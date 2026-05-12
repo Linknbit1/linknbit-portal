@@ -57,10 +57,10 @@ function BrandPanel() {
       />
 
       {/* ── TOP: Logo + stamp ── */}
-      <div className="relative z-10 flex items-center justify-between flex-shrink-0">
+      <div className="relative z-10 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <span
-            className="flex items-center justify-center text-white flex-shrink-0"
+            className="flex items-center justify-center text-white shrink-0"
             style={{ width: 30, height: 30, borderRadius: 6, background: '#EE2737', fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: 16 }}
           >
             L
@@ -79,7 +79,7 @@ function BrandPanel() {
         {/* Glyph artwork */}
         <div
           aria-hidden="true"
-          className="relative w-full"
+          className="relative w-full max-w-120"
           style={{ height: 320, marginBottom: 32, flexShrink: 0 }}
         >
           {/* Crosshairs at glyph corners */}
@@ -87,37 +87,43 @@ function BrandPanel() {
           <span className="auth-cross" style={{ position: 'absolute', bottom: 4, right: 0 }} />
 
           {/* Service orbs — overlapping blobs */}
-          <span
-            className="absolute rounded-full"
-            style={{ width: 240, height: 240, left: 30, top: 20, background: 'radial-gradient(circle at 35% 35%, #C4B5FD 0%, #8B5CF6 45%, transparent 75%)', filter: 'blur(2px)', mixBlendMode: 'screen', opacity: 0.78 }}
-          />
-          <span
-            className="absolute rounded-full"
-            style={{ width: 240, height: 240, left: 180, top: 60, background: 'radial-gradient(circle at 65% 40%, #67E8F9 0%, #06B6D4 45%, transparent 75%)', filter: 'blur(2px)', mixBlendMode: 'screen', opacity: 0.78 }}
-          />
-          <span
-            className="absolute rounded-full"
-            style={{ width: 240, height: 240, left: 100, top: 150, background: 'radial-gradient(circle at 50% 60%, #FCD34D 0%, #F59E0B 45%, transparent 75%)', filter: 'blur(2px)', mixBlendMode: 'screen', opacity: 0.78 }}
-          />
+          <div
+            className="grid w-full h-full pl-7.5"
+            style={{ gridTemplateRows: 'repeat(37, 1fr)', gridTemplateColumns: 'repeat(40, 1fr)' }}
+          >
+            <div
+              className="[grid-area:1/1/24/24] rounded-full aspect-square"
+              style={{ background: 'radial-gradient(circle at 35% 35%, #C4B5FD 0%, #8B5CF6 45%, transparent 75%)', filter: 'blur(2px)', mixBlendMode: 'screen', opacity: 0.78 }}
+            />
+            <div className="rounded-full aspect-square [grid-area:1/1/24/24] z-1 border border-[rgba(139,92,246,0.53)]">
+              <span className="flex items-center" style={{ gap: 8, fontFamily: 'JetBrains Mono', fontSize: 10, color: '#C4B5FD', letterSpacing: '0.16em', textTransform: 'uppercase', left: 0, top: 8 }}>
+                <span className="rounded-full shrink-0 w-1.5 h-1.5" style={{ background: '#A78BFA' }} />
+                Design
+              </span>
+            </div>
 
-          {/* Hairline outline rings on top of orbs */}
-          <span className="absolute rounded-full" style={{ width: 240, height: 240, left: 30, top: 20, border: '1px solid rgba(139,92,246,0.53)', boxSizing: 'border-box' }} />
-          <span className="absolute rounded-full" style={{ width: 240, height: 240, left: 180, top: 60, border: '1px solid rgba(6,182,212,0.53)', boxSizing: 'border-box' }} />
-          <span className="absolute rounded-full" style={{ width: 240, height: 240, left: 100, top: 150, border: '1px solid rgba(245,158,11,0.53)', boxSizing: 'border-box' }} />
+            <div
+              className="[grid-area:4/16/28/40] rounded-full aspect-square"
+              style={{ background: 'radial-gradient(circle at 65% 40%, #67E8F9 0%, #06B6D4 45%, transparent 75%)', filter: 'blur(2px)', mixBlendMode: 'screen', opacity: 0.78 }}
+            />
+            <div className="rounded-full aspect-square [grid-area:4/16/28/40] z-1 border border-[rgba(6,182,212,0.53)]">
+              <span className="flex items-center justify-end translate-y-5 translate-x-15" style={{ gap: 8, fontFamily: 'JetBrains Mono', fontSize: 10, color: '#67E8F9', letterSpacing: '0.16em', textTransform: 'uppercase', right: 0, top: 52 }}>
+                <span className="rounded-full shrink-0 w-1.5 h-1.5" style={{ background: '#22D3EE' }} />
+                Development
+              </span>
+            </div>
 
-          {/* Service labels */}
-          <span className="absolute flex items-center" style={{ gap: 8, fontFamily: 'JetBrains Mono', fontSize: 10, color: '#C4B5FD', letterSpacing: '0.16em', textTransform: 'uppercase', left: 0, top: 8 }}>
-            <span className="rounded-full flex-shrink-0" style={{ width: 6, height: 6, background: '#A78BFA' }} />
-            Design
-          </span>
-          <span className="absolute flex items-center" style={{ gap: 8, fontFamily: 'JetBrains Mono', fontSize: 10, color: '#67E8F9', letterSpacing: '0.16em', textTransform: 'uppercase', right: 0, top: 52 }}>
-            <span className="rounded-full flex-shrink-0" style={{ width: 6, height: 6, background: '#22D3EE' }} />
-            Development
-          </span>
-          <span className="absolute flex items-center" style={{ gap: 8, fontFamily: 'JetBrains Mono', fontSize: 10, color: '#FCD34D', letterSpacing: '0.16em', textTransform: 'uppercase', left: 70, bottom: 0 }}>
-            <span className="rounded-full flex-shrink-0" style={{ width: 6, height: 6, background: '#FBBF24' }} />
-            Marketing
-          </span>
+            <div
+              className="[grid-area:13/7/37/31] rounded-full aspect-square"
+              style={{ background: 'radial-gradient(circle at 50% 60%, #FCD34D 0%, #F59E0B 45%, transparent 75%)', filter: 'blur(2px)', mixBlendMode: 'screen', opacity: 0.78 }}
+            />
+            <div className="flex rounded-full aspect-square [grid-area:13/7/37/31] z-1 border border-[rgba(245,158,11,0.53)]">
+              <span className="flex items-center mt-auto ml-auto translate-x-15 -translate-y-5" style={{ gap: 8, fontFamily: 'JetBrains Mono', fontSize: 10, color: '#FCD34D', letterSpacing: '0.16em', textTransform: 'uppercase', left: 70, bottom: 0 }}>
+                <span className="rounded-full shrink-0 w-1.5 h-1.5" style={{ background: '#FBBF24' }} />
+                Marketing
+              </span>
+            </div>
+          </div>
         </div>
 
         {/* Headline */}
@@ -137,13 +143,13 @@ function BrandPanel() {
 
       {/* ── BOTTOM: Legend ── */}
       <div
-        className="relative z-10 flex items-center justify-between flex-shrink-0"
+        className="relative z-10 flex items-center justify-between shrink-0"
         style={{ fontFamily: 'JetBrains Mono', fontSize: 11, color: '#4A5468', letterSpacing: '0.08em', textTransform: 'uppercase' }}
       >
         <div className="flex" style={{ gap: 18 }}>
           {[{ label: 'Design', color: '#A78BFA' }, { label: 'Development', color: '#22D3EE' }, { label: 'Marketing', color: '#FBBF24' }].map((s) => (
             <span key={s.label} className="flex items-center" style={{ gap: 7 }}>
-              <span className="flex-shrink-0" style={{ width: 6, height: 6, borderRadius: 2, background: s.color }} />
+              <span className="shrink-0 w-1.5 h-1.5 rounded-[2px]" style={{ background: s.color }} />
               {s.label}
             </span>
           ))}
@@ -369,7 +375,7 @@ function SplashScreen({ user, onDone }: { user: SplashUser; onDone: () => void }
       <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, rgba(122,133,151,0.07) 1px, transparent 1px)', backgroundSize: '40px 40px', maskImage: 'radial-gradient(ellipse 60% 60% at 50% 50%, #000 30%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 60% 60% at 50% 50%, #000 30%, transparent 100%)' }} />
       <div className="absolute flex items-center justify-between" style={{ top: 32, left: 32, right: 32, fontFamily: 'JetBrains Mono', fontSize: 10.5, color: '#4A5468', textTransform: 'uppercase', letterSpacing: '0.12em' }}>
         <div className="flex items-center gap-3">
-          <span className="flex items-center justify-center text-white flex-shrink-0" style={{ width: 30, height: 30, borderRadius: 6, background: '#EE2737', fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: 16 }}>L</span>
+          <span className="flex items-center justify-center text-white shrink-0" style={{ width: 30, height: 30, borderRadius: 6, background: '#EE2737', fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: 16 }}>L</span>
           <span style={{ fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: 16, letterSpacing: '-0.01em', color: '#F2F5F9' }}>Linknbit</span>
         </div>
         <div className="flex items-center" style={{ gap: 14 }}>
@@ -436,7 +442,7 @@ export default function LoginPage() {
       <div className="min-h-screen flex" style={{ background: '#0B1018' }}>
 
         {/* ── Left: Brand panel — hidden on mobile, shown lg+ ── */}
-        <div className="hidden lg:block lg:w-1/2 flex-shrink-0">
+        <div className="hidden lg:block lg:w-1/2 shrink-0">
           <BrandPanel />
         </div>
 
@@ -444,7 +450,7 @@ export default function LoginPage() {
         <div className="flex flex-col flex-1 min-h-screen" style={{ background: '#0B1018' }}>
 
           {/* Top bar */}
-          <div className="flex items-center justify-between flex-shrink-0 px-6 pt-8 sm:px-10 sm:pt-10 lg:px-20 lg:pt-14">
+          <div className="flex items-center justify-between shrink-0 px-6 pt-8 sm:px-10 sm:pt-10 lg:px-20 lg:pt-14">
             <div className="flex items-center gap-2.5">
               <span style={{ width: 24, height: 24, borderRadius: 5, background: '#EE2737', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: 13, color: '#fff', flexShrink: 0 }}>L</span>
               <span style={{ fontFamily: 'Space Grotesk', fontWeight: 600, fontSize: 14, color: '#B5C0CF', letterSpacing: '-0.005em' }}>Operations Portal</span>
@@ -485,7 +491,7 @@ export default function LoginPage() {
           </div>
 
           {/* Bottom bar */}
-          <div className="flex-shrink-0 flex items-center justify-between px-6 pb-8 sm:px-10 sm:pb-10 lg:px-20 lg:pb-14" style={{ fontFamily: 'JetBrains Mono', fontSize: 10.5, color: '#4A5468', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+          <div className="shrink-0 flex items-center justify-between px-6 pb-8 sm:px-10 sm:pb-10 lg:px-20 lg:pb-14" style={{ fontFamily: 'JetBrains Mono', fontSize: 10.5, color: '#4A5468', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
             <span>Linknbit · Operations Portal</span>
             <span className="hidden sm:block">EN · KARACHI · PKT</span>
           </div>
