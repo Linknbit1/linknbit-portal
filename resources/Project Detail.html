@@ -1,0 +1,1209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Linknbit · Cricket Sansar App</title>
+<link rel="stylesheet" href="tokens.css">
+<style>
+  html, body { margin: 0; padding: 0; background: var(--bg-base); color: var(--text-1); font-family: var(--font-ui); }
+  * { box-sizing: border-box; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 999px; border: 2px solid var(--bg-base); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
+  svg { display: block; }
+  button { font-family: inherit; }
+
+  .app { display: grid; grid-template-columns: 248px 1fr; min-height: 100vh; width: 1440px; margin: 0 auto; }
+
+  /* ===== SIDEBAR (lifted from Projects.html) ===== */
+  .sidebar {
+    background: var(--surface-1);
+    border-right: 1px solid var(--border-default);
+    padding: 18px 14px;
+    display: flex; flex-direction: column; gap: 1px;
+    position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  }
+  .brand { display: flex; align-items: center; gap: 11px; padding: 6px 8px 16px; border-bottom: 1px solid var(--border-subtle); margin-bottom: 14px; }
+  .brand .mark { width: 28px; height: 28px; border-radius: 6px; background: var(--brand-red); display: inline-flex; align-items: center; justify-content: center; color: #fff; font-family: var(--font-display); font-weight: 700; font-size: 15px; }
+  .brand .name { font-family: var(--font-display); font-weight: 700; font-size: 15px; color: var(--text-1); letter-spacing: -0.01em; }
+  .brand .workspace { margin-left: auto; width: 22px; height: 22px; border-radius: 5px; background: var(--surface-2); border: 1px solid var(--border-default); color: var(--text-3); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+  .brand .workspace svg { width: 12px; height: 12px; }
+  .group-label { font-weight: 600; font-size: 10px; color: var(--text-4); text-transform: uppercase; letter-spacing: 0.12em; padding: 12px 8px 6px; }
+  .nav-item { display: flex; align-items: center; gap: 11px; padding: 8px 10px; border-radius: var(--radius-sm); font-size: 13px; color: var(--text-2); font-weight: 500; cursor: pointer; position: relative; }
+  .nav-item .ico { width: 16px; height: 16px; flex-shrink: 0; color: var(--text-3); }
+  .nav-item:hover { background: var(--surface-2); color: var(--text-1); }
+  .nav-item:hover .ico { color: var(--text-1); }
+  .nav-item.active { background: rgba(238, 39, 55, 0.13); color: #fff; }
+  .nav-item.active .ico { color: var(--brand-red); }
+  .nav-item.active::before { content: ''; position: absolute; left: -14px; top: 8px; bottom: 8px; width: 3px; border-radius: 0 3px 3px 0; background: var(--brand-red); }
+  .nav-item .count { margin-left: auto; background: var(--brand-red); color: #fff; font-weight: 700; font-size: 10px; padding: 1px 7px; border-radius: 999px; line-height: 1.4; }
+  .nav-item .count.muted { background: var(--surface-3); color: var(--text-2); }
+  .sidebar .user-pill { margin-top: auto; padding: 12px 14px 18px; margin: auto -14px -18px -14px; border-top: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 10px; }
+  .sidebar .user-pill .av { width: 32px; height: 32px; border-radius: 999px; background: linear-gradient(135deg, #F94454, #EE2737); color: #fff; font-weight: 700; font-size: 11.5px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .sidebar .user-pill .who { flex: 1; min-width: 0; }
+  .sidebar .user-pill .nm { font-weight: 600; font-size: 13px; color: var(--text-1); line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sidebar .user-pill .rl { font-family: var(--font-mono); font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
+  .sidebar .user-pill .more { color: var(--text-3); width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border-radius: 5px; cursor: pointer; }
+
+  /* ===== MAIN + TOPBAR ===== */
+  .main { background: var(--bg-base); min-width: 0; }
+  .topbar { height: 64px; background: rgba(11, 16, 24, 0.85); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border-default); display: flex; align-items: center; padding: 0 32px; gap: 18px; position: sticky; top: 0; z-index: 50; }
+  .crumbs { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .crumbs a { font-size: 13px; color: var(--text-3); text-decoration: none; font-weight: 500; }
+  .crumbs a:hover { color: var(--text-1); }
+  .crumbs .sep { color: var(--text-4); }
+  .crumbs h1 { font-family: var(--font-display); font-weight: 700; font-size: 17px; color: var(--text-1); margin: 0; letter-spacing: -0.005em; white-space: nowrap; }
+  .crumbs .id { font-family: var(--font-mono); font-size: 11px; color: var(--text-4); padding: 2px 7px; background: var(--surface-2); border-radius: 5px; letter-spacing: 0.04em; }
+  .topbar .role-toggle { display: inline-flex; background: var(--surface-1); border: 1px solid var(--border-default); border-radius: var(--radius-sm); padding: 3px; gap: 2px; margin-left: 8px; }
+  .topbar .role-toggle button { background: transparent; border: 0; padding: 5px 11px; border-radius: 4px; color: var(--text-3); font-weight: 600; font-size: 11px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+  .topbar .role-toggle button.on { background: var(--surface-3); color: var(--text-1); box-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+  .topbar .role-toggle button .dot { width: 6px; height: 6px; border-radius: 999px; background: currentColor; }
+  .topbar .actions { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+  .topbar .sync-pill {
+    display: inline-flex; align-items: center; gap: 9px; padding: 6px 12px 6px 9px;
+    background: var(--error-soft); border: 1px solid var(--error-border); border-radius: 999px;
+    font-size: 12px; color: var(--error); font-weight: 600; cursor: pointer;
+  }
+  .topbar .sync-pill .ico { width: 16px; height: 16px; border-radius: 999px; background: var(--error); color: #fff; display: inline-flex; align-items: center; justify-content: center; }
+  .topbar .sync-pill .ico svg { width: 9px; height: 9px; }
+  .topbar .sync-pill .ck-glyph { font-family: var(--font-display); font-weight: 700; font-size: 10px; color: var(--error); padding: 2px 6px; background: rgba(244,54,76,0.18); border-radius: 4px; letter-spacing: 0.04em; }
+  .topbar .sync-pill .meta { display: flex; flex-direction: column; line-height: 1.15; align-items: flex-start; }
+  .topbar .sync-pill .l1 { font-size: 11.5px; font-weight: 600; }
+  .topbar .sync-pill .l2 { font-family: var(--font-mono); font-size: 9.5px; color: var(--error); opacity: 0.75; font-weight: 500; letter-spacing: 0.04em; margin-top: 1px; }
+
+  .tbtn { height: 34px; border-radius: var(--radius-sm); border: 1px solid var(--border-default); padding: 0 12px; font: 600 12.5px var(--font-ui); cursor: pointer; display: inline-flex; align-items: center; gap: 7px; background: var(--surface-1); color: var(--text-1); }
+  .tbtn:hover { background: var(--surface-2); }
+  .tbtn.ghost { background: transparent; border-color: var(--border-default); color: var(--text-2); }
+  .tbtn.ghost:hover { background: var(--surface-2); color: var(--text-1); }
+  .tbtn.danger { background: transparent; color: var(--error); border-color: var(--error-border); }
+  .tbtn.danger:hover { background: var(--error-soft); }
+  .tbtn svg { width: 13px; height: 13px; }
+
+  /* ===== CONTENT GRID ===== */
+  .content { padding: 24px 32px 56px; display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 24px; align-items: start; }
+
+  /* ===== CHIPS ===== */
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 999px; font-weight: 600; font-size: 10.5px; letter-spacing: 0.04em; text-transform: uppercase; line-height: 1.4; white-space: nowrap; border: 1px solid transparent; }
+  .chip .dot { width: 5px; height: 5px; border-radius: 999px; background: currentColor; flex-shrink: 0; }
+  .chip.svc-design { background: var(--service-design-soft); color: var(--service-design); }
+  .chip.svc-dev    { background: var(--service-dev-soft); color: var(--service-dev); }
+  .chip.svc-mkt    { background: var(--service-mkt-soft); color: var(--service-mkt); }
+  .chip.st-progress { background: var(--success-soft); color: var(--success); border-color: var(--success-border); }
+  .chip.st-await    { background: var(--warning-soft); color: var(--warning); border-color: var(--warning-border); }
+  .chip.st-blocked  { background: var(--error-soft);   color: var(--error);   border-color: var(--error-border); }
+  .chip.st-done     { background: rgba(122, 133, 151, 0.15); color: var(--text-2); border-color: var(--border-default); }
+  .chip.st-review   { background: var(--info-soft); color: var(--info); border-color: var(--info-border); }
+  .chip.st-todo     { background: var(--surface-2); color: var(--text-3); border-color: var(--border-default); }
+  .chip.pr-crit { background: rgba(244, 54, 76, 0.18); color: var(--error); border-color: var(--error-border); }
+  .chip.pr-high { background: rgba(245, 158, 11, 0.18); color: var(--warning); border-color: var(--warning-border); }
+  .chip.pr-med  { background: rgba(59, 130, 246, 0.18); color: var(--info); border-color: var(--info-border); }
+  .chip.pr-low  { background: rgba(122, 133, 151, 0.15); color: var(--text-3); border-color: var(--border-default); }
+
+  /* ===== Avatars ===== */
+  .av { width: 28px; height: 28px; border-radius: 999px; color: #fff; font-weight: 700; font-size: 11px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; font-family: var(--font-ui); }
+  .av.xs { width: 20px; height: 20px; font-size: 8.5px; }
+  .av.sm { width: 24px; height: 24px; font-size: 10px; }
+  .av.lg { width: 36px; height: 36px; font-size: 13px; }
+  .av.ak { background: linear-gradient(135deg, #A78BFA, #8B5CF6); }
+  .av.ut { background: linear-gradient(135deg, #67E8F9, #06B6D4); color: #04212a; }
+  .av.ba { background: linear-gradient(135deg, #FCD34D, #F59E0B); color: #1A1306; }
+  .av.cl { background: linear-gradient(135deg, #B5C0CF, #7A8597); color: #0B1018; }
+
+  /* ===== CARD BASE ===== */
+  .card { background: var(--surface-1); border: 1px solid var(--border-default); border-radius: var(--radius-md); }
+  .card-head { padding: 16px 20px 14px; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 12px; }
+  .card-head .ttl { font-family: var(--font-display); font-weight: 600; font-size: 13px; color: var(--text-1); letter-spacing: -0.005em; }
+  .card-head .pill { font-family: var(--font-mono); font-size: 10.5px; color: var(--text-3); padding: 2px 8px; background: var(--surface-2); border-radius: 999px; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 500; }
+  .card-head .more { margin-left: auto; color: var(--text-3); cursor: pointer; padding: 4px; }
+  .card-head .more svg { width: 14px; height: 14px; }
+  .card-head .add { margin-left: auto; height: 26px; padding: 0 10px; font-size: 11px; font-weight: 600; background: var(--surface-2); border: 1px solid var(--border-default); border-radius: 6px; color: var(--text-2); cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
+  .card-head .add:hover { background: var(--surface-3); color: var(--text-1); }
+  .card-head .add svg { width: 11px; height: 11px; }
+
+  /* =========================================================
+     1. PROJECT HEADER
+     ========================================================= */
+  .project-header {
+    background: var(--surface-1);
+    border: 1px solid var(--border-default);
+    border-left: 3px solid var(--service-dev-strong);
+    border-radius: var(--radius-md);
+    padding: 22px 24px 20px;
+    display: flex; flex-direction: column; gap: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .project-header::before {
+    content: ""; position: absolute; top: -80px; right: -60px;
+    width: 320px; height: 320px;
+    background: radial-gradient(circle at center, rgba(34, 211, 238, 0.06) 0%, transparent 65%);
+    pointer-events: none;
+  }
+  .project-header > * { position: relative; }
+  .ph-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+  .ph-name {
+    font-family: var(--font-display); font-weight: 700; font-size: 28px;
+    line-height: 1.1; letter-spacing: -0.015em; color: var(--text-1);
+    margin: 0 0 8px;
+  }
+  .ph-sub { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12.5px; color: var(--text-3); }
+  .ph-sub .sep { color: var(--text-4); }
+  .ph-sub a { color: var(--text-2); font-weight: 500; text-decoration: none; }
+  .ph-sub a:hover { color: var(--text-1); }
+  .ph-headline-tile {
+    width: 56px; height: 56px; border-radius: 12px;
+    background: linear-gradient(135deg, #67E8F9, #06B6D4); color: #04212a;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: var(--font-display); font-weight: 700; font-size: 22px;
+    flex-shrink: 0;
+    box-shadow: 0 4px 16px rgba(34, 211, 238, 0.18);
+  }
+  .ph-name-block { display: flex; gap: 16px; align-items: flex-start; min-width: 0; }
+  .ph-status { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; flex-shrink: 0; }
+  .ph-status .chip-row { display: flex; gap: 8px; }
+
+  .ph-meta { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; border-top: 1px solid var(--border-subtle); padding-top: 16px; }
+  .ph-meta .cell { display: flex; flex-direction: column; gap: 5px; padding: 0 18px; border-right: 1px solid var(--border-subtle); }
+  .ph-meta .cell:first-child { padding-left: 0; }
+  .ph-meta .cell:last-child { border-right: none; padding-right: 0; }
+  .ph-meta .lbl { font-family: var(--font-ui); font-weight: 600; font-size: 9.5px; color: var(--text-4); text-transform: uppercase; letter-spacing: 0.1em; }
+  .ph-meta .val { font-family: var(--font-display); font-weight: 600; font-size: 14px; color: var(--text-1); display: flex; align-items: center; gap: 8px; line-height: 1.2; }
+  .ph-meta .val.crit { color: var(--error); }
+  .ph-meta .val .small { font-family: var(--font-mono); font-size: 10.5px; color: var(--text-3); font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; }
+
+  /* Internal note */
+  .ph-note {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px;
+    background: var(--surface-inset); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);
+    font-size: 12.5px; color: var(--text-1);
+  }
+  .ph-note .lk-label { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 10px; color: var(--text-4); text-transform: uppercase; letter-spacing: 0.08em; flex-shrink: 0; padding-right: 12px; border-right: 1px solid var(--border-subtle); }
+  .ph-note .lk-label svg { width: 10px; height: 10px; }
+  .ph-note .nt-text { flex: 1; font-style: italic; color: var(--text-2); }
+  .ph-note .nt-text b { color: var(--text-1); font-style: normal; font-weight: 600; }
+  .ph-note .nt-author { font-family: var(--font-mono); font-size: 10.5px; color: var(--text-4); letter-spacing: 0.04em; }
+  .ph-note .nt-edit { color: var(--text-3); cursor: pointer; padding: 4px; border-radius: 4px; }
+  .ph-note .nt-edit:hover { background: var(--surface-2); color: var(--text-1); }
+  .ph-note .nt-edit svg { width: 12px; height: 12px; }
+
+  /* =========================================================
+     2. STAGE PIPELINE
+     ========================================================= */
+  .stage-pipeline { padding: 22px 24px; }
+  .stage-pipeline .head { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .stage-pipeline .head .ttl { font-family: var(--font-display); font-weight: 600; font-size: 14px; color: var(--text-1); }
+  .stage-pipeline .head .progress-summary { margin-left: auto; display: flex; align-items: center; gap: 14px; font-family: var(--font-mono); font-size: 11px; color: var(--text-3); letter-spacing: 0.04em; }
+  .stage-pipeline .head .progress-summary b { color: var(--text-1); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .stage-pipeline .head .progress-summary .pct-bar { width: 100px; height: 5px; background: var(--surface-inset); border-radius: 999px; overflow: hidden; }
+  .stage-pipeline .head .progress-summary .pct-bar .fill { height: 100%; width: 44%; background: linear-gradient(90deg, var(--service-dev), var(--service-dev-strong)); border-radius: 999px; }
+
+  .stepper {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    gap: 0;
+    position: relative;
+  }
+  .stepper::before {
+    content: ""; position: absolute;
+    top: 17px; left: calc((100% / 9) / 2); right: calc((100% / 9) / 2);
+    height: 2px; background: var(--border-subtle);
+    z-index: 0;
+  }
+  .step {
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    position: relative; z-index: 1;
+    cursor: pointer;
+    padding-top: 0;
+  }
+  .step .puck {
+    width: 36px; height: 36px; border-radius: 999px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 2px solid var(--border-default);
+    background: var(--bg-base);
+    color: var(--text-3);
+    font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+    position: relative;
+    transition: transform 120ms;
+  }
+  .step .puck svg { width: 16px; height: 16px; }
+  .step .puck::after {
+    content: ""; position: absolute; inset: -6px;
+    border-radius: 999px;
+  }
+  .step.done .puck { background: var(--success); border-color: var(--success); color: #062013; }
+  .step.done .puck svg { color: #062013; }
+  .step.current .puck {
+    background: var(--service-dev-strong); border-color: var(--service-dev);
+    color: #04212a;
+    box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.18);
+  }
+  .step.current.blocked .puck {
+    background: var(--error); border-color: var(--error);
+    color: #fff;
+    box-shadow: 0 0 0 4px rgba(244, 54, 76, 0.22);
+    animation: pulse-block 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse-block {
+    0%, 100% { box-shadow: 0 0 0 4px rgba(244, 54, 76, 0.22); }
+    50% { box-shadow: 0 0 0 6px rgba(244, 54, 76, 0.32); }
+  }
+  .step.upcoming .puck { background: var(--surface-1); border-color: var(--border-default); }
+  .step.active-row { }
+  .step .label {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    text-align: center;
+  }
+  .step .label .n { font-family: var(--font-mono); font-size: 9.5px; color: var(--text-4); letter-spacing: 0.06em; text-transform: uppercase; }
+  .step .label .nm { font-family: var(--font-ui); font-weight: 600; font-size: 11px; color: var(--text-2); line-height: 1.25; max-width: 92px; }
+  .step.done .label .nm { color: var(--text-1); }
+  .step.current .label .nm { color: #fff; }
+  .step.current .label .n { color: var(--service-dev); }
+  .step.upcoming .label .nm { color: var(--text-3); }
+  .step.current.blocked .label .n { color: var(--error); }
+
+  /* Connecting bar segments — done sections green */
+  .stepper .seg {
+    position: absolute; top: 17px; height: 2px; background: var(--success);
+    z-index: 0;
+  }
+
+  /* Stage detail strip — shown for current */
+  .stage-detail {
+    margin-top: 22px; padding: 14px 18px;
+    background: linear-gradient(180deg, rgba(244,54,76,0.06), rgba(244,54,76,0.02));
+    border: 1px solid var(--error-border);
+    border-radius: var(--radius-sm);
+    display: flex; align-items: center; gap: 14px;
+  }
+  .stage-detail .ico {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: rgba(244, 54, 76, 0.18); color: var(--error);
+    display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .stage-detail .ico svg { width: 16px; height: 16px; }
+  .stage-detail .txt { flex: 1; min-width: 0; }
+  .stage-detail .ttl { font-family: var(--font-display); font-weight: 600; font-size: 13px; color: var(--text-1); display: flex; align-items: center; gap: 10px; }
+  .stage-detail .ttl .blocker-tag { font-family: var(--font-mono); font-size: 9.5px; color: var(--error); background: rgba(244,54,76,0.18); padding: 2px 7px; border-radius: 4px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .stage-detail .sub { font-size: 11.5px; color: var(--text-2); margin-top: 3px; }
+  .stage-detail .sub b { color: var(--error); font-weight: 600; }
+  .stage-detail .meta { font-family: var(--font-mono); font-size: 10.5px; color: var(--text-3); letter-spacing: 0.04em; }
+
+  /* =========================================================
+     3. TASK LIST
+     ========================================================= */
+  .task-toolbar { padding: 14px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border-subtle); }
+  .task-toolbar .ttl { font-family: var(--font-display); font-weight: 600; font-size: 14px; color: var(--text-1); display: flex; align-items: center; gap: 10px; }
+  .task-toolbar .ttl .stage-marker { display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px; border-radius: 999px; background: var(--surface-2); font-family: var(--font-mono); font-size: 10.5px; color: var(--text-2); font-weight: 500; letter-spacing: 0.04em; }
+  .task-toolbar .ttl .stage-marker .dot { width: 5px; height: 5px; border-radius: 999px; background: var(--error); }
+  .task-toolbar .count-pill { font-family: var(--font-mono); font-size: 10.5px; color: var(--text-3); padding: 2px 8px; background: var(--surface-2); border-radius: 999px; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 500; }
+  .task-toolbar .right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+  .task-toolbar .filter { height: 30px; padding: 0 10px; background: var(--surface-2); border: 1px solid var(--border-default); border-radius: 6px; color: var(--text-2); font-weight: 500; font-size: 11.5px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+  .task-toolbar .filter:hover { background: var(--surface-3); color: var(--text-1); }
+  .task-toolbar .filter svg { width: 11px; height: 11px; color: var(--text-3); }
+
+  .ttable {
+    display: grid;
+    grid-template-columns:
+      minmax(280px, 2.4fr)   /* task title */
+      130px                  /* assignee */
+      120px                  /* status */
+      110px                  /* priority */
+      100px                  /* due */
+      80px                   /* XP */
+      96px;                  /* meta icons (visibility, sync, open) */
+  }
+  .ttable .h, .ttable .c {
+    padding: 11px 14px; border-bottom: 1px solid var(--border-subtle);
+    display: flex; align-items: center; min-width: 0;
+  }
+  .ttable .h { padding: 10px 14px; background: var(--surface-2); font-weight: 600; font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.08em; }
+  .ttable .h:first-child, .ttable .c:first-child { padding-left: 20px; }
+  .ttable .h:last-child, .ttable .c:last-child { padding-right: 18px; justify-content: flex-end; }
+
+  .trow { display: contents; }
+  .trow:hover .c { background: rgba(255,255,255,0.018); }
+  .trow.blocked .c { background: rgba(244, 54, 76, 0.04); }
+  .trow.blocked .c:first-child { box-shadow: inset 2px 0 0 var(--error); }
+
+  .t-title { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .t-title .nm { font-family: var(--font-ui); font-weight: 500; font-size: 13.5px; color: var(--text-1); display: flex; align-items: center; gap: 8px; }
+  .t-title .nm .id { font-family: var(--font-mono); font-size: 10px; color: var(--text-4); font-weight: 500; }
+  .t-title .sub { font-family: var(--font-mono); font-size: 10.5px; color: var(--text-3); letter-spacing: 0.04em; }
+  .t-title .sub.crit { color: var(--error); font-weight: 600; }
+
+  .assignee { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .assignee .nm { font-size: 12px; color: var(--text-1); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .t-due { display: flex; flex-direction: column; gap: 2px; font-family: var(--font-mono); font-size: 11.5px; color: var(--text-1); font-weight: 500; font-variant-numeric: tabular-nums; }
+  .t-due .when { font-family: var(--font-mono); font-size: 9.5px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.05em; }
+  .t-due.crit { color: var(--error); }
+  .t-due.warn { color: var(--warning); }
+
+  .xp-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: rgba(251, 191, 36, 0.12); color: var(--coin-gold);
+    font-family: var(--font-display); font-weight: 700; font-size: 11.5px;
+    padding: 3px 9px; border-radius: 999px;
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    letter-spacing: 0.02em;
+  }
+  .xp-pill svg { width: 10px; height: 10px; }
+
+  .meta-icons { display: flex; align-items: center; gap: 5px; justify-content: flex-end; }
+  .vis-ico { width: 26px; height: 26px; border-radius: 6px; background: var(--surface-2); border: 1px solid var(--border-default); color: var(--text-2); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; position: relative; }
+  .vis-ico:hover { background: var(--surface-3); color: var(--text-1); }
+  .vis-ico svg { width: 12px; height: 12px; }
+  .vis-ico.client-hidden { color: var(--text-3); }
+  .vis-ico.client-visible { color: var(--success); background: rgba(34, 197, 94, 0.1); border-color: var(--success-border); }
+  .vis-ico.sync-ok { color: var(--success); }
+  .vis-ico.sync-pend { color: var(--warning); }
+  .vis-ico.sync-err { color: var(--error); background: var(--error-soft); border-color: var(--error-border); }
+  .vis-ico.sync-err::after { content: ""; position: absolute; top: -2px; right: -2px; width: 6px; height: 6px; border-radius: 999px; background: var(--error); border: 1.5px solid var(--surface-1); }
+  .vis-ico.open-btn { color: var(--text-2); }
+
+  .add-task-row { padding: 14px 20px; display: flex; align-items: center; gap: 12px; }
+  .add-task-row .add-btn { height: 36px; padding: 0 14px; border-radius: 6px; background: transparent; border: 1px dashed var(--border-strong); color: var(--text-2); font-weight: 600; font-size: 12.5px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+  .add-task-row .add-btn:hover { background: var(--surface-2); color: var(--text-1); border-style: solid; }
+  .add-task-row .add-btn svg { width: 12px; height: 12px; }
+  .add-task-row .hint { margin-left: auto; font-family: var(--font-mono); font-size: 10.5px; color: var(--text-4); letter-spacing: 0.04em; }
+  .add-task-row .hint kbd { font-family: var(--font-mono); font-size: 10px; padding: 1px 5px; background: var(--surface-2); border: 1px solid var(--border-default); border-radius: 3px; color: var(--text-2); }
+
+  /* =========================================================
+     4. STAGE APPROVAL BAR
+     ========================================================= */
+  .approval-bar {
+    background: var(--surface-1);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    padding: 18px 24px;
+    display: flex; align-items: center; gap: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .approval-bar::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: linear-gradient(180deg, var(--warning), #FBBF24);
+  }
+  .approval-bar .ic {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: rgba(245, 158, 11, 0.15); color: var(--warning);
+    display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+    border: 1px solid var(--warning-border);
+  }
+  .approval-bar .ic svg { width: 18px; height: 18px; }
+  .approval-bar .body { flex: 1; min-width: 0; }
+  .approval-bar .ttl { font-family: var(--font-display); font-weight: 600; font-size: 14px; color: var(--text-1); display: flex; align-items: center; gap: 10px; line-height: 1.3; }
+  .approval-bar .ttl .pending-tag { font-family: var(--font-mono); font-size: 9.5px; color: var(--warning); background: var(--warning-soft); padding: 2px 7px; border-radius: 4px; letter-spacing: 0.08em; text-transform: uppercase; border: 1px solid var(--warning-border); }
+  .approval-bar .sub { font-size: 12px; color: var(--text-3); margin-top: 4px; line-height: 1.5; }
+  .approval-bar .sub b { color: var(--text-2); font-weight: 600; }
+  .approval-bar .actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+  .approval-bar .approve { height: 36px; padding: 0 18px; background: var(--brand-red); color: #fff; border: 0; border-radius: var(--radius-sm); font-weight: 600; font-size: 12.5px; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; box-shadow: 0 4px 12px rgba(238,39,55,0.2); }
+  .approval-bar .approve:hover { background: var(--brand-red-hover); }
+  .approval-bar .approve svg { width: 13px; height: 13px; }
+  .approval-bar .revise { height: 36px; padding: 0 14px; background: transparent; color: var(--text-2); border: 1px solid var(--border-default); border-radius: var(--radius-sm); font-weight: 600; font-size: 12.5px; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; }
+  .approval-bar .revise:hover { background: var(--surface-2); color: var(--text-1); }
+  .approval-bar .revise svg { width: 13px; height: 13px; }
+
+  /* =========================================================
+     RIGHT PANEL
+     ========================================================= */
+  .right-panel { display: flex; flex-direction: column; gap: 20px; position: sticky; top: 88px; }
+
+  /* Team member row */
+  .team-row { padding: 12px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border-subtle); }
+  .team-row:last-child { border-bottom: none; }
+  .team-row .info { flex: 1; min-width: 0; }
+  .team-row .nm { font-family: var(--font-ui); font-weight: 600; font-size: 13px; color: var(--text-1); display: flex; align-items: center; gap: 8px; }
+  .team-row .role { font-family: var(--font-mono); font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
+  .role-pill {
+    display: inline-flex; align-items: center; padding: 1px 7px; border-radius: 999px;
+    font-family: var(--font-mono); font-size: 9px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+    background: var(--surface-2); border: 1px solid var(--border-default); color: var(--text-2);
+  }
+  .role-pill.pm { background: rgba(167, 139, 250, 0.15); color: var(--service-design); border-color: rgba(167, 139, 250, 0.35); }
+  .role-pill.dev { background: rgba(34, 211, 238, 0.12); color: var(--service-dev); border-color: rgba(34, 211, 238, 0.3); }
+  .team-row .workload { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+  .team-row .workload .bar { width: 56px; height: 4px; background: var(--surface-inset); border-radius: 999px; overflow: hidden; }
+  .team-row .workload .bar .fill { height: 100%; border-radius: 999px; }
+  .team-row .workload .lbl { font-family: var(--font-mono); font-size: 9.5px; color: var(--text-3); letter-spacing: 0.04em; font-weight: 500; }
+  .team-row .workload.ok .fill { background: var(--success); width: 65%; }
+  .team-row .workload.high .fill { background: var(--warning); width: 88%; }
+  .team-row .workload.crit .fill { background: var(--error); width: 96%; }
+  .team-row .workload.ok .lbl { color: var(--success); }
+  .team-row .workload.high .lbl { color: var(--warning); }
+  .team-row .workload.crit .lbl { color: var(--error); }
+
+  /* Deadline row */
+  .ddl-row { padding: 11px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border-subtle); }
+  .ddl-row:last-child { border-bottom: none; }
+  .ddl-row .date-tile {
+    width: 38px; height: 38px; border-radius: 7px;
+    background: var(--surface-2); border: 1px solid var(--border-default);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .ddl-row .date-tile .m { font-family: var(--font-mono); font-size: 8.5px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; line-height: 1; margin-bottom: 2px; }
+  .ddl-row .date-tile .d { font-family: var(--font-display); font-weight: 700; font-size: 15px; color: var(--text-1); line-height: 1; }
+  .ddl-row.crit .date-tile { background: var(--error-soft); border-color: var(--error-border); }
+  .ddl-row.crit .date-tile .m { color: var(--error); }
+  .ddl-row.crit .date-tile .d { color: var(--error); }
+  .ddl-row .body { flex: 1; min-width: 0; }
+  .ddl-row .tk { font-family: var(--font-ui); font-weight: 500; font-size: 12.5px; color: var(--text-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ddl-row .by { font-family: var(--font-mono); font-size: 10px; color: var(--text-3); letter-spacing: 0.04em; margin-top: 3px; display: flex; align-items: center; gap: 5px; }
+
+  /* File row */
+  .file-row { padding: 11px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border-subtle); }
+  .file-row:last-child { border-bottom: none; }
+  .file-row .ftile {
+    width: 36px; height: 36px; border-radius: 7px;
+    background: var(--surface-2); border: 1px solid var(--border-default);
+    display: inline-flex; align-items: center; justify-content: center;
+    color: var(--text-3); flex-shrink: 0; position: relative;
+    font-family: var(--font-mono); font-size: 8.5px; font-weight: 700; letter-spacing: 0.04em;
+  }
+  .file-row .ftile.pdf { color: var(--error); background: rgba(244,54,76,0.08); border-color: rgba(244,54,76,0.25); }
+  .file-row .ftile.img { color: var(--info); background: rgba(59,130,246,0.08); border-color: rgba(59,130,246,0.25); }
+  .file-row .body { flex: 1; min-width: 0; }
+  .file-row .nm { font-family: var(--font-ui); font-weight: 500; font-size: 12.5px; color: var(--text-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .file-row .meta { font-family: var(--font-mono); font-size: 10px; color: var(--text-3); letter-spacing: 0.04em; margin-top: 3px; }
+  .file-row .vis-toggle {
+    flex-shrink: 0;
+    display: inline-flex; align-items: center; gap: 5px;
+    height: 26px; padding: 0 8px;
+    border-radius: 6px; border: 1px solid var(--border-default); background: var(--surface-2);
+    font-family: var(--font-mono); font-size: 9.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--text-3); cursor: pointer;
+  }
+  .file-row .vis-toggle:hover { background: var(--surface-3); color: var(--text-1); }
+  .file-row .vis-toggle.client-visible { color: var(--success); background: rgba(34,197,94,0.08); border-color: var(--success-border); }
+  .file-row .vis-toggle svg { width: 11px; height: 11px; }
+
+  /* ClickUp sync panel */
+  .cu-card { padding: 16px 18px; }
+  .cu-card .cu-head { display: flex; align-items: center; gap: 10px; padding-bottom: 14px; border-bottom: 1px solid var(--border-subtle); margin-bottom: 14px; }
+  .cu-card .cu-ico { width: 36px; height: 36px; border-radius: 7px; background: var(--surface-2); border: 1px solid var(--border-default); display: inline-flex; align-items: center; justify-content: center; color: var(--service-mkt); font-family: var(--font-display); font-weight: 700; font-size: 14px; flex-shrink: 0; }
+  .cu-card .cu-head .folder { flex: 1; min-width: 0; }
+  .cu-card .cu-head .lbl { font-family: var(--font-mono); font-size: 9.5px; color: var(--text-4); text-transform: uppercase; letter-spacing: 0.08em; }
+  .cu-card .cu-head .nm { font-family: var(--font-ui); font-weight: 600; font-size: 13px; color: var(--text-1); margin-top: 2px; }
+  .cu-card .row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 11.5px; }
+  .cu-card .row .k { font-family: var(--font-mono); font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.06em; }
+  .cu-card .row .v { color: var(--text-1); font-weight: 500; font-family: var(--font-mono); font-size: 11px; font-variant-numeric: tabular-nums; }
+  .cu-card .row .v.err { color: var(--error); font-weight: 600; display: inline-flex; align-items: center; gap: 5px; }
+  .cu-card .row .v.err::before { content: ""; width: 6px; height: 6px; border-radius: 999px; background: var(--error); }
+  .cu-card .err-banner {
+    margin-top: 12px; padding: 10px 12px;
+    background: var(--error-soft); border: 1px solid var(--error-border); border-radius: 6px;
+    font-size: 11.5px; color: var(--error); line-height: 1.5;
+    display: flex; gap: 8px;
+  }
+  .cu-card .err-banner svg { width: 14px; height: 14px; flex-shrink: 0; margin-top: 1px; }
+  .cu-card .err-banner b { color: var(--text-1); font-weight: 600; display: block; margin-bottom: 2px; }
+  .cu-card .retry { margin-top: 12px; width: 100%; height: 36px; background: var(--surface-2); border: 1px solid var(--border-default); border-radius: var(--radius-sm); font-weight: 600; font-size: 12.5px; color: var(--text-1); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
+  .cu-card .retry:hover { background: var(--surface-3); border-color: var(--border-strong); }
+  .cu-card .retry svg { width: 13px; height: 13px; }
+
+  /* Client view banner */
+  .client-view-banner {
+    margin-bottom: 18px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    padding: 12px 18px;
+    display: flex; align-items: center; gap: 12px;
+    font-size: 12.5px;
+    color: var(--text-2);
+  }
+  .client-view-banner .ic { width: 28px; height: 28px; border-radius: 7px; background: var(--surface-3); color: var(--info); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .client-view-banner .ic svg { width: 14px; height: 14px; }
+  .client-view-banner b { color: var(--text-1); font-weight: 600; }
+  .client-view-banner .preview-link { margin-left: auto; color: var(--info); font-weight: 600; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
+  .client-view-banner .preview-link svg { width: 11px; height: 11px; }
+
+  /* Stack helper */
+  .stack { display: flex; flex-direction: column; gap: 20px; }
+
+</style>
+</head>
+<body>
+
+<div class="app" data-screen-label="Project Detail">
+
+  <!-- =================== SIDEBAR =================== -->
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="mark">L</span>
+      <span class="name">Linknbit</span>
+      <span class="workspace" title="Switch workspace">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 13 12 18 17 13"/><polyline points="7 6 12 11 17 6"/></svg>
+      </span>
+    </div>
+
+    <div class="group-label">Workspace</div>
+    <div class="nav-item">
+      <svg class="ico" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+      <span>Dashboard</span>
+    </div>
+    <div class="nav-item active">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span>Projects</span>
+      <span class="count">18</span>
+    </div>
+    <div class="nav-item">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+      <span>Clients</span>
+    </div>
+    <div class="nav-item">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span>Teams</span>
+    </div>
+    <div class="nav-item">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      <span>Tasks</span>
+      <span class="count">7</span>
+    </div>
+
+    <div class="group-label">Insights</div>
+    <div class="nav-item">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <span>Reports</span>
+    </div>
+    <div class="nav-item">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+      <span>Gamification</span>
+    </div>
+    <div class="nav-item">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+      <span>ClickUp sync</span>
+      <span class="count">1</span>
+    </div>
+
+    <div class="group-label">Account</div>
+    <div class="nav-item">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span>Settings</span>
+    </div>
+
+    <div class="user-pill">
+      <span class="av">AK</span>
+      <div class="who">
+        <div class="nm">Ahmad Karimi</div>
+        <div class="rl">Admin · Ops</div>
+      </div>
+      <span class="more">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+      </span>
+    </div>
+  </aside>
+
+
+  <!-- =================== MAIN =================== -->
+  <div class="main">
+
+    <header class="topbar">
+      <div class="crumbs">
+        <a href="Projects.html">Projects</a>
+        <span class="sep">/</span>
+        <h1>Cricket Sansar App</h1>
+        <span class="id">CU-8472</span>
+      </div>
+
+      <!-- Role / view toggle: Internal vs Client view -->
+      <div class="role-toggle" title="Toggle stripped-down client view">
+        <button class="on" title="Internal view"><span class="dot"></span>Internal</button>
+        <button title="Preview client-facing view"><span class="dot" style="color: var(--service-mkt);"></span>Client view</button>
+      </div>
+
+      <div class="actions">
+        <button class="sync-pill" title="ClickUp sync error">
+          <span class="ck-glyph">CU</span>
+          <span class="meta">
+            <span class="l1">Sync error</span>
+            <span class="l2">3 hrs ago</span>
+          </span>
+          <span class="ico">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </span>
+        </button>
+
+        <button class="tbtn ghost">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Edit project
+        </button>
+        <button class="tbtn danger">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="4" rx="1"/><path d="M5 7v13a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V7"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+          Archive
+        </button>
+      </div>
+    </header>
+
+
+    <main class="content">
+
+      <!-- =================== LEFT COLUMN =================== -->
+      <div class="stack">
+
+        <!-- 1. PROJECT HEADER -->
+        <section class="project-header">
+          <div class="ph-top">
+            <div class="ph-name-block">
+              <div class="ph-headline-tile">CS</div>
+              <div style="min-width: 0;">
+                <h2 class="ph-name">Cricket Sansar App</h2>
+                <div class="ph-sub">
+                  <a href="#">Cricket Sansar</a>
+                  <span class="sep">·</span>
+                  <span>External client</span>
+                  <span class="sep">·</span>
+                  <span style="font-family: var(--font-mono); font-size: 11px; color: var(--text-4); letter-spacing: 0.04em;">Mobile app · iOS &amp; Android</span>
+                </div>
+              </div>
+            </div>
+            <div class="ph-status">
+              <div class="chip-row">
+                <span class="chip svc-dev"><span class="dot"></span>Development</span>
+                <span class="chip st-blocked"><span class="dot"></span>Blocked · 1d 6h</span>
+              </div>
+              <div style="font-family: var(--font-mono); font-size: 10.5px; color: var(--text-3); letter-spacing: 0.04em;">Started Feb 04, 2026 · 14 weeks in</div>
+            </div>
+          </div>
+
+          <div class="ph-meta">
+            <div class="cell">
+              <div class="lbl">Project manager</div>
+              <div class="val"><span class="av sm ak">AK</span>Ahmad Karimi</div>
+            </div>
+            <div class="cell">
+              <div class="lbl">Deadline</div>
+              <div class="val crit">May 15, 2026 <span class="small">3 days</span></div>
+            </div>
+            <div class="cell">
+              <div class="lbl">Budget</div>
+              <div class="val">PKR 850,000 <span class="small">68% used</span></div>
+            </div>
+            <div class="cell">
+              <div class="lbl">Service</div>
+              <div class="val">Development <span class="small">9 stages</span></div>
+            </div>
+            <div class="cell">
+              <div class="lbl">Team</div>
+              <div class="val">
+                <div style="display: inline-flex;">
+                  <span class="av xs ak" style="border: 2px solid var(--surface-1);">AK</span>
+                  <span class="av xs ut" style="border: 2px solid var(--surface-1); margin-left: -6px;">UT</span>
+                  <span class="av xs ba" style="border: 2px solid var(--surface-1); margin-left: -6px;">BA</span>
+                </div>
+                <span class="small">3 members</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="ph-note">
+            <span class="lk-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              Internal note
+            </span>
+            <span class="nt-text">Client delayed UAT sign-off. Following up <b>Friday</b>.</span>
+            <span class="nt-author">— AK · 2h ago</span>
+            <span class="nt-edit" title="Edit note">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </span>
+          </div>
+        </section>
+
+
+        <!-- 2. STAGE PIPELINE -->
+        <section class="card stage-pipeline">
+          <div class="head">
+            <span class="ttl">Stage pipeline</span>
+            <span class="pill" style="font-family: var(--font-mono); font-size: 10.5px; color: var(--text-3); padding: 2px 8px; background: var(--surface-2); border-radius: 999px; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 500;">Development · 9 stages</span>
+            <div class="progress-summary">
+              <span><b>4</b> done · <b>1</b> blocked · <b>4</b> upcoming</span>
+              <div class="pct-bar"><div class="fill"></div></div>
+              <span><b>44%</b></span>
+            </div>
+          </div>
+
+          <div class="stepper">
+            <!-- Connected green progress segment over completed steps (stages 1-4) -->
+            <div class="seg" style="left: calc(100% / 18); right: calc(100% - (100% / 18 * 9)); background: var(--success);"></div>
+
+            <div class="step done">
+              <span class="puck">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </span>
+              <span class="label">
+                <span class="n">01 · Done</span>
+                <span class="nm">Requirement Finalization</span>
+              </span>
+            </div>
+            <div class="step done">
+              <span class="puck">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </span>
+              <span class="label">
+                <span class="n">02 · Done</span>
+                <span class="nm">Technical Planning</span>
+              </span>
+            </div>
+            <div class="step done">
+              <span class="puck">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </span>
+              <span class="label">
+                <span class="n">03 · Done</span>
+                <span class="nm">Setup &amp; Architecture</span>
+              </span>
+            </div>
+            <div class="step done">
+              <span class="puck">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </span>
+              <span class="label">
+                <span class="n">04 · Done</span>
+                <span class="nm">Development</span>
+              </span>
+            </div>
+            <div class="step current blocked">
+              <span class="puck">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              </span>
+              <span class="label">
+                <span class="n">05 · Blocked</span>
+                <span class="nm">Internal QA</span>
+              </span>
+            </div>
+            <div class="step upcoming">
+              <span class="puck">06</span>
+              <span class="label">
+                <span class="n">Upcoming</span>
+                <span class="nm">Client Testing / UAT</span>
+              </span>
+            </div>
+            <div class="step upcoming">
+              <span class="puck">07</span>
+              <span class="label">
+                <span class="n">Upcoming</span>
+                <span class="nm">Bug Fixing</span>
+              </span>
+            </div>
+            <div class="step upcoming">
+              <span class="puck">08</span>
+              <span class="label">
+                <span class="n">Upcoming</span>
+                <span class="nm">Deployment</span>
+              </span>
+            </div>
+            <div class="step upcoming">
+              <span class="puck">09</span>
+              <span class="label">
+                <span class="n">Upcoming</span>
+                <span class="nm">Support</span>
+              </span>
+            </div>
+          </div>
+
+          <div class="stage-detail">
+            <span class="ic">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </span>
+            <div class="txt">
+              <div class="ttl">Internal QA — blocked <span class="blocker-tag">Blocker · CU-8472-103</span></div>
+              <div class="sub">QA paused on critical <b>pagination bug in fixtures endpoint</b>. Backend fix in review · 1 of 5 tasks blocking stage approval.</div>
+            </div>
+            <span class="meta">Stage opened Apr 28 · 14d active</span>
+          </div>
+        </section>
+
+
+        <!-- 3. TASK LIST -->
+        <section class="card">
+          <div class="task-toolbar">
+            <span class="ttl">
+              Tasks
+              <span class="stage-marker"><span class="dot"></span>Stage 05 · Internal QA</span>
+            </span>
+            <span class="count-pill">5 tasks</span>
+            <div class="right">
+              <button class="filter">All assignees <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>
+              <button class="filter">Status: All <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>
+              <button class="filter">Sort: Priority <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>
+            </div>
+          </div>
+
+          <div class="ttable">
+            <div class="h">Task</div>
+            <div class="h">Assignee</div>
+            <div class="h">Status</div>
+            <div class="h">Priority</div>
+            <div class="h">Due</div>
+            <div class="h">XP</div>
+            <div class="h">Meta</div>
+
+            <!-- Task 1 — In progress -->
+            <div class="trow">
+              <div class="c">
+                <div class="t-title">
+                  <span class="nm">Write test cases for match scores API <span class="id">CU-8472-101</span></span>
+                  <span class="sub">QA · API test coverage</span>
+                </div>
+              </div>
+              <div class="c"><div class="assignee"><span class="av sm ak">AK</span><span class="nm">Ahmad K.</span></div></div>
+              <div class="c"><span class="chip st-progress"><span class="dot"></span>In Progress</span></div>
+              <div class="c"><span class="chip pr-high"><span class="dot"></span>High</span></div>
+              <div class="c"><div class="t-due warn">May 13<span class="when">Tomorrow</span></div></div>
+              <div class="c"><span class="xp-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>120</span></div>
+              <div class="c"><div class="meta-icons">
+                <span class="vis-ico client-hidden" title="Hidden from client">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                </span>
+                <span class="vis-ico sync-ok" title="ClickUp synced">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </span>
+                <span class="vis-ico open-btn" title="Open task">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg>
+                </span>
+              </div></div>
+            </div>
+
+            <!-- Task 2 — In Review -->
+            <div class="trow">
+              <div class="c">
+                <div class="t-title">
+                  <span class="nm">QA: Player statistics endpoint <span class="id">CU-8472-102</span></span>
+                  <span class="sub">Validation · 3 of 8 cases failing</span>
+                </div>
+              </div>
+              <div class="c"><div class="assignee"><span class="av sm ut">UT</span><span class="nm">Usman T.</span></div></div>
+              <div class="c"><span class="chip st-review"><span class="dot"></span>Review</span></div>
+              <div class="c"><span class="chip pr-high"><span class="dot"></span>High</span></div>
+              <div class="c"><div class="t-due warn">May 13<span class="when">Tomorrow</span></div></div>
+              <div class="c"><span class="xp-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>100</span></div>
+              <div class="c"><div class="meta-icons">
+                <span class="vis-ico client-hidden" title="Hidden from client">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                </span>
+                <span class="vis-ico sync-ok" title="ClickUp synced">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </span>
+                <span class="vis-ico open-btn" title="Open task">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg>
+                </span>
+              </div></div>
+            </div>
+
+            <!-- Task 3 — Blocked / critical -->
+            <div class="trow blocked">
+              <div class="c">
+                <div class="t-title">
+                  <span class="nm">Fix pagination bug on fixtures list <span class="id">CU-8472-103</span></span>
+                  <span class="sub crit">Stage blocker · waiting on backend</span>
+                </div>
+              </div>
+              <div class="c"><div class="assignee"><span class="av sm ak">AK</span><span class="nm">Ahmad K.</span></div></div>
+              <div class="c"><span class="chip st-blocked"><span class="dot"></span>Blocked</span></div>
+              <div class="c"><span class="chip pr-crit"><span class="dot"></span>Critical</span></div>
+              <div class="c"><div class="t-due crit">May 12<span class="when">Today</span></div></div>
+              <div class="c"><span class="xp-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>150</span></div>
+              <div class="c"><div class="meta-icons">
+                <span class="vis-ico client-hidden" title="Hidden from client">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                </span>
+                <span class="vis-ico sync-err" title="ClickUp sync failed">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                </span>
+                <span class="vis-ico open-btn" title="Open task">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg>
+                </span>
+              </div></div>
+            </div>
+
+            <!-- Task 4 — To Do -->
+            <div class="trow">
+              <div class="c">
+                <div class="t-title">
+                  <span class="nm">Performance test: live score updates <span class="id">CU-8472-104</span></span>
+                  <span class="sub">Load · 500 concurrent users</span>
+                </div>
+              </div>
+              <div class="c"><div class="assignee"><span class="av sm ut">UT</span><span class="nm">Usman T.</span></div></div>
+              <div class="c"><span class="chip st-todo"><span class="dot"></span>To Do</span></div>
+              <div class="c"><span class="chip pr-med"><span class="dot"></span>Medium</span></div>
+              <div class="c"><div class="t-due">May 14<span class="when">2 days</span></div></div>
+              <div class="c"><span class="xp-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>80</span></div>
+              <div class="c"><div class="meta-icons">
+                <span class="vis-ico client-hidden" title="Hidden from client">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                </span>
+                <span class="vis-ico sync-ok" title="ClickUp synced">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </span>
+                <span class="vis-ico open-btn" title="Open task">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg>
+                </span>
+              </div></div>
+            </div>
+
+            <!-- Task 5 — To Do · client visible -->
+            <div class="trow">
+              <div class="c">
+                <div class="t-title">
+                  <span class="nm">Document API response schemas <span class="id">CU-8472-105</span></span>
+                  <span class="sub">Deliverable · shared with client</span>
+                </div>
+              </div>
+              <div class="c"><div class="assignee"><span class="av sm ba">BA</span><span class="nm">Bilal A.</span></div></div>
+              <div class="c"><span class="chip st-todo"><span class="dot"></span>To Do</span></div>
+              <div class="c"><span class="chip pr-low"><span class="dot"></span>Low</span></div>
+              <div class="c"><div class="t-due">May 15<span class="when">3 days</span></div></div>
+              <div class="c"><span class="xp-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>60</span></div>
+              <div class="c"><div class="meta-icons">
+                <span class="vis-ico client-visible" title="Visible to client">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </span>
+                <span class="vis-ico sync-pend" title="ClickUp sync pending">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </span>
+                <span class="vis-ico open-btn" title="Open task">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg>
+                </span>
+              </div></div>
+            </div>
+          </div>
+
+          <div class="add-task-row">
+            <button class="add-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+              Add task
+            </button>
+            <span class="hint">Tip: press <kbd>T</kbd> to quick-add · <kbd>⌘</kbd>+<kbd>Enter</kbd> to save</span>
+          </div>
+        </section>
+
+
+        <!-- 4. STAGE APPROVAL BAR -->
+        <section class="approval-bar">
+          <span class="ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </span>
+          <div class="body">
+            <div class="ttl">
+              Internal QA stage is ready for review.
+              <span class="pending-tag">Pending approval</span>
+            </div>
+            <div class="sub">
+              <b>4 of 5 tasks complete</b> · 1 blocker open (CU-8472-103). Approving will move the project to Client Testing / UAT and notify <b>Cricket Sansar</b>.
+            </div>
+          </div>
+          <div class="actions">
+            <button class="revise">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9"/><polyline points="3 3 3 12 12 12"/></svg>
+              Request revision
+            </button>
+            <button class="approve">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Approve stage
+            </button>
+          </div>
+        </section>
+
+      </div>
+
+
+      <!-- =================== RIGHT PANEL =================== -->
+      <aside class="right-panel">
+
+        <!-- Client view notice -->
+        <div class="client-view-banner">
+          <span class="ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </span>
+          <div>
+            <b>Client sees a stripped view.</b><br>
+            <span style="font-family: var(--font-mono); font-size: 10.5px; color: var(--text-3); letter-spacing: 0.04em;">3 of 12 internal items hidden</span>
+          </div>
+          <span class="preview-link">
+            Preview
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg>
+          </span>
+        </div>
+
+
+        <!-- TEAM -->
+        <section class="card">
+          <div class="card-head">
+            <span class="ttl">Project team</span>
+            <span class="pill">3 members</span>
+            <button class="add">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+              Assign
+            </button>
+          </div>
+          <div>
+            <div class="team-row">
+              <span class="av lg ak">AK</span>
+              <div class="info">
+                <div class="nm">Ahmad Karimi <span class="role-pill pm">PM</span></div>
+                <div class="role">Project Manager · Dev pod</div>
+              </div>
+              <div class="workload high">
+                <div class="bar"><div class="fill"></div></div>
+                <span class="lbl">88% load</span>
+              </div>
+            </div>
+            <div class="team-row">
+              <span class="av lg ut">UT</span>
+              <div class="info">
+                <div class="nm">Usman Tariq <span class="role-pill dev">DEV</span></div>
+                <div class="role">Senior Developer · Backend</div>
+              </div>
+              <div class="workload crit">
+                <div class="bar"><div class="fill"></div></div>
+                <span class="lbl">96% load</span>
+              </div>
+            </div>
+            <div class="team-row">
+              <span class="av lg ba">BA</span>
+              <div class="info">
+                <div class="nm">Bilal Ahmed <span class="role-pill dev">DEV</span></div>
+                <div class="role">Developer · Mobile</div>
+              </div>
+              <div class="workload ok">
+                <div class="bar"><div class="fill"></div></div>
+                <span class="lbl">65% load</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+
+        <!-- UPCOMING DEADLINES -->
+        <section class="card">
+          <div class="card-head">
+            <span class="ttl">Upcoming deadlines</span>
+            <span class="pill">Next 3</span>
+            <span class="more">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+            </span>
+          </div>
+          <div>
+            <div class="ddl-row crit">
+              <div class="date-tile"><span class="m">MAY</span><span class="d">12</span></div>
+              <div class="body">
+                <div class="tk">Fix pagination bug on fixtures list</div>
+                <div class="by"><span class="av xs ak" style="width: 14px; height: 14px; font-size: 7px;">AK</span> Ahmad K. · <span style="color: var(--error); font-weight: 600;">Today</span></div>
+              </div>
+            </div>
+            <div class="ddl-row">
+              <div class="date-tile"><span class="m">MAY</span><span class="d">13</span></div>
+              <div class="body">
+                <div class="tk">Write test cases for match scores API</div>
+                <div class="by"><span class="av xs ak" style="width: 14px; height: 14px; font-size: 7px;">AK</span> Ahmad K. · Tomorrow</div>
+              </div>
+            </div>
+            <div class="ddl-row">
+              <div class="date-tile"><span class="m">MAY</span><span class="d">13</span></div>
+              <div class="body">
+                <div class="tk">QA: Player statistics endpoint</div>
+                <div class="by"><span class="av xs ut" style="width: 14px; height: 14px; font-size: 7px;">UT</span> Usman T. · Tomorrow</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+
+        <!-- FILES & DELIVERABLES -->
+        <section class="card">
+          <div class="card-head">
+            <span class="ttl">Files &amp; deliverables</span>
+            <span class="pill">3 files</span>
+            <button class="add">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Upload
+            </button>
+          </div>
+          <div>
+            <div class="file-row">
+              <span class="ftile pdf">PDF</span>
+              <div class="body">
+                <div class="nm">API_Schema_v2.pdf</div>
+                <div class="meta">Ahmad Karimi · 2 days ago · 1.2 MB</div>
+              </div>
+              <button class="vis-toggle" title="Toggle client visibility">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                Internal
+              </button>
+            </div>
+            <div class="file-row">
+              <span class="ftile img">PNG</span>
+              <div class="body">
+                <div class="nm">DB_Structure.png</div>
+                <div class="meta">Usman Tariq · 4 days ago · 384 KB</div>
+              </div>
+              <button class="vis-toggle" title="Toggle client visibility">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                Internal
+              </button>
+            </div>
+            <div class="file-row">
+              <span class="ftile pdf">PDF</span>
+              <div class="body">
+                <div class="nm">Project_Brief.pdf <span style="font-family: var(--font-mono); font-size: 9.5px; color: var(--service-mkt); margin-left: 4px; letter-spacing: 0.04em;">CLIENT</span></div>
+                <div class="meta">Cricket Sansar · 1 week ago · 2.4 MB</div>
+              </div>
+              <button class="vis-toggle client-visible" title="Visible to client">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                Shared
+              </button>
+            </div>
+          </div>
+        </section>
+
+
+        <!-- CLICKUP SYNC PANEL -->
+        <section class="card cu-card">
+          <div class="cu-head">
+            <span class="cu-ico">CU</span>
+            <div class="folder">
+              <div class="lbl">ClickUp folder</div>
+              <div class="nm">Cricket Sansar App</div>
+            </div>
+            <span class="chip st-blocked"><span class="dot"></span>Error</span>
+          </div>
+
+          <div class="row"><span class="k">List ID</span><span class="v">901801472</span></div>
+          <div class="row"><span class="k">Last sync</span><span class="v">May 12 · 06:42</span></div>
+          <div class="row"><span class="k">Status</span><span class="v err">Failed · 3 hrs ago</span></div>
+          <div class="row"><span class="k">Tasks tracked</span><span class="v">23 of 24</span></div>
+
+          <div class="err-banner">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span>
+              <b>Webhook timeout on CU-8472-103</b>
+              ClickUp returned 504 while syncing the blocked task. Retry below or check the workspace token.
+            </span>
+          </div>
+
+          <button class="retry">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+            Retry sync
+          </button>
+        </section>
+
+      </aside>
+    </main>
+  </div>
+</div>
+
+<script>
+  // Role toggle interactivity (visual only — Internal vs Client view)
+  const tog = document.querySelectorAll('.role-toggle button');
+  tog.forEach(b => b.addEventListener('click', () => {
+    tog.forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+  }));
+</script>
+
+</body>
+</html>

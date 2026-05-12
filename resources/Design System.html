@@ -1,0 +1,2328 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Linknbit Operations Portal — Design System</title>
+<link rel="stylesheet" href="tokens.css">
+<style>
+  html, body { margin: 0; padding: 0; background: var(--bg-base); color: var(--text-1); font-family: var(--font-ui); }
+  * { box-sizing: border-box; }
+
+  /* ===== Page chrome ===== */
+  .page { max-width: 1440px; margin: 0 auto; padding: 56px 64px 120px; }
+
+  /* ===== Cover ===== */
+  .cover {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 48px;
+    align-items: end;
+    padding-bottom: 40px;
+    border-bottom: 1px solid var(--border-subtle);
+    margin-bottom: 56px;
+    position: relative;
+  }
+  .cover::before {
+    content: "";
+    position: absolute;
+    top: -120px; left: -80px;
+    width: 520px; height: 520px;
+    background: radial-gradient(circle at center, rgba(238, 39, 55, 0.10) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .cover > * { position: relative; z-index: 1; }
+  .cover .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .cover .eyebrow .pip { width: 6px; height: 6px; background: var(--brand-red); border-radius: 2px; }
+  .cover h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 64px;
+    line-height: 0.95;
+    letter-spacing: -0.025em;
+    margin: 0 0 18px;
+    color: var(--text-1);
+  }
+  .cover h1 .red { color: var(--brand-red); }
+  .cover .sub {
+    font-family: var(--font-ui);
+    font-size: 17px;
+    line-height: 1.55;
+    color: var(--text-2);
+    max-width: 600px;
+  }
+  .cover .meta {
+    display: grid;
+    grid-template-columns: auto auto auto;
+    gap: 24px 40px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-3);
+    text-align: right;
+  }
+  .cover .meta strong {
+    display: block;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-1);
+    letter-spacing: -0.005em;
+    text-transform: none;
+    margin-top: 4px;
+  }
+  .cover .logo-mark {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+  .cover .logo-mark img { height: 36px; display: block; }
+
+  /* ===== Section ===== */
+  .section { margin-bottom: 88px; }
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 20px;
+    padding-bottom: 20px;
+    margin-bottom: 28px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .section-head .num {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--brand-red);
+    letter-spacing: 0.1em;
+  }
+  .section-head h2 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 32px;
+    letter-spacing: -0.015em;
+    margin: 0;
+    color: var(--text-1);
+  }
+  .section-head .lede {
+    margin-left: auto;
+    font-family: var(--font-ui);
+    font-size: 13px;
+    color: var(--text-3);
+    max-width: 360px;
+    text-align: right;
+    line-height: 1.5;
+  }
+
+  .subsection { margin-bottom: 44px; }
+  .subsection-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .subsection-title h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 17px;
+    margin: 0;
+    color: var(--text-1);
+    letter-spacing: -0.005em;
+  }
+  .subsection-title .rule {
+    flex: 1;
+    height: 1px;
+    background: var(--border-subtle);
+  }
+  .subsection-title .count {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-4);
+    letter-spacing: 0.06em;
+  }
+
+  /* ===== Color swatches ===== */
+  .swatch-grid {
+    display: grid;
+    gap: 14px;
+  }
+  .swatch-grid.cols-6 { grid-template-columns: repeat(6, 1fr); }
+  .swatch-grid.cols-5 { grid-template-columns: repeat(5, 1fr); }
+  .swatch-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+  .swatch-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+
+  .swatch {
+    background: var(--surface-1);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .swatch .chip {
+    height: 88px;
+    width: 100%;
+    border-bottom: 1px solid var(--border-subtle);
+    position: relative;
+  }
+  .swatch .body {
+    padding: 12px 14px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .swatch .name {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text-1);
+    letter-spacing: -0.005em;
+  }
+  .swatch .token {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--text-3);
+    letter-spacing: 0.02em;
+  }
+  .swatch .hex {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--text-2);
+    margin-top: 2px;
+    letter-spacing: 0.02em;
+  }
+  .swatch .desc {
+    font-family: var(--font-ui);
+    font-size: 11.5px;
+    color: var(--text-3);
+    margin-top: 6px;
+    line-height: 1.4;
+  }
+
+  /* Surface stack swatch — shows nested elevation */
+  .stack-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: stretch;
+  }
+  .stack-demo {
+    background: var(--bg-base);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .stack-demo .layer {
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-2);
+    letter-spacing: 0.04em;
+    display: flex;
+    justify-content: space-between;
+    border: 1px solid var(--border-subtle);
+  }
+  .stack-demo .layer .h {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 12px;
+    color: var(--text-1);
+  }
+
+  /* Text hierarchy demo */
+  .text-stack {
+    background: var(--surface-1);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    padding: 24px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .text-stack .row {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 24px;
+    align-items: baseline;
+    padding-bottom: 14px;
+    border-bottom: 1px dashed var(--border-subtle);
+  }
+  .text-stack .row:last-child { border-bottom: none; padding-bottom: 0; }
+  .text-stack .row .meta {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--text-3);
+    letter-spacing: 0.05em;
+    line-height: 1.5;
+  }
+  .text-stack .row .meta strong {
+    display: block;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 12px;
+    color: var(--text-2);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 4px;
+  }
+
+  /* Typography scale */
+  .type-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    background: var(--surface-1);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+  .type-row {
+    display: grid;
+    grid-template-columns: 200px 1fr 220px;
+    gap: 32px;
+    padding: 24px 28px;
+    align-items: center;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .type-row:last-child { border-bottom: none; }
+  .type-row .label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .type-row .label .name {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text-1);
+    letter-spacing: -0.005em;
+  }
+  .type-row .label .token {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--text-3);
+  }
+  .type-row .sample { color: var(--text-1); }
+  .type-row .specs {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--text-3);
+    letter-spacing: 0.04em;
+    text-align: right;
+    line-height: 1.7;
+  }
+  .type-row .specs .fam { color: var(--text-2); }
+
+  /* Spacing */
+  .spacing-card {
+    background: var(--surface-1);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    padding: 28px;
+  }
+  .spacing-row {
+    display: grid;
+    grid-template-columns: 60px 80px 1fr;
+    gap: 20px;
+    align-items: center;
+    padding: 8px 0;
+  }
+  .spacing-row .tok { font-family: var(--font-mono); font-size: 11.5px; color: var(--text-2); }
+  .spacing-row .px { font-family: var(--font-mono); font-size: 11.5px; color: var(--text-3); }
+  .spacing-row .bar { height: 14px; background: var(--brand-red); border-radius: 2px; }
+
+  /* Radii */
+  .radii-row {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 16px;
+  }
+  .radii-cell {
+    background: var(--surface-1);
+    border: 1px solid var(--border-default);
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+    border-radius: var(--radius-md);
+  }
+  .radii-cell .shape {
+    width: 80px;
+    height: 60px;
+    background: var(--surface-3);
+    border: 1px solid var(--border-strong);
+  }
+  .radii-cell .lbl {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .radii-cell .lbl .name { font-family: var(--font-display); font-weight: 600; font-size: 13px; color: var(--text-1); }
+  .radii-cell .lbl .tok  { font-family: var(--font-mono); font-size: 10.5px; color: var(--text-3); }
+
+  /* Shadows */
+  .shadow-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+  }
+  .shadow-cell {
+    background: var(--surface-1);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    padding: 32px 18px 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+  .shadow-cell .surface {
+    width: 100%;
+    height: 64px;
+    background: var(--surface-2);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-default);
+  }
+  .shadow-cell.sm .surface { box-shadow: var(--shadow-sm); }
+  .shadow-cell.md .surface { box-shadow: var(--shadow-md); }
+  .shadow-cell.lg .surface { box-shadow: var(--shadow-lg); }
+  .shadow-cell.pop .surface { box-shadow: var(--shadow-pop); }
+  .shadow-cell .lbl {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    align-items: center;
+    text-align: center;
+  }
+  .shadow-cell .lbl .name { font-family: var(--font-display); font-weight: 600; font-size: 13px; color: var(--text-1); }
+  .shadow-cell .lbl .tok { font-family: var(--font-mono); font-size: 10.5px; color: var(--text-3); }
+
+  /* ===== Component blocks ===== */
+  .block {
+    background: var(--surface-1);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    padding: 32px;
+  }
+  .block-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .block-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+
+  /* Buttons */
+  .btn-table {
+    display: grid;
+    grid-template-columns: 110px repeat(4, 1fr);
+    gap: 16px 18px;
+    align-items: center;
+  }
+  .btn-table .colhead {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .btn-table .rowlbl {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-2);
+    letter-spacing: 0.04em;
+  }
+  .btn {
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 9px 16px;
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    line-height: 1;
+    white-space: nowrap;
+    transition: background 120ms cubic-bezier(0.2,0.8,0.2,1);
+  }
+  .btn .ico-s { width: 14px; height: 14px; }
+
+  .btn.primary { background: var(--brand-red); color: #fff; }
+  .btn.primary.hover { background: var(--brand-red-hover); }
+  .btn.primary.active { background: var(--brand-red-press); transform: translateY(0.5px); }
+  .btn.primary.disabled { background: #5a1a20; color: #9a727a; cursor: not-allowed; }
+
+  .btn.secondary { background: var(--surface-2); color: var(--text-1); border-color: var(--border-default); }
+  .btn.secondary.hover { background: var(--surface-3); border-color: var(--border-strong); }
+  .btn.secondary.active { background: var(--surface-1); border-color: var(--border-strong); transform: translateY(0.5px); }
+  .btn.secondary.disabled { background: var(--surface-1); color: var(--text-4); border-color: var(--border-subtle); cursor: not-allowed; }
+
+  .btn.ghost { background: transparent; color: var(--text-2); }
+  .btn.ghost.hover { background: var(--surface-2); color: var(--text-1); }
+  .btn.ghost.active { background: var(--surface-3); color: var(--text-1); transform: translateY(0.5px); }
+  .btn.ghost.disabled { color: var(--text-4); cursor: not-allowed; }
+
+  .btn.danger { background: transparent; color: var(--error); border-color: var(--error-border); }
+  .btn.danger.hover { background: var(--error-soft); border-color: var(--error); }
+  .btn.danger.active { background: var(--error-soft); border-color: var(--error); transform: translateY(0.5px); }
+  .btn.danger.disabled { color: #5a2730; border-color: #5a2730; cursor: not-allowed; }
+
+  /* Inputs */
+  .input-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px 32px;
+  }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field-label {
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 11.5px;
+    color: var(--text-2);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .input {
+    background: var(--surface-inset);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-family: var(--font-ui);
+    font-size: 13.5px;
+    color: var(--text-1);
+    outline: none;
+    transition: border-color 120ms;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .input.focused { border-color: var(--border-strong); box-shadow: var(--ring-focus); }
+  .input.error { border-color: var(--error); box-shadow: 0 0 0 3px var(--error-soft); }
+  .input.disabled { color: var(--text-4); background: var(--surface-1); }
+  .input input { background: transparent; border: 0; outline: none; flex: 1; color: inherit; font: inherit; min-width: 0; }
+  .input input::placeholder { color: var(--text-3); }
+  .input .ico { width: 16px; height: 16px; color: var(--text-3); flex-shrink: 0; }
+  .field-help {
+    font-family: var(--font-ui);
+    font-size: 11.5px;
+    color: var(--text-3);
+  }
+  .field-help.error { color: var(--error); }
+
+  /* Badges & chips */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 9px;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 10.5px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    line-height: 1.4;
+    white-space: nowrap;
+    border: 1px solid transparent;
+  }
+  .chip .dot { width: 5px; height: 5px; border-radius: 999px; background: currentColor; flex-shrink: 0; }
+
+  /* Service chips */
+  .chip.svc-design { background: var(--service-design-soft); color: var(--service-design); }
+  .chip.svc-dev    { background: var(--service-dev-soft);    color: var(--service-dev); }
+  .chip.svc-mkt    { background: var(--service-mkt-soft);    color: var(--service-mkt); }
+
+  /* Status chips */
+  .chip.st-on-track { background: var(--success-soft); color: var(--success); border-color: var(--success-border); }
+  .chip.st-pending  { background: var(--warning-soft); color: var(--warning); border-color: var(--warning-border); }
+  .chip.st-blocked  { background: var(--error-soft);   color: var(--error);   border-color: var(--error-border); }
+  .chip.st-review   { background: var(--info-soft);    color: var(--info);    border-color: var(--info-border); }
+  .chip.st-draft    { background: var(--surface-3);    color: var(--text-2);  border-color: var(--border-default); }
+
+  /* Priority chips */
+  .chip.pr-p0 { background: #F4364C22; color: #F4364C; border-color: #F4364C55; }
+  .chip.pr-p1 { background: #F59E0B22; color: #FBBF24; border-color: #F59E0B55; }
+  .chip.pr-p2 { background: #3B82F622; color: #60A5FA; border-color: #3B82F655; }
+  .chip.pr-p3 { background: var(--surface-3); color: var(--text-3); border-color: var(--border-default); }
+
+  /* Role badges */
+  .role-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 4px 10px 4px 4px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
+    border: 1px solid var(--border-default);
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 11.5px;
+    color: var(--text-1);
+    white-space: nowrap;
+  }
+  .role-badge .puck {
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .role-badge .puck svg { width: 12px; height: 12px; }
+  .role-badge.r-super-admin .puck   { background: var(--role-super-admin); }
+  .role-badge.r-admin .puck         { background: var(--role-admin); }
+  .role-badge.r-pm .puck            { background: var(--role-pm); }
+  .role-badge.r-lead .puck          { background: var(--role-lead); color: #0B1018; }
+  .role-badge.r-employee .puck      { background: var(--role-employee); color: #0B1018; }
+  .role-badge.r-client .puck        { background: var(--role-client); color: #0B1018; }
+  .role-badge.r-client-member .puck { background: var(--role-client-member); color: #0B1018; }
+
+  .chip-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+  }
+
+  /* Avatars */
+  .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    background: var(--surface-3);
+    color: #fff;
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .avatar.sm { width: 24px; height: 24px; font-size: 10.5px; }
+  .avatar.lg { width: 40px; height: 40px; font-size: 14px; }
+  .avatar.role-pm { background: linear-gradient(135deg, #A78BFA, #8B5CF6); }
+  .avatar.role-lead { background: linear-gradient(135deg, #22D3EE, #06B6D4); color: #04212a; }
+  .avatar.role-employee { background: linear-gradient(135deg, #B5C0CF, #7A8597); color: #0B1018; }
+  .avatar.role-client { background: linear-gradient(135deg, #FBBF24, #F59E0B); color: #1A1306; }
+  .avatar.role-admin { background: linear-gradient(135deg, #F94454, #EE2737); }
+  .avatar .badge-role {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 12px;
+    height: 12px;
+    border-radius: 999px;
+    border: 2px solid var(--surface-1);
+  }
+  .avatar-combo {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .avatar-combo .name {
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text-1);
+    line-height: 1.2;
+  }
+  .avatar-combo .meta {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    color: var(--text-3);
+    line-height: 1.3;
+    margin-top: 2px;
+  }
+
+  .avatar-stack {
+    display: inline-flex;
+  }
+  .avatar-stack .avatar {
+    border: 2px solid var(--surface-1);
+    margin-left: -8px;
+  }
+  .avatar-stack .avatar:first-child { margin-left: 0; }
+  .avatar-stack .more {
+    background: var(--surface-3);
+    color: var(--text-2);
+    font-size: 11px;
+  }
+
+  /* XP bar */
+  .xp-block {
+    background: var(--surface-1);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    padding: 20px 22px;
+  }
+  .xp-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .xp-head .lvl {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .xp-head .lvl .num {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 24px;
+    color: var(--text-1);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .xp-head .lvl .tag {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .xp-head .total {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-2);
+    font-variant-numeric: tabular-nums;
+  }
+  .xp-head .total .next { color: var(--text-3); }
+  .xp-track {
+    height: 8px;
+    border-radius: 999px;
+    background: var(--surface-inset);
+    overflow: hidden;
+    position: relative;
+  }
+  .xp-fill {
+    height: 100%;
+    width: 68%;
+    background: var(--xp-gradient);
+    border-radius: 999px;
+    position: relative;
+  }
+  .xp-foot {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+    font-family: var(--font-ui);
+    font-size: 11.5px;
+    color: var(--text-3);
+  }
+  .xp-foot .gain { color: var(--coin-gold); font-weight: 600; }
+
+  /* Notification pill */
+  .notif {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px 8px 8px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
+    border: 1px solid var(--border-default);
+    font-family: var(--font-ui);
+    font-size: 12.5px;
+    color: var(--text-2);
+    line-height: 1.4;
+    max-width: 100%;
+  }
+  .notif .bullet {
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    background: var(--brand-red);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-ui);
+    font-weight: 700;
+    font-size: 10.5px;
+    flex-shrink: 0;
+  }
+  .notif strong { color: var(--text-1); font-weight: 600; }
+  .notif .time { font-family: var(--font-mono); color: var(--text-3); font-size: 10.5px; margin-left: 4px; }
+  .notif.xp .bullet { background: var(--coin-gold); color: #1A1306; }
+  .notif.info .bullet { background: var(--info); }
+  .notif.success .bullet { background: var(--success); color: #062013; }
+
+  /* Sync indicators */
+  .sync {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--font-ui);
+    font-size: 11.5px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: var(--radius-pill);
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+  .sync .d { width: 6px; height: 6px; border-radius: 999px; }
+  .sync.synced  { color: var(--success); background: var(--success-soft); }
+  .sync.synced .d  { background: var(--success); box-shadow: 0 0 0 3px var(--success-soft); }
+  .sync.pending { color: var(--warning); background: var(--warning-soft); }
+  .sync.pending .d {
+    background: var(--warning);
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+  .sync.error   { color: var(--error); background: var(--error-soft); }
+  .sync.error .d   { background: var(--error); }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: 0.4; transform: scale(0.85); }
+  }
+  .sync .ck { font-family: var(--font-mono); color: inherit; opacity: 0.7; }
+
+  /* Sidebar mock */
+  .sidebar-block {
+    display: grid;
+    grid-template-columns: 248px 72px 1fr;
+    gap: 18px;
+    background: var(--bg-canvas);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    min-height: 580px;
+  }
+  .nav {
+    background: var(--surface-1);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    height: fit-content;
+  }
+  .nav .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 8px 14px;
+    border-bottom: 1px solid var(--border-subtle);
+    margin-bottom: 10px;
+  }
+  .nav .brand .mark {
+    width: 26px; height: 26px; border-radius: 5px;
+    background: var(--brand-red);
+    display: inline-flex; align-items: center; justify-content: center;
+    color: #fff;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 14px;
+  }
+  .nav .brand .name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--text-1);
+    letter-spacing: -0.01em;
+  }
+  .nav .group-label {
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 10px;
+    color: var(--text-4);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 12px 8px 6px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-ui);
+    font-size: 13px;
+    color: var(--text-2);
+    font-weight: 500;
+    cursor: pointer;
+    position: relative;
+  }
+  .nav-item .ico { width: 16px; height: 16px; flex-shrink: 0; color: var(--text-3); }
+  .nav-item:hover { background: var(--surface-2); color: var(--text-1); }
+  .nav-item:hover .ico { color: var(--text-1); }
+  .nav-item.active { background: rgba(238, 39, 55, 0.13); color: #fff; }
+  .nav-item.active .ico { color: var(--brand-red); }
+  .nav-item.active::before {
+    content: '';
+    position: absolute;
+    left: -14px;
+    top: 8px; bottom: 8px;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: var(--brand-red);
+  }
+  .nav-item .count {
+    margin-left: auto;
+    background: var(--brand-red);
+    color: #fff;
+    font-family: var(--font-ui);
+    font-weight: 700;
+    font-size: 10px;
+    padding: 1px 7px;
+    border-radius: 999px;
+    line-height: 1.4;
+  }
+  .nav-item .count.muted {
+    background: var(--surface-3);
+    color: var(--text-2);
+  }
+
+  .nav.collapsed { padding: 14px 12px; align-items: center; }
+  .nav.collapsed .brand { padding: 6px 0 14px; justify-content: center; width: 100%; border-bottom: 1px solid var(--border-subtle); margin-bottom: 10px; }
+  .nav.collapsed .nav-item {
+    width: 40px; height: 40px; padding: 0;
+    justify-content: center;
+    position: relative;
+  }
+  .nav.collapsed .nav-item .label { display: none; }
+  .nav.collapsed .nav-item .count {
+    position: absolute;
+    top: -2px; right: -2px;
+    margin: 0;
+    padding: 0;
+    min-width: 16px;
+    height: 16px;
+    font-size: 9px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .nav.collapsed .nav-item.active::before { display: none; }
+
+  .sidebar-note {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 24px;
+    background: var(--surface-1);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    height: fit-content;
+  }
+  .sidebar-note h4 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 15px;
+    margin: 0;
+    color: var(--text-1);
+  }
+  .sidebar-note p {
+    font-family: var(--font-ui);
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--text-2);
+    margin: 0;
+  }
+  .sidebar-note ul {
+    margin: 0;
+    padding-left: 18px;
+    font-family: var(--font-ui);
+    font-size: 12.5px;
+    line-height: 1.7;
+    color: var(--text-2);
+  }
+  .sidebar-note li::marker { color: var(--brand-red); }
+
+  /* Data table */
+  .table {
+    background: var(--surface-1);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+  .thead, .trow {
+    display: grid;
+    grid-template-columns: 1.8fr 110px 130px 130px 1fr 90px;
+    gap: 20px;
+    padding: 12px 22px;
+    align-items: center;
+  }
+  .thead {
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border-default);
+  }
+  .thead .h {
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 10.5px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .trow {
+    border-bottom: 1px solid var(--border-subtle);
+    font-family: var(--font-ui);
+    font-size: 13px;
+    color: var(--text-2);
+  }
+  .trow:last-child { border-bottom: none; }
+  .trow:hover { background: var(--surface-2); }
+  .trow .name { color: var(--text-1); font-weight: 500; display: flex; align-items: center; gap: 10px; }
+  .trow .id  { font-family: var(--font-mono); font-size: 11.5px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+  .trow .deadline { font-family: var(--font-mono); font-size: 12px; color: var(--text-2); font-variant-numeric: tabular-nums; }
+  .trow.row-selected { background: rgba(238, 39, 55, 0.06); }
+  .trow.row-selected::before { content: ""; }
+  .trow .right { display: flex; justify-content: flex-end; }
+
+  /* Project / Task / Employee cards */
+  .pcard, .tcard, .ecard {
+    background: var(--surface-1);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    position: relative;
+    border-left: 2px solid var(--service-design-strong);
+  }
+  .pcard.svc-design, .tcard.svc-design, .ecard.svc-design { border-left-color: var(--service-design-strong); }
+  .pcard.svc-dev,    .tcard.svc-dev,    .ecard.svc-dev    { border-left-color: var(--service-dev-strong); }
+  .pcard.svc-mkt,    .tcard.svc-mkt,    .ecard.svc-mkt    { border-left-color: var(--service-mkt-strong); }
+
+  .pcard .top, .tcard .top, .ecard .top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .pcard .title, .tcard .title, .ecard .title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 1.25;
+    color: var(--text-1);
+    letter-spacing: -0.005em;
+  }
+  .pcard .sub, .tcard .sub, .ecard .sub {
+    font-family: var(--font-ui);
+    font-size: 11.5px;
+    color: var(--text-3);
+    margin-top: 3px;
+    line-height: 1.4;
+  }
+  .pcard .stage {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--font-ui);
+    font-size: 11.5px;
+    color: var(--text-2);
+  }
+  .pcard .stage .pct { color: var(--text-3); font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
+  .pcard .progress {
+    height: 5px;
+    border-radius: 999px;
+    background: var(--surface-inset);
+    overflow: hidden;
+  }
+  .pcard .progress .fill { height: 100%; border-radius: 999px; }
+  .pcard.svc-design .progress .fill { background: linear-gradient(90deg, var(--service-design), var(--service-design-strong)); width: 62%; }
+  .pcard.svc-dev    .progress .fill { background: linear-gradient(90deg, var(--service-dev), var(--service-dev-strong)); width: 78%; }
+  .pcard.svc-mkt    .progress .fill { background: linear-gradient(90deg, var(--service-mkt), var(--service-mkt-strong)); width: 41%; }
+
+  .pcard .foot, .tcard .foot, .ecard .foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+  .pcard .foot .deadline, .tcard .foot .deadline {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-2);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Task card extras */
+  .tcard .id-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .tcard .id-line .id {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-3);
+    letter-spacing: 0.02em;
+  }
+  .tcard .body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .tcard .row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .tcard .meta-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .tcard .xp-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(251, 191, 36, 0.12);
+    color: var(--coin-gold);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    letter-spacing: 0.02em;
+  }
+
+  /* Employee card */
+  .ecard { border-left-color: transparent; }
+  .ecard .top { align-items: center; }
+  .ecard .who { display: flex; align-items: center; gap: 12px; }
+  .ecard .who .info { display: flex; flex-direction: column; }
+  .ecard .who .name {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--text-1);
+  }
+  .ecard .who .role {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    color: var(--text-3);
+    margin-top: 2px;
+  }
+  .ecard .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-subtle);
+  }
+  .ecard .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .ecard .stat .v {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 18px;
+    color: var(--text-1);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+  .ecard .stat .l {
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 9.5px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .ecard .stat.gold .v { color: var(--coin-gold); }
+
+  /* misc helpers */
+  .row-flex { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+  .row-flex.gap-lg { gap: 28px; }
+  .stack { display: flex; flex-direction: column; gap: 18px; }
+
+  .legend-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    padding: 14px 18px;
+    background: var(--surface-inset);
+    border: 1px dashed var(--border-default);
+    border-radius: var(--radius-sm);
+    margin-bottom: 20px;
+    font-family: var(--font-ui);
+    font-size: 12px;
+    color: var(--text-3);
+  }
+  .legend-row b { color: var(--text-2); font-weight: 600; }
+
+  /* Footer */
+  .foot-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 32px 0 0;
+    border-top: 1px solid var(--border-subtle);
+    margin-top: 64px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-4);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- ============================== COVER ============================== -->
+  <header class="cover" data-screen-label="Design system cover">
+    <div>
+      <div class="logo-mark">
+        <img src="assets/linknbit-logo.svg" alt="Linknbit">
+      </div>
+      <div class="eyebrow"><span class="pip"></span>Design system · Version 1.0 · May 2026</div>
+      <h1>Operations <span class="red">portal.</span><br>Visual reference.</h1>
+      <p class="sub">
+        Foundations and core component library for the Linknbit Unified Operations Portal — a desktop-first, dark-mode SaaS surface that has to feel premium to clients and rewarding to employees, simultaneously.
+      </p>
+    </div>
+    <div class="meta">
+      <div>System owner<strong>Linknbit Design</strong></div>
+      <div>Coverage<strong>7 roles · 3 services</strong></div>
+      <div>Status<strong style="color: var(--success);">● Production</strong></div>
+    </div>
+  </header>
+
+
+  <!-- ============================== 01 COLOR ============================== -->
+  <section class="section" data-screen-label="01 Color system">
+    <div class="section-head">
+      <span class="num">01</span>
+      <h2>Color system</h2>
+      <p class="lede">Dark-mode only. Surfaces are deep navy, never pure black. One brand red, three taxonomic service accents, semantic states reserved for state.</p>
+    </div>
+
+    <!-- Brand -->
+    <div class="subsection">
+      <div class="subsection-title"><h3>Brand</h3><div class="rule"></div><span class="count">2 tokens</span></div>
+      <div class="swatch-grid cols-6">
+        <div class="swatch">
+          <div class="chip" style="background: var(--brand-red);"></div>
+          <div class="body">
+            <div class="name">Brand red</div>
+            <div class="token">--brand-red</div>
+            <div class="hex">#EE2737</div>
+            <div class="desc">Primary CTA, active nav, focus rings, brand mark. Used sparingly.</div>
+          </div>
+        </div>
+        <div class="swatch">
+          <div class="chip" style="background: var(--brand-red-hover);"></div>
+          <div class="body">
+            <div class="name">Brand red — hover</div>
+            <div class="token">--brand-red-hover</div>
+            <div class="hex">#F94454</div>
+          </div>
+        </div>
+        <div class="swatch">
+          <div class="chip" style="background: var(--brand-red-press);"></div>
+          <div class="body">
+            <div class="name">Brand red — press</div>
+            <div class="token">--brand-red-press</div>
+            <div class="hex">#C81E2C</div>
+          </div>
+        </div>
+        <div class="swatch">
+          <div class="chip" style="background: var(--brand-navy);"></div>
+          <div class="body">
+            <div class="name">Brand navy</div>
+            <div class="token">--brand-navy</div>
+            <div class="hex">#1A222D</div>
+            <div class="desc">Logo navy. Reserved for darkest brand surfaces.</div>
+          </div>
+        </div>
+        <div class="swatch" style="grid-column: span 2; background: var(--surface-1); padding: 0; overflow: hidden;">
+          <div class="chip" style="background: var(--brand-red); height: 88px; display:flex; align-items:center; justify-content:center;">
+            <span style="font-family: var(--font-display); font-weight: 700; font-size: 22px; color: #fff; letter-spacing: -0.01em;">EE2737</span>
+          </div>
+          <div class="body">
+            <div class="name" style="font-size: 14px;">Brand red is the only red</div>
+            <div class="desc" style="margin-top: 4px;">Don't pair it with secondary reds. Errors use a desaturated red (--error #F4364C) so they read as state, not brand.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Surfaces -->
+    <div class="subsection">
+      <div class="subsection-title"><h3>Surfaces &amp; elevation</h3><div class="rule"></div><span class="count">6 tokens</span></div>
+      <div class="stack-row">
+        <div class="swatch-grid cols-3" style="grid-column: span 1;">
+          <div class="swatch">
+            <div class="chip" style="background: var(--bg-base);"></div>
+            <div class="body"><div class="name">Page base</div><div class="token">--bg-base</div><div class="hex">#0B1018</div></div>
+          </div>
+          <div class="swatch">
+            <div class="chip" style="background: var(--bg-canvas);"></div>
+            <div class="body"><div class="name">Canvas</div><div class="token">--bg-canvas</div><div class="hex">#0F1620</div></div>
+          </div>
+          <div class="swatch">
+            <div class="chip" style="background: var(--surface-1);"></div>
+            <div class="body"><div class="name">Surface 1 — card</div><div class="token">--surface-1</div><div class="hex">#131C28</div></div>
+          </div>
+          <div class="swatch">
+            <div class="chip" style="background: var(--surface-2);"></div>
+            <div class="body"><div class="name">Surface 2 — elevated</div><div class="token">--surface-2</div><div class="hex">#1A2433</div></div>
+          </div>
+          <div class="swatch">
+            <div class="chip" style="background: var(--surface-3);"></div>
+            <div class="body"><div class="name">Surface 3 — hover / overlay</div><div class="token">--surface-3</div><div class="hex">#232E3F</div></div>
+          </div>
+          <div class="swatch">
+            <div class="chip" style="background: var(--surface-inset);"></div>
+            <div class="body"><div class="name">Inset</div><div class="token">--surface-inset</div><div class="hex">#0B121C</div></div>
+          </div>
+        </div>
+        <div class="stack-demo">
+          <div class="layer" style="background: var(--bg-base);"><span class="h">Page background</span><span>bg-base · #0B1018</span></div>
+          <div class="layer" style="background: var(--bg-canvas);"><span class="h">Content canvas</span><span>bg-canvas · #0F1620</span></div>
+          <div class="layer" style="background: var(--surface-1);"><span class="h">Card surface</span><span>surface-1 · #131C28</span></div>
+          <div class="layer" style="background: var(--surface-2);"><span class="h">Elevated card</span><span>surface-2 · #1A2433</span></div>
+          <div class="layer" style="background: var(--surface-3); box-shadow: var(--shadow-lg);"><span class="h">Dropdown / overlay</span><span>surface-3 · #232E3F</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Text -->
+    <div class="subsection">
+      <div class="subsection-title"><h3>Text hierarchy</h3><div class="rule"></div><span class="count">4 levels + on-brand</span></div>
+      <div class="text-stack">
+        <div class="row">
+          <div class="meta"><strong>Text 1</strong>--text-1<br>#F2F5F9</div>
+          <div style="font-family: var(--font-display); font-weight: 700; font-size: 28px; color: var(--text-1); line-height: 1.2;">Primary — headings, body, names</div>
+        </div>
+        <div class="row">
+          <div class="meta"><strong>Text 2</strong>--text-2<br>#B5C0CF</div>
+          <div style="font-family: var(--font-ui); font-size: 16px; color: var(--text-2);">Secondary — supporting paragraphs, labels, form values</div>
+        </div>
+        <div class="row">
+          <div class="meta"><strong>Text 3</strong>--text-3<br>#7A8597</div>
+          <div style="font-family: var(--font-ui); font-size: 14px; color: var(--text-3);">Muted — captions, table column headers, helper text</div>
+        </div>
+        <div class="row">
+          <div class="meta"><strong>Text 4</strong>--text-4<br>#4A5468</div>
+          <div style="font-family: var(--font-ui); font-size: 13px; color: var(--text-4);">Disabled — inactive controls, placeholder for empty data</div>
+        </div>
+        <div class="row">
+          <div class="meta"><strong>On brand</strong>--text-on-brand<br>#FFFFFF</div>
+          <div>
+            <span style="background: var(--brand-red); color: #fff; font-family: var(--font-ui); font-weight: 600; font-size: 14px; padding: 6px 14px; border-radius: 6px; display: inline-block;">Text on brand red</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Borders -->
+    <div class="subsection">
+      <div class="subsection-title"><h3>Borders</h3><div class="rule"></div><span class="count">4 tokens</span></div>
+      <div class="swatch-grid cols-4">
+        <div class="swatch">
+          <div class="chip" style="background: var(--surface-1); display: flex; align-items: center; justify-content: center;">
+            <div style="width: 70%; height: 50%; background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 6px;"></div>
+          </div>
+          <div class="body"><div class="name">Subtle</div><div class="token">--border-subtle</div><div class="hex">#1E2937</div><div class="desc">Nested dividers inside a card.</div></div>
+        </div>
+        <div class="swatch">
+          <div class="chip" style="background: var(--surface-1); display: flex; align-items: center; justify-content: center;">
+            <div style="width: 70%; height: 50%; background: var(--surface-2); border: 1px solid var(--border-default); border-radius: 6px;"></div>
+          </div>
+          <div class="body"><div class="name">Default</div><div class="token">--border-default</div><div class="hex">#2A3647</div><div class="desc">Cards, table rows, inputs.</div></div>
+        </div>
+        <div class="swatch">
+          <div class="chip" style="background: var(--surface-1); display: flex; align-items: center; justify-content: center;">
+            <div style="width: 70%; height: 50%; background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: 6px;"></div>
+          </div>
+          <div class="body"><div class="name">Strong</div><div class="token">--border-strong</div><div class="hex">#3B4A60</div><div class="desc">Active tabs, hover, focused.</div></div>
+        </div>
+        <div class="swatch">
+          <div class="chip" style="background: var(--surface-1); display: flex; align-items: center; justify-content: center;">
+            <div style="width: 70%; height: 50%; background: var(--surface-2); border: 1px solid var(--border-default); border-radius: 6px; box-shadow: var(--ring-focus);"></div>
+          </div>
+          <div class="body"><div class="name">Focus ring</div><div class="token">--ring-focus</div><div class="hex">EE2737 / 35%</div><div class="desc">3px outer ring on every interactive element.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Semantic -->
+    <div class="subsection">
+      <div class="subsection-title"><h3>Semantic — state only</h3><div class="rule"></div><span class="count">4 states</span></div>
+      <div class="swatch-grid cols-4">
+        <div class="swatch">
+          <div class="chip" style="background: var(--surface-1); display: flex; align-items: center; gap: 10px; padding: 0 18px;">
+            <span style="width: 12px; height: 12px; border-radius: 999px; background: var(--success);"></span>
+            <span class="chip st-on-track"><span class="dot"></span>Approved</span>
+          </div>
+          <div class="body"><div class="name">Success</div><div class="token">--success</div><div class="hex">#22C55E</div><div class="desc">Approved, synced, on-track.</div></div>
+        </div>
+        <div class="swatch">
+          <div class="chip" style="background: var(--surface-1); display: flex; align-items: center; gap: 10px; padding: 0 18px;">
+            <span style="width: 12px; height: 12px; border-radius: 999px; background: var(--warning);"></span>
+            <span class="chip st-pending"><span class="dot"></span>Pending</span>
+          </div>
+          <div class="body"><div class="name">Warning</div><div class="token">--warning</div><div class="hex">#F59E0B</div><div class="desc">Awaiting review, due soon.</div></div>
+        </div>
+        <div class="swatch">
+          <div class="chip" style="background: var(--surface-1); display: flex; align-items: center; gap: 10px; padding: 0 18px;">
+            <span style="width: 12px; height: 12px; border-radius: 999px; background: var(--error);"></span>
+            <span class="chip st-blocked"><span class="dot"></span>Blocked</span>
+          </div>
+          <div class="body"><div class="name">Error</div><div class="token">--error</div><div class="hex">#F4364C</div><div class="desc">Blocked, sync failed, destructive.</div></div>
+        </div>
+        <div class="swatch">
+          <div class="chip" style="background: var(--surface-1); display: flex; align-items: center; gap: 10px; padding: 0 18px;">
+            <span style="width: 12px; height: 12px; border-radius: 999px; background: var(--info);"></span>
+            <span class="chip st-review"><span class="dot"></span>In review</span>
+          </div>
+          <div class="body"><div class="name">Info</div><div class="token">--info</div><div class="hex">#3B82F6</div><div class="desc">In review, informational.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Service -->
+    <div class="subsection">
+      <div class="subsection-title"><h3>Service accents — taxonomic, not decorative</h3><div class="rule"></div><span class="count">3 services</span></div>
+      <div class="legend-row">
+        <span><b>Rule:</b> every project, task, and team carries exactly one service color.</span>
+        <span><b>Usage:</b> filled chips · 2px left card border · dot beside project name.</span>
+      </div>
+      <div class="swatch-grid cols-3">
+        <div class="swatch" style="border-left: 2px solid var(--service-design-strong);">
+          <div class="chip" style="background: var(--service-design-soft); display: flex; align-items: center; justify-content: center; gap: 16px;">
+            <div style="width: 48px; height: 48px; border-radius: 8px; background: var(--service-design-strong); display: flex; align-items: center; justify-content: center;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="0.5"/><circle cx="17.5" cy="10.5" r="0.5"/><circle cx="8.5" cy="7.5" r="0.5"/><circle cx="6.5" cy="12.5" r="0.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.5-.6 1.5-1.5 0-.4-.2-.8-.5-1.1-.3-.3-.5-.7-.5-1.1 0-.9.7-1.6 1.6-1.6H16c3.3 0 6-2.7 6-6 0-5-4.5-9-10-9z"/></svg>
+            </div>
+            <span class="chip svc-design" style="font-size: 12px; padding: 5px 12px;"><span class="dot"></span>Design</span>
+          </div>
+          <div class="body">
+            <div class="name">Design</div>
+            <div class="token">--service-design · --service-design-strong</div>
+            <div class="hex">#A78BFA · #8B5CF6</div>
+            <div class="desc">Violet. UI design, brand, illustration, motion. Lucide icon: palette.</div>
+          </div>
+        </div>
+        <div class="swatch" style="border-left: 2px solid var(--service-dev-strong);">
+          <div class="chip" style="background: var(--service-dev-soft); display: flex; align-items: center; justify-content: center; gap: 16px;">
+            <div style="width: 48px; height: 48px; border-radius: 8px; background: var(--service-dev-strong); display: flex; align-items: center; justify-content: center;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#04212a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
+            </div>
+            <span class="chip svc-dev" style="font-size: 12px; padding: 5px 12px;"><span class="dot"></span>Development</span>
+          </div>
+          <div class="body">
+            <div class="name">Development</div>
+            <div class="token">--service-dev · --service-dev-strong</div>
+            <div class="hex">#22D3EE · #06B6D4</div>
+            <div class="desc">Cyan. Frontend, backend, infra, QA. Lucide icon: code-2.</div>
+          </div>
+        </div>
+        <div class="swatch" style="border-left: 2px solid var(--service-mkt-strong);">
+          <div class="chip" style="background: var(--service-mkt-soft); display: flex; align-items: center; justify-content: center; gap: 16px;">
+            <div style="width: 48px; height: 48px; border-radius: 8px; background: var(--service-mkt-strong); display: flex; align-items: center; justify-content: center;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1A1306" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+            </div>
+            <span class="chip svc-mkt" style="font-size: 12px; padding: 5px 12px;"><span class="dot"></span>Marketing</span>
+          </div>
+          <div class="body">
+            <div class="name">Marketing</div>
+            <div class="token">--service-mkt · --service-mkt-strong</div>
+            <div class="hex">#FBBF24 · #F59E0B</div>
+            <div class="desc">Amber. Campaigns, content, SEO, social. Lucide icon: megaphone.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+
+  <!-- ============================== 02 TYPOGRAPHY ============================== -->
+  <section class="section" data-screen-label="02 Typography">
+    <div class="section-head">
+      <span class="num">02</span>
+      <h2>Typography</h2>
+      <p class="lede">Space Grotesk for display moments and numerals. IBM Plex Sans for the UI layer. JetBrains Mono for IDs and timestamps. Tabular numerals everywhere data lives.</p>
+    </div>
+
+    <div class="type-grid">
+      <div class="type-row">
+        <div class="label"><div class="name">Display</div><div class="token">.t-display</div></div>
+        <div class="sample" style="font-family: var(--font-display); font-weight: 700; font-size: 56px; line-height: 1.05; letter-spacing: -0.02em;">1,240 XP</div>
+        <div class="specs"><span class="fam">Space Grotesk 700</span><br>56 / 60 · -0.02em</div>
+      </div>
+      <div class="type-row">
+        <div class="label"><div class="name">Heading 1</div><div class="token">.t-h1</div></div>
+        <div class="sample" style="font-family: var(--font-display); font-weight: 700; font-size: 36px; line-height: 1.15; letter-spacing: -0.015em;">Cricket Sansar Website</div>
+        <div class="specs"><span class="fam">Space Grotesk 700</span><br>36 / 41 · -0.015em</div>
+      </div>
+      <div class="type-row">
+        <div class="label"><div class="name">Heading 2</div><div class="token">.t-h2</div></div>
+        <div class="sample" style="font-family: var(--font-display); font-weight: 600; font-size: 28px; line-height: 1.2; letter-spacing: -0.01em;">This sprint's leaderboard</div>
+        <div class="specs"><span class="fam">Space Grotesk 600</span><br>28 / 34 · -0.01em</div>
+      </div>
+      <div class="type-row">
+        <div class="label"><div class="name">Heading 3</div><div class="token">.t-h3</div></div>
+        <div class="sample" style="font-family: var(--font-display); font-weight: 600; font-size: 22px; line-height: 1.25;">Stage 3 of 5 — Visual exploration</div>
+        <div class="specs"><span class="fam">Space Grotesk 600</span><br>22 / 28</div>
+      </div>
+      <div class="type-row">
+        <div class="label"><div class="name">Heading 4</div><div class="token">.t-h4</div></div>
+        <div class="sample" style="font-family: var(--font-ui); font-weight: 600; font-size: 18px; line-height: 1.3;">Assigned to Ahmad Karimi</div>
+        <div class="specs"><span class="fam">IBM Plex Sans 600</span><br>18 / 23</div>
+      </div>
+      <div class="type-row">
+        <div class="label"><div class="name">Body large</div><div class="token">.t-body-lg</div></div>
+        <div class="sample" style="font-family: var(--font-ui); font-weight: 400; font-size: 16px; line-height: 1.55; color: var(--text-1);">Linknbit's operations team picks up tasks from ClickUp and ships against approved milestones — the portal handles the rest.</div>
+        <div class="specs"><span class="fam">IBM Plex Sans 400</span><br>16 / 25</div>
+      </div>
+      <div class="type-row">
+        <div class="label"><div class="name">Body</div><div class="token">.t-body</div></div>
+        <div class="sample" style="font-family: var(--font-ui); font-weight: 400; font-size: 14px; line-height: 1.55; color: var(--text-2);">Sara Qureshi moved 3 tasks to Review on Cricket Sansar Website. ClickUp synced at 14:32.</div>
+        <div class="specs"><span class="fam">IBM Plex Sans 400</span><br>14 / 22</div>
+      </div>
+      <div class="type-row">
+        <div class="label"><div class="name">Body small</div><div class="token">.t-body-sm</div></div>
+        <div class="sample" style="font-family: var(--font-ui); font-weight: 400; font-size: 13px; line-height: 1.5; color: var(--text-2);">Used inside dense table cells and secondary text rows.</div>
+        <div class="specs"><span class="fam">IBM Plex Sans 400</span><br>13 / 20</div>
+      </div>
+      <div class="type-row">
+        <div class="label"><div class="name">Caption</div><div class="token">.t-caption</div></div>
+        <div class="sample" style="font-family: var(--font-ui); font-weight: 500; font-size: 12px; line-height: 1.4; color: var(--text-3);">Last sync · 2 minutes ago</div>
+        <div class="specs"><span class="fam">IBM Plex Sans 500</span><br>12 / 17</div>
+      </div>
+      <div class="type-row">
+        <div class="label"><div class="name">Label</div><div class="token">.t-label</div></div>
+        <div class="sample" style="font-family: var(--font-ui); font-weight: 600; font-size: 11px; line-height: 1.2; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3);">Service type · Assigned to</div>
+        <div class="specs"><span class="fam">IBM Plex Sans 600</span><br>11 · 0.08em · UPPER</div>
+      </div>
+      <div class="type-row">
+        <div class="label"><div class="name">Mono / code</div><div class="token">.t-mono</div></div>
+        <div class="sample" style="font-family: var(--font-mono); font-weight: 400; font-size: 13px; line-height: 1.5; color: var(--text-2);">CU-8472 · 14:32 PKT · +25 XP</div>
+        <div class="specs"><span class="fam">JetBrains Mono 400</span><br>13 / 20</div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============================== 03 SPACING / RADII / SHADOW ============================== -->
+  <section class="section" data-screen-label="03 Spacing radii shadows">
+    <div class="section-head">
+      <span class="num">03</span>
+      <h2>Spacing, radii, elevation</h2>
+      <p class="lede">4px base unit. Soft radii on everyday components, sharper corners on chips and tags. Restrained outer shadows — elevation does most of the work.</p>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title"><h3>Spacing scale — base 4</h3><div class="rule"></div><span class="count">12 tokens</span></div>
+      <div class="spacing-card">
+        <div class="spacing-row"><div class="tok">space-1</div><div class="px">4px</div><div class="bar" style="width: 4px;"></div></div>
+        <div class="spacing-row"><div class="tok">space-2</div><div class="px">8px</div><div class="bar" style="width: 8px;"></div></div>
+        <div class="spacing-row"><div class="tok">space-3</div><div class="px">12px</div><div class="bar" style="width: 12px;"></div></div>
+        <div class="spacing-row"><div class="tok">space-4</div><div class="px">16px</div><div class="bar" style="width: 16px;"></div></div>
+        <div class="spacing-row"><div class="tok">space-5</div><div class="px">20px</div><div class="bar" style="width: 20px;"></div></div>
+        <div class="spacing-row"><div class="tok">space-6</div><div class="px">24px</div><div class="bar" style="width: 24px;"></div></div>
+        <div class="spacing-row"><div class="tok">space-8</div><div class="px">32px</div><div class="bar" style="width: 32px;"></div></div>
+        <div class="spacing-row"><div class="tok">space-10</div><div class="px">40px</div><div class="bar" style="width: 40px;"></div></div>
+        <div class="spacing-row"><div class="tok">space-12</div><div class="px">48px</div><div class="bar" style="width: 48px;"></div></div>
+        <div class="spacing-row"><div class="tok">space-16</div><div class="px">64px</div><div class="bar" style="width: 64px;"></div></div>
+        <div class="spacing-row"><div class="tok">space-20</div><div class="px">80px</div><div class="bar" style="width: 80px;"></div></div>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title"><h3>Layout grid</h3><div class="rule"></div><span class="count">12 cols · 24px gutter</span></div>
+      <div class="spacing-card" style="padding: 22px;">
+        <div style="display: grid; grid-template-columns: repeat(12, 1fr); gap: 24px;">
+          <div style="grid-column: span 3; background: rgba(238, 39, 55, 0.10); border: 1px dashed var(--brand-red); border-radius: 6px; padding: 18px 14px; font-family: var(--font-mono); font-size: 11px; color: var(--text-2);">3 cols</div>
+          <div style="grid-column: span 3; background: rgba(238, 39, 55, 0.10); border: 1px dashed var(--brand-red); border-radius: 6px; padding: 18px 14px; font-family: var(--font-mono); font-size: 11px; color: var(--text-2);">3 cols</div>
+          <div style="grid-column: span 6; background: var(--service-design-soft); border: 1px dashed var(--service-design-strong); border-radius: 6px; padding: 18px 14px; font-family: var(--font-mono); font-size: 11px; color: var(--service-design);">6 cols — feature card</div>
+          <div style="grid-column: span 4; background: var(--service-dev-soft); border: 1px dashed var(--service-dev-strong); border-radius: 6px; padding: 18px 14px; font-family: var(--font-mono); font-size: 11px; color: var(--service-dev);">4 cols</div>
+          <div style="grid-column: span 4; background: var(--service-dev-soft); border: 1px dashed var(--service-dev-strong); border-radius: 6px; padding: 18px 14px; font-family: var(--font-mono); font-size: 11px; color: var(--service-dev);">4 cols</div>
+          <div style="grid-column: span 4; background: var(--service-dev-soft); border: 1px dashed var(--service-dev-strong); border-radius: 6px; padding: 18px 14px; font-family: var(--font-mono); font-size: 11px; color: var(--service-dev);">4 cols</div>
+          <div style="grid-column: span 12; background: var(--service-mkt-soft); border: 1px dashed var(--service-mkt-strong); border-radius: 6px; padding: 18px 14px; font-family: var(--font-mono); font-size: 11px; color: var(--service-mkt);">12 cols — full-bleed hero</div>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-top: 18px; font-family: var(--font-mono); font-size: 11px; color: var(--text-3);">
+          <span>Content max-width <b style="color: var(--text-2);">1440px</b></span>
+          <span>Page padding <b style="color: var(--text-2);">32px</b></span>
+          <span>Sidebar <b style="color: var(--text-2);">248 / 72px</b></span>
+          <span>Topbar <b style="color: var(--text-2);">64px · blurred</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title"><h3>Radii</h3><div class="rule"></div><span class="count">6 tokens</span></div>
+      <div class="radii-row">
+        <div class="radii-cell"><div class="shape" style="border-radius: var(--radius-xs);"></div><div class="lbl"><div class="name">XS · 4px</div><div class="tok">--radius-xs · chips, tags</div></div></div>
+        <div class="radii-cell"><div class="shape" style="border-radius: var(--radius-sm);"></div><div class="lbl"><div class="name">SM · 6px</div><div class="tok">--radius-sm · buttons, inputs</div></div></div>
+        <div class="radii-cell"><div class="shape" style="border-radius: var(--radius-md);"></div><div class="lbl"><div class="name">MD · 10px</div><div class="tok">--radius-md · cards</div></div></div>
+        <div class="radii-cell"><div class="shape" style="border-radius: var(--radius-lg);"></div><div class="lbl"><div class="name">LG · 14px</div><div class="tok">--radius-lg · modals</div></div></div>
+        <div class="radii-cell"><div class="shape" style="border-radius: var(--radius-xl);"></div><div class="lbl"><div class="name">XL · 20px</div><div class="tok">--radius-xl · hero panel</div></div></div>
+        <div class="radii-cell"><div class="shape" style="border-radius: var(--radius-pill); width: 60px;"></div><div class="lbl"><div class="name">Pill</div><div class="tok">--radius-pill · avatars, badges</div></div></div>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title"><h3>Elevation</h3><div class="rule"></div><span class="count">4 tokens</span></div>
+      <div class="shadow-row">
+        <div class="shadow-cell sm"><div class="surface"></div><div class="lbl"><div class="name">Card · resting</div><div class="tok">--shadow-sm</div></div></div>
+        <div class="shadow-cell md"><div class="surface"></div><div class="lbl"><div class="name">Card · hover</div><div class="tok">--shadow-md</div></div></div>
+        <div class="shadow-cell lg"><div class="surface"></div><div class="lbl"><div class="name">Dropdown</div><div class="tok">--shadow-lg</div></div></div>
+        <div class="shadow-cell pop"><div class="surface"></div><div class="lbl"><div class="name">Modal / overlay</div><div class="tok">--shadow-pop</div></div></div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============================== 04 BUTTONS ============================== -->
+  <section class="section" data-screen-label="04 Buttons">
+    <div class="section-head">
+      <span class="num">04</span>
+      <h2>Buttons</h2>
+      <p class="lede">Four intents. Primary is brand red and used once per screen — for the single most important action. Everything else is secondary, ghost, or destructive.</p>
+    </div>
+
+    <div class="block">
+      <div class="btn-table">
+        <div></div>
+        <div class="colhead">Default</div>
+        <div class="colhead">Hover</div>
+        <div class="colhead">Active / pressed</div>
+        <div class="colhead">Disabled</div>
+
+        <div class="rowlbl">primary</div>
+        <div><button class="btn primary"><svg class="ico-s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Create project</button></div>
+        <div><button class="btn primary hover"><svg class="ico-s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Create project</button></div>
+        <div><button class="btn primary active"><svg class="ico-s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Create project</button></div>
+        <div><button class="btn primary disabled"><svg class="ico-s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Create project</button></div>
+
+        <div class="rowlbl">secondary</div>
+        <div><button class="btn secondary"><svg class="ico-s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>Sync with ClickUp</button></div>
+        <div><button class="btn secondary hover"><svg class="ico-s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>Sync with ClickUp</button></div>
+        <div><button class="btn secondary active"><svg class="ico-s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>Sync with ClickUp</button></div>
+        <div><button class="btn secondary disabled"><svg class="ico-s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>Sync with ClickUp</button></div>
+
+        <div class="rowlbl">ghost</div>
+        <div><button class="btn ghost">View all projects</button></div>
+        <div><button class="btn ghost hover">View all projects</button></div>
+        <div><button class="btn ghost active">View all projects</button></div>
+        <div><button class="btn ghost disabled">View all projects</button></div>
+
+        <div class="rowlbl">danger</div>
+        <div><button class="btn danger"><svg class="ico-s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>Delete project</button></div>
+        <div><button class="btn danger hover"><svg class="ico-s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>Delete project</button></div>
+        <div><button class="btn danger active"><svg class="ico-s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>Delete project</button></div>
+        <div><button class="btn danger disabled"><svg class="ico-s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Delete project</button></div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============================== 05 INPUTS ============================== -->
+  <section class="section" data-screen-label="05 Inputs">
+    <div class="section-head">
+      <span class="num">05</span>
+      <h2>Inputs</h2>
+      <p class="lede">Inset surface, default border, brand-red focus ring. Field label is uppercase tracked-out micro-label — telegraphs "this is a field, not a sentence."</p>
+    </div>
+
+    <div class="block">
+      <div class="input-row">
+        <div class="field">
+          <div class="field-label">Project name</div>
+          <div class="input">
+            <input type="text" value="Cricket Sansar Website Redesign">
+          </div>
+          <div class="field-help">Default — resting state.</div>
+        </div>
+        <div class="field">
+          <div class="field-label">Client</div>
+          <div class="input focused">
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            <input type="text" value="Sansar Sports">
+          </div>
+          <div class="field-help">Focused — 3px brand-red ring.</div>
+        </div>
+        <div class="field">
+          <div class="field-label">ClickUp workspace ID</div>
+          <div class="input error">
+            <svg class="ico" style="color: var(--error);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <input type="text" value="cu_8472_xQ" style="color: var(--error);">
+          </div>
+          <div class="field-help error">Workspace not found — check the ID in ClickUp settings.</div>
+        </div>
+        <div class="field">
+          <div class="field-label">Deadline</div>
+          <div class="input disabled">
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <input type="text" value="Jun 14, 2026" disabled style="color: var(--text-4);">
+          </div>
+          <div class="field-help">Disabled — locked once project is in approval.</div>
+        </div>
+        <div class="field" style="grid-column: span 2;">
+          <div class="field-label">Search projects</div>
+          <div class="input">
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" placeholder="Search by project name, client, or CU-ID…">
+            <span style="font-family: var(--font-mono); font-size: 10.5px; color: var(--text-4); padding: 2px 6px; border: 1px solid var(--border-default); border-radius: 4px;">⌘K</span>
+          </div>
+          <div class="field-help">With leading icon and keyboard hint.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============================== 06 BADGES & CHIPS ============================== -->
+  <section class="section" data-screen-label="06 Badges and chips">
+    <div class="section-head">
+      <span class="num">06</span>
+      <h2>Badges &amp; chips</h2>
+      <p class="lede">Role badges encode identity. Service chips encode taxonomy. Status and priority chips encode state. Never mix them — one chip per role per row.</p>
+    </div>
+
+    <div class="block stack">
+      <!-- Role badges -->
+      <div>
+        <div class="subsection-title" style="margin-bottom: 14px;"><h3>Role badges</h3><div class="rule"></div><span class="count">7 roles</span></div>
+        <div class="chip-grid">
+          <span class="role-badge r-super-admin"><span class="puck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>Super Admin</span>
+          <span class="role-badge r-admin"><span class="puck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></span>Admin / Ops</span>
+          <span class="role-badge r-pm"><span class="puck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></span>Project Manager</span>
+          <span class="role-badge r-lead"><span class="puck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>Team Lead</span>
+          <span class="role-badge r-employee"><span class="puck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>Employee</span>
+          <span class="role-badge r-client"><span class="puck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></span>Client Owner</span>
+          <span class="role-badge r-client-member"><span class="puck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></span>Client Member</span>
+        </div>
+      </div>
+
+      <!-- Service chips -->
+      <div>
+        <div class="subsection-title" style="margin-bottom: 14px;"><h3>Service-type chips</h3><div class="rule"></div><span class="count">3 services</span></div>
+        <div class="chip-grid">
+          <span class="chip svc-design"><span class="dot"></span>Design</span>
+          <span class="chip svc-dev"><span class="dot"></span>Development</span>
+          <span class="chip svc-mkt"><span class="dot"></span>Marketing</span>
+          <span style="font-family: var(--font-mono); font-size: 11px; color: var(--text-3); margin-left: 8px;">— one chip per entity, never combined</span>
+        </div>
+      </div>
+
+      <!-- Status chips -->
+      <div>
+        <div class="subsection-title" style="margin-bottom: 14px;"><h3>Status chips</h3><div class="rule"></div><span class="count">5 states</span></div>
+        <div class="chip-grid">
+          <span class="chip st-on-track"><span class="dot"></span>On track</span>
+          <span class="chip st-pending"><span class="dot"></span>Awaiting review</span>
+          <span class="chip st-review"><span class="dot"></span>In review</span>
+          <span class="chip st-blocked"><span class="dot"></span>Blocked</span>
+          <span class="chip st-draft"><span class="dot"></span>Draft</span>
+        </div>
+      </div>
+
+      <!-- Priority chips -->
+      <div>
+        <div class="subsection-title" style="margin-bottom: 14px;"><h3>Priority chips</h3><div class="rule"></div><span class="count">4 levels</span></div>
+        <div class="chip-grid">
+          <span class="chip pr-p0">P0 · Critical</span>
+          <span class="chip pr-p1">P1 · High</span>
+          <span class="chip pr-p2">P2 · Normal</span>
+          <span class="chip pr-p3">P3 · Low</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============================== 07 AVATARS ============================== -->
+  <section class="section" data-screen-label="07 Avatars">
+    <div class="section-head">
+      <span class="num">07</span>
+      <h2>Avatars &amp; identity</h2>
+      <p class="lede">Solid color circles tinted to the user's role. Initials when no photo. Group stacks overlap left-to-right with a 2px surface-1 border.</p>
+    </div>
+
+    <div class="block stack">
+      <div>
+        <div class="subsection-title" style="margin-bottom: 14px;"><h3>Sizes</h3><div class="rule"></div></div>
+        <div class="row-flex gap-lg" style="align-items: center;">
+          <div class="avatar-combo">
+            <span class="avatar sm role-pm">SQ</span>
+            <span style="font-family: var(--font-mono); font-size: 11px; color: var(--text-3);">24px · sm</span>
+          </div>
+          <div class="avatar-combo">
+            <span class="avatar role-pm">SQ</span>
+            <span style="font-family: var(--font-mono); font-size: 11px; color: var(--text-3);">32px · default</span>
+          </div>
+          <div class="avatar-combo">
+            <span class="avatar lg role-pm">SQ</span>
+            <span style="font-family: var(--font-mono); font-size: 11px; color: var(--text-3);">40px · lg</span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="subsection-title" style="margin-bottom: 14px;"><h3>Name combos — by role</h3><div class="rule"></div><span class="count">7 examples</span></div>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px 32px;">
+          <div class="avatar-combo">
+            <span class="avatar role-admin">AK</span>
+            <div><div class="name">Ahmad Karimi</div><div class="meta">Ops Manager · linknbit.com</div></div>
+          </div>
+          <div class="avatar-combo">
+            <span class="avatar role-pm">SQ</span>
+            <div><div class="name">Sara Qureshi</div><div class="meta">Project Manager · Design</div></div>
+          </div>
+          <div class="avatar-combo">
+            <span class="avatar role-lead">ZM</span>
+            <div><div class="name">Zain Malik</div><div class="meta">Team Lead · Development</div></div>
+          </div>
+          <div class="avatar-combo">
+            <span class="avatar role-employee">RB</span>
+            <div><div class="name">Rida Baig</div><div class="meta">Designer · Level 7 · 1,240 XP</div></div>
+          </div>
+          <div class="avatar-combo">
+            <span class="avatar role-employee">HS</span>
+            <div><div class="name">Hassan Siddiqui</div><div class="meta">Frontend Engineer · Level 5</div></div>
+          </div>
+          <div class="avatar-combo">
+            <span class="avatar role-client">FA</span>
+            <div><div class="name">Faisal Abbasi</div><div class="meta">Client Owner · Sansar Sports</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="subsection-title" style="margin-bottom: 14px;"><h3>Group stack</h3><div class="rule"></div></div>
+        <div class="row-flex gap-lg">
+          <div class="avatar-stack">
+            <span class="avatar role-pm">SQ</span>
+            <span class="avatar role-lead">ZM</span>
+            <span class="avatar role-employee">RB</span>
+            <span class="avatar role-employee">HS</span>
+            <span class="avatar more">+4</span>
+          </div>
+          <span style="font-family: var(--font-mono); font-size: 11px; color: var(--text-3);">8 contributors</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============================== 08 XP / NOTIF / SYNC ============================== -->
+  <section class="section" data-screen-label="08 XP notifications sync">
+    <div class="section-head">
+      <span class="num">08</span>
+      <h2>XP, notifications, sync</h2>
+      <p class="lede">Three small components that carry a lot of meaning — gamification progress, in-app alerts, and the ClickUp sync state that lives next to every project.</p>
+    </div>
+
+    <div class="block-grid-3">
+
+      <!-- XP -->
+      <div class="block" style="padding: 26px;">
+        <div class="subsection-title" style="margin-bottom: 16px;"><h3>XP progress bar</h3><div class="rule"></div></div>
+        <div class="xp-block" style="border: none; padding: 0; background: transparent;">
+          <div class="xp-head">
+            <div class="lvl">
+              <span class="num">07</span>
+              <div style="display: flex; flex-direction: column;">
+                <span style="font-family: var(--font-display); font-weight: 600; font-size: 13px; color: var(--text-1);">Rida Baig</span>
+                <span class="tag">Level · Designer</span>
+              </div>
+            </div>
+            <div class="total"><b style="color: var(--text-1);">1,240</b> <span class="next">/ 1,800 XP</span></div>
+          </div>
+          <div class="xp-track"><div class="xp-fill"></div></div>
+          <div class="xp-foot">
+            <span>560 XP to Level 8</span>
+            <span class="gain">+25 XP earned today</span>
+          </div>
+        </div>
+
+        <div style="margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--border-subtle);">
+          <div style="font-family: var(--font-ui); font-weight: 600; font-size: 11.5px; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px;">Sprint streak — compact</div>
+          <div style="background: var(--surface-2); border: 1px solid var(--border-default); border-radius: 8px; padding: 14px 16px; display: flex; align-items: center; gap: 12px;">
+            <div style="font-family: var(--font-display); font-weight: 700; font-size: 22px; color: var(--coin-gold); font-variant-numeric: tabular-nums;">14</div>
+            <div style="flex: 1;">
+              <div style="font-family: var(--font-ui); font-size: 12.5px; color: var(--text-1); font-weight: 500;">Day streak</div>
+              <div style="margin-top: 4px; height: 4px; background: var(--surface-inset); border-radius: 999px; overflow: hidden;">
+                <div style="width: 70%; height: 100%; background: var(--xp-gradient);"></div>
+              </div>
+            </div>
+            <span class="chip" style="background: rgba(251,191,36,0.12); color: var(--coin-gold); border: 1px solid rgba(251,191,36,0.3); padding: 3px 8px;">Quest</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notifications -->
+      <div class="block" style="padding: 26px;">
+        <div class="subsection-title" style="margin-bottom: 16px;"><h3>Notification pills</h3><div class="rule"></div></div>
+        <div class="stack" style="gap: 12px;">
+          <div class="notif info">
+            <span class="bullet">1</span>
+            <span><strong>Ahmad Karimi</strong> assigned you a task in Cricket Sansar Website<span class="time">2m</span></span>
+          </div>
+          <div class="notif xp">
+            <span class="bullet">★</span>
+            <span><strong>+25 XP</strong> · design approved in one round<span class="time">14m</span></span>
+          </div>
+          <div class="notif success">
+            <span class="bullet">✓</span>
+            <span><strong>Sara Qureshi</strong> approved your homepage hero<span class="time">1h</span></span>
+          </div>
+          <div class="notif">
+            <span class="bullet" style="background: var(--error);">!</span>
+            <span><strong>ClickUp sync failed</strong> — retry from project settings<span class="time">3h</span></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sync -->
+      <div class="block" style="padding: 26px;">
+        <div class="subsection-title" style="margin-bottom: 16px;"><h3>ClickUp sync status</h3><div class="rule"></div></div>
+        <div class="stack" style="gap: 16px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background: var(--surface-2); border: 1px solid var(--border-default); border-radius: 8px;">
+            <div>
+              <div style="font-family: var(--font-display); font-weight: 600; font-size: 13px; color: var(--text-1);">Synced</div>
+              <div style="font-family: var(--font-mono); font-size: 10.5px; color: var(--text-3); margin-top: 2px;">CU-8472 · 14:32 PKT</div>
+            </div>
+            <span class="sync synced"><span class="d"></span>ClickUp synced</span>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background: var(--surface-2); border: 1px solid var(--border-default); border-radius: 8px;">
+            <div>
+              <div style="font-family: var(--font-display); font-weight: 600; font-size: 13px; color: var(--text-1);">Pending</div>
+              <div style="font-family: var(--font-mono); font-size: 10.5px; color: var(--text-3); margin-top: 2px;">3 changes queued · syncing…</div>
+            </div>
+            <span class="sync pending"><span class="d"></span>Syncing</span>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background: var(--surface-2); border: 1px solid var(--border-default); border-radius: 8px;">
+            <div>
+              <div style="font-family: var(--font-display); font-weight: 600; font-size: 13px; color: var(--text-1);">Sync failed</div>
+              <div style="font-family: var(--font-mono); font-size: 10.5px; color: var(--text-3); margin-top: 2px;">Workspace token expired</div>
+            </div>
+            <span class="sync error"><span class="d"></span>Retry</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============================== 09 SIDEBAR ============================== -->
+  <section class="section" data-screen-label="09 Sidebar navigation">
+    <div class="section-head">
+      <span class="num">09</span>
+      <h2>Sidebar navigation</h2>
+      <p class="lede">Fixed left, collapsible 248 → 72px. Active item gets a flush brand-red rail and a softened tint. Count badges are brand-red for action-required, muted for informational.</p>
+    </div>
+
+    <div class="sidebar-block">
+      <!-- Expanded -->
+      <div class="nav">
+        <div class="brand"><span class="mark">L</span><span class="name">Linknbit</span></div>
+
+        <div class="group-label">Workspace</div>
+        <div class="nav-item">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+          <span class="label">Dashboard</span>
+        </div>
+        <div class="nav-item active">
+          <svg class="ico" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          <span class="label">Projects</span>
+          <span class="count">12</span>
+        </div>
+        <div class="nav-item">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          <span class="label">Clients</span>
+        </div>
+        <div class="nav-item">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span class="label">Teams</span>
+        </div>
+        <div class="nav-item">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          <span class="label">Tasks</span>
+          <span class="count">4</span>
+        </div>
+
+        <div class="group-label">Insights</div>
+        <div class="nav-item">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          <span class="label">Reports</span>
+        </div>
+        <div class="nav-item">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+          <span class="label">Gamification</span>
+          <span class="count muted">v2</span>
+        </div>
+        <div class="nav-item">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+          <span class="label">ClickUp</span>
+        </div>
+
+        <div class="group-label">Account</div>
+        <div class="nav-item">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span class="label">Settings</span>
+        </div>
+      </div>
+
+      <!-- Collapsed -->
+      <div class="nav collapsed">
+        <div class="brand"><span class="mark">L</span></div>
+        <div class="nav-item">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+        </div>
+        <div class="nav-item active">
+          <svg class="ico" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          <span class="count">12</span>
+        </div>
+        <div class="nav-item">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        </div>
+        <div class="nav-item">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        </div>
+        <div class="nav-item">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          <span class="count">4</span>
+        </div>
+        <div class="nav-item">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        </div>
+        <div class="nav-item">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+        </div>
+        <div class="nav-item">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 10v6m11-11h-6M7 12H1m17.07-7.07-4.24 4.24M9.17 14.83l-4.24 4.24m0-14.14 4.24 4.24m5.66 5.66 4.24 4.24"/></svg>
+        </div>
+      </div>
+
+      <!-- Note -->
+      <div class="sidebar-note">
+        <h4>Behavior</h4>
+        <ul>
+          <li>Expanded width <b style="color: var(--text-1);">248px</b>, collapsed <b style="color: var(--text-1);">72px</b>.</li>
+          <li>Toggle persists per-user.</li>
+          <li>Active state: 3px brand-red flush rail, filled icon variant, 13% red tint behind label.</li>
+          <li>Count badges: <span class="count" style="background: var(--brand-red); color: #fff; padding: 1px 7px; border-radius: 999px; font-family: var(--font-ui); font-weight: 700; font-size: 10px;">12</span> for action-required, <span class="count muted" style="background: var(--surface-3); color: var(--text-2); padding: 1px 7px; border-radius: 999px; font-family: var(--font-ui); font-weight: 700; font-size: 10px;">v2</span> for informational.</li>
+          <li>Group labels appear only when expanded.</li>
+          <li>Hover lifts background <code style="font-family: var(--font-mono); color: var(--text-1);">surface-1 → surface-2</code>.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============================== 10 DATA TABLE ============================== -->
+  <section class="section" data-screen-label="10 Data table">
+    <div class="section-head">
+      <span class="num">10</span>
+      <h2>Data table row</h2>
+      <p class="lede">12px row padding, 1px subtle divider, hover lifts to surface-2. Service taxonomy lives in the leading dot beside the project name.</p>
+    </div>
+
+    <div class="table">
+      <div class="thead">
+        <div class="h">Project</div>
+        <div class="h">Service</div>
+        <div class="h">Stage</div>
+        <div class="h">Sync</div>
+        <div class="h">Team</div>
+        <div class="h" style="text-align: right;">Due</div>
+      </div>
+
+      <div class="trow">
+        <div class="name"><span style="width: 8px; height: 8px; border-radius: 999px; background: var(--service-design);"></span>Cricket Sansar Website Redesign <span class="id">CU-8472</span></div>
+        <div><span class="chip svc-design"><span class="dot"></span>Design</span></div>
+        <div><span class="chip st-review"><span class="dot"></span>UI Design stage</span></div>
+        <div><span class="sync synced"><span class="d"></span>Synced</span></div>
+        <div><span class="avatar-stack"><span class="avatar sm role-pm">SQ</span><span class="avatar sm role-employee">RB</span><span class="avatar sm role-employee">HS</span></span></div>
+        <div class="deadline" style="text-align: right;">Jun 14</div>
+      </div>
+      <div class="trow row-selected">
+        <div class="name"><span style="width: 8px; height: 8px; border-radius: 999px; background: var(--service-dev);"></span>Linknbit Internal Portal v2 <span class="id">CU-8511</span></div>
+        <div><span class="chip svc-dev"><span class="dot"></span>Development</span></div>
+        <div><span class="chip st-on-track"><span class="dot"></span>Sprint 4 of 6</span></div>
+        <div><span class="sync synced"><span class="d"></span>Synced</span></div>
+        <div><span class="avatar-stack"><span class="avatar sm role-lead">ZM</span><span class="avatar sm role-employee">HS</span><span class="avatar sm role-employee">TA</span><span class="avatar sm more">+2</span></span></div>
+        <div class="deadline" style="text-align: right;">Jul 02</div>
+      </div>
+      <div class="trow">
+        <div class="name"><span style="width: 8px; height: 8px; border-radius: 999px; background: var(--service-mkt);"></span>Q3 Brand Awareness Campaign <span class="id">CU-8398</span></div>
+        <div><span class="chip svc-mkt"><span class="dot"></span>Marketing</span></div>
+        <div><span class="chip st-pending"><span class="dot"></span>Awaiting approval</span></div>
+        <div><span class="sync pending"><span class="d"></span>Syncing</span></div>
+        <div><span class="avatar-stack"><span class="avatar sm role-pm">SQ</span><span class="avatar sm role-employee">NA</span></span></div>
+        <div class="deadline" style="text-align: right;">Jun 28</div>
+      </div>
+      <div class="trow">
+        <div class="name"><span style="width: 8px; height: 8px; border-radius: 999px; background: var(--service-design);"></span>Linknbit Brand Identity <span class="id">CU-8290</span></div>
+        <div><span class="chip svc-design"><span class="dot"></span>Design</span></div>
+        <div><span class="chip st-draft"><span class="dot"></span>Discovery</span></div>
+        <div><span class="sync error"><span class="d"></span>Failed</span></div>
+        <div><span class="avatar-stack"><span class="avatar sm role-pm">SQ</span><span class="avatar sm role-employee">RB</span></span></div>
+        <div class="deadline" style="text-align: right;">Aug 09</div>
+      </div>
+      <div class="trow">
+        <div class="name"><span style="width: 8px; height: 8px; border-radius: 999px; background: var(--service-dev);"></span>Sansar Sports Mobile App <span class="id">CU-8205</span></div>
+        <div><span class="chip svc-dev"><span class="dot"></span>Development</span></div>
+        <div><span class="chip st-blocked"><span class="dot"></span>Blocked · API</span></div>
+        <div><span class="sync synced"><span class="d"></span>Synced</span></div>
+        <div><span class="avatar-stack"><span class="avatar sm role-lead">ZM</span><span class="avatar sm role-employee">TA</span></span></div>
+        <div class="deadline" style="text-align: right;">Sep 12</div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============================== 11 CARDS ============================== -->
+  <section class="section" data-screen-label="11 Cards">
+    <div class="section-head">
+      <span class="num">11</span>
+      <h2>Cards</h2>
+      <p class="lede">Three primary card patterns. Each carries who / when / what — avatar, deadline, status — and where applicable a 2px left service-accent rail.</p>
+    </div>
+
+    <!-- Project cards -->
+    <div class="subsection">
+      <div class="subsection-title"><h3>Project card</h3><div class="rule"></div><span class="count">3 services</span></div>
+      <div class="block-grid-3">
+        <div class="pcard svc-design">
+          <div class="top">
+            <div>
+              <div class="title">Cricket Sansar Website</div>
+              <div class="sub">Sansar Sports · External client</div>
+            </div>
+            <span class="chip svc-design"><span class="dot"></span>Design</span>
+          </div>
+          <div>
+            <div class="stage"><span>Stage 3 of 5 · Visual exploration</span><span class="pct">62%</span></div>
+            <div class="progress"><div class="fill"></div></div>
+          </div>
+          <div class="foot">
+            <div class="avatar-combo"><span class="avatar sm role-pm">SQ</span><span style="font-family: var(--font-ui); font-size: 12px; color: var(--text-2);">Sara Qureshi</span></div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span class="deadline">Jun 14</span>
+              <span class="sync synced"><span class="d"></span>Synced</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="pcard svc-dev">
+          <div class="top">
+            <div>
+              <div class="title">Linknbit Portal v2</div>
+              <div class="sub">Internal · Operations &amp; engineering</div>
+            </div>
+            <span class="chip svc-dev"><span class="dot"></span>Development</span>
+          </div>
+          <div>
+            <div class="stage"><span>Sprint 4 of 6 · API integration</span><span class="pct">78%</span></div>
+            <div class="progress"><div class="fill"></div></div>
+          </div>
+          <div class="foot">
+            <div class="avatar-combo"><span class="avatar sm role-lead">ZM</span><span style="font-family: var(--font-ui); font-size: 12px; color: var(--text-2);">Zain Malik</span></div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span class="deadline">Jul 02</span>
+              <span class="sync synced"><span class="d"></span>Synced</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="pcard svc-mkt">
+          <div class="top">
+            <div>
+              <div class="title">Q3 Brand Awareness</div>
+              <div class="sub">Internal · Marketing team</div>
+            </div>
+            <span class="chip svc-mkt"><span class="dot"></span>Marketing</span>
+          </div>
+          <div>
+            <div class="stage"><span>Stage 2 of 4 · Asset production</span><span class="pct">41%</span></div>
+            <div class="progress"><div class="fill"></div></div>
+          </div>
+          <div class="foot">
+            <div class="avatar-combo"><span class="avatar sm role-employee">NA</span><span style="font-family: var(--font-ui); font-size: 12px; color: var(--text-2);">Noor Aslam</span></div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span class="deadline">Jun 28</span>
+              <span class="sync pending"><span class="d"></span>Syncing</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Task cards -->
+    <div class="subsection">
+      <div class="subsection-title"><h3>Task card</h3><div class="rule"></div><span class="count">3 states</span></div>
+      <div class="block-grid-3">
+        <div class="tcard svc-design">
+          <div class="id-line">
+            <span class="id">CU-8472-04</span>
+            <span class="chip svc-design" style="margin-left: auto;"><span class="dot"></span>Design</span>
+          </div>
+          <div class="title">Homepage hero — visual direction A</div>
+          <div class="meta-row">
+            <span class="chip st-review"><span class="dot"></span>In review</span>
+            <span class="chip pr-p1">P1</span>
+            <span class="xp-pill">+25 XP</span>
+          </div>
+          <div class="foot">
+            <div class="avatar-combo"><span class="avatar sm role-employee">RB</span><span style="font-family: var(--font-ui); font-size: 12px; color: var(--text-2);">Rida Baig</span></div>
+            <span class="deadline">Due Wed · 17:00</span>
+          </div>
+        </div>
+
+        <div class="tcard svc-dev">
+          <div class="id-line">
+            <span class="id">CU-8511-12</span>
+            <span class="chip svc-dev" style="margin-left: auto;"><span class="dot"></span>Development</span>
+          </div>
+          <div class="title">Wire ClickUp webhook → sync queue</div>
+          <div class="meta-row">
+            <span class="chip st-on-track"><span class="dot"></span>In progress</span>
+            <span class="chip pr-p0">P0</span>
+            <span class="xp-pill">+50 XP</span>
+          </div>
+          <div class="foot">
+            <div class="avatar-combo"><span class="avatar sm role-employee">HS</span><span style="font-family: var(--font-ui); font-size: 12px; color: var(--text-2);">Hassan Siddiqui</span></div>
+            <span class="deadline">Due Fri · 18:00</span>
+          </div>
+        </div>
+
+        <div class="tcard svc-mkt">
+          <div class="id-line">
+            <span class="id">CU-8398-07</span>
+            <span class="chip svc-mkt" style="margin-left: auto;"><span class="dot"></span>Marketing</span>
+          </div>
+          <div class="title">Newsletter — Q3 launch copy</div>
+          <div class="meta-row">
+            <span class="chip st-blocked"><span class="dot"></span>Blocked · brief</span>
+            <span class="chip pr-p2">P2</span>
+            <span class="xp-pill">+15 XP</span>
+          </div>
+          <div class="foot">
+            <div class="avatar-combo"><span class="avatar sm role-employee">NA</span><span style="font-family: var(--font-ui); font-size: 12px; color: var(--text-2);">Noor Aslam</span></div>
+            <span class="deadline">Due Mon · 12:00</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Employee cards -->
+    <div class="subsection">
+      <div class="subsection-title"><h3>Employee card</h3><div class="rule"></div><span class="count">3 examples</span></div>
+      <div class="block-grid-3">
+        <div class="ecard">
+          <div class="top">
+            <div class="who">
+              <span class="avatar lg role-employee">RB</span>
+              <div class="info">
+                <span class="name">Rida Baig</span>
+                <span class="role">Designer · Design pod</span>
+              </div>
+            </div>
+            <span class="role-badge r-employee" style="padding: 3px 8px 3px 3px; font-size: 10.5px;"><span class="puck" style="width: 18px; height: 18px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>Employee</span>
+          </div>
+          <div class="xp-block" style="background: transparent; border: none; padding: 0;">
+            <div class="xp-head" style="margin-bottom: 6px;">
+              <span style="font-family: var(--font-mono); font-size: 11px; color: var(--text-3); letter-spacing: 0.04em;">LEVEL 7</span>
+              <span class="total" style="font-size: 11.5px;"><b style="color: var(--text-1);">1,240</b> / 1,800 XP</span>
+            </div>
+            <div class="xp-track" style="height: 6px;"><div class="xp-fill" style="width: 68%;"></div></div>
+          </div>
+          <div class="stats">
+            <div class="stat"><span class="v">24</span><span class="l">Tasks done</span></div>
+            <div class="stat"><span class="v">94%</span><span class="l">On-time</span></div>
+            <div class="stat gold"><span class="v">340</span><span class="l">Coins</span></div>
+          </div>
+        </div>
+
+        <div class="ecard">
+          <div class="top">
+            <div class="who">
+              <span class="avatar lg role-employee">HS</span>
+              <div class="info">
+                <span class="name">Hassan Siddiqui</span>
+                <span class="role">Frontend Engineer · Dev pod</span>
+              </div>
+            </div>
+            <span class="role-badge r-employee" style="padding: 3px 8px 3px 3px; font-size: 10.5px;"><span class="puck" style="width: 18px; height: 18px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>Employee</span>
+          </div>
+          <div class="xp-block" style="background: transparent; border: none; padding: 0;">
+            <div class="xp-head" style="margin-bottom: 6px;">
+              <span style="font-family: var(--font-mono); font-size: 11px; color: var(--text-3); letter-spacing: 0.04em;">LEVEL 5</span>
+              <span class="total" style="font-size: 11.5px;"><b style="color: var(--text-1);">880</b> / 1,200 XP</span>
+            </div>
+            <div class="xp-track" style="height: 6px;"><div class="xp-fill" style="width: 73%;"></div></div>
+          </div>
+          <div class="stats">
+            <div class="stat"><span class="v">18</span><span class="l">Tasks done</span></div>
+            <div class="stat"><span class="v">88%</span><span class="l">On-time</span></div>
+            <div class="stat gold"><span class="v">215</span><span class="l">Coins</span></div>
+          </div>
+        </div>
+
+        <div class="ecard">
+          <div class="top">
+            <div class="who">
+              <span class="avatar lg role-lead">ZM</span>
+              <div class="info">
+                <span class="name">Zain Malik</span>
+                <span class="role">Team Lead · Dev pod</span>
+              </div>
+            </div>
+            <span class="role-badge r-lead" style="padding: 3px 8px 3px 3px; font-size: 10.5px;"><span class="puck" style="width: 18px; height: 18px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>Lead</span>
+          </div>
+          <div class="xp-block" style="background: transparent; border: none; padding: 0;">
+            <div class="xp-head" style="margin-bottom: 6px;">
+              <span style="font-family: var(--font-mono); font-size: 11px; color: var(--text-3); letter-spacing: 0.04em;">LEVEL 11</span>
+              <span class="total" style="font-size: 11.5px;"><b style="color: var(--text-1);">2,640</b> / 3,000 XP</span>
+            </div>
+            <div class="xp-track" style="height: 6px;"><div class="xp-fill" style="width: 88%;"></div></div>
+          </div>
+          <div class="stats">
+            <div class="stat"><span class="v">8</span><span class="l">Reports</span></div>
+            <div class="stat"><span class="v">96%</span><span class="l">Pod on-time</span></div>
+            <div class="stat gold"><span class="v">620</span><span class="l">Coins</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============================== FOOTER ============================== -->
+  <footer class="foot-meta">
+    <span>Linknbit Operations Portal · Design System v1.0</span>
+    <span>11 sections · 64 tokens · 14 components</span>
+    <span style="color: var(--text-3);">— end of reference —</span>
+  </footer>
+
+</div>
+
+</body>
+</html>

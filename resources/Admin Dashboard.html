@@ -1,0 +1,2233 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Linknbit · Admin Dashboard</title>
+<link rel="stylesheet" href="tokens.css">
+<style>
+  html, body { margin: 0; padding: 0; background: var(--bg-base); color: var(--text-1); font-family: var(--font-ui); }
+  * { box-sizing: border-box; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 999px; border: 2px solid var(--bg-base); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
+
+  /* SVG default sizing */
+  svg { display: block; }
+
+  /* =========================================================
+     APP SHELL
+     ========================================================= */
+  .app {
+    display: grid;
+    grid-template-columns: 248px 1fr;
+    min-height: 100vh;
+    width: 1440px;
+    margin: 0 auto;
+    background: var(--bg-base);
+  }
+
+  /* ===== Sidebar ===== */
+  .sidebar {
+    background: var(--surface-1);
+    border-right: 1px solid var(--border-default);
+    padding: 18px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 6px 8px 16px;
+    border-bottom: 1px solid var(--border-subtle);
+    margin-bottom: 14px;
+  }
+  .brand .mark {
+    width: 28px; height: 28px; border-radius: 6px;
+    background: var(--brand-red);
+    display: inline-flex; align-items: center; justify-content: center;
+    color: #fff;
+    font-family: var(--font-display);
+    font-weight: 700; font-size: 15px;
+  }
+  .brand .name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--text-1);
+    letter-spacing: -0.01em;
+  }
+  .brand .workspace {
+    margin-left: auto;
+    width: 22px; height: 22px;
+    border-radius: 5px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-default);
+    color: var(--text-3);
+    display: inline-flex; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+  .brand .workspace svg { width: 12px; height: 12px; }
+
+  .group-label {
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 10px;
+    color: var(--text-4);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    padding: 12px 8px 6px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-ui);
+    font-size: 13px;
+    color: var(--text-2);
+    font-weight: 500;
+    cursor: pointer;
+    position: relative;
+  }
+  .nav-item .ico { width: 16px; height: 16px; flex-shrink: 0; color: var(--text-3); }
+  .nav-item:hover { background: var(--surface-2); color: var(--text-1); }
+  .nav-item:hover .ico { color: var(--text-1); }
+  .nav-item.active { background: rgba(238, 39, 55, 0.13); color: #fff; }
+  .nav-item.active .ico { color: var(--brand-red); }
+  .nav-item.active::before {
+    content: '';
+    position: absolute;
+    left: -14px;
+    top: 8px; bottom: 8px;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: var(--brand-red);
+  }
+  .nav-item .count {
+    margin-left: auto;
+    background: var(--brand-red);
+    color: #fff;
+    font-family: var(--font-ui);
+    font-weight: 700;
+    font-size: 10px;
+    padding: 1px 7px;
+    border-radius: 999px;
+    line-height: 1.4;
+  }
+  .nav-item .count.muted { background: var(--surface-3); color: var(--text-2); }
+
+  .sidebar .user-pill {
+    margin-top: auto;
+    padding: 12px 12px;
+    border-top: 1px solid var(--border-subtle);
+    margin-left: -14px;
+    margin-right: -14px;
+    margin-bottom: -18px;
+    padding-bottom: 18px;
+    padding-left: 14px;
+    padding-right: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .sidebar .user-pill .av {
+    width: 32px; height: 32px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #F94454, #EE2737);
+    color: #fff;
+    font-family: var(--font-ui);
+    font-weight: 700;
+    font-size: 11.5px;
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .sidebar .user-pill .who {
+    flex: 1;
+    min-width: 0;
+  }
+  .sidebar .user-pill .nm {
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text-1);
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sidebar .user-pill .rl {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 2px;
+  }
+  .sidebar .user-pill .more {
+    color: var(--text-3);
+    width: 24px; height: 24px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  .sidebar .user-pill .more:hover { background: var(--surface-2); color: var(--text-1); }
+
+  /* ===== Main column ===== */
+  .main {
+    background: var(--bg-base);
+    min-width: 0;
+  }
+  .topbar {
+    height: 64px;
+    background: rgba(11, 16, 24, 0.85);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border-default);
+    display: flex;
+    align-items: center;
+    padding: 0 32px;
+    gap: 24px;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .topbar .crumbs {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .topbar .crumbs .kicker {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-4);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .topbar .crumbs h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 20px;
+    color: var(--text-1);
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+  .topbar .search {
+    margin-left: 32px;
+    flex: 1;
+    max-width: 440px;
+    background: var(--surface-1);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-sm);
+    padding: 0 12px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .topbar .search svg { width: 14px; height: 14px; color: var(--text-3); }
+  .topbar .search input {
+    background: transparent;
+    border: 0; outline: 0;
+    color: var(--text-1);
+    flex: 1;
+    font: 500 13px var(--font-ui);
+    min-width: 0;
+  }
+  .topbar .search input::placeholder { color: var(--text-3); }
+  .topbar .search .kbd {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-4);
+    padding: 2px 6px;
+    border: 1px solid var(--border-default);
+    border-radius: 4px;
+    letter-spacing: 0.04em;
+  }
+  .topbar .actions {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .icon-btn {
+    width: 36px; height: 36px;
+    border-radius: var(--radius-sm);
+    background: var(--surface-1);
+    border: 1px solid var(--border-default);
+    color: var(--text-2);
+    display: inline-flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    position: relative;
+  }
+  .icon-btn:hover { background: var(--surface-2); color: var(--text-1); }
+  .icon-btn svg { width: 16px; height: 16px; }
+  .icon-btn .pip {
+    position: absolute;
+    top: 4px; right: 4px;
+    min-width: 16px; height: 16px;
+    background: var(--brand-red);
+    color: #fff;
+    font-family: var(--font-ui);
+    font-weight: 700;
+    font-size: 9.5px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    line-height: 1;
+    border: 2px solid var(--bg-base);
+  }
+  .topbar .me {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 10px 4px 4px;
+    border-radius: 999px;
+    background: var(--surface-1);
+    border: 1px solid var(--border-default);
+    cursor: pointer;
+  }
+  .topbar .me:hover { background: var(--surface-2); }
+  .topbar .me .av {
+    width: 28px; height: 28px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #F94454, #EE2737);
+    color: #fff;
+    font-family: var(--font-ui);
+    font-weight: 700;
+    font-size: 11px;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .topbar .me .meta {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+  }
+  .topbar .me .nm {
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 12.5px;
+    color: var(--text-1);
+  }
+  .topbar .me .rl {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: 1px;
+  }
+  .topbar .me svg.chev { width: 12px; height: 12px; color: var(--text-3); margin-left: 2px; }
+
+  /* ===== Content ===== */
+  .content {
+    padding: 28px 32px 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .greet {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .greet h2 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 26px;
+    color: var(--text-1);
+    margin: 0;
+    letter-spacing: -0.015em;
+  }
+  .greet h2 .muted { color: var(--text-3); font-weight: 500; }
+  .greet .sub {
+    font-family: var(--font-ui);
+    font-size: 13px;
+    color: var(--text-3);
+    margin-top: 4px;
+  }
+  .greet .controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .seg {
+    display: flex;
+    background: var(--surface-1);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-sm);
+    padding: 3px;
+    gap: 2px;
+  }
+  .seg button {
+    background: transparent;
+    border: 0;
+    color: var(--text-3);
+    font: 600 12px var(--font-ui);
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+  }
+  .seg button.on { background: var(--surface-3); color: var(--text-1); box-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+  .btn {
+    height: 36px;
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    padding: 0 14px;
+    font: 600 13px var(--font-ui);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn.primary { background: var(--brand-red); color: #fff; box-shadow: 0 4px 12px rgba(238, 39, 55, 0.2); }
+  .btn.primary:hover { background: var(--brand-red-hover); }
+  .btn.secondary { background: var(--surface-1); color: var(--text-1); border-color: var(--border-default); }
+  .btn.secondary:hover { background: var(--surface-2); }
+  .btn svg { width: 14px; height: 14px; }
+
+  /* =========================================================
+     SECTION CARD
+     ========================================================= */
+  .card {
+    background: var(--surface-1);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+  .card-head {
+    padding: 18px 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border-subtle);
+    gap: 16px;
+  }
+  .card-head .title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .card-head h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--text-1);
+    margin: 0;
+    letter-spacing: -0.005em;
+  }
+  .card-head .pill {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--text-3);
+    padding: 2px 8px;
+    background: var(--surface-2);
+    border-radius: 999px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .card-head .right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .card-head .link {
+    font-family: var(--font-ui);
+    font-size: 12.5px;
+    color: var(--text-2);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: 500;
+  }
+  .card-head .link:hover { color: var(--brand-red); }
+  .card-head .link svg { width: 12px; height: 12px; }
+
+  /* =========================================================
+     KPI CARDS
+     ========================================================= */
+  .kpis {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+  .kpi {
+    background: var(--surface-1);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    padding: 20px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    position: relative;
+    overflow: hidden;
+  }
+  .kpi.urgent {
+    background: linear-gradient(135deg, rgba(244, 54, 76, 0.10), rgba(244, 54, 76, 0.02));
+    border-color: var(--error-border);
+  }
+  .kpi.urgent::after {
+    content: "";
+    position: absolute;
+    top: 0; right: 0;
+    width: 80px; height: 80px;
+    background: radial-gradient(circle at top right, rgba(244, 54, 76, 0.18), transparent 70%);
+    pointer-events: none;
+  }
+  .kpi-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .kpi-label {
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 11px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .kpi-label .ico {
+    width: 28px; height: 28px;
+    border-radius: 7px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-2);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .kpi-label .ico svg { width: 14px; height: 14px; }
+  .kpi.urgent .kpi-label .ico { background: var(--error-soft); color: var(--error); border-color: var(--error-border); }
+  .kpi.gold .kpi-label .ico { background: rgba(251, 191, 36, 0.12); color: var(--coin-gold); border-color: rgba(251, 191, 36, 0.3); }
+  .kpi-menu {
+    color: var(--text-4);
+    width: 24px; height: 24px;
+    border-radius: 5px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .kpi-menu:hover { background: var(--surface-2); color: var(--text-2); }
+  .kpi-menu svg { width: 14px; height: 14px; }
+  .kpi-value {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 38px;
+    color: var(--text-1);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .kpi-value .unit {
+    font-size: 16px;
+    color: var(--text-3);
+    font-weight: 500;
+    letter-spacing: 0;
+  }
+  .kpi.urgent .kpi-value { color: var(--error); }
+  .kpi.gold .kpi-value { color: var(--coin-gold); }
+  .kpi-delta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 12px;
+    line-height: 1.2;
+  }
+  .kpi-delta svg { width: 12px; height: 12px; }
+  .kpi-delta .arrow { display: inline-flex; }
+  .kpi-delta.up   { color: var(--success); }
+  .kpi-delta.down { color: var(--error); }
+  .kpi-delta.flat { color: var(--text-3); }
+  .kpi-delta .note { color: var(--text-3); font-weight: 500; margin-left: 2px; }
+
+  /* arc gauge */
+  .arc-gauge {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: -4px;
+  }
+  .arc-gauge .arc-wrap {
+    width: 72px; height: 44px;
+    position: relative;
+  }
+  .arc-gauge svg { width: 72px; height: 44px; overflow: visible; }
+  .arc-gauge .arc-track { stroke: var(--surface-inset); stroke-width: 6; fill: none; }
+  .arc-gauge .arc-fill  { stroke: url(#util-grad); stroke-width: 6; fill: none; stroke-linecap: round; }
+  .arc-gauge .arc-val {
+    position: absolute;
+    bottom: -2px; left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--text-1);
+    font-variant-numeric: tabular-nums;
+  }
+  .arc-gauge .body { flex: 1; }
+  .arc-gauge .top-val {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 32px;
+    line-height: 1;
+    color: var(--text-1);
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .arc-gauge .top-val .unit { font-size: 16px; color: var(--text-3); font-weight: 500; }
+
+  /* =========================================================
+     PROJECT STATUS OVERVIEW
+     ========================================================= */
+  .filters {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 11px 5px 9px;
+    border-radius: 999px;
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 11.5px;
+    border: 1px solid var(--border-default);
+    background: var(--surface-1);
+    color: var(--text-2);
+    cursor: pointer;
+    letter-spacing: 0.02em;
+  }
+  .filter-chip .d { width: 6px; height: 6px; border-radius: 999px; }
+  .filter-chip .x {
+    width: 14px; height: 14px;
+    border-radius: 999px;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: currentColor;
+    opacity: 0.6;
+  }
+  .filter-chip .x svg { width: 8px; height: 8px; }
+  .filter-chip.on.design { background: rgba(167, 139, 250, 0.12); color: #C4B5FD; border-color: rgba(167, 139, 250, 0.35); }
+  .filter-chip.on.design .d { background: #A78BFA; }
+  .filter-chip.on.dev    { background: rgba(34, 211, 238, 0.12); color: #67E8F9; border-color: rgba(34, 211, 238, 0.35); }
+  .filter-chip.on.dev .d { background: #22D3EE; }
+  .filter-chip.on.mkt    { background: rgba(251, 191, 36, 0.12); color: #FCD34D; border-color: rgba(251, 191, 36, 0.35); }
+  .filter-chip.on.mkt .d { background: #FBBF24; }
+
+  .pso-body {
+    padding: 22px;
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 32px;
+    align-items: center;
+  }
+  .pso-summary {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 48px;
+    color: var(--text-1);
+    letter-spacing: -0.025em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+  .pso-summary .total {
+    color: var(--text-1);
+  }
+  .pso-summary .lbl {
+    font-family: var(--font-ui);
+    font-weight: 500;
+    font-size: 13px;
+    color: var(--text-3);
+    letter-spacing: 0;
+  }
+  .pso-bar {
+    display: flex;
+    width: 100%;
+    height: 18px;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    background: var(--surface-inset);
+    border: 1px solid var(--border-subtle);
+  }
+  .pso-bar .seg {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #06080C;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 11px;
+    border-right: 1px solid rgba(11, 16, 24, 0.3);
+    transition: filter 120ms;
+  }
+  .pso-bar .seg:last-child { border-right: 0; }
+  .pso-bar .seg.s-prog   { background: linear-gradient(180deg, #34D399, #22C55E); color: #052e1c; flex: 9; }
+  .pso-bar .seg.s-await  { background: linear-gradient(180deg, #FBBF24, #F59E0B); color: #1A1306; flex: 4; }
+  .pso-bar .seg.s-blocked{ background: linear-gradient(180deg, #F4364C, #DC2638); color: #fff; flex: 2; }
+  .pso-bar .seg.s-done   { background: linear-gradient(180deg, #5C6A7F, #3B4A60); color: #fff; flex: 3; }
+
+  .pso-legend {
+    margin-top: 16px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  .pso-legend .item {
+    border-left: 2px solid;
+    padding: 4px 0 4px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .pso-legend .item.in-progress    { border-color: #22C55E; }
+  .pso-legend .item.awaiting       { border-color: #F59E0B; }
+  .pso-legend .item.blocked        { border-color: #F4364C; }
+  .pso-legend .item.completed      { border-color: #5C6A7F; }
+  .pso-legend .item .lbl {
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 10.5px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .pso-legend .item .v {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 22px;
+    color: var(--text-1);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+  .pso-legend .item .v .pct {
+    font-size: 11px;
+    color: var(--text-3);
+    font-weight: 500;
+  }
+
+  .pso-side {
+    background: var(--surface-2);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-sm);
+    padding: 18px;
+  }
+  .pso-side .h {
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 11px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 14px;
+  }
+  .pso-side .row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px dashed var(--border-subtle);
+  }
+  .pso-side .row:last-child { border-bottom: 0; padding-bottom: 0; }
+  .pso-side .row .d { width: 8px; height: 8px; border-radius: 2px; }
+  .pso-side .row .nm {
+    font-family: var(--font-ui);
+    font-size: 13px;
+    color: var(--text-1);
+    font-weight: 500;
+    flex: 1;
+  }
+  .pso-side .row .nm .sm {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--text-3);
+    display: block;
+    margin-top: 2px;
+    letter-spacing: 0.04em;
+  }
+  .pso-side .row .v {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--text-1);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* =========================================================
+     TWO COLUMN LAYOUT
+     ========================================================= */
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 20px;
+    align-items: flex-start;
+  }
+  .col { display: flex; flex-direction: column; gap: 24px; }
+
+  /* =========================================================
+     AT-RISK PROJECTS
+     ========================================================= */
+  .ar-table {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) 118px 88px 96px minmax(0, 1fr);
+    align-items: center;
+  }
+  .ar-thead, .ar-row {
+    display: contents;
+  }
+  .ar-thead .h {
+    padding: 12px 10px;
+    background: var(--surface-2);
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 10.5px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border-bottom: 1px solid var(--border-default);
+  }
+  .ar-thead .h:first-child { padding-left: 22px; }
+  .ar-thead .h:last-child { padding-right: 22px; text-align: right; }
+  .ar-row .c {
+    padding: 14px 10px;
+    border-bottom: 1px solid var(--border-subtle);
+    font-family: var(--font-ui);
+    font-size: 13px;
+    color: var(--text-2);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+  .ar-row .c:first-child { padding-left: 22px; }
+  .ar-row .c:last-child { padding-right: 16px; justify-content: flex-end; }
+  .ar-row:last-child .c { border-bottom: 0; }
+  .ar-row:hover .c { background: rgba(255,255,255,0.015); }
+  .ar-row.urgent .c { background: rgba(244, 54, 76, 0.04); }
+  .ar-row.urgent:hover .c { background: rgba(244, 54, 76, 0.07); }
+
+  .ar-name {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+  .ar-name .nm {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 13.5px;
+    color: var(--text-1);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    letter-spacing: -0.005em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ar-name .nm > .text { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .ar-name .nm .svc-dot { width: 7px; height: 7px; border-radius: 999px; flex-shrink: 0; }
+  .ar-name .nm .svc-dot.design  { background: #A78BFA; }
+  .ar-name .nm .svc-dot.dev     { background: #22D3EE; }
+  .ar-name .nm .svc-dot.mkt     { background: #FBBF24; }
+  .ar-name .sub {
+    font-family: var(--font-ui);
+    font-size: 11.5px;
+    color: var(--text-3);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .ar-name .sub .svc {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 1px 7px;
+    border-radius: 999px;
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .ar-name .sub .svc.design { background: rgba(167,139,250,0.12); color: #C4B5FD; }
+  .ar-name .sub .svc.dev    { background: rgba(34,211,238,0.12); color: #67E8F9; }
+  .ar-name .sub .svc.mkt    { background: rgba(251,191,36,0.12); color: #FCD34D; }
+  .ar-name .sub .svc .d { width: 5px; height: 5px; border-radius: 999px; background: currentColor; }
+  .ar-name .sub .id { font-family: var(--font-mono); color: var(--text-4); }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 10.5px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    line-height: 1.4;
+    white-space: nowrap;
+    border: 1px solid transparent;
+  }
+  .chip .dot { width: 5px; height: 5px; border-radius: 999px; background: currentColor; flex-shrink: 0; }
+  .chip.svc-design { background: rgba(167,139,250,0.12); color: #C4B5FD; }
+  .chip.svc-dev    { background: rgba(34,211,238,0.12); color: #67E8F9; }
+  .chip.svc-mkt    { background: rgba(251,191,36,0.12); color: #FCD34D; }
+  .chip.st-progress{ background: var(--success-soft); color: var(--success); border-color: var(--success-border); }
+  .chip.st-await   { background: var(--warning-soft); color: var(--warning); border-color: var(--warning-border); }
+  .chip.st-blocked { background: var(--error-soft);   color: var(--error);   border-color: var(--error-border); }
+
+  .ar-stage {
+    font-family: var(--font-ui);
+    font-weight: 500;
+    font-size: 12.5px;
+    color: var(--text-2);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .ar-stage .step {
+    width: 16px; height: 16px;
+    border-radius: 4px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-default);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--text-3);
+    flex-shrink: 0;
+  }
+
+  .ar-deadline {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-1);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-variant-numeric: tabular-nums;
+  }
+  .ar-deadline .days {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .ar-deadline .days .num {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 16px;
+    font-variant-numeric: tabular-nums;
+  }
+  .ar-deadline .label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .ar-deadline.crit .num { color: var(--error); }
+  .ar-deadline.warn .num { color: var(--warning); }
+
+  .ar-pm {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+  }
+  .ar-pm .av {
+    width: 26px; height: 26px;
+    border-radius: 999px;
+    font-family: var(--font-ui);
+    font-weight: 700;
+    font-size: 10.5px;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .ar-pm .av.ak { background: linear-gradient(135deg, #F94454, #C81E2C); }
+  .ar-pm .av.sq { background: linear-gradient(135deg, #A78BFA, #8B5CF6); }
+  .ar-pm .av.zm { background: linear-gradient(135deg, #67E8F9, #06B6D4); color: #04212a; }
+  .ar-pm .av.ba { background: linear-gradient(135deg, #FCD34D, #F59E0B); color: #1A1306; }
+  .ar-pm .av.ut { background: linear-gradient(135deg, #C4B5FD, #8B5CF6); }
+  .ar-pm .nm {
+    font-family: var(--font-ui);
+    font-size: 12px;
+    color: var(--text-1);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+
+  .ar-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+  }
+  .sync-icon {
+    width: 26px; height: 26px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-2);
+    border: 1px solid var(--border-default);
+    flex-shrink: 0;
+    position: relative;
+  }
+  .sync-icon svg { width: 13px; height: 13px; }
+  .sync-icon.ok    { color: var(--success); }
+  .sync-icon.pend  { color: var(--warning); }
+  .sync-icon.err   { color: var(--error); background: var(--error-soft); border-color: var(--error-border); }
+  .sync-icon.err::after {
+    content: ""; position: absolute; top: 2px; right: 2px;
+    width: 5px; height: 5px; border-radius: 999px;
+    background: var(--error);
+    box-shadow: 0 0 0 2px var(--surface-1);
+  }
+  .view-btn {
+    height: 28px;
+    padding: 0 10px;
+    border-radius: 6px;
+    background: transparent;
+    border: 1px solid var(--border-default);
+    color: var(--text-1);
+    font: 600 11.5px var(--font-ui);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+  }
+  .view-btn:hover { background: var(--surface-2); border-color: var(--border-strong); }
+  .view-btn svg { width: 11px; height: 11px; }
+
+  /* =========================================================
+     TEAM PERFORMANCE
+     ========================================================= */
+  .tp-table {
+    display: grid;
+    grid-template-columns: minmax(0, 1.8fr) 100px 100px 110px 130px;
+    align-items: center;
+  }
+  .tp-thead, .tp-row { display: contents; }
+  .tp-thead .h {
+    padding: 12px 12px;
+    background: var(--surface-2);
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 10.5px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border-bottom: 1px solid var(--border-default);
+  }
+  .tp-thead .h:first-child { padding-left: 22px; }
+  .tp-thead .h:last-child { padding-right: 22px; text-align: right; }
+  .tp-row .c {
+    padding: 14px 12px;
+    border-bottom: 1px solid var(--border-subtle);
+    font-family: var(--font-ui);
+    font-size: 13px;
+    color: var(--text-2);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+  .tp-row .c:first-child { padding-left: 22px; }
+  .tp-row .c:last-child { padding-right: 22px; justify-content: flex-end; }
+  .tp-row:last-child .c { border-bottom: 0; }
+  .tp-row:hover .c { background: rgba(255,255,255,0.015); }
+
+  .tp-person {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    min-width: 0;
+  }
+  .tp-person .meta { min-width: 0; }
+  .tp-person .av {
+    width: 32px; height: 32px;
+    border-radius: 999px;
+    font-family: var(--font-ui);
+    font-weight: 700;
+    font-size: 11.5px;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .tp-person .av.ak { background: linear-gradient(135deg, #F94454, #C81E2C); }
+  .tp-person .av.sq { background: linear-gradient(135deg, #A78BFA, #8B5CF6); }
+  .tp-person .av.zm { background: linear-gradient(135deg, #67E8F9, #06B6D4); color: #04212a; }
+  .tp-person .av.ba { background: linear-gradient(135deg, #FCD34D, #F59E0B); color: #1A1306; }
+  .tp-person .meta {
+    display: flex;
+    flex-direction: column;
+  }
+  .tp-person .nm {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 13.5px;
+    color: var(--text-1);
+    letter-spacing: -0.005em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .tp-person .role {
+    font-family: var(--font-ui);
+    font-size: 11.5px;
+    color: var(--text-3);
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .tp-person .role .d { width: 5px; height: 5px; border-radius: 999px; }
+  .tp-person .role.design .d { background: #A78BFA; }
+  .tp-person .role.dev    .d { background: #22D3EE; }
+  .tp-person .role.mkt    .d { background: #FBBF24; }
+
+  .tp-num {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 17px;
+    color: var(--text-1);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+  .tp-num .unit {
+    font-family: var(--font-ui);
+    font-weight: 500;
+    font-size: 11.5px;
+    color: var(--text-3);
+    margin-left: 4px;
+    letter-spacing: 0;
+  }
+  .tp-xp {
+    color: var(--coin-gold);
+  }
+  .tp-xp .unit { color: var(--coin-gold); opacity: 0.7; }
+
+  .workload {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 4px 10px 4px 4px;
+    border-radius: 999px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-default);
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .workload .bars {
+    display: inline-flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 12px;
+  }
+  .workload .bars span {
+    display: block;
+    width: 3px;
+    background: var(--surface-3);
+    border-radius: 1px;
+  }
+  .workload .bars span:nth-child(1) { height: 4px; }
+  .workload .bars span:nth-child(2) { height: 8px; }
+  .workload .bars span:nth-child(3) { height: 12px; }
+  .workload.heavy { color: var(--error); border-color: var(--error-border); background: var(--error-soft); }
+  .workload.heavy .bars span { background: var(--error); }
+  .workload.medium { color: var(--warning); border-color: var(--warning-border); background: var(--warning-soft); }
+  .workload.medium .bars span:nth-child(1),
+  .workload.medium .bars span:nth-child(2) { background: var(--warning); }
+  .workload.light { color: var(--success); border-color: var(--success-border); background: var(--success-soft); }
+  .workload.light .bars span:nth-child(1) { background: var(--success); }
+
+  /* =========================================================
+     ACTIVITY FEED (right column)
+     ========================================================= */
+  .feed {
+    padding: 6px 0 14px;
+  }
+  .feed-row {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 12px;
+    padding: 12px 22px 12px 22px;
+    position: relative;
+  }
+  .feed-row::before {
+    content: "";
+    position: absolute;
+    left: 35px;
+    top: 36px;
+    bottom: -10px;
+    width: 1px;
+    background: var(--border-subtle);
+  }
+  .feed-row:last-child::before { display: none; }
+  .feed-icon {
+    width: 28px; height: 28px;
+    border-radius: 999px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-default);
+    color: var(--text-2);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .feed-icon svg { width: 13px; height: 13px; }
+  .feed-icon.complete  { background: var(--success-soft); color: var(--success); border-color: var(--success-border); }
+  .feed-icon.file      { background: rgba(167,139,250,0.12); color: #C4B5FD; border-color: rgba(167,139,250,0.3); }
+  .feed-icon.approve   { background: var(--success-soft); color: var(--success); border-color: var(--success-border); }
+  .feed-icon.move      { background: rgba(251,191,36,0.12); color: #FCD34D; border-color: rgba(251,191,36,0.3); }
+  .feed-icon.badge     { background: rgba(251,191,36,0.18); color: var(--coin-gold); border-color: rgba(251,191,36,0.4); }
+  .feed-icon.revision  { background: rgba(34,211,238,0.12); color: #67E8F9; border-color: rgba(34,211,238,0.3); }
+  .feed-icon.error     { background: var(--error-soft); color: var(--error); border-color: var(--error); }
+  .feed-icon.xp        { background: rgba(251,191,36,0.18); color: var(--coin-gold); border-color: rgba(251,191,36,0.4); }
+
+  .feed-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+  .feed-text {
+    font-family: var(--font-ui);
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--text-2);
+  }
+  .feed-text .who { color: var(--text-1); font-weight: 600; }
+  .feed-text .obj { color: var(--text-1); font-weight: 500; }
+  .feed-text .obj.code {
+    font-family: var(--font-mono);
+    font-weight: 400;
+    font-size: 11.5px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-subtle);
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin: 0 1px;
+  }
+  .feed-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--text-4);
+    margin-top: 2px;
+    letter-spacing: 0.04em;
+  }
+  .feed-meta .proj {
+    color: var(--text-3);
+  }
+  .feed-row.err {
+    background: linear-gradient(90deg, rgba(244, 54, 76, 0.07), transparent 60%);
+    border-left: 2px solid var(--error);
+    margin: 0 -2px;
+    padding-left: 24px;
+  }
+  .feed-row.err .feed-text .obj { color: var(--error); }
+  .feed-row.err .retry-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 6px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: var(--error-soft);
+    border: 1px solid var(--error-border);
+    color: var(--error);
+    font: 600 10px var(--font-ui);
+    text-decoration: none;
+    width: fit-content;
+    max-width: 100%;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+  .feed-row.err .retry-link svg { width: 10px; height: 10px; }
+
+  /* =========================================================
+     LEADERBOARD
+     ========================================================= */
+  .lb {
+    display: flex;
+    flex-direction: column;
+    padding: 6px 0;
+  }
+  .lb-row {
+    display: grid;
+    grid-template-columns: 24px 32px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 18px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .lb-row:last-child { border-bottom: 0; }
+  .lb-row:hover { background: rgba(255,255,255,0.015); }
+  .lb-rank {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--text-4);
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .lb-row.r-1 .lb-rank { color: #FBBF24; }
+  .lb-row.r-2 .lb-rank { color: #B5C0CF; }
+  .lb-row.r-3 .lb-rank { color: #D97757; }
+  .lb-rank .crown {
+    display: inline-block;
+    margin-top: -2px;
+  }
+
+  .lb-av {
+    width: 32px; height: 32px;
+    border-radius: 999px;
+    font-family: var(--font-ui);
+    font-weight: 700;
+    font-size: 11.5px;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .lb-av.zm { background: linear-gradient(135deg, #67E8F9, #06B6D4); color: #04212a; }
+  .lb-av.ak { background: linear-gradient(135deg, #F94454, #C81E2C); }
+  .lb-av.sq { background: linear-gradient(135deg, #A78BFA, #8B5CF6); }
+  .lb-av.ut { background: linear-gradient(135deg, #C4B5FD, #8B5CF6); }
+  .lb-av.ba { background: linear-gradient(135deg, #FCD34D, #F59E0B); color: #1A1306; }
+
+  .lb-mid {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .lb-mid .nm {
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text-1);
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .lb-mid .meta {
+    margin-top: 3px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .lb-mid .meta .lvl {
+    color: var(--coin-gold);
+    font-weight: 600;
+  }
+  .lb-mid .meta .role {
+    color: var(--text-3);
+  }
+  .lb-mid .bar {
+    margin-top: 6px;
+    height: 4px;
+    background: var(--surface-inset);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .lb-mid .bar .fill {
+    height: 100%;
+    background: var(--xp-gradient);
+    border-radius: 999px;
+  }
+  .lb-xp {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--text-1);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    line-height: 1;
+  }
+  .lb-xp .u {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    color: var(--coin-gold);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 4px;
+    font-weight: 500;
+  }
+
+  .lb-foot {
+    padding: 14px 22px;
+    border-top: 1px solid var(--border-subtle);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .lb-foot .link {
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 12.5px;
+    color: var(--brand-red);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .lb-foot .link svg { width: 12px; height: 12px; }
+  .lb-foot .stamp {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--text-4);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+</style>
+</head>
+<body>
+
+<!-- gradients used by SVG arcs -->
+<svg width="0" height="0" style="position: absolute;">
+  <defs>
+    <linearGradient id="util-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#22D3EE"/>
+      <stop offset="50%" stop-color="#A78BFA"/>
+      <stop offset="100%" stop-color="#22C55E"/>
+    </linearGradient>
+  </defs>
+</svg>
+
+<div class="app" data-screen-label="Admin dashboard">
+
+  <!-- ============================== SIDEBAR ============================== -->
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="mark">L</span>
+      <span class="name">Linknbit</span>
+      <span class="workspace" title="Switch workspace">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 13 12 18 17 13"/><polyline points="7 6 12 11 17 6"/></svg>
+      </span>
+    </div>
+
+    <div class="group-label">Workspace</div>
+    <div class="nav-item active">
+      <svg class="ico" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+      <span>Dashboard</span>
+    </div>
+    <div class="nav-item">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span>Projects</span>
+      <span class="count">18</span>
+    </div>
+    <div class="nav-item">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+      <span>Clients</span>
+    </div>
+    <div class="nav-item">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span>Teams</span>
+    </div>
+    <div class="nav-item">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      <span>Tasks</span>
+      <span class="count">7</span>
+    </div>
+
+    <div class="group-label">Insights</div>
+    <div class="nav-item">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <span>Reports</span>
+    </div>
+    <div class="nav-item">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+      <span>Gamification</span>
+    </div>
+    <div class="nav-item">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+      <span>ClickUp sync</span>
+      <span class="count">1</span>
+    </div>
+
+    <div class="group-label">Account</div>
+    <div class="nav-item">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span>Settings</span>
+    </div>
+
+    <div class="user-pill">
+      <span class="av">AK</span>
+      <div class="who">
+        <div class="nm">Ahmad Karimi</div>
+        <div class="rl">Admin · Ops</div>
+      </div>
+      <span class="more">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+      </span>
+    </div>
+  </aside>
+
+
+  <!-- ============================== MAIN ============================== -->
+  <div class="main">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div class="crumbs">
+        <span class="kicker">Operations</span>
+        <h1>Dashboard</h1>
+      </div>
+
+      <div class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Search projects, tasks, people, clients…">
+        <span class="kbd">⌘K</span>
+      </div>
+
+      <div class="actions">
+        <button class="icon-btn" title="ClickUp sync status">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+        </button>
+        <button class="icon-btn" title="Notifications">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+          <span class="pip">12</span>
+        </button>
+        <div class="me">
+          <span class="av">AK</span>
+          <div class="meta">
+            <span class="nm">Ahmad Karimi</span>
+            <span class="rl">Admin</span>
+          </div>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
+    </header>
+
+
+    <!-- CONTENT -->
+    <main class="content">
+
+      <!-- ====== Greeting / controls ====== -->
+      <div class="greet">
+        <div>
+          <h2>Good afternoon, Ahmad<span class="muted">.</span></h2>
+          <div class="sub">Tuesday, 12 May 2026 · 14:32 PKT · 18 active projects, 7 overdue tasks need your attention</div>
+        </div>
+        <div class="controls">
+          <div class="seg">
+            <button>Today</button>
+            <button class="on">This week</button>
+            <button>Month</button>
+            <button>Quarter</button>
+          </div>
+          <button class="btn secondary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export
+          </button>
+          <button class="btn primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+            New project
+          </button>
+        </div>
+      </div>
+
+      <!-- ====== 1. KPI ROW ====== -->
+      <section class="kpis">
+        <!-- Active projects -->
+        <div class="kpi">
+          <div class="kpi-top">
+            <span class="kpi-label">
+              <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
+              Active projects
+            </span>
+            <span class="kpi-menu">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+            </span>
+          </div>
+          <div class="kpi-value">18</div>
+          <div class="kpi-delta up">
+            <span class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></span>
+            +3 <span class="note">vs last month</span>
+          </div>
+        </div>
+
+        <!-- Overdue tasks (urgent) -->
+        <div class="kpi urgent">
+          <div class="kpi-top">
+            <span class="kpi-label">
+              <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+              Overdue tasks
+            </span>
+            <span class="kpi-menu">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+            </span>
+          </div>
+          <div class="kpi-value">7</div>
+          <div class="kpi-delta down">
+            <span class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+            +2 <span class="note">vs last month · 4 critical</span>
+          </div>
+        </div>
+
+        <!-- Team utilization -->
+        <div class="kpi">
+          <div class="kpi-top">
+            <span class="kpi-label">
+              <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+              Team utilization
+            </span>
+            <span class="kpi-menu">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+            </span>
+          </div>
+          <div class="arc-gauge">
+            <div class="arc-wrap">
+              <svg viewBox="0 0 72 44">
+                <path class="arc-track" d="M 6 38 A 30 30 0 0 1 66 38" />
+                <path class="arc-fill" d="M 6 38 A 30 30 0 0 1 60.85 23.07" />
+              </svg>
+            </div>
+            <div class="body">
+              <div class="top-val">84<span class="unit">%</span></div>
+            </div>
+          </div>
+          <div class="kpi-delta up">
+            <span class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></span>
+            +6pt <span class="note">vs last week · healthy</span>
+          </div>
+        </div>
+
+        <!-- XP awarded -->
+        <div class="kpi gold">
+          <div class="kpi-top">
+            <span class="kpi-label">
+              <span class="ico"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6L12 2z"/></svg></span>
+              XP awarded this month
+            </span>
+            <span class="kpi-menu">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+            </span>
+          </div>
+          <div class="kpi-value">12,400 <span class="unit">XP</span></div>
+          <div class="kpi-delta up">
+            <span class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></span>
+            +18% <span class="note">vs last month · 41 contributors</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====== 2. PROJECT STATUS OVERVIEW ====== -->
+      <section class="card">
+        <div class="card-head">
+          <div class="title">
+            <h3>Project status overview</h3>
+            <span class="pill">18 active</span>
+          </div>
+          <div class="right">
+            <div class="filters">
+              <button class="filter-chip on design">
+                <span class="d"></span>Design <span class="x">×</span>
+              </button>
+              <button class="filter-chip on dev">
+                <span class="d"></span>Development <span class="x">×</span>
+              </button>
+              <button class="filter-chip on mkt">
+                <span class="d"></span>Marketing <span class="x">×</span>
+              </button>
+            </div>
+            <a class="link">View all projects
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </a>
+          </div>
+        </div>
+
+        <div class="pso-body">
+          <div>
+            <div class="pso-summary">
+              <span class="total">18</span>
+              <span class="lbl">projects across<br>3 service lines</span>
+            </div>
+            <div class="pso-bar">
+              <div class="seg s-prog" style="flex: 9;">9 In&nbsp;progress</div>
+              <div class="seg s-await" style="flex: 4;">4 Awaiting&nbsp;client</div>
+              <div class="seg s-blocked" style="flex: 2;">2 Blocked</div>
+              <div class="seg s-done" style="flex: 3;">3 Completed</div>
+            </div>
+            <div class="pso-legend">
+              <div class="item in-progress">
+                <span class="lbl">In progress</span>
+                <span class="v">9<span class="pct">· 50%</span></span>
+              </div>
+              <div class="item awaiting">
+                <span class="lbl">Awaiting client</span>
+                <span class="v">4<span class="pct">· 22%</span></span>
+              </div>
+              <div class="item blocked">
+                <span class="lbl">Blocked</span>
+                <span class="v">2<span class="pct">· 11%</span></span>
+              </div>
+              <div class="item completed">
+                <span class="lbl">Completed</span>
+                <span class="v">3<span class="pct">· 17%</span></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="pso-side">
+            <div class="h">By service line</div>
+            <div class="row">
+              <span class="d" style="background: #A78BFA;"></span>
+              <span class="nm">Design<span class="sm">3 in progress · 1 awaiting</span></span>
+              <span class="v">7</span>
+            </div>
+            <div class="row">
+              <span class="d" style="background: #22D3EE;"></span>
+              <span class="nm">Development<span class="sm">4 in progress · 1 blocked</span></span>
+              <span class="v">6</span>
+            </div>
+            <div class="row">
+              <span class="d" style="background: #FBBF24;"></span>
+              <span class="nm">Marketing<span class="sm">2 in progress · 1 blocked</span></span>
+              <span class="v">5</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ====== 3 + 4 vs 5 + 6 :  TWO COLUMN ====== -->
+      <div class="grid">
+
+        <!-- LEFT (At-Risk + Team Performance) -->
+        <div class="col">
+
+          <!-- AT-RISK PROJECTS -->
+          <section class="card">
+            <div class="card-head">
+              <div class="title">
+                <h3>At-risk projects</h3>
+                <span class="pill" style="color: var(--error); background: var(--error-soft);">● 4 need attention</span>
+              </div>
+              <div class="right">
+                <a class="link">All at-risk
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                </a>
+              </div>
+            </div>
+
+            <div class="ar-table">
+              <div class="ar-thead">
+                <div class="h">Project</div>
+                <div class="h">Stage</div>
+                <div class="h">Deadline</div>
+                <div class="h">PM</div>
+                <div class="h">Status</div>
+              </div>
+
+              <!-- Row 1 — Cricket Sansar App -->
+              <div class="ar-row urgent">
+                <div class="c">
+                  <div class="ar-name">
+                    <span class="nm"><span class="text">Cricket Sansar App</span></span>
+                    <span class="sub"><span class="svc dev"><span class="d"></span>Dev</span>Cricket Sansar <span class="id">CU-8472</span></span>
+                  </div>
+                </div>
+                <div class="c"><span class="ar-stage"><span class="step">4</span>Internal QA</span></div>
+                <div class="c">
+                  <div class="ar-deadline crit">
+                    <span class="days"><span class="num">3</span><span class="label">days</span></span>
+                    <span class="label">May 15</span>
+                  </div>
+                </div>
+                <div class="c">
+                  <div class="ar-pm"><span class="av ak">AK</span><span class="nm">Ahmad K.</span></div>
+                </div>
+                <div class="c">
+                  <div class="ar-actions">
+                    <span class="chip st-blocked"><span class="dot"></span>Blocked</span>
+                    <span class="sync-icon err" title="ClickUp sync error">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    </span>
+                    <button class="view-btn">View
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Row 2 — Rahim Gul Transport -->
+              <div class="ar-row">
+                <div class="c">
+                  <div class="ar-name">
+                    <span class="nm"><span class="text">Rahim Gul Transport Website</span></span>
+                    <span class="sub"><span class="svc design"><span class="d"></span>Design</span>Rahim Gul GLT <span class="id">CU-8390</span></span>
+                  </div>
+                </div>
+                <div class="c"><span class="ar-stage"><span class="step">3</span>Client Review</span></div>
+                <div class="c">
+                  <div class="ar-deadline warn">
+                    <span class="days"><span class="num">5</span><span class="label">days</span></span>
+                    <span class="label">May 17</span>
+                  </div>
+                </div>
+                <div class="c">
+                  <div class="ar-pm"><span class="av sq">SQ</span><span class="nm">Sara Q.</span></div>
+                </div>
+                <div class="c">
+                  <div class="ar-actions">
+                    <span class="chip st-await"><span class="dot"></span>Awaiting</span>
+                    <span class="sync-icon ok" title="ClickUp synced">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    </span>
+                    <button class="view-btn">View
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Row 3 — VPNGuider SEO -->
+              <div class="ar-row urgent">
+                <div class="c">
+                  <div class="ar-name">
+                    <span class="nm"><span class="text">VPNGuider SEO Campaign</span></span>
+                    <span class="sub"><span class="svc mkt"><span class="d"></span>Mkt</span>VPNGuider <span class="id">CU-8221</span></span>
+                  </div>
+                </div>
+                <div class="c"><span class="ar-stage"><span class="step">5</span>Optimization</span></div>
+                <div class="c">
+                  <div class="ar-deadline crit">
+                    <span class="days"><span class="num">2</span><span class="label">days</span></span>
+                    <span class="label">May 14</span>
+                  </div>
+                </div>
+                <div class="c">
+                  <div class="ar-pm"><span class="av zm">ZM</span><span class="nm">Zain M.</span></div>
+                </div>
+                <div class="c">
+                  <div class="ar-actions">
+                    <span class="chip st-blocked"><span class="dot"></span>Blocked</span>
+                    <span class="sync-icon ok" title="ClickUp synced">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    </span>
+                    <button class="view-btn">View
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Row 4 — Linknbit Brand Identity -->
+              <div class="ar-row">
+                <div class="c">
+                  <div class="ar-name">
+                    <span class="nm"><span class="text">Linknbit Brand Identity</span></span>
+                    <span class="sub"><span class="svc design"><span class="d"></span>Design</span>Internal <span class="id">CU-8290</span></span>
+                  </div>
+                </div>
+                <div class="c"><span class="ar-stage"><span class="step">3</span>UI Design</span></div>
+                <div class="c">
+                  <div class="ar-deadline">
+                    <span class="days"><span class="num">6</span><span class="label">days</span></span>
+                    <span class="label">May 18</span>
+                  </div>
+                </div>
+                <div class="c">
+                  <div class="ar-pm"><span class="av ak">AK</span><span class="nm">Ahmad K.</span></div>
+                </div>
+                <div class="c">
+                  <div class="ar-actions">
+                    <span class="chip st-progress"><span class="dot"></span>In progress</span>
+                    <span class="sync-icon pend" title="Syncing">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                    </span>
+                    <button class="view-btn">View
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+
+          <!-- TEAM PERFORMANCE -->
+          <section class="card">
+            <div class="card-head">
+              <div class="title">
+                <h3>Team performance</h3>
+                <span class="pill">4 leads · this week</span>
+              </div>
+              <div class="right">
+                <a class="link">Open team view
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                </a>
+              </div>
+            </div>
+            <div class="tp-table">
+              <div class="tp-thead">
+                <div class="h">Lead</div>
+                <div class="h">Tasks done</div>
+                <div class="h">Avg cycle</div>
+                <div class="h">XP</div>
+                <div class="h">Workload</div>
+              </div>
+
+              <div class="tp-row">
+                <div class="c">
+                  <div class="tp-person">
+                    <span class="av ak">AK</span>
+                    <div class="meta">
+                      <span class="nm">Ahmad Karimi</span>
+                      <span class="role dev"><span class="d"></span>Development Lead</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="c"><span class="tp-num">23<span class="unit">tasks</span></span></div>
+                <div class="c"><span class="tp-num">1.8<span class="unit">days</span></span></div>
+                <div class="c"><span class="tp-num tp-xp">3,200<span class="unit">XP</span></span></div>
+                <div class="c"><span class="workload heavy"><span class="bars"><span></span><span></span><span></span></span>Heavy</span></div>
+              </div>
+
+              <div class="tp-row">
+                <div class="c">
+                  <div class="tp-person">
+                    <span class="av sq">SQ</span>
+                    <div class="meta">
+                      <span class="nm">Sara Qureshi</span>
+                      <span class="role design"><span class="d"></span>Design Lead</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="c"><span class="tp-num">18<span class="unit">tasks</span></span></div>
+                <div class="c"><span class="tp-num">2.1<span class="unit">days</span></span></div>
+                <div class="c"><span class="tp-num tp-xp">2,800<span class="unit">XP</span></span></div>
+                <div class="c"><span class="workload medium"><span class="bars"><span></span><span></span><span></span></span>Medium</span></div>
+              </div>
+
+              <div class="tp-row">
+                <div class="c">
+                  <div class="tp-person">
+                    <span class="av zm">ZM</span>
+                    <div class="meta">
+                      <span class="nm">Zain Malik</span>
+                      <span class="role mkt"><span class="d"></span>Marketing Lead</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="c"><span class="tp-num">31<span class="unit">tasks</span></span></div>
+                <div class="c"><span class="tp-num">1.2<span class="unit">days</span></span></div>
+                <div class="c"><span class="tp-num tp-xp">4,100<span class="unit">XP</span></span></div>
+                <div class="c"><span class="workload heavy"><span class="bars"><span></span><span></span><span></span></span>Heavy</span></div>
+              </div>
+
+              <div class="tp-row">
+                <div class="c">
+                  <div class="tp-person">
+                    <span class="av ba">BA</span>
+                    <div class="meta">
+                      <span class="nm">Bilal Ahmed</span>
+                      <span class="role design"><span class="d"></span>Design Lead</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="c"><span class="tp-num">11<span class="unit">tasks</span></span></div>
+                <div class="c"><span class="tp-num">3.0<span class="unit">days</span></span></div>
+                <div class="c"><span class="tp-num tp-xp">1,600<span class="unit">XP</span></span></div>
+                <div class="c"><span class="workload light"><span class="bars"><span></span><span></span><span></span></span>Light</span></div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+
+        <!-- RIGHT (Activity + Leaderboard) -->
+        <div class="col">
+
+          <!-- ACTIVITY FEED -->
+          <section class="card">
+            <div class="card-head">
+              <div class="title">
+                <h3>Recent activity</h3>
+                <span class="pill" style="color: var(--success); background: var(--success-soft);">● live</span>
+              </div>
+              <div class="right">
+                <a class="link">All
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                </a>
+              </div>
+            </div>
+
+            <div class="feed">
+              <div class="feed-row">
+                <div class="feed-icon complete">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div class="feed-body">
+                  <div class="feed-text">
+                    <span class="who">Ahmad Karimi</span> completed task <span class="obj code">API endpoint for match scores</span>
+                  </div>
+                  <div class="feed-meta">
+                    <span class="proj">Cricket Sansar App</span> · <span>2 min ago</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="feed-row">
+                <div class="feed-icon file">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                </div>
+                <div class="feed-body">
+                  <div class="feed-text">
+                    <span class="who">Sara Qureshi</span> uploaded <span class="obj code">Homepage_v3.fig</span>
+                  </div>
+                  <div class="feed-meta">
+                    <span class="proj">Linknbit Brand Identity</span> · <span>14 min ago</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="feed-row">
+                <div class="feed-icon approve">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                </div>
+                <div class="feed-body">
+                  <div class="feed-text">
+                    <span class="who">Client (Cricket Sansar)</span> approved stage <span class="obj">Wireframing</span>
+                  </div>
+                  <div class="feed-meta">
+                    <span class="proj">Cricket Sansar App</span> · <span>1 hr ago</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="feed-row">
+                <div class="feed-icon move">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 9 2 12 5 15"/><polyline points="9 5 12 2 15 5"/><polyline points="15 19 12 22 9 19"/><polyline points="19 9 22 12 19 15"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/></svg>
+                </div>
+                <div class="feed-body">
+                  <div class="feed-text">
+                    <span class="who">Zain Malik</span> moved project to <span class="obj">Optimization</span> stage
+                  </div>
+                  <div class="feed-meta">
+                    <span class="proj">VPNGuider SEO Campaign</span> · <span>2 hrs ago</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="feed-row">
+                <div class="feed-icon badge">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 14.39 8.26 21 9.27l-4.78 4.66 1.13 6.58L12 17.4 6.66 20.51l1.13-6.58L3 9.27l6.61-1.01L12 2z"/></svg>
+                </div>
+                <div class="feed-body">
+                  <div class="feed-text">
+                    <span class="who">Bilal Ahmed</span> earned badge <span class="obj">First Approval</span>
+                  </div>
+                  <div class="feed-meta">
+                    <span class="proj">Achievement</span> · <span>3 hrs ago</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="feed-row">
+                <div class="feed-icon revision">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9"/><polyline points="3 4 3 12 11 12"/></svg>
+                </div>
+                <div class="feed-body">
+                  <div class="feed-text">
+                    <span class="who">Sara Qureshi</span> requested revision on <span class="obj code">Mobile Navigation Design</span>
+                  </div>
+                  <div class="feed-meta">
+                    <span class="proj">Linknbit Brand Identity</span> · <span>4 hrs ago</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="feed-row err">
+                <div class="feed-icon error">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                </div>
+                <div class="feed-body">
+                  <div class="feed-text">
+                    <span class="obj">ClickUp sync error</span> — webhook returned 503, last successful sync 6h ago.
+                  </div>
+                  <div class="feed-meta">
+                    <span class="proj">Cricket Sansar App</span> · <span>5 hrs ago</span>
+                  </div>
+                  <a class="retry-link" href="#">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                    Retry sync
+                  </a>
+                </div>
+              </div>
+
+              <div class="feed-row">
+                <div class="feed-icon xp">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6L12 2z"/></svg>
+                </div>
+                <div class="feed-body">
+                  <div class="feed-text">
+                    <span class="who">Ahmad Karimi</span> earned <span class="obj" style="color: var(--coin-gold);">+450 XP</span> for completing sprint
+                  </div>
+                  <div class="feed-meta">
+                    <span class="proj">Sprint 12 · wrap-up</span> · <span>6 hrs ago</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+
+          <!-- LEADERBOARD -->
+          <section class="card">
+            <div class="card-head">
+              <div class="title">
+                <h3>XP leaderboard</h3>
+                <span class="pill">This week</span>
+              </div>
+            </div>
+
+            <div class="lb">
+
+              <div class="lb-row r-1">
+                <span class="lb-rank">
+                  <svg class="crown" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M2 19h20l-2-9-5 4-3-7-3 7-5-4-2 9z"/></svg>
+                </span>
+                <span class="lb-av zm">ZM</span>
+                <div class="lb-mid">
+                  <span class="nm">Zain Malik</span>
+                  <span class="meta"><span class="lvl">L8</span> · <span class="role">Marketing</span></span>
+                  <div class="bar"><div class="fill" style="width: 92%;"></div></div>
+                </div>
+                <div class="lb-xp">4,100<span class="u">XP</span></div>
+              </div>
+
+              <div class="lb-row r-2">
+                <span class="lb-rank">02</span>
+                <span class="lb-av ak">AK</span>
+                <div class="lb-mid">
+                  <span class="nm">Ahmad Karimi</span>
+                  <span class="meta"><span class="lvl">L7</span> · <span class="role">Development</span></span>
+                  <div class="bar"><div class="fill" style="width: 78%;"></div></div>
+                </div>
+                <div class="lb-xp">3,200<span class="u">XP</span></div>
+              </div>
+
+              <div class="lb-row r-3">
+                <span class="lb-rank">03</span>
+                <span class="lb-av sq">SQ</span>
+                <div class="lb-mid">
+                  <span class="nm">Sara Qureshi</span>
+                  <span class="meta"><span class="lvl">L6</span> · <span class="role">Design</span></span>
+                  <div class="bar"><div class="fill" style="width: 68%;"></div></div>
+                </div>
+                <div class="lb-xp">2,800<span class="u">XP</span></div>
+              </div>
+
+              <div class="lb-row">
+                <span class="lb-rank">04</span>
+                <span class="lb-av ut">UT</span>
+                <div class="lb-mid">
+                  <span class="nm">Usman Tariq</span>
+                  <span class="meta"><span class="lvl">L5</span> · <span class="role">Designer</span></span>
+                  <div class="bar"><div class="fill" style="width: 51%;"></div></div>
+                </div>
+                <div class="lb-xp">2,100<span class="u">XP</span></div>
+              </div>
+
+              <div class="lb-row">
+                <span class="lb-rank">05</span>
+                <span class="lb-av ba">BA</span>
+                <div class="lb-mid">
+                  <span class="nm">Bilal Ahmed</span>
+                  <span class="meta"><span class="lvl">L4</span> · <span class="role">Design</span></span>
+                  <div class="bar"><div class="fill" style="width: 39%;"></div></div>
+                </div>
+                <div class="lb-xp">1,600<span class="u">XP</span></div>
+              </div>
+
+            </div>
+
+            <div class="lb-foot">
+              <a class="link" href="#">View full leaderboard
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              </a>
+              <span class="stamp">Resets · 7d 14h</span>
+            </div>
+          </section>
+
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+</body>
+</html>

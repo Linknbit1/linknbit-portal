@@ -1,0 +1,1112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Cricket Sansar · Linknbit Client Portal</title>
+<link rel="stylesheet" href="tokens.css">
+<style>
+  /* =========================================================
+     CLIENT PORTAL — LIGHT MODE
+     Warm off-white surfaces, type-driven, premium feel.
+     ========================================================= */
+
+  html, body { margin: 0; padding: 0; }
+  * { box-sizing: border-box; }
+
+  :root {
+    /* Light-mode overrides for the client portal only */
+    --c-bg:           #FAF7F2;   /* page — warm cream */
+    --c-bg-alt:       #F2EDE4;   /* subtle band */
+    --c-surface:      #FFFFFF;   /* cards */
+    --c-surface-2:    #FBF8F3;   /* nested inset */
+    --c-border:       #EAE3D6;   /* default warm border */
+    --c-border-2:     #DBD2C0;   /* stronger */
+    --c-border-3:     #C9BFAB;
+    --c-ink-1:        #1A1612;   /* primary text */
+    --c-ink-2:        #4F4940;
+    --c-ink-3:        #877F71;
+    --c-ink-4:        #B7AE9D;
+    --c-accent:       #EE2737;   /* brand red */
+    --c-accent-hover: #F94454;
+    --c-success:      #1F9D55;
+    --c-success-soft: #1F9D5512;
+    --c-success-line: #1F9D5544;
+    --c-warning:      #C77900;
+    --c-warning-soft: #FBBF2418;
+    --c-warning-line: #C7790044;
+    --c-info:         #3568D4;
+    --c-info-soft:    #3568D414;
+    --c-dev:          #0E8B9A;   /* dimmer cyan for light bg */
+    --c-dev-soft:     #0E8B9A14;
+    --c-design:       #7A3FD9;   /* dimmer violet */
+    --c-design-soft:  #7A3FD914;
+    --c-mkt:          #B07A0F;
+    --c-mkt-soft:     #B07A0F14;
+  }
+
+  body {
+    background: var(--c-bg);
+    color: var(--c-ink-1);
+    font-family: var(--font-ui);
+    font-size: 15px;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  .page { max-width: 1280px; margin: 0 auto; padding: 0; }
+  a { color: inherit; }
+  button { font-family: inherit; cursor: pointer; }
+  svg { display: block; }
+
+  /* ===== TOP NAV ===== */
+  .topnav {
+    background: var(--c-surface);
+    border-bottom: 1px solid var(--c-border);
+    height: 72px;
+    display: flex; align-items: center;
+    padding: 0 40px;
+    gap: 36px;
+    position: sticky; top: 0; z-index: 30;
+  }
+  .brand-block { display: flex; align-items: center; gap: 12px; }
+  .brand-block .mk {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: var(--c-accent); color: #fff;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: var(--font-display); font-weight: 700; font-size: 16px;
+  }
+  .brand-block .wm { display: flex; flex-direction: column; line-height: 1.05; }
+  .brand-block .wm .title {
+    font-family: var(--font-display); font-weight: 700; font-size: 16px;
+    color: var(--c-ink-1); letter-spacing: -0.005em;
+  }
+  .brand-block .wm .sub {
+    font-family: var(--font-mono); font-size: 9.5px; color: var(--c-ink-3);
+    letter-spacing: 0.1em; text-transform: uppercase; margin-top: 2px;
+  }
+  .brand-block .wm .sub b { color: var(--c-accent); font-weight: 700; }
+
+  .nav-items { display: flex; align-items: center; gap: 4px; margin-left: 16px; }
+  .nav-items a {
+    text-decoration: none;
+    padding: 10px 14px; border-radius: 8px;
+    font-weight: 500; font-size: 14px; color: var(--c-ink-2);
+    position: relative;
+  }
+  .nav-items a:hover { background: var(--c-bg); color: var(--c-ink-1); }
+  .nav-items a.active { color: var(--c-ink-1); font-weight: 600; }
+  .nav-items a.active::after {
+    content: ""; position: absolute;
+    bottom: -23px; left: 14px; right: 14px;
+    height: 2px; background: var(--c-accent); border-radius: 999px 999px 0 0;
+  }
+  .nav-items a .badge {
+    margin-left: 7px; background: var(--c-accent); color: #fff;
+    font-size: 10px; font-weight: 700;
+    padding: 1px 6px; border-radius: 999px;
+    vertical-align: 1px;
+  }
+
+  .nav-right { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+  .bell {
+    width: 38px; height: 38px; border-radius: 9px;
+    background: transparent; border: 1px solid transparent;
+    color: var(--c-ink-2); display: inline-flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .bell:hover { background: var(--c-bg); color: var(--c-ink-1); }
+  .bell svg { width: 17px; height: 17px; }
+  .bell::after {
+    content: ""; position: absolute; top: 9px; right: 10px;
+    width: 8px; height: 8px; border-radius: 999px;
+    background: var(--c-accent); border: 2px solid var(--c-surface);
+  }
+
+  .profile {
+    display: flex; align-items: center; gap: 10px;
+    padding: 5px 14px 5px 5px;
+    border-radius: 999px;
+    background: var(--c-bg);
+    border: 1px solid var(--c-border);
+    cursor: pointer;
+  }
+  .profile:hover { background: var(--c-bg-alt); }
+  .profile .av {
+    width: 30px; height: 30px; border-radius: 999px;
+    background: linear-gradient(135deg, #FBBF24, #B07A0F);
+    color: #1A1612; font-weight: 700; font-size: 11.5px;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .profile .who { line-height: 1.15; min-width: 0; }
+  .profile .nm { font-weight: 600; font-size: 13.5px; color: var(--c-ink-1); }
+  .profile .rl {
+    font-family: var(--font-mono); font-size: 9.5px;
+    color: var(--c-warning); margin-top: 2px;
+    letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .profile .rl::before {
+    content: ""; width: 5px; height: 5px; border-radius: 999px; background: var(--c-warning);
+  }
+  .profile .chev { color: var(--c-ink-3); }
+  .profile .chev svg { width: 12px; height: 12px; }
+
+  /* ===== HERO ===== */
+  .hero {
+    padding: 56px 40px 24px;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    gap: 24px;
+  }
+  .hero h1 {
+    font-family: var(--font-display);
+    font-weight: 700; font-size: 44px; line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: var(--c-ink-1);
+    margin: 0 0 14px;
+  }
+  .hero h1 .you { color: var(--c-accent); }
+  .hero .sub {
+    font-size: 16px; line-height: 1.5; color: var(--c-ink-2);
+    max-width: 520px;
+  }
+  .hero .sub a {
+    color: var(--c-accent); font-weight: 600;
+    text-decoration: none;
+    border-bottom: 1px solid currentColor;
+    padding-bottom: 1px;
+  }
+  .hero .sub a:hover { color: var(--c-accent-hover); }
+  .hero .date-tile {
+    text-align: right;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--c-ink-3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    line-height: 1.6;
+  }
+  .hero .date-tile .big {
+    font-family: var(--font-display);
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--c-ink-1);
+    letter-spacing: 0.02em;
+    text-transform: none;
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  /* ===== SECTION HEADER ===== */
+  .section { padding: 0 40px; margin-top: 32px; }
+  .sec-head {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    margin-bottom: 18px; gap: 16px;
+  }
+  .sec-head .titles { display: flex; flex-direction: column; gap: 4px; }
+  .sec-head h2 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 22px;
+    margin: 0;
+    color: var(--c-ink-1);
+    letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .sec-head h2 .count-circ {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 26px; height: 26px; padding: 0 8px;
+    border-radius: 999px;
+    background: var(--c-accent); color: #fff;
+    font-family: var(--font-ui); font-weight: 700; font-size: 11.5px;
+  }
+  .sec-head h2 .count-circ.muted { background: var(--c-bg-alt); color: var(--c-ink-2); }
+  .sec-head .lbl {
+    font-family: var(--font-mono); font-size: 10.5px;
+    color: var(--c-ink-3); letter-spacing: 0.1em;
+    text-transform: uppercase; font-weight: 600;
+  }
+  .sec-head .right-link {
+    font-size: 13.5px; color: var(--c-ink-2); font-weight: 600;
+    text-decoration: none;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .sec-head .right-link:hover { color: var(--c-ink-1); }
+  .sec-head .right-link svg { width: 12px; height: 12px; }
+
+  /* ===== Common chips ===== */
+  .ch {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px; border-radius: 999px;
+    font-weight: 600; font-size: 10.5px;
+    letter-spacing: 0.04em; text-transform: uppercase; line-height: 1.4;
+    white-space: nowrap;
+    border: 1px solid transparent;
+  }
+  .ch .dot { width: 5px; height: 5px; border-radius: 999px; background: currentColor; }
+  .ch.svc-dev    { background: var(--c-dev-soft);    color: var(--c-dev);    border-color: rgba(14,139,154,0.25); }
+  .ch.svc-design { background: var(--c-design-soft); color: var(--c-design); border-color: rgba(122,63,217,0.22); }
+  .ch.svc-mkt    { background: var(--c-mkt-soft);    color: var(--c-mkt);    border-color: rgba(176,122,15,0.22); }
+  .ch.st-progress { background: rgba(14,139,154,0.08); color: var(--c-dev); border-color: rgba(14,139,154,0.25); }
+  .ch.st-awaiting { background: var(--c-warning-soft); color: var(--c-warning); border-color: var(--c-warning-line); }
+  .ch.st-done    { background: var(--c-success-soft); color: var(--c-success); border-color: var(--c-success-line); }
+
+  /* =========================================================
+     2. ACTIVE PROJECTS — card grid
+     ========================================================= */
+  .proj-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .proj-card {
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: 16px;
+    padding: 28px 28px 24px;
+    display: flex; flex-direction: column;
+    gap: 22px;
+    position: relative;
+    transition: border-color 150ms, box-shadow 150ms;
+  }
+  .proj-card:hover { border-color: var(--c-border-2); }
+  .proj-card.awaiting {
+    border-color: var(--c-warning);
+    box-shadow: 0 1px 0 var(--c-warning) inset,
+                0 24px 48px -28px rgba(199, 121, 0, 0.32),
+                0 0 0 4px rgba(251, 191, 36, 0.08);
+  }
+  .proj-card .awaiting-flag {
+    position: absolute; top: 0; right: 28px;
+    transform: translateY(-50%);
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: var(--c-warning); color: #fff;
+    font-weight: 700; font-size: 10.5px; letter-spacing: 0.1em;
+    text-transform: uppercase;
+    box-shadow: 0 6px 16px rgba(199, 121, 0, 0.25);
+  }
+  .proj-card .awaiting-flag svg { width: 11px; height: 11px; }
+
+  .pc-top { display: flex; align-items: flex-start; gap: 16px; }
+  .pc-tile {
+    width: 54px; height: 54px; border-radius: 12px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: var(--font-display); font-weight: 700; font-size: 19px;
+    flex-shrink: 0;
+  }
+  .pc-tile.dev    { background: linear-gradient(140deg, #B8E8EE, #0E8B9A); color: #08323A; }
+  .pc-tile.design { background: linear-gradient(140deg, #E2D2FF, #7A3FD9); color: #fff; }
+  .pc-name-block { flex: 1; min-width: 0; }
+  .pc-chips { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 8px; }
+  .pc-name {
+    font-family: var(--font-display); font-weight: 700;
+    font-size: 22px; line-height: 1.2; letter-spacing: -0.01em;
+    color: var(--c-ink-1); margin: 0;
+  }
+  .pc-stage {
+    margin-top: 6px;
+    font-size: 13.5px; color: var(--c-ink-3);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .pc-stage b { color: var(--c-ink-2); font-weight: 600; }
+
+  /* Stage description (plain-language) */
+  .pc-stage-desc {
+    background: var(--c-surface-2);
+    border: 1px solid var(--c-border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 14px; line-height: 1.55;
+    color: var(--c-ink-2);
+  }
+  .pc-stage-desc .next-step {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--c-border-2);
+    display: flex; align-items: center; gap: 8px;
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--c-ink-3); letter-spacing: 0.04em;
+    text-transform: uppercase; font-weight: 600;
+  }
+  .pc-stage-desc .next-step svg { width: 11px; height: 11px; color: var(--c-ink-3); }
+  .pc-stage-desc .next-step .txt { text-transform: none; letter-spacing: normal; color: var(--c-ink-2); font-family: var(--font-ui); font-size: 13px; font-weight: 500; }
+
+  /* Progress section */
+  .pc-progress { display: flex; flex-direction: column; gap: 8px; }
+  .pc-progress .pp-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--c-ink-3); letter-spacing: 0.06em;
+    text-transform: uppercase; font-weight: 600;
+  }
+  .pc-progress .pp-head b {
+    font-family: var(--font-display); color: var(--c-ink-1);
+    font-size: 18px; font-weight: 700; letter-spacing: -0.01em;
+    text-transform: none;
+  }
+  .pc-bar { height: 8px; background: var(--c-bg-alt); border-radius: 999px; overflow: hidden; position: relative; }
+  .pc-bar .fill { height: 100%; border-radius: 999px; }
+  .pc-bar .fill.dev { background: linear-gradient(90deg, #0E8B9A, #22D3EE); }
+  .pc-bar .fill.design { background: linear-gradient(90deg, #7A3FD9, #A78BFA); }
+
+  /* Footer row */
+  .pc-foot {
+    display: flex; align-items: center; gap: 14px;
+    padding-top: 18px;
+    border-top: 1px solid var(--c-border);
+  }
+  .pc-pm { display: flex; align-items: center; gap: 10px; }
+  .pc-pm .av {
+    width: 30px; height: 30px; border-radius: 999px;
+    font-weight: 700; font-size: 11px;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: #fff;
+  }
+  .pc-pm .av.ak { background: linear-gradient(135deg, #A78BFA, #7A3FD9); }
+  .pc-pm .av.sq { background: linear-gradient(135deg, #F9A8D4, #BE185D); }
+  .pc-pm .info { line-height: 1.2; }
+  .pc-pm .lbl { font-family: var(--font-mono); font-size: 9.5px; color: var(--c-ink-3); letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; }
+  .pc-pm .nm { font-size: 13.5px; font-weight: 600; color: var(--c-ink-1); margin-top: 1px; }
+  .pc-cta { margin-left: auto; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    height: 38px; padding: 0 18px; border-radius: 9px;
+    border: 1px solid transparent;
+    font: 600 13.5px var(--font-ui);
+    cursor: pointer; white-space: nowrap;
+    transition: background 120ms, color 120ms, border-color 120ms;
+  }
+  .btn svg { width: 13px; height: 13px; }
+  .btn.primary {
+    background: var(--c-accent); color: #fff;
+    box-shadow: 0 4px 12px rgba(238, 39, 55, 0.18);
+  }
+  .btn.primary:hover { background: var(--c-accent-hover); }
+  .btn.success {
+    background: var(--c-success); color: #fff;
+    box-shadow: 0 4px 12px rgba(31, 157, 85, 0.22);
+  }
+  .btn.success:hover { background: #1A8E4B; }
+  .btn.ghost {
+    background: transparent; color: var(--c-ink-1);
+    border-color: var(--c-border-2);
+  }
+  .btn.ghost:hover { background: var(--c-bg); border-color: var(--c-border-3); }
+  .btn.solid {
+    background: var(--c-ink-1); color: #fff;
+  }
+  .btn.solid:hover { background: #2a2520; }
+
+  /* =========================================================
+     3. APPROVALS
+     ========================================================= */
+  .approvals-wrap {
+    background: linear-gradient(180deg, rgba(199, 121, 0, 0.04), rgba(199, 121, 0, 0));
+    border: 1px solid var(--c-warning-line);
+    border-radius: 18px;
+    padding: 4px;
+  }
+  .approval-card {
+    background: var(--c-surface);
+    border-radius: 14px;
+    padding: 24px 28px;
+    display: flex;
+    gap: 28px;
+    align-items: flex-start;
+  }
+  .ap-left {
+    flex: 1; min-width: 0;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .approval-card + .approval-card {
+    border-top: 1px dashed var(--c-border-2);
+    border-radius: 0;
+  }
+
+  .ap-top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .ap-type {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 5px 11px; border-radius: 999px;
+    background: var(--c-warning); color: #fff;
+    font-weight: 700; font-size: 10.5px;
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .ap-type svg { width: 11px; height: 11px; }
+  .ap-meta {
+    font-family: var(--font-mono); font-size: 11.5px;
+    color: var(--c-ink-3); letter-spacing: 0.04em;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .ap-meta .dot { width: 3px; height: 3px; border-radius: 999px; background: currentColor; display: inline-block; }
+  .ap-meta b { color: var(--c-ink-2); font-weight: 600; }
+
+  .ap-title-row { display: flex; align-items: flex-start; gap: 14px; }
+  .ap-title-row .ttl {
+    font-family: var(--font-display); font-weight: 600;
+    font-size: 18px; line-height: 1.3; color: var(--c-ink-1);
+    margin: 0; letter-spacing: -0.005em;
+  }
+  .ap-title-row .ttl .proj-name { color: var(--c-ink-3); font-weight: 500; }
+
+  .ap-body { display: flex; flex-direction: column; gap: 14px; }
+  .ap-msg {
+    background: var(--c-surface-2); border: 1px solid var(--c-border);
+    border-left: 3px solid var(--c-border-2);
+    padding: 14px 18px; border-radius: 8px;
+    font-size: 14px; line-height: 1.6; color: var(--c-ink-2);
+  }
+  .ap-msg .from {
+    font-family: var(--font-mono); font-size: 10.5px;
+    color: var(--c-ink-3); letter-spacing: 0.06em;
+    text-transform: uppercase; font-weight: 600;
+    margin-bottom: 5px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .ap-msg .from b { color: var(--c-ink-2); font-weight: 700; }
+  .ap-msg .body { color: var(--c-ink-1); }
+
+  .ap-file {
+    display: inline-flex; align-items: center; gap: 12px;
+    padding: 10px 14px 10px 10px;
+    background: var(--c-surface); border: 1px solid var(--c-border);
+    border-radius: 10px;
+    align-self: flex-start;
+    text-decoration: none; color: inherit;
+  }
+  .ap-file:hover { border-color: var(--c-border-2); background: var(--c-surface-2); }
+  .ap-file .ic {
+    width: 36px; height: 36px; border-radius: 7px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-weight: 700; font-size: 9px;
+    letter-spacing: 0.04em;
+  }
+  .ap-file .ic.figma {
+    background: linear-gradient(180deg, #F24E1E 0%, #FF7262 33%, #A259FF 66%, #1ABCFE 100%);
+    color: #fff;
+  }
+  .ap-file .body { line-height: 1.2; }
+  .ap-file .nm { font-weight: 600; font-size: 13.5px; color: var(--c-ink-1); }
+  .ap-file .meta { font-family: var(--font-mono); font-size: 10.5px; color: var(--c-ink-3); margin-top: 2px; letter-spacing: 0.04em; }
+  .ap-file .open-link {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 12px; font-weight: 600; color: var(--c-accent);
+    margin-left: 10px; padding-left: 12px;
+    border-left: 1px solid var(--c-border);
+    text-decoration: none;
+  }
+  .ap-file .open-link svg { width: 12px; height: 12px; }
+
+  .ap-actions {
+    display: flex; flex-direction: column; gap: 8px;
+    width: 200px;
+    flex-shrink: 0;
+    align-items: stretch;
+  }
+  .ap-actions .btn { width: 100%; justify-content: center; }
+  .ap-actions .deadline {
+    margin-top: 6px;
+    padding: 10px 12px;
+    background: var(--c-bg-alt); border-radius: 8px;
+    font-family: var(--font-mono); font-size: 10.5px;
+    color: var(--c-ink-3); letter-spacing: 0.04em;
+    text-align: center; line-height: 1.5;
+  }
+  .ap-actions .deadline b { color: var(--c-ink-1); font-weight: 700; display: block; font-family: var(--font-display); font-size: 14px; letter-spacing: 0; }
+
+  /* =========================================================
+     4. RECENT UPDATES (timeline) — two-col band with files
+     ========================================================= */
+  .band-2col {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 24px;
+  }
+  .timeline-card, .files-card {
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: 14px;
+    padding: 24px 26px;
+  }
+  .tl-card-head {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 18px;
+  }
+  .tl-card-head .ttl {
+    font-family: var(--font-display); font-weight: 600;
+    font-size: 16px; color: var(--c-ink-1); letter-spacing: -0.005em;
+  }
+  .tl-card-head .cnt {
+    font-family: var(--font-mono); font-size: 10px; color: var(--c-ink-3);
+    padding: 2px 8px; background: var(--c-bg-alt); border-radius: 999px;
+    letter-spacing: 0.06em; text-transform: uppercase; font-weight: 600;
+  }
+  .tl-card-head .right {
+    margin-left: auto;
+    font-size: 12.5px; color: var(--c-ink-3); font-weight: 600;
+    cursor: pointer; text-decoration: none;
+  }
+  .tl-card-head .right:hover { color: var(--c-ink-1); }
+
+  .timeline { position: relative; }
+  .timeline::before {
+    content: ""; position: absolute;
+    left: 11px; top: 6px; bottom: 6px;
+    width: 2px; background: var(--c-border);
+  }
+  .tl-item { position: relative; padding: 8px 0 14px 36px; }
+  .tl-item::before {
+    content: ""; position: absolute;
+    left: 6px; top: 12px;
+    width: 12px; height: 12px; border-radius: 999px;
+    background: var(--c-surface);
+    border: 2px solid var(--c-border-3);
+  }
+  .tl-item.you::before { border-color: var(--c-accent); background: var(--c-accent); }
+  .tl-item.upload::before { border-color: var(--c-info); }
+  .tl-item.stage::before { border-color: var(--c-dev); }
+  .tl-item.approve::before { border-color: var(--c-success); background: var(--c-success); }
+
+  .tl-item .line {
+    font-size: 14px; line-height: 1.55; color: var(--c-ink-1);
+  }
+  .tl-item .line .actor { font-weight: 600; }
+  .tl-item .line .actor.you { color: var(--c-accent); }
+  .tl-item .line .verb { color: var(--c-ink-2); }
+  .tl-item .line .target { font-weight: 600; }
+  .tl-item .line .target.file { font-family: var(--font-mono); font-size: 12.5px; background: var(--c-bg-alt); padding: 1px 6px; border-radius: 4px; }
+  .tl-item .when {
+    margin-top: 4px;
+    font-family: var(--font-mono); font-size: 10.5px;
+    color: var(--c-ink-3); letter-spacing: 0.04em;
+  }
+  .tl-item .when .proj { color: var(--c-ink-2); font-weight: 600; }
+
+  /* =========================================================
+     5. DELIVERED FILES
+     ========================================================= */
+  .file-list { display: flex; flex-direction: column; gap: 0; }
+  .file-row {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--c-border);
+  }
+  .file-row:last-child { border-bottom: none; }
+  .file-row .ic {
+    width: 44px; height: 44px; border-radius: 9px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-weight: 700; font-size: 9.5px;
+    letter-spacing: 0.04em;
+  }
+  .file-row .ic.pdf { background: rgba(238, 39, 55, 0.08); color: var(--c-accent); border: 1px solid rgba(238, 39, 55, 0.18); }
+  .file-row .ic.png { background: var(--c-info-soft); color: var(--c-info); border: 1px solid rgba(53, 104, 212, 0.22); }
+  .file-row .ic.fig { background: linear-gradient(180deg, #F24E1E 0%, #FF7262 33%, #A259FF 66%, #1ABCFE 100%); color: #fff; }
+  .file-row .ic.zip { background: var(--c-bg-alt); color: var(--c-ink-2); border: 1px solid var(--c-border); }
+  .file-row .body { min-width: 0; }
+  .file-row .nm-line { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .file-row .nm { font-weight: 600; font-size: 14.5px; color: var(--c-ink-1); }
+  .file-row .proj-tag {
+    font-family: var(--font-mono); font-size: 9.5px;
+    color: var(--c-ink-3); background: var(--c-bg-alt);
+    padding: 2px 7px; border-radius: 4px;
+    letter-spacing: 0.06em; text-transform: uppercase; font-weight: 600;
+  }
+  .file-row .meta-line {
+    margin-top: 4px;
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--c-ink-3); letter-spacing: 0.04em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .file-row .meta-line b { color: var(--c-ink-2); font-weight: 600; }
+  .file-row .dl-btn {
+    height: 34px; padding: 0 14px;
+    border-radius: 8px;
+    background: var(--c-surface); border: 1px solid var(--c-border);
+    font: 600 12.5px var(--font-ui); color: var(--c-ink-1);
+    cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .file-row .dl-btn:hover { background: var(--c-bg); border-color: var(--c-border-2); }
+  .file-row .dl-btn svg { width: 12px; height: 12px; }
+
+  /* ===== FOOTER ===== */
+  .pf-foot {
+    margin-top: 64px; padding: 40px;
+    border-top: 1px solid var(--c-border);
+    display: flex; align-items: center; gap: 18px;
+    color: var(--c-ink-3); font-size: 12.5px;
+  }
+  .pf-foot .left { display: flex; align-items: center; gap: 10px; }
+  .pf-foot .left .mk {
+    width: 22px; height: 22px; border-radius: 5px;
+    background: var(--c-accent); color: #fff;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: var(--font-display); font-weight: 700; font-size: 11px;
+  }
+  .pf-foot .right { margin-left: auto; display: flex; gap: 18px; }
+  .pf-foot .right a { color: var(--c-ink-3); text-decoration: none; }
+  .pf-foot .right a:hover { color: var(--c-ink-1); }
+
+</style>
+</head>
+<body>
+
+<div class="page" data-screen-label="Client Dashboard">
+
+  <!-- =================== TOP NAV =================== -->
+  <header class="topnav">
+    <div class="brand-block">
+      <span class="mk">L</span>
+      <div class="wm">
+        <span class="title">Cricket Sansar</span>
+        <span class="sub">Powered by <b>Linknbit</b></span>
+      </div>
+    </div>
+
+    <nav class="nav-items">
+      <a href="#" class="active">My projects</a>
+      <a href="#approvals">Approvals <span class="badge">2</span></a>
+      <a href="#files">Files &amp; deliverables</a>
+      <a href="#">Reports</a>
+    </nav>
+
+    <div class="nav-right">
+      <button class="bell" title="Notifications">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      </button>
+      <button class="profile">
+        <span class="av">IS</span>
+        <div class="who">
+          <div class="nm">Imran Shah</div>
+          <div class="rl">Client Owner</div>
+        </div>
+        <span class="chev">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </span>
+      </button>
+    </div>
+  </header>
+
+
+  <!-- =================== HERO =================== -->
+  <section class="hero">
+    <div>
+      <h1>Good morning, <span class="you">Imran</span>.</h1>
+      <div class="sub">
+        You have <b style="color: var(--c-ink-1);">2 items waiting for your approval</b>. Both are simple — a quick look and a click will let our team keep moving.
+        &nbsp;<a href="#approvals">Review now →</a>
+      </div>
+    </div>
+    <div class="date-tile">
+      <span class="big">Tuesday, May 12</span>
+      Cricket Sansar workspace
+    </div>
+  </section>
+
+
+  <!-- =================== ACTIVE PROJECTS =================== -->
+  <section class="section">
+    <div class="sec-head">
+      <div class="titles">
+        <span class="lbl">Section 01</span>
+        <h2>Your active projects <span class="count-circ muted">2</span></h2>
+      </div>
+      <a href="#" class="right-link">
+        See all projects
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </a>
+    </div>
+
+    <div class="proj-grid">
+
+      <!-- PROJECT 1 — CS App / Development / In progress -->
+      <article class="proj-card">
+        <div class="pc-top">
+          <div class="pc-tile dev">CS</div>
+          <div class="pc-name-block">
+            <div class="pc-chips">
+              <span class="ch svc-dev"><span class="dot"></span>Development</span>
+              <span class="ch st-progress"><span class="dot"></span>In progress</span>
+            </div>
+            <h3 class="pc-name">Cricket Sansar App</h3>
+            <div class="pc-stage">Currently in <b>Internal QA</b> · stage 5 of 9</div>
+          </div>
+        </div>
+
+        <div class="pc-stage-desc">
+          Our team is running quality checks before handing the app over to you for testing.
+          <div class="next-step">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            <span style="font-weight: 600;">Next:</span>
+            <span class="txt">Client Testing starts after QA approval.</span>
+          </div>
+        </div>
+
+        <div class="pc-progress">
+          <div class="pp-head">
+            <span>Overall progress · <b>68%</b></span>
+            <span>Due May 15, 2026</span>
+          </div>
+          <div class="pc-bar"><div class="fill dev" style="width: 68%;"></div></div>
+        </div>
+
+        <div class="pc-foot">
+          <div class="pc-pm">
+            <span class="av ak">AK</span>
+            <div class="info">
+              <div class="lbl">Project manager</div>
+              <div class="nm">Ahmad Karimi</div>
+            </div>
+          </div>
+          <div class="pc-cta">
+            <a class="btn ghost" href="Project Detail.html">
+              View project
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </a>
+          </div>
+        </div>
+      </article>
+
+
+      <!-- PROJECT 2 — CS Brand Identity / Design / Awaiting client -->
+      <article class="proj-card awaiting">
+        <span class="awaiting-flag">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Awaiting your review
+        </span>
+        <div class="pc-top">
+          <div class="pc-tile design">CS</div>
+          <div class="pc-name-block">
+            <div class="pc-chips">
+              <span class="ch svc-design"><span class="dot"></span>Design</span>
+              <span class="ch st-awaiting"><span class="dot"></span>Your review needed</span>
+            </div>
+            <h3 class="pc-name">Cricket Sansar Brand Identity</h3>
+            <div class="pc-stage">Currently in <b>Client Review</b> · stage 4 of 5</div>
+          </div>
+        </div>
+
+        <div class="pc-stage-desc">
+          We've completed the UI designs and need your feedback before finalizing.
+          <div class="next-step">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            <span style="font-weight: 600;">Next:</span>
+            <span class="txt">Approve designs to proceed to handover.</span>
+          </div>
+        </div>
+
+        <div class="pc-progress">
+          <div class="pp-head">
+            <span>Overall progress · <b>80%</b></span>
+            <span>Due May 18, 2026</span>
+          </div>
+          <div class="pc-bar"><div class="fill design" style="width: 80%;"></div></div>
+        </div>
+
+        <div class="pc-foot">
+          <div class="pc-pm">
+            <span class="av sq">SQ</span>
+            <div class="info">
+              <div class="lbl">Project manager</div>
+              <div class="nm">Sara Qureshi</div>
+            </div>
+          </div>
+          <div class="pc-cta">
+            <button class="btn primary">
+              Review now
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </button>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+
+  <!-- =================== APPROVALS =================== -->
+  <section class="section" id="approvals">
+    <div class="sec-head">
+      <div class="titles">
+        <span class="lbl">Section 02</span>
+        <h2>Waiting for you <span class="count-circ">2</span></h2>
+      </div>
+      <a href="#" class="right-link" style="color: var(--c-warning);">
+        Approval history
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9"/><polyline points="3 3 3 12 12 12"/></svg>
+      </a>
+    </div>
+
+    <div class="approvals-wrap">
+
+      <!-- APPROVAL 1 — Stage approval -->
+      <div class="approval-card">
+        <div class="ap-left">
+        <div class="ap-top">
+          <span class="ap-type">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg>
+            Stage approval
+          </span>
+          <span class="ap-meta">
+            <span>Submitted <b>2 days ago</b></span>
+            <span class="dot"></span>
+            <span>By <b>Sara Qureshi</b></span>
+          </span>
+        </div>
+
+        <div class="ap-title-row">
+          <h3 class="ttl">
+            <span class="proj-name">Cricket Sansar Brand Identity</span><br>
+            Client Review &mdash; UI designs ready for sign-off
+          </h3>
+        </div>
+
+        <div class="ap-body">
+          <div class="ap-msg">
+            <div class="from">From <b>Sara Qureshi</b> · Project Manager</div>
+            <div class="body">"Hi Imran, the UI designs for all 12 screens are ready. Please review the Figma file and approve or request revisions."</div>
+          </div>
+
+          <a class="ap-file" href="#">
+            <span class="ic figma">Fig</span>
+            <div class="body">
+              <div class="nm">CS_UI_Designs_v3.fig</div>
+              <div class="meta">Figma file · 12 screens · 18.4 MB</div>
+            </div>
+            <span class="open-link">
+              Open in Figma
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg>
+            </span>
+          </a>
+        </div>
+        </div>
+
+        <div class="ap-actions">
+          <button class="btn success">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><polyline points="20 6 9 17 4 12"/></svg>
+            Approve stage
+          </button>
+          <button class="btn ghost">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9"/><polyline points="3 3 3 12 12 12"/></svg>
+            Request revision
+          </button>
+          <div class="deadline">
+            <b>May 14</b>
+            Sign-off requested by
+          </div>
+        </div>
+      </div>
+
+
+      <!-- APPROVAL 2 — File approval -->
+      <div class="approval-card">
+        <div class="ap-left">
+        <div class="ap-top">
+          <span class="ap-type">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            File approval
+          </span>
+          <span class="ap-meta">
+            <span>Submitted <b>1 day ago</b></span>
+            <span class="dot"></span>
+            <span>By <b>Ahmad Karimi</b></span>
+          </span>
+        </div>
+
+        <div class="ap-title-row">
+          <h3 class="ttl">
+            <span class="proj-name">Cricket Sansar App</span><br>
+            API Documentation v2 &mdash; review before client testing
+          </h3>
+        </div>
+
+        <div class="ap-body">
+          <div class="ap-msg">
+            <div class="from">From <b>Ahmad Karimi</b> · Project Manager</div>
+            <div class="body">"Please review and approve the API documentation before we proceed to client testing."</div>
+          </div>
+
+          <a class="ap-file" href="#">
+            <span class="ic" style="background: rgba(238,39,55,0.08); color: var(--c-accent); border: 1px solid rgba(238,39,55,0.2);">PDF</span>
+            <div class="body">
+              <div class="nm">API_Documentation_v2.pdf</div>
+              <div class="meta">PDF · 28 pages · 1.6 MB</div>
+            </div>
+            <span class="open-link">
+              View
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg>
+            </span>
+          </a>
+        </div>
+        </div>
+
+        <div class="ap-actions">
+          <button class="btn primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><polyline points="20 6 9 17 4 12"/></svg>
+            Approve
+          </button>
+          <button class="btn ghost">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9"/><polyline points="3 3 3 12 12 12"/></svg>
+            Request revision
+          </button>
+          <div class="deadline">
+            <b>May 13</b>
+            Sign-off requested by
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- =================== TIMELINE + FILES BAND =================== -->
+  <section class="section">
+    <div class="band-2col">
+
+      <!-- 4. RECENT UPDATES -->
+      <div class="timeline-card">
+        <div class="tl-card-head">
+          <span class="ttl">Recent updates</span>
+          <span class="cnt">Last 7 days</span>
+          <a class="right" href="#">View all</a>
+        </div>
+
+        <div class="timeline">
+          <div class="tl-item upload">
+            <div class="line">
+              <span class="actor">Sara Qureshi</span>
+              <span class="verb"> uploaded </span>
+              <span class="target file">CS_UI_Designs_v3.fig</span>
+            </div>
+            <div class="when">2 days ago · <span class="proj">Cricket Sansar Brand Identity</span></div>
+          </div>
+
+          <div class="tl-item stage">
+            <div class="line">
+              <span class="actor">Ahmad Karimi</span>
+              <span class="verb"> moved your project to </span>
+              <span class="target">Internal QA</span>
+              <span class="verb"> stage</span>
+            </div>
+            <div class="when">4 days ago · <span class="proj">Cricket Sansar App</span></div>
+          </div>
+
+          <div class="tl-item approve you">
+            <div class="line">
+              <span class="actor you">You</span>
+              <span class="verb"> approved </span>
+              <span class="target">Wireframing</span>
+              <span class="verb"> stage</span>
+            </div>
+            <div class="when">6 days ago · <span class="proj">Cricket Sansar Brand Identity</span></div>
+          </div>
+
+          <div class="tl-item stage">
+            <div class="line">
+              <span class="verb">Project moved to </span>
+              <span class="target">Development</span>
+              <span class="verb"> stage</span>
+            </div>
+            <div class="when">1 week ago · <span class="proj">Cricket Sansar App</span></div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- 5. DELIVERED FILES -->
+      <div class="files-card" id="files">
+        <div class="tl-card-head">
+          <span class="ttl">Delivered files</span>
+          <span class="cnt">4 files</span>
+          <a class="right" href="#">View all</a>
+        </div>
+
+        <div class="file-list">
+
+          <div class="file-row">
+            <span class="ic fig">Fig</span>
+            <div class="body">
+              <div class="nm-line">
+                <span class="nm">CS_UI_Designs_v3.fig</span>
+                <span class="proj-tag">Brand Identity</span>
+              </div>
+              <div class="meta-line">Shared by <b>Sara Qureshi</b> · 2 days ago · 18.4 MB</div>
+            </div>
+            <button class="dl-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download
+            </button>
+          </div>
+
+          <div class="file-row">
+            <span class="ic pdf">PDF</span>
+            <div class="body">
+              <div class="nm-line">
+                <span class="nm">API_Documentation_v2.pdf</span>
+                <span class="proj-tag">App</span>
+              </div>
+              <div class="meta-line">Shared by <b>Ahmad Karimi</b> · 1 day ago · 1.6 MB</div>
+            </div>
+            <button class="dl-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download
+            </button>
+          </div>
+
+          <div class="file-row">
+            <span class="ic png">PNG</span>
+            <div class="body">
+              <div class="nm-line">
+                <span class="nm">Logo_Final_Pack.png</span>
+                <span class="proj-tag">Brand Identity</span>
+              </div>
+              <div class="meta-line">Shared by <b>Sara Qureshi</b> · 5 days ago · 4.2 MB</div>
+            </div>
+            <button class="dl-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download
+            </button>
+          </div>
+
+          <div class="file-row">
+            <span class="ic pdf">PDF</span>
+            <div class="body">
+              <div class="nm-line">
+                <span class="nm">Project_Brief_Approved.pdf</span>
+                <span class="proj-tag">App</span>
+              </div>
+              <div class="meta-line">Shared by <b>Ahmad Karimi</b> · 3 weeks ago · 2.4 MB</div>
+            </div>
+            <button class="dl-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- =================== FOOTER =================== -->
+  <footer class="pf-foot">
+    <div class="left">
+      <span class="mk">L</span>
+      <span>Linknbit Client Portal · v2.4 · Confidential to Cricket Sansar</span>
+    </div>
+    <div class="right">
+      <a href="#">Help</a>
+      <a href="#">Contact your PM</a>
+      <a href="#">Sign out</a>
+    </div>
+  </footer>
+
+</div>
+
+</body>
+</html>

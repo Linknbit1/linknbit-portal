@@ -1,0 +1,1416 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Linknbit · Auth Screens</title>
+<link rel="stylesheet" href="tokens.css">
+<style>
+  html, body { margin: 0; padding: 0; background: #06080C; color: var(--text-1); font-family: var(--font-ui); }
+  * { box-sizing: border-box; }
+
+  /* ===== Doc shell ===== */
+  .doc {
+    max-width: 1640px;
+    margin: 0 auto;
+    padding: 56px 80px 120px;
+  }
+  .doc-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 32px;
+    margin-bottom: 48px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .doc-head .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .doc-head .eyebrow .pip { width: 6px; height: 6px; background: var(--brand-red); border-radius: 2px; }
+  .doc-head h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 44px;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0;
+    color: var(--text-1);
+  }
+  .doc-head h1 .red { color: var(--brand-red); }
+  .doc-head .meta {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-4);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    text-align: right;
+    line-height: 1.8;
+  }
+  .doc-head .meta b { color: var(--text-2); font-weight: 500; }
+
+  /* ===== Artboard frame ===== */
+  .frame { margin-bottom: 80px; }
+  .frame-head {
+    display: flex;
+    align-items: baseline;
+    gap: 18px;
+    margin-bottom: 18px;
+  }
+  .frame-head .num {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--brand-red);
+    letter-spacing: 0.1em;
+  }
+  .frame-head h2 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 22px;
+    letter-spacing: -0.01em;
+    margin: 0;
+    color: var(--text-1);
+  }
+  .frame-head .state {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-3);
+    padding: 3px 9px;
+    border: 1px solid var(--border-default);
+    border-radius: 999px;
+    background: var(--surface-1);
+    letter-spacing: 0.04em;
+  }
+  .frame-head .note {
+    margin-left: auto;
+    font-family: var(--font-ui);
+    font-size: 12.5px;
+    color: var(--text-3);
+    max-width: 460px;
+    text-align: right;
+    line-height: 1.5;
+  }
+
+  .artboard {
+    width: 1440px;
+    height: 900px;
+    background: var(--bg-base);
+    border-radius: 12px;
+    border: 1px solid var(--border-subtle);
+    overflow: hidden;
+    box-shadow: 0 30px 70px rgba(0,0,0,0.5);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    position: relative;
+  }
+
+  /* =====================================================
+     LEFT BRAND PANEL — the signature artwork
+     ===================================================== */
+  .brand-panel {
+    position: relative;
+    background: linear-gradient(180deg, #0D131D 0%, #0A0F17 100%);
+    overflow: hidden;
+    padding: 56px 64px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  /* dot grid */
+  .brand-panel::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle, rgba(122, 133, 151, 0.10) 1px, transparent 1px);
+    background-size: 32px 32px;
+    background-position: -1px -1px;
+    pointer-events: none;
+    opacity: 0.6;
+    mask-image: radial-gradient(ellipse 80% 65% at 50% 50%, #000 40%, transparent 100%);
+  }
+  /* hairline frame */
+  .brand-panel::after {
+    content: "";
+    position: absolute;
+    inset: 24px;
+    border: 1px solid rgba(255,255,255,0.04);
+    border-radius: 6px;
+    pointer-events: none;
+  }
+
+  .bp-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    z-index: 2;
+  }
+  .bp-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .bp-logo .mark {
+    width: 30px; height: 30px; border-radius: 6px;
+    background: var(--brand-red);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: var(--font-display);
+    font-weight: 700; font-size: 16px;
+    color: #fff;
+  }
+  .bp-logo .word {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: -0.01em;
+    color: var(--text-1);
+  }
+  .bp-stamp {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--text-4);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .bp-stamp b { color: var(--text-2); font-weight: 500; }
+
+  /* Hero composition */
+  .bp-hero {
+    position: relative;
+    z-index: 2;
+    margin: -20px 0 0;
+  }
+  .bp-glyph {
+    position: relative;
+    width: 100%;
+    height: 360px;
+    margin-bottom: 28px;
+  }
+  /* three overlapping circles representing the services */
+  .bp-glyph .orb {
+    position: absolute;
+    width: 240px;
+    height: 240px;
+    border-radius: 999px;
+    filter: blur(2px);
+    mix-blend-mode: screen;
+    opacity: 0.78;
+  }
+  .bp-glyph .orb.design { background: radial-gradient(circle at 35% 35%, #C4B5FD 0%, #8B5CF6 45%, transparent 75%); left: 30px;  top: 30px; }
+  .bp-glyph .orb.dev    { background: radial-gradient(circle at 65% 40%, #67E8F9 0%, #06B6D4 45%, transparent 75%); left: 200px; top: 80px; }
+  .bp-glyph .orb.mkt    { background: radial-gradient(circle at 50% 60%, #FCD34D 0%, #F59E0B 45%, transparent 75%); left: 110px; top: 170px; }
+  /* hairline rings sit on top */
+  .bp-glyph .ring {
+    position: absolute;
+    width: 240px;
+    height: 240px;
+    border-radius: 999px;
+    border: 1px solid;
+    box-sizing: border-box;
+  }
+  .bp-glyph .ring.design { border-color: #8B5CF688; left: 30px;  top: 30px; }
+  .bp-glyph .ring.dev    { border-color: #06B6D488; left: 200px; top: 80px; }
+  .bp-glyph .ring.mkt    { border-color: #F59E0B88; left: 110px; top: 170px; }
+  /* labels around the circles */
+  .bp-glyph .lbl {
+    position: absolute;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-2);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .bp-glyph .lbl .d { width: 6px; height: 6px; border-radius: 999px; }
+  .bp-glyph .lbl.design { left: 0px;   top: 12px;  color: #C4B5FD; }
+  .bp-glyph .lbl.design .d { background: #A78BFA; }
+  .bp-glyph .lbl.dev    { right: 0px;  top: 64px;  color: #67E8F9; }
+  .bp-glyph .lbl.dev .d { background: #22D3EE; }
+  .bp-glyph .lbl.mkt    { left: 76px;  bottom: 0px; color: #FCD34D; }
+  .bp-glyph .lbl.mkt .d { background: #FBBF24; }
+  /* tiny crosshairs */
+  .bp-glyph .cross {
+    position: absolute;
+    width: 10px; height: 10px;
+    border: 1px solid var(--text-4);
+    opacity: 0.6;
+  }
+  .bp-glyph .cross::before, .bp-glyph .cross::after {
+    content: ""; position: absolute; background: var(--text-4); opacity: 0.7;
+  }
+  .bp-glyph .cross::before { left: 50%; top: -3px; bottom: -3px; width: 1px; transform: translateX(-50%); }
+  .bp-glyph .cross::after  { top: 50%; left: -3px; right: -3px; height: 1px; transform: translateY(-50%); }
+  .bp-glyph .cross.tl { top: 4px; left: 0; }
+  .bp-glyph .cross.br { bottom: 4px; right: 0; }
+
+  .bp-headline {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 64px;
+    line-height: 0.92;
+    letter-spacing: -0.025em;
+    color: var(--text-1);
+    margin: 0;
+  }
+  .bp-headline .red { color: var(--brand-red); }
+  .bp-headline .muted { color: var(--text-3); font-weight: 500; }
+  .bp-sub {
+    margin-top: 22px;
+    font-family: var(--font-ui);
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: var(--text-2);
+    max-width: 440px;
+  }
+
+  .bp-foot {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-4);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .bp-foot .legend {
+    display: flex;
+    gap: 18px;
+  }
+  .bp-foot .legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .bp-foot .legend .d { width: 6px; height: 6px; border-radius: 2px; }
+  .bp-foot .legend .design .d { background: #A78BFA; }
+  .bp-foot .legend .dev    .d { background: #22D3EE; }
+  .bp-foot .legend .mkt    .d { background: #FBBF24; }
+  .bp-foot b { color: var(--text-2); font-weight: 500; }
+
+  /* =====================================================
+     RIGHT FORM PANEL
+     ===================================================== */
+  .form-panel {
+    background: var(--bg-base);
+    padding: 56px 80px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+  }
+  .fp-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .fp-mini-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .fp-mini-logo .mark {
+    width: 24px; height: 24px; border-radius: 5px;
+    background: var(--brand-red);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: var(--font-display);
+    font-weight: 700; font-size: 13px; color: #fff;
+  }
+  .fp-mini-logo .word {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-2);
+    letter-spacing: -0.005em;
+  }
+  .fp-mini {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--text-4);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .form-card {
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+  .form-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 32px;
+    line-height: 1.15;
+    letter-spacing: -0.018em;
+    color: var(--text-1);
+    margin: 0 0 10px;
+  }
+  .form-sub {
+    font-family: var(--font-ui);
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--text-3);
+    margin: 0 0 32px;
+  }
+
+  /* Inline error banner */
+  .err-banner {
+    display: flex;
+    gap: 10px;
+    padding: 12px 14px;
+    margin-bottom: 18px;
+    background: var(--error-soft);
+    border: 1px solid var(--error-border);
+    border-radius: var(--radius-sm);
+    align-items: flex-start;
+  }
+  .err-banner .ico {
+    width: 16px; height: 16px;
+    color: var(--error);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .err-banner .text {
+    font-family: var(--font-ui);
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--text-1);
+  }
+  .err-banner .text strong { color: var(--error); font-weight: 600; }
+  .err-banner .text .meta {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--text-3);
+    margin-top: 4px;
+    letter-spacing: 0.04em;
+  }
+
+  /* Field */
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    margin-bottom: 16px;
+  }
+  .field-label {
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 11px;
+    color: var(--text-2);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .field-label a {
+    font-family: var(--font-ui);
+    font-weight: 500;
+    font-size: 11.5px;
+    color: var(--brand-red);
+    letter-spacing: 0;
+    text-transform: none;
+    text-decoration: none;
+  }
+  .input {
+    background: var(--surface-inset);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-sm);
+    padding: 0 14px;
+    height: 46px;
+    font-family: var(--font-ui);
+    font-size: 14px;
+    color: var(--text-1);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: border-color 120ms, box-shadow 120ms;
+  }
+  .input input {
+    background: transparent;
+    border: 0;
+    outline: none;
+    flex: 1;
+    color: inherit;
+    font: inherit;
+    min-width: 0;
+    height: 100%;
+  }
+  .input input::placeholder { color: var(--text-3); }
+  .input .ico {
+    width: 16px; height: 16px;
+    color: var(--text-3);
+    flex-shrink: 0;
+  }
+  .input .toggle {
+    background: transparent;
+    border: 0;
+    color: var(--text-3);
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+  }
+  .input .toggle:hover { color: var(--text-1); background: var(--surface-2); }
+  .input.focused { border-color: var(--brand-red); box-shadow: var(--ring-focus); }
+  .input.invalid { border-color: var(--error); }
+
+  /* Buttons */
+  .btn {
+    width: 100%;
+    height: 46px;
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: background 120ms, transform 80ms;
+  }
+  .btn.primary { background: var(--brand-red); color: #fff; box-shadow: 0 4px 14px rgba(238, 39, 55, 0.22); }
+  .btn.primary:hover { background: var(--brand-red-hover); }
+  .btn.discord {
+    background: #5865F2;
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(88, 101, 242, 0.22);
+  }
+  .btn.discord:hover { background: #4752C4; }
+  .btn.discord svg { width: 18px; height: 18px; }
+  .btn.ghost {
+    background: var(--surface-1);
+    color: var(--text-1);
+    border-color: var(--border-default);
+  }
+
+  /* Divider */
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 22px 0;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--text-4);
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+  }
+  .divider::before, .divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--border-subtle);
+  }
+
+  /* Footer note */
+  .invite-note {
+    margin-top: 28px;
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    background: var(--surface-1);
+    border: 1px solid var(--border-subtle);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-ui);
+    font-size: 12px;
+    color: var(--text-3);
+    line-height: 1.5;
+  }
+  .invite-note .ico {
+    width: 14px; height: 14px; color: var(--text-3); flex-shrink: 0;
+  }
+  .invite-note strong { color: var(--text-2); font-weight: 600; }
+
+  .fp-bot {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--text-4);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* Back link */
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--font-ui);
+    font-size: 13px;
+    color: var(--text-2);
+    text-decoration: none;
+    margin-top: 22px;
+    padding: 6px 10px 6px 6px;
+    border-radius: 6px;
+    transition: color 120ms;
+    width: fit-content;
+  }
+  .back-link:hover { color: var(--text-1); background: var(--surface-1); }
+  .back-link svg { width: 14px; height: 14px; }
+
+  /* Success state */
+  .success-card {
+    text-align: center;
+    padding: 18px 0 0;
+  }
+  .success-icon {
+    width: 64px; height: 64px;
+    border-radius: 16px;
+    background: linear-gradient(160deg, #1A2433 0%, #131C28 100%);
+    border: 1px solid var(--border-default);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    position: relative;
+    color: var(--brand-red);
+    box-shadow: 0 0 0 6px rgba(238, 39, 55, 0.06);
+  }
+  .success-icon svg { width: 28px; height: 28px; }
+  .success-icon::after {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, transparent 30%, rgba(238, 39, 55, 0.2), transparent 70%);
+    mask: linear-gradient(#000,#000) content-box, linear-gradient(#000,#000);
+    mask-composite: exclude;
+    -webkit-mask-composite: xor;
+    padding: 1px;
+    pointer-events: none;
+  }
+  .masked-email {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: var(--surface-1);
+    border: 1px solid var(--border-default);
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-1);
+    margin-top: 16px;
+  }
+  .masked-email .dot { width: 5px; height: 5px; border-radius: 999px; background: var(--success); }
+
+  /* =====================================================
+     SCREEN 3: ROLE-BASED REDIRECT SPLASH
+     ===================================================== */
+  .splash {
+    grid-column: span 2;
+    background: radial-gradient(circle at 50% 50%, #0F1620 0%, #06080C 70%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    padding: 56px 64px;
+  }
+  .splash::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle, rgba(122, 133, 151, 0.07) 1px, transparent 1px);
+    background-size: 40px 40px;
+    mask-image: radial-gradient(ellipse 60% 60% at 50% 50%, #000 30%, transparent 100%);
+    pointer-events: none;
+  }
+  .splash-top {
+    position: absolute;
+    top: 32px; left: 32px; right: 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--text-4);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+  .splash-top .bp-logo .word { font-size: 16px; }
+  .splash-top .session {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .splash-top .session .live {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--success);
+  }
+  .splash-top .session .live .d {
+    width: 6px; height: 6px;
+    background: var(--success);
+    border-radius: 999px;
+    animation: livepulse 1.6s ease-in-out infinite;
+  }
+  @keyframes livepulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: 0.3; transform: scale(0.7); }
+  }
+
+  .splash-body {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
+    text-align: center;
+  }
+  .splash-avatar-wrap {
+    position: relative;
+    width: 132px;
+    height: 132px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .splash-avatar {
+    width: 88px; height: 88px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #A78BFA, #8B5CF6);
+    color: #fff;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #1A2433;
+    box-shadow: 0 0 60px rgba(167, 139, 250, 0.25);
+    position: relative;
+    z-index: 3;
+  }
+  /* three orbit rings, each colored to a service */
+  .splash-orbit {
+    position: absolute;
+    inset: 0;
+    border-radius: 999px;
+    border: 1px solid;
+    animation: orbit 8s linear infinite;
+  }
+  .splash-orbit::before {
+    content: "";
+    position: absolute;
+    width: 8px; height: 8px;
+    border-radius: 999px;
+    top: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    box-shadow: 0 0 12px;
+  }
+  .splash-orbit.design { border-color: rgba(167, 139, 250, 0.22); }
+  .splash-orbit.design::before { background: #A78BFA; color: #A78BFA; }
+  .splash-orbit.dev    { inset: 14px; border-color: rgba(34, 211, 238, 0.22); animation-duration: 6s; animation-direction: reverse; }
+  .splash-orbit.dev::before    { background: #22D3EE; color: #22D3EE; }
+  .splash-orbit.mkt    { inset: -14px; border-color: rgba(251, 191, 36, 0.22); animation-duration: 10s; }
+  .splash-orbit.mkt::before    { background: #FBBF24; color: #FBBF24; }
+  @keyframes orbit {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+
+  .splash-greet {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 36px;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--text-1);
+    margin: 0;
+  }
+  .splash-greet .name { color: var(--text-1); }
+  .splash-greet .comma { color: var(--text-3); font-weight: 500; }
+  .splash-role {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 12px 5px 5px;
+    border-radius: 999px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-default);
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 12.5px;
+    color: var(--text-1);
+  }
+  .splash-role .puck {
+    width: 24px; height: 24px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #A78BFA, #8B5CF6);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+  }
+  .splash-role .puck svg { width: 13px; height: 13px; }
+  .splash-status {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-3);
+    letter-spacing: 0.04em;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .splash-status .typing {
+    display: inline-flex;
+    gap: 4px;
+  }
+  .splash-status .typing span {
+    width: 5px; height: 5px;
+    background: var(--text-3);
+    border-radius: 999px;
+    animation: typing 1.2s ease-in-out infinite;
+  }
+  .splash-status .typing span:nth-child(2) { animation-delay: 0.15s; background: #A78BFA; }
+  .splash-status .typing span:nth-child(3) { animation-delay: 0.30s; background: #22D3EE; }
+  .splash-status .typing span:nth-child(4) { animation-delay: 0.45s; background: #FBBF24; }
+  @keyframes typing {
+    0%, 100% { opacity: 0.25; transform: translateY(0); }
+    50%      { opacity: 1;    transform: translateY(-3px); }
+  }
+
+  /* Boot checklist */
+  .splash-checklist {
+    margin-top: 12px;
+    width: 480px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 18px 22px;
+    background: rgba(19, 28, 40, 0.5);
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    backdrop-filter: blur(6px);
+    text-align: left;
+  }
+  .splash-checklist .step {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 0;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-2);
+    letter-spacing: 0.02em;
+  }
+  .splash-checklist .step .mark {
+    width: 16px; height: 16px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .splash-checklist .step .mark svg { width: 10px; height: 10px; }
+  .splash-checklist .step.done .mark { background: var(--success-soft); color: var(--success); }
+  .splash-checklist .step.now .mark  { background: rgba(238, 39, 55, 0.15); color: var(--brand-red); }
+  .splash-checklist .step.now .mark .spin {
+    width: 10px; height: 10px;
+    border: 1.5px solid var(--brand-red);
+    border-top-color: transparent;
+    border-radius: 999px;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .splash-checklist .step.pending .mark {
+    border: 1px solid var(--border-default);
+    background: transparent;
+  }
+  .splash-checklist .step.pending { color: var(--text-4); }
+  .splash-checklist .step .t {
+    flex: 1;
+  }
+  .splash-checklist .step .ms {
+    color: var(--text-4);
+    font-size: 11px;
+  }
+
+  /* Progress bar with the three-service gradient */
+  .splash-progress {
+    width: 480px;
+    margin-top: 6px;
+    height: 4px;
+    background: var(--surface-inset);
+    border-radius: 999px;
+    overflow: hidden;
+    position: relative;
+  }
+  .splash-progress::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 68%;
+    background: linear-gradient(90deg, #A78BFA 0%, #22D3EE 50%, #FBBF24 100%);
+    animation: prog 2.6s ease-in-out infinite;
+  }
+  @keyframes prog {
+    0%   { width: 14%; }
+    60%  { width: 72%; }
+    100% { width: 92%; }
+  }
+
+  /* ===== Helper / footer ===== */
+  .doc-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 32px 0 0;
+    border-top: 1px solid var(--border-subtle);
+    margin-top: 24px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-4);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* Respect reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .splash-orbit, .splash-status .typing span, .splash-progress::before, .splash-top .session .live .d, .splash-checklist .step.now .mark .spin {
+      animation: none !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="doc">
+
+  <!-- ============================== HEADER ============================== -->
+  <header class="doc-head">
+    <div>
+      <div class="eyebrow"><span class="pip"></span>Authentication · Desktop · 1440 × 900</div>
+      <h1>Sign-in flow<span class="red">.</span></h1>
+    </div>
+    <div class="meta">
+      <div>Three screens<b>· five states</b></div>
+      <div>Dark mode<b>· invite-only</b></div>
+      <div>Auth methods<b>· Email · Discord OAuth</b></div>
+    </div>
+  </header>
+
+
+  <!-- ============================== SCREEN 1A — LOGIN DEFAULT ============================== -->
+  <section class="frame" data-screen-label="01 Login default">
+    <div class="frame-head">
+      <span class="num">01 / A</span>
+      <h2>Login — default state</h2>
+      <span class="state">resting</span>
+      <p class="note">Branded left panel uses the three service colors as overlapping orbs — not literal taxonomy, just the product's visual DNA.</p>
+    </div>
+
+    <div class="artboard">
+      <!-- Brand panel -->
+      <div class="brand-panel">
+        <div class="bp-top">
+          <div class="bp-logo">
+            <span class="mark">L</span>
+            <span class="word">Linknbit</span>
+          </div>
+          <div class="bp-stamp">Portal <b>v2.0</b> · MAY 2026</div>
+        </div>
+
+        <div class="bp-hero">
+          <div class="bp-glyph" aria-hidden="true">
+            <span class="cross tl"></span>
+            <span class="cross br"></span>
+            <span class="orb design"></span>
+            <span class="orb dev"></span>
+            <span class="orb mkt"></span>
+            <span class="ring design"></span>
+            <span class="ring dev"></span>
+            <span class="ring mkt"></span>
+            <span class="lbl design"><span class="d"></span>Design</span>
+            <span class="lbl dev"><span class="d"></span>Development</span>
+            <span class="lbl mkt"><span class="d"></span>Marketing</span>
+          </div>
+          <h2 class="bp-headline">Unified<br>operations<span class="red">.</span></h2>
+          <p class="bp-sub">One workspace for the three sides of Linknbit — design, engineering, and growth. Sign in to pick up where your team left off.</p>
+        </div>
+
+        <div class="bp-foot">
+          <div class="legend">
+            <span class="design"><span class="d"></span>Design</span>
+            <span class="dev"><span class="d"></span>Development</span>
+            <span class="mkt"><span class="d"></span>Marketing</span>
+          </div>
+          <span>© 2026 Linknbit · Karachi <b>·</b> PKT 14:32</span>
+        </div>
+      </div>
+
+      <!-- Form panel -->
+      <div class="form-panel">
+        <div class="fp-top">
+          <div class="fp-mini-logo">
+            <span class="mark">L</span>
+            <span class="word">Operations Portal</span>
+          </div>
+          <span class="fp-mini">Need help? help@linknbit.com</span>
+        </div>
+
+        <div class="form-card">
+          <h1 class="form-title">Welcome back.</h1>
+          <p class="form-sub">Sign in to your workspace to continue.</p>
+
+          <div class="field">
+            <label class="field-label">Work email</label>
+            <div class="input">
+              <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+              <input type="email" value="ghayas@linknbit.com">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">
+              <span>Password</span>
+              <a href="#">Forgot password?</a>
+            </label>
+            <div class="input focused">
+              <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <input type="password" value="••••••••••••">
+              <button class="toggle">Show</button>
+            </div>
+          </div>
+
+          <button class="btn primary" style="margin-top: 8px;">
+            Sign in
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </button>
+
+          <div class="divider">or continue with</div>
+
+          <button class="btn discord">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.317 4.369A19.79 19.79 0 0 0 16.558 3.2a.078.078 0 0 0-.083.038c-.18.32-.378.736-.515 1.062a18.27 18.27 0 0 0-5.488 0 12.51 12.51 0 0 0-.523-1.062.08.08 0 0 0-.083-.038c-1.305.225-2.55.62-3.76 1.169a.07.07 0 0 0-.032.027C2.65 8.045 1.997 11.617 2.317 15.145a.082.082 0 0 0 .031.056 19.9 19.9 0 0 0 6.002 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.077.077 0 0 0-.041-.106 13.11 13.11 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.094.252-.192.371-.292a.075.075 0 0 1 .077-.01c3.927 1.793 8.18 1.793 12.06 0a.075.075 0 0 1 .079.009c.12.1.245.199.371.293a.077.077 0 0 1-.006.128 12.3 12.3 0 0 1-1.873.891.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.077.077 0 0 0 .084.028 19.83 19.83 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-4.077-.838-7.62-3.548-10.749a.061.061 0 0 0-.031-.027ZM8.02 13.5c-1.182 0-2.157-1.085-2.157-2.42 0-1.333.957-2.418 2.157-2.418 1.21 0 2.176 1.094 2.157 2.419 0 1.334-.957 2.419-2.157 2.419Zm7.974 0c-1.182 0-2.157-1.085-2.157-2.42 0-1.333.957-2.418 2.157-2.418 1.21 0 2.176 1.094 2.157 2.419 0 1.334-.946 2.419-2.157 2.419Z"/></svg>
+            Continue with Discord
+          </button>
+
+          <div class="invite-note">
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+            <span><strong>Access is invite-only.</strong> Contact your admin if you need an account.</span>
+          </div>
+        </div>
+
+        <div class="fp-bot">
+          <span>Linknbit · Operations Portal</span>
+          <span>EN · KARACHI · PKT</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============================== SCREEN 1B — LOGIN ERROR ============================== -->
+  <section class="frame" data-screen-label="02 Login error">
+    <div class="frame-head">
+      <span class="num">01 / B</span>
+      <h2>Login — invalid credentials</h2>
+      <span class="state">error</span>
+      <p class="note">One inline banner above the form, not per-field. Includes attempt counter and rate-limit timestamp.</p>
+    </div>
+
+    <div class="artboard">
+      <div class="brand-panel">
+        <div class="bp-top">
+          <div class="bp-logo"><span class="mark">L</span><span class="word">Linknbit</span></div>
+          <div class="bp-stamp">Portal <b>v2.0</b> · MAY 2026</div>
+        </div>
+        <div class="bp-hero">
+          <div class="bp-glyph" aria-hidden="true">
+            <span class="cross tl"></span>
+            <span class="cross br"></span>
+            <span class="orb design"></span>
+            <span class="orb dev"></span>
+            <span class="orb mkt"></span>
+            <span class="ring design"></span>
+            <span class="ring dev"></span>
+            <span class="ring mkt"></span>
+            <span class="lbl design"><span class="d"></span>Design</span>
+            <span class="lbl dev"><span class="d"></span>Development</span>
+            <span class="lbl mkt"><span class="d"></span>Marketing</span>
+          </div>
+          <h2 class="bp-headline">Unified<br>operations<span class="red">.</span></h2>
+          <p class="bp-sub">One workspace for the three sides of Linknbit — design, engineering, and growth. Sign in to pick up where your team left off.</p>
+        </div>
+        <div class="bp-foot">
+          <div class="legend">
+            <span class="design"><span class="d"></span>Design</span>
+            <span class="dev"><span class="d"></span>Development</span>
+            <span class="mkt"><span class="d"></span>Marketing</span>
+          </div>
+          <span>© 2026 Linknbit · Karachi <b>·</b> PKT 14:32</span>
+        </div>
+      </div>
+
+      <div class="form-panel">
+        <div class="fp-top">
+          <div class="fp-mini-logo">
+            <span class="mark">L</span>
+            <span class="word">Operations Portal</span>
+          </div>
+          <span class="fp-mini">Need help? help@linknbit.com</span>
+        </div>
+
+        <div class="form-card">
+          <h1 class="form-title">Welcome back.</h1>
+          <p class="form-sub">Sign in to your workspace to continue.</p>
+
+          <div class="err-banner">
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <div class="text">
+              <strong>That email and password don't match.</strong> Double-check your credentials or reset your password.
+              <span class="meta">Attempt 2 of 5 · next try free</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">Work email</label>
+            <div class="input invalid">
+              <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+              <input type="email" value="ghayas@linknbit.com">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">
+              <span>Password</span>
+              <a href="#">Forgot password?</a>
+            </label>
+            <div class="input invalid">
+              <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <input type="password" value="••••••••">
+              <button class="toggle">Show</button>
+            </div>
+          </div>
+
+          <button class="btn primary" style="margin-top: 8px;">
+            Sign in
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </button>
+
+          <div class="divider">or continue with</div>
+
+          <button class="btn discord">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.317 4.369A19.79 19.79 0 0 0 16.558 3.2a.078.078 0 0 0-.083.038c-.18.32-.378.736-.515 1.062a18.27 18.27 0 0 0-5.488 0 12.51 12.51 0 0 0-.523-1.062.08.08 0 0 0-.083-.038c-1.305.225-2.55.62-3.76 1.169a.07.07 0 0 0-.032.027C2.65 8.045 1.997 11.617 2.317 15.145a.082.082 0 0 0 .031.056 19.9 19.9 0 0 0 6.002 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.077.077 0 0 0-.041-.106 13.11 13.11 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.094.252-.192.371-.292a.075.075 0 0 1 .077-.01c3.927 1.793 8.18 1.793 12.06 0a.075.075 0 0 1 .079.009c.12.1.245.199.371.293a.077.077 0 0 1-.006.128 12.3 12.3 0 0 1-1.873.891.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.077.077 0 0 0 .084.028 19.83 19.83 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-4.077-.838-7.62-3.548-10.749a.061.061 0 0 0-.031-.027ZM8.02 13.5c-1.182 0-2.157-1.085-2.157-2.42 0-1.333.957-2.418 2.157-2.418 1.21 0 2.176 1.094 2.157 2.419 0 1.334-.957 2.419-2.157 2.419Zm7.974 0c-1.182 0-2.157-1.085-2.157-2.42 0-1.333.957-2.418 2.157-2.418 1.21 0 2.176 1.094 2.157 2.419 0 1.334-.946 2.419-2.157 2.419Z"/></svg>
+            Continue with Discord
+          </button>
+
+          <div class="invite-note">
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+            <span><strong>Access is invite-only.</strong> Contact your admin if you need an account.</span>
+          </div>
+        </div>
+
+        <div class="fp-bot">
+          <span>Linknbit · Operations Portal</span>
+          <span>EN · KARACHI · PKT</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============================== SCREEN 2A — FORGOT DEFAULT ============================== -->
+  <section class="frame" data-screen-label="03 Forgot password default">
+    <div class="frame-head">
+      <span class="num">02 / A</span>
+      <h2>Forgot password — request</h2>
+      <span class="state">default</span>
+      <p class="note">Same chrome as login. Back link returns to /sign-in without losing state.</p>
+    </div>
+
+    <div class="artboard">
+      <div class="brand-panel">
+        <div class="bp-top">
+          <div class="bp-logo"><span class="mark">L</span><span class="word">Linknbit</span></div>
+          <div class="bp-stamp">Portal <b>v2.0</b> · MAY 2026</div>
+        </div>
+        <div class="bp-hero">
+          <div class="bp-glyph" aria-hidden="true">
+            <span class="cross tl"></span>
+            <span class="cross br"></span>
+            <span class="orb design"></span>
+            <span class="orb dev"></span>
+            <span class="orb mkt"></span>
+            <span class="ring design"></span>
+            <span class="ring dev"></span>
+            <span class="ring mkt"></span>
+            <span class="lbl design"><span class="d"></span>Design</span>
+            <span class="lbl dev"><span class="d"></span>Development</span>
+            <span class="lbl mkt"><span class="d"></span>Marketing</span>
+          </div>
+          <h2 class="bp-headline">Unified<br>operations<span class="red">.</span></h2>
+          <p class="bp-sub">One workspace for the three sides of Linknbit — design, engineering, and growth. Sign in to pick up where your team left off.</p>
+        </div>
+        <div class="bp-foot">
+          <div class="legend">
+            <span class="design"><span class="d"></span>Design</span>
+            <span class="dev"><span class="d"></span>Development</span>
+            <span class="mkt"><span class="d"></span>Marketing</span>
+          </div>
+          <span>© 2026 Linknbit · Karachi <b>·</b> PKT 14:32</span>
+        </div>
+      </div>
+
+      <div class="form-panel">
+        <div class="fp-top">
+          <div class="fp-mini-logo">
+            <span class="mark">L</span>
+            <span class="word">Operations Portal</span>
+          </div>
+          <span class="fp-mini">Need help? help@linknbit.com</span>
+        </div>
+
+        <div class="form-card">
+          <h1 class="form-title">Reset your password.</h1>
+          <p class="form-sub">Enter your work email and we'll send you a secure link to reset it.</p>
+
+          <div class="field">
+            <label class="field-label">Work email</label>
+            <div class="input focused">
+              <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+              <input type="email" value="ghayas@linknbit.com">
+            </div>
+          </div>
+
+          <button class="btn primary" style="margin-top: 8px;">
+            Send reset link
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </button>
+
+          <a href="#" class="back-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+            Back to sign in
+          </a>
+
+          <div class="invite-note" style="margin-top: 32px;">
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+            <span>Reset links expire after <strong>15 minutes</strong> for security.</span>
+          </div>
+        </div>
+
+        <div class="fp-bot">
+          <span>Linknbit · Operations Portal</span>
+          <span>EN · KARACHI · PKT</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============================== SCREEN 2B — FORGOT SUCCESS ============================== -->
+  <section class="frame" data-screen-label="04 Forgot password success">
+    <div class="frame-head">
+      <span class="num">02 / B</span>
+      <h2>Forgot password — sent</h2>
+      <span class="state">success</span>
+      <p class="note">Replaces the form. Email mask shows the first letter, then asterisks of the local part.</p>
+    </div>
+
+    <div class="artboard">
+      <div class="brand-panel">
+        <div class="bp-top">
+          <div class="bp-logo"><span class="mark">L</span><span class="word">Linknbit</span></div>
+          <div class="bp-stamp">Portal <b>v2.0</b> · MAY 2026</div>
+        </div>
+        <div class="bp-hero">
+          <div class="bp-glyph" aria-hidden="true">
+            <span class="cross tl"></span>
+            <span class="cross br"></span>
+            <span class="orb design"></span>
+            <span class="orb dev"></span>
+            <span class="orb mkt"></span>
+            <span class="ring design"></span>
+            <span class="ring dev"></span>
+            <span class="ring mkt"></span>
+            <span class="lbl design"><span class="d"></span>Design</span>
+            <span class="lbl dev"><span class="d"></span>Development</span>
+            <span class="lbl mkt"><span class="d"></span>Marketing</span>
+          </div>
+          <h2 class="bp-headline">Unified<br>operations<span class="red">.</span></h2>
+          <p class="bp-sub">One workspace for the three sides of Linknbit — design, engineering, and growth. Sign in to pick up where your team left off.</p>
+        </div>
+        <div class="bp-foot">
+          <div class="legend">
+            <span class="design"><span class="d"></span>Design</span>
+            <span class="dev"><span class="d"></span>Development</span>
+            <span class="mkt"><span class="d"></span>Marketing</span>
+          </div>
+          <span>© 2026 Linknbit · Karachi <b>·</b> PKT 14:32</span>
+        </div>
+      </div>
+
+      <div class="form-panel">
+        <div class="fp-top">
+          <div class="fp-mini-logo">
+            <span class="mark">L</span>
+            <span class="word">Operations Portal</span>
+          </div>
+          <span class="fp-mini">Need help? help@linknbit.com</span>
+        </div>
+
+        <div class="form-card success-card">
+          <div class="success-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 4 12 14.01l-3-3"/>
+              <path d="M22 12v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h12"/>
+            </svg>
+          </div>
+
+          <h1 class="form-title">Check your inbox.</h1>
+          <p class="form-sub">If an account exists with this email, you'll receive a reset link within a minute.</p>
+
+          <div class="masked-email">
+            <span class="dot"></span>
+            g******@linknbit.com
+          </div>
+
+          <div style="margin-top: 36px; display: flex; flex-direction: column; gap: 10px;">
+            <button class="btn ghost">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+              Resend link <span style="color: var(--text-3); font-weight: 400; margin-left: 6px;">· in 0:54</span>
+            </button>
+            <a href="#" class="back-link" style="margin: 6px auto 0;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+              Back to sign in
+            </a>
+          </div>
+
+          <div class="invite-note" style="margin-top: 32px; text-align: left;">
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+            <span>Didn't get it? Check spam, or contact <strong>help@linknbit.com</strong>.</span>
+          </div>
+        </div>
+
+        <div class="fp-bot">
+          <span>Linknbit · Operations Portal</span>
+          <span>EN · KARACHI · PKT</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============================== SCREEN 3 — ROLE-BASED REDIRECT SPLASH ============================== -->
+  <section class="frame" data-screen-label="05 Role redirect splash">
+    <div class="frame-head">
+      <span class="num">03</span>
+      <h2>Role-based redirect splash</h2>
+      <span class="state">transient · ~800ms</span>
+      <p class="note">Sits between authentication and dashboard render. The three service-colored orbits visualize the workspace being assembled around the user.</p>
+    </div>
+
+    <div class="artboard">
+      <div class="splash">
+        <div class="splash-top">
+          <div class="bp-logo">
+            <span class="mark">L</span>
+            <span class="word">Linknbit</span>
+          </div>
+          <div class="session">
+            <span>Session <b style="color: var(--text-2);">8a3f-2c91</b></span>
+            <span class="live"><span class="d"></span>Authenticated</span>
+          </div>
+        </div>
+
+        <div class="splash-body">
+          <div class="splash-avatar-wrap">
+            <div class="splash-orbit mkt"></div>
+            <div class="splash-orbit design"></div>
+            <div class="splash-orbit dev"></div>
+            <div class="splash-avatar">SQ</div>
+          </div>
+
+          <div>
+            <h1 class="splash-greet"><span class="comma">Welcome,</span> <span class="name">Sara Qureshi</span><span class="red" style="color: var(--brand-red);">.</span></h1>
+            <div style="margin-top: 14px;">
+              <span class="splash-role">
+                <span class="puck">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                </span>
+                Project Manager · Design pod
+              </span>
+            </div>
+          </div>
+
+          <div class="splash-checklist">
+            <div class="step done">
+              <span class="mark">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </span>
+              <span class="t">Verifying credentials</span>
+              <span class="ms">142ms</span>
+            </div>
+            <div class="step done">
+              <span class="mark">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </span>
+              <span class="t">Loading role permissions</span>
+              <span class="ms">87ms</span>
+            </div>
+            <div class="step now">
+              <span class="mark"><span class="spin"></span></span>
+              <span class="t">Syncing your projects from ClickUp</span>
+              <span class="ms">…</span>
+            </div>
+            <div class="step pending">
+              <span class="mark"></span>
+              <span class="t">Preparing your dashboard</span>
+              <span class="ms">queued</span>
+            </div>
+          </div>
+
+          <div class="splash-progress"></div>
+
+          <div class="splash-status">
+            <span>Setting up your workspace</span>
+            <span class="typing">
+              <span></span><span></span><span></span><span></span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============================== FOOTER ============================== -->
+  <footer class="doc-foot">
+    <span>Linknbit Operations Portal · Auth flow v1.0</span>
+    <span>3 screens · 5 states · 1440 × 900</span>
+    <span style="color: var(--text-3);">— end —</span>
+  </footer>
+
+</div>
+
+</body>
+</html>
