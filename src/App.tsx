@@ -6,6 +6,7 @@ import LoginPage from './pages/auth/LoginPage'
 import AdminDashboardPage from './pages/admin/DashboardPage'
 import AdminProjectsPage from './pages/admin/ProjectsPage'
 import AdminProjectDetailPage from './pages/admin/ProjectDetailPage'
+import AdminTaskDetailPage from './pages/admin/TaskDetailPage'
 import GamificationPage from './pages/admin/GamificationPage'
 import PlaceholderPage from './pages/admin/PlaceholderPage'
 import EmployeeDashboardPage from './pages/employee/DashboardPage'
@@ -36,6 +37,7 @@ export default function App() {
           <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
           <Route path="/admin/projects" element={<AdminProjectsPage />} />
           <Route path="/admin/projects/:id" element={<AdminProjectDetailPage />} />
+          <Route path="/admin/tasks/:id" element={<AdminTaskDetailPage />} />
           <Route path="/admin/clients" element={<AdminPlaceholder title="Clients" />} />
           <Route path="/admin/teams" element={<AdminPlaceholder title="Teams" />} />
           <Route path="/admin/tasks" element={<AdminPlaceholder title="Tasks" />} />

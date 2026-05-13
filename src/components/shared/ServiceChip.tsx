@@ -4,41 +4,36 @@ import type { ServiceType } from '../../types'
 const SERVICE_CONFIG = {
   design: {
     label: 'Design',
-    dot: 'bg-service-design',
-    classes: 'bg-service-design/10 text-service-design border border-service-design/30',
+    classes: 'bg-[rgba(167,139,250,0.12)] text-[#C4B5FD]',
   },
   development: {
     label: 'Development',
-    dot: 'bg-service-dev',
-    classes: 'bg-service-dev/10 text-service-dev border border-service-dev/30',
+    classes: 'bg-[rgba(34,211,238,0.12)] text-[#67E8F9]',
   },
   marketing: {
     label: 'Marketing',
-    dot: 'bg-service-mkt',
-    classes: 'bg-service-mkt/10 text-service-mkt border border-service-mkt/30',
+    classes: 'bg-[rgba(251,191,36,0.12)] text-[#FCD34D]',
   },
 } as const
 
 interface ServiceChipProps {
   service: ServiceType
-  size?: 'sm' | 'md'
   showDot?: boolean
   className?: string
 }
 
-export function ServiceChip({ service, size = 'sm', showDot = true, className }: ServiceChipProps) {
+export function ServiceChip({ service, showDot = true, className }: ServiceChipProps) {
   const config = SERVICE_CONFIG[service]
 
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 font-ui font-semibold rounded-xs',
-        size === 'sm' ? 'text-caption px-2 py-0.5' : 'text-body-sm px-2.5 py-1',
+        'inline-flex items-center gap-[6px] py-[3px] px-[9px] rounded-full font-ui font-semibold text-[10.5px] uppercase tracking-[0.04em] leading-[1.4] whitespace-nowrap border border-transparent',
         config.classes,
         className,
       )}
     >
-      {showDot && <span className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', config.dot)} />}
+      {showDot && <span className="w-[5px] h-[5px] rounded-full bg-current flex-shrink-0" />}
       {config.label}
     </span>
   )

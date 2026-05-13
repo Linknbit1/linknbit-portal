@@ -1,32 +1,30 @@
 import { cn } from '../../lib/cn'
 import type { Priority } from '../../types'
 
-const PRIORITY_CONFIG: Record<Priority, { label: string; classes: string; dot: string }> = {
-  critical: { label: 'Critical', dot: 'bg-error', classes: 'bg-error/10 text-error border border-error/30' },
-  high: { label: 'High', dot: 'bg-warning', classes: 'bg-warning/10 text-warning border border-warning/30' },
-  medium: { label: 'Medium', dot: 'bg-info', classes: 'bg-info/10 text-info border border-info/30' },
-  low: { label: 'Low', dot: 'bg-text-4', classes: 'bg-surface-2 text-text-3 border border-border-default' },
+const PRIORITY_CONFIG: Record<Priority, { label: string; classes: string }> = {
+  critical: { label: 'Critical', classes: 'bg-[rgba(244,54,76,0.18)] text-[#F4364C] border-[rgba(244,54,76,0.4)]' },
+  high:     { label: 'High',     classes: 'bg-[rgba(245,158,11,0.18)] text-[#F59E0B] border-[rgba(245,158,11,0.4)]' },
+  medium:   { label: 'Medium',   classes: 'bg-[rgba(59,130,246,0.18)] text-[#60A5FA] border-[rgba(59,130,246,0.4)]' },
+  low:      { label: 'Low',      classes: 'bg-surface-2 text-text-3 border-border-default' },
 }
 
 interface PriorityChipProps {
   priority: Priority
-  size?: 'sm' | 'md'
   className?: string
 }
 
-export function PriorityChip({ priority, size = 'sm', className }: PriorityChipProps) {
+export function PriorityChip({ priority, className }: PriorityChipProps) {
   const config = PRIORITY_CONFIG[priority]
 
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 font-ui font-semibold rounded-xs',
-        size === 'sm' ? 'text-caption px-1.5 py-0.5' : 'text-body-sm px-2.5 py-1',
+        'inline-flex items-center gap-[6px] py-[3px] px-[9px] rounded-full font-ui font-semibold text-[10.5px] uppercase tracking-[0.04em] leading-[1.4] whitespace-nowrap border',
         config.classes,
         className,
       )}
     >
-      <span className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', config.dot)} />
+      <span className="w-[5px] h-[5px] rounded-full bg-current flex-shrink-0" />
       {config.label}
     </span>
   )
