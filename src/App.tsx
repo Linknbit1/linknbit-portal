@@ -4,12 +4,17 @@ import { ClientShell } from './components/layout/ClientShell'
 
 import LoginPage from './pages/auth/LoginPage'
 import AdminDashboardPage from './pages/admin/DashboardPage'
-import ProjectsPage from './pages/admin/ProjectsPage'
-import ProjectDetailPage from './pages/admin/ProjectDetailPage'
+import AdminProjectsPage from './pages/admin/ProjectsPage'
+import AdminProjectDetailPage from './pages/admin/ProjectDetailPage'
 import GamificationPage from './pages/admin/GamificationPage'
 import PlaceholderPage from './pages/admin/PlaceholderPage'
 import EmployeeDashboardPage from './pages/employee/DashboardPage'
-import ClientDashboardPage from './pages/client/DashboardPage'
+
+import ClientProjectsPage from './pages/client/ProjectsPage'
+import ClientProjectDetailPage from './pages/client/ProjectDetailPage'
+import ClientApprovalsPage from './pages/client/ApprovalsPage'
+import ClientFilesPage from './pages/client/FilesPage'
+import ClientReportsPage from './pages/client/ReportsPage'
 
 function AdminPlaceholder({ title }: { title: string }) {
   return <PlaceholderPage title={title} />
@@ -25,8 +30,8 @@ export default function App() {
         {/* Internal portal (dark mode) */}
         <Route element={<AppShell />}>
           <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
-          <Route path="/admin/projects" element={<ProjectsPage />} />
-          <Route path="/admin/projects/:id" element={<ProjectDetailPage />} />
+          <Route path="/admin/projects" element={<AdminProjectsPage />} />
+          <Route path="/admin/projects/:id" element={<AdminProjectDetailPage />} />
           <Route path="/admin/clients" element={<AdminPlaceholder title="Clients" />} />
           <Route path="/admin/teams" element={<AdminPlaceholder title="Teams" />} />
           <Route path="/admin/tasks" element={<AdminPlaceholder title="Tasks" />} />
@@ -45,10 +50,12 @@ export default function App() {
 
         {/* Client portal (light mode) */}
         <Route element={<ClientShell />}>
-          <Route path="/client/projects" element={<ClientDashboardPage />} />
-          <Route path="/client/approvals" element={<ClientDashboardPage />} />
-          <Route path="/client/files" element={<ClientDashboardPage />} />
-          <Route path="/client/reports" element={<ClientDashboardPage />} />
+          <Route path="/client" element={<Navigate to="/client/projects" replace />} />
+          <Route path="/client/projects" element={<ClientProjectsPage />} />
+          <Route path="/client/projects/:id" element={<ClientProjectDetailPage />} />
+          <Route path="/client/approvals" element={<ClientApprovalsPage />} />
+          <Route path="/client/files" element={<ClientFilesPage />} />
+          <Route path="/client/reports" element={<ClientReportsPage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/login" replace />} />
