@@ -121,7 +121,7 @@ export default function EmployeeDashboardPage() {
                         </p>
                         <div className="flex items-center gap-1.5 mt-0.5">
                           <span className="text-caption text-text-4 font-mono">{task.projectName}</span>
-                          <ServiceChip service={task.serviceType} size="sm" />
+                          <ServiceChip service={task.serviceType} />
                         </div>
                       </div>
                       <StatusChip status={task.status} />
