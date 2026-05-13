@@ -245,7 +245,8 @@ export default function ClientReportsPage() {
         ].map((kpi) => (
           <div
             key={kpi.label}
-            className="bg-client-surface border border-client-border rounded-xl p-5 shadow-sm"
+            className="bg-white border rounded-xl p-5"
+            style={{ borderColor: '#EAE3D6' }}
           >
             <div className="flex items-start justify-between mb-3">
               <p className="text-[12px]" style={{ color: '#877F71' }}>
@@ -274,7 +275,7 @@ export default function ClientReportsPage() {
       {/* Charts row */}
       <div className="grid grid-cols-3 gap-5 mb-8">
         {/* Area chart */}
-        <div className="col-span-2 bg-client-surface border border-client-border rounded-xl p-5 shadow-sm">
+        <div className="col-span-2 bg-white border rounded-xl p-5" style={{ borderColor: '#EAE3D6' }}>
           <div className="flex items-center justify-between mb-5">
             <div>
               <h3
@@ -335,7 +336,8 @@ export default function ClientReportsPage() {
         </div>
 
         {/* Project breakdown */}
-        <div className="bg-client-surface border border-client-border rounded-xl p-5 shadow-sm">
+        <div className="bg-white border rounded-xl p-5"
+            style={{ borderColor: '#EAE3D6' }}>
           <h3 className="font-display font-semibold text-[16px] mb-4" style={{ color: '#1A1612' }}>
             Project Status
           </h3>
@@ -373,7 +375,8 @@ export default function ClientReportsPage() {
       </div>
 
       {/* Milestones */}
-      <div className="bg-client-surface border border-client-border rounded-xl p-5 shadow-sm">
+      <div className="bg-white border rounded-xl p-5"
+            style={{ borderColor: '#EAE3D6' }}>
         <div className="flex items-center justify-between mb-5">
           <div>
             <h3 className="font-display font-semibold text-[16px]" style={{ color: '#1A1612' }}>

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import {
   Search,
   Clock,
@@ -114,9 +115,14 @@ export default function ClientProjectsPage() {
       {/* Stats row */}
       <div className="grid grid-cols-4 gap-4 mb-8">
         {stats.map((s) => (
-          <div
+          <motion.div
             key={s.label}
-            className="bg-client-surface border border-client-border rounded-xl p-4 flex items-center gap-3.5 shadow-sm"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+            whileHover={{ boxShadow: '0 4px 14px rgba(26,22,18,0.07)' }}
+            className="bg-white border rounded-xl p-4 flex items-center gap-3.5"
+            style={{ borderColor: '#EAE3D6' }}
           >
             <div
               className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
@@ -135,7 +141,7 @@ export default function ClientProjectsPage() {
                 {s.label}
               </p>
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
 
@@ -213,13 +219,17 @@ export default function ClientProjectsPage() {
             const isAction = project.status === 'awaiting_client'
 
             return (
-              <div
+              <motion.div
                 key={project.id}
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                whileHover={{ y: -3, boxShadow: '0 8px 24px rgba(26,22,18,0.08)' }}
                 className={cn(
-                  'bg-client-surface rounded-xl border p-6 shadow-sm hover:shadow-md transition-all',
-                  isAction ? 'border-2' : 'border-client-border',
+                  'bg-white rounded-2xl p-6 cursor-default',
+                  isAction ? 'border-2' : 'border',
                 )}
-                style={isAction ? { borderColor: 'rgba(238,39,55,0.5)' } : {}}
+                style={{ borderColor: isAction ? 'rgba(238,39,55,0.3)' : '#EAE3D6' }}
               >
                 {/* Header row */}
                 <div className="flex items-start justify-between gap-3 mb-4">
@@ -325,7 +335,7 @@ export default function ClientProjectsPage() {
                     </Link>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             )
           })}
         </div>
