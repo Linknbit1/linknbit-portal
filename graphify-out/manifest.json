@@ -1,0 +1,238 @@
+{
+  "D:\\Projects\\react\\linknbit-portal\\eslint.config.js": {
+    "mtime": 1778596599.7674432,
+    "hash": "75a0286de267d5393020e4439ed72f6a"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\vite.config.ts": {
+    "mtime": 1778598704.486619,
+    "hash": "60b22c6831f3f0493394a9ffb67a7852"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\resources\\uploads\\design-canvas.jsx": {
+    "mtime": 1778596599.77557,
+    "hash": "2952531bc4efd01c765b4d8370b16f62"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\App.tsx": {
+    "mtime": 1778596599.7780874,
+    "hash": "7b76ef2d589485003b31b5c45b132f97"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\main.tsx": {
+    "mtime": 1778596599.7888126,
+    "hash": "df3369963799e47ef5a77cdca932abf0"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\AppShell.tsx": {
+    "mtime": 1778596599.7800949,
+    "hash": "2720ef7843152799678be0956860e81c"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\ClientShell.tsx": {
+    "mtime": 1778596599.7800949,
+    "hash": "dd56bf65ae1f5f1400385e5032e7af49"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\Sidebar.tsx": {
+    "mtime": 1778596599.7816026,
+    "hash": "05ca967e13c47c7159683b6175c22014"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\Topbar.tsx": {
+    "mtime": 1778596599.7816026,
+    "hash": "ec2307671cf4ce4b38b7b9465fe0d048"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\components\\shared\\ClickUpStatus.tsx": {
+    "mtime": 1778596599.7816026,
+    "hash": "54c47b0ec06e53cac5115c0721649d99"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\components\\shared\\ClientVisibility.tsx": {
+    "mtime": 1778596599.7826118,
+    "hash": "a3724101dc10f9e8a5411c9e1b011d0e"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\components\\shared\\PriorityChip.tsx": {
+    "mtime": 1778596599.7826118,
+    "hash": "8e46999083e246300bf28c176d0ddac7"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\components\\shared\\RoleBadge.tsx": {
+    "mtime": 1778596599.7826118,
+    "hash": "38a5605f458e5d05b97f7f75a778d513"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\components\\shared\\ServiceChip.tsx": {
+    "mtime": 1778596599.7826118,
+    "hash": "8a0046125914df78dd32a1ca75f2a7a6"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\components\\shared\\StatusChip.tsx": {
+    "mtime": 1778596599.783612,
+    "hash": "35ead081d00a9ac442d68e4371d78f8d"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\components\\shared\\XPBar.tsx": {
+    "mtime": 1778596599.783612,
+    "hash": "de19b1e64236293c8c97e966f0870c39"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\Avatar.tsx": {
+    "mtime": 1778596599.7846117,
+    "hash": "b9a9c0c7211b356fe90cc593e97aa0da"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\Badge.tsx": {
+    "mtime": 1778596599.7846117,
+    "hash": "baffe57abebba1fef6b86a6867360d8c"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\Button.tsx": {
+    "mtime": 1778596599.7846117,
+    "hash": "820735fc1cfd9e781b46d19cc18d8dc3"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\Card.tsx": {
+    "mtime": 1778596599.7856133,
+    "hash": "6954adf29bf2998167cc210bed3f8acd"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\Drawer.tsx": {
+    "mtime": 1778596599.7856133,
+    "hash": "74baf4d14497174bee65496016a2c535"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\Input.tsx": {
+    "mtime": 1778596599.7856133,
+    "hash": "b92402cff3abfc28113f6cdad1527c6a"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\ProgressBar.tsx": {
+    "mtime": 1778596599.7856133,
+    "hash": "6178435e7a185ccb72665edcabf990ec"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\Skeleton.tsx": {
+    "mtime": 1778596599.7866092,
+    "hash": "7ffa7629241993a7f35d3f206a148706"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\Tabs.tsx": {
+    "mtime": 1778596599.7866092,
+    "hash": "43eb25a2327e13cc5577a6ccb98d6194"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\Toggle.tsx": {
+    "mtime": 1778596599.7866092,
+    "hash": "975af2cea79d974559ad991315b7d16c"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\data\\mock.ts": {
+    "mtime": 1778596599.7866092,
+    "hash": "5a205b2238ef2ab74511800e7384de35"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\lib\\cn.ts": {
+    "mtime": 1778596599.7878091,
+    "hash": "d5fc3afa79f0c3df711898805e5da7b2"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\lib\\utils.ts": {
+    "mtime": 1778596599.7888126,
+    "hash": "a2210c783661ba929ae04c4b0258072e"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\DashboardPage.tsx": {
+    "mtime": 1778596599.7898102,
+    "hash": "a27081d9298eea8fbee78c3ff37390ef"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\GamificationPage.tsx": {
+    "mtime": 1778596599.7898102,
+    "hash": "62b8fe71ca57cc05fc7a7a730eb24348"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\PlaceholderPage.tsx": {
+    "mtime": 1778596599.7898102,
+    "hash": "afa5de5fe297c1484499cd629056d912"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\ProjectDetailPage.tsx": {
+    "mtime": 1778596599.7898102,
+    "hash": "3632899d52bd877cac0b487bad33abe7"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\ProjectsPage.tsx": {
+    "mtime": 1778596599.790808,
+    "hash": "fa2c723ce2af77e4814e8b1928c7d050"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\TaskDetailDrawer.tsx": {
+    "mtime": 1778596599.790808,
+    "hash": "b36d69fbdf220233671066b1f278711a"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\auth\\LoginPage.tsx": {
+    "mtime": 1778610597.5054471,
+    "hash": "fdea4401fe4dd77339f0aad2050faff7"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\client\\DashboardPage.tsx": {
+    "mtime": 1778596599.79181,
+    "hash": "1769b1a8991268b4b29ae950ff4c405d"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\employee\\DashboardPage.tsx": {
+    "mtime": 1778596599.7928076,
+    "hash": "8912dca4e833497344862d1478ddb37b"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\types\\index.ts": {
+    "mtime": 1778596599.7928076,
+    "hash": "e625c5d2c70e1e90c15ba613f2627bb1"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\AGENTS.md": {
+    "mtime": 1778637729.709293,
+    "hash": "747e73a5e1af4b72c0d65c9169c23199"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\CLAUDE.md": {
+    "mtime": 1778637720.9159863,
+    "hash": "cd049adcc5d7ab0307b65c80e0ce549c"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\index.html": {
+    "mtime": 1778596599.7674432,
+    "hash": "591ea1c5a416771e8be391c91e34b682"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\README.md": {
+    "mtime": 1778596599.7664366,
+    "hash": "1fd1975c826313d9af82af3562df872f"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\docs\\Gamified Rewards & Recognition System.docx.md": {
+    "mtime": 1778596599.7664366,
+    "hash": "0467a2a46160f30874268be2ba00045a"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\docs\\Linknbit Unified Operations Portal.md": {
+    "mtime": 1778596599.7664366,
+    "hash": "9d98f7033a0918b2711e8d802599b928"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\resources\\Admin Dashboard.html": {
+    "mtime": 1778596599.7695684,
+    "hash": "71475566fdbff2b1b0d940cf809a7650"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\resources\\Auth Screens.html": {
+    "mtime": 1778596599.7695684,
+    "hash": "24f0b9357e39a6321fa832424db92f7e"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\resources\\Client Dashboard.html": {
+    "mtime": 1778596599.7705686,
+    "hash": "b32a2becaee759307ce79e3826b3c212"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\resources\\Design System.html": {
+    "mtime": 1778596599.7715695,
+    "hash": "e22297616ed0ddde158ba06b1501e3f6"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\resources\\phases.md": {
+    "mtime": 1778596599.7735696,
+    "hash": "a172130e0d9d92d5015bcc827851dde8"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\resources\\Project Detail.html": {
+    "mtime": 1778596599.7715695,
+    "hash": "800808c29b2adb52c50a5f168c00e2e2"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\resources\\Projects.html": {
+    "mtime": 1778596599.7725687,
+    "hash": "eadb4293fcfef12caec1a934e3000469"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\resources\\Task Detail.html": {
+    "mtime": 1778596599.7735696,
+    "hash": "ab8ebd1811090c6bead9a61f55d9c430"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\public\\favicon.svg": {
+    "mtime": 1778596599.768564,
+    "hash": "7e840862161341271697daa99a40d76b"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\public\\icons.svg": {
+    "mtime": 1778596599.768564,
+    "hash": "21c7473c592c67dc87223d49892c8f0a"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\resources\\assets\\linknbit-logo.svg": {
+    "mtime": 1778596599.7735696,
+    "hash": "c2d86e6b8fd1853d289ef4200f833bc9"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\assets\\hero.png": {
+    "mtime": 1778596599.7780874,
+    "hash": "aead493361b27e7510691c5d7072dfc1"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\assets\\react.svg": {
+    "mtime": 1778596599.7790935,
+    "hash": "f0402b67b6ce880f65666bb49e841696"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\assets\\vite.svg": {
+    "mtime": 1778596599.7790935,
+    "hash": "6d5180a782d64c8cf51ba01c2a2184d8"
+  }
+}

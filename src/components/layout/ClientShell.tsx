@@ -1,21 +1,129 @@
-import { NavLink, Outlet } from 'react-router-dom'
-import { Bell, ChevronDown } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
+import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import {
+  Bell,
+  ChevronDown,
+  X,
+  FileText,
+  GitBranch,
+  Settings,
+  HelpCircle,
+  LogOut,
+  CheckCircle2,
+  AlertCircle,
+  MessageSquare,
+  User,
+} from 'lucide-react'
 import { cn } from '../../lib/cn'
+import { APPROVALS } from '../../data/mock'
+import { formatRelativeTime } from '../../lib/utils'
 
-const CLIENT_NAV = [
-  { label: 'My Projects', to: '/client/projects' },
-  { label: 'Approvals', to: '/client/approvals', badge: 2 },
-  { label: 'Files & Deliverables', to: '/client/files' },
-  { label: 'Reports', to: '/client/reports' },
+const CLIENT_NOTIFICATIONS = [
+  {
+    id: 'cn1',
+    type: 'file' as const,
+    message: 'Sara Qureshi uploaded "CS_UI_Designs_v3.fig"',
+    project: 'Cricket Sansar Brand Identity',
+    time: '2026-05-10T14:00:00',
+    read: false,
+  },
+  {
+    id: 'cn2',
+    type: 'approval' as const,
+    message: 'Stage approval needed: API Documentation v2 review',
+    project: 'Cricket Sansar App',
+    time: '2026-05-11T10:00:00',
+    read: false,
+  },
+  {
+    id: 'cn3',
+    type: 'stage' as const,
+    message: 'Cricket Sansar App moved to Internal QA stage',
+    project: 'Cricket Sansar App',
+    time: '2026-05-08T09:00:00',
+    read: false,
+  },
+  {
+    id: 'cn4',
+    type: 'approved' as const,
+    message: 'You approved the Wireframing stage',
+    project: 'Cricket Sansar Brand Identity',
+    time: '2026-05-06T11:00:00',
+    read: true,
+  },
+  {
+    id: 'cn5',
+    type: 'comment' as const,
+    message: 'Ahmad Karimi left a comment on API Documentation',
+    project: 'Cricket Sansar App',
+    time: '2026-05-12T09:00:00',
+    read: true,
+  },
 ]
 
+function useClickOutside(
+  ref: React.RefObject<HTMLElement | null>,
+  handler: () => void,
+) {
+  useEffect(() => {
+    const listener = (e: MouseEvent) => {
+      if (!ref.current || ref.current.contains(e.target as Node)) return
+      handler()
+    }
+    document.addEventListener('mousedown', listener)
+    return () => document.removeEventListener('mousedown', listener)
+  }, [ref, handler])
+}
+
 export function ClientShell() {
+  const navigate = useNavigate()
+  const [notifOpen, setNotifOpen] = useState(false)
+  const [profileOpen, setProfileOpen] = useState(false)
+  const [dismissed, setDismissed] = useState<Set<string>>(new Set())
+
+  const notifRef = useRef<HTMLDivElement>(null)
+  const profileRef = useRef<HTMLDivElement>(null)
+
+  useClickOutside(notifRef, () => setNotifOpen(false))
+  useClickOutside(profileRef, () => setProfileOpen(false))
+
+  const pendingApprovals = APPROVALS.filter((a) => a.status === 'pending').length
+  const unreadCount = CLIENT_NOTIFICATIONS.filter((n) => !n.read && !dismissed.has(n.id)).length
+
+  const notifIcon = (type: string) => {
+    switch (type) {
+      case 'file':
+        return <FileText size={13} style={{ color: '#7A3FD9' }} />
+      case 'approval':
+        return <AlertCircle size={13} style={{ color: '#EE2737' }} />
+      case 'approved':
+        return <CheckCircle2 size={13} style={{ color: '#1F9D55' }} />
+      case 'comment':
+        return <MessageSquare size={13} style={{ color: '#0E8B9A' }} />
+      default:
+        return <GitBranch size={13} style={{ color: '#877F71' }} />
+    }
+  }
+
+  const handleBellClick = () => {
+    if (!notifOpen) {
+      setDismissed(new Set(CLIENT_NOTIFICATIONS.map((n) => n.id)))
+    }
+    setNotifOpen((v) => !v)
+    setProfileOpen(false)
+  }
+
+  const handleProfileClick = () => {
+    setProfileOpen((v) => !v)
+    setNotifOpen(false)
+  }
+
   return (
     <div className="client-portal min-h-screen bg-client-bg font-ui" style={{ color: '#1A1612' }}>
-      {/* Top navigation */}
-      <header className="h-client-topbar bg-client-surface border-b border-client-border sticky top-0 z-30 flex items-center px-10 gap-9">
+      {/* ── Top navigation ── */}
+      <header className="h-client-topbar bg-client-surface border-b border-client-border sticky top-0 z-30 flex items-center px-10 gap-8">
         {/* Brand */}
-        <div className="flex items-center gap-3 flex-shrink-0">
+        <div className="flex items-center gap-3 shrink-0">
           <span className="w-8 h-8 rounded-md bg-client-accent flex items-center justify-center">
             <svg viewBox="0 0 41 45" width="18" height="18" fill="none">
               <rect x="0" y="3.5" width="10.5" height="10.5" rx="0.4" fill="white" />
@@ -27,40 +135,57 @@ export function ClientShell() {
             </svg>
           </span>
           <div>
-            <p className="font-display font-bold text-[16px] text-client-ink-1 leading-tight tracking-tight">
+            <p className="font-display font-bold text-[16px] leading-tight tracking-tight" style={{ color: '#1A1612' }}>
               Linknbit
             </p>
-            <p className="font-mono text-[9px] text-client-ink-3 uppercase tracking-widest mt-px">
-              Powered by <span className="text-client-accent font-bold">Linknbit</span>
+            <p className="font-mono text-[9px] uppercase tracking-widest mt-px" style={{ color: '#B7AE9D' }}>
+              Client Portal
             </p>
           </div>
         </div>
 
+        {/* Divider */}
+        <div className="w-px h-6 shrink-0" style={{ background: '#EAE3D6' }} />
+
         {/* Nav */}
-        <nav className="flex items-center gap-1 ml-4">
-          {CLIENT_NAV.map((item) => (
+        <nav className="flex items-center gap-0.5">
+          {[
+            { label: 'My Projects', to: '/client/projects' },
+            { label: 'Approvals', to: '/client/approvals', badge: pendingApprovals },
+            { label: 'Files & Deliverables', to: '/client/files' },
+            { label: 'Reports', to: '/client/reports' },
+          ].map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
                 cn(
-                  'relative px-3.5 py-2.5 rounded-md font-medium text-[14px] transition-colors',
+                  'relative px-3.5 py-2 rounded-md font-medium text-[14px] transition-all flex items-center gap-1.5',
                   isActive
-                    ? 'text-client-ink-1 font-semibold'
-                    : 'text-client-ink-2 hover:bg-client-bg hover:text-client-ink-1',
+                    ? 'font-semibold'
+                    : 'hover:bg-client-bg-alt',
                 )
               }
+              style={({ isActive }) => ({
+                color: isActive ? '#1A1612' : '#4F4940',
+              })}
             >
               {({ isActive }) => (
                 <>
                   {item.label}
-                  {item.badge && (
-                    <span className="ml-1.5 bg-client-accent text-white text-[10px] font-bold px-1.5 py-px rounded-full align-middle">
+                  {item.badge !== undefined && item.badge > 0 && (
+                    <span
+                      className="text-[10px] font-bold px-1.5 py-px rounded-full text-white"
+                      style={{ background: '#EE2737' }}
+                    >
                       {item.badge}
                     </span>
                   )}
                   {isActive && (
-                    <span className="absolute bottom-0 left-3.5 right-3.5 h-0.5 bg-client-accent rounded-full" />
+                    <span
+                      className="absolute bottom-0 left-3.5 right-3.5 h-0.5 rounded-full"
+                      style={{ background: '#EE2737' }}
+                    />
                   )}
                 </>
               )}
@@ -68,25 +193,215 @@ export function ClientShell() {
           ))}
         </nav>
 
-        {/* Right */}
-        <div className="ml-auto flex items-center gap-3.5">
-          <button className="relative w-9.5 h-9.5 rounded-md text-client-ink-2 hover:bg-client-bg hover:text-client-ink-1 flex items-center justify-center transition-colors">
-            <Bell size={17} />
-            <span className="absolute top-2 right-2.5 w-2 h-2 rounded-full bg-client-accent border-2 border-client-surface" />
-          </button>
-          <button className="flex items-center gap-2.5 pl-1.5 pr-3 py-1 rounded-full bg-client-bg border border-client-border hover:bg-client-bg-alt transition-colors">
-            <span className="w-7.5 h-7.5 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 text-amber-900 font-bold text-[11.5px] flex items-center justify-center flex-shrink-0">
-              IS
-            </span>
-            <div className="flex flex-col items-start leading-none">
-              <span className="font-semibold text-[13.5px] text-client-ink-1">Imran Shah</span>
-              <span className="font-mono text-[9.5px] text-client-warning uppercase tracking-wider mt-0.5 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-client-warning inline-block" />
-                Client Owner
+        {/* Right side */}
+        <div className="ml-auto flex items-center gap-2.5">
+          {/* Notification bell */}
+          <div ref={notifRef} className="relative">
+            <button
+              onClick={handleBellClick}
+              className={cn(
+                'relative w-9 h-9 rounded-lg flex items-center justify-center transition-colors',
+                notifOpen ? 'bg-client-bg-alt' : 'hover:bg-client-bg-alt',
+              )}
+              style={{ color: '#4F4940' }}
+              aria-label="Notifications"
+            >
+              <Bell size={17} />
+              {unreadCount > 0 && (
+                <span
+                  className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full border-2 border-client-surface"
+                  style={{ background: '#EE2737' }}
+                />
+              )}
+            </button>
+
+            {/* Notification dropdown */}
+            {notifOpen && (
+              <div
+                className="absolute right-0 top-full mt-2.5 w-84 rounded-2xl border shadow-xl z-50 overflow-hidden"
+                style={{ background: '#FFFFFF', borderColor: '#EAE3D6', width: '340px' }}
+              >
+                <div
+                  className="flex items-center justify-between px-4 py-3 border-b"
+                  style={{ borderColor: '#EAE3D6' }}
+                >
+                  <h3 className="font-display font-bold text-[15px]" style={{ color: '#1A1612' }}>
+                    Notifications
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    {unreadCount === 0 && (
+                      <span className="text-[11px]" style={{ color: '#B7AE9D' }}>
+                        All caught up
+                      </span>
+                    )}
+                    <button
+                      onClick={() => setNotifOpen(false)}
+                      className="w-6 h-6 flex items-center justify-center rounded-md transition-colors hover:bg-client-bg-alt"
+                      style={{ color: '#877F71' }}
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="divide-y" style={{ borderColor: '#F2EDE4' }}>
+                  {CLIENT_NOTIFICATIONS.map((n) => {
+                    const isNew = !n.read && !dismissed.has(n.id)
+                    return (
+                      <div
+                        key={n.id}
+                        className="flex gap-3 px-4 py-3 transition-colors hover:bg-client-bg cursor-pointer"
+                        style={isNew ? { background: 'rgba(251,191,36,0.04)' } : {}}
+                      >
+                        <div
+                          className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5"
+                          style={{ background: '#F2EDE4' }}
+                        >
+                          {notifIcon(n.type)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[13px] leading-snug" style={{ color: '#1A1612' }}>
+                            {n.message}
+                          </p>
+                          <p className="text-[11px] font-mono mt-0.5" style={{ color: '#B7AE9D' }}>
+                            {n.project} · {formatRelativeTime(n.time)}
+                          </p>
+                        </div>
+                        {isNew && (
+                          <div
+                            className="w-2 h-2 rounded-full shrink-0 mt-1.5"
+                            style={{ background: '#EE2737' }}
+                          />
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+
+                <div
+                  className="px-4 py-2.5 border-t text-center"
+                  style={{ borderColor: '#EAE3D6' }}
+                >
+                  <button
+                    className="text-[12px] font-semibold transition-colors hover:opacity-70"
+                    style={{ color: '#EE2737' }}
+                  >
+                    View all notifications
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Profile button */}
+          <div ref={profileRef} className="relative">
+            <button
+              onClick={handleProfileClick}
+              className={cn(
+                'flex items-center gap-2 pl-1.5 pr-3 py-1 rounded-full border transition-all',
+                profileOpen ? 'shadow-sm' : 'hover:shadow-sm',
+              )}
+              style={{ background: '#F2EDE4', borderColor: '#EAE3D6' }}
+            >
+              <span
+                className="w-7 h-7 rounded-full bg-linear-to-br from-amber-400 to-amber-600 font-bold text-[11px] flex items-center justify-center shrink-0"
+                style={{ color: '#78350F' }}
+              >
+                IS
               </span>
-            </div>
-            <ChevronDown size={14} className="text-client-ink-3 ml-1" />
-          </button>
+              <div className="flex flex-col items-start leading-none">
+                <span className="font-semibold text-[13px]" style={{ color: '#1A1612' }}>
+                  Imran Shah
+                </span>
+                <span
+                  className="font-mono text-[9px] uppercase tracking-wider mt-0.5 flex items-center gap-1"
+                  style={{ color: '#FBBF24' }}
+                >
+                  <span
+                    className="w-1.5 h-1.5 rounded-full inline-block"
+                    style={{ background: '#FBBF24' }}
+                  />
+                  Client Owner
+                </span>
+              </div>
+              <ChevronDown
+                size={13}
+                className={cn('transition-transform ml-0.5', profileOpen && 'rotate-180')}
+                style={{ color: '#B7AE9D' }}
+              />
+            </button>
+
+            {/* Profile dropdown */}
+            {profileOpen && (
+              <div
+                className="absolute right-0 top-full mt-2.5 w-56 rounded-2xl border shadow-xl z-50 overflow-hidden"
+                style={{ background: '#FFFFFF', borderColor: '#EAE3D6' }}
+              >
+                {/* User info */}
+                <div
+                  className="px-4 py-3.5 border-b"
+                  style={{ borderColor: '#F2EDE4' }}
+                >
+                  <div className="flex items-center gap-2.5 mb-2">
+                    <span
+                      className="w-9 h-9 rounded-full bg-linear-to-br from-amber-400 to-amber-600 font-bold text-[12px] flex items-center justify-center shrink-0"
+                      style={{ color: '#78350F' }}
+                    >
+                      IS
+                    </span>
+                    <div>
+                      <p className="font-semibold text-[13px]" style={{ color: '#1A1612' }}>
+                        Imran Shah
+                      </p>
+                      <p className="text-[11px]" style={{ color: '#877F71' }}>
+                        Cricket Sansar
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-[11px] font-mono" style={{ color: '#B7AE9D' }}>
+                    imran@cricketsansar.com
+                  </p>
+                </div>
+
+                {/* Menu items */}
+                <div className="py-1">
+                  {[
+                    { icon: User, label: 'My Account', description: 'Profile & preferences' },
+                    { icon: Settings, label: 'Settings', description: 'Portal configuration' },
+                    { icon: HelpCircle, label: 'Help & Support', description: 'Docs & contact' },
+                  ].map((item) => (
+                    <button
+                      key={item.label}
+                      onClick={() => setProfileOpen(false)}
+                      className="w-full px-4 py-2.5 flex items-center gap-3 transition-colors hover:bg-client-bg text-left"
+                    >
+                      <item.icon size={15} style={{ color: '#877F71' }} />
+                      <div>
+                        <p className="text-[13px] font-medium" style={{ color: '#1A1612' }}>
+                          {item.label}
+                        </p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="border-t py-1" style={{ borderColor: '#F2EDE4' }}>
+                  <button
+                    onClick={() => {
+                      setProfileOpen(false)
+                      navigate('/login')
+                    }}
+                    className="w-full px-4 py-2.5 flex items-center gap-3 transition-colors hover:bg-red-50 text-left"
+                  >
+                    <LogOut size={15} style={{ color: '#EE2737' }} />
+                    <span className="text-[13px] font-medium" style={{ color: '#EE2737' }}>
+                      Sign Out
+                    </span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
