@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Download, Search, Eye, FileText, Folder, Image, Archive } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Download, Search, Eye, FileText, Folder, Image, Archive, Layers } from 'lucide-react'
 import { PROJECTS } from '../../data/mock'
 import { formatDate } from '../../lib/utils'
 import { cn } from '../../lib/cn'
@@ -54,23 +55,24 @@ const FILE_TYPE_LABELS: Record<string, string> = {
   spreadsheet: 'Spreadsheets',
 }
 
-const TYPE_ICON_STYLES: Record<string, { bg: string; color: string; label: string }> = {
-  figma: { bg: 'rgba(122,63,217,0.1)', color: '#7A3FD9', label: 'FIG' },
-  pdf: { bg: 'rgba(238,39,55,0.08)', color: '#EE2737', label: 'PDF' },
-  image: { bg: 'rgba(251,191,36,0.1)', color: '#B47700', label: 'IMG' },
-  doc: { bg: 'rgba(14,139,154,0.1)', color: '#0E8B9A', label: 'DOC' },
-  spreadsheet: { bg: 'rgba(31,157,85,0.1)', color: '#1F9D55', label: 'XLS' },
-  archive: { bg: '#F2EDE4', color: '#877F71', label: 'ZIP' },
+const TYPE_ICON_CONFIG: Record<string, { bg: string; color: string; icon: React.ElementType }> = {
+  figma: { bg: 'rgba(122,63,217,0.1)', color: '#7A3FD9', icon: Layers },
+  pdf: { bg: 'rgba(238,39,55,0.08)', color: '#EE2737', icon: FileText },
+  image: { bg: 'rgba(251,191,36,0.1)', color: '#B47700', icon: Image },
+  doc: { bg: 'rgba(14,139,154,0.1)', color: '#0E8B9A', icon: FileText },
+  spreadsheet: { bg: 'rgba(31,157,85,0.1)', color: '#1F9D55', icon: Archive },
+  archive: { bg: '#F2EDE4', color: '#877F71', icon: Archive },
 }
 
 function FileTypeIcon({ type }: { type: string }) {
-  const s = TYPE_ICON_STYLES[type] ?? { bg: '#F2EDE4', color: '#877F71', label: 'FILE' }
+  const s = TYPE_ICON_CONFIG[type] ?? { bg: '#F2EDE4', color: '#877F71', icon: FileText }
+  const Icon = s.icon
   return (
     <div
-      className="w-10 h-10 rounded-lg flex items-center justify-center text-[9px] font-mono font-bold flex-shrink-0"
+      className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
       style={{ background: s.bg, color: s.color }}
     >
-      {s.label}
+      <Icon size={16} />
     </div>
   )
 }
@@ -148,9 +150,14 @@ export default function ClientFilesPage() {
           { label: 'Documents', value: ALL_FILES.filter((f) => f.type === 'pdf').length, icon: Archive, color: '#EE2737' },
           { label: 'Added this week', value: recentCount, icon: Image, color: '#1F9D55' },
         ].map((s) => (
-          <div
+          <motion.div
             key={s.label}
-            className="bg-client-surface border border-client-border rounded-xl p-4 flex items-center gap-3.5 shadow-sm"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+            whileHover={{ boxShadow: '0 4px 14px rgba(26,22,18,0.07)' }}
+            className="bg-white border rounded-xl p-4 flex items-center gap-3.5"
+            style={{ borderColor: '#EAE3D6' }}
           >
             <div
               className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
@@ -166,7 +173,7 @@ export default function ClientFilesPage() {
                 {s.label}
               </p>
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
 
@@ -301,8 +308,11 @@ function FileRow({ file }: { file: ClientFile }) {
   const catColor = CATEGORY_COLORS[file.category] ?? CATEGORY_COLORS.reference
 
   return (
-    <div
-      className="flex items-center gap-3 p-4 rounded-xl bg-client-surface border border-client-border shadow-sm hover:shadow-md transition-all"
+    <motion.div
+      className="flex items-center gap-3 p-4 rounded-xl bg-white border"
+      style={{ borderColor: '#EAE3D6' }}
+      whileHover={{ y: -2, boxShadow: '0 4px 14px rgba(26,22,18,0.07)' }}
+      transition={{ duration: 0.18, ease: 'easeOut' }}
     >
       <FileTypeIcon type={file.type} />
 
@@ -339,6 +349,6 @@ function FileRow({ file }: { file: ClientFile }) {
           Download
         </button>
       </div>
-    </div>
+    </motion.div>
   )
 }

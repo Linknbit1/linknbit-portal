@@ -6,7 +6,12 @@
       "Bash(Sort-Object FullName)",
       "Bash(Format-Table -AutoSize)",
       "Bash(npx tsc *)",
-      "Bash(npx vite *)"
+      "Bash(npx vite *)",
+      "Bash(python \"C:\\\\Users\\\\PC\\\\.claude\\\\plugins\\\\cache\\\\ui-ux-pro-max-skill\\\\ui-ux-pro-max\\\\2.5.0\\\\.claude\\\\skills\\\\ui-ux-pro-max\\\\scripts\\\\search.py\" \"premium client portal SaaS dashboard warm light mode professional\" --design-system -p \"Linknbit Client Portal\" -f markdown)",
+      "Bash(python \"C:\\\\Users\\\\PC\\\\.claude\\\\plugins\\\\cache\\\\ui-ux-pro-max-skill\\\\ui-ux-pro-max\\\\2.5.0\\\\src\\\\ui-ux-pro-max\\\\scripts\\\\search.py\" \"premium client portal SaaS dashboard warm light mode professional\" --design-system -p \"Linknbit Client Portal\" -f markdown)",
+      "Bash(python \"C:\\\\Users\\\\PC\\\\.claude\\\\plugins\\\\cache\\\\ui-ux-pro-max-skill\\\\ui-ux-pro-max\\\\2.5.0\\\\src\\\\ui-ux-pro-max\\\\scripts\\\\search.py\" \"client dashboard animation stagger entrance card\" --domain ux -n 8)",
+      "Bash(findstr -i \"framer\\\\|motion\")",
+      "Bash(python \"C:\\\\Users\\\\PC\\\\.claude\\\\plugins\\\\cache\\\\ui-ux-pro-max-skill\\\\ui-ux-pro-max\\\\2.5.0\\\\src\\\\ui-ux-pro-max\\\\scripts\\\\search.py\" \"client portal card design elevation shadow warm light\" --domain style -n 5)"
     ]
   }
 }

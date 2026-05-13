@@ -10,11 +10,15 @@ import GamificationPage from './pages/admin/GamificationPage'
 import PlaceholderPage from './pages/admin/PlaceholderPage'
 import EmployeeDashboardPage from './pages/employee/DashboardPage'
 
+import ClientDashboardPage from './pages/client/DashboardPage'
 import ClientProjectsPage from './pages/client/ProjectsPage'
 import ClientProjectDetailPage from './pages/client/ProjectDetailPage'
 import ClientApprovalsPage from './pages/client/ApprovalsPage'
 import ClientFilesPage from './pages/client/FilesPage'
 import ClientReportsPage from './pages/client/ReportsPage'
+import ClientAccountPage from './pages/client/AccountPage'
+import ClientSettingsPage from './pages/client/SettingsPage'
+import ClientHelpPage from './pages/client/HelpPage'
 
 function AdminPlaceholder({ title }: { title: string }) {
   return <PlaceholderPage title={title} />
@@ -50,12 +54,16 @@ export default function App() {
 
         {/* Client portal (light mode) */}
         <Route element={<ClientShell />}>
-          <Route path="/client" element={<Navigate to="/client/projects" replace />} />
+          <Route path="/client" element={<Navigate to="/client/dashboard" replace />} />
+          <Route path="/client/dashboard" element={<ClientDashboardPage />} />
           <Route path="/client/projects" element={<ClientProjectsPage />} />
           <Route path="/client/projects/:id" element={<ClientProjectDetailPage />} />
           <Route path="/client/approvals" element={<ClientApprovalsPage />} />
           <Route path="/client/files" element={<ClientFilesPage />} />
           <Route path="/client/reports" element={<ClientReportsPage />} />
+          <Route path="/client/account" element={<ClientAccountPage />} />
+          <Route path="/client/settings" element={<ClientSettingsPage />} />
+          <Route path="/client/help" element={<ClientHelpPage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/login" replace />} />

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { NavLink, Outlet, useNavigate, Link } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   Bell,
   ChevronDown,
@@ -17,6 +18,12 @@ import {
 import { cn } from '../../lib/cn'
 import { APPROVALS } from '../../data/mock'
 import { formatRelativeTime } from '../../lib/utils'
+
+const dropdownVariants = {
+  hidden: { opacity: 0, y: -8, scale: 0.97 },
+  show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.2, ease: [0.22, 1, 0.36, 1] } },
+  exit: { opacity: 0, y: -6, scale: 0.97, transition: { duration: 0.15, ease: 'easeIn' } },
+}
 
 const CLIENT_NOTIFICATIONS = [
   {
@@ -150,6 +157,7 @@ export function ClientShell() {
         {/* Nav */}
         <nav className="flex items-center gap-0.5">
           {[
+            { label: 'Dashboard', to: '/client/dashboard' },
             { label: 'My Projects', to: '/client/projects' },
             { label: 'Approvals', to: '/client/approvals', badge: pendingApprovals },
             { label: 'Files & Deliverables', to: '/client/files' },
@@ -216,9 +224,14 @@ export function ClientShell() {
             </button>
 
             {/* Notification dropdown */}
+            <AnimatePresence>
             {notifOpen && (
-              <div
-                className="absolute right-0 top-full mt-2.5 w-84 rounded-2xl border shadow-xl z-50 overflow-hidden"
+              <motion.div
+                variants={dropdownVariants}
+                initial="hidden"
+                animate="show"
+                exit="exit"
+                className="absolute right-0 top-full mt-2.5 rounded-2xl border shadow-xl z-50 overflow-hidden"
                 style={{ background: '#FFFFFF', borderColor: '#EAE3D6', width: '340px' }}
               >
                 <div
@@ -289,8 +302,9 @@ export function ClientShell() {
                     View all notifications
                   </button>
                 </div>
-              </div>
+              </motion.div>
             )}
+            </AnimatePresence>
           </div>
 
           {/* Profile button */}
@@ -332,8 +346,13 @@ export function ClientShell() {
             </button>
 
             {/* Profile dropdown */}
+            <AnimatePresence>
             {profileOpen && (
-              <div
+              <motion.div
+                variants={dropdownVariants}
+                initial="hidden"
+                animate="show"
+                exit="exit"
                 className="absolute right-0 top-full mt-2.5 w-56 rounded-2xl border shadow-xl z-50 overflow-hidden"
                 style={{ background: '#FFFFFF', borderColor: '#EAE3D6' }}
               >
@@ -366,22 +385,21 @@ export function ClientShell() {
                 {/* Menu items */}
                 <div className="py-1">
                   {[
-                    { icon: User, label: 'My Account', description: 'Profile & preferences' },
-                    { icon: Settings, label: 'Settings', description: 'Portal configuration' },
-                    { icon: HelpCircle, label: 'Help & Support', description: 'Docs & contact' },
+                    { icon: User, label: 'My Account', to: '/client/account' },
+                    { icon: Settings, label: 'Settings', to: '/client/settings' },
+                    { icon: HelpCircle, label: 'Help & Support', to: '/client/help' },
                   ].map((item) => (
-                    <button
+                    <Link
                       key={item.label}
+                      to={item.to}
                       onClick={() => setProfileOpen(false)}
-                      className="w-full px-4 py-2.5 flex items-center gap-3 transition-colors hover:bg-client-bg text-left"
+                      className="w-full px-4 py-2.5 flex items-center gap-3 transition-colors hover:bg-[#FAF7F2] text-left"
                     >
                       <item.icon size={15} style={{ color: '#877F71' }} />
-                      <div>
-                        <p className="text-[13px] font-medium" style={{ color: '#1A1612' }}>
-                          {item.label}
-                        </p>
-                      </div>
-                    </button>
+                      <p className="text-[13px] font-medium" style={{ color: '#1A1612' }}>
+                        {item.label}
+                      </p>
+                    </Link>
                   ))}
                 </div>
 
@@ -399,8 +417,9 @@ export function ClientShell() {
                     </span>
                   </button>
                 </div>
-              </div>
+              </motion.div>
             )}
+            </AnimatePresence>
           </div>
         </div>
       </header>
