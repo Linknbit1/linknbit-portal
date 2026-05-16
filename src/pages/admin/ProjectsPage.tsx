@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   List, Columns, Plus, Search, ChevronDown, ChevronLeft, ChevronRight,
   MoreHorizontal, ArrowUpDown, Download, Calendar, AlertCircle,
-  ExternalLink, Pencil, RefreshCw,
+  ExternalLink, Pencil, RefreshCw, Flag, CheckCircle2, Clock,
 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Avatar } from '../../components/ui/Avatar'
@@ -17,7 +17,7 @@ import { cn } from '../../lib/cn'
 import type { ServiceType, ProjectStatus, Project } from '../../types'
 import { NewProjectModal } from './NewProjectModal'
 
-type ViewMode = 'list' | 'kanban'
+type ViewMode = 'list' | 'kanban' | 'timeline' | 'milestones'
 
 const SERVICE_COLORS: Record<ServiceType, string> = {
   design: '#A78BFA',
@@ -181,6 +181,267 @@ function KanbanCard({ project, colStatus, isDragging, isMenuOpen, onMenuToggle, 
 }
 
 // ─────────────────────────────────────────────────
+// Timeline View
+// ─────────────────────────────────────────────────
+
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+const TODAY = new Date('2026-05-16')
+
+function TimelineView({ projects }: { projects: typeof PROJECTS }) {
+  const parsed = projects.map(p => ({
+    ...p,
+    start: p.startDate ? new Date(p.startDate) : new Date(new Date(p.deadline).getTime() - 60 * 86400000),
+    end: new Date(p.deadline),
+  }))
+
+  if (parsed.length === 0) return (
+    <div className="bg-surface-1 border border-border-default rounded-[10px] flex flex-col items-center justify-center py-16 gap-3">
+      <span className="font-display font-semibold text-[14px] text-text-2">No projects to display</span>
+    </div>
+  )
+
+  const rangeStart = new Date(Math.min(...parsed.map(p => p.start.getTime())))
+  rangeStart.setDate(1)
+  const rangeEnd = new Date(Math.max(...parsed.map(p => p.end.getTime())))
+  rangeEnd.setMonth(rangeEnd.getMonth() + 1); rangeEnd.setDate(0)
+
+  const totalMs = rangeEnd.getTime() - rangeStart.getTime()
+  const pct = (d: Date) => Math.max(0, Math.min(100, ((d.getTime() - rangeStart.getTime()) / totalMs) * 100))
+
+  const months: { date: Date; left: number; width: number }[] = []
+  const m = new Date(rangeStart.getFullYear(), rangeStart.getMonth(), 1)
+  while (m <= rangeEnd) {
+    const ms = new Date(m)
+    const me = new Date(m.getFullYear(), m.getMonth() + 1, 0)
+    months.push({ date: ms, left: pct(ms), width: ((Math.min(me.getTime(), rangeEnd.getTime()) - ms.getTime()) / totalMs) * 100 })
+    m.setMonth(m.getMonth() + 1)
+  }
+
+  const todayPct = pct(TODAY)
+
+  return (
+    <div className="bg-surface-1 border border-border-default rounded-[10px] overflow-hidden">
+      <div className="flex items-center gap-3 px-5 py-3.5 border-b border-border-subtle">
+        <span className="font-display font-semibold text-[14px] text-text-1">Timeline</span>
+        <span className="font-mono text-[10.5px] text-text-3 bg-surface-2 rounded-full px-2 py-[2px] uppercase tracking-wider">{parsed.length} projects</span>
+        <div className="ml-auto flex items-center gap-1.5 font-mono text-[10.5px] text-text-3">
+          <span className="w-2 h-2 rounded-full bg-brand-red inline-block" />
+          Today · May 16 '26
+        </div>
+      </div>
+
+      <div className="overflow-x-auto">
+        <div style={{ minWidth: 900 }}>
+          {/* Month header */}
+          <div className="flex border-b border-border-subtle bg-surface-2">
+            <div className="w-[220px] flex-shrink-0 px-5 py-2.5 font-ui font-semibold text-[10px] text-text-3 uppercase tracking-wider border-r border-border-subtle">
+              Project
+            </div>
+            <div className="flex-1 relative h-9">
+              {months.map((month, i) => (
+                <div
+                  key={i}
+                  className="absolute top-0 bottom-0 flex items-center justify-center border-r border-border-subtle last:border-r-0"
+                  style={{ left: `${month.left}%`, width: `${month.width}%` }}
+                >
+                  <span className="font-mono text-[9.5px] text-text-3 uppercase tracking-wider">
+                    {MONTH_NAMES[month.date.getMonth()]} '{String(month.date.getFullYear()).slice(2)}
+                  </span>
+                </div>
+              ))}
+              <div className="absolute top-0 bottom-0 w-px bg-brand-red/50 z-10" style={{ left: `${todayPct}%` }} />
+            </div>
+          </div>
+
+          {/* Project rows */}
+          {parsed.map(project => {
+            const startPct = pct(project.start)
+            const endPct = pct(project.end)
+            const barWidth = endPct - startPct
+            const isOverdue = project.end < TODAY
+            return (
+              <div key={project.id} className="flex items-center border-b border-border-subtle last:border-b-0 hover:bg-white/[0.015] transition-colors">
+                <div className="w-[220px] flex-shrink-0 px-4 py-3 border-r border-border-subtle flex items-center gap-2.5 min-w-0">
+                  <div
+                    className="w-7 h-7 rounded-[6px] flex items-center justify-center font-display font-bold text-[11px] flex-shrink-0"
+                    style={{ background: TILE_GRADIENT[project.serviceType], color: TILE_TEXT[project.serviceType] }}
+                  >
+                    {project.name.charAt(0)}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-ui font-medium text-[12.5px] text-text-1 truncate">{project.name}</p>
+                    <p className="font-mono text-[9.5px] text-text-3 uppercase tracking-wider">{project.progress}% done</p>
+                  </div>
+                </div>
+                <div className="flex-1 relative h-[52px]">
+                  {/* Month gridlines */}
+                  {months.map((month, i) => (
+                    <div key={i} className="absolute top-0 bottom-0 border-r border-border-subtle/50" style={{ left: `${month.left + month.width}%` }} />
+                  ))}
+                  {/* Today line */}
+                  <div className="absolute top-0 bottom-0 w-px bg-brand-red/30 z-10" style={{ left: `${todayPct}%` }} />
+                  {/* Bar track */}
+                  <div
+                    className="absolute top-1/2 -translate-y-1/2 h-7 rounded-[5px] overflow-hidden"
+                    style={{
+                      left: `${startPct}%`,
+                      width: `${barWidth}%`,
+                      background: `${SERVICE_COLORS[project.serviceType]}18`,
+                      border: `1px solid ${SERVICE_COLORS[project.serviceType]}35`,
+                    }}
+                  >
+                    <div
+                      className="h-full rounded-[5px]"
+                      style={{ width: `${project.progress}%`, background: `${SERVICE_COLORS[project.serviceType]}55` }}
+                    />
+                    <span
+                      className="absolute inset-0 flex items-center px-2 font-mono text-[9px] uppercase tracking-wider truncate"
+                      style={{ color: SERVICE_COLORS[project.serviceType] }}
+                    >
+                      {project.currentStage}
+                    </span>
+                  </div>
+                  {/* Deadline dot */}
+                  <div
+                    className={cn('absolute top-1/2 -translate-y-1/2 w-[7px] h-[7px] rounded-full -ml-[3px] z-20', isOverdue ? 'bg-error' : 'bg-text-3')}
+                    style={{ left: `${endPct}%` }}
+                  />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────
+// Milestones View
+// ─────────────────────────────────────────────────
+
+function MilestonesView({ projects }: { projects: typeof PROJECTS }) {
+  const rows = projects.flatMap(project =>
+    project.stages
+      .filter(s => s.requiresApproval || s.status === 'current' || s.status === 'blocked')
+      .map(stage => ({ project, stage }))
+  ).sort((a, b) => {
+    const order = { blocked: 0, current: 1, upcoming: 2, completed: 3 } as Record<string, number>
+    return (order[a.stage.status ?? 'upcoming'] ?? 2) - (order[b.stage.status ?? 'upcoming'] ?? 2)
+  })
+
+  if (rows.length === 0) return (
+    <div className="bg-surface-1 border border-border-default rounded-[10px] flex flex-col items-center justify-center py-16 gap-3 text-center">
+      <span className="w-12 h-12 rounded-xl bg-surface-2 border border-dashed border-border-strong text-text-3 flex items-center justify-center">
+        <Flag size={18} />
+      </span>
+      <p className="font-display font-semibold text-[14px] text-text-2">No milestones found</p>
+      <p className="text-[12.5px] text-text-3">Projects with approval stages will appear here</p>
+    </div>
+  )
+
+  const blockedCount = rows.filter(r => r.stage.status === 'blocked').length
+  const pendingCount = rows.filter(r => r.stage.approvalStatus === 'pending').length
+
+  return (
+    <div className="bg-surface-1 border border-border-default rounded-[10px] overflow-hidden">
+      <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-border-subtle">
+        <span className="font-display font-semibold text-[14px] text-text-1">Milestones</span>
+        <span className="font-mono text-[10.5px] text-text-3 bg-surface-2 rounded-full px-2 py-[2px] uppercase tracking-wider">{rows.length} total</span>
+        {blockedCount > 0 && (
+          <span className="font-mono text-[10.5px] text-error bg-error/12 border border-error/30 rounded-full px-2 py-[2px] uppercase tracking-wider">{blockedCount} blocked</span>
+        )}
+        {pendingCount > 0 && (
+          <span className="font-mono text-[10.5px] text-warning bg-warning/12 border border-warning/30 rounded-full px-2 py-[2px] uppercase tracking-wider">{pendingCount} awaiting approval</span>
+        )}
+      </div>
+
+      {/* Table header */}
+      <div className="grid bg-surface-2 border-b border-border-default" style={{ gridTemplateColumns: '2fr 180px 130px 130px 140px' }}>
+        {['Milestone', 'Project', 'Service', 'Stage Status', 'Approval'].map((col, i) => (
+          <div key={col} className={cn('px-4 py-2.5 font-ui font-semibold text-[10px] text-text-3 uppercase tracking-wider', i === 0 && 'pl-5')}>
+            {col}
+          </div>
+        ))}
+      </div>
+
+      {rows.map(({ project, stage }) => (
+        <div
+          key={`${project.id}-${stage.id}`}
+          className="grid border-b border-border-subtle last:border-b-0 hover:bg-white/[0.018] transition-colors"
+          style={{ gridTemplateColumns: '2fr 180px 130px 130px 140px' }}
+        >
+          <div className="pl-5 pr-4 py-3.5 flex items-center gap-3 min-w-0">
+            <span className={cn(
+              'w-2 h-2 rounded-full flex-shrink-0',
+              stage.status === 'completed' ? 'bg-success' :
+              stage.status === 'blocked' ? 'bg-error shadow-[0_0_0_3px_rgba(244,54,76,0.18)]' :
+              stage.status === 'current' ? 'bg-service-dev' : 'bg-border-strong',
+            )} />
+            <div className="min-w-0">
+              <p className="font-ui font-medium text-[13px] text-text-1 truncate">{stage.name}</p>
+              <p className="font-mono text-[9.5px] text-text-4 uppercase tracking-wider mt-0.5">
+                Stage {stage.order} · {stage.requiresApproval ? 'Requires Approval' : 'Key Stage'}
+              </p>
+            </div>
+          </div>
+
+          <div className="px-4 py-3.5 flex items-center min-w-0">
+            <div className="min-w-0">
+              <p className="font-ui font-medium text-[12.5px] text-text-1 truncate">{project.name}</p>
+              <p className="font-mono text-[9.5px] text-text-3 uppercase tracking-wider mt-0.5">{project.clientName}</p>
+            </div>
+          </div>
+
+          <div className="px-4 py-3.5 flex items-center">
+            <ServiceChip service={project.serviceType} />
+          </div>
+
+          <div className="px-4 py-3.5 flex items-center">
+            {stage.status === 'completed' ? (
+              <span className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider px-2 py-[3px] rounded-[4px] font-semibold border bg-success/12 text-success border-success/30">
+                <CheckCircle2 size={10} /> Done
+              </span>
+            ) : stage.status === 'blocked' ? (
+              <span className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider px-2 py-[3px] rounded-[4px] font-semibold border bg-error/12 text-error border-error/30">
+                <AlertCircle size={10} /> Blocked
+              </span>
+            ) : stage.status === 'current' ? (
+              <span className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider px-2 py-[3px] rounded-[4px] font-semibold border bg-service-dev/12 text-service-dev border-service-dev/30">
+                <Clock size={10} /> Active
+              </span>
+            ) : (
+              <span className="font-mono text-[10px] uppercase tracking-wider px-2 py-[3px] rounded-[4px] font-semibold border bg-surface-2 text-text-3 border-border-default">
+                Upcoming
+              </span>
+            )}
+          </div>
+
+          <div className="px-4 py-3.5 flex items-center">
+            {stage.requiresApproval ? (
+              <span className={cn(
+                'font-mono text-[10px] uppercase tracking-wider px-2 py-[3px] rounded-[4px] font-semibold border',
+                stage.approvalStatus === 'approved' ? 'bg-success/12 text-success border-success/30' :
+                stage.approvalStatus === 'pending' ? 'bg-warning/12 text-warning border-warning/30' :
+                stage.approvalStatus === 'rejected' ? 'bg-error/12 text-error border-error/30' :
+                'bg-surface-2 text-text-3 border-border-default',
+              )}>
+                {stage.approvalStatus === 'approved' ? 'Approved' :
+                 stage.approvalStatus === 'pending' ? 'Pending' :
+                 stage.approvalStatus === 'rejected' ? 'Rejected' :
+                 stage.approvalStatus === 'revision_requested' ? 'Revision' : 'Not Submitted'}
+              </span>
+            ) : (
+              <span className="font-mono text-[10px] text-text-4">—</span>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────
 // Main Page
 // ─────────────────────────────────────────────────
 
@@ -319,7 +580,7 @@ export default function ProjectsPage() {
             size="sm"
           />
 
-          {view === 'list' && (
+          {(view === 'list') && (
             <Select
               value={statusFilter}
               onChange={(v) => { setStatusFilter(v as ProjectStatus | 'all'); setPage(1) }}
@@ -368,6 +629,8 @@ export default function ProjectsPage() {
               {([
                 { mode: 'list' as const, Icon: List, title: 'List view' },
                 { mode: 'kanban' as const, Icon: Columns, title: 'Kanban view' },
+                { mode: 'timeline' as const, Icon: Calendar, title: 'Timeline view' },
+                { mode: 'milestones' as const, Icon: Flag, title: 'Milestones view' },
               ] as const).map(({ mode, Icon, title }) => (
                 <button
                   key={mode}
@@ -381,9 +644,6 @@ export default function ProjectsPage() {
                   <Icon size={14} />
                 </button>
               ))}
-              <button disabled title="Timeline — coming soon" className="w-[30px] h-[28px] rounded-[4px] flex items-center justify-center text-text-4 opacity-40 cursor-not-allowed">
-                <span className="font-mono text-[9px]">TL</span>
-              </button>
             </div>
           </div>
         </div>
@@ -709,6 +969,13 @@ export default function ProjectsPage() {
             })}
           </div>
         )}
+
+        {/* ── TIMELINE VIEW ── */}
+        {view === 'timeline' && <TimelineView projects={kanbanFiltered} />}
+
+        {/* ── MILESTONES VIEW ── */}
+        {view === 'milestones' && <MilestonesView projects={kanbanFiltered} />}
+
       </div>
 
       {showNewModal && <NewProjectModal onClose={() => setShowNewModal(false)} />}

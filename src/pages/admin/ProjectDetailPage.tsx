@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import {
   CheckCircle2, AlertTriangle, Clock, Plus, RefreshCw,
-  CheckCheck, RotateCcw, Eye, EyeOff, ChevronRight,
+  CheckCheck, RotateCcw, Eye, EyeOff, ChevronRight, ChevronDown,
   FileText, Image, File, MoreHorizontal, ArrowLeft,
   Pencil, Archive, ExternalLink, Lock, Unlock, Zap,
   Users, Calendar, DollarSign, Filter,
@@ -15,7 +15,7 @@ import { PriorityChip } from '../../components/shared/PriorityChip'
 import { ClickUpStatus } from '../../components/shared/ClickUpStatus'
 import { ClientVisibility } from '../../components/shared/ClientVisibility'
 import { RoleBadge } from '../../components/shared/RoleBadge'
-import { PROJECTS, TASKS, USERS } from '../../data/mock'
+import { PROJECTS, TASKS, USERS, APPROVALS } from '../../data/mock'
 import { formatDate, formatCurrency, getDaysUntil } from '../../lib/utils'
 import { cn } from '../../lib/cn'
 import type { TaskStatus, Priority } from '../../types'
@@ -81,11 +81,36 @@ export default function ProjectDetailPage() {
   const allTasks = TASKS.filter((t) => t.projectId === project.id)
   const teamMembers = USERS.filter((u) => project.teamIds.includes(u.id))
 
+  const [expandedStages, setExpandedStages] = useState<Set<string>>(
+    () => new Set(project.stages.map(s => s.id))
+  )
+  const toggleStage = (stageId: string) =>
+    setExpandedStages(prev => {
+      const next = new Set(prev)
+      next.has(stageId) ? next.delete(stageId) : next.add(stageId)
+      return next
+    })
+
   const filteredTasks = allTasks.filter((t) => {
     if (statusFilter !== 'all' && t.status !== statusFilter) return false
     if (priorityFilter !== 'all' && t.priority !== priorityFilter) return false
+    if (viewMode === 'client' && !t.clientVisible) return false
     return true
   })
+
+  const visibleStages = viewMode === 'client'
+    ? project.stages.filter(s => s.clientVisible)
+    : project.stages
+
+  const stageGroups = visibleStages
+    .map(stage => ({ stage, tasks: filteredTasks.filter(t => t.stageId === stage.id) }))
+    .filter(g => g.tasks.length > 0 || g.stage.status === 'current' || g.stage.status === 'blocked')
+
+  const unstagedTasks = filteredTasks.filter(t => !visibleStages.some(s => s.id === t.stageId))
+
+  const pendingFileApprovals = APPROVALS.filter(
+    a => a.type === 'file' && a.projectId === project.id && a.status === 'pending'
+  )
 
   const currentStageIndex = project.stages.findIndex((s) => s.status === 'current' || s.status === 'blocked')
   const currentStage = project.stages[currentStageIndex]
@@ -196,7 +221,7 @@ export default function ProjectDetailPage() {
                     <span className="text-text-4">·</span>
                     <a href="#" className="text-text-2 font-medium hover:text-text-1 transition-colors">{project.pm.name}</a>
                     <span className="text-text-4">·</span>
-                    <span>Created May 2026</span>
+                    <span>Started {project.startDate ? formatDate(project.startDate) : '—'}</span>
                   </div>
                 </div>
               </div>
@@ -212,7 +237,7 @@ export default function ProjectDetailPage() {
             </div>
 
             {/* Meta grid */}
-            <div className="grid border-t border-border-subtle pt-4" style={{ gridTemplateColumns: 'repeat(5, 1fr)' }}>
+            <div className="grid border-t border-border-subtle pt-4" style={{ gridTemplateColumns: 'repeat(6, 1fr)' }}>
               {[
                 {
                   label: 'Progress',
@@ -223,6 +248,14 @@ export default function ProjectDetailPage() {
                       </div>
                       <span>{project.progress}%</span>
                     </div>
+                  ),
+                },
+                {
+                  label: 'Start Date',
+                  value: (
+                    <span className="text-text-1">
+                      {project.startDate ? formatDate(project.startDate) : '—'}
+                    </span>
                   ),
                 },
                 {
@@ -265,7 +298,7 @@ export default function ProjectDetailPage() {
                   ),
                 },
               ].map((cell, i) => (
-                <div key={cell.label} className={cn('flex flex-col gap-1.5 px-[18px]', i > 0 && 'border-l border-border-subtle', i === 0 && 'pl-0', i === 4 && 'pr-0')}>
+                <div key={cell.label} className={cn('flex flex-col gap-1.5 px-[18px]', i > 0 && 'border-l border-border-subtle', i === 0 && 'pl-0', i === 5 && 'pr-0')}>
                   <span className="font-ui font-semibold text-[9.5px] text-text-4 uppercase tracking-widest">{cell.label}</span>
                   <div className="font-display font-semibold text-[14px] text-text-1 flex items-center gap-2 leading-snug">
                     {cell.value}
@@ -477,11 +510,13 @@ export default function ProjectDetailPage() {
                   onChange={(v) => setStatusFilter(v as TaskStatus | 'all')}
                   options={[
                     { value: 'all', label: 'All Status' },
-                    { value: 'todo', label: 'To Do' },
-                    { value: 'in_progress', label: 'In Progress' },
-                    { value: 'review', label: 'Review' },
-                    { value: 'blocked', label: 'Blocked' },
-                    { value: 'completed', label: 'Completed' },
+                    { value: 'backlog', label: 'Backlog', dot: '#5C6A7F' },
+                    { value: 'todo', label: 'To Do', dot: '#7A8597' },
+                    { value: 'in_progress', label: 'In Progress', dot: '#22D3EE' },
+                    { value: 'review', label: 'Review', dot: '#A78BFA' },
+                    { value: 'approved', label: 'Approved', dot: '#22C55E' },
+                    { value: 'completed', label: 'Completed', dot: '#34D399' },
+                    { value: 'blocked', label: 'Blocked', dot: '#F4364C' },
                   ]}
                 />
                 <Select
@@ -502,11 +537,12 @@ export default function ProjectDetailPage() {
               </div>
             </div>
 
-            {/* Task table */}
+            {/* Task table — grouped by stage */}
             <div
               className="grid"
               style={{ gridTemplateColumns: 'minmax(280px,2.4fr) 130px 120px 110px 100px 80px 96px' }}
             >
+              {/* Column headers */}
               {['Task', 'Assignee', 'Status', 'Priority', 'Due', 'XP', ''].map((h, i) => (
                 <div
                   key={h + i}
@@ -520,90 +556,202 @@ export default function ProjectDetailPage() {
                 </div>
               ))}
 
-              {filteredTasks.map((task) => {
-                const taskDays = getDaysUntil(task.dueDate)
-                const isBlocked = task.status === 'blocked'
-                return (
-                  <div key={task.id} className="contents group">
-                    {/* Title */}
-                    <div className={cn(
-                      'pl-5 pr-3.5 py-[11px] border-b border-border-subtle flex items-center min-w-0 group-hover:bg-white/[0.018] transition-colors',
-                      isBlocked && 'bg-error/4',
-                      isBlocked && 'shadow-[inset_2px_0_0_rgba(244,54,76,1)]',
-                    )}>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <Link
-                            to={`/admin/tasks/${task.id}`}
-                            className="font-ui font-medium text-[13.5px] text-text-1 hover:text-brand-red transition-colors"
-                          >
-                            {task.title}
-                          </Link>
-                          {task.clickUpId && (
-                            <span className="font-mono text-[10px] text-text-4">{task.clickUpId}</span>
-                          )}
-                        </div>
-                        {taskDays <= 0 && (
-                          <span className="font-mono text-[10.5px] text-error font-semibold tracking-wider uppercase">
-                            {Math.abs(taskDays)}d overdue
+              {project.stages.length > 0 ? (
+                <>
+                  {stageGroups.flatMap(({ stage, tasks: stageTasks }) => {
+                    const isExpanded = expandedStages.has(stage.id)
+                    const rows: React.ReactNode[] = []
+
+                    rows.push(
+                      <div
+                        key={`sh-${stage.id}`}
+                        style={{ gridColumn: '1 / -1' }}
+                        onClick={() => toggleStage(stage.id)}
+                        className="flex items-center gap-2.5 px-5 py-2 bg-surface-2/70 border-b border-border-subtle cursor-pointer hover:bg-surface-3/60 transition-colors select-none"
+                      >
+                        <span className={cn(
+                          'w-[18px] h-[18px] rounded-[4px] flex items-center justify-center font-mono text-[9px] flex-shrink-0 border font-semibold',
+                          stage.status === 'completed' ? 'bg-success/15 border-success/30 text-success' :
+                          stage.status === 'blocked' ? 'bg-error/15 border-error/30 text-error' :
+                          stage.status === 'current' ? 'bg-service-dev/15 border-service-dev/30 text-service-dev' :
+                          'bg-surface-3 border-border-default text-text-4',
+                        )}>
+                          {stage.order}
+                        </span>
+                        <span className="font-display font-semibold text-[12.5px] text-text-1">{stage.name}</span>
+                        {stage.status === 'blocked' && (
+                          <span className="font-mono text-[9px] bg-error/12 text-error border border-error/25 px-1.5 py-[1px] rounded-[3px] uppercase tracking-wider">Blocked</span>
+                        )}
+                        {stage.status === 'current' && (
+                          <span className="font-mono text-[9px] bg-service-dev/12 text-service-dev border border-service-dev/25 px-1.5 py-[1px] rounded-[3px] uppercase tracking-wider">Active</span>
+                        )}
+                        {stage.requiresApproval && stage.approvalStatus === 'pending' && (
+                          <span className="font-mono text-[9px] bg-warning/12 text-warning border border-warning/25 px-1.5 py-[1px] rounded-[3px] uppercase tracking-wider flex items-center gap-1">
+                            <Clock size={9} /> Awaiting Approval
                           </span>
                         )}
+                        {!stage.clientVisible && (
+                          <span className="font-mono text-[9px] text-text-4 flex items-center gap-1">
+                            <Lock size={9} /> Internal
+                          </span>
+                        )}
+                        <span className="font-mono text-[10px] text-text-4 ml-auto mr-1">{stageTasks.length} task{stageTasks.length !== 1 ? 's' : ''}</span>
+                        <ChevronDown size={12} className={cn('text-text-3 transition-transform duration-150 flex-shrink-0', !isExpanded && '-rotate-90')} />
+                      </div>
+                    )
+
+                    if (isExpanded && stageTasks.length === 0) {
+                      rows.push(
+                        <div key={`se-${stage.id}`} style={{ gridColumn: '1 / -1' }} className="flex items-center justify-center py-4 border-b border-border-subtle">
+                          <span className="font-mono text-[10.5px] text-text-4 uppercase tracking-wider">No tasks in this stage</span>
+                        </div>
+                      )
+                    }
+
+                    if (isExpanded) {
+                      stageTasks.forEach(task => {
+                        const taskDays = getDaysUntil(task.dueDate)
+                        const isBlocked = task.status === 'blocked'
+                        rows.push(
+                          <div key={task.id} className="contents group">
+                            <div className={cn('pl-5 pr-3.5 py-[11px] border-b border-border-subtle flex items-center min-w-0 group-hover:bg-white/[0.018] transition-colors', isBlocked && 'bg-error/4 shadow-[inset_2px_0_0_rgba(244,54,76,1)]')}>
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <Link to={`/admin/tasks/${task.id}`} className="font-ui font-medium text-[13.5px] text-text-1 hover:text-brand-red transition-colors">
+                                    {task.title}
+                                  </Link>
+                                  {task.clickUpId && <span className="font-mono text-[10px] text-text-4">{task.clickUpId}</span>}
+                                </div>
+                                {taskDays <= 0 && (
+                                  <span className="font-mono text-[10.5px] text-error font-semibold tracking-wider uppercase">{Math.abs(taskDays)}d overdue</span>
+                                )}
+                              </div>
+                            </div>
+                            <div className={cn('px-3.5 py-[11px] border-b border-border-subtle flex items-center gap-2 min-w-0 group-hover:bg-white/[0.018] transition-colors', isBlocked && 'bg-error/4')}>
+                              <Avatar name={task.assignee.name} size="xs" />
+                              <span className="text-[12px] font-ui font-medium text-text-1 truncate">{task.assignee.name}</span>
+                            </div>
+                            <div className={cn('px-3.5 py-[11px] border-b border-border-subtle flex items-center group-hover:bg-white/[0.018] transition-colors', isBlocked && 'bg-error/4')}>
+                              <StatusChip status={task.status} />
+                            </div>
+                            <div className={cn('px-3.5 py-[11px] border-b border-border-subtle flex items-center group-hover:bg-white/[0.018] transition-colors', isBlocked && 'bg-error/4')}>
+                              <PriorityChip priority={task.priority} />
+                            </div>
+                            <div className={cn('px-3.5 py-[11px] border-b border-border-subtle group-hover:bg-white/[0.018] transition-colors', isBlocked && 'bg-error/4')}>
+                              <span className={cn('font-mono text-[11.5px] font-medium tabular-nums block', taskDays < 0 ? 'text-error' : taskDays <= 2 ? 'text-warning' : 'text-text-1')}>
+                                {formatDate(task.dueDate)}
+                              </span>
+                              <span className="font-mono text-[9.5px] text-text-3 uppercase tracking-wider mt-0.5 block">
+                                {taskDays < 0 ? 'Overdue' : taskDays === 0 ? 'Today' : `${taskDays}d`}
+                              </span>
+                            </div>
+                            <div className={cn('px-3.5 py-[11px] border-b border-border-subtle flex items-center group-hover:bg-white/[0.018] transition-colors', isBlocked && 'bg-error/4')}>
+                              <span className="inline-flex items-center gap-1 bg-coin-gold/12 border border-coin-gold/30 text-coin-gold font-display font-bold text-[11.5px] rounded-full px-2 py-[3px]">
+                                <Zap size={10} />{task.xpReward}
+                              </span>
+                            </div>
+                            <div className={cn('pr-[18px] px-3.5 py-[11px] border-b border-border-subtle flex items-center gap-1.5 justify-end group-hover:bg-white/[0.018] transition-colors', isBlocked && 'bg-error/4')}>
+                              <span className={cn('w-[26px] h-[26px] rounded-[6px] bg-surface-2 border border-border-default flex items-center justify-center cursor-pointer hover:bg-surface-3 transition-colors', task.clientVisible ? 'text-success bg-success/10 border-success/30' : 'text-text-3')}>
+                                {task.clientVisible ? <Eye size={12} /> : <EyeOff size={12} />}
+                              </span>
+                              <ClickUpStatus status={task.clickUpSync} />
+                              <Link to={`/admin/tasks/${task.id}`} className="w-[26px] h-[26px] rounded-[6px] bg-surface-2 border border-border-default text-text-2 flex items-center justify-center hover:bg-surface-3 hover:text-text-1 transition-colors">
+                                <ExternalLink size={12} />
+                              </Link>
+                            </div>
+                          </div>
+                        )
+                      })
+                    }
+
+                    return rows
+                  })}
+
+                  {/* Ungrouped tasks (not matching any stage) */}
+                  {unstagedTasks.length > 0 && [
+                    <div
+                      key="sh-ungrouped"
+                      style={{ gridColumn: '1 / -1' }}
+                      onClick={() => toggleStage('_ungrouped')}
+                      className="flex items-center gap-2.5 px-5 py-2 bg-surface-2/70 border-b border-border-subtle cursor-pointer hover:bg-surface-3/60 transition-colors select-none"
+                    >
+                      <span className="font-display font-semibold text-[12.5px] text-text-1">Other Tasks</span>
+                      <span className="font-mono text-[10px] text-text-4 ml-auto mr-1">{unstagedTasks.length} tasks</span>
+                      <ChevronDown size={12} className={cn('text-text-3 transition-transform duration-150 flex-shrink-0', !expandedStages.has('_ungrouped') && '-rotate-90')} />
+                    </div>,
+                    ...(expandedStages.has('_ungrouped') ? unstagedTasks.map(task => {
+                      const taskDays = getDaysUntil(task.dueDate)
+                      const isBlocked = task.status === 'blocked'
+                      return (
+                        <div key={task.id} className="contents group">
+                          <div className={cn('pl-5 pr-3.5 py-[11px] border-b border-border-subtle flex items-center min-w-0 group-hover:bg-white/[0.018] transition-colors', isBlocked && 'bg-error/4 shadow-[inset_2px_0_0_rgba(244,54,76,1)]')}>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2">
+                                <Link to={`/admin/tasks/${task.id}`} className="font-ui font-medium text-[13.5px] text-text-1 hover:text-brand-red transition-colors">{task.title}</Link>
+                                {task.clickUpId && <span className="font-mono text-[10px] text-text-4">{task.clickUpId}</span>}
+                              </div>
+                              {taskDays <= 0 && <span className="font-mono text-[10.5px] text-error font-semibold tracking-wider uppercase">{Math.abs(taskDays)}d overdue</span>}
+                            </div>
+                          </div>
+                          <div className={cn('px-3.5 py-[11px] border-b border-border-subtle flex items-center gap-2 group-hover:bg-white/[0.018] transition-colors', isBlocked && 'bg-error/4')}>
+                            <Avatar name={task.assignee.name} size="xs" /><span className="text-[12px] font-ui font-medium text-text-1 truncate">{task.assignee.name}</span>
+                          </div>
+                          <div className={cn('px-3.5 py-[11px] border-b border-border-subtle flex items-center group-hover:bg-white/[0.018] transition-colors', isBlocked && 'bg-error/4')}><StatusChip status={task.status} /></div>
+                          <div className={cn('px-3.5 py-[11px] border-b border-border-subtle flex items-center group-hover:bg-white/[0.018] transition-colors', isBlocked && 'bg-error/4')}><PriorityChip priority={task.priority} /></div>
+                          <div className={cn('px-3.5 py-[11px] border-b border-border-subtle group-hover:bg-white/[0.018] transition-colors', isBlocked && 'bg-error/4')}>
+                            <span className={cn('font-mono text-[11.5px] font-medium tabular-nums block', taskDays < 0 ? 'text-error' : taskDays <= 2 ? 'text-warning' : 'text-text-1')}>{formatDate(task.dueDate)}</span>
+                            <span className="font-mono text-[9.5px] text-text-3 uppercase tracking-wider mt-0.5 block">{taskDays < 0 ? 'Overdue' : taskDays === 0 ? 'Today' : `${taskDays}d`}</span>
+                          </div>
+                          <div className={cn('px-3.5 py-[11px] border-b border-border-subtle flex items-center group-hover:bg-white/[0.018] transition-colors', isBlocked && 'bg-error/4')}>
+                            <span className="inline-flex items-center gap-1 bg-coin-gold/12 border border-coin-gold/30 text-coin-gold font-display font-bold text-[11.5px] rounded-full px-2 py-[3px]"><Zap size={10} />{task.xpReward}</span>
+                          </div>
+                          <div className={cn('pr-[18px] px-3.5 py-[11px] border-b border-border-subtle flex items-center gap-1.5 justify-end group-hover:bg-white/[0.018] transition-colors', isBlocked && 'bg-error/4')}>
+                            <span className={cn('w-[26px] h-[26px] rounded-[6px] bg-surface-2 border border-border-default flex items-center justify-center cursor-pointer hover:bg-surface-3 transition-colors', task.clientVisible ? 'text-success bg-success/10 border-success/30' : 'text-text-3')}>{task.clientVisible ? <Eye size={12} /> : <EyeOff size={12} />}</span>
+                            <ClickUpStatus status={task.clickUpSync} />
+                            <Link to={`/admin/tasks/${task.id}`} className="w-[26px] h-[26px] rounded-[6px] bg-surface-2 border border-border-default text-text-2 flex items-center justify-center hover:bg-surface-3 hover:text-text-1 transition-colors"><ExternalLink size={12} /></Link>
+                          </div>
+                        </div>
+                      )
+                    }) : []),
+                  ]}
+                </>
+              ) : (
+                /* Flat fallback for projects with no stages */
+                filteredTasks.map((task) => {
+                  const taskDays = getDaysUntil(task.dueDate)
+                  const isBlocked = task.status === 'blocked'
+                  return (
+                    <div key={task.id} className="contents group">
+                      <div className={cn('pl-5 pr-3.5 py-[11px] border-b border-border-subtle flex items-center min-w-0 group-hover:bg-white/[0.018] transition-colors', isBlocked && 'bg-error/4 shadow-[inset_2px_0_0_rgba(244,54,76,1)]')}>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <Link to={`/admin/tasks/${task.id}`} className="font-ui font-medium text-[13.5px] text-text-1 hover:text-brand-red transition-colors">{task.title}</Link>
+                            {task.clickUpId && <span className="font-mono text-[10px] text-text-4">{task.clickUpId}</span>}
+                          </div>
+                          {taskDays <= 0 && <span className="font-mono text-[10.5px] text-error font-semibold tracking-wider uppercase">{Math.abs(taskDays)}d overdue</span>}
+                        </div>
+                      </div>
+                      <div className={cn('px-3.5 py-[11px] border-b border-border-subtle flex items-center gap-2 min-w-0 group-hover:bg-white/[0.018] transition-colors', isBlocked && 'bg-error/4')}>
+                        <Avatar name={task.assignee.name} size="xs" /><span className="text-[12px] font-ui font-medium text-text-1 truncate">{task.assignee.name}</span>
+                      </div>
+                      <div className={cn('px-3.5 py-[11px] border-b border-border-subtle flex items-center group-hover:bg-white/[0.018] transition-colors', isBlocked && 'bg-error/4')}><StatusChip status={task.status} /></div>
+                      <div className={cn('px-3.5 py-[11px] border-b border-border-subtle flex items-center group-hover:bg-white/[0.018] transition-colors', isBlocked && 'bg-error/4')}><PriorityChip priority={task.priority} /></div>
+                      <div className={cn('px-3.5 py-[11px] border-b border-border-subtle group-hover:bg-white/[0.018] transition-colors', isBlocked && 'bg-error/4')}>
+                        <span className={cn('font-mono text-[11.5px] font-medium tabular-nums block', taskDays < 0 ? 'text-error' : taskDays <= 2 ? 'text-warning' : 'text-text-1')}>{formatDate(task.dueDate)}</span>
+                        <span className="font-mono text-[9.5px] text-text-3 uppercase tracking-wider mt-0.5 block">{taskDays < 0 ? 'Overdue' : taskDays === 0 ? 'Today' : `${taskDays}d`}</span>
+                      </div>
+                      <div className={cn('px-3.5 py-[11px] border-b border-border-subtle flex items-center group-hover:bg-white/[0.018] transition-colors', isBlocked && 'bg-error/4')}>
+                        <span className="inline-flex items-center gap-1 bg-coin-gold/12 border border-coin-gold/30 text-coin-gold font-display font-bold text-[11.5px] rounded-full px-2 py-[3px]"><Zap size={10} />{task.xpReward}</span>
+                      </div>
+                      <div className={cn('pr-[18px] px-3.5 py-[11px] border-b border-border-subtle flex items-center gap-1.5 justify-end group-hover:bg-white/[0.018] transition-colors', isBlocked && 'bg-error/4')}>
+                        <span className={cn('w-[26px] h-[26px] rounded-[6px] bg-surface-2 border border-border-default flex items-center justify-center cursor-pointer hover:bg-surface-3 transition-colors', task.clientVisible ? 'text-success bg-success/10 border-success/30' : 'text-text-3')}>{task.clientVisible ? <Eye size={12} /> : <EyeOff size={12} />}</span>
+                        <ClickUpStatus status={task.clickUpSync} />
+                        <Link to={`/admin/tasks/${task.id}`} className="w-[26px] h-[26px] rounded-[6px] bg-surface-2 border border-border-default text-text-2 flex items-center justify-center hover:bg-surface-3 hover:text-text-1 transition-colors"><ExternalLink size={12} /></Link>
                       </div>
                     </div>
-
-                    {/* Assignee */}
-                    <div className={cn('px-3.5 py-[11px] border-b border-border-subtle flex items-center gap-2 min-w-0 group-hover:bg-white/[0.018] transition-colors', isBlocked && 'bg-error/4')}>
-                      <Avatar name={task.assignee.name} size="xs" />
-                      <span className="text-[12px] font-ui font-medium text-text-1 truncate">{task.assignee.name}</span>
-                    </div>
-
-                    {/* Status */}
-                    <div className={cn('px-3.5 py-[11px] border-b border-border-subtle flex items-center group-hover:bg-white/[0.018] transition-colors', isBlocked && 'bg-error/4')}>
-                      <StatusChip status={task.status} />
-                    </div>
-
-                    {/* Priority */}
-                    <div className={cn('px-3.5 py-[11px] border-b border-border-subtle flex items-center group-hover:bg-white/[0.018] transition-colors', isBlocked && 'bg-error/4')}>
-                      <PriorityChip priority={task.priority} />
-                    </div>
-
-                    {/* Due */}
-                    <div className={cn('px-3.5 py-[11px] border-b border-border-subtle group-hover:bg-white/[0.018] transition-colors', isBlocked && 'bg-error/4')}>
-                      <span className={cn('font-mono text-[11.5px] font-medium tabular-nums block', taskDays < 0 ? 'text-error' : taskDays <= 2 ? 'text-warning' : 'text-text-1')}>
-                        {formatDate(task.dueDate)}
-                      </span>
-                      <span className="font-mono text-[9.5px] text-text-3 uppercase tracking-wider mt-0.5 block">
-                        {taskDays < 0 ? 'Overdue' : taskDays === 0 ? 'Today' : `${taskDays}d`}
-                      </span>
-                    </div>
-
-                    {/* XP */}
-                    <div className={cn('px-3.5 py-[11px] border-b border-border-subtle flex items-center group-hover:bg-white/[0.018] transition-colors', isBlocked && 'bg-error/4')}>
-                      <span className="inline-flex items-center gap-1 bg-coin-gold/12 border border-coin-gold/30 text-coin-gold font-display font-bold text-[11.5px] rounded-full px-2 py-[3px]">
-                        <Zap size={10} />
-                        {task.xpReward}
-                      </span>
-                    </div>
-
-                    {/* Meta icons */}
-                    <div className={cn('pr-[18px] px-3.5 py-[11px] border-b border-border-subtle flex items-center gap-1.5 justify-end group-hover:bg-white/[0.018] transition-colors', isBlocked && 'bg-error/4')}>
-                      <span className={cn(
-                        'w-[26px] h-[26px] rounded-[6px] bg-surface-2 border border-border-default flex items-center justify-center cursor-pointer hover:bg-surface-3 transition-colors',
-                        task.clientVisible ? 'text-success bg-success/10 border-success/30' : 'text-text-3',
-                      )}>
-                        {task.clientVisible ? <Eye size={12} /> : <EyeOff size={12} />}
-                      </span>
-                      <ClickUpStatus status={task.clickUpSync} />
-                      <Link
-                        to={`/admin/tasks/${task.id}`}
-                        className="w-[26px] h-[26px] rounded-[6px] bg-surface-2 border border-border-default text-text-2 flex items-center justify-center hover:bg-surface-3 hover:text-text-1 transition-colors"
-                      >
-                        <ExternalLink size={12} />
-                      </Link>
-                    </div>
-                  </div>
-                )
-              })}
+                  )
+                })
+              )}
             </div>
 
             {/* Add task row */}
@@ -704,6 +852,7 @@ export default function ProjectDetailPage() {
               </div>
               {allTasks.flatMap((t) => t.files ?? []).slice(0, 4).map((file) => {
                 const Icon = FILE_ICON_MAP[file.type] ?? File
+                const pendingApproval = pendingFileApprovals.find(a => a.fileName === file.name)
                 return (
                   <div key={file.id} className="flex items-center gap-3 px-[18px] py-[11px] border-b border-border-subtle last:border-0 hover:bg-white/[0.015] transition-colors">
                     <span className={cn('w-9 h-9 rounded-[7px] border flex items-center justify-center font-mono text-[8.5px] font-bold tracking-wider flex-shrink-0', FILE_TYPE_CLS[file.type])}>
@@ -711,7 +860,14 @@ export default function ProjectDetailPage() {
                     </span>
                     <div className="flex-1 min-w-0">
                       <p className="font-ui font-medium text-[12.5px] text-text-1 truncate">{file.name}</p>
-                      <p className="font-mono text-[10px] text-text-3 tracking-wider mt-0.5">{file.uploadedBy} · {file.uploadedAt}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <p className="font-mono text-[10px] text-text-3 tracking-wider">{file.uploadedBy} · {file.uploadedAt}</p>
+                        {pendingApproval && (
+                          <span className="inline-flex items-center gap-1 font-mono text-[9px] text-warning bg-warning/12 border border-warning/30 px-1.5 py-[1px] rounded-[3px] uppercase tracking-wider">
+                            <Clock size={8} /> Approval Pending
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <button className={cn(
                       'flex-shrink-0 flex items-center gap-1 h-[26px] px-2 rounded-[6px] border font-mono text-[9.5px] font-semibold uppercase tracking-wider transition-colors',
