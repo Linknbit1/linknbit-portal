@@ -1,0 +1,504 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Linknbit War Room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/office-quest.css">
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════
+     LOGIN SCREEN
+════════════════════════════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg></div>
+      <div><div class="login-logo-text">Linknbit War Room</div><div class="login-logo-sub">Team execution, recognition, and rewards.</div></div>
+    </div>
+    <div class="login-tabs">
+      <button class="login-tab active" onclick="setLoginRole('employee')">Member</button>
+      <button class="login-tab" onclick="setLoginRole('admin')">Admin</button>
+    </div>
+    <div id="login-error" class="login-error"></div>
+    <div class="l-field"><label>Member ID</label><input id="l-id" placeholder="e.g. EMP-001" autocomplete="username"></div>
+    <div class="l-field"><label>Preview Key</label><input id="l-pass" type="password" placeholder="Optional in preview mode" autocomplete="off"></div>
+    <button class="login-btn" onclick="doLogin()">Open workspace</button>
+    <div class="login-hint" id="login-hint">Preview mode: enter a member ID. WordPress will provide real authentication later.</div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     SHELL (after login)
+════════════════════════════════════════════════════ -->
+<div id="shell">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="tb-logo">
+      <div class="tb-logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg></div>
+      <span class="tb-logo-name">Linknbit War Room</span>
+    </div>
+    <div class="tb-divider"></div>
+    <span class="tb-role" id="tb-role-badge">—</span>
+    <div class="tb-spacer"></div>
+    <div class="tb-user">
+      <div class="tb-av" id="tb-av"></div>
+      <span class="tb-name" id="tb-name"></span>
+      <span class="tb-pts" id="tb-pts" style="display:none"></span><span class="tb-pts" id="tb-rep" style="display:none;background:rgba(200,160,255,.12);color:var(--purple)"></span>
+      <div id="tb-xp-wrap" style="display:none;align-items:center;gap:5px">
+        <span style="font-size:10px;color:var(--muted)" id="tb-level"></span>
+        <div class="xp-bar-wrap"><div class="xp-bar" id="tb-xp-bar"></div></div>
+      </div>
+      <!-- Notification bell -->
+      <div style="position:relative">
+        <button class="notif-bell" id="notif-bell" onclick="toggleNotifDropdown()">
+          🔔
+          <span class="notif-badge" id="notif-badge" style="display:none">0</span>
+        </button>
+        <div class="notif-dropdown" id="notif-dropdown" style="display:none">
+          <div class="notif-dd-header">
+            <span>Notifications</span>
+            <button onclick="markAllRead()" style="font-size:11px;color:var(--muted);background:none;border:none;cursor:pointer;font-family:var(--font)">Mark all read</button>
+          </div>
+          <div id="notif-dd-list"></div>
+          <div style="padding:10px 16px;text-align:center;border-top:1px solid var(--border)">
+            <button onclick="closeNotifDropdown();switchPanel(currentUser.role==='admin'?'a-notifications':'e-notifications')" style="font-size:12px;color:var(--accent);background:none;border:none;cursor:pointer;font-family:var(--font)">See all notifications →</button>
+          </div>
+        </div>
+      </div>
+      <!-- Chat icon -->
+      <button class="notif-bell" onclick="switchPanel(currentUser.role==='admin'?'a-chat':'e-chat')" title="Chat" id="chat-btn">
+        💬
+        <span class="notif-badge" id="chat-badge" style="display:none">0</span>
+      </button>
+      <button class="tb-logout" onclick="doLogout()">Exit</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <!-- SIDEBAR (rendered by JS) -->
+    <div class="sidebar" id="sidebar"></div>
+    <!-- MAIN -->
+    <div class="main" id="main-content"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ════════════ MODALS ════════════════════════════════ -->
+
+<!-- Add/Edit Employee -->
+<div class="modal-bg" id="modal-emp">
+  <div class="modal">
+    <div class="modal-title" id="emp-modal-title">Add team member</div>
+    <div class="f-grid">
+      <div class="f-row" style="margin-bottom:0"><label>First name</label><input id="e-first" placeholder="Ahmed"></div>
+      <div class="f-row" style="margin-bottom:0"><label>Last name</label><input id="e-last" placeholder="Raza"></div>
+    </div>
+    <div class="f-grid" style="margin-top:13px">
+      <div class="f-row" style="margin-bottom:0"><label>Department</label>
+        <select id="e-dept"><option>Engineering</option><option>Design</option><option>Marketing</option><option>Sales</option><option>Operations</option><option>HR</option><option>Finance</option></select>
+      </div>
+      <div class="f-row" style="margin-bottom:0"><label>Role</label>
+        <select id="e-role"><option value="employee">Member</option><option value="admin">Admin</option></select>
+      </div>
+    </div>
+    <div class="f-row" style="margin-top:13px"><label>Access</label><input id="e-pass" placeholder="Managed by WordPress during integration" disabled></div>
+    <div id="e-id-display" style="font-size:12px;color:var(--muted);margin-top:-6px;margin-bottom:13px"></div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal('modal-emp')">Cancel</button>
+      <button class="btn btn-accent" onclick="saveEmployee()">Save member</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Task -->
+<div class="modal-bg" id="modal-task">
+  <div class="modal">
+    <div class="modal-title" id="task-modal-title">Create quest</div>
+    <div class="f-row"><label>Quest title</label><input id="t-title" placeholder="e.g. Organise team lunch"></div>
+    <div class="f-row"><label>Description</label><textarea id="t-desc" placeholder="What needs to be done?"></textarea></div>
+    <div class="f-grid">
+      <div class="f-row" style="margin-bottom:0"><label>Category</label>
+        <select id="t-cat"><option>Work</option><option>Event</option><option>Help</option><option>Idea</option><option>Social</option><option>Ops</option></select>
+      </div>
+      <div class="f-row" style="margin-bottom:0"><label>XP Reward (pts)</label>
+        <select id="t-pts"><option value="10">10 XP</option><option value="20" selected>20 XP</option><option value="30">30 XP</option><option value="50">50 XP</option></select>
+      </div>
+      <div class="f-row" style="margin-bottom:0"><label>Difficulty</label>
+        <select id="t-diff"><option>Easy</option><option selected>Medium</option><option>Hard</option></select>
+      </div>
+      <div class="f-row" style="margin-bottom:0"><label>Time limit</label>
+        <select id="t-dur"><option value="1">1 day</option><option value="2">2 days</option><option value="3" selected>3 days</option><option value="5">5 days</option><option value="7">1 week</option><option value="14">2 weeks</option></select>
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal('modal-task')">Cancel</button>
+      <button class="btn btn-accent" onclick="saveTask()">Post quest</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Benefit -->
+<div class="modal-bg" id="modal-benefit">
+  <div class="modal">
+    <div class="modal-title" id="ben-modal-title">Add reward</div>
+    <div class="f-row"><label>Reward name</label><input id="b-name" placeholder="e.g. Early leave Friday"></div>
+    <div class="f-row"><label>Description</label><textarea id="b-desc" placeholder="What does this include?"></textarea></div>
+    <div class="f-grid">
+      <div class="f-row" style="margin-bottom:0"><label>XP to redeem</label><input type="number" id="b-pts" placeholder="200" min="1"></div>
+      <div class="f-row" style="margin-bottom:0"><label>Icon (emoji)</label><input id="b-icon" placeholder="🎁" maxlength="4"></div>
+      <div class="f-row" style="margin-bottom:0"><label>Colour theme</label>
+        <select id="b-color"><option value="green">Green</option><option value="teal">Teal</option><option value="amber">Amber</option><option value="blue">Blue</option><option value="purple">Purple</option><option value="coral">Coral</option><option value="pink">Pink</option></select>
+      </div>
+      <div class="f-row" style="margin-bottom:0"><label>Frequency</label>
+        <select id="b-freq"><option>Monthly</option><option>Quarterly</option><option>Annually</option><option>Once ever</option></select>
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal('modal-benefit')">Cancel</button>
+      <button class="btn btn-accent" onclick="saveBenefit()">Save reward</button>
+    </div>
+  </div>
+</div>
+
+<!-- Give Shoutout (admin) -->
+<div class="modal-bg" id="modal-shoutout">
+  <div class="modal">
+    <div class="modal-title">🎯 Give a power-up shoutout</div>
+    <div class="f-row"><label>To member</label><select id="ms-to"></select></div>
+    <div class="f-row"><label>Achievement unlocked</label>
+      <select id="ms-cat"><option>Work excellence</option><option>Helped a teammate</option><option>Organised an event</option><option>Shared a great idea</option><option>Went above and beyond</option><option>Team spirit</option></select>
+    </div>
+    <div class="f-row"><label>What they did</label><textarea id="ms-msg" placeholder="Describe their epic move..."></textarea></div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal('modal-shoutout')">Cancel</button>
+      <button class="btn btn-accent" onclick="adminGiveShoutout()">🚀 Fire shoutout!</button>
+    </div>
+  </div>
+</div>
+
+<!-- Issue Penalty (admin) -->
+<div class="modal-bg" id="modal-penalty">
+  <div class="modal">
+    <div class="modal-title">⚠️ Issue Penalty</div>
+    <div class="f-row"><label>Member</label><select id="pen-to"></select></div>
+    <div class="f-row"><label>Penalty Level</label>
+      <select id="pen-level">
+        <option value="1">🟡 Level 1 — Minor Warning (−10 XP)</option>
+        <option value="2">🟠 Level 2 — Formal Warning (−25 XP)</option>
+        <option value="3">🔴 Level 3 — Severe Strike (−50 XP)</option>
+      </select>
+    </div>
+    <div class="f-row"><label>Reason</label><textarea id="pen-reason" placeholder="Describe the reason for this penalty..."></textarea></div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal('modal-penalty')">Cancel</button>
+      <button class="btn btn-danger" onclick="issuePenalty()">Issue Penalty</button>
+    </div>
+  </div>
+</div>
+
+<!-- Community Task Modal -->
+<div class="modal-bg" id="modal-ctask">
+  <div class="modal">
+    <div class="modal-title" id="ctask-modal-title">📋 Post a bounty</div>
+    <div style="font-size:12px;color:var(--amber);background:rgba(255,190,71,.1);border:1px solid rgba(255,190,71,.2);padding:9px 12px;border-radius:var(--r-sm);margin-bottom:13px">💡 You are funding this quest with your own XP. The XP will be held and released to whoever claims it.</div>
+    <div class="f-row"><label>Quest title</label><input id="ct-title" placeholder="e.g. Help me with the slides"></div>
+    <div class="f-row"><label>Description</label><textarea id="ct-desc" placeholder="What do you need help with?"></textarea></div>
+    <div class="f-row"><label>XP Bounty you'll pay</label>
+      <select id="ct-pts"><option value="10">10 XP (small ask)</option><option value="20" selected>20 XP</option><option value="30">30 XP</option><option value="50">50 XP (big ask)</option></select>
+    </div>
+    <div class="f-row"><label>Category</label>
+      <select id="ct-cat"><option>Help</option><option>Work</option><option>Event</option><option>Idea</option><option>Social</option><option>Ops</option></select>
+    </div>
+    <div id="ct-balance-warn" style="font-size:12px;color:var(--red);margin-top:-6px;margin-bottom:8px;display:none">⚠️ You don't have enough XP for this bounty!</div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal('modal-ctask')">Cancel</button>
+      <button class="btn btn-accent" onclick="saveCommunityTask()">Post & Fund Quest</button>
+    </div>
+  </div>
+</div>
+
+<!-- Claim benefit confirm -->
+<div class="modal-bg" id="modal-claim-ben">
+  <div class="modal modal-sm">
+    <div class="modal-title">🎁 Redeem reward?</div>
+    <p id="claim-ben-msg" style="font-size:13px;color:var(--muted);margin-bottom:1.5rem;line-height:1.6"></p>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal('modal-claim-ben')">Cancel</button>
+      <button class="btn btn-accent" onclick="confirmClaimBenefit()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Avatar chooser -->
+<div class="modal-bg" id="modal-avatar">
+  <div class="modal">
+    <div class="modal-title">🎭 Choose your avatar</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:10px">Pick the character that represents you!</p>
+    <div class="av-grid" id="av-grid-options"></div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal('modal-avatar')">Cancel</button>
+      <button class="btn btn-accent" onclick="saveAvatar()">Save avatar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Challenge Modal -->
+<div class="modal-bg" id="modal-challenge">
+  <div class="modal">
+    <div class="modal-title">⚔️ Issue a 1v1 Duel Challenge</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Challenge a player — whoever earns the most XP during the duel period wins the stake!</div>
+    <div class="f-row"><label>Choose your opponent</label><select id="ch-opponent"></select></div>
+    <div class="f-row"><label>Duel duration</label>
+      <select id="ch-dur">
+        <option value="1">1 Day sprint</option>
+        <option value="3" selected>3 Day battle</option>
+        <option value="7">7 Day war</option>
+      </select>
+    </div>
+    <div class="f-row"><label>XP Stake (each player puts in)</label>
+      <select id="ch-stake">
+        <option value="0">No stake — bragging rights only</option>
+        <option value="10">10 XP each</option>
+        <option value="25" selected>25 XP each</option>
+        <option value="50">50 XP each</option>
+      </select>
+    </div>
+    <div id="ch-stake-warn" style="font-size:12px;color:var(--red);display:none;margin-top:-8px;margin-bottom:8px">⚠️ Not enough XP for this stake!</div>
+    <div style="font-size:12px;color:var(--amber);background:rgba(255,190,71,.08);border:1px solid rgba(255,190,71,.15);border-radius:var(--r-sm);padding:9px 12px">
+      🏆 Winner takes <strong>both stakes</strong>. XP is deducted on challenge start and awarded on duel end.
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal('modal-challenge')">Cancel</button>
+      <button class="btn btn-accent" onclick="issueChallenge()">⚔️ Send Challenge!</button>
+    </div>
+  </div>
+</div>
+
+<!-- Team Battle Modal (admin) -->
+<div class="modal-bg" id="modal-sprint">
+  <div class="modal">
+    <div class="modal-title">Launch Sprint</div>
+    <div class="f-row"><label>Project name</label><input id="sp-name" placeholder="e.g. Client Portal Redesign, Q2 Launch"></div>
+    <div class="f-row"><label>Description</label><textarea id="sp-desc" placeholder="What needs to be done? What is the goal?"></textarea></div>
+    <div class="f-row"><label>Assign to teams</label>
+      <div style="display:flex;flex-direction:column;gap:6px;background:var(--bg3);padding:10px;border-radius:var(--r-sm);border:1px solid var(--border-s)">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--text)">
+          <input type="checkbox" id="sp-team-devs" value="Devs" style="width:15px;height:15px;accent-color:var(--accent)"> 💻 Dev Team (Engineering)
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--text)">
+          <input type="checkbox" id="sp-team-design" value="Design" style="width:15px;height:15px;accent-color:var(--accent)"> 🎨 Design Team
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--text)">
+          <input type="checkbox" id="sp-team-mkt" value="Mkt" style="width:15px;height:15px;accent-color:var(--accent)"> 📣 Marketing Team
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--accent)">
+          <input type="checkbox" id="sp-team-all" onchange="toggleAllTeams(this)" style="width:15px;height:15px;accent-color:var(--accent)"> ⚡ All Teams
+        </label>
+      </div>
+    </div>
+    <div class="f-grid">
+      <div class="f-row" style="margin-bottom:0"><label>Deadline</label>
+        <select id="sp-dur">
+          <option value="1">1 Day — urgent!</option>
+          <option value="3">3 Days</option>
+          <option value="7" selected>1 Week</option>
+          <option value="14">2 Weeks</option>
+          <option value="30">1 Month</option>
+        </select>
+      </div>
+      <div class="f-row" style="margin-bottom:0"><label>XP per winner</label>
+        <input type="number" id="sp-xp" value="50" min="1" max="999" placeholder="e.g. 50">
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--muted);background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 12px">
+      Team members log contributions. <strong>You choose</strong> who gets XP when you close the sprint.
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal('modal-sprint')">Cancel</button>
+      <button class="btn btn-accent" onclick="launchSprint()">Launch sprint</button>
+    </div>
+  </div>
+</div>
+
+<!-- Log Contribution Modal -->
+<div class="modal-bg" id="modal-contribute">
+  <div class="modal modal-sm">
+    <div class="modal-title">📝 Log Your Contribution</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:12px" id="contribute-sprint-name"></p>
+    <div class="f-row"><label>What did you contribute?</label>
+      <textarea id="contribute-note" placeholder="Briefly describe what you worked on..."></textarea>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal('modal-contribute')">Cancel</button>
+      <button class="btn btn-accent" onclick="confirmContribute()">Log contribution</button>
+    </div>
+  </div>
+</div>
+
+<!-- GM Pick Winners Modal -->
+<div class="modal-bg" id="modal-winners">
+  <div class="modal">
+    <div class="modal-title">👑 Pick the Winners</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px" id="winners-sprint-desc"></p>
+    <div class="f-row"><label>Select contributors to award XP to</label>
+      <div id="winners-checklist" style="display:flex;flex-direction:column;gap:8px;background:var(--bg3);padding:12px;border-radius:var(--r-sm);border:1px solid var(--border-s);max-height:260px;overflow-y:auto"></div>
+    </div>
+    <div style="font-size:12px;color:var(--accent);font-family:var(--mono);margin-top:6px" id="winners-xp-preview"></div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal('modal-winners')">Cancel</button>
+      <button class="btn btn-accent" onclick="confirmWinners()">👑 Award XP & Complete</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- New Project Modal -->
+<div class="modal-bg" id="modal-project">
+  <div class="modal">
+    <div class="modal-title" id="proj-modal-title">📁 New Project</div>
+    <div class="f-row"><label>Project name</label><input id="proj-name" placeholder="e.g. Website Redesign"></div>
+    <div class="f-row"><label>Description</label><textarea id="proj-desc" placeholder="What is this project about?"></textarea></div>
+    <div class="f-grid">
+      <div class="f-row" style="margin-bottom:0"><label>Assign to team</label>
+        <select id="proj-team">
+          <option value="Devs">💻 Dev Team</option>
+          <option value="Design">🎨 Design Team</option>
+          <option value="Mkt">📣 Marketing</option>
+          <option value="">All Teams</option>
+        </select>
+      </div>
+      <div class="f-row" style="margin-bottom:0"><label>Colour</label>
+        <select id="proj-color">
+          <option value="#5AB4FF">🔵 Blue</option>
+          <option value="#4FFFB0">🟢 Green</option>
+          <option value="#FFBE47">🟡 Amber</option>
+          <option value="#C8A0FF">🟣 Purple</option>
+          <option value="#FF78B4">🩷 Pink</option>
+          <option value="#E8FF47">🟨 Lime</option>
+          <option value="#FF8264">🟠 Orange</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal('modal-project')">Cancel</button>
+      <button class="btn btn-accent" onclick="saveProject()">Create project</button>
+    </div>
+  </div>
+</div>
+
+<!-- New / Edit Task Modal -->
+<div class="modal-bg" id="modal-ptask">
+  <div class="modal">
+    <div class="modal-title" id="ptask-modal-title">➕ Add task</div>
+    <div class="f-row"><label>Task title</label><input id="pt-title" placeholder="What needs to be done?"></div>
+    <div class="f-row"><label>Description</label><textarea id="pt-desc" placeholder="Details, acceptance criteria, context..."></textarea></div>
+    <div class="f-grid">
+      <div class="f-row" style="margin-bottom:0"><label>Assignee</label>
+        <select id="pt-assignee">
+          <option value="">Unassigned</option>
+        </select>
+      </div>
+      <div class="f-row" style="margin-bottom:0"><label>Priority</label>
+        <select id="pt-priority">
+          <option value="Low">🔘 Low</option>
+          <option value="Medium" selected>🔵 Medium</option>
+          <option value="High">🟡 High</option>
+          <option value="Urgent">🔴 Urgent</option>
+        </select>
+      </div>
+      <div class="f-row" style="margin-bottom:0"><label>Due date</label>
+        <input type="date" id="pt-due">
+      </div>
+      <div class="f-row" style="margin-bottom:0"><label>XP reward (0 = none)</label>
+        <input type="number" id="pt-xp" value="0" min="0" max="200" placeholder="0">
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal('modal-ptask')">Cancel</button>
+      <button class="btn btn-accent" onclick="saveProjectTask()">Save task</button>
+    </div>
+  </div>
+</div>
+
+<!-- Task Detail Modal -->
+<div class="modal-bg" id="modal-task-detail">
+  <div class="modal" style="max-width:580px">
+    <div id="task-detail-body"></div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" style="font-size:12px" onclick="const tid=projectTaskDetail;closeModal('modal-task-detail');openTaskThread(tid)">💬 Open thread</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-task-detail')">Close</button>
+    </div>
+  </div>
+</div>
+<!-- New Channel Modal -->
+<div class="modal-bg" id="modal-new-channel">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-title">➕ Create a channel</div>
+    <div class="f-row"><label>Channel name</label>
+      <input id="new-ch-name" placeholder="e.g. random, announcements, design-feedback" maxlength="30"
+        oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9-]/g,'-')">
+      <div style="font-size:11px;color:var(--hint);margin-top:4px">Lowercase, hyphens only. Will appear as #channel-name</div>
+    </div>
+    <div class="f-row"><label>Description (optional)</label>
+      <input id="new-ch-desc" placeholder="What is this channel for?">
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal('modal-new-channel')">Cancel</button>
+      <button class="btn btn-accent" onclick="createChannel()">Create channel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Attendance Award Modal -->
+<div class="modal-bg" id="modal-attendance">
+  <div class="modal">
+    <div class="modal-title">🏅 Award Attendance Bonus</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:1rem">Select the top attendees for this month. Top 1 earns +150 🪙, Top 2-3 earn +75 🪙, Honorable mention earns +25 🪙. These are Coins only (attendance doesn't affect Reputation).</p>
+    <div class="f-row"><label>🥇 Top 1 — Perfect attendance (+150 🪙)</label><select id="att-1"><option value="">None</option></select></div>
+    <div class="f-row"><label>🥈 Top 2 (+75 🪙)</label><select id="att-2"><option value="">None</option></select></div>
+    <div class="f-row"><label>🥉 Top 3 (+75 🪙)</label><select id="att-3"><option value="">None</option></select></div>
+    <div class="f-row"><label>🎖 Honorable mention (+25 🪙)</label><select id="att-4"><option value="">None</option></select></div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal('modal-attendance')">Cancel</button>
+      <button class="btn btn-accent" onclick="awardAttendance()">🏅 Award Bonus</button>
+    </div>
+  </div>
+</div>
+
+<!-- Monthly Reset Modal -->
+<div class="modal-bg" id="modal-reset">
+  <div class="modal modal-sm">
+    <div class="modal-title">🔄 Monthly Coin Reset</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:1rem">This will reset all employee <strong>Coins</strong> to 0 and archive this month's standings. <strong>Reputation points are never reset.</strong></p>
+    <div style="background:rgba(255,90,90,.08);border:1px solid rgba(255,90,90,.2);border-radius:var(--r-sm);padding:10px 12px;font-size:12px;color:var(--red);margin-bottom:1rem">⚠️ This cannot be undone. Make sure all rewards have been redeemed first.</div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal('modal-reset')">Cancel</button>
+      <button class="btn btn-danger" onclick="doMonthlyReset()">Reset Coins</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete confirm -->
+<div class="modal-bg" id="modal-delete">
+  <div class="modal modal-sm">
+    <div class="modal-title" id="del-modal-title">Delete?</div>
+    <p id="del-modal-msg" style="font-size:13px;color:var(--muted);margin-bottom:1.5rem"></p>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal('modal-delete')">Cancel</button>
+      <button class="btn btn-danger" onclick="confirmDeleteAction()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ APP SCRIPT ════════════════════════════ -->
+<script src="assets/js/office-quest.js" defer></script>
+</body>
+</html>
+

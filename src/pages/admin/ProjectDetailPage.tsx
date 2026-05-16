@@ -15,10 +15,11 @@ import { PriorityChip } from '../../components/shared/PriorityChip'
 import { ClickUpStatus } from '../../components/shared/ClickUpStatus'
 import { ClientVisibility } from '../../components/shared/ClientVisibility'
 import { RoleBadge } from '../../components/shared/RoleBadge'
+import { TaskDetailDrawer } from './TaskDetailDrawer'
 import { PROJECTS, TASKS, USERS, APPROVALS } from '../../data/mock'
 import { formatDate, formatCurrency, getDaysUntil } from '../../lib/utils'
 import { cn } from '../../lib/cn'
-import type { TaskStatus, Priority } from '../../types'
+import type { Task, TaskStatus, Priority } from '../../types'
 
 const FILE_TYPE_CLS: Record<string, string> = {
   pdf: 'text-error bg-error/8 border-error/25',
@@ -76,6 +77,10 @@ export default function ProjectDetailPage() {
   const [viewMode, setViewMode] = useState<'internal' | 'client'>('internal')
   const [internalNote, setInternalNote] = useState<string | null>(null)
   const [editingNote, setEditingNote] = useState(false)
+  const [drawerTask, setDrawerTask] = useState<Task | null>(null)
+  const [drawerOpen, setDrawerOpen] = useState(false)
+
+  const openDrawer = (task: Task) => { setDrawerTask(task); setDrawerOpen(true) }
 
   const project = PROJECTS.find((p) => p.id === id) ?? PROJECTS[0]
   const allTasks = TASKS.filter((t) => t.projectId === project.id)
@@ -617,9 +622,9 @@ export default function ProjectDetailPage() {
                             <div className={cn('pl-5 pr-3.5 py-[11px] border-b border-border-subtle flex items-center min-w-0 group-hover:bg-white/[0.018] transition-colors', isBlocked && 'bg-error/4 shadow-[inset_2px_0_0_rgba(244,54,76,1)]')}>
                               <div className="min-w-0">
                                 <div className="flex items-center gap-2">
-                                  <Link to={`/admin/tasks/${task.id}`} className="font-ui font-medium text-[13.5px] text-text-1 hover:text-brand-red transition-colors">
+                                  <button onClick={() => openDrawer(task)} className="font-ui font-medium text-[13.5px] text-text-1 hover:text-brand-red transition-colors text-left">
                                     {task.title}
-                                  </Link>
+                                  </button>
                                   {task.clickUpId && <span className="font-mono text-[10px] text-text-4">{task.clickUpId}</span>}
                                 </div>
                                 {taskDays <= 0 && (
@@ -687,7 +692,7 @@ export default function ProjectDetailPage() {
                           <div className={cn('pl-5 pr-3.5 py-[11px] border-b border-border-subtle flex items-center min-w-0 group-hover:bg-white/[0.018] transition-colors', isBlocked && 'bg-error/4 shadow-[inset_2px_0_0_rgba(244,54,76,1)]')}>
                             <div className="min-w-0">
                               <div className="flex items-center gap-2">
-                                <Link to={`/admin/tasks/${task.id}`} className="font-ui font-medium text-[13.5px] text-text-1 hover:text-brand-red transition-colors">{task.title}</Link>
+                                <button onClick={() => openDrawer(task)} className="font-ui font-medium text-[13.5px] text-text-1 hover:text-brand-red transition-colors text-left">{task.title}</button>
                                 {task.clickUpId && <span className="font-mono text-[10px] text-text-4">{task.clickUpId}</span>}
                               </div>
                               {taskDays <= 0 && <span className="font-mono text-[10.5px] text-error font-semibold tracking-wider uppercase">{Math.abs(taskDays)}d overdue</span>}
@@ -725,7 +730,7 @@ export default function ProjectDetailPage() {
                       <div className={cn('pl-5 pr-3.5 py-[11px] border-b border-border-subtle flex items-center min-w-0 group-hover:bg-white/[0.018] transition-colors', isBlocked && 'bg-error/4 shadow-[inset_2px_0_0_rgba(244,54,76,1)]')}>
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
-                            <Link to={`/admin/tasks/${task.id}`} className="font-ui font-medium text-[13.5px] text-text-1 hover:text-brand-red transition-colors">{task.title}</Link>
+                            <button onClick={() => openDrawer(task)} className="font-ui font-medium text-[13.5px] text-text-1 hover:text-brand-red transition-colors text-left">{task.title}</button>
                             {task.clickUpId && <span className="font-mono text-[10px] text-text-4">{task.clickUpId}</span>}
                           </div>
                           {taskDays <= 0 && <span className="font-mono text-[10.5px] text-error font-semibold tracking-wider uppercase">{Math.abs(taskDays)}d overdue</span>}
@@ -929,6 +934,12 @@ export default function ProjectDetailPage() {
 
         </div>
       </div>
+
+      <TaskDetailDrawer
+        task={drawerTask}
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+      />
     </div>
   )
 }
