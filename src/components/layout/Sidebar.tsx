@@ -10,6 +10,7 @@ import {
   Settings,
   UserCircle,
   ChevronRight,
+  CalendarCheck,
 } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { Avatar } from '../ui/Avatar'
@@ -22,6 +23,7 @@ const NAV_ITEMS = [
   { label: 'Clients', icon: UserCircle, to: '/admin/clients' },
   { label: 'Teams', icon: Users, to: '/admin/teams' },
   { label: 'Tasks', icon: CheckSquare, to: '/admin/tasks', badge: 7 },
+  { label: 'Attendance', icon: CalendarCheck, to: '/admin/attendance' },
   { label: 'Reports', icon: BarChart2, to: '/admin/reports' },
   { label: 'Gamification', icon: Trophy, to: '/admin/gamification' },
   { label: 'ClickUp', icon: Link2, to: '/admin/clickup' },
