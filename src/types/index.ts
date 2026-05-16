@@ -250,3 +250,46 @@ export interface KPICard {
   variant?: 'default' | 'warning' | 'error' | 'success'
   icon?: string
 }
+
+/* ---- Clients ---- */
+export interface Client {
+  id: string
+  name: string
+  email: string
+  company: string
+  accountManagerId: string
+  accountManagerName: string
+  status: 'active' | 'inactive' | 'on_hold'
+  projectCount: number
+  joinedAt: string
+  avatar?: string
+  internalNote?: string
+  industry?: string
+}
+
+/* ---- Attendance ---- */
+export type AttendanceStatus = 'present' | 'late' | 'absent' | 'remote' | 'half_day'
+
+export interface AttendanceRecord {
+  id: string
+  userId: string
+  userName: string
+  date: string
+  checkIn?: string
+  checkOut?: string
+  status: AttendanceStatus
+  method: 'office' | 'remote' | 'admin'
+  note?: string
+}
+
+/* ---- Team ---- */
+export interface Team {
+  id: string
+  name: string
+  department: ServiceType
+  leadId: string
+  leadName: string
+  memberIds: string[]
+  activeProjects: number
+  avgWorkload: WorkloadLevel
+}

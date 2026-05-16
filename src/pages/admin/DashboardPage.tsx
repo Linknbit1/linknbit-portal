@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  TrendingUp, TrendingDown, AlertTriangle, Users, Zap,
+  TrendingUp, AlertTriangle, Users, Zap,
   ArrowRight, CheckCircle2, Upload, Star, RefreshCw,
   CheckCheck, Award, MoreHorizontal, Plus, Activity,
 } from 'lucide-react'

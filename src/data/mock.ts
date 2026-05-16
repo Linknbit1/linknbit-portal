@@ -10,6 +10,9 @@ import type {
   Quest,
   Reward,
   Approval,
+  Client,
+  AttendanceRecord,
+  Team,
 } from '../types'
 
 /* =========================================================
@@ -461,4 +464,48 @@ export const TEAM_PERFORMANCE = [
   { id: 'u3', name: 'Sara Qureshi', role: 'Design Lead', tasksCompleted: 18, avgDays: 2.1, xp: 2800, workload: 'medium' as const },
   { id: 'u4', name: 'Zain Malik', role: 'Marketing Lead', tasksCompleted: 31, avgDays: 1.2, xp: 4100, workload: 'heavy' as const },
   { id: 'u6', name: 'Bilal Ahmed', role: 'Design Lead', tasksCompleted: 11, avgDays: 3.0, xp: 1600, workload: 'light' as const },
+]
+
+/* =========================================================
+   CLIENTS
+   ========================================================= */
+export const CLIENTS: Client[] = [
+  { id: 'c1', name: 'Imran Shah', email: 'imran@cricketsansar.com', company: 'Cricket Sansar', accountManagerId: 'u2', accountManagerName: 'Ahmad Karimi', status: 'active', projectCount: 1, joinedAt: '2026-02-10', industry: 'Sports & Media', internalNote: 'High-priority client. Needs weekly updates.' },
+  { id: 'c2', name: 'Internal', email: 'ghayas@linknbit.com', company: 'Linknbit (Internal)', accountManagerId: 'u1', accountManagerName: 'Ghayas', status: 'active', projectCount: 1, joinedAt: '2026-04-01', industry: 'Agency' },
+  { id: 'c3', name: 'Alex Turner', email: 'alex@vpnguider.com', company: 'VPNGuider', accountManagerId: 'u4', accountManagerName: 'Zain Malik', status: 'active', projectCount: 1, joinedAt: '2026-03-01', industry: 'Technology', internalNote: 'SEO-focused. Monthly reporting required.' },
+  { id: 'c4', name: 'Rahim Gul', email: 'rahim@glttransport.com', company: 'Rahim Gul GLT', accountManagerId: 'u3', accountManagerName: 'Sara Qureshi', status: 'active', projectCount: 1, joinedAt: '2026-04-10', industry: 'Logistics' },
+  { id: 'c5', name: 'David Starr', email: 'david@starrluxury.com', company: 'Starr Luxury Cars', accountManagerId: 'u2', accountManagerName: 'Ahmad Karimi', status: 'active', projectCount: 1, joinedAt: '2026-04-15', industry: 'Automotive' },
+  { id: 'c6', name: 'Irene Teo', email: 'irene@ireneteo.com', company: 'Irene Teo Coaching', accountManagerId: 'u6', accountManagerName: 'Bilal Ahmed', status: 'active', projectCount: 1, joinedAt: '2026-05-01', industry: 'Coaching & Consulting' },
+  { id: 'c7', name: 'Mark Offsite', email: 'mark@offsitepro.com', company: 'Offsite Pro', accountManagerId: 'u5', accountManagerName: 'Usman Tariq', status: 'active', projectCount: 1, joinedAt: '2026-04-20', industry: 'B2B SaaS' },
+  { id: 'c8', name: 'Dr. Farrukh Alam', email: 'farrukh@medigrow.pk', company: 'MediGrow', accountManagerId: 'u2', accountManagerName: 'Ahmad Karimi', status: 'active', projectCount: 1, joinedAt: '2026-05-10', industry: 'Healthcare' },
+]
+
+/* =========================================================
+   ATTENDANCE
+   ========================================================= */
+export const ATTENDANCE_RECORDS: AttendanceRecord[] = [
+  { id: 'a1', userId: 'u2', userName: 'Ahmad Karimi', date: '2026-05-16', checkIn: '09:02', checkOut: '18:15', status: 'present', method: 'office' },
+  { id: 'a2', userId: 'u3', userName: 'Sara Qureshi', date: '2026-05-16', checkIn: '09:45', checkOut: undefined, status: 'late', method: 'remote', note: 'Working from home today' },
+  { id: 'a3', userId: 'u4', userName: 'Zain Malik', date: '2026-05-16', checkIn: '08:55', checkOut: '17:58', status: 'present', method: 'office' },
+  { id: 'a4', userId: 'u5', userName: 'Usman Tariq', date: '2026-05-16', checkIn: '09:10', checkOut: undefined, status: 'present', method: 'office' },
+  { id: 'a5', userId: 'u6', userName: 'Bilal Ahmed', date: '2026-05-16', status: 'absent', method: 'admin', note: 'Sick leave' },
+  { id: 'a6', userId: 'u7', userName: 'Hina Rizvi', date: '2026-05-16', checkIn: '10:30', checkOut: '14:30', status: 'half_day', method: 'office' },
+  { id: 'a7', userId: 'u8', userName: 'Kamran Ali', date: '2026-05-16', checkIn: '09:05', checkOut: undefined, status: 'present', method: 'office' },
+  // Yesterday
+  { id: 'a8', userId: 'u2', userName: 'Ahmad Karimi', date: '2026-05-15', checkIn: '09:00', checkOut: '18:30', status: 'present', method: 'office' },
+  { id: 'a9', userId: 'u3', userName: 'Sara Qureshi', date: '2026-05-15', checkIn: '09:15', checkOut: '17:45', status: 'present', method: 'office' },
+  { id: 'a10', userId: 'u4', userName: 'Zain Malik', date: '2026-05-15', checkIn: '09:00', checkOut: '18:00', status: 'present', method: 'office' },
+  { id: 'a11', userId: 'u5', userName: 'Usman Tariq', date: '2026-05-15', status: 'absent', method: 'admin' },
+  { id: 'a12', userId: 'u6', userName: 'Bilal Ahmed', date: '2026-05-15', checkIn: '09:20', checkOut: '18:10', status: 'present', method: 'office' },
+  { id: 'a13', userId: 'u7', userName: 'Hina Rizvi', date: '2026-05-15', checkIn: '09:00', checkOut: '18:00', status: 'present', method: 'office' },
+  { id: 'a14', userId: 'u8', userName: 'Kamran Ali', date: '2026-05-15', checkIn: '09:30', status: 'late', method: 'office' },
+]
+
+/* =========================================================
+   TEAMS
+   ========================================================= */
+export const TEAMS: Team[] = [
+  { id: 'tm1', name: 'Development Team', department: 'development', leadId: 'u2', leadName: 'Ahmad Karimi', memberIds: ['u2', 'u5', 'u8'], activeProjects: 4, avgWorkload: 'heavy' },
+  { id: 'tm2', name: 'Design Team', department: 'design', leadId: 'u3', leadName: 'Sara Qureshi', memberIds: ['u3', 'u6'], activeProjects: 3, avgWorkload: 'medium' },
+  { id: 'tm3', name: 'Marketing Team', department: 'marketing', leadId: 'u4', leadName: 'Zain Malik', memberIds: ['u4', 'u7'], activeProjects: 1, avgWorkload: 'medium' },
 ]
