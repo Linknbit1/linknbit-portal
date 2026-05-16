@@ -74,6 +74,7 @@ export interface Project {
   status: ProjectStatus
   currentStage: string
   progress: number
+  startDate?: string
   deadline: string
   budget?: number
   pmId: string

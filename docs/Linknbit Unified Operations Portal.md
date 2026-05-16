@@ -8,29 +8,29 @@
 
 The Linknbit Unified Operations Portal is a centralized system that combines:
 
-* Client-facing project dashboard  
-* Internal employee management system  
-* Gamified performance & reward system  
-* Service-based workflows (Design, Development, Marketing)  
-* ClickUp integration (execution layer)  
+* Client-facing project dashboard
+* Internal employee management system
+* Gamified performance & reward system
+* Service-based workflows (Design, Development, Marketing)
+* ClickUp integration (execution layer)
 * Optional Discord-based authentication
 
 The system enables:
 
-* Clients → track projects, progress, approvals  
-* Employees → manage tasks, earn rewards, collaborate  
+* Clients → track projects, progress, approvals
+* Employees → manage tasks, earn rewards, collaborate
 * Admins → control operations, teams, reporting
 
 ---
 
 ## **2\. Core Objectives**
 
-* Provide **clear, structured client journeys per service**  
-* Maintain **internal productivity and gamification**  
-* Enable **multi-project clients**  
-* Create **single source of truth dashboard**  
-* Integrate with **ClickUp for execution**  
-* Enforce **strict role-based permissions**  
+* Provide **clear, structured client journeys per service**
+* Maintain **internal productivity and gamification**
+* Enable **multi-project clients**
+* Create **single source of truth dashboard**
+* Integrate with **ClickUp for execution**
+* Enforce **strict role-based permissions**
 * Scale operations without chaos
 
 ---
@@ -45,8 +45,8 @@ The system enables:
 
 **Important Rules:**
 
-* Clients DO NOT depend on ClickUp  
-* ClickUp is NOT the database  
+* Clients DO NOT depend on ClickUp
+* ClickUp is NOT the database
 * Discord does NOT control permissions fully
 
 ---
@@ -59,10 +59,10 @@ service\_type: Design | Development | Marketing
 
 This defines:
 
-* Project stages  
-* Task templates  
-* Approval flows  
-* Visibility rules  
+* Project stages
+* Task templates
+* Approval flows
+* Visibility rules
 * ClickUp structure
 
 ---
@@ -71,37 +71,37 @@ This defines:
 
 ### **5.1 Super Admin**
 
-* Full system control  
+* Full system control
 * Manage integrations, permissions, system logic
 
 ### **5.2 Admin / Operations Manager**
 
-* Manage projects, teams, clients  
+* Manage projects, teams, clients
 * Monitor performance
 
 ### **5.3 Project Manager**
 
-* Manage projects and client communication  
+* Manage projects and client communication
 * Handle approvals and delivery
 
 ### **5.4 Team Lead**
 
-* Assign tasks  
+* Assign tasks
 * Manage team performance
 
 ### **5.5 Employee**
 
-* Work on tasks  
+* Work on tasks
 * Earn XP and rewards
 
 ### **5.6 Client Owner**
 
-* View all company projects  
+* View all company projects
 * Approve deliverables
 
 ### **5.7 Client Member**
 
-* Limited access to projects  
+* Limited access to projects
 * Comment and view updates
 
 ---
@@ -114,15 +114,15 @@ This defines:
 
 ### **Features:**
 
-* Email/password login  
-* Discord OAuth login  
-* Role-based dashboard routing  
-* Permission-based UI  
+* Email/password login
+* Discord OAuth login
+* Role-based dashboard routing
+* Permission-based UI
 * Session management
 
 ### **Discord Role Mapping:**
 
-* Map Discord roles → Portal roles  
+* Map Discord roles → Portal roles
 * Portal remains authority
 
 ---
@@ -131,11 +131,11 @@ This defines:
 
 ### **Features:**
 
-* Create client companies  
-* Multiple users per client  
-* Assign account manager  
-* Client status tracking  
-* Internal notes (hidden)  
+* Create client companies
+* Multiple users per client
+* Assign account manager
+* Client status tracking
+* Internal notes (hidden)
 * Activity logs
 
 ---
@@ -144,22 +144,22 @@ This defines:
 
 ### **Fields:**
 
-* Name  
-* Client  
-* Service type  
-* Budget  
-* Start date / deadline  
-* Assigned team  
-* Status  
-* Progress (client/internal)  
-* Current stage  
+* Name
+* Client
+* Service type
+* Budget
+* Start date / deadline
+* Assigned team
+* Status
+* Progress (client/internal)
+* Current stage
 * ClickUp mapping
 
 ### **Views:**
 
-* List  
-* Kanban  
-* Timeline  
+* List
+* Kanban
+* Timeline
 * Milestones
 
 ---
@@ -172,20 +172,20 @@ This defines:
 
 ### **Stages:**
 
-1. Discovery & Brief  
-2. Research & Strategy  
-3. Wireframing  
-4. UI Design  
-5. Internal Review  
-6. Client Review  
-7. Revisions  
-8. Final Approval  
+1. Discovery & Brief
+2. Research & Strategy
+3. Wireframing
+4. UI Design
+5. Internal Review
+6. Client Review
+7. Revisions
+8. Final Approval
 9. Handover
 
 ### **Characteristics:**
 
-* High client interaction  
-* Multiple approvals  
+* High client interaction
+* Multiple approvals
 * File-heavy (Figma, assets)
 
 ---
@@ -194,19 +194,19 @@ This defines:
 
 ### **Stages:**
 
-1. Requirement Finalization  
-2. Technical Planning  
-3. Setup & Architecture  
-4. Development  
-5. Internal QA  
-6. Client Testing (UAT)  
-7. Bug Fixing  
-8. Deployment  
+1. Requirement Finalization
+2. Technical Planning
+3. Setup & Architecture
+4. Development
+5. Internal QA
+6. Client Testing (UAT)
+7. Bug Fixing
+8. Deployment
 9. Support
 
 ### **Characteristics:**
 
-* Internal-heavy workflow  
+* Internal-heavy workflow
 * Milestone-based client interaction
 
 ---
@@ -215,20 +215,20 @@ This defines:
 
 ### **Stages:**
 
-1. Onboarding  
-2. Audit & Research  
-3. Strategy  
-4. Creative Production  
-5. Campaign Setup  
-6. Launch  
-7. Optimization  
-8. Reporting  
+1. Onboarding
+2. Audit & Research
+3. Strategy
+4. Creative Production
+5. Campaign Setup
+6. Launch
+7. Optimization
+8. Reporting
 9. Scaling
 
 ### **Characteristics:**
 
-* Continuous cycle  
-* Recurring tasks  
+* Continuous cycle
+* Recurring tasks
 * Performance-driven
 
 ---
@@ -253,27 +253,27 @@ ServiceTemplate:
 
 ### **Fields:**
 
-* Title  
-* Description  
-* Project  
-* Stage  
-* Assignee  
-* Status  
-* Priority  
-* Due date  
-* XP reward  
-* Client visibility  
-* ClickUp ID  
+* Title
+* Description
+* Project
+* Stage
+* Assignee
+* Status
+* Priority
+* Due date
+* XP reward
+* Client visibility
+* ClickUp ID
 * Files & comments
 
 ### **Statuses:**
 
-* Backlog  
-* To Do  
-* In Progress  
-* Review  
-* Approved  
-* Completed  
+* Backlog
+* To Do
+* In Progress
+* Review
+* Approved
+* Completed
 * Blocked
 
 ---
@@ -284,20 +284,20 @@ ServiceTemplate:
 
 #### **Design:**
 
-* Homepage design  
-* UI system  
+* Homepage design
+* UI system
 * Mobile design
 
 #### **Development:**
 
-* Frontend setup  
-* Backend APIs  
+* Frontend setup
+* Backend APIs
 * DB schema
 
 #### **Marketing:**
 
-* Campaign creation  
-* Ad copy  
+* Campaign creation
+* Ad copy
 * Targeting setup
 
 ---
@@ -320,15 +320,15 @@ client\_visible: true/false
 
 ### **Types:**
 
-* Stage approval  
-* Task approval  
+* Stage approval
+* Task approval
 * File approval
 
 ### **Status:**
 
-* Pending  
-* Approved  
-* Rejected  
+* Pending
+* Approved
+* Rejected
 * Revision Requested
 
 ---
@@ -339,13 +339,13 @@ client\_visible: true/false
 
 Portal → ClickUp:
 
-* Project → Folder/List  
-* Task → Task  
+* Project → Folder/List
+* Task → Task
 * Status updates → Sync
 
 ClickUp → Portal:
 
-* Task updates  
+* Task updates
 * Status updates
 
 ### **Mapping:**
@@ -364,29 +364,29 @@ Based on Office Quest system
 
 ### **Features:**
 
-* XP, Levels  
-* Coins  
-* Badges  
-* Leaderboards  
-* Quests  
-* Rewards  
+* XP, Levels
+* Coins
+* Badges
+* Leaderboards
+* Quests
+* Rewards
 * Penalties
 
 ### **XP Logic:**
 
 #### **Design:**
 
-* Approval → bonus  
+* Approval → bonus
 * Revisions → penalty
 
 #### **Development:**
 
-* Bug-free → bonus  
+* Bug-free → bonus
 * Bugs → penalty
 
 #### **Marketing:**
 
-* Performance → bonus  
+* Performance → bonus
 * Poor results → penalty
 
 ---
@@ -395,9 +395,9 @@ Based on Office Quest system
 
 ### **Features:**
 
-* Teams & departments  
-* Team leads  
-* Workload tracking  
+* Teams & departments
+* Team leads
+* Workload tracking
 * Performance tracking
 
 ---
@@ -408,29 +408,29 @@ Based on Office Quest system
 
 ### **Client Dashboard**
 
-* Active projects  
-* Progress tracker  
-* Current stage  
-* Pending approvals  
-* Deliverables  
+* Active projects
+* Progress tracker
+* Current stage
+* Pending approvals
+* Deliverables
 * Reports (marketing)
 
 ---
 
 ### **Employee Dashboard**
 
-* Assigned tasks  
-* XP progress  
-* Rewards  
+* Assigned tasks
+* XP progress
+* Rewards
 * Team ranking
 
 ---
 
 ### **Admin Dashboard**
 
-* Project status  
-* Team performance  
-* Delays  
+* Project status
+* Team performance
+* Delays
 * XP leaderboard
 
 ---
@@ -439,9 +439,9 @@ Based on Office Quest system
 
 ### **Features:**
 
-* Task comments  
-* Mentions  
-* Notifications  
+* Task comments
+* Mentions
+* Notifications
 * Activity feed
 
 ### **Rules:**
@@ -452,9 +452,9 @@ Based on Office Quest system
 
 ## **6.15 Files & Deliverables**
 
-* Upload files  
-* Attach to tasks/stages  
-* Versioning  
+* Upload files
+* Attach to tasks/stages
+* Versioning
 * Client visibility toggle
 
 ---
@@ -463,25 +463,25 @@ Based on Office Quest system
 
 ### **Types:**
 
-* Task updates  
-* Comments  
-* Approvals  
-* Deadlines  
+* Task updates
+* Comments
+* Approvals
+* Deadlines
 * Rewards
 
 ### **Channels:**
 
-* In-app  
+* In-app
 * Email
 
 ---
 
 ## **6.17 Reports**
 
-* Project progress  
-* Team performance  
-* Task completion  
-* XP reports  
+* Project progress
+* Team performance
+* Task completion
+* XP reports
 * Marketing performance
 
 ---
@@ -490,20 +490,20 @@ Based on Office Quest system
 
 Controlled by:
 
-* Role  
-* Project  
-* Client  
+* Role
+* Project
+* Client
 * Visibility flags
 
 ---
 
 ## **6.19 Settings**
 
-* Branding  
-* Stages  
-* XP rules  
-* Reward rules  
-* Integrations  
+* Branding
+* Stages
+* XP rules
+* Reward rules
+* Integrations
 * Notifications
 
 ---
@@ -512,10 +512,10 @@ Controlled by:
 
 Track:
 
-* User actions  
-* Task updates  
-* Approvals  
-* Role changes  
+* User actions
+* Task updates
+* Approvals
+* Role changes
 * Integration events
 
 ---
@@ -524,19 +524,19 @@ Track:
 
 ### **Core Entities:**
 
-* Users  
-* Roles  
-* Clients  
-* Projects  
-* Service Templates  
-* Stages  
-* Tasks  
-* Teams  
-* Rewards  
-* XP Logs  
-* Notifications  
-* Files  
-* Approvals  
+* Users
+* Roles
+* Clients
+* Projects
+* Service Templates
+* Stages
+* Tasks
+* Teams
+* Rewards
+* XP Logs
+* Notifications
+* Files
+* Approvals
 * Integrations
 
 ---
@@ -545,18 +545,18 @@ Track:
 
 ### **Frontend:**
 
-* React / Next.js  
+* React / Next.js
 * Tailwind
 
 ### **Backend:**
 
-* Node.js / NestJS  
-* PostgreSQL  
+* Node.js / NestJS
+* PostgreSQL
 * Prisma
 
 ### **Auth:**
 
-* Auth.js / JWT  
+* Auth.js / JWT
 * Discord OAuth
 
 ### **Integrations:**
@@ -569,17 +569,17 @@ Track:
 
 ### **Include:**
 
-* Role-based login  
-* Service-based projects  
-* Stages & tasks  
-* Client dashboard  
-* Basic XP system  
+* Role-based login
+* Service-based projects
+* Stages & tasks
+* Client dashboard
+* Basic XP system
 * ClickUp sync
 
 ### **Exclude:**
 
-* Advanced automation  
-* Full chat  
+* Advanced automation
+* Full chat
 * Billing
 
 ---
@@ -588,14 +588,14 @@ Track:
 
 This system must be built around:
 
-* **Service-driven workflows**  
-* **Clean permissions**  
+* **Service-driven workflows**
+* **Clean permissions**
 * **Controlled visibility**
 
 If done right:
 
-* Scalable operations  
-* Clear client experience  
+* Scalable operations
+* Clear client experience
 * Strong internal productivity
 
 ---
@@ -608,6 +608,6 @@ You should NOT jump to UI.
 
 Next priority is:
 
-* Database schema  
-* Permission matrix  
+* Database schema
+* Permission matrix
 * ClickUp sync logic
