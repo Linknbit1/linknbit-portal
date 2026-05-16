@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { ExternalLink, Send, ChevronDown, ChevronRight, Plus, Upload } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { ExternalLink, Send, ChevronDown, ChevronRight, Plus, Upload, ArrowUpRight } from 'lucide-react'
 import { Drawer } from '../../components/ui/Drawer'
 import { Button } from '../../components/ui/Button'
 import { Avatar } from '../../components/ui/Avatar'
@@ -21,6 +22,7 @@ interface TaskDetailDrawerProps {
 }
 
 export function TaskDetailDrawer({ task, open, onClose }: TaskDetailDrawerProps) {
+  const navigate = useNavigate()
   const [commentTab, setCommentTab] = useState('internal')
   const [commentText, setCommentText] = useState('')
   const [clientComment, setClientComment] = useState(false)
@@ -52,10 +54,18 @@ export function TaskDetailDrawer({ task, open, onClose }: TaskDetailDrawerProps)
             <span className="text-caption text-text-3">{task.stageName}</span>
             <ServiceChip service={task.serviceType} />
           </div>
-          <div className="flex items-center gap-2 mt-1">
+          <div className="flex items-center gap-3 mt-1">
             <button className="flex items-center gap-1 text-caption text-text-3 hover:text-text-1 transition-colors">
               <ExternalLink size={11} />
               Open in ClickUp
+            </button>
+            <span className="text-text-4 text-[10px]">·</span>
+            <button
+              onClick={() => { onClose(); navigate(`/admin/tasks/${task.id}`) }}
+              className="flex items-center gap-1 text-caption text-brand-red/80 hover:text-brand-red font-semibold transition-colors"
+            >
+              <ArrowUpRight size={11} />
+              View full task page
             </button>
           </div>
         </div>
