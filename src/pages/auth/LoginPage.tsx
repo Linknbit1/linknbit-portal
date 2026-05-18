@@ -1,19 +1,23 @@
-import { useState, useEffect, type ReactNode } from 'react'
+import { useState, useEffect, useRef, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   AlertCircle,
   ArrowRight,
   Check,
   ChevronLeft,
+  Eye,
+  EyeOff,
   Info,
   LayoutGrid,
   Lock,
   Mail,
   RotateCcw,
+  ShieldCheck,
 } from 'lucide-react'
 import { cn } from '../../lib/cn'
+import { useSignIn, useSendOtp, useVerifyOtp, useUpdatePassword } from '../../hooks/useAuth'
 
-type AuthView = 'login' | 'forgot' | 'forgot-sent' | 'splash'
+type AuthView = 'login' | 'forgot' | 'otp' | 'new-password' | 'splash'
 type BootStep = 'done' | 'now' | 'pending'
 
 interface SplashUser {
@@ -26,6 +30,7 @@ interface SplashUser {
 
 interface DemoAccount extends SplashUser {
   email: string
+  password: string
   label: string
   labelClass: string
 }
@@ -33,6 +38,7 @@ interface DemoAccount extends SplashUser {
 const DEMO_ACCOUNTS: DemoAccount[] = [
   {
     email: 'ghayas@linknbit.com',
+    password: 'demo-admin',
     label: 'Admin',
     labelClass: 'text-brand-red',
     initials: 'GK',
@@ -43,6 +49,7 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
   },
   {
     email: 'usman@linknbit.com',
+    password: 'demo-employee',
     label: 'Employee',
     labelClass: 'text-service-dev',
     initials: 'UT',
@@ -53,6 +60,7 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
   },
   {
     email: 'imran@cricketsansar.com',
+    password: 'demo-client',
     label: 'Client',
     labelClass: 'text-service-mkt',
     initials: 'IK',
@@ -75,6 +83,23 @@ function maskEmail(email: string) {
   return `${local[0]}${'*'.repeat(Math.max(local.length - 1, 4))}@${domain}`
 }
 
+function getPktTime() {
+  const now = new Date()
+  const pktOffset = 5 * 60
+  const utc = now.getTime() + now.getTimezoneOffset() * 60000
+  const pkt = new Date(utc + pktOffset * 60000)
+  const h = String(pkt.getHours()).padStart(2, '0')
+  const m = String(pkt.getMinutes()).padStart(2, '0')
+  return `${h}:${m}`
+}
+
+function getCurrentMonthYear() {
+  const now = new Date()
+  const month = now.toLocaleString('en-US', { month: 'short' }).toUpperCase()
+  const year = now.getFullYear()
+  return `${month} ${year}`
+}
+
 function LogoMark({ compact = false }: { compact?: boolean }) {
   return (
     <span
@@ -89,6 +114,13 @@ function LogoMark({ compact = false }: { compact?: boolean }) {
 }
 
 function BrandPanel() {
+  const [time, setTime] = useState(getPktTime)
+
+  useEffect(() => {
+    const id = setInterval(() => setTime(getPktTime()), 30000)
+    return () => clearInterval(id)
+  }, [])
+
   return (
     <div className="relative flex min-h-screen flex-col overflow-hidden bg-[linear-gradient(180deg,#0D131D_0%,#0A0F17_100%)] px-16 py-14">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,rgba(122,133,151,0.10)_1px,transparent_1px)] bg-[length:32px_32px] bg-[-1px_-1px] opacity-60 [mask-image:radial-gradient(ellipse_80%_65%_at_50%_50%,#000_40%,transparent_100%)]" />
@@ -100,7 +132,7 @@ function BrandPanel() {
           <span className="font-display text-[18px] font-bold text-text-1">Linknbit</span>
         </div>
         <span className="font-mono text-[10.5px] uppercase tracking-[0.12em] text-text-4">
-          Portal <b className="font-medium text-text-2">v2.0</b> - MAY 2026
+          Portal <b className="font-medium text-text-2">v2.0</b> - {getCurrentMonthYear()}
         </span>
       </div>
 
@@ -157,7 +189,7 @@ function BrandPanel() {
           ))}
         </div>
         <span>
-          © 2026 Linknbit - Karachi <b className="font-medium text-text-2">-</b> PKT 14:32
+          © {new Date().getFullYear()} Linknbit - Islamabad <b className="font-medium text-text-2">-</b> PKT {time}
         </span>
       </div>
     </div>
@@ -203,7 +235,7 @@ function AuthInput({
           type={type}
           value={value}
           placeholder={placeholder}
-          onChange={(event) => onChange(event.target.value)}
+          onChange={(e) => onChange(e.target.value)}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           className="h-full min-w-0 flex-1 border-0 bg-transparent font-ui text-body text-text-1 outline-none placeholder:text-text-4"
@@ -223,7 +255,7 @@ function AuthBtn({
 }: {
   children: ReactNode
   onClick?: () => void
-  variant?: 'primary' | 'discord' | 'ghost'
+  variant?: 'primary' | 'ghost'
   disabled?: boolean
   type?: 'button' | 'submit'
 }) {
@@ -235,7 +267,6 @@ function AuthBtn({
       className={cn(
         'inline-flex h-[46px] w-full items-center justify-center gap-2.5 rounded-sm border font-ui text-body font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50',
         variant === 'primary' && 'border-transparent bg-brand-red shadow-[0_4px_14px_rgba(238,39,55,0.22)] hover:bg-brand-red-hover',
-        variant === 'discord' && 'border-transparent bg-[#5865F2] shadow-[0_4px_14px_rgba(88,101,242,0.22)] hover:bg-[#6672f4]',
         variant === 'ghost' && 'border-border-default bg-surface-1 hover:bg-surface-2',
       )}
     >
@@ -244,23 +275,103 @@ function AuthBtn({
   )
 }
 
-function LoginForm({ onSuccess, onForgot }: { onSuccess: (user: SplashUser) => void; onForgot: () => void }) {
+function OtpBoxes({
+  value,
+  onChange,
+  invalid = false,
+}: {
+  value: string[]
+  onChange: (v: string[]) => void
+  invalid?: boolean
+}) {
+  const refs = Array.from({ length: 6 }, () => useRef<HTMLInputElement>(null))
+
+  function handleChange(index: number, raw: string) {
+    const digit = raw.replace(/\D/g, '').slice(-1)
+    const next = [...value]
+    next[index] = digit
+    onChange(next)
+    if (digit && index < 5) refs[index + 1].current?.focus()
+  }
+
+  function handleKeyDown(index: number, e: React.KeyboardEvent) {
+    if (e.key === 'Backspace' && !value[index] && index > 0) {
+      refs[index - 1].current?.focus()
+    }
+  }
+
+  function handlePaste(e: React.ClipboardEvent) {
+    e.preventDefault()
+    const digits = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6)
+    if (!digits) return
+    const next = Array(6).fill('')
+    digits.split('').forEach((d, i) => { next[i] = d })
+    onChange(next)
+    const focusIdx = Math.min(digits.length, 5)
+    refs[focusIdx].current?.focus()
+  }
+
+  return (
+    <div className="flex justify-center gap-3">
+      {refs.map((ref, i) => (
+        <input
+          key={i}
+          ref={ref}
+          type="text"
+          inputMode="numeric"
+          maxLength={1}
+          value={value[i] ?? ''}
+          onChange={(e) => handleChange(i, e.target.value)}
+          onKeyDown={(e) => handleKeyDown(i, e)}
+          onPaste={i === 0 ? handlePaste : undefined}
+          className={cn(
+            'size-12 rounded-sm border bg-surface-inset text-center font-mono text-[22px] font-bold text-text-1 outline-none transition-[border-color,box-shadow] caret-transparent selection:bg-transparent',
+            invalid
+              ? 'border-error'
+              : 'border-border-default focus:border-brand-red focus:shadow-ring-focus',
+          )}
+        />
+      ))}
+    </div>
+  )
+}
+
+function LoginForm({
+  onSuccess,
+  onForgot,
+}: {
+  onSuccess: (user: SplashUser) => void
+  onForgot: () => void
+}) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPass, setShowPass] = useState(false)
-  const [error, setError] = useState(false)
   const [attempts, setAttempts] = useState(0)
+  const signIn = useSignIn()
 
-  function handleSubmit(event: React.FormEvent) {
-    event.preventDefault()
-    const matched = DEMO_ACCOUNTS.find((account) => account.email === email.trim())
-    if (matched && password) {
-      onSuccess(matched)
-    } else {
-      setError(true)
-      setAttempts((count) => count + 1)
-    }
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    signIn.mutate(
+      { email: email.trim(), password },
+      {
+        onSuccess: () => {
+          const demo = DEMO_ACCOUNTS.find((a) => a.email === email.trim())
+          onSuccess(
+            demo ?? {
+              initials: email.slice(0, 2).toUpperCase(),
+              name: email.split('@')[0],
+              role: 'Team Member',
+              pod: 'Linknbit',
+              path: '/admin/dashboard',
+            },
+          )
+        },
+        onError: () => setAttempts((n) => n + 1),
+      },
+    )
   }
+
+  const hasError = signIn.isError
 
   return (
     <form onSubmit={handleSubmit}>
@@ -271,14 +382,14 @@ function LoginForm({ onSuccess, onForgot }: { onSuccess: (user: SplashUser) => v
         Sign in to your workspace to continue.
       </p>
 
-      {error && (
+      {hasError && (
         <div className="mb-[18px] flex items-start gap-2.5 rounded-sm border border-error-border bg-error-soft px-3.5 py-3">
           <AlertCircle size={16} className="mt-px shrink-0 text-error" />
           <div className="font-ui text-[12.5px] leading-[1.5] text-text-1">
             <strong className="font-semibold text-error">That email and password don't match.</strong>{' '}
             Double-check your credentials or reset your password.
             <span className="mt-1 block font-mono text-[10.5px] tracking-[0.04em] text-text-3">
-              Attempt {attempts} of 5 - next try free
+              Attempt {attempts} of 5 — next try free
             </span>
           </div>
         </div>
@@ -289,7 +400,7 @@ function LoginForm({ onSuccess, onForgot }: { onSuccess: (user: SplashUser) => v
         type="email"
         value={email}
         onChange={setEmail}
-        invalid={error}
+        invalid={hasError}
         icon={<Mail size={16} strokeWidth={1.75} />}
       />
       <AuthInput
@@ -297,42 +408,33 @@ function LoginForm({ onSuccess, onForgot }: { onSuccess: (user: SplashUser) => v
         type={showPass ? 'text' : 'password'}
         value={password}
         onChange={setPassword}
-        invalid={error}
+        invalid={hasError}
         icon={<Lock size={16} strokeWidth={1.75} />}
         labelRight={
-          <button type="button" onClick={onForgot} className="bg-transparent p-0 font-ui text-[11.5px] font-medium text-brand-red">
+          <button
+            type="button"
+            onClick={onForgot}
+            className="bg-transparent p-0 font-ui text-[11.5px] font-medium text-brand-red"
+          >
             Forgot password?
           </button>
         }
         rightSlot={
           <button
             type="button"
-            onClick={() => setShowPass((visible) => !visible)}
-            className="shrink-0 rounded-xs bg-transparent px-2 py-1 font-ui text-label font-semibold uppercase tracking-[0.08em] text-text-3 hover:text-text-2"
+            onClick={() => setShowPass((v) => !v)}
+            className="shrink-0 rounded-xs bg-transparent px-2 py-1 text-text-3 hover:text-text-2"
           >
-            {showPass ? 'Hide' : 'Show'}
+            {showPass ? <EyeOff size={15} strokeWidth={1.75} /> : <Eye size={15} strokeWidth={1.75} />}
           </button>
         }
       />
 
       <div className="mt-2">
-        <AuthBtn type="submit" variant="primary">
-          Sign in <ArrowRight size={16} />
+        <AuthBtn type="submit" variant="primary" disabled={signIn.isPending}>
+          {signIn.isPending ? 'Signing in…' : <>Sign in <ArrowRight size={16} /></>}
         </AuthBtn>
       </div>
-
-      <div className="my-5 flex items-center gap-3.5 font-mono text-[10.5px] uppercase tracking-[0.16em] text-text-4">
-        <span className="h-px flex-1 bg-border-subtle" />
-        or continue with
-        <span className="h-px flex-1 bg-border-subtle" />
-      </div>
-
-      <AuthBtn variant="discord">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-          <path d="M20.317 4.369A19.79 19.79 0 0 0 16.558 3.2a.078.078 0 0 0-.083.038c-.18.32-.378.736-.515 1.062a18.27 18.27 0 0 0-5.488 0 12.51 12.51 0 0 0-.523-1.062.08.08 0 0 0-.083-.038c-1.305.225-2.55.62-3.76 1.169a.07.07 0 0 0-.032.027C2.65 8.045 1.997 11.617 2.317 15.145a.082.082 0 0 0 .031.056 19.9 19.9 0 0 0 6.002 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.077.077 0 0 0-.041-.106 13.11 13.11 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.094.252-.192.371-.292a.075.075 0 0 1 .077-.01c3.927 1.793 8.18 1.793 12.06 0a.075.075 0 0 1 .079.009c.12.1.245.199.371.293a.077.077 0 0 1-.006.128 12.3 12.3 0 0 1-1.873.891.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.077.077 0 0 0 .084.028 19.83 19.83 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-4.077-.838-7.62-3.548-10.749a.061.061 0 0 0-.031-.027ZM8.02 13.5c-1.182 0-2.157-1.085-2.157-2.42 0-1.333.957-2.418 2.157-2.418 1.21 0 2.176 1.094 2.157 2.419 0 1.334-.957 2.419-2.157 2.419Zm7.974 0c-1.182 0-2.157-1.085-2.157-2.42 0-1.333.957-2.418 2.157-2.418 1.21 0 2.176 1.094 2.157 2.419 0 1.334-.946 2.419-2.157 2.419Z" />
-        </svg>
-        Continue with Discord
-      </AuthBtn>
 
       <div className="mt-6 flex items-center gap-2.5 rounded-sm border border-border-subtle bg-surface-1 px-3.5 py-3 font-ui text-caption leading-[1.5] text-text-3">
         <Info size={14} className="shrink-0 text-text-3" />
@@ -343,14 +445,17 @@ function LoginForm({ onSuccess, onForgot }: { onSuccess: (user: SplashUser) => v
 
       <div className="mt-6 border-t border-surface-2 pt-[18px]">
         <p className="mb-2.5 font-mono text-[9.5px] uppercase tracking-[0.14em] text-text-4">
-          Prototype - demo accounts
+          Prototype — demo accounts
         </p>
         <div className="grid grid-cols-3 gap-2">
           {DEMO_ACCOUNTS.map((account) => (
             <button
               key={account.email}
               type="button"
-              onClick={() => onSuccess(account)}
+              onClick={() => {
+                setEmail(account.email)
+                setPassword(account.password)
+              }}
               className="rounded-sm border border-border-default bg-bg-canvas px-2.5 py-2 text-left hover:border-border-strong"
             >
               <p className={cn('mb-0.5 font-display text-label font-bold', account.labelClass)}>
@@ -365,26 +470,52 @@ function LoginForm({ onSuccess, onForgot }: { onSuccess: (user: SplashUser) => v
   )
 }
 
-function ForgotForm({ onBack, onSent }: { onBack: () => void; onSent: (email: string) => void }) {
+function ForgotForm({
+  onBack,
+  onSent,
+}: {
+  onBack: () => void
+  onSent: (email: string) => void
+}) {
   const [email, setEmail] = useState('')
+  const sendOtp = useSendOtp()
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    sendOtp.mutate(email.trim(), {
+      onSuccess: () => onSent(email.trim()),
+    })
+  }
+
   return (
-    <div>
+    <form onSubmit={handleSubmit}>
       <h1 className="mb-2 font-display text-[32px] font-bold leading-[1.15] tracking-[-0.018em] text-text-1">
         Reset your password.
       </h1>
       <p className="mb-7 font-ui text-body leading-[1.55] text-text-3">
-        Enter your work email and we'll send you a secure link to reset it.
+        Enter your work email and we'll send you a 6-digit code to reset it.
       </p>
+
+      {sendOtp.isError && (
+        <div className="mb-[18px] flex items-start gap-2.5 rounded-sm border border-error-border bg-error-soft px-3.5 py-3">
+          <AlertCircle size={16} className="mt-px shrink-0 text-error" />
+          <p className="font-ui text-[12.5px] leading-[1.5] text-text-1">
+            {(sendOtp.error as Error).message ?? 'Could not send code. Try again.'}
+          </p>
+        </div>
+      )}
+
       <AuthInput
         label="Work email"
         type="email"
         value={email}
         onChange={setEmail}
+        invalid={sendOtp.isError}
         icon={<Mail size={16} strokeWidth={1.75} />}
       />
       <div className="mt-2">
-        <AuthBtn onClick={() => onSent(email || 'user@linknbit.com')} variant="primary">
-          Send reset link <ArrowRight size={16} />
+        <AuthBtn type="submit" variant="primary" disabled={sendOtp.isPending || !email}>
+          {sendOtp.isPending ? 'Sending…' : <>Send OTP code <ArrowRight size={16} /></>}
         </AuthBtn>
       </div>
       <button
@@ -397,57 +528,212 @@ function ForgotForm({ onBack, onSent }: { onBack: () => void; onSent: (email: st
       <div className="mt-7 flex items-center gap-2.5 rounded-sm border border-border-subtle bg-surface-1 px-3.5 py-3 font-ui text-caption leading-[1.5] text-text-3">
         <Info size={14} className="shrink-0 text-text-3" />
         <span>
-          Reset links expire after <strong className="font-semibold text-text-2">15 minutes</strong> for security.
+          Codes expire after <strong className="font-semibold text-text-2">10 minutes</strong> for security.
         </span>
       </div>
-    </div>
+    </form>
   )
 }
 
-function ForgotSent({ email, onBack }: { email: string; onBack: () => void }) {
-  const [seconds, setSeconds] = useState(54)
+function OtpView({
+  email,
+  onVerified,
+  onChangeEmail,
+}: {
+  email: string
+  onVerified: () => void
+  onChangeEmail: () => void
+}) {
+  const [digits, setDigits] = useState<string[]>(Array(6).fill(''))
+  const [seconds, setSeconds] = useState(60)
+  const sendOtp = useSendOtp()
+  const verifyOtp = useVerifyOtp()
+
   useEffect(() => {
     if (seconds <= 0) return
-    const timer = setTimeout(() => setSeconds((value) => value - 1), 1000)
-    return () => clearTimeout(timer)
+    const t = setTimeout(() => setSeconds((s) => s - 1), 1000)
+    return () => clearTimeout(t)
   }, [seconds])
 
+  const token = digits.join('')
+  const isFilled = token.length === 6
+
+  function handleVerify(e: React.FormEvent) {
+    e.preventDefault()
+    verifyOtp.mutate(
+      { email, token },
+      { onSuccess: onVerified },
+    )
+  }
+
+  function handleResend() {
+    sendOtp.mutate(email, {
+      onSuccess: () => {
+        setDigits(Array(6).fill(''))
+        setSeconds(60)
+        verifyOtp.reset()
+      },
+    })
+  }
+
+  const hasError = verifyOtp.isError
+
   return (
-    <div className="pt-[18px] text-center">
-      <div className="mb-6 inline-flex size-16 items-center justify-center rounded-lg border border-border-default bg-[linear-gradient(160deg,#1A2433_0%,#131C28_100%)] text-brand-red shadow-[0_0_0_6px_rgba(238,39,55,0.06)]">
-        <Mail size={28} strokeWidth={1.75} />
+    <form onSubmit={handleVerify}>
+      <div className="mb-6 flex size-14 items-center justify-center rounded-lg border border-border-default bg-[linear-gradient(160deg,#1A2433_0%,#131C28_100%)] text-brand-red shadow-[0_0_0_6px_rgba(238,39,55,0.06)]">
+        <ShieldCheck size={26} strokeWidth={1.75} />
       </div>
+
       <h1 className="mb-2 font-display text-[32px] font-bold leading-[1.15] tracking-[-0.018em] text-text-1">
-        Check your inbox.
+        Enter your code.
       </h1>
-      <p className="m-0 font-ui text-body leading-[1.55] text-text-3">
-        If an account exists with this email, you'll receive a reset link within a minute.
+      <p className="mb-1 font-ui text-body leading-[1.55] text-text-3">
+        We sent a 6-digit code to
       </p>
-      <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-border-default bg-surface-1 px-3 py-1.5 font-mono text-mono text-text-1">
+      <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border-default bg-surface-1 px-3 py-1.5 font-mono text-mono text-text-1">
         <span className="size-[5px] shrink-0 rounded-full bg-success" />
         {maskEmail(email)}
       </div>
-      <div className="mt-8 flex flex-col gap-2.5">
-        <AuthBtn variant="ghost" disabled={seconds > 0}>
+
+      {hasError && (
+        <div className="mb-4 flex items-start gap-2.5 rounded-sm border border-error-border bg-error-soft px-3.5 py-3">
+          <AlertCircle size={16} className="mt-px shrink-0 text-error" />
+          <p className="font-ui text-[12.5px] leading-[1.5] text-text-1">
+            Invalid or expired code. Check your email and try again.
+          </p>
+        </div>
+      )}
+
+      <div className="mb-6">
+        <OtpBoxes value={digits} onChange={setDigits} invalid={hasError} />
+      </div>
+
+      <div className="flex flex-col gap-2.5">
+        <AuthBtn type="submit" variant="primary" disabled={!isFilled || verifyOtp.isPending}>
+          {verifyOtp.isPending ? 'Verifying…' : <>Verify code <ArrowRight size={16} /></>}
+        </AuthBtn>
+        <AuthBtn
+          variant="ghost"
+          disabled={seconds > 0 || sendOtp.isPending}
+          onClick={handleResend}
+        >
           <RotateCcw size={14} />
-          Resend link
-          {seconds > 0 && <span className="ml-1.5 font-normal text-text-3">- in 0:{String(seconds).padStart(2, '0')}</span>}
+          {seconds > 0
+            ? <>Resend code <span className="ml-1 font-normal text-text-3">in 0:{String(seconds).padStart(2, '0')}</span></>
+            : sendOtp.isPending ? 'Sending…' : 'Resend code'}
         </AuthBtn>
         <button
           type="button"
-          onClick={onBack}
-          className="mt-1 inline-flex items-center justify-center gap-[7px] rounded-sm bg-transparent px-2.5 py-1.5 font-ui text-body-sm text-text-2 hover:text-text-1"
+          onClick={onChangeEmail}
+          className="mt-1 inline-flex items-center justify-center gap-[7px] bg-transparent px-2.5 py-1.5 font-ui text-body-sm text-text-2 hover:text-text-1"
         >
-          <ChevronLeft size={14} /> Back to sign in
+          <ChevronLeft size={14} /> Change email
         </button>
       </div>
-      <div className="mt-7 flex items-center gap-2.5 rounded-sm border border-border-subtle bg-surface-1 px-3.5 py-3 text-left font-ui text-caption leading-[1.5] text-text-3">
+
+      <div className="mt-6 flex items-center gap-2.5 rounded-sm border border-border-subtle bg-surface-1 px-3.5 py-3 font-ui text-caption leading-[1.5] text-text-3">
         <Info size={14} className="shrink-0 text-text-3" />
         <span>
-          Didn't get it? Check spam, or contact <strong className="font-semibold text-text-2">help@linknbit.com</strong>.
+          Didn't get it? Check spam, or contact{' '}
+          <strong className="font-semibold text-text-2">help@linknbit.com</strong>.
         </span>
       </div>
-    </div>
+    </form>
+  )
+}
+
+function NewPasswordView({ onDone }: { onDone: () => void }) {
+  const [password, setPassword] = useState('')
+  const [confirm, setConfirm] = useState('')
+  const [showPass, setShowPass] = useState(false)
+  const updatePassword = useUpdatePassword()
+
+  const isStrong = password.length >= 8 && /[A-Z]/.test(password) && /[0-9]/.test(password)
+  const mismatch = confirm.length > 0 && confirm !== password
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!isStrong || mismatch) return
+    updatePassword.mutate(password, { onSuccess: onDone })
+  }
+
+  const strengthLabel = password.length === 0 ? null : isStrong ? 'Strong' : password.length >= 8 ? 'Fair' : 'Weak'
+  const strengthColor = strengthLabel === 'Strong' ? 'text-success' : strengthLabel === 'Fair' ? 'text-service-mkt' : 'text-error'
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <div className="mb-6 flex size-14 items-center justify-center rounded-lg border border-border-default bg-[linear-gradient(160deg,#1A2433_0%,#131C28_100%)] text-success shadow-[0_0_0_6px_rgba(34,197,94,0.06)]">
+        <ShieldCheck size={26} strokeWidth={1.75} />
+      </div>
+
+      <h1 className="mb-2 font-display text-[32px] font-bold leading-[1.15] tracking-[-0.018em] text-text-1">
+        Set new password.
+      </h1>
+      <p className="mb-7 font-ui text-body leading-[1.55] text-text-3">
+        Choose a strong password for your account.
+      </p>
+
+      {updatePassword.isError && (
+        <div className="mb-4 flex items-start gap-2.5 rounded-sm border border-error-border bg-error-soft px-3.5 py-3">
+          <AlertCircle size={16} className="mt-px shrink-0 text-error" />
+          <p className="font-ui text-[12.5px] leading-[1.5] text-text-1">
+            {(updatePassword.error as Error).message ?? 'Could not update password. Try again.'}
+          </p>
+        </div>
+      )}
+
+      <AuthInput
+        label="New password"
+        type={showPass ? 'text' : 'password'}
+        value={password}
+        onChange={setPassword}
+        icon={<Lock size={16} strokeWidth={1.75} />}
+        labelRight={
+          strengthLabel ? (
+            <span className={cn('font-ui text-[11.5px] font-medium', strengthColor)}>
+              {strengthLabel}
+            </span>
+          ) : undefined
+        }
+        rightSlot={
+          <button
+            type="button"
+            onClick={() => setShowPass((v) => !v)}
+            className="shrink-0 rounded-xs bg-transparent px-2 py-1 text-text-3 hover:text-text-2"
+          >
+            {showPass ? <EyeOff size={15} strokeWidth={1.75} /> : <Eye size={15} strokeWidth={1.75} />}
+          </button>
+        }
+      />
+      <AuthInput
+        label="Confirm password"
+        type="password"
+        value={confirm}
+        onChange={setConfirm}
+        invalid={mismatch}
+        icon={<Lock size={16} strokeWidth={1.75} />}
+      />
+      {mismatch && (
+        <p className="-mt-2 mb-4 font-ui text-[12px] text-error">Passwords don't match.</p>
+      )}
+
+      <div className="mt-2">
+        <AuthBtn
+          type="submit"
+          variant="primary"
+          disabled={!isStrong || mismatch || password !== confirm || updatePassword.isPending}
+        >
+          {updatePassword.isPending ? 'Saving…' : <>Set new password <ArrowRight size={16} /></>}
+        </AuthBtn>
+      </div>
+
+      <div className="mt-6 flex items-center gap-2.5 rounded-sm border border-border-subtle bg-surface-1 px-3.5 py-3 font-ui text-caption leading-[1.5] text-text-3">
+        <Info size={14} className="shrink-0 text-text-3" />
+        <span>
+          Use at least <strong className="font-semibold text-text-2">8 characters</strong> with a capital letter and a number.
+        </span>
+      </div>
+    </form>
   )
 }
 
@@ -481,17 +767,10 @@ function SplashScreen({ user, onDone }: { user: SplashUser; onDone: () => void }
   const [step4, setStep4] = useState<BootStep>('pending')
 
   useEffect(() => {
-    const t1 = setTimeout(() => {
-      setStep3('done')
-      setStep4('now')
-    }, 900)
+    const t1 = setTimeout(() => { setStep3('done'); setStep4('now') }, 900)
     const t2 = setTimeout(() => setStep4('done'), 1700)
     const t3 = setTimeout(onDone, 2300)
-    return () => {
-      clearTimeout(t1)
-      clearTimeout(t2)
-      clearTimeout(t3)
-    }
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
   }, [onDone])
 
   return (
@@ -576,7 +855,9 @@ export default function LoginPage() {
 
   return (
     <>
-      {view === 'splash' && splashUser && <SplashScreen user={splashUser} onDone={() => navigate(splashUser.path)} />}
+      {view === 'splash' && splashUser && (
+        <SplashScreen user={splashUser} onDone={() => navigate(splashUser.path)} />
+      )}
 
       <div className="flex min-h-screen bg-bg-base">
         <div className="hidden shrink-0 lg:block lg:w-1/2">
@@ -612,23 +893,31 @@ export default function LoginPage() {
 
           <div className="flex flex-1 items-center justify-center px-6 py-8 sm:px-10 lg:px-20">
             <div className="w-full max-w-[400px]">
-              {view === 'login' && <LoginForm onSuccess={triggerSplash} onForgot={() => setView('forgot')} />}
+              {view === 'login' && (
+                <LoginForm onSuccess={triggerSplash} onForgot={() => setView('forgot')} />
+              )}
               {view === 'forgot' && (
                 <ForgotForm
                   onBack={() => setView('login')}
-                  onSent={(email) => {
-                    setForgotEmail(email)
-                    setView('forgot-sent')
-                  }}
+                  onSent={(email) => { setForgotEmail(email); setView('otp') }}
                 />
               )}
-              {view === 'forgot-sent' && <ForgotSent email={forgotEmail} onBack={() => setView('login')} />}
+              {view === 'otp' && (
+                <OtpView
+                  email={forgotEmail}
+                  onVerified={() => setView('new-password')}
+                  onChangeEmail={() => setView('forgot')}
+                />
+              )}
+              {view === 'new-password' && (
+                <NewPasswordView onDone={() => setView('login')} />
+              )}
             </div>
           </div>
 
           <div className="flex shrink-0 items-center justify-between px-6 pb-8 font-mono text-[10.5px] uppercase tracking-[0.1em] text-text-4 sm:px-10 sm:pb-10 lg:px-20 lg:pb-14">
             <span>Linknbit - Operations Portal</span>
-            <span className="hidden sm:block">EN - KARACHI - PKT</span>
+            <span className="hidden sm:block">EN - ISLAMABAD - PKT</span>
           </div>
         </div>
       </div>

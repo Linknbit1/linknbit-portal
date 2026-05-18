@@ -1,5 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ToastProvider } from './components/ui/Toast'
+import { AuthProvider } from './context/AuthContext'
+import { PrivateRoute } from './components/layout/PrivateRoute'
 import { AppShell } from './components/layout/AppShell'
 import { ClientShell } from './components/layout/ClientShell'
 
@@ -28,54 +31,64 @@ import ClientAccountPage from './pages/client/AccountPage'
 import ClientSettingsPage from './pages/client/SettingsPage'
 import ClientHelpPage from './pages/client/HelpPage'
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { staleTime: 1000 * 60 * 5, retry: 1 },
+  },
+})
+
 export default function App() {
   return (
-    <ToastProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="/login" element={<LoginPage />} />
+    <QueryClientProvider client={queryClient}>
+      <ToastProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <Routes>
+              <Route path="/" element={<Navigate to="/login" replace />} />
+              <Route path="/login" element={<LoginPage />} />
 
-          {/* Internal portal (dark mode) */}
-          <Route element={<AppShell />}>
-            <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
-            <Route path="/admin/projects" element={<AdminProjectsPage />} />
-            <Route path="/admin/projects/:id" element={<AdminProjectDetailPage />} />
-            <Route path="/admin/tasks/:id" element={<AdminTaskDetailPage />} />
-            <Route path="/admin/tasks" element={<TasksPage />} />
-            <Route path="/admin/clients" element={<ClientsPage />} />
-            <Route path="/admin/teams" element={<TeamsPage />} />
-            <Route path="/admin/attendance" element={<AttendancePage />} />
-            <Route path="/admin/reports" element={<ReportsPage />} />
-            <Route path="/admin/gamification" element={<GamificationPage />} />
-            <Route path="/admin/clickup" element={<ClickUpPage />} />
-            <Route path="/admin/settings" element={<SettingsPage />} />
+              {/* Internal portal (dark mode) */}
+              <Route element={<PrivateRoute><AppShell /></PrivateRoute>}>
+                <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+                <Route path="/admin/projects" element={<AdminProjectsPage />} />
+                <Route path="/admin/projects/:id" element={<AdminProjectDetailPage />} />
+                <Route path="/admin/tasks/:id" element={<AdminTaskDetailPage />} />
+                <Route path="/admin/tasks" element={<TasksPage />} />
+                <Route path="/admin/clients" element={<ClientsPage />} />
+                <Route path="/admin/teams" element={<TeamsPage />} />
+                <Route path="/admin/attendance" element={<AttendancePage />} />
+                <Route path="/admin/reports" element={<ReportsPage />} />
+                <Route path="/admin/gamification" element={<GamificationPage />} />
+                <Route path="/admin/clickup" element={<ClickUpPage />} />
+                <Route path="/admin/settings" element={<SettingsPage />} />
 
-            {/* Employee portal */}
-            <Route path="/employee/dashboard" element={<EmployeeDashboardPage />} />
-            <Route path="/employee/tasks" element={<TasksPage />} />
-            <Route path="/employee/projects" element={<AdminProjectsPage />} />
-            <Route path="/employee/leaderboard" element={<GamificationPage />} />
-            <Route path="/employee/rewards" element={<GamificationPage />} />
-          </Route>
+                {/* Employee portal */}
+                <Route path="/employee/dashboard" element={<EmployeeDashboardPage />} />
+                <Route path="/employee/tasks" element={<TasksPage />} />
+                <Route path="/employee/projects" element={<AdminProjectsPage />} />
+                <Route path="/employee/leaderboard" element={<GamificationPage />} />
+                <Route path="/employee/rewards" element={<GamificationPage />} />
+              </Route>
 
-          {/* Client portal (light mode) */}
-          <Route element={<ClientShell />}>
-            <Route path="/client" element={<Navigate to="/client/dashboard" replace />} />
-            <Route path="/client/dashboard" element={<ClientDashboardPage />} />
-            <Route path="/client/projects" element={<ClientProjectsPage />} />
-            <Route path="/client/projects/:id" element={<ClientProjectDetailPage />} />
-            <Route path="/client/approvals" element={<ClientApprovalsPage />} />
-            <Route path="/client/files" element={<ClientFilesPage />} />
-            <Route path="/client/reports" element={<ClientReportsPage />} />
-            <Route path="/client/account" element={<ClientAccountPage />} />
-            <Route path="/client/settings" element={<ClientSettingsPage />} />
-            <Route path="/client/help" element={<ClientHelpPage />} />
-          </Route>
+              {/* Client portal (light mode) */}
+              <Route element={<PrivateRoute><ClientShell /></PrivateRoute>}>
+                <Route path="/client" element={<Navigate to="/client/dashboard" replace />} />
+                <Route path="/client/dashboard" element={<ClientDashboardPage />} />
+                <Route path="/client/projects" element={<ClientProjectsPage />} />
+                <Route path="/client/projects/:id" element={<ClientProjectDetailPage />} />
+                <Route path="/client/approvals" element={<ClientApprovalsPage />} />
+                <Route path="/client/files" element={<ClientFilesPage />} />
+                <Route path="/client/reports" element={<ClientReportsPage />} />
+                <Route path="/client/account" element={<ClientAccountPage />} />
+                <Route path="/client/settings" element={<ClientSettingsPage />} />
+                <Route path="/client/help" element={<ClientHelpPage />} />
+              </Route>
 
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </BrowserRouter>
-    </ToastProvider>
+              <Route path="*" element={<Navigate to="/login" replace />} />
+            </Routes>
+          </AuthProvider>
+        </BrowserRouter>
+      </ToastProvider>
+    </QueryClientProvider>
   )
 }
