@@ -27,7 +27,13 @@
       "WebFetch(domain:developer.clickup.com)",
       "mcp__claude_ai_Vercel__deploy_to_vercel",
       "Bash(vercel deploy *)",
-      "Bash(npm i *)"
+      "Bash(npm i *)",
+      "PowerShell(supabase *)",
+      "mcp__supabase__list_projects"
     ]
-  }
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "supabase"
+  ]
 }

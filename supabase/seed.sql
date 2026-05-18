@@ -1,0 +1,3 @@
+-- Seed file: runs after all migrations on `supabase db reset`
+-- Add development seed data here (test users, sample data, etc.)
+-- This file is for LOCAL DEVELOPMENT ONLY — never runs against production.
