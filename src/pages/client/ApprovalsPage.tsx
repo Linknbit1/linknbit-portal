@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import type { Variants } from 'framer-motion'
 import {
   CheckCircle2,
   RotateCcw,
@@ -76,12 +77,12 @@ const ALL_APPROVALS = [...APPROVALS, ...EXTRA_APPROVALS]
 
 // ── Animation variants ────────────────────────────────────────────────────
 
-const containerVariants = {
+const containerVariants: Variants = {
   hidden: {},
   show: { transition: { staggerChildren: 0.06 } },
 }
 
-const cardVariants = {
+const cardVariants: Variants = {
   hidden: { opacity: 0, y: 16 },
   show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.22, 1, 0.36, 1] } },
   exit: { opacity: 0, scale: 0.97, transition: { duration: 0.2 } },

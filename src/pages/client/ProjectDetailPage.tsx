@@ -33,14 +33,6 @@ const SERVICE_COLORS: Record<string, { bg: string; text: string; bar: string }> 
   marketing: { bg: 'rgba(251,191,36,0.15)', text: '#B47700', bar: '#FBBF24' },
 }
 
-const CLIENT_STATUS_LABELS: Record<string, string> = {
-  in_progress: 'In Progress',
-  blocked: 'Internal Review',
-  awaiting_client: 'Action Needed',
-  completed: 'Completed',
-  on_hold: 'On Hold',
-}
-
 const PROJECT_DESCRIPTIONS: Record<string, string> = {
   p1: 'A full-featured cricket data and scoring app for the South Asian market. The app includes live match scores, player statistics, tournaments, and fantasy cricket features.',
   p2: 'Complete brand identity package including logo system, typography, color palette, brand guidelines, and all digital asset deliverables.',
@@ -798,7 +790,7 @@ export default function ClientProjectDetailPage() {
               style={{ background: '#EAE3D6' }}
             />
             <div className="space-y-0">
-              {ACTIVITY.map((item, i) => {
+              {ACTIVITY.map((item) => {
                 const dotColor =
                   item.type === 'approved'
                     ? '#1F9D55'

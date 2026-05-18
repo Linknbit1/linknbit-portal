@@ -3,7 +3,7 @@ import { Check, Bell, Zap, Layers, Link2, Palette, Shield, ChevronRight } from '
 import { Topbar } from '../../components/layout/Topbar'
 import { Button } from '../../components/ui/Button'
 import { Toggle } from '../../components/ui/Toggle'
-import { useToast } from '../../components/ui/Toast'
+import { useToast } from '../../components/ui/toast-context'
 import { cn } from '../../lib/cn'
 
 type Tab = 'general' | 'xp' | 'stages' | 'notifications' | 'integrations' | 'permissions'
