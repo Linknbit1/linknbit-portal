@@ -40,7 +40,9 @@
 │  ├── tasks                              ├── file-proxy   │
 │  ├── comments            Storage        ├── discord-audit-post
 │  ├── audit_logs*         └── task-attachments            │
-│  ├── sync_queue              avatars    └── quest-evaluator
+│  ├── sync_queue              avatars    ├── quest-evaluator
+│  ├── attendance                         └── attendance-checkin
+│  ├── enrolled_devices                                    │
 │  └── integrations                                        │
 │                                                           │
 │  * partitioned by month                                   │
@@ -76,18 +78,20 @@ Discord has no login, no OAuth, no role sync. It only receives audit log message
 ```
 super_admin
   └─ admin / ops_manager
-       └─ project_manager
-            └─ team_lead
-                 └─ employee
+       ├─ project_manager
+       │    └─ team_lead
+       │         └─ employee
+       ├─ hr          (people, attendance — no access to client/project/task data)
+       └─ finance     (client & project read-only for billing — no task/gamification access)
 client_owner
   └─ client_member
 ```
 
-`user_role` is kept as a PostgreSQL enum — it is security-critical and values must be explicitly controlled. Adding a new role is intentional and requires a migration, which is the correct behaviour.
+`user_role` and `service_type` are both `text` columns with `CHECK` constraints — same pattern as `task_status` and `audit_action`. No PostgreSQL enums for domain types. Adding a new role or service line requires only updating the CHECK constraint in a migration. No `ALTER TYPE` needed.
 
-`service_type` is also kept as an enum for the same reason.
+All domain types (`user_role`, `service_type`, `task_status`, `audit_action`, `priority_level`, `project_status`) are `text` with `CHECK` constraints.
 
-All other formerly-enum types (`task_status`, `audit_action`, `priority_level`, `project_status`) are converted to `text` with `CHECK` constraints so new values can be added without migrations.
+Internal-only state types (`sync_state`, `sync_operation`, `queue_status`, `redemption_status`) remain as enums — they are implementation details, never user-facing, and their values will not change.
 
 ---
 
@@ -96,21 +100,22 @@ All other formerly-enum types (`task_status`, `audit_action`, `priority_level`, 
 ### Types
 
 ```sql
--- Kept as enums: security-critical, intentionally rigid
-CREATE TYPE user_role AS ENUM (
-  'super_admin', 'admin', 'project_manager',
-  'team_lead', 'employee', 'client_owner', 'client_member'
-);
-CREATE TYPE service_type AS ENUM ('design', 'development', 'marketing');
+-- All domain types are text + CHECK (defined inline on each table).
+-- No PostgreSQL enums for domain types — enums require ALTER TYPE to extend.
+--
+-- Domain types (text + CHECK, inline):
+--   service_type:      'design' | 'development' | 'marketing'
+--   user_role:         'super_admin' | 'admin' | 'project_manager' | 'team_lead'
+--                      | 'employee' | 'hr' | 'finance' | 'client_owner' | 'client_member'
+--   task_status:       'backlog' | 'todo' | 'in_progress' | 'review' | 'approved' | 'completed' | 'blocked'
+--   priority_level:    'critical' | 'high' | 'medium' | 'low'
+--   project_status:    'draft' | 'active' | 'on_hold' | 'completed' | 'cancelled'
+--   audit_action:      'create' | 'update' | 'delete' | 'restore' | 'approve' | 'reject'
 
--- Converted to text + CHECK: will grow over time, migrations would be painful
--- task_status, audit_action, priority_level, project_status are plain text columns
--- with CHECK constraints defined inline on each table.
-
--- Internal-only state enums: stable, never user-facing
-CREATE TYPE sync_state     AS ENUM ('synced', 'pending', 'error');
-CREATE TYPE sync_operation AS ENUM ('create', 'update', 'delete');
-CREATE TYPE queue_status   AS ENUM ('pending', 'processing', 'done', 'failed');
+-- Internal-only state enums: implementation details, never user-facing, values will not change
+CREATE TYPE sync_state        AS ENUM ('synced', 'pending', 'error');
+CREATE TYPE sync_operation    AS ENUM ('create', 'update', 'delete');
+CREATE TYPE queue_status      AS ENUM ('pending', 'processing', 'done', 'failed');
 CREATE TYPE redemption_status AS ENUM ('pending', 'approved', 'fulfilled', 'rejected');
 ```
 
@@ -139,8 +144,13 @@ CREATE TABLE profiles (
   name            text NOT NULL,
   email           text NOT NULL UNIQUE,
   avatar_url      text,
-  role            user_role NOT NULL DEFAULT 'employee',
-  service_type    service_type,
+  role            text NOT NULL DEFAULT 'employee'
+                    CHECK (role IN (
+                      'super_admin','admin','project_manager','team_lead',
+                      'employee','hr','finance',
+                      'client_owner','client_member'
+                    )),
+  service_type    text CHECK (service_type IN ('design', 'development', 'marketing')),
   team_id         uuid,
   clickup_user_id text,
   xp_total        int NOT NULL DEFAULT 0,
@@ -150,6 +160,27 @@ CREATE TABLE profiles (
   created_at      timestamptz NOT NULL DEFAULT now(),
   updated_at      timestamptz NOT NULL DEFAULT now()
 );
+
+-- Trigger: when a profile has a team, enforce that service_type matches the team's service_type.
+-- Keeps the denormalized service_type on profiles consistent with teams.service_type.
+-- Profiles without a team (team_id IS NULL) can have any service_type or NULL.
+CREATE OR REPLACE FUNCTION fn_sync_profile_service_type()
+RETURNS TRIGGER AS $$
+DECLARE v_team_service text;
+BEGIN
+  IF NEW.team_id IS NOT NULL THEN
+    SELECT service_type INTO v_team_service FROM teams WHERE id = NEW.team_id;
+    IF v_team_service IS NOT NULL AND NEW.service_type IS DISTINCT FROM v_team_service THEN
+      NEW.service_type := v_team_service;
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_profile_service_type
+  BEFORE INSERT OR UPDATE OF team_id, service_type ON profiles
+  FOR EACH ROW EXECUTE FUNCTION fn_sync_profile_service_type();
 
 -- Trigger: recompute level whenever xp_total changes
 CREATE OR REPLACE FUNCTION fn_sync_profile_level()
@@ -166,21 +197,103 @@ CREATE TRIGGER trg_profile_level_sync
   BEFORE UPDATE OF xp_total ON profiles
   FOR EACH ROW EXECUTE FUNCTION fn_sync_profile_level();
 
--- Trigger: update xp_total when an xp_transaction is inserted
--- xp_total is a cached counter; xp_transactions is the source of truth
-CREATE OR REPLACE FUNCTION fn_apply_xp_transaction()
-RETURNS TRIGGER AS $$
-BEGIN
-  UPDATE profiles
-  SET xp_total = xp_total + NEW.amount
-  WHERE id = NEW.profile_id;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+-- ─────────────────────────────────────────
+-- ROLE FEATURE FLAGS  (UI/action-level gates per role, admin-configurable)
+-- ─────────────────────────────────────────
+-- Controls which features/actions each role can access in the UI.
+-- This is NOT a security boundary — RLS handles data security.
+-- This gates UI visibility and soft action checks (show/hide buttons, pages).
+-- Fetched once on app load; admins toggle from Settings → Roles.
+CREATE TABLE role_feature_flags (
+  role         text NOT NULL,   -- matches profiles.role check constraint
+  feature_key  text NOT NULL,   -- e.g. 'can_approve_tasks', 'can_view_reports'
+  enabled      boolean NOT NULL DEFAULT false,
+  updated_by   uuid REFERENCES profiles(id),
+  updated_at   timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (role, feature_key)
+);
 
-CREATE TRIGGER trg_apply_xp
-  AFTER INSERT ON xp_transactions
-  FOR EACH ROW EXECUTE FUNCTION fn_apply_xp_transaction();
+-- Seed defaults — adjust to match intended permissions per role
+-- Roles: super_admin, admin, project_manager, team_lead, employee, hr, finance
+-- HR:      people, attendance, profiles — blocked from client/project/task data
+-- Finance: client & project read for billing context — blocked from tasks/gamification
+INSERT INTO role_feature_flags (role, feature_key, enabled) VALUES
+  -- ── Reports page ──────────────────────────────────────────────────────────
+  ('super_admin',     'can_view_reports',          true),
+  ('admin',           'can_view_reports',          true),
+  ('project_manager', 'can_view_reports',          true),
+  ('team_lead',       'can_view_reports',          false),
+  ('employee',        'can_view_reports',          false),
+  ('hr',              'can_view_reports',          true),   -- HR sees attendance/people reports
+  ('finance',         'can_view_reports',          true),   -- Finance sees billing/project reports
+
+  -- ── Task approval ─────────────────────────────────────────────────────────
+  ('super_admin',     'can_approve_tasks',         true),
+  ('admin',           'can_approve_tasks',         true),
+  ('project_manager', 'can_approve_tasks',         true),
+  ('team_lead',       'can_approve_tasks',         false),
+  ('employee',        'can_approve_tasks',         false),
+  ('hr',              'can_approve_tasks',         false),
+  ('finance',         'can_approve_tasks',         false),
+
+  -- ── Project deletion (soft-delete) ────────────────────────────────────────
+  ('super_admin',     'can_delete_projects',       true),
+  ('admin',           'can_delete_projects',       true),
+  ('project_manager', 'can_delete_projects',       false),
+  ('hr',              'can_delete_projects',       false),
+  ('finance',         'can_delete_projects',       false),
+
+  -- ── Client management ─────────────────────────────────────────────────────
+  ('super_admin',     'can_manage_clients',        true),
+  ('admin',           'can_manage_clients',        true),
+  ('project_manager', 'can_manage_clients',        false),
+  ('finance',         'can_manage_clients',        false),  -- Finance reads clients, not manages
+  ('hr',              'can_manage_clients',        false),
+
+  -- ── Finance: view clients and projects (read-only, for billing context) ───
+  ('finance',         'can_view_clients',          true),
+  ('finance',         'can_view_projects',         true),
+
+  -- ── Reward shop management (create/edit rewards) ──────────────────────────
+  ('super_admin',     'can_manage_rewards',        true),
+  ('admin',           'can_manage_rewards',        true),
+  ('hr',              'can_manage_rewards',        false),
+  ('finance',         'can_manage_rewards',        false),
+
+  -- ── Attendance admin (mark others' attendance) ────────────────────────────
+  ('super_admin',     'can_mark_attendance',       true),
+  ('admin',           'can_mark_attendance',       true),
+  ('hr',              'can_mark_attendance',       true),   -- HR core responsibility
+  ('team_lead',       'can_mark_attendance',       false),
+  ('finance',         'can_mark_attendance',       false),
+
+  -- ── Attendance reports (view all employees' records) ──────────────────────
+  ('super_admin',     'can_view_all_attendance',   true),
+  ('admin',           'can_view_all_attendance',   true),
+  ('hr',              'can_view_all_attendance',   true),
+  ('project_manager', 'can_view_all_attendance',   false),
+  ('team_lead',       'can_view_all_attendance',   false),
+  ('finance',         'can_view_all_attendance',   false),
+
+  -- ── People management (invite/deactivate employees) ───────────────────────
+  ('super_admin',     'can_manage_people',         true),
+  ('admin',           'can_manage_people',         true),
+  ('hr',              'can_manage_people',         true),   -- HR core responsibility
+  ('project_manager', 'can_manage_people',         false),
+  ('finance',         'can_manage_people',         false),
+
+  -- ── XP granting ───────────────────────────────────────────────────────────
+  ('super_admin',     'can_grant_xp',              true),
+  ('admin',           'can_grant_xp',              true),
+  ('project_manager', 'can_grant_xp',              false),
+  ('hr',              'can_grant_xp',              false),
+  ('finance',         'can_grant_xp',              false),
+
+  -- ── ClickUp settings ──────────────────────────────────────────────────────
+  ('super_admin',     'can_manage_integrations',   true),
+  ('admin',           'can_manage_integrations',   true),
+  ('hr',              'can_manage_integrations',   false),
+  ('finance',         'can_manage_integrations',   false);
 
 -- ─────────────────────────────────────────
 -- TEAMS
@@ -188,7 +301,7 @@ CREATE TRIGGER trg_apply_xp
 CREATE TABLE teams (
   id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name         text NOT NULL,
-  service_type service_type NOT NULL,
+  service_type text NOT NULL CHECK (service_type IN ('design', 'development', 'marketing')),
   lead_id      uuid REFERENCES profiles(id) ON DELETE SET NULL,
   created_at   timestamptz NOT NULL DEFAULT now()
 );
@@ -225,7 +338,7 @@ CREATE TABLE projects (
   name           text NOT NULL,
   description    text,
   client_id      uuid REFERENCES clients(id) ON DELETE SET NULL,
-  service_type   service_type NOT NULL,
+  service_type   text NOT NULL CHECK (service_type IN ('design', 'development', 'marketing')),
   status         text NOT NULL DEFAULT 'active'
                    CHECK (status IN ('draft','active','on_hold','completed','cancelled')),
   team_id        uuid REFERENCES teams(id) ON DELETE SET NULL,
@@ -312,10 +425,6 @@ CREATE TRIGGER trg_tasks_set_source
   BEFORE INSERT OR UPDATE ON tasks
   FOR EACH ROW EXECUTE FUNCTION fn_set_update_source();
 
-CREATE TRIGGER trg_comments_set_source
-  BEFORE INSERT OR UPDATE ON comments
-  FOR EACH ROW EXECUTE FUNCTION fn_set_update_source();
-
 CREATE TABLE task_assignees (
   task_id    uuid NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
   profile_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
@@ -378,6 +487,11 @@ CREATE TABLE comments (
   updated_at            timestamptz NOT NULL DEFAULT now()
 );
 
+-- fn_set_update_source is defined in the tasks section above; reused here
+CREATE TRIGGER trg_comments_set_source
+  BEFORE INSERT OR UPDATE ON comments
+  FOR EACH ROW EXECUTE FUNCTION fn_set_update_source();
+
 -- ─────────────────────────────────────────
 -- ATTACHMENTS
 -- Files are stored in Supabase Storage.
@@ -406,7 +520,7 @@ CREATE TABLE attachments (
 CREATE TABLE audit_logs (
   id             uuid NOT NULL DEFAULT gen_random_uuid(),
   actor_id       uuid,           -- NULL when source = 'clickup' or 'system'
-  actor_role     user_role,      -- denormalized snapshot at time of action
+  actor_role     text,           -- denormalized snapshot at time of action (matches profiles.role)
   action         text NOT NULL,  -- text not enum: new action types added freely
   resource_type  text NOT NULL,
   resource_id    text NOT NULL,
@@ -447,6 +561,22 @@ CREATE TABLE xp_transactions (
   created_at timestamptz NOT NULL DEFAULT now()
   -- Immutable ledger: no updated_at, no soft-delete. Corrections via reversal entries.
 );
+
+-- Trigger: update xp_total when an xp_transaction is inserted
+-- xp_total is a cached counter; xp_transactions is the source of truth
+CREATE OR REPLACE FUNCTION fn_apply_xp_transaction()
+RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE profiles
+  SET xp_total = xp_total + NEW.amount
+  WHERE id = NEW.profile_id;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER trg_apply_xp
+  AFTER INSERT ON xp_transactions
+  FOR EACH ROW EXECUTE FUNCTION fn_apply_xp_transaction();
 
 CREATE TABLE rewards (
   id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -551,6 +681,166 @@ CREATE TABLE quest_progress (
 -- See Section 8 for the quest-evaluator function.
 
 -- ─────────────────────────────────────────
+-- ATTENDANCE SETTINGS  (singleton, admin-configurable)
+-- ─────────────────────────────────────────
+-- Same singleton pattern as integrations: only one row can exist.
+-- All time values are interpreted in the configured timezone.
+CREATE TABLE attendance_settings (
+  singleton          boolean PRIMARY KEY DEFAULT true CHECK (singleton),
+  work_start_time    time NOT NULL DEFAULT '09:00',
+  work_end_time      time NOT NULL DEFAULT '18:00',
+  grace_period_min   int  NOT NULL DEFAULT 15,
+  timezone           text NOT NULL DEFAULT 'Asia/Karachi',
+  xp_on_time_checkin int  NOT NULL DEFAULT 10,  -- admin controls how much XP on-time check-in earns
+  office_ip_cidr     text,                       -- e.g. '203.101.45.0/24'; NULL disables WiFi check
+  updated_by         uuid REFERENCES profiles(id),
+  updated_at         timestamptz NOT NULL DEFAULT now()
+);
+
+-- ─────────────────────────────────────────
+-- ATTENDANCE  (one row per employee per day)
+-- ─────────────────────────────────────────
+CREATE TABLE attendance (
+  id                 uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  profile_id         uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  date               date NOT NULL,
+  check_in           timestamptz,
+  check_out          timestamptz,
+  status             text NOT NULL DEFAULT 'present'
+                       CHECK (status IN ('present','absent','late','half_day','leave','holiday')),
+  -- 'self' = employee checked in themselves
+  -- 'admin' = admin marked it; status is set manually and not auto-calculated
+  source             text NOT NULL DEFAULT 'self'
+                       CHECK (source IN ('self','admin')),
+  marked_by          uuid REFERENCES profiles(id),  -- NULL when source = 'self'
+  note               text,
+
+  -- Device & network audit columns (populated by check-in Edge Function for source='self')
+  device_name        text,        -- human-readable: "Samsung SM-A515F (Android 12)"
+  device_fingerprint text,        -- canvas+signals hash; used for cross-employee duplicate detection
+  ip_address         inet,        -- client IP as seen by Edge Function
+  wifi_validated     boolean NOT NULL DEFAULT false,  -- true if IP matched office_ip_cidr
+  device_flagged     boolean NOT NULL DEFAULT false,  -- true if same fingerprint used by another employee today
+
+  created_at         timestamptz NOT NULL DEFAULT now(),
+  updated_at         timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (profile_id, date),
+  CONSTRAINT chk_checkout_after_checkin CHECK (check_out IS NULL OR check_out > check_in)
+);
+
+CREATE INDEX idx_attendance_profile_date ON attendance(profile_id, date DESC);
+CREATE INDEX idx_attendance_date         ON attendance(date);
+CREATE INDEX idx_attendance_fingerprint  ON attendance(device_fingerprint, date);
+
+-- ─────────────────────────────────────────
+-- ENROLLED DEVICES  (admin-approved device registry per employee)
+-- ─────────────────────────────────────────
+-- An enrolled device is a browser/device fingerprint that an admin has approved
+-- for a specific employee. Check-ins from unenrolled fingerprints are allowed but
+-- flagged (device_flagged = true) for HR review.
+-- A fingerprint enrolled to more than one employee is also flagged on check-in.
+CREATE TABLE enrolled_devices (
+  id                 uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  profile_id         uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  device_fingerprint text NOT NULL,
+  device_name        text NOT NULL,  -- display label, e.g. "Ahmad's iPhone (iOS 17.4)"
+  approved_by        uuid REFERENCES profiles(id),
+  approved_at        timestamptz,
+  is_active          boolean NOT NULL DEFAULT true,
+  first_seen_at      timestamptz NOT NULL DEFAULT now(),
+  last_seen_at       timestamptz,
+  UNIQUE (profile_id, device_fingerprint)
+);
+
+CREATE INDEX idx_enrolled_devices_fingerprint ON enrolled_devices(device_fingerprint);
+
+-- BEFORE trigger: auto-set status and enforce the check-in time window for self check-ins.
+-- Admin-marked records (source = 'admin') skip all validation — status is set manually.
+--
+-- Time semantics:
+--   work_start_time            = office opens; earliest allowed check-in
+--   work_start_time + grace    = latest allowed check-in (grace = tolerance window)
+--   work_end_time              = used for check-out validation (see fn_set_checkout_status)
+--
+-- Status rule:
+--   Checked in at or before work_start_time          → 'present'
+--   Checked in after work_start_time but within grace → 'late'
+--   Outside either boundary                           → REJECTED (exception)
+--
+-- The attendance-checkin Edge Function enforces this first; the trigger is defence-in-depth.
+CREATE OR REPLACE FUNCTION fn_set_attendance_status()
+RETURNS TRIGGER AS $$
+DECLARE
+  v_settings    attendance_settings%ROWTYPE;
+  v_local_time  time;
+  v_late_cutoff time;
+  v_open_time   time;
+BEGIN
+  IF NEW.source = 'self' AND NEW.check_in IS NOT NULL THEN
+    SELECT * INTO v_settings FROM attendance_settings;
+    v_local_time  := (NEW.check_in AT TIME ZONE v_settings.timezone)::time;
+    v_open_time   := v_settings.work_start_time;
+    v_late_cutoff := v_settings.work_start_time
+                     + (v_settings.grace_period_min || ' minutes')::interval;
+
+    -- Reject check-ins before office opens or after grace period ends
+    IF v_local_time < v_open_time OR v_local_time > v_late_cutoff THEN
+      RAISE EXCEPTION 'Check-in outside allowed window (% – %)', v_open_time, v_late_cutoff;
+    END IF;
+
+    -- On time = at or before work_start_time; after = late (but still within grace window)
+    NEW.status := CASE WHEN v_local_time <= v_open_time THEN 'present' ELSE 'late' END;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_attendance_auto_status
+  BEFORE INSERT OR UPDATE OF check_in ON attendance
+  FOR EACH ROW EXECUTE FUNCTION fn_set_attendance_status();
+
+-- BEFORE trigger: validate check_out is before work_end_time for self-submitted records.
+-- Admin overrides (source = 'admin') are not validated — admin may mark unusual hours.
+CREATE OR REPLACE FUNCTION fn_validate_checkout()
+RETURNS TRIGGER AS $$
+DECLARE
+  v_settings   attendance_settings%ROWTYPE;
+  v_local_time time;
+BEGIN
+  IF NEW.source = 'self' AND NEW.check_out IS NOT NULL THEN
+    SELECT * INTO v_settings FROM attendance_settings;
+    v_local_time := (NEW.check_out AT TIME ZONE v_settings.timezone)::time;
+    IF v_local_time > v_settings.work_end_time THEN
+      RAISE EXCEPTION 'Check-out time % is after work_end_time %', v_local_time, v_settings.work_end_time;
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_attendance_checkout_validate
+  BEFORE UPDATE OF check_out ON attendance
+  FOR EACH ROW EXECUTE FUNCTION fn_validate_checkout();
+
+-- AFTER trigger: award XP for on-time self check-ins only.
+-- Plugs into xp_transactions → existing trigger updates profiles.xp_total → level recalcs.
+CREATE OR REPLACE FUNCTION fn_attendance_xp()
+RETURNS TRIGGER AS $$
+DECLARE v_xp int; BEGIN
+  IF NEW.status = 'present' AND NEW.source = 'self' THEN
+    SELECT xp_on_time_checkin INTO v_xp FROM attendance_settings;
+    INSERT INTO xp_transactions (profile_id, amount, reason)
+    VALUES (NEW.profile_id, v_xp, 'On-time check-in: ' || NEW.date);
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER trg_attendance_xp
+  AFTER INSERT ON attendance
+  FOR EACH ROW EXECUTE FUNCTION fn_attendance_xp();
+
+-- ─────────────────────────────────────────
 -- IN-APP NOTIFICATIONS
 -- ─────────────────────────────────────────
 CREATE TABLE notifications (
@@ -617,6 +907,10 @@ CREATE TABLE integrations (
   -- Empty array = forward all. Configurable in Settings.
   discord_audit_filter   jsonb NOT NULL DEFAULT '[]',
   discord_connected_at   timestamptz,
+
+  -- General-purpose metadata; used by bootstrap sync to record resume progress.
+  -- e.g. { "bootstrap_sync_log": { "status": "running", "last_list_id": "..." } }
+  metadata   jsonb NOT NULL DEFAULT '{}',
 
   updated_at timestamptz NOT NULL DEFAULT now()
 );
@@ -714,7 +1008,7 @@ await supabase.rpc('process_clickup_task_update', {
 
 ClickUp statuses are custom strings per workspace ("In Review", "Needs QA", etc.). They cannot be hardcoded in the portal. On ClickUp connect:
 
-1. Fetch all statuses from the configured Space via `GET /api/v2/space/{space_id}/tag`
+1. Fetch all statuses from the configured Space via `GET /api/v2/space/{space_id}` (the `statuses` array in the response body). Per-list overrides can be fetched via `GET /api/v2/list/{list_id}` if needed. Note: `/tag` fetches ClickUp Tags, not Statuses — do not confuse the two endpoints.
 2. Auto-populate `clickup_status_mappings` with smart defaults (case-insensitive string matching)
 3. Show the mapping table in Settings for admin review and manual correction
 
@@ -1106,6 +1400,47 @@ Called by `pg_net` HTTP extension from inside the `log_action` RPC, or from the 
 4. Format and POST Discord embed
 5. Log result: on failure, insert into `audit_logs` with `action = 'system'`, `source = 'system'`
 
+### `attendance-checkin`
+Handles employee self check-in. Enforces WiFi, time window, and device checks before writing to the `attendance` table.
+
+```
+Request body: {
+  device_fingerprint: string   -- canvas + signals hash from src/lib/deviceUtils.ts
+  device_name:        string   -- human-readable from getDeviceName(navigator.userAgent)
+}
+
+Validation steps (in order — first failure returns 4xx, nothing is written):
+
+1. Auth:         Verify JWT → resolve profile_id. Reject if not authenticated.
+
+2. Time window:  Read attendance_settings (work_start_time, grace_period_min, timezone).
+                 Compute current local time. Reject with 422 if outside
+                 [work_start_time, work_start_time + grace_period_min].
+
+3. WiFi check:   Read attendance_settings.office_ip_cidr.
+                 If office_ip_cidr IS NOT NULL:
+                   Extract client IP from X-Forwarded-For header.
+                   Reject with 403 if IP is not within the CIDR range.
+                 If office_ip_cidr IS NULL: skip check (WiFi enforcement not configured).
+
+4. Duplicate:    Check if attendance row already exists for (profile_id, today).
+                 Reject with 409 if already checked in.
+
+5. Device flag:  Query enrolled_devices WHERE device_fingerprint = $1 AND is_active = true.
+                 - If found for this profile_id: update last_seen_at.
+                 - If found for a DIFFERENT profile_id: set device_flagged = true on the
+                   new attendance row and notify HR via notifications table.
+                 - If not found at all: upsert into enrolled_devices with approved_by = NULL
+                   (pending review); set device_flagged = true on attendance row.
+
+6. Write:        INSERT into attendance with device_name, device_fingerprint, ip_address,
+                 wifi_validated = (office_ip_cidr IS NOT NULL), device_flagged.
+                 Trigger fn_set_attendance_status fires and sets status (present/late).
+                 Trigger fn_attendance_xp fires and awards XP if status = 'present'.
+
+Response: { status, check_in, device_flagged }
+```
+
 ### `quest-evaluator`
 Runs on a daily schedule for streak-based quests. Count-based quests are handled by Postgres triggers on `tasks` and `comments`.
 
@@ -1170,7 +1505,7 @@ DELETE FROM clickup_webhook_events WHERE received_at < now() - interval '24 hour
 ### Helper Functions
 
 ```sql
-CREATE OR REPLACE FUNCTION current_user_role() RETURNS user_role AS $$
+CREATE OR REPLACE FUNCTION current_user_role() RETURNS text AS $$
   SELECT role FROM profiles WHERE id = auth.uid()
 $$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public;
 
@@ -1189,6 +1524,47 @@ $$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public;
 ```
 
 Note: all helper functions use `SECURITY DEFINER SET search_path = public` to prevent search_path injection.
+
+### Clients
+
+```sql
+ALTER TABLE clients ENABLE ROW LEVEL SECURITY;
+ALTER TABLE client_members ENABLE ROW LEVEL SECURITY;
+
+-- Internal users (admin, PM, team_lead, employee) see all clients
+-- HR has no client context; Finance has a separate read-only policy below
+CREATE POLICY p_clients_internal_select ON clients FOR SELECT
+  USING (
+    is_internal() AND
+    current_user_role() NOT IN ('hr', 'finance')
+  );
+
+-- Finance sees all clients read-only (billing context only — cannot write)
+CREATE POLICY p_clients_finance_select ON clients FOR SELECT
+  USING (current_user_role() = 'finance');
+
+-- Client users see only their own client record
+CREATE POLICY p_clients_own ON clients FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM client_members
+      WHERE client_id = clients.id AND profile_id = auth.uid()
+    )
+  );
+
+-- Only admin+ can create/update/delete clients
+CREATE POLICY p_clients_admin_write ON clients FOR ALL
+  USING (current_user_role() IN ('super_admin', 'admin'))
+  WITH CHECK (current_user_role() IN ('super_admin', 'admin'));
+
+-- Client members table: admins manage; client users see their own row
+CREATE POLICY p_client_members_admin ON client_members FOR ALL
+  USING (current_user_role() IN ('super_admin', 'admin'))
+  WITH CHECK (current_user_role() IN ('super_admin', 'admin'));
+
+CREATE POLICY p_client_members_own ON client_members FOR SELECT
+  USING (profile_id = auth.uid());
+```
 
 ### Profiles
 
@@ -1213,10 +1589,12 @@ CREATE POLICY p_profiles_client_members ON profiles FOR SELECT
     )
   );
 
--- Users update only their own non-role fields
+-- Users update only their own non-role fields.
+-- WITH CHECK uses current_user_role() (SECURITY DEFINER) instead of a subquery on profiles
+-- to avoid querying the same RLS-protected table inside its own policy expression.
 CREATE POLICY p_profiles_self_update ON profiles FOR UPDATE
   USING (id = auth.uid())
-  WITH CHECK (id = auth.uid() AND role = (SELECT role FROM profiles WHERE id = auth.uid()));
+  WITH CHECK (id = auth.uid() AND role = current_user_role());
 
 -- Admin+ can update any profile (including role changes)
 CREATE POLICY p_profiles_admin_update ON profiles FOR UPDATE
@@ -1242,6 +1620,10 @@ CREATE POLICY p_projects_admin_select ON projects FOR SELECT
     current_user_role() IN ('super_admin', 'admin', 'project_manager') AND
     deleted_at IS NULL
   );
+
+-- Finance sees all non-deleted projects read-only (billing context — no task/member data)
+CREATE POLICY p_projects_finance_select ON projects FOR SELECT
+  USING (current_user_role() = 'finance' AND deleted_at IS NULL);
 
 -- Admin sees soft-deleted projects (Trash view)
 CREATE POLICY p_projects_trash_select ON projects FOR SELECT
@@ -1291,14 +1673,16 @@ CREATE POLICY p_tasks_trash_select ON tasks FOR SELECT
     deleted_at IS NOT NULL
   );
 
--- Clients: client_visible tasks only
+-- Clients: task must be client_visible AND its project must also be client_visible
 CREATE POLICY p_tasks_client_select ON tasks FOR SELECT
   USING (
     client_visible AND deleted_at IS NULL AND
     EXISTS (
       SELECT 1 FROM projects p
       JOIN client_members cm ON cm.client_id = p.client_id
-      WHERE p.id = tasks.project_id AND cm.profile_id = auth.uid()
+      WHERE p.id = tasks.project_id
+        AND p.client_visible = true
+        AND cm.profile_id = auth.uid()
     )
   );
 
@@ -1349,17 +1733,23 @@ CREATE POLICY p_comments_client_select ON comments FOR SELECT
     )
   );
 
--- Any project member or visible client can add comments
+-- Internal project members and visible clients can add comments
 CREATE POLICY p_comments_insert ON comments FOR INSERT
   WITH CHECK (
     author_id = auth.uid() AND (
-      is_internal() OR  -- client portal comment (client_visible enforced at app level)
+      -- Internal user must be a member of the task's project
+      (is_internal() AND EXISTS (
+        SELECT 1 FROM tasks t
+        WHERE t.id = comments.task_id AND is_project_member(t.project_id)
+      ))
+      OR
+      -- Client user: must be in the client org and the task must be client-visible
       EXISTS (
         SELECT 1 FROM tasks t
         JOIN projects p ON p.id = t.project_id
         JOIN client_members cm ON cm.client_id = p.client_id
         WHERE t.id = comments.task_id AND cm.profile_id = auth.uid()
-          AND t.client_visible = true
+          AND t.client_visible = true AND p.client_visible = true
       )
     )
   );
@@ -1429,8 +1819,14 @@ CREATE POLICY p_checklists_select ON checklists FOR SELECT
   );
 
 CREATE POLICY p_checklists_write ON checklists FOR ALL
-  USING (is_internal())
-  WITH CHECK (is_internal());
+  USING (
+    is_internal() AND
+    EXISTS (SELECT 1 FROM tasks t WHERE t.id = checklists.task_id AND is_project_member(t.project_id))
+  )
+  WITH CHECK (
+    is_internal() AND
+    EXISTS (SELECT 1 FROM tasks t WHERE t.id = checklists.task_id AND is_project_member(t.project_id))
+  );
 
 CREATE POLICY p_checklist_items_select ON checklist_items FOR SELECT
   USING (
@@ -1442,8 +1838,22 @@ CREATE POLICY p_checklist_items_select ON checklist_items FOR SELECT
   );
 
 CREATE POLICY p_checklist_items_write ON checklist_items FOR ALL
-  USING (is_internal())
-  WITH CHECK (is_internal());
+  USING (
+    is_internal() AND
+    EXISTS (
+      SELECT 1 FROM checklists c
+      JOIN tasks t ON t.id = c.task_id
+      WHERE c.id = checklist_items.checklist_id AND is_project_member(t.project_id)
+    )
+  )
+  WITH CHECK (
+    is_internal() AND
+    EXISTS (
+      SELECT 1 FROM checklists c
+      JOIN tasks t ON t.id = c.task_id
+      WHERE c.id = checklist_items.checklist_id AND is_project_member(t.project_id)
+    )
+  );
 ```
 
 ### Notifications
@@ -1494,8 +1904,8 @@ CREATE POLICY p_redemptions_own ON reward_redemptions FOR SELECT
 CREATE POLICY p_redemptions_admin ON reward_redemptions FOR SELECT
   USING (current_user_role() IN ('super_admin', 'admin'));
 
-CREATE POLICY p_redemptions_insert ON reward_redemptions FOR INSERT
-  WITH CHECK (profile_id = auth.uid());
+-- No INSERT policy: redemptions are only created via redeem_reward() SECURITY DEFINER function.
+-- Direct INSERT bypasses the FOR UPDATE row locks and XP balance check — intentionally blocked.
 
 CREATE POLICY p_redemptions_admin_update ON reward_redemptions FOR UPDATE
   USING (current_user_role() IN ('super_admin', 'admin'));
@@ -1521,6 +1931,130 @@ CREATE POLICY p_quest_progress_admin ON quest_progress FOR SELECT
   USING (current_user_role() IN ('super_admin', 'admin'));
 
 -- No INSERT/UPDATE: managed exclusively by SECURITY DEFINER trigger functions
+```
+
+### Attendance
+
+```sql
+ALTER TABLE attendance ENABLE ROW LEVEL SECURITY;
+ALTER TABLE attendance_settings ENABLE ROW LEVEL SECURITY;
+
+-- Employees see only their own records
+CREATE POLICY p_attendance_own ON attendance FOR SELECT
+  USING (profile_id = auth.uid());
+
+-- Team leads and above see their team's records
+CREATE POLICY p_attendance_team ON attendance FOR SELECT
+  USING (
+    current_user_role() IN ('team_lead','project_manager','admin','super_admin') AND
+    EXISTS (
+      SELECT 1 FROM profiles p
+      WHERE p.id = attendance.profile_id
+        AND p.team_id IN (SELECT team_id FROM profiles WHERE id = auth.uid())
+    )
+  );
+
+-- Admins and HR see everyone
+CREATE POLICY p_attendance_admin ON attendance FOR SELECT
+  USING (current_user_role() IN ('admin','super_admin','hr'));
+
+-- Employees insert their own check-in
+CREATE POLICY p_attendance_self_insert ON attendance FOR INSERT
+  WITH CHECK (profile_id = auth.uid() AND source = 'self');
+
+-- Employees update their own record (check-out only).
+-- WITH CHECK ensures only check_out can change — all other columns must remain identical.
+-- This prevents retroactive alteration of check_in time, wifi_validated, device_fingerprint, etc.
+CREATE POLICY p_attendance_self_update ON attendance FOR UPDATE
+  USING (profile_id = auth.uid() AND source = 'self')
+  WITH CHECK (
+    profile_id         = auth.uid() AND
+    source             = 'self' AND
+    date               = (SELECT date FROM attendance WHERE id = attendance.id) AND
+    check_in           = (SELECT check_in FROM attendance WHERE id = attendance.id) AND
+    status             = (SELECT status FROM attendance WHERE id = attendance.id) AND
+    device_fingerprint IS NOT DISTINCT FROM (SELECT device_fingerprint FROM attendance WHERE id = attendance.id) AND
+    wifi_validated     = (SELECT wifi_validated FROM attendance WHERE id = attendance.id)
+  );
+
+-- Admins and HR insert or update any record (source = 'admin')
+CREATE POLICY p_attendance_admin_write ON attendance FOR ALL
+  USING (current_user_role() IN ('admin','super_admin','hr'))
+  WITH CHECK (current_user_role() IN ('admin','super_admin','hr'));
+
+-- Settings: all authenticated users can read; only admins can write
+CREATE POLICY p_attendance_settings_read ON attendance_settings FOR SELECT
+  USING (auth.uid() IS NOT NULL);
+
+CREATE POLICY p_attendance_settings_write ON attendance_settings FOR ALL
+  USING (current_user_role() IN ('admin','super_admin'))
+  WITH CHECK (current_user_role() IN ('admin','super_admin'));
+```
+
+### Enrolled Devices
+
+```sql
+ALTER TABLE enrolled_devices ENABLE ROW LEVEL SECURITY;
+
+-- Employees see their own enrolled devices (so they can see what's registered to them)
+CREATE POLICY p_enrolled_devices_own ON enrolled_devices FOR SELECT
+  USING (profile_id = auth.uid());
+
+-- Admins and HR see all enrolled devices (for review and approval)
+CREATE POLICY p_enrolled_devices_admin_select ON enrolled_devices FOR SELECT
+  USING (current_user_role() IN ('admin','super_admin','hr'));
+
+-- Only admins can approve/deactivate devices (INSERT handled by attendance-checkin Edge Fn
+-- via SECURITY DEFINER; direct INSERT from client is blocked)
+CREATE POLICY p_enrolled_devices_admin_write ON enrolled_devices FOR UPDATE
+  USING (current_user_role() IN ('admin','super_admin','hr'))
+  WITH CHECK (current_user_role() IN ('admin','super_admin','hr'));
+
+-- No direct INSERT or DELETE from client — the attendance-checkin Edge Function
+-- (SECURITY DEFINER) manages inserts; admins deactivate via UPDATE (is_active = false)
+```
+
+### Role Feature Flags
+
+```sql
+ALTER TABLE role_feature_flags ENABLE ROW LEVEL SECURITY;
+
+-- All authenticated internal users can read (needed at app load to gate UI)
+CREATE POLICY p_role_flags_select ON role_feature_flags FOR SELECT
+  USING (is_internal());
+
+-- Only super_admin can write — these are system-wide access decisions
+CREATE POLICY p_role_flags_write ON role_feature_flags FOR ALL
+  USING (current_user_role() = 'super_admin')
+  WITH CHECK (current_user_role() = 'super_admin');
+```
+
+**Frontend usage pattern:**
+
+```typescript
+// src/api/roleFlags.ts
+export async function fetchRoleFlags(): Promise<RoleFeatureFlag[]> {
+  const { data, error } = await supabase
+    .from('role_feature_flags')
+    .select('role, feature_key, enabled')
+  if (error) throw error
+  return data
+}
+
+// src/hooks/useRoleFlags.ts
+export function useCanAccess(featureKey: string): boolean {
+  const { data: flags } = useQuery({
+    queryKey: ['role_feature_flags'],
+    queryFn: fetchRoleFlags,
+    staleTime: Infinity,   // fetched once per session; invalidated on settings save
+  })
+  const { role } = useCurrentUser()
+  return flags?.find(f => f.role === role && f.feature_key === featureKey)?.enabled ?? false
+}
+
+// Usage in any component
+const canApprove = useCanAccess('can_approve_tasks')
+// <button disabled={!canApprove}>Approve</button>
 ```
 
 ### Audit Logs
@@ -1560,6 +2094,78 @@ CREATE POLICY p_status_mappings_write ON clickup_status_mappings FOR ALL
   WITH CHECK (current_user_role() IN ('super_admin', 'admin'));
 ```
 
+### Project Members & Task Assignees
+
+```sql
+ALTER TABLE project_members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE task_assignees   ENABLE ROW LEVEL SECURITY;
+
+-- Project members: internal users can see members of projects they belong to;
+-- admins/PMs can see all (needed for management and assignment UI)
+CREATE POLICY p_project_members_select ON project_members FOR SELECT
+  USING (
+    current_user_role() IN ('super_admin','admin','project_manager') OR
+    EXISTS (
+      SELECT 1 FROM project_members pm2
+      WHERE pm2.project_id = project_members.project_id AND pm2.profile_id = auth.uid()
+    )
+  );
+
+CREATE POLICY p_project_members_write ON project_members FOR ALL
+  USING (current_user_role() IN ('super_admin','admin','project_manager'))
+  WITH CHECK (current_user_role() IN ('super_admin','admin','project_manager'));
+
+-- Task assignees: visible to any project member; managed by admin/PM/team_lead
+CREATE POLICY p_task_assignees_select ON task_assignees FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM tasks t
+      WHERE t.id = task_assignees.task_id AND is_project_member(t.project_id)
+    )
+  );
+
+CREATE POLICY p_task_assignees_write ON task_assignees FOR ALL
+  USING (
+    current_user_role() IN ('super_admin','admin','project_manager','team_lead') AND
+    EXISTS (
+      SELECT 1 FROM tasks t
+      WHERE t.id = task_assignees.task_id AND is_project_member(t.project_id)
+    )
+  )
+  WITH CHECK (
+    current_user_role() IN ('super_admin','admin','project_manager','team_lead') AND
+    EXISTS (
+      SELECT 1 FROM tasks t
+      WHERE t.id = task_assignees.task_id AND is_project_member(t.project_id)
+    )
+  );
+```
+
+### Levels
+
+```sql
+ALTER TABLE levels ENABLE ROW LEVEL SECURITY;
+
+-- All authenticated users can read levels (needed for XP bar display)
+CREATE POLICY p_levels_select ON levels FOR SELECT
+  USING (auth.uid() IS NOT NULL);
+
+-- Only super_admin can add/adjust XP thresholds
+CREATE POLICY p_levels_write ON levels FOR ALL
+  USING (current_user_role() = 'super_admin')
+  WITH CHECK (current_user_role() = 'super_admin');
+```
+
+### Webhook Dedup
+
+```sql
+ALTER TABLE clickup_webhook_events ENABLE ROW LEVEL SECURITY;
+
+-- No SELECT/INSERT/DELETE for any role: exclusively managed by the
+-- clickup-webhook Edge Function (SECURITY DEFINER context bypasses RLS).
+-- Explicit empty policy set ensures no client can read or write dedup state.
+```
+
 ---
 
 ## 11. SaaS Scalability
@@ -1571,10 +2177,13 @@ Add `workspace_id uuid NOT NULL DEFAULT '<linknbit-uuid>'` to every major table.
 1. Remove the `DEFAULT` clause — workspace_id becomes required
 2. Add `workspace_id` check to every RLS policy (one line per policy)
 3. Convert `integrations` from a singleton to one-row-per-workspace
-4. Add a `workspaces` table + Stripe billing flow
-5. Point subdomains (`acme.portal.io`) to the same Supabase instance
+4. Convert `attendance_settings` from a singleton to one-row-per-workspace (different tenants have different office hours, timezones, and office IPs)
+5. Add `workspace_id` to `role_feature_flags` (different tenants may want different default feature flag values per role); primary key becomes `(workspace_id, role, feature_key)`
+6. Add `workspace_id` to `clickup_webhook_events` so dedup is per-workspace
+7. Add a `workspaces` table + Stripe billing flow
+8. Point subdomains (`acme.portal.io`) to the same Supabase instance
 
-This requires no schema migration — just policy updates and adding the `workspaces` table.
+This requires no schema migration for items 1–2 — just policy updates and adding the `workspaces` table. Items 3–6 require corrective migrations to convert singleton tables.
 
 ### ClickUp OAuth for SaaS
 
@@ -1622,7 +2231,7 @@ Supabase Realtime       → postgres_changes for comments/notifications;
 Supabase Storage        → all files; served via file-proxy Edge Fn (links never expire)
 Postgres Triggers       → audit logs (diff-only, source-aware, no-op guarded, partitioned)
                           XP sync, level recalc, quest progress (count-based)
-RBAC                    → user_role enum + Supabase RLS on all 15+ tables
+RBAC                    → user_role text+CHECK + Supabase RLS on all 15+ tables
                           internal users scoped to project membership, not all projects
 Gamification            → XP via immutable ledger + trigger cache; levels via threshold table;
                           quests via trigger (count) + scheduled Edge Fn (streak)
