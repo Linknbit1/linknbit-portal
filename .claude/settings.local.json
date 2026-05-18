@@ -29,7 +29,11 @@
       "Bash(vercel deploy *)",
       "Bash(npm i *)",
       "PowerShell(supabase *)",
-      "mcp__supabase__list_projects"
+      "mcp__supabase__list_projects",
+      "Bash(Get-ChildItem *)",
+      "mcp__supabase__list_migrations",
+      "mcp__supabase__apply_migration",
+      "mcp__supabase__generate_typescript_types"
     ]
   },
   "enableAllProjectMcpServers": true,
