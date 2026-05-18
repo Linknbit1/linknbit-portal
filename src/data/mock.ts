@@ -13,6 +13,7 @@ import type {
   Client,
   AttendanceRecord,
   Team,
+  WFHRequest,
 } from '../types'
 
 /* =========================================================
@@ -499,6 +500,75 @@ export const ATTENDANCE_RECORDS: AttendanceRecord[] = [
   { id: 'a12', userId: 'u6', userName: 'Bilal Ahmed', date: '2026-05-15', checkIn: '09:20', checkOut: '18:10', status: 'present', method: 'office' },
   { id: 'a13', userId: 'u7', userName: 'Hina Rizvi', date: '2026-05-15', checkIn: '09:00', checkOut: '18:00', status: 'present', method: 'office' },
   { id: 'a14', userId: 'u8', userName: 'Kamran Ali', date: '2026-05-15', checkIn: '09:30', status: 'late', method: 'office' },
+]
+
+/* =========================================================
+   WFH REQUESTS
+   ========================================================= */
+export const WFH_REQUESTS: WFHRequest[] = [
+  {
+    id: 'wfh1',
+    userId: 'u5',
+    userName: 'Usman Tariq',
+    date: '2026-05-19',
+    requestedAt: '2026-05-18T09:15:00',
+    reason: 'Internet issues in my area — will work from a co-working space nearby.',
+    status: 'pending',
+  },
+  {
+    id: 'wfh2',
+    userId: 'u6',
+    userName: 'Bilal Ahmed',
+    date: '2026-05-19',
+    requestedAt: '2026-05-18T08:45:00',
+    reason: 'Doctor appointment in the morning, will work from home afterward.',
+    status: 'pending',
+  },
+  {
+    id: 'wfh3',
+    userId: 'u3',
+    userName: 'Sara Qureshi',
+    date: '2026-05-20',
+    requestedAt: '2026-05-18T10:00:00',
+    reason: 'Deadline-critical design work — need a distraction-free environment.',
+    status: 'pending',
+  },
+  {
+    id: 'wfh4',
+    userId: 'u7',
+    userName: 'Hina Rizvi',
+    date: '2026-05-17',
+    requestedAt: '2026-05-16T18:30:00',
+    reason: 'Family commitment in the evening, requesting early WFH.',
+    status: 'approved',
+    reviewedBy: 'Ghayas',
+    reviewedAt: '2026-05-16T19:05:00',
+    note: 'Approved. Please check in on time.',
+  },
+  {
+    id: 'wfh5',
+    userId: 'u8',
+    userName: 'Kamran Ali',
+    date: '2026-05-16',
+    requestedAt: '2026-05-15T17:00:00',
+    reason: 'Power outage reported in my area.',
+    status: 'rejected',
+    reviewedBy: 'Ahmad Karimi',
+    reviewedAt: '2026-05-15T18:30:00',
+    note: 'Generator available at office. Please come in.',
+  },
+  {
+    id: 'wfh6',
+    userId: 'u2',
+    userName: 'Ahmad Karimi',
+    date: '2026-05-18',
+    requestedAt: '2026-05-18T00:00:00',
+    reason: 'HR-granted WFH for client call setup.',
+    status: 'approved',
+    reviewedBy: 'Ghayas',
+    reviewedAt: '2026-05-18T00:00:00',
+    grantedDirectly: true,
+  },
 ]
 
 /* =========================================================

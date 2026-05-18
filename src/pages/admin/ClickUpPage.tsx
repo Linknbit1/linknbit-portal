@@ -4,7 +4,7 @@ import { Topbar } from '../../components/layout/Topbar'
 import { Button } from '../../components/ui/Button'
 import { ClickUpStatus } from '../../components/shared/ClickUpStatus'
 import { ServiceChip } from '../../components/shared/ServiceChip'
-import { useToast } from '../../components/ui/Toast'
+import { useToast } from '../../components/ui/toast-context'
 import { PROJECTS, TASKS } from '../../data/mock'
 import { cn } from '../../lib/cn'
 

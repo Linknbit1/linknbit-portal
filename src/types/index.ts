@@ -282,6 +282,23 @@ export interface AttendanceRecord {
   note?: string
 }
 
+/* ---- Work From Home ---- */
+export type WFHStatus = 'pending' | 'approved' | 'rejected'
+
+export interface WFHRequest {
+  id: string
+  userId: string
+  userName: string
+  date: string
+  requestedAt: string
+  reason: string
+  status: WFHStatus
+  reviewedBy?: string
+  reviewedAt?: string
+  note?: string
+  grantedDirectly?: boolean
+}
+
 /* ---- Team ---- */
 export interface Team {
   id: string
