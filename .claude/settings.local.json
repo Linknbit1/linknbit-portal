@@ -22,7 +22,9 @@
       "PowerShell(python \"C:\\\\Users\\\\PC\\\\.claude\\\\plugins\\\\cache\\\\ui-ux-pro-max-skill\\\\ui-ux-pro-max\\\\2.5.0\\\\src\\\\ui-ux-pro-max\\\\scripts\\\\search.py\" \"SaaS operations portal dark mode admin internal tool\" --design-system -p \"Linknbit Ops Portal\" -f markdown 2>&1 | Select-Object -First 150)",
       "PowerShell(python \"C:\\\\Users\\\\PC\\\\.claude\\\\plugins\\\\cache\\\\ui-ux-pro-max-skill\\\\ui-ux-pro-max\\\\2.5.0\\\\src\\\\ui-ux-pro-max\\\\scripts\\\\search.py\" \"task detail sidebar vs full page operations tool\" --domain ux -n 8 2>&1)",
       "Skill(ui-ux-pro-max:ui-ux-pro-max)",
-      "mcp__magic__21st_magic_component_builder"
+      "mcp__magic__21st_magic_component_builder",
+      "WebSearch",
+      "WebFetch(domain:developer.clickup.com)"
     ]
   }
 }
