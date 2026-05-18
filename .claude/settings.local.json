@@ -24,7 +24,10 @@
       "Skill(ui-ux-pro-max:ui-ux-pro-max)",
       "mcp__magic__21st_magic_component_builder",
       "WebSearch",
-      "WebFetch(domain:developer.clickup.com)"
+      "WebFetch(domain:developer.clickup.com)",
+      "mcp__claude_ai_Vercel__deploy_to_vercel",
+      "Bash(vercel deploy *)",
+      "Bash(npm i *)"
     ]
   }
 }

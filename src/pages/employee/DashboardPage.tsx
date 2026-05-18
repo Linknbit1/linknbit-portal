@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Zap, Flame, Target, ArrowUp, ArrowDown, Minus, Trophy } from 'lucide-react'
+import { Zap, Flame, Target, ArrowUp, ArrowDown, Minus, Trophy, Home, X, Clock, CheckCircle2, XCircle } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Card } from '../../components/ui/Card'
 import { Avatar } from '../../components/ui/Avatar'
@@ -11,9 +11,106 @@ import { ServiceChip } from '../../components/shared/ServiceChip'
 import { StatusChip } from '../../components/shared/StatusChip'
 import { PriorityChip } from '../../components/shared/PriorityChip'
 import { XPBar } from '../../components/shared/XPBar'
-import { TASKS, LEADERBOARD, QUESTS, BADGES } from '../../data/mock'
+import { useToast } from '../../components/ui/toast-context'
+import { TASKS, LEADERBOARD, QUESTS, BADGES, WFH_REQUESTS } from '../../data/mock'
+import type { WFHRequest, WFHStatus } from '../../types'
 import { formatDate, formatRelativeTime } from '../../lib/utils'
 import { cn } from '../../lib/cn'
+
+const MY_USER_ID = 'u5'
+
+const WFH_STATUS_CONFIG: Record<WFHStatus, { label: string; icon: typeof Clock; cls: string; iconCls: string }> = {
+  pending:  { label: 'Pending Review', icon: Clock,         cls: 'bg-warning/10 border-warning/30',  iconCls: 'text-warning' },
+  approved: { label: 'Approved',       icon: CheckCircle2,  cls: 'bg-success/10 border-success/30',  iconCls: 'text-success' },
+  rejected: { label: 'Rejected',       icon: XCircle,       cls: 'bg-error/10 border-error/30',      iconCls: 'text-error'   },
+}
+
+function WFHRequestModal({
+  open,
+  onClose,
+  onSubmit,
+}: {
+  open: boolean
+  onClose: () => void
+  onSubmit: (req: WFHRequest) => void
+}) {
+  const [date, setDate] = useState(() => new Date(Date.now() + 86400000).toISOString().split('T')[0])
+  const [reason, setReason] = useState('')
+
+  const handleSubmit = () => {
+    if (!reason.trim()) return
+    onSubmit({
+      id: 'wfh_' + Date.now(),
+      userId: MY_USER_ID,
+      userName: 'Usman Tariq',
+      date,
+      requestedAt: new Date().toISOString(),
+      reason: reason.trim(),
+      status: 'pending',
+    })
+    setReason('')
+    onClose()
+  }
+
+  if (!open) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-surface-1 border border-border-default rounded-xl p-6 w-full max-w-md shadow-2xl">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-service-dev/15 flex items-center justify-center">
+              <Home size={15} className="text-service-dev" />
+            </div>
+            <h3 className="font-display font-bold text-[16px] text-text-1">Request Work From Home</h3>
+          </div>
+          <button onClick={onClose} className="text-text-4 hover:text-text-1 transition-colors">
+            <X size={18} />
+          </button>
+        </div>
+        <p className="text-[12px] font-ui text-text-3 mb-5">
+          Since check-in requires office WiFi, submit a WFH request and HR will approve it before your workday starts.
+        </p>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">
+              WFH Date
+            </label>
+            <input
+              type="date"
+              value={date}
+              min={new Date().toISOString().split('T')[0]}
+              onChange={(e) => setDate(e.target.value)}
+              className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-mono text-text-1 outline-none focus:border-border-focus"
+            />
+          </div>
+          <div>
+            <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">
+              Reason
+            </label>
+            <textarea
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="Explain why you need to work from home..."
+              rows={3}
+              autoFocus
+              className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-ui text-text-1 placeholder:text-text-4 outline-none focus:border-border-focus resize-none"
+            />
+          </div>
+        </div>
+
+        <div className="flex gap-2.5 mt-5">
+          <Button variant="ghost" size="sm" className="flex-1" onClick={onClose}>Cancel</Button>
+          <Button size="sm" className="flex-1" onClick={handleSubmit} disabled={!reason.trim()}>
+            <Home size={14} /> Submit Request
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 const ME = {
   name: 'Usman Tariq',
@@ -31,7 +128,19 @@ const ME = {
 const BADGES_EARNED = BADGES.filter((b) => !b.locked).slice(0, 3)
 
 export default function EmployeeDashboardPage() {
+  const toast = useToast()
   const [taskTab, setTaskTab] = useState('today')
+  const [wfhModalOpen, setWfhModalOpen] = useState(false)
+  const [myWFHRequests, setMyWFHRequests] = useState<WFHRequest[]>(
+    WFH_REQUESTS.filter((r) => r.userId === MY_USER_ID)
+  )
+
+  const latestWFH = myWFHRequests.sort((a, b) => b.requestedAt.localeCompare(a.requestedAt))[0]
+
+  const handleWFHSubmit = (req: WFHRequest) => {
+    setMyWFHRequests((prev) => [req, ...prev])
+    toast('WFH request submitted — HR will review it shortly', 'success')
+  }
 
   const myTasks = TASKS.filter((t) => t.assigneeId === 'u5')
 
@@ -179,8 +288,61 @@ export default function EmployeeDashboardPage() {
             </div>
           </div>
 
-          {/* Right: Leaderboard + Badges */}
+          {/* Right: WFH + Leaderboard + Badges */}
           <div className="flex flex-col gap-4">
+            {/* WFH Request Card */}
+            <Card>
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-7 h-7 rounded-md bg-service-dev/15 flex items-center justify-center">
+                  <Home size={14} className="text-service-dev" />
+                </div>
+                <h3 className="font-display font-semibold text-h4 text-text-1 tracking-tight">Work From Home</h3>
+              </div>
+
+              {latestWFH ? (() => {
+                const cfg = WFH_STATUS_CONFIG[latestWFH.status]
+                const Icon = cfg.icon
+                return (
+                  <div className={cn('rounded-md border p-3 mb-3', cfg.cls)}>
+                    <div className="flex items-center gap-2 mb-1">
+                      <Icon size={13} className={cfg.iconCls} />
+                      <span className={cn('font-ui font-semibold text-[12px]', cfg.iconCls)}>{cfg.label}</span>
+                    </div>
+                    <p className="font-mono text-[11.5px] text-text-2">
+                      {latestWFH.date}
+                    </p>
+                    <p className="font-ui text-[11.5px] text-text-3 mt-1 leading-snug line-clamp-2">
+                      {latestWFH.reason}
+                    </p>
+                    {latestWFH.note && (
+                      <p className="font-ui text-[11px] text-text-4 italic mt-1.5 border-t border-current/10 pt-1.5">
+                        HR: "{latestWFH.note}"
+                      </p>
+                    )}
+                  </div>
+                )
+              })() : (
+                <p className="text-[12px] font-ui text-text-4 mb-3 leading-snug">
+                  No active WFH request. Since office WiFi is required for check-in, request WFH in advance.
+                </p>
+              )}
+
+              <Button
+                size="sm"
+                variant="secondary"
+                className="w-full"
+                onClick={() => setWfhModalOpen(true)}
+              >
+                <Home size={13} /> Request WFH
+              </Button>
+
+              {myWFHRequests.length > 1 && (
+                <p className="text-[11px] font-mono text-text-4 mt-2 text-center">
+                  {myWFHRequests.length} total requests this month
+                </p>
+              )}
+            </Card>
+
             {/* Leaderboard */}
             <Card padding="none">
               <div className="px-5 py-4 border-b border-border-subtle flex items-center gap-2">
@@ -256,6 +418,12 @@ export default function EmployeeDashboardPage() {
           </div>
         </div>
       </div>
+
+      <WFHRequestModal
+        open={wfhModalOpen}
+        onClose={() => setWfhModalOpen(false)}
+        onSubmit={handleWFHSubmit}
+      />
     </div>
   )
 }

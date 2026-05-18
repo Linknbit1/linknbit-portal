@@ -9,7 +9,7 @@ import {
 } from 'recharts'
 import { Topbar } from '../../components/layout/Topbar'
 import { Button } from '../../components/ui/Button'
-import { useToast } from '../../components/ui/Toast'
+import { useToast } from '../../components/ui/toast-context'
 import { PROJECTS, TASKS, TEAM_PERFORMANCE, LEADERBOARD } from '../../data/mock'
 import { cn } from '../../lib/cn'
 

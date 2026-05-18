@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import type { Variants } from 'framer-motion'
 import {
   CheckCircle2,
   ChevronRight,
@@ -52,17 +53,17 @@ const STAGE_DESCRIPTIONS: Record<string, { desc: string; next: string }> = {
 
 // ── Animation variants ──────────────────────────────────────────────────────
 
-const pageVariants = {
+const pageVariants: Variants = {
   hidden: {},
   show: { transition: { staggerChildren: 0.07, delayChildren: 0.05 } },
 }
 
-const fadeUp = {
+const fadeUp: Variants = {
   hidden: { opacity: 0, y: 18 },
   show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } },
 }
 
-const fadeIn = {
+const fadeIn: Variants = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { duration: 0.3, ease: 'easeOut' } },
 }
@@ -614,8 +615,11 @@ export default function ClientDashboardPage() {
                 transition={{ delay: 0.2 + i * 0.06, duration: 0.3, ease: 'easeOut' }}
                 className="flex items-center gap-3.5 p-3.5 rounded-xl bg-white cursor-pointer"
                 style={{ border: '1px solid #EAE3D6' }}
-                whileHover={{ y: -2, boxShadow: '0 6px 18px rgba(26,22,18,0.07)' }}
-                transition={{ duration: 0.2, ease: 'easeOut' }}
+                whileHover={{
+                  y: -2,
+                  boxShadow: '0 6px 18px rgba(26,22,18,0.07)',
+                  transition: { duration: 0.2, ease: 'easeOut' },
+                }}
               >
                 <div
                   className="w-9 h-9 rounded-xl flex items-center justify-center text-[10px] font-mono font-bold shrink-0"
