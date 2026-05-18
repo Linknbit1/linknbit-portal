@@ -14,7 +14,7 @@ import { StatusChip } from '../../components/shared/StatusChip'
 import { PriorityChip } from '../../components/shared/PriorityChip'
 import { ClickUpStatus } from '../../components/shared/ClickUpStatus'
 import { TaskDetailDrawer } from './TaskDetailDrawer'
-import { useToast } from '../../components/ui/Toast'
+import { useToast } from '../../components/ui/toast-context'
 import { PROJECTS, TASKS, USERS } from '../../data/mock'
 import { formatDate, getDaysUntil } from '../../lib/utils'
 import { cn } from '../../lib/cn'
@@ -105,7 +105,11 @@ export default function ProjectDetailPage() {
   const toggleStage = (stageId: string) =>
     setExpandedStages((prev) => {
       const next = new Set(prev)
-      next.has(stageId) ? next.delete(stageId) : next.add(stageId)
+      if (next.has(stageId)) {
+        next.delete(stageId)
+      } else {
+        next.add(stageId)
+      }
       return next
     })
 

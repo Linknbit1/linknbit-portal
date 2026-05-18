@@ -8,7 +8,7 @@ import { cn } from '../../lib/cn'
 import { Select } from '../../components/ui/Select'
 import { Button } from '../../components/ui/Button'
 import { Avatar } from '../../components/ui/Avatar'
-import { useToast } from '../../components/ui/Toast'
+import { useToast } from '../../components/ui/toast-context'
 import { TASKS, USERS } from '../../data/mock'
 import type { TaskStatus, Priority } from '../../types'
 

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { NavLink, Outlet, useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import type { Variants } from 'framer-motion'
 import {
   Bell,
   ChevronDown,
@@ -19,7 +20,7 @@ import { cn } from '../../lib/cn'
 import { APPROVALS } from '../../data/mock'
 import { formatRelativeTime } from '../../lib/utils'
 
-const dropdownVariants = {
+const dropdownVariants: Variants = {
   hidden: { opacity: 0, y: -8, scale: 0.97 },
   show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.2, ease: [0.22, 1, 0.36, 1] } },
   exit: { opacity: 0, y: -6, scale: 0.97, transition: { duration: 0.15, ease: 'easeIn' } },
