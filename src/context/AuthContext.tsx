@@ -1,48 +1,112 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
-import type { Session, User } from '@supabase/supabase-js'
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
+import type { User } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
-import { fetchProfile, type ProfileRow } from '../api/auth'
+import {
+  bffSignIn,
+  bffRefreshSession,
+  bffSignOut,
+  fetchProfile,
+  type BffSession,
+  type ProfileRow,
+} from '../api/auth'
 
 interface AuthContextValue {
-  session: Session | null
   user: User | null
   profile: ProfileRow | null
+  accessToken: string | null
   loading: boolean
+  signIn: (email: string, password: string) => Promise<void>
+  signOut: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
+function getTokenExpiry(token: string): number {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    return payload.exp * 1000
+  } catch {
+    return Date.now() + 55 * 60 * 1000 // fallback: 55 min
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null)
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<ProfileRow | null>(null)
+  const [accessToken, setAccessToken] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
+  // Stable ref so the scheduled refresh timer always closes over the latest token
+  const accessTokenRef = useRef<string | null>(null)
+  const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  function clearAll(): void {
+    if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current)
+    refreshTimerRef.current = null
+    accessTokenRef.current = null
+    setUser(null)
+    setProfile(null)
+    setAccessToken(null)
+    supabase.auth.signOut() // wipe any in-memory Supabase client state
+  }
+
+  async function applySession(bffSession: BffSession): Promise<void> {
+    // Hydrate the Supabase JS client so DB queries include the JWT
+    await supabase.auth.setSession({
+      access_token: bffSession.access_token,
+      refresh_token: bffSession.refresh_token,
+    })
+
+    const { data } = await supabase.auth.getUser()
+    if (!data.user) { clearAll(); return }
+
+    setUser(data.user)
+    setAccessToken(bffSession.access_token)
+    accessTokenRef.current = bffSession.access_token
+
+    fetchProfile(data.user.id).then(setProfile)
+
+    // Schedule a silent refresh 5 minutes before the access token expires
+    if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current)
+    const expiry = getTokenExpiry(bffSession.access_token)
+    const delay = Math.max(expiry - Date.now() - 5 * 60 * 1000, 30_000)
+
+    refreshTimerRef.current = setTimeout(async () => {
+      try {
+        const next = await bffRefreshSession()
+        await applySession(next)
+      } catch {
+        clearAll()
+      }
+    }, delay)
+  }
+
+  async function signIn(email: string, password: string): Promise<void> {
+    const session = await bffSignIn(email, password)
+    await applySession(session)
+  }
+
+  async function signOut(): Promise<void> {
+    const token = accessTokenRef.current
+    clearAll() // clear state immediately so UI responds at once
+    if (token) await bffSignOut(token).catch(() => {}) // best-effort server revocation
+  }
+
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session)
-      setUser(data.session?.user ?? null)
-      if (data.session?.user) {
-        fetchProfile(data.session.user.id).then(setProfile)
-      }
-      setLoading(false)
-    })
+    // On every page load: ask the BFF to exchange the HTTP-only cookie for a fresh token.
+    // If there's no cookie (or it's expired), the user stays logged out.
+    bffRefreshSession()
+      .then(applySession)
+      .catch(() => {})
+      .finally(() => setLoading(false))
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      setSession(newSession)
-      setUser(newSession?.user ?? null)
-      if (newSession?.user) {
-        fetchProfile(newSession.user.id).then(setProfile)
-      } else {
-        setProfile(null)
-      }
-    })
-
-    return () => listener.subscription.unsubscribe()
-  }, [])
+    return () => {
+      if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <AuthContext.Provider value={{ session, user, profile, loading }}>
+    <AuthContext.Provider value={{ user, profile, accessToken, loading, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   )

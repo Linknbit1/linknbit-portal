@@ -2,18 +2,27 @@ import { Bell, Search } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { Avatar } from '../ui/Avatar'
 import { RoleBadge } from '../shared/RoleBadge'
-import { NOTIFICATIONS, USERS } from '../../data/mock'
+import { useAuthContext } from '../../context/AuthContext'
+import type { UserRole } from '../../types'
+
+const VALID_ROLES = new Set<string>([
+  'super_admin', 'admin', 'project_manager', 'team_lead',
+  'employee', 'hr', 'finance', 'client_owner', 'client_member',
+])
+
+function isUserRole(role: string): role is UserRole {
+  return VALID_ROLES.has(role)
+}
 
 interface TopbarProps {
   title?: string
   breadcrumb?: string
   className?: string
+  unreadCount?: number
 }
 
-const currentUser = USERS[0]
-const unreadCount = NOTIFICATIONS.filter((n) => !n.read).length
-
-export function Topbar({ title, breadcrumb, className }: TopbarProps) {
+export function Topbar({ title, breadcrumb, className, unreadCount = 0 }: TopbarProps) {
+  const { profile } = useAuthContext()
   return (
     <header
       className={cn(
@@ -59,15 +68,17 @@ export function Topbar({ title, breadcrumb, className }: TopbarProps) {
         </button>
 
         {/* User */}
-        <button className="flex items-center gap-2.5 pl-1 pr-2.5 py-1 rounded-full bg-surface-1 border border-border-default hover:bg-surface-2 transition-colors">
-          <Avatar name={currentUser.name} size="sm" />
-          <div className="flex flex-col items-start leading-tight">
-            <span className="font-ui font-semibold text-[12.5px] text-text-1 whitespace-nowrap">
-              {currentUser.name}
-            </span>
-            <RoleBadge role={currentUser.role} size="sm" className="border-0 bg-transparent px-0 py-0 text-text-3" />
-          </div>
-        </button>
+        {profile && isUserRole(profile.role) && (
+          <button className="flex items-center gap-2.5 pl-1 pr-2.5 py-1 rounded-full bg-surface-1 border border-border-default hover:bg-surface-2 transition-colors">
+            <Avatar name={profile.name} size="sm" />
+            <div className="flex flex-col items-start leading-tight">
+              <span className="font-ui font-semibold text-[12.5px] text-text-1 whitespace-nowrap">
+                {profile.name}
+              </span>
+              <RoleBadge role={profile.role} size="sm" className="border-0 bg-transparent px-0 py-0 text-text-3" />
+            </div>
+          </button>
+        )}
       </div>
     </header>
   )

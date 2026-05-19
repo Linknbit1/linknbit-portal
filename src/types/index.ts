@@ -8,6 +8,8 @@ export type UserRole =
   | 'project_manager'
   | 'team_lead'
   | 'employee'
+  | 'hr'
+  | 'finance'
   | 'client_owner'
   | 'client_member'
 
