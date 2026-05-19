@@ -1,5 +1,9 @@
 {
   "rewrites": [
+    {
+      "source": "/api/auth/:path*",
+      "destination": "https://pifsboyhheazpccyliwy.supabase.co/functions/v1/:path*"
+    },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

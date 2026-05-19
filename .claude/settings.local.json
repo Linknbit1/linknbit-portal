@@ -33,7 +33,10 @@
       "Bash(Get-ChildItem *)",
       "mcp__supabase__list_migrations",
       "mcp__supabase__apply_migration",
-      "mcp__supabase__generate_typescript_types"
+      "mcp__supabase__generate_typescript_types",
+      "mcp__supabase__execute_sql",
+      "mcp__supabase__deploy_edge_function",
+      "Bash(node -e ' *)"
     ]
   },
   "enableAllProjectMcpServers": true,

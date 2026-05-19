@@ -8,6 +8,8 @@ const ROLE_CONFIG: Record<UserRole, string> = {
   project_manager: 'text-role-pm bg-role-pm/10 border border-role-pm/30',
   team_lead: 'text-role-lead bg-role-lead/10 border border-role-lead/30',
   employee: 'text-role-employee bg-surface-2 border border-border-default',
+  hr: 'text-service-design bg-service-design/10 border border-service-design/30',
+  finance: 'text-service-mkt bg-service-mkt/10 border border-service-mkt/30',
   client_owner: 'text-role-client bg-role-client/10 border border-role-client/30',
   client_member: 'text-role-client-member bg-surface-2 border border-border-default',
 }

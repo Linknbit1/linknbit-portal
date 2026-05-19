@@ -11,8 +11,8 @@ function FullPageSpinner() {
 }
 
 export function PrivateRoute({ children }: { children: ReactNode }) {
-  const { session, loading } = useAuthContext()
+  const { accessToken, loading } = useAuthContext()
   if (loading) return <FullPageSpinner />
-  if (!session) return <Navigate to="/login" replace />
+  if (!accessToken) return <Navigate to="/login" replace />
   return <>{children}</>
 }
