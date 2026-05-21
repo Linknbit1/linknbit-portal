@@ -19,6 +19,8 @@ import { Topbar } from '../../components/layout/Topbar'
 import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { Select } from '../../components/ui/Select'
+import { DatePicker } from '../../components/ui/DatePicker'
+import { TimePicker } from '../../components/ui/TimePicker'
 import {
   useMyTodayAttendance,
   useMyAttendanceHistory,
@@ -452,6 +454,11 @@ function RequestExceptionModal({ open, onClose }: RequestExceptionModalProps) {
     out_of_office:   'Departure Time',
   }
 
+  const todayStr = new Date().toISOString().split('T')[0]
+  const now = new Date()
+  const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+  const requestedTimeMin = date === todayStr ? currentTimeStr : undefined
+
   const handleSubmit = async () => {
     if (!requestedTime || !reason.trim()) return
     try {
@@ -500,12 +507,10 @@ function RequestExceptionModal({ open, onClose }: RequestExceptionModalProps) {
 
           <div>
             <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Date</label>
-            <input
-              type="date"
+            <DatePicker
               value={date}
-              min={new Date().toISOString().split('T')[0]}
-              onChange={(e) => setDate(e.target.value)}
-              className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-mono text-text-1 outline-none focus:border-border-focus"
+              onChange={(v) => { setDate(v); setRequestedTime(''); setReturnTime('') }}
+              minDate={todayStr}
             />
           </div>
 
@@ -513,11 +518,11 @@ function RequestExceptionModal({ open, onClose }: RequestExceptionModalProps) {
             <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">
               {timeLabel[excType]}
             </label>
-            <input
-              type="time"
+            <TimePicker
               value={requestedTime}
-              onChange={(e) => setRequestedTime(e.target.value)}
-              className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-mono text-text-1 outline-none focus:border-border-focus"
+              onChange={(v) => { setRequestedTime(v); setReturnTime('') }}
+              minTime={requestedTimeMin}
+              placeholder="Select time…"
             />
           </div>
 
@@ -527,11 +532,11 @@ function RequestExceptionModal({ open, onClose }: RequestExceptionModalProps) {
                 Expected Return Time{' '}
                 <span className="normal-case font-ui text-text-4">(optional)</span>
               </label>
-              <input
-                type="time"
+              <TimePicker
                 value={returnTime}
-                onChange={(e) => setReturnTime(e.target.value)}
-                className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-mono text-text-1 outline-none focus:border-border-focus"
+                onChange={setReturnTime}
+                minTime={requestedTime || requestedTimeMin}
+                placeholder="Select return time…"
               />
             </div>
           )}

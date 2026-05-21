@@ -12,6 +12,7 @@ import { StatusChip } from '../../components/shared/StatusChip'
 import { PriorityChip } from '../../components/shared/PriorityChip'
 import { XPBar } from '../../components/shared/XPBar'
 import { useToast } from '../../components/ui/toast-context'
+import { DatePicker } from '../../components/ui/DatePicker'
 import { useMyTodayAttendance, useCheckIn, useCheckOut } from '../../hooks/useAttendance'
 import { getDeviceFingerprint, getDeviceName } from '../../lib/deviceUtils'
 import { TASKS, LEADERBOARD, QUESTS, BADGES, WFH_REQUESTS } from '../../data/mock'
@@ -208,12 +209,10 @@ function WFHRequestModal({
             <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">
               WFH Date
             </label>
-            <input
-              type="date"
+            <DatePicker
               value={date}
-              min={new Date().toISOString().split('T')[0]}
-              onChange={(e) => setDate(e.target.value)}
-              className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-mono text-text-1 outline-none focus:border-border-focus"
+              onChange={setDate}
+              minDate={new Date().toISOString().split('T')[0]}
             />
           </div>
           <div>
