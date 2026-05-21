@@ -1,9 +1,11 @@
 import { useState } from 'react'
-import { Check, Bell, Zap, Layers, Link2, Palette, Shield, ChevronRight } from 'lucide-react'
+import { Check, Bell, Zap, Layers, Link2, Palette, Shield, ChevronRight, Loader2 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Button } from '../../components/ui/Button'
 import { Toggle } from '../../components/ui/Toggle'
 import { useToast } from '../../components/ui/toast-context'
+import { useAuthContext } from '../../context/AuthContext'
+import { useRoleFlags, useUpdateRoleFlag } from '../../hooks/useRoleFlags'
 import { cn } from '../../lib/cn'
 
 type Tab = 'general' | 'xp' | 'stages' | 'notifications' | 'integrations' | 'permissions'
@@ -54,8 +56,42 @@ function TextInput({ value, onChange, placeholder }: { value: string; onChange: 
   )
 }
 
+const INTERNAL_ROLES = ['super_admin', 'admin', 'project_manager', 'team_lead', 'employee', 'hr', 'finance'] as const
+const ROLE_LABELS: Record<string, string> = {
+  super_admin: 'Super Admin', admin: 'Admin', project_manager: 'PM',
+  team_lead: 'Team Lead', employee: 'Employee', hr: 'HR', finance: 'Finance',
+}
+const FEATURE_ORDER = [
+  'can_view_reports', 'can_approve_tasks', 'can_delete_projects',
+  'can_manage_clients', 'can_view_clients', 'can_view_projects',
+  'can_manage_rewards', 'can_manage_quests', 'can_give_shoutout',
+  'can_mark_attendance', 'can_view_all_attendance',
+  'can_manage_people', 'can_grant_xp', 'can_manage_integrations',
+] as const
+const FEATURE_LABELS: Record<string, string> = {
+  can_view_reports: 'View Reports',
+  can_approve_tasks: 'Approve Tasks',
+  can_delete_projects: 'Delete Projects',
+  can_manage_clients: 'Manage Clients',
+  can_view_clients: 'View Clients',
+  can_view_projects: 'View Projects',
+  can_manage_rewards: 'Manage Rewards',
+  can_manage_quests: 'Manage Quests',
+  can_give_shoutout: 'Give Shoutouts',
+  can_mark_attendance: 'Mark Attendance',
+  can_view_all_attendance: 'View All Attendance',
+  can_manage_people: 'Manage People',
+  can_grant_xp: 'Grant XP',
+  can_manage_integrations: 'Manage Integrations',
+}
+
 export default function SettingsPage() {
   const toast = useToast()
+  const { profile } = useAuthContext()
+  const { data: flags = [], isLoading: flagsLoading } = useRoleFlags()
+  const { mutate: updateFlag, isPending: updatingFlag } = useUpdateRoleFlag()
+  const canEditFlags = profile?.role === 'super_admin' || profile?.role === 'admin'
+
   const [activeTab, setActiveTab] = useState<Tab>('general')
 
   // General
@@ -271,43 +307,62 @@ export default function SettingsPage() {
               {activeTab === 'permissions' && (
                 <div>
                   <h2 className="font-display font-bold text-[16px] text-text-1 mb-1">Permissions</h2>
-                  <p className="font-ui text-[13px] text-text-3 mb-5">Role-based access matrix.</p>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-[12px]">
-                      <thead>
-                        <tr className="border-b border-border-subtle">
-                          <th className="text-left py-2 font-mono text-text-4 uppercase text-[10px] tracking-wider pr-4">Permission</th>
-                          {['Super Admin', 'Admin', 'PM', 'Team Lead', 'Employee'].map((r) => (
-                            <th key={r} className="text-center py-2 font-ui font-semibold text-text-3 px-3">{r}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {[
-                          { action: 'Manage Projects', perms: [true, true, true, false, false] },
-                          { action: 'Assign Tasks', perms: [true, true, true, true, false] },
-                          { action: 'Issue Shoutouts', perms: [true, true, true, true, false] },
-                          { action: 'Approve Stages', perms: [true, true, true, false, false] },
-                          { action: 'View Client Portal', perms: [true, true, true, false, false] },
-                          { action: 'Manage Team', perms: [true, true, false, true, false] },
-                          { action: 'Edit XP Rules', perms: [true, true, false, false, false] },
-                          { action: 'Manage Integrations', perms: [true, false, false, false, false] },
-                        ].map(({ action, perms }) => (
-                          <tr key={action} className="border-b border-border-subtle last:border-0">
-                            <td className="py-3 font-ui text-text-2 pr-4">{action}</td>
-                            {perms.map((allowed, i) => (
-                              <td key={i} className="text-center py-3 px-3">
-                                {allowed
-                                  ? <Check size={14} className="text-success mx-auto" />
-                                  : <span className="w-3.5 h-[1.5px] bg-surface-3 block mx-auto mt-1" />
-                                }
-                              </td>
+                  <p className="font-ui text-[13px] text-text-3 mb-1">Role-based feature access. Toggle to enable or disable per role.</p>
+                  {!canEditFlags && (
+                    <p className="font-mono text-[11px] text-text-4 mb-4">View only — only Super Admins and Admins can change permissions.</p>
+                  )}
+                  {canEditFlags && <p className="font-mono text-[11px] text-text-4 mb-4">Changes take effect immediately for all sessions.</p>}
+
+                  {flagsLoading ? (
+                    <div className="flex items-center justify-center py-16 text-text-4">
+                      <Loader2 size={18} className="animate-spin" />
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-[12px] min-w-[700px]">
+                        <thead>
+                          <tr className="border-b border-border-subtle">
+                            <th className="text-left py-2 font-mono text-text-4 uppercase text-[10px] tracking-wider pr-6 min-w-[160px]">Feature</th>
+                            {INTERNAL_ROLES.map((role) => (
+                              <th key={role} className="text-center py-2 font-ui font-semibold text-text-3 px-2 min-w-[70px]">
+                                {ROLE_LABELS[role]}
+                              </th>
                             ))}
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                        </thead>
+                        <tbody>
+                          {FEATURE_ORDER.map((featureKey) => {
+                            const label = FEATURE_LABELS[featureKey] ?? featureKey
+                            return (
+                              <tr key={featureKey} className="border-b border-border-subtle last:border-0">
+                                <td className="py-3 font-ui text-[13px] text-text-2 pr-6 whitespace-nowrap">{label}</td>
+                                {INTERNAL_ROLES.map((role) => {
+                                  const flag = flags.find((f) => f.role === role && f.feature_key === featureKey)
+                                  const enabled = flag?.enabled ?? false
+                                  return (
+                                    <td key={role} className="text-center py-3 px-2">
+                                      <div className="flex justify-center">
+                                        <Toggle
+                                          checked={enabled}
+                                          onChange={(val) => {
+                                            if (!canEditFlags || updatingFlag) return
+                                            updateFlag(
+                                              { role, featureKey, enabled: val },
+                                              { onError: () => toast('Failed to update permission', 'error') },
+                                            )
+                                          }}
+                                        />
+                                      </div>
+                                    </td>
+                                  )
+                                })}
+                              </tr>
+                            )
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
               )}
 
