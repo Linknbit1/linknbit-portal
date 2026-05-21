@@ -10,6 +10,8 @@ import { Avatar } from '../../components/ui/Avatar'
 import { Button } from '../../components/ui/Button'
 import { Select } from '../../components/ui/Select'
 import { TimezoneSelect } from '../../components/ui/TimezoneSelect'
+import { DatePicker } from '../../components/ui/DatePicker'
+import { TimePicker } from '../../components/ui/TimePicker'
 import { useToast } from '../../components/ui/toast-context'
 import { useAuthContext } from '../../context/AuthContext'
 import {
@@ -317,11 +319,11 @@ function DailyRecordsTab({ canManage }: { canManage: boolean }) {
       <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
         <div className="flex items-center gap-3 px-5 py-3.5 border-b border-border-subtle">
           <Calendar size={15} className="text-text-3 flex-shrink-0" />
-          <input
-            type="date"
+          <DatePicker
             value={dateFilter}
-            onChange={(e) => setDateFilter(e.target.value)}
-            className="bg-surface-inset border border-border-default rounded-md px-2.5 py-1.5 text-[12.5px] font-mono text-text-1 outline-none focus:border-border-focus"
+            onChange={setDateFilter}
+            placeholder="Select date…"
+            className="w-[160px]"
           />
           <div className="relative flex-1 max-w-[220px]">
             <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-4" />
@@ -1097,21 +1099,20 @@ function SettingsTab() {
 
           <div>
             <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Work Start Time</label>
-            <input
-              type="time"
+            <TimePicker
               value={workStart}
-              onChange={(e) => setWorkStart(e.target.value)}
-              className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-mono text-text-1 outline-none focus:border-border-focus"
+              onChange={setWorkStart}
+              placeholder="Select start time…"
             />
           </div>
 
           <div>
             <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Work End Time</label>
-            <input
-              type="time"
+            <TimePicker
               value={workEnd}
-              onChange={(e) => setWorkEnd(e.target.value)}
-              className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-mono text-text-1 outline-none focus:border-border-focus"
+              onChange={setWorkEnd}
+              minTime={workStart || undefined}
+              placeholder="Select end time…"
             />
           </div>
 
