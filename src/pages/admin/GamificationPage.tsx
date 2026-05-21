@@ -470,9 +470,6 @@ export default function GamificationPage() {
   const availableQuests = questsWithProgress.filter((q) => !q.started)
   const completedQuests = questsWithProgress.filter((q) => q.completed)
 
-  // Podium: [2nd, 1st, 3rd] order (middle is tallest)
-  const podiumOrder = [rankedLeaderboard[1], rankedLeaderboard[0], rankedLeaderboard[2]]
-
   // ── Handlers ───────────────────────────────────────────────────────────────────
   const handleShoutoutSave = (data: Partial<ShoutoutRecord>) => {
     const id = 's' + (shoutouts.length + 1)

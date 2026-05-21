@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Zap, Flame, Target, ArrowUp, ArrowDown, Minus, Trophy, Home, X, Clock, CheckCircle2, XCircle } from 'lucide-react'
+import { Zap, Flame, Target, ArrowUp, ArrowDown, Minus, Trophy, Home, X, Clock, CheckCircle2, XCircle, LogIn, LogOut, CalendarCheck, AlertTriangle } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Card } from '../../components/ui/Card'
 import { Avatar } from '../../components/ui/Avatar'
@@ -12,12 +12,142 @@ import { StatusChip } from '../../components/shared/StatusChip'
 import { PriorityChip } from '../../components/shared/PriorityChip'
 import { XPBar } from '../../components/shared/XPBar'
 import { useToast } from '../../components/ui/toast-context'
+import { useMyTodayAttendance, useCheckIn, useCheckOut } from '../../hooks/useAttendance'
+import { getDeviceFingerprint, getDeviceName } from '../../lib/deviceUtils'
 import { TASKS, LEADERBOARD, QUESTS, BADGES, WFH_REQUESTS } from '../../data/mock'
 import type { WFHRequest, WFHStatus } from '../../types'
 import { formatDate, formatRelativeTime } from '../../lib/utils'
 import { cn } from '../../lib/cn'
 
 const MY_USER_ID = 'u5'
+
+function formatTime(iso: string | null | undefined): string {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
+}
+
+function TodayAttendanceCard() {
+  const toast = useToast()
+  const { data: today, isLoading } = useMyTodayAttendance()
+  const checkInMut = useCheckIn()
+  const checkOutMut = useCheckOut()
+
+  const [deviceReady, setDeviceReady] = useState(false)
+  const [deviceFingerprint, setDeviceFingerprint] = useState('')
+  const [deviceName, setDeviceName] = useState('')
+
+  useEffect(() => {
+    Promise.all([getDeviceFingerprint(), Promise.resolve(getDeviceName())]).then(([fp, name]) => {
+      setDeviceFingerprint(fp)
+      setDeviceName(name)
+      setDeviceReady(true)
+    })
+  }, [])
+
+  const handleCheckIn = async () => {
+    try {
+      const result = await checkInMut.mutateAsync({ deviceFingerprint, deviceName })
+      toast(
+        result.status === 'late' ? 'Checked in — marked as late' : 'Checked in successfully!',
+        result.status === 'late' ? 'warning' : 'success',
+      )
+    } catch (err: unknown) {
+      const body = (err as { context?: { body?: string } }).context?.body
+      let parsed: { error?: string; code?: string } = {}
+      try { parsed = body ? JSON.parse(body) : {} } catch { /* empty */ }
+      const msg = parsed.code === 'outside_window'
+        ? 'Outside check-in window'
+        : parsed.code === 'wrong_network'
+          ? 'Connect to office WiFi first'
+          : 'Check-in failed'
+      toast(msg, 'error')
+    }
+  }
+
+  const handleCheckOut = async () => {
+    if (!today?.id) return
+    try {
+      await checkOutMut.mutateAsync(today.id)
+      toast('Checked out — great work today!', 'success')
+    } catch {
+      toast('Check-out failed', 'error')
+    }
+  }
+
+  if (isLoading) {
+    return <div className="h-16 bg-surface-2 rounded-xl animate-pulse" />
+  }
+
+  const isCheckedIn  = !!today
+  const isCheckedOut = isCheckedIn && !!today.check_out
+
+  const statusCfg = today
+    ? today.status === 'present'
+      ? { label: 'Present', bg: 'bg-success/10 border-success/25', text: 'text-success', dot: 'bg-success' }
+      : { label: 'Late',    bg: 'bg-warning/10 border-warning/25', text: 'text-warning', dot: 'bg-warning' }
+    : { label: 'Not Checked In', bg: 'bg-surface-1 border-border-default', text: 'text-text-4', dot: 'bg-text-4' }
+
+  return (
+    <Card className={cn('flex items-center gap-4', statusCfg.bg)}>
+      <div className={cn('w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0', isCheckedIn ? statusCfg.bg : 'bg-surface-2')}>
+        <CalendarCheck size={17} className={statusCfg.text} />
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <span className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', statusCfg.dot)} />
+          <p className={cn('font-ui font-semibold text-body-sm', statusCfg.text)}>{statusCfg.label}</p>
+          {today?.device_flagged && (
+            <AlertTriangle size={12} className="text-warning" aria-label="Unrecognised device" />
+          )}
+        </div>
+        <div className="flex items-center gap-3 mt-0.5">
+          {isCheckedIn && (
+            <span className="flex items-center gap-1 font-mono text-[11px] text-text-4">
+              <LogIn size={10} className="text-success" /> {formatTime(today.check_in)}
+            </span>
+          )}
+          {isCheckedOut && (
+            <span className="flex items-center gap-1 font-mono text-[11px] text-text-4">
+              <LogOut size={10} className="text-error" /> {formatTime(today.check_out)}
+            </span>
+          )}
+          {!isCheckedIn && (
+            <span className="font-mono text-[11px] text-text-4">
+              {deviceReady ? deviceName : 'Detecting device…'}
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2 flex-shrink-0">
+        {!isCheckedIn ? (
+          <Button
+            size="sm"
+            onClick={handleCheckIn}
+            disabled={!deviceReady || checkInMut.isPending}
+          >
+            <LogIn size={13} />
+            {checkInMut.isPending ? 'Checking in…' : 'Check In'}
+          </Button>
+        ) : !isCheckedOut ? (
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={handleCheckOut}
+            disabled={checkOutMut.isPending}
+          >
+            <LogOut size={13} />
+            {checkOutMut.isPending ? '…' : 'Check Out'}
+          </Button>
+        ) : null}
+        <Link to="/employee/attendance" className="font-mono text-[11px] text-brand-red hover:text-brand-red-hover transition-colors whitespace-nowrap">
+          View history →
+        </Link>
+      </div>
+    </Card>
+  )
+}
 
 const WFH_STATUS_CONFIG: Record<WFHStatus, { label: string; icon: typeof Clock; cls: string; iconCls: string }> = {
   pending:  { label: 'Pending Review', icon: Clock,         cls: 'bg-warning/10 border-warning/30',  iconCls: 'text-warning' },
@@ -190,6 +320,9 @@ export default function EmployeeDashboardPage() {
             </div>
           </div>
         </div>
+
+        {/* Today's attendance */}
+        <TodayAttendanceCard />
 
         <div className="grid grid-cols-3 gap-5">
           {/* My Tasks */}
