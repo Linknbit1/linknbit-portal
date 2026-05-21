@@ -21,6 +21,7 @@ import ClickUpPage from './pages/admin/ClickUpPage'
 import SettingsPage from './pages/admin/SettingsPage'
 import AttendancePage from './pages/admin/AttendancePage'
 import EmployeeDashboardPage from './pages/employee/DashboardPage'
+import EmployeeAttendancePage from './pages/employee/AttendancePage'
 
 import ClientDashboardPage from './pages/client/DashboardPage'
 import ClientProjectsPage from './pages/client/ProjectsPage'
@@ -68,6 +69,7 @@ export default function App() {
                 <Route path="/employee/dashboard" element={<EmployeeDashboardPage />} />
                 <Route path="/employee/tasks" element={<TasksPage />} />
                 <Route path="/employee/projects" element={<AdminProjectsPage />} />
+                <Route path="/employee/attendance" element={<EmployeeAttendancePage />} />
                 <Route path="/employee/leaderboard" element={<GamificationPage />} />
                 <Route path="/employee/rewards" element={<GamificationPage />} />
               </Route>

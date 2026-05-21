@@ -36,7 +36,8 @@
       "mcp__supabase__generate_typescript_types",
       "mcp__supabase__execute_sql",
       "mcp__supabase__deploy_edge_function",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(pnpm build *)"
     ]
   },
   "enableAllProjectMcpServers": true,

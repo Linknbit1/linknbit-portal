@@ -18,6 +18,173 @@ export type Database = {
   }
   public: {
     Tables: {
+      attendance: {
+        Row: {
+          check_in: string | null
+          check_out: string | null
+          created_at: string
+          date: string
+          device_fingerprint: string | null
+          device_flagged: boolean
+          device_name: string | null
+          id: string
+          ip_address: unknown
+          marked_by: string | null
+          note: string | null
+          profile_id: string
+          source: string
+          status: string
+          updated_at: string
+          wifi_validated: boolean
+        }
+        Insert: {
+          check_in?: string | null
+          check_out?: string | null
+          created_at?: string
+          date: string
+          device_fingerprint?: string | null
+          device_flagged?: boolean
+          device_name?: string | null
+          id?: string
+          ip_address?: unknown
+          marked_by?: string | null
+          note?: string | null
+          profile_id: string
+          source?: string
+          status?: string
+          updated_at?: string
+          wifi_validated?: boolean
+        }
+        Update: {
+          check_in?: string | null
+          check_out?: string | null
+          created_at?: string
+          date?: string
+          device_fingerprint?: string | null
+          device_flagged?: boolean
+          device_name?: string | null
+          id?: string
+          ip_address?: unknown
+          marked_by?: string | null
+          note?: string | null
+          profile_id?: string
+          source?: string
+          status?: string
+          updated_at?: string
+          wifi_validated?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_marked_by_fkey"
+            columns: ["marked_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      attendance_settings: {
+        Row: {
+          grace_period_min: number
+          office_ip_cidr: string | null
+          singleton: boolean
+          timezone: string
+          updated_at: string
+          updated_by: string | null
+          work_end_time: string
+          work_start_time: string
+          xp_on_time_checkin: number
+        }
+        Insert: {
+          grace_period_min?: number
+          office_ip_cidr?: string | null
+          singleton?: boolean
+          timezone?: string
+          updated_at?: string
+          updated_by?: string | null
+          work_end_time?: string
+          work_start_time?: string
+          xp_on_time_checkin?: number
+        }
+        Update: {
+          grace_period_min?: number
+          office_ip_cidr?: string | null
+          singleton?: boolean
+          timezone?: string
+          updated_at?: string
+          updated_by?: string | null
+          work_end_time?: string
+          work_start_time?: string
+          xp_on_time_checkin?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      enrolled_devices: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          device_fingerprint: string
+          device_name: string
+          first_seen_at: string
+          id: string
+          is_active: boolean
+          last_seen_at: string | null
+          profile_id: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          device_fingerprint: string
+          device_name: string
+          first_seen_at?: string
+          id?: string
+          is_active?: boolean
+          last_seen_at?: string | null
+          profile_id: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          device_fingerprint?: string
+          device_name?: string
+          first_seen_at?: string
+          id?: string
+          is_active?: boolean
+          last_seen_at?: string | null
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "enrolled_devices_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "enrolled_devices_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       levels: {
         Row: {
           label: string | null
@@ -127,6 +294,13 @@ export type Database = {
           xp_total?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_profiles_team"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profiles_level_fkey"
             columns: ["level"]
@@ -339,6 +513,38 @@ export type Database = {
           {
             foreignKeyName: "role_feature_flags_updated_by_fkey"
             columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teams: {
+        Row: {
+          created_at: string
+          id: string
+          lead_id: string | null
+          name: string
+          service_type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lead_id?: string | null
+          name: string
+          service_type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lead_id?: string | null
+          name?: string
+          service_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teams_lead_id_fkey"
+            columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
