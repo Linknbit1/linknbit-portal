@@ -1,4 +1,31 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 # Linknbit Unified Operations Portal — Development Rules
+
+## Commands
+
+```bash
+# Development
+pnpm dev              # start Vite dev server (exposed on LAN via --host)
+pnpm build            # tsc type-check + Vite production build
+pnpm lint             # ESLint
+
+# Supabase (requires supabase CLI + Docker Desktop for local stack)
+pnpm sb:link          # link to remote project pifsboyhheazpccyliwy
+pnpm sb:migration     # create a new timestamped migration file (append the name: pnpm sb:migration add_foo)
+pnpm sb:push          # push pending migrations to the linked remote project
+pnpm sb:types         # regenerate src/types/database.ts from the linked remote schema
+pnpm sb:reset         # wipe local DB and replay all migrations from scratch (requires Docker)
+pnpm sb:start / pnpm sb:stop  # start/stop local Supabase stack (requires Docker Desktop)
+```
+
+**Docker Desktop is required for the local Supabase stack.** When Docker is not running, apply migrations to the remote project via the Supabase MCP tool (`mcp__supabase__apply_migration`) and regenerate types via `mcp__supabase__generate_typescript_types` instead of `pnpm sb:types`.
+
+After every migration — whether applied locally or remotely — run `pnpm sb:types` (or use the MCP) and commit the updated `src/types/database.ts` alongside the migration file.
+
+---
 
 ## Product Overview
 

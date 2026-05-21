@@ -136,6 +136,183 @@ export type Database = {
           },
         ]
       }
+      quest_progress: {
+        Row: {
+          completed: boolean
+          completed_at: string | null
+          profile_id: string
+          progress: number
+          quest_id: string
+        }
+        Insert: {
+          completed?: boolean
+          completed_at?: string | null
+          profile_id: string
+          progress?: number
+          quest_id: string
+        }
+        Update: {
+          completed?: boolean
+          completed_at?: string | null
+          profile_id?: string
+          progress?: number
+          quest_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quest_progress_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quest_progress_quest_id_fkey"
+            columns: ["quest_id"]
+            isOneToOne: false
+            referencedRelation: "quests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quests: {
+        Row: {
+          condition_type: string
+          condition_value: Json
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          repeatable: boolean
+          title: string
+          xp_reward: number
+        }
+        Insert: {
+          condition_type: string
+          condition_value: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          repeatable?: boolean
+          title: string
+          xp_reward: number
+        }
+        Update: {
+          condition_type?: string
+          condition_value?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          repeatable?: boolean
+          title?: string
+          xp_reward?: number
+        }
+        Relationships: []
+      }
+      reward_redemptions: {
+        Row: {
+          created_at: string
+          id: string
+          note: string | null
+          profile_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          reward_id: string
+          status: Database["public"]["Enums"]["redemption_status"]
+          xp_spent: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          profile_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reward_id: string
+          status?: Database["public"]["Enums"]["redemption_status"]
+          xp_spent: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          profile_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reward_id?: string
+          status?: Database["public"]["Enums"]["redemption_status"]
+          xp_spent?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reward_redemptions_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reward_redemptions_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reward_redemptions_reward_id_fkey"
+            columns: ["reward_id"]
+            isOneToOne: false
+            referencedRelation: "rewards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rewards: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          name: string
+          quantity: number | null
+          xp_cost: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name: string
+          quantity?: number | null
+          xp_cost: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name?: string
+          quantity?: number | null
+          xp_cost?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rewards_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       role_feature_flags: {
         Row: {
           enabled: boolean
@@ -168,6 +345,51 @@ export type Database = {
           },
         ]
       }
+      xp_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          granted_by: string | null
+          id: string
+          profile_id: string
+          reason: string
+          task_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          profile_id: string
+          reason: string
+          task_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          profile_id?: string
+          reason?: string
+          task_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "xp_transactions_granted_by_fkey"
+            columns: ["granted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "xp_transactions_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -176,6 +398,11 @@ export type Database = {
       current_user_role: { Args: never; Returns: string }
       is_internal: { Args: never; Returns: boolean }
       is_project_member: { Args: { p_project_id: string }; Returns: boolean }
+      redeem_reward: {
+        Args: { p_profile_id: string; p_reward_id: string }
+        Returns: string
+      }
+      start_quest: { Args: { p_quest_id: string }; Returns: undefined }
     }
     Enums: {
       queue_status: "pending" | "processing" | "done" | "failed"
