@@ -52,15 +52,15 @@ function TodayAttendanceCard() {
         result.status === 'late' ? 'warning' : 'success',
       )
     } catch (err: unknown) {
-      const body = (err as { context?: { body?: string } }).context?.body
-      let parsed: { error?: string; code?: string } = {}
-      try { parsed = body ? JSON.parse(body) : {} } catch { /* empty */ }
-      const msg = parsed.code === 'outside_window'
-        ? 'Outside check-in window'
-        : parsed.code === 'wrong_network'
-          ? 'Connect to office WiFi first'
-          : 'Check-in failed'
-      toast(msg, 'error')
+      const code = (err as { code?: string }).code ?? ''
+      const msg  = err instanceof Error ? err.message : 'Check-in failed'
+      toast(
+        code === 'outside_window' ? msg
+          : code === 'wrong_network' ? 'Connect to office WiFi first'
+          : code === 'duplicate' ? 'Already checked in today'
+          : msg || 'Check-in failed',
+        'error',
+      )
     }
   }
 

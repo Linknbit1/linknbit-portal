@@ -90,6 +90,72 @@ export type Database = {
           },
         ]
       }
+      attendance_exceptions: {
+        Row: {
+          actual_departure: string | null
+          actual_return: string | null
+          created_at: string
+          date: string
+          exception_type: string
+          id: string
+          profile_id: string
+          reason: string
+          requested_time: string
+          return_time: string | null
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+        }
+        Insert: {
+          actual_departure?: string | null
+          actual_return?: string | null
+          created_at?: string
+          date: string
+          exception_type: string
+          id?: string
+          profile_id: string
+          reason: string
+          requested_time: string
+          return_time?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Update: {
+          actual_departure?: string | null
+          actual_return?: string | null
+          created_at?: string
+          date?: string
+          exception_type?: string
+          id?: string
+          profile_id?: string
+          reason?: string
+          requested_time?: string
+          return_time?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_exceptions_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_exceptions_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       attendance_settings: {
         Row: {
           grace_period_min: number
