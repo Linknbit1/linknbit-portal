@@ -9,8 +9,14 @@ import {
   adminCheckOut,
   fetchAttendanceSettings,
   updateAttendanceSettings,
+  fetchAttendanceExceptions,
+  fetchAllAttendanceExceptions,
+  requestException,
+  reviewException,
+  logOooDeparture,
+  logOooReturn,
 } from '../api/attendance'
-import type { MarkAttendancePayload } from '../api/attendance'
+import type { MarkAttendancePayload, RequestExceptionPayload, FetchExceptionsFilters } from '../api/attendance'
 import type { TablesUpdate } from '../types/database'
 
 export const ATTENDANCE_KEYS = {
@@ -18,6 +24,9 @@ export const ATTENDANCE_KEYS = {
   myToday: ['attendance', 'my', 'today'] as const,
   allByDate: (date: string) => ['attendance', 'all', date] as const,
   settings: ['attendance', 'settings'] as const,
+  exceptions: (filters: FetchExceptionsFilters) => ['attendance', 'exceptions', filters] as const,
+  myExceptions: ['attendance', 'exceptions', 'my'] as const,
+  allExceptions: (filters: FetchExceptionsFilters) => ['attendance', 'exceptions', 'all', filters] as const,
 }
 
 export function useMyAttendanceHistory(days = 30) {
@@ -98,5 +107,69 @@ export function useUpdateAttendanceSettings() {
     mutationFn: (payload: TablesUpdate<'attendance_settings'>) =>
       updateAttendanceSettings(payload),
     onSuccess: () => qc.invalidateQueries({ queryKey: ATTENDANCE_KEYS.settings }),
+  })
+}
+
+// ── Exceptions ────────────────────────────────────────────────────────────────
+
+export function useAttendanceExceptions(filters: FetchExceptionsFilters = {}) {
+  return useQuery({
+    queryKey: ATTENDANCE_KEYS.exceptions(filters),
+    queryFn: () => fetchAttendanceExceptions(filters),
+  })
+}
+
+export function useAllAttendanceExceptions(filters: FetchExceptionsFilters = {}) {
+  return useQuery({
+    queryKey: ATTENDANCE_KEYS.allExceptions(filters),
+    queryFn: () => fetchAllAttendanceExceptions(filters),
+  })
+}
+
+export function useMyExceptions() {
+  return useQuery({
+    queryKey: ATTENDANCE_KEYS.myExceptions,
+    queryFn: () => fetchAttendanceExceptions({}),
+  })
+}
+
+export function useRequestException() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: RequestExceptionPayload) => requestException(payload),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['attendance', 'exceptions'] })
+    },
+  })
+}
+
+export function useReviewException() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, status, note }: { id: string; status: 'approved' | 'rejected'; note?: string }) =>
+      reviewException(id, status, note),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['attendance', 'exceptions'] })
+    },
+  })
+}
+
+export function useLogOooDeparture() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => logOooDeparture(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['attendance', 'exceptions'] })
+    },
+  })
+}
+
+export function useLogOooReturn() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => logOooReturn(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['attendance', 'exceptions'] })
+    },
   })
 }

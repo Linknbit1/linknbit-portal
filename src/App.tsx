@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ToastProvider } from './components/ui/Toast'
 import { AuthProvider } from './context/AuthContext'
 import { PrivateRoute } from './components/layout/PrivateRoute'
+import { RoleGuard, ATTENDANCE_ADMIN_ROLES } from './components/layout/RoleGuard'
 import { AppShell } from './components/layout/AppShell'
 import { ClientShell } from './components/layout/ClientShell'
 
@@ -59,7 +60,11 @@ export default function App() {
                 <Route path="/admin/tasks" element={<TasksPage />} />
                 <Route path="/admin/clients" element={<ClientsPage />} />
                 <Route path="/admin/teams" element={<TeamsPage />} />
-                <Route path="/admin/attendance" element={<AttendancePage />} />
+                <Route path="/admin/attendance" element={
+                  <RoleGuard allowedRoles={ATTENDANCE_ADMIN_ROLES}>
+                    <AttendancePage />
+                  </RoleGuard>
+                } />
                 <Route path="/admin/reports" element={<ReportsPage />} />
                 <Route path="/admin/gamification" element={<GamificationPage />} />
                 <Route path="/admin/clickup" element={<ClickUpPage />} />

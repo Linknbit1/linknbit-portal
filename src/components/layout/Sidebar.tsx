@@ -15,7 +15,9 @@ import {
 import { cn } from '../../lib/cn'
 import { Avatar } from '../ui/Avatar'
 import { RoleBadge } from '../shared/RoleBadge'
-import { USERS } from '../../data/mock'
+import { useAuthContext } from '../../context/AuthContext'
+
+const ATTENDANCE_ADMIN_ROLES = ['super_admin', 'admin', 'hr', 'project_manager']
 
 const NAV_ITEMS = [
   { label: 'Dashboard', icon: LayoutDashboard, to: '/admin/dashboard' },
@@ -30,10 +32,15 @@ const NAV_ITEMS = [
   { label: 'Settings', icon: Settings, to: '/admin/settings' },
 ]
 
-const currentUser = USERS[0]
-
 export function Sidebar() {
   const location = useLocation()
+  const { profile } = useAuthContext()
+  const role = profile?.role ?? 'employee'
+  const attendancePath = ATTENDANCE_ADMIN_ROLES.includes(role) ? '/admin/attendance' : '/employee/attendance'
+
+  const navItems = NAV_ITEMS.map((item) =>
+    item.label === 'Attendance' ? { ...item, to: attendancePath } : item
+  )
 
   return (
     <aside className="w-sidebar-expanded bg-surface-1 border-r border-border-default flex flex-col sticky top-0 h-screen overflow-y-auto flex-shrink-0">
@@ -63,7 +70,7 @@ export function Sidebar() {
         <p className="text-[10px] font-ui font-semibold text-text-4 uppercase tracking-widest px-2 py-2">
           Main Menu
         </p>
-        {NAV_ITEMS.map((item) => {
+        {navItems.map((item) => {
           const isActive = location.pathname.startsWith(item.to)
           return (
             <NavLink
@@ -94,12 +101,12 @@ export function Sidebar() {
       {/* User pill */}
       <div className="border-t border-border-subtle px-3 py-3 mt-auto">
         <div className="flex items-center gap-2.5">
-          <Avatar name={currentUser.name} size="sm" online={currentUser.online} />
+          <Avatar name={profile?.name ?? '?'} size="sm" />
           <div className="flex-1 min-w-0">
             <p className="font-ui font-semibold text-body-sm text-text-1 leading-tight truncate">
-              {currentUser.name}
+              {profile?.name ?? '—'}
             </p>
-            <RoleBadge role={currentUser.role} size="sm" className="mt-0.5" />
+            <RoleBadge role={role as import('../../types').UserRole} size="sm" className="mt-0.5" />
           </div>
           <button className="w-6 h-6 rounded flex items-center justify-center text-text-3 hover:text-text-1 hover:bg-surface-2 transition-colors">
             <ChevronRight size={12} />

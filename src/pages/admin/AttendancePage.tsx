@@ -9,6 +9,7 @@ import { Topbar } from '../../components/layout/Topbar'
 import { Avatar } from '../../components/ui/Avatar'
 import { Button } from '../../components/ui/Button'
 import { Select } from '../../components/ui/Select'
+import { TimezoneSelect } from '../../components/ui/TimezoneSelect'
 import { useToast } from '../../components/ui/toast-context'
 import { useAuthContext } from '../../context/AuthContext'
 import {
@@ -19,7 +20,10 @@ import {
   useAdminCheckOut,
   useAttendanceSettings,
   useUpdateAttendanceSettings,
+  useAllAttendanceExceptions,
+  useReviewException,
 } from '../../hooks/useAttendance'
+import type { AttendanceExceptionWithProfile } from '../../api/attendance'
 import { useEnrolledDevices, useApproveDevice, useDeactivateDevice } from '../../hooks/useEnrolledDevices'
 import { getDeviceFingerprint, getDeviceName } from '../../lib/deviceUtils'
 import { WFH_REQUESTS } from '../../data/mock'
@@ -87,15 +91,16 @@ function SelfCheckInCard() {
         toast('Your device is not recognised. HR has been notified.', 'warning')
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Check-in failed'
-      if (msg.includes('outside_window') || msg.includes('outside allowed window')) {
-        toast('Check-in is only allowed during office hours.', 'error')
-      } else if (msg.includes('wrong_network')) {
+      const code = (err as { code?: string }).code ?? ''
+      const msg  = err instanceof Error ? err.message : 'Check-in failed'
+      if (code === 'outside_window') {
+        toast(msg, 'error')
+      } else if (code === 'wrong_network') {
         toast('You must be on the office WiFi to check in.', 'error')
-      } else if (msg.includes('duplicate') || msg.includes('Already checked in')) {
+      } else if (code === 'duplicate') {
         toast('Already checked in today.', 'warning')
       } else {
-        toast(msg, 'error')
+        toast(msg || 'Check-in failed', 'error')
       }
     }
   }
@@ -241,7 +246,7 @@ function MarkModal({ open, onClose, dateFilter }: MarkModalProps) {
 }
 
 /* ── Daily Records tab ───────────────────────────────────────────────────── */
-function DailyRecordsTab() {
+function DailyRecordsTab({ canManage }: { canManage: boolean }) {
   const toast = useToast()
   const [dateFilter, setDateFilter] = useState(new Date().toISOString().split('T')[0])
   const [statusFilter, setStatusFilter] = useState('all')
@@ -340,9 +345,11 @@ function DailyRecordsTab() {
             <Button size="sm" variant="secondary" onClick={() => toast('CSV exported', 'success')}>
               <Download size={13} /> Export
             </Button>
-            <Button size="sm" onClick={() => setMarkOpen(true)}>
-              <Plus size={13} /> Mark Attendance
-            </Button>
+            {canManage && (
+              <Button size="sm" onClick={() => setMarkOpen(true)}>
+                <Plus size={13} /> Mark Attendance
+              </Button>
+            )}
           </div>
         </div>
 
@@ -385,7 +392,7 @@ function DailyRecordsTab() {
                   <td className="px-4 py-3">
                     {rec.check_out ? (
                       <span className="font-mono text-[12.5px] text-text-1">{fmtTime(rec.check_out)}</span>
-                    ) : rec.check_in ? (
+                    ) : rec.check_in && canManage ? (
                       <button
                         onClick={() => handleCheckOut(rec)}
                         disabled={adminCheckOutMutation.isPending}
@@ -432,7 +439,7 @@ function DailyRecordsTab() {
         </table>
       </div>
 
-      <MarkModal open={markOpen} onClose={() => setMarkOpen(false)} dateFilter={dateFilter} />
+      {canManage && <MarkModal open={markOpen} onClose={() => setMarkOpen(false)} dateFilter={dateFilter} />}
     </>
   )
 }
@@ -779,6 +786,254 @@ function EnrolledDevicesTab() {
   )
 }
 
+/* ── Exception status chip ───────────────────────────────────────────────── */
+const EXC_STATUS_META: Record<string, { label: string; cls: string; dot: string }> = {
+  pending:  { label: 'Pending',  cls: 'bg-warning/10 text-warning border-warning/30',   dot: '#F59E0B' },
+  approved: { label: 'Approved', cls: 'bg-success/10 text-success border-success/30',   dot: '#22C55E' },
+  rejected: { label: 'Rejected', cls: 'bg-error/10 text-error border-error/30',         dot: '#F4364C' },
+}
+
+function ExcStatusChip({ status }: { status: string }) {
+  const m = EXC_STATUS_META[status] ?? EXC_STATUS_META['pending']
+  return (
+    <span className={cn('inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-ui font-semibold border', m.cls)}>
+      <span className="w-1.5 h-1.5 rounded-full" style={{ background: m.dot }} />
+      {m.label}
+    </span>
+  )
+}
+
+/* ── Exceptions tab ───────────────────────────────────────────────────────── */
+function ExceptionsTab() {
+  const toast = useToast()
+  const [typeFilter, setTypeFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [rejectTarget, setRejectTarget] = useState<string | null>(null)
+  const [rejectNote, setRejectNote] = useState('')
+
+  const filters = {
+    type:   typeFilter   !== 'all' ? typeFilter   : undefined,
+    status: statusFilter !== 'all' ? statusFilter : undefined,
+  }
+
+  const { data: exceptions = [], isLoading } = useAllAttendanceExceptions(filters)
+  const reviewMutation = useReviewException()
+
+  const pendingCount  = exceptions.filter((e) => e.status === 'pending').length
+  const approvedCount = exceptions.filter((e) => e.status === 'approved').length
+  const rejectedCount = exceptions.filter((e) => e.status === 'rejected').length
+
+  const handleApprove = async (id: string) => {
+    try {
+      await reviewMutation.mutateAsync({ id, status: 'approved' })
+      toast('Exception approved', 'success')
+    } catch {
+      toast('Failed to approve exception', 'error')
+    }
+  }
+
+  const handleReject = async () => {
+    if (!rejectTarget) return
+    try {
+      await reviewMutation.mutateAsync({ id: rejectTarget, status: 'rejected', note: rejectNote.trim() || undefined })
+      toast('Exception rejected', 'error')
+      setRejectTarget(null)
+      setRejectNote('')
+    } catch {
+      toast('Failed to reject exception', 'error')
+    }
+  }
+
+  const TYPE_META: Record<string, { label: string; cls: string }> = {
+    late_arrival:    { label: 'Late Arrival',    cls: 'bg-warning/10 text-warning border-warning/25' },
+    early_departure: { label: 'Early Departure', cls: 'bg-service-design/10 text-service-design border-service-design/25' },
+    out_of_office:   { label: 'Out of Office',   cls: 'bg-service-dev/10 text-service-dev border-service-dev/25' },
+  }
+
+  const fmtTimeStr = (t: string | null) => t ? t.slice(0, 5) : '—'
+  const fmtTs = (iso: string | null) =>
+    iso ? new Date(iso).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '—'
+  const fmtDate = (d: string) =>
+    new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+
+  return (
+    <div className="flex flex-col gap-5">
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-4">
+        {[
+          { label: 'Pending Review', value: pendingCount,  icon: Clock,        color: 'text-warning', bg: 'bg-warning/10 border-warning/20' },
+          { label: 'Approved',       value: approvedCount, icon: CheckCircle2, color: 'text-success', bg: 'bg-success/10 border-success/20' },
+          { label: 'Rejected',       value: rejectedCount, icon: AlertTriangle, color: 'text-error',  bg: 'bg-error/10 border-error/20' },
+        ].map(({ label, value, icon: Icon, color, bg }) => (
+          <div key={label} className="bg-surface-1 border border-border-default rounded-xl p-4 flex items-center gap-4">
+            <div className={cn('w-10 h-10 rounded-lg border flex items-center justify-center flex-shrink-0', bg)}>
+              <Icon size={18} className={color} />
+            </div>
+            <div>
+              <p className={cn('font-display font-bold text-[26px] leading-none', color)}>{value}</p>
+              <p className="font-ui text-[12px] text-text-3 mt-1">{label}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Table */}
+      <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
+        <div className="flex items-center gap-3 px-5 py-3.5 border-b border-border-subtle">
+          <AlertCircle size={14} className="text-text-3" />
+          <span className="font-ui font-semibold text-[13px] text-text-1">Exception Requests</span>
+          <div className="ml-auto flex items-center gap-2">
+            <Select
+              size="sm"
+              value={typeFilter}
+              onChange={setTypeFilter}
+              options={[
+                { value: 'all',              label: 'All Types' },
+                { value: 'late_arrival',     label: 'Late Arrival' },
+                { value: 'early_departure',  label: 'Early Departure' },
+                { value: 'out_of_office',    label: 'Out of Office' },
+              ]}
+            />
+            <Select
+              size="sm"
+              value={statusFilter}
+              onChange={setStatusFilter}
+              options={[
+                { value: 'all',      label: 'All Status' },
+                { value: 'pending',  label: 'Pending' },
+                { value: 'approved', label: 'Approved' },
+                { value: 'rejected', label: 'Rejected' },
+              ]}
+            />
+          </div>
+        </div>
+
+        <table className="w-full">
+          <thead>
+            <tr className="border-b border-border-subtle bg-surface-2">
+              {['Employee', 'Date', 'Type', 'Requested Time', 'Reason', 'Status', 'OOO Tracking', 'Actions'].map((h) => (
+                <th key={h} className="px-4 py-2.5 text-left font-ui font-semibold text-[10.5px] text-text-3 uppercase tracking-wider">
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {isLoading ? (
+              <tr><td colSpan={8} className="px-4 py-12 text-center font-mono text-[12px] text-text-4">Loading…</td></tr>
+            ) : exceptions.length === 0 ? (
+              <tr><td colSpan={8} className="px-4 py-12 text-center font-mono text-[12px] text-text-4">No exception requests match this filter.</td></tr>
+            ) : (
+              exceptions.map((exc) => {
+                const typeMeta = TYPE_META[exc.exception_type] ?? TYPE_META['late_arrival']
+                const excWp = exc as AttendanceExceptionWithProfile
+                return (
+                  <tr key={exc.id} className="border-b border-border-subtle hover:bg-white/[0.015] transition-colors">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2.5">
+                        <Avatar name={excWp.profiles?.name ?? '?'} size="sm" />
+                        <span className="font-ui font-medium text-[13px] text-text-1">
+                          {excWp.profiles?.name ?? exc.profile_id.slice(0, 8)}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 font-mono text-[12px] text-text-2 whitespace-nowrap">{fmtDate(exc.date)}</td>
+                    <td className="px-4 py-3">
+                      <span className={cn('inline-flex items-center px-2 py-0.5 rounded-xs border text-[11px] font-mono font-semibold whitespace-nowrap', typeMeta.cls)}>
+                        {typeMeta.label}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 font-mono text-[12px] text-text-1 whitespace-nowrap">
+                      {fmtTimeStr(exc.requested_time)}
+                      {exc.return_time && (
+                        <span className="text-text-4 ml-1">→ {fmtTimeStr(exc.return_time)}</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 font-ui text-[12px] text-text-2 max-w-[160px]">
+                      <span className="line-clamp-2">{exc.reason}</span>
+                    </td>
+                    <td className="px-4 py-3"><ExcStatusChip status={exc.status} /></td>
+                    <td className="px-4 py-3">
+                      {exc.exception_type === 'out_of_office' ? (
+                        <div className="text-[11px] font-mono text-text-3 space-y-0.5">
+                          <div>Out: {fmtTs(exc.actual_departure)}</div>
+                          <div>Back: {fmtTs(exc.actual_return)}</div>
+                        </div>
+                      ) : (
+                        <span className="font-mono text-[11px] text-text-4">—</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      {exc.status === 'pending' ? (
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => handleApprove(exc.id)}
+                            disabled={reviewMutation.isPending}
+                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-sm bg-success/10 border border-success/30 text-success text-[11.5px] font-ui font-semibold hover:bg-success/20 transition-colors"
+                          >
+                            <ThumbsUp size={12} /> Approve
+                          </button>
+                          <button
+                            onClick={() => setRejectTarget(exc.id)}
+                            disabled={reviewMutation.isPending}
+                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-sm bg-error/10 border border-error/30 text-error text-[11.5px] font-ui font-semibold hover:bg-error/20 transition-colors"
+                          >
+                            <ThumbsDown size={12} /> Reject
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="font-mono text-[11px] text-text-4">
+                          {exc.reviewed_at
+                            ? new Date(exc.reviewed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                            : '—'}
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                )
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Reject modal */}
+      {rejectTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => { setRejectTarget(null); setRejectNote('') }} />
+          <div className="relative bg-surface-1 border border-border-default rounded-xl p-6 w-full max-w-sm shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-display font-bold text-[16px] text-text-1">Reject Exception</h3>
+              <button onClick={() => { setRejectTarget(null); setRejectNote('') }} className="text-text-4 hover:text-text-1"><X size={18} /></button>
+            </div>
+            <p className="font-ui text-[13px] text-text-3 mb-4">Provide a reason so the employee knows what to address.</p>
+            <textarea
+              value={rejectNote}
+              onChange={(e) => setRejectNote(e.target.value)}
+              placeholder="Reason for rejection..."
+              rows={3}
+              autoFocus
+              className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-ui text-text-1 placeholder:text-text-4 outline-none focus:border-border-focus resize-none mb-4"
+            />
+            <div className="flex gap-2.5">
+              <Button variant="ghost" size="sm" className="flex-1" onClick={() => { setRejectTarget(null); setRejectNote('') }}>Cancel</Button>
+              <Button
+                size="sm"
+                variant="danger"
+                className="flex-1"
+                disabled={!rejectNote.trim() || reviewMutation.isPending}
+                onClick={handleReject}
+              >
+                <X size={14} /> Reject
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 /* ── Settings tab ─────────────────────────────────────────────────────────── */
 function SettingsTab() {
   const toast = useToast()
@@ -892,13 +1147,7 @@ function SettingsTab() {
 
           <div>
             <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Timezone</label>
-            <input
-              type="text"
-              value={tz}
-              onChange={(e) => setTz(e.target.value)}
-              placeholder="Asia/Karachi"
-              className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-mono text-text-1 placeholder:text-text-4 outline-none focus:border-border-focus"
-            />
+            <TimezoneSelect value={tz} onChange={setTz} />
           </div>
 
           <div>
@@ -931,20 +1180,37 @@ function SettingsTab() {
 }
 
 /* ── Page ──────────────────────────────────────────────────────────────────── */
-type Tab = 'records' | 'wfh' | 'devices' | 'settings'
+type Tab = 'records' | 'wfh' | 'exceptions' | 'devices' | 'settings'
+
+const MGMT = ['super_admin', 'admin', 'hr']
+const CAN_SETTINGS = ['super_admin', 'admin']
 
 export default function AttendancePage() {
+  const { profile } = useAuthContext()
+  const role = profile?.role ?? ''
+  const canManage  = MGMT.includes(role)
+  const canSettings = CAN_SETTINGS.includes(role)
+
   const [view, setView] = useState<Tab>('records')
   const pendingWFH = WFH_REQUESTS.filter((r) => r.status === 'pending').length
   const { data: devices = [] } = useEnrolledDevices()
   const pendingDevices = devices.filter((d) => !d.approved_by && d.is_active).length
+  const { data: pendingExcData = [] } = useAllAttendanceExceptions({ status: 'pending' })
+  const pendingExceptions = pendingExcData.length
 
   const tabs: { id: Tab; label: string; icon: typeof Users; badge?: number }[] = [
-    { id: 'records',  label: 'Daily Records',    icon: Users },
-    { id: 'wfh',      label: 'WFH Requests',     icon: Home,         badge: pendingWFH },
-    { id: 'devices',  label: 'Enrolled Devices', icon: Smartphone,   badge: pendingDevices },
-    { id: 'settings', label: 'Settings',         icon: SettingsIcon },
+    { id: 'records', label: 'Daily Records', icon: Users },
+    ...(canManage ? [
+      { id: 'wfh'        as Tab, label: 'WFH Requests',    icon: Home,        badge: pendingWFH },
+      { id: 'exceptions' as Tab, label: 'Exceptions',       icon: AlertCircle, badge: pendingExceptions },
+      { id: 'devices'    as Tab, label: 'Enrolled Devices', icon: Smartphone,  badge: pendingDevices },
+    ] : []),
+    ...(canSettings ? [{ id: 'settings' as Tab, label: 'Settings', icon: SettingsIcon }] : []),
   ]
+
+  // Clamp active tab to allowed set (e.g. after role change in dev)
+  const allowedIds = new Set(tabs.map((t) => t.id))
+  const effectiveView: Tab = allowedIds.has(view) ? view : 'records'
 
   return (
     <div className="flex flex-col flex-1">
@@ -975,7 +1241,7 @@ export default function AttendancePage() {
               onClick={() => setView(id)}
               className={cn(
                 'flex items-center gap-2 px-4 py-2 rounded-sm text-[13px] font-ui font-medium transition-colors relative',
-                view === id
+                effectiveView === id
                   ? 'bg-surface-3 text-text-1 shadow-sm'
                   : 'text-text-3 hover:text-text-2',
               )}
@@ -991,10 +1257,11 @@ export default function AttendancePage() {
           ))}
         </div>
 
-        {view === 'records'  && <DailyRecordsTab />}
-        {view === 'wfh'      && <WFHRequestsTab />}
-        {view === 'devices'  && <EnrolledDevicesTab />}
-        {view === 'settings' && <SettingsTab />}
+        {effectiveView === 'records'    && <DailyRecordsTab canManage={canManage} />}
+        {effectiveView === 'wfh'        && <WFHRequestsTab />}
+        {effectiveView === 'exceptions' && <ExceptionsTab />}
+        {effectiveView === 'devices'    && <EnrolledDevicesTab />}
+        {effectiveView === 'settings'   && <SettingsTab />}
       </div>
     </div>
   )
