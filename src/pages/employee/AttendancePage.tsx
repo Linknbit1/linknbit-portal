@@ -121,6 +121,8 @@ function CheckInCard() {
         setErrorMsg('You must be connected to the office WiFi to check in.')
       } else if (code === 'duplicate') {
         setErrorMsg('You have already checked in today.')
+      } else if (code === 'device_blocked') {
+        setErrorMsg('This device has been blocked by HR. Please contact HR to reactivate it or use an approved device.')
       } else {
         setErrorMsg(msg || 'Check-in failed. Please try again or contact HR.')
       }
