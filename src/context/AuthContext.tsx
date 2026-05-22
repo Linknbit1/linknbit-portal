@@ -39,6 +39,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Stable ref so the scheduled refresh timer always closes over the latest token
   const accessTokenRef = useRef<string | null>(null)
   const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // React 18 StrictMode double-invokes effects in dev. Refresh tokens are single-use,
+  // so the second concurrent call gets a 401 and its setLoading(false) races ahead of
+  // the successful applySession(), causing a spurious logout. This guard ensures init
+  // runs only once across the StrictMode mount/unmount/remount cycle.
+  const initDone = useRef(false)
 
   function clearAll(): void {
     if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current)
@@ -93,6 +98,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
+    if (initDone.current) return
+    initDone.current = true
+
     // On every page load: ask the BFF to exchange the HTTP-only cookie for a fresh token.
     // If there's no cookie (or it's expired), the user stays logged out.
     bffRefreshSession()
@@ -112,6 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuthContext(): AuthContextValue {
   const ctx = useContext(AuthContext)
   if (!ctx) throw new Error('useAuthContext must be used inside <AuthProvider>')

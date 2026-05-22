@@ -101,6 +101,8 @@ function SelfCheckInCard() {
         toast('You must be on the office WiFi to check in.', 'error')
       } else if (code === 'duplicate') {
         toast('Already checked in today.', 'warning')
+      } else if (code === 'device_blocked') {
+        toast('This device has been blocked. Contact HR to reactivate it.', 'error')
       } else {
         toast(msg || 'Check-in failed', 'error')
       }
@@ -671,6 +673,16 @@ function EnrolledDevicesTab() {
     }
   }
 
+  const handleReactivate = async (deviceId: string) => {
+    if (!profile) return
+    try {
+      await approveMutation.mutateAsync({ deviceId, approvedBy: profile.id })
+      toast('Device reactivated — employee can check in again', 'success')
+    } catch {
+      toast('Failed to reactivate device', 'error')
+    }
+  }
+
   const DeviceRow = ({ d }: { d: typeof devices[number] }) => (
     <tr className="border-b border-border-subtle hover:bg-white/[0.015] transition-colors">
       <td className="px-4 py-3">
@@ -721,6 +733,15 @@ function EnrolledDevicesTab() {
               className="flex items-center gap-1 px-2.5 py-1.5 rounded-sm bg-error/10 border border-error/30 text-error text-[11.5px] font-ui font-semibold hover:bg-error/20 transition-colors"
             >
               <X size={12} /> Deactivate
+            </button>
+          )}
+          {!d.is_active && (
+            <button
+              onClick={() => handleReactivate(d.id)}
+              disabled={approveMutation.isPending}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-sm bg-service-dev/10 border border-service-dev/30 text-service-dev text-[11.5px] font-ui font-semibold hover:bg-service-dev/20 transition-colors"
+            >
+              <CheckCircle2 size={12} /> Reactivate
             </button>
           )}
         </div>

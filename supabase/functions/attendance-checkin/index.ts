@@ -137,6 +137,25 @@ Deno.serve(async (req: Request) => {
 
   // 7. Device enrollment check
   let deviceFlagged = false
+
+  // Block check-in if this profile's device was explicitly deactivated by HR/admin.
+  // Must run before the active-device query so the auto-enroll upsert below never
+  // re-activates a device that was intentionally blocked.
+  const { data: blockedRecord } = await supabase
+    .from('enrolled_devices')
+    .select('id')
+    .eq('profile_id', profileId)
+    .eq('device_fingerprint', deviceFingerprint)
+    .eq('is_active', false)
+    .maybeSingle()
+
+  if (blockedRecord) {
+    return json({
+      error: 'This device has been blocked by HR. Please contact HR or use an approved device to check in.',
+      code: 'device_blocked',
+    }, 403)
+  }
+
   const { data: matchedDevices } = await supabase
     .from('enrolled_devices')
     .select('id, profile_id, is_active')
