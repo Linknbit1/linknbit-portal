@@ -170,6 +170,13 @@ Deno.serve(async (req: Request) => {
     const foreign = matchedDevices.find((d: { profile_id: string }) => d.profile_id !== profileId)
     if (foreign) {
       deviceFlagged = true
+      // Enroll this user on the shared device as pending review
+      await supabase
+        .from('enrolled_devices')
+        .upsert(
+          { profile_id: profileId, device_fingerprint: deviceFingerprint, device_name: deviceName, is_active: true },
+          { onConflict: 'profile_id,device_fingerprint' },
+        )
     } else {
       await supabase
         .from('enrolled_devices')
