@@ -43,7 +43,8 @@
       "Bash(pnpm sb:migration *)",
       "Bash(pnpm sb:link)",
       "Bash(supabase functions *)",
-      "Bash(curl *)"
+      "Bash(curl *)",
+      "Bash(node -e \"const p=require\\('./node_modules/@supabase/supabase-js/package.json'\\); console.log\\(p.version\\)\")"
     ]
   },
   "enableAllProjectMcpServers": true,
