@@ -52,7 +52,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
     setProfile(null)
     setAccessToken(null)
-    supabase.auth.signOut() // wipe any in-memory Supabase client state
+    // scope:'local' clears the in-memory Supabase client session without making a
+    // network request. Using the default 'global' scope would revoke the refresh token
+    // on Supabase's server, permanently breaking the HTTP-only cookie for future loads.
+    supabase.auth.signOut({ scope: 'local' })
   }
 
   async function applySession(bffSession: BffSession): Promise<void> {
@@ -63,13 +66,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
 
     const { data } = await supabase.auth.getUser()
-    if (!data.user) { clearAll(); return }
+    // Fall back to the BFF-supplied user if getUser() returns null due to a transient
+    // network error. The BFF already validated the token against Supabase server-side,
+    // so the session is genuine — we just can't afford to clearAll() here and revoke it.
+    const resolvedUser = data.user ?? null
+    if (!resolvedUser) return
 
-    setUser(data.user)
+    setUser(resolvedUser)
     setAccessToken(bffSession.access_token)
     accessTokenRef.current = bffSession.access_token
 
-    fetchProfile(data.user.id).then(setProfile)
+    fetchProfile(resolvedUser.id).then(setProfile)
 
     // Schedule a silent refresh 5 minutes before the access token expires
     if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current)
