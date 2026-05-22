@@ -40,7 +40,10 @@
       "Bash(pnpm build *)",
       "mcp__supabase__list_tables",
       "mcp__supabase__get_logs",
-      "Bash(pnpm sb:migration *)"
+      "Bash(pnpm sb:migration *)",
+      "Bash(pnpm sb:link)",
+      "Bash(supabase functions *)",
+      "Bash(curl *)"
     ]
   },
   "enableAllProjectMcpServers": true,
