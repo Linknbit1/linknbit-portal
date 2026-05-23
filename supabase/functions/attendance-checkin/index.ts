@@ -89,6 +89,29 @@ Deno.serve(async (req: Request) => {
   // en-CA locale reliably formats as YYYY-MM-DD, which PostgreSQL date columns expect
   const today = new Intl.DateTimeFormat('en-CA', { timeZone: tz }).format(now)
 
+  // 4a. Weekend gate — derive day-of-week from the already-localized date string
+  const [ty, tm, td] = today.split('-').map(Number)
+  const dayOfWeek = new Date(ty, tm - 1, td).getDay() // 0 = Sun, 6 = Sat
+
+  if (dayOfWeek === 0) {
+    return json({ error: 'Check-in is not allowed on Sundays.', code: 'weekend' }, 422)
+  }
+
+  if (dayOfWeek === 6) {
+    if (!settings.saturday_working) {
+      // Check if this specific Saturday is in the working_saturdays table
+      const { data: workingSat } = await supabase
+        .from('working_saturdays')
+        .select('id')
+        .eq('date', today)
+        .maybeSingle()
+
+      if (!workingSat) {
+        return json({ error: 'Check-in is not allowed on Saturdays.', code: 'weekend' }, 422)
+      }
+    }
+  }
+
   const [startH, startM] = settings.work_start_time.split(':').map(Number)
   const [endH, endM] = settings.work_end_time.split(':').map(Number)
   const graceMin = settings.grace_period_min

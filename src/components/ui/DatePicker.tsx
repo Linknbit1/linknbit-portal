@@ -6,6 +6,8 @@ interface DatePickerProps {
   value: string            // YYYY-MM-DD or ''
   onChange: (val: string) => void
   minDate?: string         // YYYY-MM-DD — dates before this are disabled
+  maxDate?: string         // YYYY-MM-DD — dates after this are disabled
+  allowedDow?: number[]    // 0=Sun … 6=Sat — only these weekdays are selectable
   placeholder?: string
   className?: string
 }
@@ -27,10 +29,11 @@ function parseStr(s: string): Date | null {
   return new Date(y, m - 1, d)
 }
 
-export function DatePicker({ value, onChange, minDate, placeholder = 'Select date…', className }: DatePickerProps) {
+export function DatePicker({ value, onChange, minDate, maxDate, allowedDow, placeholder = 'Select date…', className }: DatePickerProps) {
   const todayStr = toStr(new Date())
   const selected = parseStr(value)
   const minD = parseStr(minDate ?? '')
+  const maxD = parseStr(maxDate ?? '')
 
   const [open, setOpen] = useState(false)
   const [displayYear, setDisplayYear] = useState(() => (selected ?? new Date()).getFullYear())
@@ -70,7 +73,13 @@ export function DatePicker({ value, onChange, minDate, placeholder = 'Select dat
   while (cells.length % 7 !== 0) cells.push(null)
 
   const dayStr = (day: number) => toStr(new Date(displayYear, displayMonth, day))
-  const isDisabled = (day: number) => !!minD && new Date(displayYear, displayMonth, day) < minD
+  const isDisabled = (day: number) => {
+    const d = new Date(displayYear, displayMonth, day)
+    if (minD && d < minD) return true
+    if (maxD && d > maxD) return true
+    if (allowedDow && !allowedDow.includes(d.getDay())) return true
+    return false
+  }
   const isToday = (day: number) => dayStr(day) === todayStr
   const isSelected = (day: number) => dayStr(day) === value
 
@@ -80,7 +89,7 @@ export function DatePicker({ value, onChange, minDate, placeholder = 'Select dat
     setOpen(false)
   }
 
-  const todayDisabled = !!minD && new Date() < minD
+  const todayDisabled = (!!minD && new Date() < minD) || (!!maxD && new Date() > maxD)
 
   const triggerLabel = (() => {
     if (!value) return null
