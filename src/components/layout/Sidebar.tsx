@@ -17,15 +17,13 @@ import { Avatar } from '../ui/Avatar'
 import { RoleBadge } from '../shared/RoleBadge'
 import { useAuthContext } from '../../context/AuthContext'
 
-const ATTENDANCE_ADMIN_ROLES = ['super_admin', 'admin', 'hr', 'project_manager']
-
 const NAV_ITEMS = [
   { label: 'Dashboard', icon: LayoutDashboard, to: '/admin/dashboard' },
   { label: 'Projects', icon: FolderOpen, to: '/admin/projects', badge: 2 },
   { label: 'Clients', icon: UserCircle, to: '/admin/clients' },
   { label: 'Teams', icon: Users, to: '/admin/teams' },
   { label: 'Tasks', icon: CheckSquare, to: '/admin/tasks', badge: 7 },
-  { label: 'Attendance', icon: CalendarCheck, to: '/admin/attendance' },
+  { label: 'Attendance', icon: CalendarCheck, to: '/attendance' },
   { label: 'Reports', icon: BarChart2, to: '/admin/reports' },
   { label: 'Gamification', icon: Trophy, to: '/admin/gamification' },
   { label: 'ClickUp', icon: Link2, to: '/admin/clickup' },
@@ -36,11 +34,8 @@ export function Sidebar() {
   const location = useLocation()
   const { profile } = useAuthContext()
   const role = profile?.role ?? 'employee'
-  const attendancePath = ATTENDANCE_ADMIN_ROLES.includes(role) ? '/admin/attendance' : '/employee/attendance'
 
-  const navItems = NAV_ITEMS.map((item) =>
-    item.label === 'Attendance' ? { ...item, to: attendancePath } : item
-  )
+  const navItems = NAV_ITEMS
 
   return (
     <aside className="w-sidebar-expanded bg-surface-1 border-r border-border-default flex flex-col sticky top-0 h-screen overflow-y-auto flex-shrink-0">
