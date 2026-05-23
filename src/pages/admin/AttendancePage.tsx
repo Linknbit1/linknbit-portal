@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import {
-  MapPin, CheckCircle2, Clock, LogOut, Users, Calendar,
+  CheckCircle2, Clock, LogOut, Users, Calendar,
   AlertTriangle, Wifi, Monitor, Search, Download, Plus, X, Check,
   Home, ChevronDown, ClipboardList, ThumbsUp, ThumbsDown, ShieldCheck,
   Smartphone, Settings as SettingsIcon, Shield, AlertCircle, Save,
@@ -17,9 +17,7 @@ import { TimePicker } from '../../components/ui/TimePicker'
 import { useToast } from '../../components/ui/toast-context'
 import { useAuthContext } from '../../context/AuthContext'
 import {
-  useMyTodayAttendance,
   useAllAttendance,
-  useCheckIn,
   useMarkAttendance,
   useAdminCheckOut,
   useAttendanceSettings,
@@ -39,8 +37,8 @@ import {
 } from '../../hooks/useAttendance'
 import type { AttendanceExceptionWithProfile } from '../../api/attendance'
 import { useActiveProfiles } from '../../hooks/useAuth'
+import { AttendanceCheckInCard } from '../../components/shared/AttendanceCheckInCard'
 import { useEnrolledDevices, useApproveDevice, useDeactivateDevice } from '../../hooks/useEnrolledDevices'
-import { getDeviceFingerprint, getDeviceName } from '../../lib/deviceUtils'
 import { WFH_REQUESTS } from '../../data/mock'
 import type { WFHRequest, WFHStatus } from '../../types'
 import type { AttendanceWithProfile } from '../../api/attendance'
@@ -79,108 +77,6 @@ function WFHStatusChip({ status }: { status: WFHStatus }) {
       <span className="w-1.5 h-1.5 rounded-full" style={{ background: m.dot }} />
       {m.label}
     </span>
-  )
-}
-
-/* ── Self Check-In card ───────────────────────────────────────────────────── */
-function SelfCheckInCard() {
-  const toast = useToast()
-  const { data: today, isLoading } = useMyTodayAttendance()
-  const checkInMutation = useCheckIn()
-  const [time, setTime] = useState('')
-
-  useEffect(() => {
-    const tick = () => setTime(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }))
-    tick()
-    const id = setInterval(tick, 1000)
-    return () => clearInterval(id)
-  }, [])
-
-  const handleCheckIn = async () => {
-    try {
-      const [fingerprint, name] = await Promise.all([getDeviceFingerprint(), Promise.resolve(getDeviceName())])
-      const result = await checkInMutation.mutateAsync({ deviceFingerprint: fingerprint, deviceName: name })
-      const msg = result.status === 'late' ? `Checked in (late) at ${time}` : `Checked in at ${time} — +10 XP earned!`
-      toast(msg, result.status === 'late' ? 'warning' : 'success')
-      if (result.device_flagged) {
-        toast('Your device is not recognised. HR has been notified.', 'warning')
-      }
-    } catch (err: unknown) {
-      const code = (err as { code?: string }).code ?? ''
-      const msg  = err instanceof Error ? err.message : 'Check-in failed'
-      if (code === 'outside_window') {
-        toast(msg, 'error')
-      } else if (code === 'wrong_network') {
-        toast('You must be on the office WiFi to check in.', 'error')
-      } else if (code === 'duplicate') {
-        toast('Already checked in today.', 'warning')
-      } else if (code === 'device_blocked') {
-        toast('This device has been blocked. Contact HR to reactivate it.', 'error')
-      } else {
-        toast(msg || 'Check-in failed', 'error')
-      }
-    }
-  }
-
-  if (isLoading) {
-    return (
-      <div className="w-24 h-24 rounded-full bg-surface-2 animate-pulse mx-auto" />
-    )
-  }
-
-  if (today) {
-    const checkedOut = Boolean(today.check_out)
-    return (
-      <div className="flex flex-col items-center gap-3">
-        <div className={cn(
-          'w-24 h-24 rounded-full border-2 flex items-center justify-center',
-          today.status === 'present' ? 'bg-success/15 border-success/40' : 'bg-warning/15 border-warning/40',
-        )}>
-          <CheckCircle2 size={40} className={today.status === 'present' ? 'text-success' : 'text-warning'} />
-        </div>
-        <div className="text-center">
-          <p className={cn('font-display font-bold text-[18px]', today.status === 'present' ? 'text-success' : 'text-warning')}>
-            {today.status === 'late' ? 'Checked In (Late)' : 'Checked In'}
-          </p>
-          {today.check_in && (
-            <p className="font-mono text-[13px] text-text-3 mt-0.5">
-              {new Date(today.check_in).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-              {checkedOut && today.check_out && (
-                <> → {new Date(today.check_out).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</>
-              )}
-            </p>
-          )}
-          {today.device_flagged && (
-            <div className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-warning/10 border border-warning/30 text-[11.5px] font-ui text-warning">
-              <AlertCircle size={12} /> Device not recognised — HR notified
-            </div>
-          )}
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="flex flex-col items-center gap-3">
-      <button
-        onClick={handleCheckIn}
-        disabled={checkInMutation.isPending}
-        className={cn(
-          'w-24 h-24 rounded-full border-2 flex items-center justify-center transition-all duration-200',
-          'border-brand-red/50 bg-brand-red/10 hover:bg-brand-red/20 hover:border-brand-red hover:scale-105 active:scale-95',
-          checkInMutation.isPending && 'opacity-70 cursor-not-allowed',
-        )}
-      >
-        {checkInMutation.isPending
-          ? <span className="w-7 h-7 border-2 border-brand-red border-t-transparent rounded-full animate-spin" />
-          : <MapPin size={36} className="text-brand-red" />
-        }
-      </button>
-      <div className="text-center">
-        <p className="font-display font-bold text-[18px] text-text-1">Check In</p>
-        <p className="font-mono text-[13px] text-text-3 mt-0.5">{time}</p>
-      </div>
-    </div>
   )
 }
 
@@ -2453,19 +2349,7 @@ export default function AttendancePage() {
       <div className="p-6 flex flex-col gap-6 max-w-content mx-auto w-full">
 
         {/* Self Check-In Card */}
-        <div className="bg-surface-1 border border-border-default rounded-xl p-8 flex flex-col items-center gap-6">
-          <div className="text-center">
-            <h2 className="font-display font-bold text-[18px] text-text-1">Your Attendance</h2>
-            <p className="font-mono text-[12px] text-text-4 mt-1">
-              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-            </p>
-          </div>
-          <SelfCheckInCard />
-          <div className="flex items-center gap-6 text-[12px] font-mono text-text-3">
-            <span className="flex items-center gap-1.5"><Wifi size={12} className="text-success" /> Office Network Required</span>
-            <span className="flex items-center gap-1.5"><Home size={12} className="text-service-dev" /> WFH needs HR approval</span>
-          </div>
-        </div>
+        <AttendanceCheckInCard />
 
         {/* Tab switcher */}
         <div className="flex items-center gap-1 bg-surface-1 border border-border-default rounded-lg p-1 self-start">
