@@ -44,7 +44,9 @@
       "Bash(pnpm sb:link)",
       "Bash(supabase functions *)",
       "Bash(curl *)",
-      "Bash(node -e \"const p=require\\('./node_modules/@supabase/supabase-js/package.json'\\); console.log\\(p.version\\)\")"
+      "Bash(node -e \"const p=require\\('./node_modules/@supabase/supabase-js/package.json'\\); console.log\\(p.version\\)\")",
+      "Bash(pnpm lint *)",
+      "Bash(npx eslint *)"
     ]
   },
   "enableAllProjectMcpServers": true,

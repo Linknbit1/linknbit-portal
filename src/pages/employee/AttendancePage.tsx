@@ -14,6 +14,7 @@ import {
   X,
   Check,
   ClipboardList,
+  Hourglass,
 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Card } from '../../components/ui/Card'
@@ -30,6 +31,8 @@ import {
   useRequestException,
   useLogOooDeparture,
   useLogOooReturn,
+  useMyOvertimeRequests,
+  useSubmitOvertime,
 } from '../../hooks/useAttendance'
 import { getDeviceFingerprint, getDeviceName } from '../../lib/deviceUtils'
 import { useToast } from '../../components/ui/toast-context'
@@ -650,6 +653,185 @@ function MyExceptionsSection() {
   )
 }
 
+// ── Overtime section ──────────────────────────────────────────────────────────
+
+const OT_STATUS_CLS: Record<string, string> = {
+  pending:  'bg-warning/10 text-warning border-warning/25',
+  approved: 'bg-success/10 text-success border-success/25',
+  rejected: 'bg-error/10 text-error border-error/25',
+}
+
+function OvertimeSection() {
+  const toast = useToast()
+  const [modalOpen, setModalOpen] = useState(false)
+  const [form, setForm] = useState({
+    date: new Date().toISOString().split('T')[0],
+    startTime: '',
+    endTime: '',
+    reason: '',
+  })
+
+  const { data: requests = [], isLoading } = useMyOvertimeRequests()
+  const submitMut = useSubmitOvertime()
+
+  const computedHours = (() => {
+    if (!form.startTime || !form.endTime) return 0
+    const [sh, sm] = form.startTime.split(':').map(Number)
+    const [eh, em] = form.endTime.split(':').map(Number)
+    const diff = (eh * 60 + em) - (sh * 60 + sm)
+    return diff > 0 ? parseFloat((diff / 60).toFixed(2)) : 0
+  })()
+
+  const handleSubmit = async () => {
+    if (!form.date || !form.startTime || !form.endTime || !form.reason.trim() || computedHours <= 0) return
+    try {
+      await submitMut.mutateAsync({
+        date: form.date,
+        start_time: form.startTime,
+        end_time: form.endTime,
+        hours: computedHours,
+        reason: form.reason.trim(),
+      })
+      toast('Overtime request submitted — awaiting HR approval', 'success')
+      setModalOpen(false)
+      setForm({ date: new Date().toISOString().split('T')[0], startTime: '', endTime: '', reason: '' })
+    } catch {
+      toast('Failed to submit overtime request', 'error')
+    }
+  }
+
+  const fmtDate = (d: string) =>
+    new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  const fmtT = (t: string) => {
+    const [h, m] = t.split(':').map(Number)
+    return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`
+  }
+
+  const todayStr = new Date().toISOString().split('T')[0]
+
+  return (
+    <>
+      <div className="flex items-center justify-between">
+        <h2 className="font-display font-semibold text-h4 text-text-1">Overtime Requests</h2>
+        <Button size="sm" onClick={() => setModalOpen(true)}>
+          <Plus size={13} /> Log Overtime
+        </Button>
+      </div>
+
+      {isLoading ? (
+        <Card className="animate-pulse"><div className="h-16 bg-surface-2 rounded" /></Card>
+      ) : requests.length === 0 ? (
+        <Card className="py-8 text-center">
+          <Hourglass size={24} className="mx-auto text-text-4 mb-2" />
+          <p className="font-ui text-[13px] text-text-3">No overtime requests yet</p>
+          <p className="font-ui text-caption text-text-4 mt-1">
+            Worked extra hours? Log it here and HR will review it.
+          </p>
+        </Card>
+      ) : (
+        <Card padding="none">
+          <div className="divide-y divide-border-subtle">
+            {requests.slice(0, 8).map((req) => (
+              <div key={req.id} className="flex items-start gap-3 px-5 py-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                    <span className="font-ui font-medium text-[13px] text-text-1">
+                      {fmtDate(req.date)}
+                    </span>
+                    <span className="font-mono text-[11px] text-text-3">
+                      {fmtT(req.start_time)} – {fmtT(req.end_time)}
+                    </span>
+                    <span className="font-display font-bold text-[13px] text-service-mkt">{req.hours}h</span>
+                  </div>
+                  <p className="font-ui text-[12px] text-text-3 truncate">{req.reason}</p>
+                  {req.review_note && (
+                    <p className="font-ui text-[11px] text-error mt-0.5 italic">"{req.review_note}"</p>
+                  )}
+                </div>
+                <span className={cn(
+                  'inline-flex items-center px-2 py-0.5 rounded-xs border text-[11px] font-mono font-semibold flex-shrink-0 mt-0.5',
+                  OT_STATUS_CLS[req.status] ?? OT_STATUS_CLS['pending'],
+                )}>
+                  {req.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Submit modal */}
+      {modalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setModalOpen(false)} />
+          <div className="relative bg-surface-1 border border-border-default rounded-xl p-6 w-full max-w-md shadow-2xl">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="font-display font-bold text-[16px] text-text-1">Log Overtime</h3>
+              <button onClick={() => setModalOpen(false)} className="text-text-4 hover:text-text-1"><X size={18} /></button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Date</label>
+                <DatePicker
+                  value={form.date}
+                  onChange={(v) => setForm((f) => ({ ...f, date: v, startTime: '', endTime: '' }))}
+                  maxDate={todayStr}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Start Time</label>
+                  <TimePicker
+                    value={form.startTime}
+                    onChange={(v) => setForm((f) => ({ ...f, startTime: v, endTime: '' }))}
+                    placeholder="Start…"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">End Time</label>
+                  <TimePicker
+                    value={form.endTime}
+                    onChange={(v) => setForm((f) => ({ ...f, endTime: v }))}
+                    minTime={form.startTime || undefined}
+                    placeholder="End…"
+                  />
+                </div>
+              </div>
+              {computedHours > 0 && (
+                <div className="flex items-center gap-2 px-3 py-2 bg-service-mkt/8 border border-service-mkt/20 rounded-md">
+                  <Hourglass size={13} className="text-service-mkt" />
+                  <span className="font-mono text-[12px] text-service-mkt font-semibold">{computedHours}h overtime</span>
+                </div>
+              )}
+              <div>
+                <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Reason</label>
+                <textarea
+                  value={form.reason}
+                  onChange={(e) => setForm((f) => ({ ...f, reason: e.target.value }))}
+                  placeholder="What work did you do during this time?"
+                  rows={3}
+                  className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-ui text-text-1 placeholder:text-text-4 outline-none focus:border-border-focus resize-none"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2.5 mt-5">
+              <Button variant="ghost" size="sm" className="flex-1" onClick={() => setModalOpen(false)}>Cancel</Button>
+              <Button
+                size="sm"
+                className="flex-1"
+                disabled={!form.date || !form.startTime || !form.endTime || !form.reason.trim() || computedHours <= 0 || submitMut.isPending}
+                onClick={handleSubmit}
+              >
+                <Check size={14} /> Submit
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function EmployeeAttendancePage() {
@@ -667,6 +849,9 @@ export default function EmployeeAttendancePage() {
 
         {/* Exception requests */}
         <MyExceptionsSection />
+
+        {/* Overtime requests */}
+        <OvertimeSection />
 
         {/* Summary stats */}
         {!isLoading && history.length > 0 && <SummaryStats records={history} />}

@@ -5,6 +5,8 @@ export type AttendanceRow = Tables<'attendance'>
 export type AttendanceSettings = Tables<'attendance_settings'>
 export type EnrolledDevice = Tables<'enrolled_devices'>
 export type AttendanceException = Tables<'attendance_exceptions'>
+export type HolidayRow = Tables<'holidays'>
+export type OvertimeRequest = Tables<'overtime_requests'>
 
 export interface CheckInResult {
   status: 'present' | 'late'
@@ -324,6 +326,32 @@ export async function logOooReturn(id: string): Promise<AttendanceException> {
   return data
 }
 
+// ── Monthly attendance report (admin/HR) ─────────────────────────────────────
+
+export interface MonthlyReportRow extends AttendanceWithProfile {
+  profiles: { name: string; avatar_url: string | null; role: string } | null
+}
+
+export async function fetchMonthlyAttendance(
+  year: number,
+  month: number, // 1-indexed
+): Promise<MonthlyReportRow[]> {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const from = `${year}-${pad(month)}-01`
+  // Last day of the month
+  const last = new Date(year, month, 0).getDate()
+  const to   = `${year}-${pad(month)}-${pad(last)}`
+
+  const { data, error } = await supabase
+    .from('attendance')
+    .select('*, profiles!attendance_profile_id_fkey(name, avatar_url, role)')
+    .gte('date', from)
+    .lte('date', to)
+    .order('date', { ascending: true })
+  if (error) throw error
+  return data as unknown as MonthlyReportRow[]
+}
+
 // ── Admin: exceptions with profile join ───────────────────────────────────────
 
 export interface AttendanceExceptionWithProfile extends AttendanceException {
@@ -345,4 +373,169 @@ export async function fetchAllAttendanceExceptions(
   if (error) throw error
   // as unknown: Supabase cannot infer the joined shape when multiple FKs exist on profiles
   return data as unknown as AttendanceExceptionWithProfile[]
+}
+
+// ── Holidays ──────────────────────────────────────────────────────────────────
+
+export async function fetchHolidays(year?: number): Promise<HolidayRow[]> {
+  let q = supabase.from('holidays').select('*').order('date', { ascending: true })
+  if (year) {
+    q = q.gte('date', `${year}-01-01`).lte('date', `${year}-12-31`)
+  }
+  const { data, error } = await q
+  if (error) throw error
+  return data
+}
+
+export interface CreateHolidayPayload {
+  date: string
+  name: string
+  type: 'public_holiday' | 'company_off' | 'optional'
+}
+
+export async function createHoliday(
+  payload: CreateHolidayPayload,
+  createdBy: string,
+): Promise<HolidayRow> {
+  const { data, error } = await supabase
+    .from('holidays')
+    .insert({ ...payload, created_by: createdBy })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function createHolidayRange(
+  startDate: string,
+  endDate: string,
+  name: string,
+  type: CreateHolidayPayload['type'],
+  createdBy: string,
+): Promise<HolidayRow[]> {
+  const dates: string[] = []
+  const cur = new Date(startDate + 'T00:00:00')
+  const end = new Date(endDate   + 'T00:00:00')
+  while (cur <= end) {
+    const y = cur.getFullYear()
+    const m = String(cur.getMonth() + 1).padStart(2, '0')
+    const d = String(cur.getDate()).padStart(2, '0')
+    dates.push(`${y}-${m}-${d}`)
+    cur.setDate(cur.getDate() + 1)
+  }
+  const rows = dates.map((date) => ({ date, name, type, created_by: createdBy }))
+  const { data, error } = await supabase.from('holidays').insert(rows).select()
+  if (error) throw error
+  return data
+}
+
+export async function deleteHoliday(id: string): Promise<void> {
+  const { error } = await supabase.from('holidays').delete().eq('id', id)
+  if (error) throw error
+}
+
+// ── Working Saturdays ─────────────────────────────────────────────────────────
+
+export type WorkingSaturday = Tables<'working_saturdays'>
+
+export async function fetchWorkingSaturdays(year?: number): Promise<WorkingSaturday[]> {
+  let q = supabase.from('working_saturdays').select('*').order('date', { ascending: true })
+  if (year) q = q.gte('date', `${year}-01-01`).lte('date', `${year}-12-31`)
+  const { data, error } = await q
+  if (error) throw error
+  return data
+}
+
+export async function addWorkingSaturday(
+  date: string,
+  note: string | null,
+  createdBy: string,
+): Promise<WorkingSaturday> {
+  const { data, error } = await supabase
+    .from('working_saturdays')
+    .insert({ date, note, created_by: createdBy })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function removeWorkingSaturday(id: string): Promise<void> {
+  const { error } = await supabase.from('working_saturdays').delete().eq('id', id)
+  if (error) throw error
+}
+
+// ── Overtime requests ─────────────────────────────────────────────────────────
+
+export interface OvertimeRequestWithProfile extends OvertimeRequest {
+  profiles: { name: string; avatar_url: string | null } | null
+}
+
+export interface SubmitOvertimePayload {
+  date: string
+  start_time: string
+  end_time: string
+  hours: number
+  reason: string
+}
+
+export async function submitOvertimeRequest(
+  payload: SubmitOvertimePayload,
+): Promise<OvertimeRequest> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+  const { data, error } = await supabase
+    .from('overtime_requests')
+    .insert({ ...payload, profile_id: user.id })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function fetchMyOvertimeRequests(): Promise<OvertimeRequest[]> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+  const { data, error } = await supabase
+    .from('overtime_requests')
+    .select('*')
+    .eq('profile_id', user.id)
+    .order('date', { ascending: false })
+  if (error) throw error
+  return data
+}
+
+export async function fetchAllOvertimeRequests(
+  status?: string,
+): Promise<OvertimeRequestWithProfile[]> {
+  let q = supabase
+    .from('overtime_requests')
+    .select('*, profiles!overtime_requests_profile_id_fkey(name, avatar_url)')
+    .order('date', { ascending: false })
+  if (status) q = q.eq('status', status)
+  const { data, error } = await q
+  if (error) throw error
+  return data as unknown as OvertimeRequestWithProfile[]
+}
+
+export async function reviewOvertimeRequest(
+  id: string,
+  status: 'approved' | 'rejected',
+  reviewedBy: string,
+  reviewNote?: string,
+): Promise<OvertimeRequest> {
+  const { data, error } = await supabase
+    .from('overtime_requests')
+    .update({
+      status,
+      reviewed_by: reviewedBy,
+      reviewed_at: new Date().toISOString(),
+      review_note: reviewNote ?? null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+    .select()
+    .single()
+  if (error) throw error
+  return data
 }
