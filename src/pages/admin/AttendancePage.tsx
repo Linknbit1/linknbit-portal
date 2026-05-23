@@ -38,6 +38,7 @@ import {
   useReviewOvertime,
 } from '../../hooks/useAttendance'
 import type { AttendanceExceptionWithProfile } from '../../api/attendance'
+import { useActiveProfiles } from '../../hooks/useAuth'
 import { useEnrolledDevices, useApproveDevice, useDeactivateDevice } from '../../hooks/useEnrolledDevices'
 import { getDeviceFingerprint, getDeviceName } from '../../lib/deviceUtils'
 import { WFH_REQUESTS } from '../../data/mock'
@@ -1833,6 +1834,9 @@ function ReportsTab() {
 
   const { data: records = [], isLoading } = useMonthlyAttendance(year, month)
   const { data: settings } = useAttendanceSettings()
+  const { data: activeProfiles = [] } = useActiveProfiles()
+  const { data: holidays = [] } = useHolidays(year)
+  const { data: workingSaturdays = [] } = useWorkingSaturdays(year)
 
   const workStartMin = settings
     ? (() => {
@@ -1843,23 +1847,60 @@ function ReportsTab() {
 
   const graceMin = settings?.grace_period_min ?? 15
 
-  // Compute working days in the selected month (Mon–Fri, no holidays in DB for now)
+  // Compute working days for the entire month (for the header count + totalExpected)
   const workingDays = (() => {
+    const holidaySet = new Set(holidays.map((h) => h.date))
+    const workingSatSet = new Set(workingSaturdays.map((s) => s.date))
     const last = new Date(year, month, 0).getDate()
     let count = 0
     for (let d = 1; d <= last; d++) {
       const dow = new Date(year, month - 1, d).getDay()
-      if (dow !== 0 && dow !== 6) count++
+      const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+      if (dow === 0) continue
+      if (dow === 6 && !settings?.saturday_working && !workingSatSet.has(dateStr)) continue
+      if (holidaySet.has(dateStr)) continue
+      count++
     }
     return count
   })()
 
-  // Aggregate per employee
+  // Working days that have already passed (used for absent calculation)
+  const pastWorkingDaySet = (() => {
+    const set = new Set<string>()
+    const holidaySet = new Set(holidays.map((h) => h.date))
+    const workingSatSet = new Set(workingSaturdays.map((s) => s.date))
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+    const last = new Date(year, month, 0).getDate()
+    for (let d = 1; d <= last; d++) {
+      const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+      if (dateStr >= todayStr) break
+      const dow = new Date(year, month - 1, d).getDay()
+      if (dow === 0) continue
+      if (dow === 6 && !settings?.saturday_working && !workingSatSet.has(dateStr)) continue
+      if (holidaySet.has(dateStr)) continue
+      set.add(dateStr)
+    }
+    return set
+  })()
+
+  // Seed statsMap with every active employee so those with zero records still appear
   const statsMap = new Map<string, EmployeeStat>()
+  for (const p of activeProfiles) {
+    statsMap.set(p.id, {
+      profileId: p.id, name: p.name,
+      present: 0, late: 0, absent: 0, halfDay: 0, leave: 0, holiday: 0,
+      totalCheckins: 0, totalMinutes: 0, earlyCount: 0, onTimeCount: 0, avgCheckinMin: 0,
+    })
+  }
+
+  // Track which dates each employee has any record (to detect missing days)
+  const recordDates = new Map<string, Set<string>>()
 
   for (const rec of records) {
     const id   = rec.profile_id
     const name = rec.profiles?.name ?? rec.profile_id.slice(0, 8)
+
+    // Ensure HR-marked employees that aren't in activeProfiles still show up
     if (!statsMap.has(id)) {
       statsMap.set(id, {
         profileId: id, name,
@@ -1867,8 +1908,11 @@ function ReportsTab() {
         totalCheckins: 0, totalMinutes: 0, earlyCount: 0, onTimeCount: 0, avgCheckinMin: 0,
       })
     }
-    const s = statsMap.get(id)!
 
+    if (!recordDates.has(id)) recordDates.set(id, new Set())
+    recordDates.get(id)!.add(rec.date)
+
+    const s = statsMap.get(id)!
     switch (rec.status) {
       case 'present':  s.present++;  break
       case 'late':     s.late++;     break
@@ -1889,6 +1933,14 @@ function ReportsTab() {
     if (rec.check_in && rec.check_out) {
       const diff = (new Date(rec.check_out).getTime() - new Date(rec.check_in).getTime()) / 60000
       if (diff > 0) s.totalMinutes += diff
+    }
+  }
+
+  // Absent = past working days with no attendance record at all
+  for (const [profileId, s] of statsMap) {
+    const empDates = recordDates.get(profileId)
+    for (const dateStr of pastWorkingDaySet) {
+      if (!empDates?.has(dateStr)) s.absent++
     }
   }
 
@@ -1963,7 +2015,7 @@ function ReportsTab() {
           <ChevronRight size={15} />
         </button>
         <span className="ml-1 font-ui text-[12px] text-text-4">
-          {workingDays} working days · {employeeStats.length} employees tracked
+          {workingDays} working days · {employeeStats.length} employees
         </span>
         <button
           onClick={() => {
@@ -2295,16 +2347,14 @@ function SettingsTab() {
               type="button"
               onClick={() => setSaturdayWorking((v) => !v)}
               className={cn(
-                'relative w-10 h-5.5 rounded-full transition-colors flex-shrink-0',
+                'relative flex-shrink-0 rounded-full transition-colors duration-200',
                 saturdayWorking ? 'bg-brand-red' : 'bg-surface-3 border border-border-strong',
               )}
-              style={{ minWidth: '2.5rem', height: '1.375rem' }}
+              style={{ width: 40, height: 22 }}
             >
               <span
-                className={cn(
-                  'absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform',
-                  saturdayWorking ? 'translate-x-[1.125rem]' : 'translate-x-0.5',
-                )}
+                className="absolute top-[3px] w-4 h-4 rounded-full bg-white shadow transition-transform duration-200"
+                style={{ left: 3, transform: saturdayWorking ? 'translateX(18px)' : 'translateX(0)' }}
               />
             </button>
           </div>
@@ -2385,7 +2435,7 @@ export default function AttendancePage() {
       { id: 'wfh'        as Tab, label: 'WFH Requests',    icon: Home,        badge: pendingWFH },
       { id: 'exceptions' as Tab, label: 'Exceptions',       icon: AlertCircle, badge: pendingExceptions },
       { id: 'devices'    as Tab, label: 'Enrolled Devices', icon: Smartphone,  badge: pendingDevices },
-      { id: 'holidays'   as Tab, label: 'Holidays',         icon: Palmtree },
+      { id: 'holidays'   as Tab, label: 'Schedule',          icon: Palmtree },
       { id: 'overtime'   as Tab, label: 'Overtime',         icon: Hourglass,   badge: pendingOvertime },
       { id: 'reports'    as Tab, label: 'Reports',          icon: BarChart2 },
     ] : []),
