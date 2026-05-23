@@ -76,7 +76,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAccessToken(bffSession.access_token)
     accessTokenRef.current = bffSession.access_token
 
-    fetchProfile(resolvedUser.id).then(setProfile)
+    // Await profile so loading stays true until both session AND profile are ready.
+    // If fire-and-forget, loading becomes false while profile is still null, causing
+    // RoleGuard to see profile===null and redirect to /login on hard refresh.
+    const profileData = await fetchProfile(resolvedUser.id)
+    setProfile(profileData)
 
     // Schedule a silent refresh 5 minutes before the access token expires
     if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current)
