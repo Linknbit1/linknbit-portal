@@ -1,6 +1,6 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { useAuthContext } from '../context/AuthContext'
-import { sendOtp, verifyOtp, updatePassword, sendPasswordResetEmail } from '../api/auth'
+import { sendOtp, verifyOtp, updatePassword, sendPasswordResetEmail, fetchActiveProfiles } from '../api/auth'
 
 export { useAuthContext as useSession }
 
@@ -33,4 +33,12 @@ export function useUpdatePassword() {
 
 export function useSendPasswordReset() {
   return useMutation({ mutationFn: (email: string) => sendPasswordResetEmail(email) })
+}
+
+export function useActiveProfiles() {
+  return useQuery({
+    queryKey: ['profiles', 'active'],
+    queryFn: fetchActiveProfiles,
+    staleTime: 5 * 60 * 1000,
+  })
 }
