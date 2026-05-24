@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { Check, Bell, Zap, Layers, Link2, Palette, Shield, ChevronRight, Loader2 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Button } from '../../components/ui/Button'
@@ -61,29 +61,33 @@ const ROLE_LABELS: Record<string, string> = {
   super_admin: 'Super Admin', admin: 'Admin', project_manager: 'PM',
   team_lead: 'Team Lead', employee: 'Employee', hr: 'HR', finance: 'Finance',
 }
-const FEATURE_ORDER = [
-  'can_view_reports', 'can_approve_tasks', 'can_delete_projects',
-  'can_manage_clients', 'can_view_clients', 'can_view_projects',
-  'can_manage_rewards', 'can_manage_quests', 'can_give_shoutout',
-  'can_mark_attendance', 'can_view_all_attendance',
-  'can_manage_people', 'can_grant_xp', 'can_manage_integrations',
-] as const
 const FEATURE_LABELS: Record<string, string> = {
-  can_view_reports: 'View Reports',
-  can_approve_tasks: 'Approve Tasks',
-  can_delete_projects: 'Delete Projects',
-  can_manage_clients: 'Manage Clients',
-  can_view_clients: 'View Clients',
-  can_view_projects: 'View Projects',
-  can_manage_rewards: 'Manage Rewards',
-  can_manage_quests: 'Manage Quests',
-  can_give_shoutout: 'Give Shoutouts',
-  can_mark_attendance: 'Mark Attendance',
-  can_view_all_attendance: 'View All Attendance',
-  can_manage_people: 'Manage People',
-  can_grant_xp: 'Grant XP',
-  can_manage_integrations: 'Manage Integrations',
+  can_view_reports:       'View Reports',
+  can_approve_tasks:      'Approve Tasks',
+  can_delete_projects:    'Delete Projects',
+  can_manage_clients:     'Manage Clients',
+  can_view_clients:       'View Clients',
+  can_view_projects:      'View Projects',
+  can_manage_rewards:     'Manage Rewards',
+  can_manage_quests:      'Manage Quests',
+  can_give_shoutout:      'Give Shoutouts',
+  can_mark_attendance:    'Mark Attendance',
+  can_view_all_attendance:'View All Attendance',
+  can_manage_people:      'Manage People',
+  can_grant_xp:           'Grant XP',
+  can_manage_integrations:'Manage Integrations',
 }
+
+const FEATURE_SECTIONS: { label: string; features: string[] }[] = [
+  { label: 'Projects',     features: ['can_view_projects', 'can_delete_projects'] },
+  { label: 'Tasks',        features: ['can_approve_tasks'] },
+  { label: 'Clients',      features: ['can_view_clients', 'can_manage_clients'] },
+  { label: 'Attendance',   features: ['can_mark_attendance', 'can_view_all_attendance'] },
+  { label: 'People',       features: ['can_manage_people'] },
+  { label: 'Gamification', features: ['can_manage_rewards', 'can_manage_quests', 'can_give_shoutout', 'can_grant_xp'] },
+  { label: 'Reports',      features: ['can_view_reports'] },
+  { label: 'Integrations', features: ['can_manage_integrations'] },
+]
 
 export default function SettingsPage() {
   const toast = useToast()
@@ -322,7 +326,7 @@ export default function SettingsPage() {
                       <table className="w-full text-[12px] min-w-[700px]">
                         <thead>
                           <tr className="border-b border-border-subtle">
-                            <th className="text-left py-2 font-mono text-text-4 uppercase text-[10px] tracking-wider pr-6 min-w-[160px]">Feature</th>
+                            <th className="text-left py-2 font-mono text-text-4 uppercase text-[10px] tracking-wider pr-6 min-w-[180px]">Feature</th>
                             {INTERNAL_ROLES.map((role) => (
                               <th key={role} className="text-center py-2 font-ui font-semibold text-text-3 px-2 min-w-[70px]">
                                 {ROLE_LABELS[role]}
@@ -331,34 +335,49 @@ export default function SettingsPage() {
                           </tr>
                         </thead>
                         <tbody>
-                          {FEATURE_ORDER.map((featureKey) => {
-                            const label = FEATURE_LABELS[featureKey] ?? featureKey
-                            return (
-                              <tr key={featureKey} className="border-b border-border-subtle last:border-0">
-                                <td className="py-3 font-ui text-[13px] text-text-2 pr-6 whitespace-nowrap">{label}</td>
-                                {INTERNAL_ROLES.map((role) => {
-                                  const flag = flags.find((f) => f.role === role && f.feature_key === featureKey)
-                                  const enabled = flag?.enabled ?? false
-                                  return (
-                                    <td key={role} className="text-center py-3 px-2">
-                                      <div className="flex justify-center">
-                                        <Toggle
-                                          checked={enabled}
-                                          onChange={(val) => {
-                                            if (!canEditFlags || updatingFlag) return
-                                            updateFlag(
-                                              { role, featureKey, enabled: val },
-                                              { onError: () => toast('Failed to update permission', 'error') },
-                                            )
-                                          }}
-                                        />
-                                      </div>
-                                    </td>
-                                  )
-                                })}
+                          {FEATURE_SECTIONS.map((section) => (
+                            <React.Fragment key={section.label}>
+                              <tr className="border-b border-border-subtle">
+                                <td
+                                  colSpan={INTERNAL_ROLES.length + 1}
+                                  className="py-2 px-3 bg-surface-2"
+                                >
+                                  <span className="font-mono text-[10px] font-semibold text-text-4 uppercase tracking-widest">
+                                    {section.label}
+                                  </span>
+                                </td>
                               </tr>
-                            )
-                          })}
+                              {section.features.map((featureKey, i) => {
+                                const label = FEATURE_LABELS[featureKey] ?? featureKey
+                                const isLast = i === section.features.length - 1
+                                return (
+                                  <tr key={featureKey} className={cn('border-b border-border-subtle', isLast && 'border-border-default')}>
+                                    <td className="py-3 pl-3 font-ui text-[13px] text-text-2 pr-6 whitespace-nowrap">{label}</td>
+                                    {INTERNAL_ROLES.map((role) => {
+                                      const flag = flags.find((f) => f.role === role && f.feature_key === featureKey)
+                                      const enabled = flag?.enabled ?? false
+                                      return (
+                                        <td key={role} className="text-center py-3 px-2">
+                                          <div className="flex justify-center">
+                                            <Toggle
+                                              checked={enabled}
+                                              onChange={(val) => {
+                                                if (!canEditFlags || updatingFlag) return
+                                                updateFlag(
+                                                  { role, featureKey, enabled: val },
+                                                  { onError: () => toast('Failed to update permission', 'error') },
+                                                )
+                                              }}
+                                            />
+                                          </div>
+                                        </td>
+                                      )
+                                    })}
+                                  </tr>
+                                )
+                              })}
+                            </React.Fragment>
+                          ))}
                         </tbody>
                       </table>
                     </div>

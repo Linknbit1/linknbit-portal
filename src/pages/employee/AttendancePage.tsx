@@ -154,26 +154,25 @@ function SummaryStats({ records }: { records: AttendanceRow[] }) {
   const { data: holidays = [] }    = useHolidays(year)
   const { data: workingSats = [] } = useWorkingSaturdays(year)
 
-  // Compute absent: past working days (last 30 days, before today) with no record
+  // Compute absent: past working days this month (before today) with no record
   const absent = (() => {
     const holidaySet    = new Set(holidays.map((h) => h.date))
     const workingSatSet = new Set(workingSats.map((s) => s.date))
     const recordSet     = new Set(records.map((r) => r.date))
     let count = 0
-    for (let i = 1; i <= 30; i++) {
-      const d = new Date(now)
-      d.setDate(d.getDate() - i)
+    const d = new Date(now.getFullYear(), now.getMonth(), 1)
+    while (d < now) {
       const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
       const dow = d.getDay()
-      if (dow === 0) continue
-      if (dow === 6 && !settings?.saturday_working && !workingSatSet.has(dateStr)) continue
-      if (holidaySet.has(dateStr)) continue
-      if (!recordSet.has(dateStr)) count++
+      if (dow !== 0 && !(dow === 6 && !settings?.saturday_working && !workingSatSet.has(dateStr)) && !holidaySet.has(dateStr)) {
+        if (!recordSet.has(dateStr)) count++
+      }
+      d.setDate(d.getDate() + 1)
     }
     return count
   })()
 
-  const totalPresent = records.filter((r) => r.status === 'present' || r.status === 'late').length
+  const totalPresent = records.filter((r) => r.status === 'present').length
   const late         = records.filter((r) => r.status === 'late').length
   const leave        = records.filter((r) => r.status === 'leave').length
 
