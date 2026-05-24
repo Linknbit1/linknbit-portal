@@ -79,10 +79,11 @@ export function AttendanceCheckInCard() {
   // Schedule context
   const todayHoliday    = holidays.find((h) => h.date === todayStr)
   const dow             = now.getDay()
+  const isSunday        = dow === 0
   const isSaturday      = dow === 6
   const workingSatSet   = new Set(workingSats.map((s) => s.date))
   const isWorkingSat    = isSaturday && (!!settings?.saturday_working || workingSatSet.has(todayStr))
-  const isDayOff        = isSaturday && !isWorkingSat
+  const isDayOff        = isSunday || (isSaturday && !isWorkingSat)
 
   const workStart = settings?.work_start_time?.slice(0, 5) ?? '09:00'
   const workEnd   = settings?.work_end_time?.slice(0, 5)   ?? '18:00'
@@ -154,7 +155,7 @@ export function AttendanceCheckInCard() {
         </div>
       )}
 
-      {/* ── Saturday off ── */}
+      {/* ── Day off (Sunday or non-working Saturday) ── */}
       {!isLoading && !todayHoliday && isDayOff && (
         <div className="flex flex-col items-center gap-3 text-center">
           <div className="w-24 h-24 rounded-full bg-service-dev/10 border-2 border-service-dev/20 flex items-center justify-center">
@@ -162,7 +163,9 @@ export function AttendanceCheckInCard() {
           </div>
           <div>
             <p className="font-display font-bold text-[18px] text-service-dev">Weekend</p>
-            <p className="font-ui text-[13px] text-text-3 mt-0.5">Saturdays are off — see you Monday!</p>
+            <p className="font-ui text-[13px] text-text-3 mt-0.5">
+              {isSunday ? 'Sundays are off — see you tomorrow!' : 'Saturdays are off — see you Monday!'}
+            </p>
           </div>
         </div>
       )}
