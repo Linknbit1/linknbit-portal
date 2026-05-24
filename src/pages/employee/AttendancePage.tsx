@@ -39,6 +39,10 @@ import { useToast } from '../../components/ui/toast-context'
 import { cn } from '../../lib/cn'
 import type { AttendanceRow } from '../../api/attendance'
 
+function localToday(): string {
+  return new Intl.DateTimeFormat('en-CA').format(new Date())
+}
+
 function formatTime(iso: string | null | undefined): string {
   if (!iso) return '—'
   return new Date(iso).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
@@ -274,7 +278,7 @@ function OooSection() {
   const logDepartureMut = useLogOooDeparture()
   const logReturnMut    = useLogOooReturn()
 
-  const todayStr = new Date().toISOString().split('T')[0]
+  const todayStr = localToday()
   const todayOoo = myExceptions.find(
     (e) => e.exception_type === 'out_of_office' && e.status === 'approved' && e.date === todayStr
   )
@@ -338,7 +342,7 @@ function RequestExceptionModal({ open, onClose }: RequestExceptionModalProps) {
   const toast = useToast()
   const requestMut = useRequestException()
   const [excType, setExcType] = useState<'late_arrival' | 'early_departure' | 'out_of_office'>('late_arrival')
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0])
+  const [date, setDate] = useState(localToday)
   const [requestedTime, setRequestedTime] = useState('')
   const [returnTime, setReturnTime] = useState('')
   const [reason, setReason] = useState('')
@@ -349,7 +353,7 @@ function RequestExceptionModal({ open, onClose }: RequestExceptionModalProps) {
     out_of_office:   'Departure Time',
   }
 
-  const todayStr = new Date().toISOString().split('T')[0]
+  const todayStr = localToday()
   const now = new Date()
   const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
   const requestedTimeMin = date === todayStr ? currentTimeStr : undefined
@@ -555,7 +559,7 @@ function OvertimeSection() {
   const toast = useToast()
   const [modalOpen, setModalOpen] = useState(false)
   const [form, setForm] = useState({
-    date: new Date().toISOString().split('T')[0],
+    date: localToday(),
     startTime: '',
     endTime: '',
     reason: '',
@@ -584,7 +588,7 @@ function OvertimeSection() {
       })
       toast('Overtime request submitted — awaiting HR approval', 'success')
       setModalOpen(false)
-      setForm({ date: new Date().toISOString().split('T')[0], startTime: '', endTime: '', reason: '' })
+      setForm({ date: localToday(), startTime: '', endTime: '', reason: '' })
     } catch {
       toast('Failed to submit overtime request', 'error')
     }
@@ -597,7 +601,7 @@ function OvertimeSection() {
     return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`
   }
 
-  const todayStr = new Date().toISOString().split('T')[0]
+  const todayStr = localToday()
 
   return (
     <div className="flex flex-col gap-4">
@@ -734,8 +738,22 @@ export default function EmployeeAttendancePage() {
       <div className="p-8 flex flex-col gap-6 max-w-content mx-auto w-full">
         <AttendanceCheckInCard />
 
-        {/* Stats — always visible, computed from last 30 days */}
-        <SummaryStats records={history} />
+        {/* Stats — skeleton while history loads, then real values */}
+        {isLoading ? (
+          <div className="grid grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-surface-1 border border-border-default rounded-xl p-4 flex flex-col gap-2 animate-pulse">
+                <div className="w-9 h-9 rounded-lg bg-surface-2" />
+                <div>
+                  <div className="h-7 w-10 bg-surface-2 rounded mb-1" />
+                  <div className="h-3 w-14 bg-surface-2 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <SummaryStats records={history} />
+        )}
 
         <UpcomingScheduleSection />
 

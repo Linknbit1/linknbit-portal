@@ -44,6 +44,10 @@ import type { WFHRequest, WFHStatus } from '../../types'
 import type { AttendanceWithProfile } from '../../api/attendance'
 import { cn } from '../../lib/cn'
 
+function localToday(): string {
+  return new Intl.DateTimeFormat('en-CA').format(new Date())
+}
+
 /* ── Status chip meta ─────────────────────────────────────────────────────── */
 const STATUS_META: Record<string, { label: string; cls: string; dot: string }> = {
   present:  { label: 'Present',  cls: 'bg-success/10 text-success border-success/30',     dot: '#22C55E' },
@@ -161,7 +165,7 @@ function MarkModal({ open, onClose, dateFilter }: MarkModalProps) {
 /* ── Daily Records tab ───────────────────────────────────────────────────── */
 function DailyRecordsTab({ canManage }: { canManage: boolean }) {
   const toast = useToast()
-  const [dateFilter, setDateFilter] = useState(new Date().toISOString().split('T')[0])
+  const [dateFilter, setDateFilter] = useState(localToday)
   const [statusFilter, setStatusFilter] = useState('all')
   const [search, setSearch] = useState('')
   const [markOpen, setMarkOpen] = useState(false)
@@ -2033,7 +2037,7 @@ function ReportsTab() {
                       </td>
                       <td className="px-4 py-3 font-mono text-[13px] text-service-design">{s.halfDay || '—'}</td>
                       <td className="px-4 py-3 font-mono text-[13px] text-service-dev">{s.leave || '—'}</td>
-                      <td className="px-4 py-3 font-mono text-[12px] text-text-2">{fmtTime(s.avgCheckinMin)}</td>
+                      <td className="px-4 py-3 font-mono text-[12px] text-text-2">{s.totalCheckins > 0 ? fmtTime(s.avgCheckinMin) : '—'}</td>
                       <td className="px-4 py-3 font-mono text-[12px] text-text-2">{fmtMinutes(avgHours)}</td>
                       <td className="px-4 py-3">
                         <span className="inline-flex items-center gap-1 font-mono text-[12px] text-success">
