@@ -16,6 +16,7 @@ import { DatePicker } from '../../components/ui/DatePicker'
 import { TimePicker } from '../../components/ui/TimePicker'
 import { useToast } from '../../components/ui/toast-context'
 import { useAuthContext } from '../../context/AuthContext'
+import { useCanAccess } from '../../hooks/useRoleFlags'
 import {
   useAllAttendance,
   useMarkAttendance,
@@ -2311,14 +2312,14 @@ function SettingsTab() {
 /* ── Page ──────────────────────────────────────────────────────────────────── */
 type Tab = 'records' | 'wfh' | 'exceptions' | 'devices' | 'holidays' | 'overtime' | 'reports' | 'settings'
 
-const MGMT = ['super_admin', 'admin', 'hr']
-const CAN_SETTINGS = ['super_admin', 'admin']
-
 export default function AttendancePage() {
-  const { profile } = useAuthContext()
-  const role = profile?.role ?? ''
-  const canManage  = MGMT.includes(role)
-  const canSettings = CAN_SETTINGS.includes(role)
+  const canManageAttendance = useCanAccess('can_manage_attendance')
+  const canManageWFH        = useCanAccess('can_manage_wfh')
+  const canManageExceptions = useCanAccess('can_manage_exceptions')
+  const canManageSchedule   = useCanAccess('can_manage_schedule')
+  const canManageOvertime   = useCanAccess('can_manage_overtime')
+  const canViewReports      = useCanAccess('can_view_attendance_reports')
+  const canManageSettings   = useCanAccess('can_manage_attendance_settings')
 
   const [view, setView] = useState<Tab>('records')
   const pendingWFH = WFH_REQUESTS.filter((r) => r.status === 'pending').length
@@ -2330,21 +2331,19 @@ export default function AttendancePage() {
   const pendingOvertime = pendingOtData.length
 
   const tabs: { id: Tab; label: string; icon: typeof Users; badge?: number }[] = [
-    { id: 'records', label: 'Daily Records', icon: Users },
-    ...(canManage ? [
-      { id: 'wfh'        as Tab, label: 'WFH Requests',    icon: Home,        badge: pendingWFH },
-      { id: 'exceptions' as Tab, label: 'Exceptions',       icon: AlertCircle, badge: pendingExceptions },
-      { id: 'devices'    as Tab, label: 'Enrolled Devices', icon: Smartphone,  badge: pendingDevices },
-      { id: 'holidays'   as Tab, label: 'Schedule',          icon: Palmtree },
-      { id: 'overtime'   as Tab, label: 'Overtime',         icon: Hourglass,   badge: pendingOvertime },
-      { id: 'reports'    as Tab, label: 'Reports',          icon: BarChart2 },
-    ] : []),
-    ...(canSettings ? [{ id: 'settings' as Tab, label: 'Settings', icon: SettingsIcon }] : []),
+    ...(canManageAttendance ? [{ id: 'records'  as Tab, label: 'Daily Records',    icon: Users }] : []),
+    ...(canManageWFH        ? [{ id: 'wfh'       as Tab, label: 'WFH Requests',    icon: Home,        badge: pendingWFH }] : []),
+    ...(canManageExceptions ? [{ id: 'exceptions'as Tab, label: 'Exceptions',       icon: AlertCircle, badge: pendingExceptions }] : []),
+    ...(canManageAttendance ? [{ id: 'devices'   as Tab, label: 'Enrolled Devices', icon: Smartphone,  badge: pendingDevices }] : []),
+    ...(canManageSchedule   ? [{ id: 'holidays'  as Tab, label: 'Schedule',         icon: Palmtree }] : []),
+    ...(canManageOvertime   ? [{ id: 'overtime'  as Tab, label: 'Overtime',         icon: Hourglass,   badge: pendingOvertime }] : []),
+    ...(canViewReports      ? [{ id: 'reports'   as Tab, label: 'Reports',          icon: BarChart2 }] : []),
+    ...(canManageSettings   ? [{ id: 'settings'  as Tab, label: 'Settings',         icon: SettingsIcon }] : []),
   ]
 
   // Clamp active tab to allowed set (e.g. after role change in dev)
   const allowedIds = new Set(tabs.map((t) => t.id))
-  const effectiveView: Tab = allowedIds.has(view) ? view : 'records'
+  const effectiveView: Tab = allowedIds.has(view) ? view : (tabs[0]?.id ?? 'records')
 
   return (
     <div className="flex flex-col flex-1">
@@ -2379,7 +2378,7 @@ export default function AttendancePage() {
           ))}
         </div>
 
-        {effectiveView === 'records'    && <DailyRecordsTab canManage={canManage} />}
+        {effectiveView === 'records'    && <DailyRecordsTab canManage={canManageAttendance} />}
         {effectiveView === 'wfh'        && <WFHRequestsTab />}
         {effectiveView === 'exceptions' && <ExceptionsTab />}
         {effectiveView === 'devices'    && <EnrolledDevicesTab />}

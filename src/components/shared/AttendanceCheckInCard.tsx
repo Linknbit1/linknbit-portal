@@ -12,6 +12,7 @@ import {
   useWorkingSaturdays,
 } from '../../hooks/useAttendance'
 import { getDeviceFingerprint, getDeviceName } from '../../lib/deviceUtils'
+import { useCanAccess } from '../../hooks/useRoleFlags'
 import { useToast } from '../ui/toast-context'
 import { Button } from '../ui/Button'
 import { cn } from '../../lib/cn'
@@ -42,6 +43,7 @@ function ErrorBanner({ msg }: { msg: string }) {
 }
 
 export function AttendanceCheckInCard() {
+  const canMarkAttendance = useCanAccess('can_mark_attendance')
   const toast = useToast()
 
   const now = new Date()
@@ -127,6 +129,8 @@ export function AttendanceCheckInCard() {
       else toast('Check-out failed. Please try again.', 'error')
     }
   }
+
+  if (!canMarkAttendance) return null
 
   return (
     <div className="bg-surface-1 border border-border-default rounded-xl p-8 flex flex-col items-center gap-6">
