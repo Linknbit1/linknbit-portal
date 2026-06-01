@@ -350,19 +350,19 @@ function OtpBoxes({
   onChange: (v: string[]) => void
   invalid?: boolean
 }) {
-  const refs = Array.from({ length: 6 }, () => useRef<HTMLInputElement>(null))
+  const refs = useRef<Array<HTMLInputElement | null>>([])
 
   function handleChange(index: number, raw: string) {
     const digit = raw.replace(/\D/g, '').slice(-1)
     const next = [...value]
     next[index] = digit
     onChange(next)
-    if (digit && index < 5) refs[index + 1].current?.focus()
+    if (digit && index < 5) refs.current[index + 1]?.focus()
   }
 
   function handleKeyDown(index: number, e: React.KeyboardEvent) {
     if (e.key === 'Backspace' && !value[index] && index > 0) {
-      refs[index - 1].current?.focus()
+      refs.current[index - 1]?.focus()
     }
   }
 
@@ -374,15 +374,15 @@ function OtpBoxes({
     digits.split('').forEach((d, i) => { next[i] = d })
     onChange(next)
     const focusIdx = Math.min(digits.length, 5)
-    refs[focusIdx].current?.focus()
+    refs.current[focusIdx]?.focus()
   }
 
   return (
     <div className="flex justify-center gap-3">
-      {refs.map((ref, i) => (
+      {Array.from({ length: 6 }, (_, i) => (
         <input
           key={i}
-          ref={ref}
+          ref={(node) => { refs.current[i] = node }}
           type="text"
           inputMode="numeric"
           maxLength={1}

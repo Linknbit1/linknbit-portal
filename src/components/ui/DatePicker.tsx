@@ -49,10 +49,14 @@ export function DatePicker({ value, onChange, minDate, maxDate, allowedDow, plac
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  // Sync display month when value changes externally
-  useEffect(() => {
-    if (selected) { setDisplayYear(selected.getFullYear()); setDisplayMonth(selected.getMonth()) }
-  }, [value]) // eslint-disable-line react-hooks/exhaustive-deps
+  const toggleOpen = () => {
+    const nextOpen = !open
+    if (nextOpen && selected) {
+      setDisplayYear(selected.getFullYear())
+      setDisplayMonth(selected.getMonth())
+    }
+    setOpen(nextOpen)
+  }
 
   const prevMonth = () => {
     if (displayMonth === 0) { setDisplayMonth(11); setDisplayYear(y => y - 1) }
@@ -101,7 +105,7 @@ export function DatePicker({ value, onChange, minDate, maxDate, allowedDow, plac
     <div ref={containerRef} className={cn('relative', className)}>
       <button
         type="button"
-        onClick={() => setOpen(o => !o)}
+        onClick={toggleOpen}
         className={cn(
           'w-full flex items-center gap-2 bg-surface-inset border rounded-md px-3 py-2 text-left transition-colors',
           open ? 'border-border-focus' : 'border-border-default hover:border-border-strong',

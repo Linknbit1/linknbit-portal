@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import {
   CheckCircle2, Clock, LogOut, Users, Calendar,
   AlertTriangle, Wifi, Monitor, Search, Download, Plus, X, Check,
@@ -36,7 +36,7 @@ import {
   useAllOvertimeRequests,
   useReviewOvertime,
 } from '../../hooks/useAttendance'
-import type { AttendanceExceptionWithProfile } from '../../api/attendance'
+import type { AttendanceExceptionWithProfile, AttendanceSettings } from '../../api/attendance'
 import { useActiveProfiles } from '../../hooks/useAuth'
 import { AttendanceCheckInCard } from '../../components/shared/AttendanceCheckInCard'
 import { useEnrolledDevices, useApproveDevice, useDeactivateDevice } from '../../hooks/useEnrolledDevices'
@@ -2141,30 +2141,26 @@ function ReportsTab() {
 
 /* ── Settings tab ─────────────────────────────────────────────────────────── */
 function SettingsTab() {
-  const toast = useToast()
   const { data: settings, isLoading } = useAttendanceSettings()
+
+  if (isLoading || !settings) {
+    return <div className="bg-surface-1 border border-border-default rounded-xl p-8 animate-pulse h-48" />
+  }
+
+  return <SettingsForm key={settings.updated_at ?? 'attendance-settings'} settings={settings} />
+}
+
+function SettingsForm({ settings }: { settings: AttendanceSettings }) {
+  const toast = useToast()
   const updateMutation = useUpdateAttendanceSettings()
 
-  const [workStart, setWorkStart] = useState('')
-  const [workEnd, setWorkEnd] = useState('')
-  const [grace, setGrace] = useState('')
-  const [tz, setTz] = useState('')
-  const [xp, setXp] = useState('')
-  const [ipCidr, setIpCidr] = useState('')
-  const [saturdayWorking, setSaturdayWorking] = useState(false)
-
-  // Sync form state when settings load
-  useEffect(() => {
-    if (settings) {
-      setWorkStart(settings.work_start_time.slice(0, 5))
-      setWorkEnd(settings.work_end_time.slice(0, 5))
-      setGrace(String(settings.grace_period_min))
-      setTz(settings.timezone)
-      setXp(String(settings.xp_on_time_checkin))
-      setIpCidr(settings.office_ip_cidr ?? '')
-      setSaturdayWorking(settings.saturday_working)
-    }
-  }, [settings])
+  const [workStart, setWorkStart] = useState(() => settings.work_start_time.slice(0, 5))
+  const [workEnd, setWorkEnd] = useState(() => settings.work_end_time.slice(0, 5))
+  const [grace, setGrace] = useState(() => String(settings.grace_period_min))
+  const [tz, setTz] = useState(() => settings.timezone)
+  const [xp, setXp] = useState(() => String(settings.xp_on_time_checkin))
+  const [ipCidr, setIpCidr] = useState(() => settings.office_ip_cidr ?? '')
+  const [saturdayWorking, setSaturdayWorking] = useState(() => settings.saturday_working)
 
   const handleSave = async () => {
     try {
@@ -2181,10 +2177,6 @@ function SettingsTab() {
     } catch {
       toast('Failed to save settings', 'error')
     }
-  }
-
-  if (isLoading) {
-    return <div className="bg-surface-1 border border-border-default rounded-xl p-8 animate-pulse h-48" />
   }
 
   return (
