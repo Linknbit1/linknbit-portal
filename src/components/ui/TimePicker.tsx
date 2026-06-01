@@ -59,15 +59,20 @@ export function TimePicker({
   const HOURS = Array.from({ length: 24 }, (_, i) => i)
   const MINUTES = Array.from({ length: Math.ceil(60 / step) }, (_, i) => i * step)
 
-  // When picker opens, sync pending state to current value
-  useEffect(() => {
-    if (!open) return
-    if (parsed) {
+  const scrollTo = (ref: React.RefObject<HTMLUListElement | null>, idx: number) => {
+    const el = ref.current?.children[idx] as HTMLElement | undefined
+    el?.scrollIntoView({ block: 'center', behavior: 'instant' })
+  }
+
+  const toggleOpen = () => {
+    const nextOpen = !open
+    if (nextOpen && parsed) {
       setPendingH(parsed[0])
       const snapped = Math.round(parsed[1] / step) * step
       setPendingM(snapped >= 60 ? 0 : snapped)
     }
-  }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
+    setOpen(nextOpen)
+  }
 
   // Scroll selected items into view after open animation
   useEffect(() => {
@@ -80,11 +85,6 @@ export function TimePicker({
     }, 40)
     return () => clearTimeout(id)
   }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  const scrollTo = (ref: React.RefObject<HTMLUListElement | null>, idx: number) => {
-    const el = ref.current?.children[idx] as HTMLElement | undefined
-    el?.scrollIntoView({ block: 'center', behavior: 'instant' })
-  }
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -126,7 +126,7 @@ export function TimePicker({
     <div ref={containerRef} className={cn('relative', className)}>
       <button
         type="button"
-        onClick={() => setOpen(o => !o)}
+        onClick={toggleOpen}
         className={cn(
           'w-full flex items-center gap-2 bg-surface-inset border rounded-md px-3 py-2 text-left transition-colors',
           open ? 'border-border-focus' : 'border-border-default hover:border-border-strong',
