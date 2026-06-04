@@ -169,6 +169,7 @@ src/
 5. **Variants via props** — use discriminated unions for complex state variations (e.g., `status: 'synced' | 'pending' | 'error'`)
 6. **No hardcoded colors** — always use Tailwind token classes
 7. **Accessible by default** — proper `aria-*` attributes, keyboard navigation on interactive elements
+8. **Use the existing custom UI primitives** — never use native `<select>`, `<input type="date">`, `<input type="time">`, checkboxes/toggles, or other raw form controls when a matching component already exists in `src/components/ui/` (`Select`, `DatePicker`, `TimePicker`, `Toggle`, `Input`, etc.). Reach for the native element only when no custom equivalent exists, and prefer building/extending the shared component over a one-off.
 
 ---
 
@@ -521,6 +522,7 @@ These extend the existing "Code Style" rules and take precedence.
 - No `as` type assertions without a justifying comment
 - No `@ts-ignore` or `@ts-expect-error`
 - No business logic inside components
+- No native `<select>` / `<input type="date|time">` / raw form controls when a custom component exists in `src/components/ui/` — use `Select`, `DatePicker`, `TimePicker`, `Toggle`, etc.
 
 **Data & State**
 - No Supabase calls directly inside components — always go through `src/api/`

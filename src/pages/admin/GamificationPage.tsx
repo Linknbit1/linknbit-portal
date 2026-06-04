@@ -9,6 +9,7 @@ import { Button } from '../../components/ui/Button'
 import { Tabs } from '../../components/ui/Tabs'
 import { Select } from '../../components/ui/Select'
 import { Toggle } from '../../components/ui/Toggle'
+import { DatePicker } from '../../components/ui/DatePicker'
 import { useToast } from '../../components/ui/toast-context'
 import { useAuthContext } from '../../context/AuthContext'
 import {
@@ -295,8 +296,7 @@ function QuestTaskModal({ task, actorId, onClose }: {
             </div>
             <div>
               <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Deadline</label>
-              <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)}
-                className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-ui text-text-1 outline-none focus:border-border-focus" />
+              <DatePicker value={deadline} onChange={setDeadline} minDate={new Date().toISOString().split('T')[0]} placeholder="No deadline" />
             </div>
           </div>
           <label className="flex items-center gap-2.5 cursor-pointer">
@@ -601,7 +601,7 @@ export default function GamificationPage() {
     { key: 'shoutouts',   label: 'Shoutouts' },
     { key: 'badges',      label: 'Badges' },
     { key: 'rewards',     label: 'Rewards Shop' },
-    ...(showAdmin ? [{ key: 'admin', label: `Manage${reviewCount > 0 ? ` (${reviewCount})` : ''}` }] : []),
+    ...(showAdmin ? [{ key: 'admin', label: `Settings${reviewCount > 0 ? ` (${reviewCount})` : ''}` }] : []),
   ]
 
   const reviewPending = reviewingTask || reviewingShout || reviewingRedeem
