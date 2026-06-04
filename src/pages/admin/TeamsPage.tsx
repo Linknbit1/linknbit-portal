@@ -10,28 +10,19 @@ import { useToast } from '../../components/ui/toast-context'
 import { useAuthContext } from '../../context/AuthContext'
 import { useTeams, useCreateTeam, useUpdateTeam } from '../../hooks/useTeams'
 import { usePeople, useUpdatePersonRole } from '../../hooks/usePeople'
+import { useServices } from '../../hooks/useServices'
 import type { Team } from '../../api/teams'
 import type { Person } from '../../api/people'
 import { canManagePeople } from '../../lib/peopleAccess'
 
-const SERVICE_OPTIONS = [
-  { value: 'design', label: 'Design' },
-  { value: 'development', label: 'Development' },
-  { value: 'marketing', label: 'Marketing' },
-]
-
-const isService = (s: string): s is 'design' | 'development' | 'marketing' =>
-  s === 'design' || s === 'development' || s === 'marketing'
-
-function serviceChip(s: string) {
-  return isService(s) ? <ServiceChip service={s} /> : null
-}
+type Option = { value: string; label: string }
 
 // ── Create / edit team modal ───────────────────────────────────────────────────
 
-function TeamModal({ team, people, onClose }: {
+function TeamModal({ team, people, serviceOptions, onClose }: {
   team: Team | null
   people: Person[]
+  serviceOptions: Option[]
   onClose: () => void
 }) {
   const toast = useToast()
@@ -39,9 +30,21 @@ function TeamModal({ team, people, onClose }: {
   const { mutate: update, isPending: updating } = useUpdateTeam()
   const isEdit = team !== null
   const [name, setName] = useState(team?.name ?? '')
-  const [service, setService] = useState(team?.service_type ?? 'development')
+  const [service, setService] = useState(team?.service_type ?? serviceOptions[0]?.value ?? '')
   const [leadId, setLeadId] = useState(team?.lead_id ?? '')
   const isPending = creating || updating
+
+  // Only users who hold the Team Lead role may lead a team. Keep the current
+  // lead selectable even if their role later changed, so editing doesn't drop it.
+  const leadOptions = useMemo(() => {
+    const eligible = people.filter((p) => p.role === 'team_lead')
+    const opts = [{ value: '', label: 'No lead' }, ...eligible.map((p) => ({ value: p.id, label: p.name }))]
+    if (team?.lead_id && !eligible.some((p) => p.id === team.lead_id)) {
+      const cur = people.find((p) => p.id === team.lead_id)
+      if (cur) opts.splice(1, 0, { value: cur.id, label: `${cur.name} (current)` })
+    }
+    return opts
+  }, [people, team])
 
   const submit = () => {
     if (!name.trim()) return
@@ -71,11 +74,12 @@ function TeamModal({ team, people, onClose }: {
           <Input label="Team name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Development Pod A" />
           <div>
             <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Service</label>
-            <Select value={service} onChange={setService} options={SERVICE_OPTIONS} />
+            <Select value={service} onChange={setService} options={serviceOptions} />
           </div>
           <div>
             <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Team lead</label>
-            <Select value={leadId} onChange={setLeadId} options={[{ value: '', label: 'No lead' }, ...people.map((p) => ({ value: p.id, label: p.name }))]} />
+            <Select value={leadId} onChange={setLeadId} options={leadOptions} />
+            {leadOptions.length === 1 && <p className="font-mono text-[10px] text-text-4 mt-1">No users with the Team Lead role yet.</p>}
           </div>
         </div>
         <div className="flex gap-2.5 mt-5">
@@ -138,7 +142,13 @@ export default function TeamsPage() {
 
   const { data: teams = [], isLoading } = useTeams()
   const { data: people = [] } = usePeople()
+  const { data: services = [] } = useServices()
   const { mutate: assign } = useUpdatePersonRole()
+
+  const serviceOptions = useMemo(
+    () => services.filter((s) => s.is_active).map((s) => ({ value: s.slug, label: s.name })),
+    [services],
+  )
 
   const [teamModal, setTeamModal] = useState<Team | null | 'new'>(null)
   const [addTo, setAddTo] = useState<Team | null>(null)
@@ -187,7 +197,7 @@ export default function TeamsPage() {
                       <div className="w-10 h-10 rounded-lg bg-surface-2 flex items-center justify-center flex-shrink-0"><Users size={18} className="text-text-3" /></div>
                       <div className="min-w-0">
                         <p className="font-display font-bold text-[15px] text-text-1 truncate">{team.name}</p>
-                        <div className="flex items-center gap-2 mt-0.5">{serviceChip(team.service_type)}<span className="font-mono text-[11px] text-text-4">{members.length} member{members.length === 1 ? '' : 's'}</span></div>
+                        <div className="flex items-center gap-2 mt-0.5"><ServiceChip service={team.service_type} /><span className="font-mono text-[11px] text-text-4">{members.length} member{members.length === 1 ? '' : 's'}</span></div>
                       </div>
                     </div>
                     {canManage && <Button size="sm" variant="ghost" onClick={() => setTeamModal(team)}><Pencil size={13} /></Button>}
@@ -223,7 +233,7 @@ export default function TeamsPage() {
         )}
       </div>
 
-      {teamModal !== null && <TeamModal team={teamModal === 'new' ? null : teamModal} people={people} onClose={() => setTeamModal(null)} />}
+      {teamModal !== null && <TeamModal team={teamModal === 'new' ? null : teamModal} people={people} serviceOptions={serviceOptions} onClose={() => setTeamModal(null)} />}
       {addTo && <AddMemberModal team={addTo} candidates={people.filter((p) => p.team_id !== addTo.id && p.is_active)} onClose={() => setAddTo(null)} />}
     </div>
   )
