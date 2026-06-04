@@ -16,7 +16,6 @@ import { DatePicker } from '../../components/ui/DatePicker'
 import { TimePicker } from '../../components/ui/TimePicker'
 import { useToast } from '../../components/ui/toast-context'
 import { useAuthContext } from '../../context/AuthContext'
-import { useCanAccess } from '../../hooks/useRoleFlags'
 import {
   useAllAttendance,
   useMarkAttendance,
@@ -164,7 +163,7 @@ function MarkModal({ open, onClose, dateFilter }: MarkModalProps) {
 }
 
 /* ── Daily Records tab ───────────────────────────────────────────────────── */
-function DailyRecordsTab({ canManage }: { canManage: boolean }) {
+function DailyRecordsTab() {
   const toast = useToast()
   const [dateFilter, setDateFilter] = useState(localToday)
   const [statusFilter, setStatusFilter] = useState('all')
@@ -263,11 +262,9 @@ function DailyRecordsTab({ canManage }: { canManage: boolean }) {
             <Button size="sm" variant="secondary" onClick={() => toast('CSV exported', 'success')}>
               <Download size={13} /> Export
             </Button>
-            {canManage && (
-              <Button size="sm" onClick={() => setMarkOpen(true)}>
-                <Plus size={13} /> Mark Attendance
-              </Button>
-            )}
+            <Button size="sm" onClick={() => setMarkOpen(true)}>
+              <Plus size={13} /> Mark Attendance
+            </Button>
           </div>
         </div>
 
@@ -310,7 +307,7 @@ function DailyRecordsTab({ canManage }: { canManage: boolean }) {
                   <td className="px-4 py-3">
                     {rec.check_out ? (
                       <span className="font-mono text-[12.5px] text-text-1">{fmtTime(rec.check_out)}</span>
-                    ) : rec.check_in && canManage ? (
+                    ) : rec.check_in ? (
                       <button
                         onClick={() => handleCheckOut(rec)}
                         disabled={adminCheckOutMutation.isPending}
@@ -357,7 +354,7 @@ function DailyRecordsTab({ canManage }: { canManage: boolean }) {
         </table>
       </div>
 
-      {canManage && <MarkModal open={markOpen} onClose={() => setMarkOpen(false)} dateFilter={dateFilter} />}
+      <MarkModal open={markOpen} onClose={() => setMarkOpen(false)} dateFilter={dateFilter} />
     </>
   )
 }
@@ -2305,14 +2302,6 @@ function SettingsForm({ settings }: { settings: AttendanceSettings }) {
 type Tab = 'records' | 'wfh' | 'exceptions' | 'devices' | 'holidays' | 'overtime' | 'reports' | 'settings'
 
 export default function AttendancePage() {
-  const canManageAttendance = useCanAccess('can_manage_attendance')
-  const canManageWFH        = useCanAccess('can_manage_wfh')
-  const canManageExceptions = useCanAccess('can_manage_exceptions')
-  const canManageSchedule   = useCanAccess('can_manage_schedule')
-  const canManageOvertime   = useCanAccess('can_manage_overtime')
-  const canViewReports      = useCanAccess('can_view_attendance_reports')
-  const canManageSettings   = useCanAccess('can_manage_attendance_settings')
-
   const [view, setView] = useState<Tab>('records')
   const pendingWFH = WFH_REQUESTS.filter((r) => r.status === 'pending').length
   const { data: devices = [] } = useEnrolledDevices()
@@ -2322,20 +2311,19 @@ export default function AttendancePage() {
   const { data: pendingOtData = [] } = useAllOvertimeRequests('pending')
   const pendingOvertime = pendingOtData.length
 
+  // Only Super Admin / Admin / HR reach this view, and they get every feature.
   const tabs: { id: Tab; label: string; icon: typeof Users; badge?: number }[] = [
-    ...(canManageAttendance ? [{ id: 'records'  as Tab, label: 'Daily Records',    icon: Users }] : []),
-    ...(canManageWFH        ? [{ id: 'wfh'       as Tab, label: 'WFH Requests',    icon: Home,        badge: pendingWFH }] : []),
-    ...(canManageExceptions ? [{ id: 'exceptions'as Tab, label: 'Exceptions',       icon: AlertCircle, badge: pendingExceptions }] : []),
-    ...(canManageAttendance ? [{ id: 'devices'   as Tab, label: 'Enrolled Devices', icon: Smartphone,  badge: pendingDevices }] : []),
-    ...(canManageSchedule   ? [{ id: 'holidays'  as Tab, label: 'Schedule',         icon: Palmtree }] : []),
-    ...(canManageOvertime   ? [{ id: 'overtime'  as Tab, label: 'Overtime',         icon: Hourglass,   badge: pendingOvertime }] : []),
-    ...(canViewReports      ? [{ id: 'reports'   as Tab, label: 'Reports',          icon: BarChart2 }] : []),
-    ...(canManageSettings   ? [{ id: 'settings'  as Tab, label: 'Settings',         icon: SettingsIcon }] : []),
+    { id: 'records',    label: 'Daily Records',    icon: Users },
+    { id: 'wfh',        label: 'WFH Requests',     icon: Home,        badge: pendingWFH },
+    { id: 'exceptions', label: 'Exceptions',       icon: AlertCircle, badge: pendingExceptions },
+    { id: 'devices',    label: 'Enrolled Devices', icon: Smartphone,  badge: pendingDevices },
+    { id: 'holidays',   label: 'Schedule',         icon: Palmtree },
+    { id: 'overtime',   label: 'Overtime',         icon: Hourglass,   badge: pendingOvertime },
+    { id: 'reports',    label: 'Reports',          icon: BarChart2 },
+    { id: 'settings',   label: 'Settings',         icon: SettingsIcon },
   ]
 
-  // Clamp active tab to allowed set (e.g. after role change in dev)
-  const allowedIds = new Set(tabs.map((t) => t.id))
-  const effectiveView: Tab = allowedIds.has(view) ? view : (tabs[0]?.id ?? 'records')
+  const effectiveView: Tab = view
 
   return (
     <div className="flex flex-col flex-1">
@@ -2370,7 +2358,7 @@ export default function AttendancePage() {
           ))}
         </div>
 
-        {effectiveView === 'records'    && <DailyRecordsTab canManage={canManageAttendance} />}
+        {effectiveView === 'records'    && <DailyRecordsTab />}
         {effectiveView === 'wfh'        && <WFHRequestsTab />}
         {effectiveView === 'exceptions' && <ExceptionsTab />}
         {effectiveView === 'devices'    && <EnrolledDevicesTab />}

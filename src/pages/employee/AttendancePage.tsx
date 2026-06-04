@@ -734,7 +734,7 @@ export default function EmployeeAttendancePage() {
     <div className="flex flex-col flex-1">
       <Topbar title="My Attendance" />
 
-      <div className="p-8 flex flex-col gap-6 max-w-content mx-auto w-full">
+      <div className="p-6 flex flex-col gap-6 max-w-content mx-auto w-full">
         <AttendanceCheckInCard />
 
         {/* Stats — skeleton while history loads, then real values */}
