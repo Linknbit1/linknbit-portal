@@ -5,7 +5,7 @@ import {
   Home, ChevronDown, ClipboardList, ThumbsUp, ThumbsDown, ShieldCheck,
   Smartphone, Settings as SettingsIcon, Shield, AlertCircle, Save,
   BarChart2, ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Minus,
-  Palmtree, Hourglass, Star,
+  Palmtree, Hourglass, Star, Plane, Trash2, Pencil,
 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Avatar } from '../../components/ui/Avatar'
@@ -34,14 +34,28 @@ import {
   useRemoveWorkingSaturday,
   useAllOvertimeRequests,
   useReviewOvertime,
+  useAllWfhRequests,
+  useReviewWfh,
+  useGrantWfh,
+  useLeaveTypes,
+  useCreateLeaveType,
+  useUpdateLeaveType,
+  useDeleteLeaveType,
+  useAllLeaveRequests,
+  useReviewLeave,
 } from '../../hooks/useAttendance'
-import type { AttendanceExceptionWithProfile, AttendanceSettings } from '../../api/attendance'
+import type {
+  AttendanceExceptionWithProfile,
+  AttendanceSettings,
+  WfhRequestWithProfile,
+  LeaveRequestWithProfile,
+  LeaveType,
+} from '../../api/attendance'
 import { useActiveProfiles } from '../../hooks/useAuth'
 import { AttendanceCheckInCard } from '../../components/shared/AttendanceCheckInCard'
 import { useEnrolledDevices, useApproveDevice, useDeactivateDevice } from '../../hooks/useEnrolledDevices'
-import { WFH_REQUESTS } from '../../data/mock'
-import type { WFHRequest, WFHStatus } from '../../types'
 import type { AttendanceWithProfile } from '../../api/attendance'
+import { downloadCsv } from '../../lib/csv'
 import { cn } from '../../lib/cn'
 
 function localToday(): string {
@@ -55,10 +69,11 @@ const STATUS_META: Record<string, { label: string; cls: string; dot: string }> =
   absent:   { label: 'Absent',   cls: 'bg-error/10 text-error border-error/30',           dot: '#F4364C' },
   half_day: { label: 'Half Day', cls: 'bg-service-design/10 text-service-design border-service-design/30', dot: '#A78BFA' },
   leave:    { label: 'Leave',    cls: 'bg-service-dev/10 text-service-dev border-service-dev/30', dot: '#22D3EE' },
+  wfh:      { label: 'WFH',      cls: 'bg-service-dev/10 text-service-dev border-service-dev/30', dot: '#22D3EE' },
   holiday:  { label: 'Holiday',  cls: 'bg-text-3/10 text-text-3 border-border-default',   dot: '#6B7280' },
 }
 
-const WFH_META: Record<WFHStatus, { label: string; cls: string; dot: string }> = {
+const WFH_META: Record<string, { label: string; cls: string; dot: string }> = {
   pending:  { label: 'Pending',  cls: 'bg-warning/10 text-warning border-warning/30',   dot: '#F59E0B' },
   approved: { label: 'Approved', cls: 'bg-success/10 text-success border-success/30',   dot: '#22C55E' },
   rejected: { label: 'Rejected', cls: 'bg-error/10 text-error border-error/30',         dot: '#F4364C' },
@@ -74,8 +89,8 @@ function StatusChip({ status }: { status: string }) {
   )
 }
 
-function WFHStatusChip({ status }: { status: WFHStatus }) {
-  const m = WFH_META[status]
+function WFHStatusChip({ status }: { status: string }) {
+  const m = WFH_META[status] ?? WFH_META.pending
   return (
     <span className={cn('inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-ui font-semibold border', m.cls)}>
       <span className="w-1.5 h-1.5 rounded-full" style={{ background: m.dot }} />
@@ -94,6 +109,7 @@ interface MarkModalProps {
 function MarkModal({ open, onClose, dateFilter }: MarkModalProps) {
   const toast = useToast()
   const markMutation = useMarkAttendance()
+  const { data: people = [] } = useActiveProfiles()
   const [profileId, setProfileId] = useState('')
   const [status, setStatus] = useState('present')
   const [note, setNote] = useState('')
@@ -124,12 +140,12 @@ function MarkModal({ open, onClose, dateFilter }: MarkModalProps) {
         </div>
         <div className="space-y-4">
           <div>
-            <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Profile ID</label>
-            <input
+            <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Employee</label>
+            <Select
               value={profileId}
-              onChange={(e) => setProfileId(e.target.value)}
-              placeholder="Paste employee UUID..."
-              className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-mono text-text-1 placeholder:text-text-4 outline-none focus:border-border-focus"
+              onChange={setProfileId}
+              placeholder="Select employee…"
+              options={people.map((p) => ({ value: p.id, label: p.name }))}
             />
           </div>
           <div>
@@ -207,6 +223,28 @@ function DailyRecordsTab() {
   const fmtTime = (iso: string | null) =>
     iso ? new Date(iso).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '—'
 
+  const exportCsv = () => {
+    if (filtered.length === 0) {
+      toast('No records to export', 'error')
+      return
+    }
+    downloadCsv(
+      `attendance-${dateFilter}`,
+      ['Name', 'Date', 'Status', 'Check In', 'Check Out', 'Duration', 'Source', 'Device', 'Note'],
+      filtered.map((r) => [
+        r.profiles?.name ?? r.profile_id,
+        r.date,
+        r.status,
+        fmtTime(r.check_in),
+        fmtTime(r.check_out),
+        durationLabel(r),
+        r.source,
+        r.device_name ?? '',
+        r.note ?? '',
+      ]),
+    )
+  }
+
   return (
     <>
       {/* Stats row */}
@@ -259,7 +297,7 @@ function DailyRecordsTab() {
             ]}
           />
           <div className="ml-auto flex items-center gap-2">
-            <Button size="sm" variant="secondary" onClick={() => toast('CSV exported', 'success')}>
+            <Button size="sm" variant="secondary" onClick={exportCsv}>
               <Download size={13} /> Export
             </Button>
             <Button size="sm" onClick={() => setMarkOpen(true)}>
@@ -359,13 +397,83 @@ function DailyRecordsTab() {
   )
 }
 
-/* ── WFH Requests tab (mock — pending DB schema) ─────────────────────────── */
+/* ── Grant WFH modal ──────────────────────────────────────────────────────── */
+function GrantWfhModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const toast = useToast()
+  const { profile } = useAuthContext()
+  const grantMut = useGrantWfh()
+  const { data: people = [] } = useActiveProfiles()
+  const [profileId, setProfileId] = useState('')
+  const [date, setDate] = useState(localToday)
+  const [reason, setReason] = useState('')
+
+  const handleGrant = async () => {
+    if (!profileId || !reason.trim()) return
+    try {
+      await grantMut.mutateAsync({ profileId, date, reason: reason.trim(), grantedBy: profile?.id ?? '' })
+      toast('WFH granted — marked on attendance', 'success')
+      onClose()
+      setProfileId(''); setReason(''); setDate(localToday())
+    } catch {
+      toast('Failed to grant WFH', 'error')
+    }
+  }
+
+  if (!open) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-surface-1 border border-border-default rounded-xl p-6 w-full max-w-md shadow-2xl">
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="font-display font-bold text-[16px] text-text-1">Grant WFH</h3>
+          <button onClick={onClose} className="text-text-4 hover:text-text-1 transition-colors"><X size={18} /></button>
+        </div>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Employee</label>
+            <Select
+              value={profileId}
+              onChange={setProfileId}
+              placeholder="Select employee…"
+              options={people.map((p) => ({ value: p.id, label: p.name }))}
+            />
+          </div>
+          <div>
+            <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Date</label>
+            <DatePicker value={date} onChange={setDate} />
+          </div>
+          <div>
+            <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Reason</label>
+            <textarea
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="Why is WFH being granted?"
+              rows={2}
+              className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-ui text-text-1 placeholder:text-text-4 outline-none focus:border-border-focus resize-none"
+            />
+          </div>
+        </div>
+        <div className="flex gap-2.5 mt-5">
+          <Button variant="ghost" size="sm" className="flex-1" onClick={onClose}>Cancel</Button>
+          <Button size="sm" className="flex-1" onClick={handleGrant} disabled={!profileId || !reason.trim() || grantMut.isPending}>
+            <Check size={14} /> Grant
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ── WFH Requests tab ─────────────────────────────────────────────────────── */
 function WFHRequestsTab() {
   const toast = useToast()
-  const [requests, setRequests] = useState<WFHRequest[]>(WFH_REQUESTS)
+  const { profile } = useAuthContext()
+  const { data: requests = [] } = useAllWfhRequests()
+  const reviewMut = useReviewWfh()
   const [grantOpen, setGrantOpen] = useState(false)
-  const [rejectTarget, setRejectTarget] = useState<WFHRequest | null>(null)
-  const [statusFilter, setStatusFilter] = useState<WFHStatus | 'all'>('all')
+  const [rejectTarget, setRejectTarget] = useState<WfhRequestWithProfile | null>(null)
+  const [statusFilter, setStatusFilter] = useState<string>('all')
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
   const pending = requests.filter((r) => r.status === 'pending').length
@@ -374,18 +482,22 @@ function WFHRequestsTab() {
 
   const filtered = requests.filter((r) => statusFilter === 'all' || r.status === statusFilter)
 
-  const approve = (id: string) => {
-    setRequests((prev) => prev.map((r) =>
-      r.id === id ? { ...r, status: 'approved', reviewedBy: 'HR', reviewedAt: new Date().toISOString() } : r
-    ))
-    toast('WFH request approved', 'success')
+  const approve = async (id: string) => {
+    try {
+      await reviewMut.mutateAsync({ id, status: 'approved', reviewedBy: profile?.id ?? '' })
+      toast('WFH request approved — marked on attendance', 'success')
+    } catch {
+      toast('Failed to approve request', 'error')
+    }
   }
 
-  const reject = (id: string, note: string) => {
-    setRequests((prev) => prev.map((r) =>
-      r.id === id ? { ...r, status: 'rejected', reviewedBy: 'HR', reviewedAt: new Date().toISOString(), note } : r
-    ))
-    toast('WFH request rejected', 'error')
+  const reject = async (id: string, note: string) => {
+    try {
+      await reviewMut.mutateAsync({ id, status: 'rejected', reviewedBy: profile?.id ?? '', reviewNote: note })
+      toast('WFH request rejected', 'error')
+    } catch {
+      toast('Failed to reject request', 'error')
+    }
   }
 
   const fmt = (iso: string) =>
@@ -420,7 +532,7 @@ function WFHRequestsTab() {
             <Select
               size="sm"
               value={statusFilter}
-              onChange={(v) => setStatusFilter(v as WFHStatus | 'all')}
+              onChange={setStatusFilter}
               options={[
                 { value: 'all', label: 'All Status' },
                 { value: 'pending', label: 'Pending' },
@@ -443,11 +555,11 @@ function WFHRequestsTab() {
               return (
                 <div key={req.id} className="hover:bg-white/[0.015] transition-colors">
                   <div className="flex items-center gap-3 px-5 py-3.5">
-                    <Avatar name={req.userName} size="sm" />
+                    <Avatar name={req.profiles?.name ?? '?'} size="sm" />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
-                        <span className="font-ui font-medium text-[13px] text-text-1">{req.userName}</span>
-                        {req.grantedDirectly && (
+                        <span className="font-ui font-medium text-[13px] text-text-1">{req.profiles?.name ?? '?'}</span>
+                        {req.granted_directly && (
                           <span className="text-[10px] font-mono bg-service-dev/10 text-service-dev border border-service-dev/20 px-1.5 py-0.5 rounded-xs uppercase tracking-wide">HR Granted</span>
                         )}
                       </div>
@@ -457,7 +569,7 @@ function WFHRequestsTab() {
                       <Calendar size={12} className="text-text-4" />
                       {req.date}
                     </div>
-                    <div className="flex-shrink-0 text-[11.5px] font-mono text-text-4">{fmt(req.requestedAt)}</div>
+                    <div className="flex-shrink-0 text-[11.5px] font-mono text-text-4">{fmt(req.created_at)}</div>
                     <WFHStatusChip status={req.status} />
                     {req.status === 'pending' ? (
                       <div className="flex items-center gap-1.5 ml-1">
@@ -483,9 +595,8 @@ function WFHRequestsTab() {
                   {isExpanded && req.status !== 'pending' && (
                     <div className="px-5 pb-3.5 pt-0">
                       <div className="bg-surface-2 rounded-md px-4 py-3 text-[12px] font-ui text-text-3 flex gap-4 flex-wrap">
-                        <span><span className="text-text-4 font-mono">Reviewed by</span> <span className="text-text-2 font-medium">{req.reviewedBy}</span></span>
-                        {req.reviewedAt && <span><span className="text-text-4 font-mono">at</span> <span className="text-text-2">{fmt(req.reviewedAt)}</span></span>}
-                        {req.note && <span className="w-full text-text-2 italic">"{req.note}"</span>}
+                        {req.reviewed_at && <span><span className="text-text-4 font-mono">Reviewed at</span> <span className="text-text-2">{fmt(req.reviewed_at)}</span></span>}
+                        {req.review_note && <span className="w-full text-text-2 italic">"{req.review_note}"</span>}
                       </div>
                     </div>
                   )}
@@ -496,20 +607,8 @@ function WFHRequestsTab() {
         )}
       </div>
 
-      {/* Grant WFH modal (simplified) */}
-      {grantOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setGrantOpen(false)} />
-          <div className="relative bg-surface-1 border border-border-default rounded-xl p-6 w-full max-w-md shadow-2xl">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-display font-bold text-[16px] text-text-1">Grant WFH</h3>
-              <button onClick={() => setGrantOpen(false)} className="text-text-4 hover:text-text-1"><X size={18} /></button>
-            </div>
-            <p className="text-[13px] font-ui text-text-3 mb-4">WFH request DB schema is pending Phase 4. Use Mark Attendance with status override for now.</p>
-            <Button size="sm" onClick={() => setGrantOpen(false)} className="w-full">Close</Button>
-          </div>
-        </div>
-      )}
+      {/* Grant WFH modal */}
+      <GrantWfhModal open={grantOpen} onClose={() => setGrantOpen(false)} />
 
       {rejectTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -520,7 +619,7 @@ function WFHRequestsTab() {
               <button onClick={() => setRejectTarget(null)} className="text-text-4 hover:text-text-1"><X size={18} /></button>
             </div>
             <p className="text-[13px] font-ui text-text-2 mb-4">
-              Rejecting WFH request for <span className="font-semibold text-text-1">{rejectTarget.userName}</span>.
+              Rejecting WFH request for <span className="font-semibold text-text-1">{rejectTarget.profiles?.name ?? 'this employee'}</span>.
             </p>
             <textarea
               placeholder="Reason for rejection..."
@@ -540,6 +639,299 @@ function WFHRequestsTab() {
                 reject(rejectTarget.id, note)
                 setRejectTarget(null)
               }}>
+                <X size={14} /> Reject
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ── Leave type editor modal ──────────────────────────────────────────────── */
+const LEAVE_COLOR_OPTIONS = [
+  { value: 'service-dev',    label: 'Cyan' },
+  { value: 'service-mkt',    label: 'Amber' },
+  { value: 'service-design', label: 'Violet' },
+  { value: 'success',        label: 'Green' },
+  { value: 'warning',        label: 'Orange' },
+]
+
+function LeaveTypeModal({ open, onClose, editing }: {
+  open: boolean
+  onClose: () => void
+  editing: LeaveType | null
+}) {
+  if (!open) return null
+  // Keyed remount initialises the form from `editing` without a sync-in-effect.
+  return <LeaveTypeForm key={editing?.id ?? 'new'} onClose={onClose} editing={editing} />
+}
+
+function LeaveTypeForm({ onClose, editing }: { onClose: () => void; editing: LeaveType | null }) {
+  const toast = useToast()
+  const { profile } = useAuthContext()
+  const createMut = useCreateLeaveType()
+  const updateMut = useUpdateLeaveType()
+  const [name, setName] = useState(editing?.name ?? '')
+  const [days, setDays] = useState(String(editing?.days_allowed ?? 0))
+  const [color, setColor] = useState(editing?.color ?? 'service-dev')
+
+  const handleSave = async () => {
+    const daysNum = Number(days)
+    if (!name.trim() || !Number.isFinite(daysNum) || daysNum < 0) return
+    try {
+      if (editing) {
+        await updateMut.mutateAsync({ id: editing.id, payload: { name: name.trim(), days_allowed: daysNum, color } })
+        toast('Leave type updated', 'success')
+      } else {
+        await createMut.mutateAsync({ payload: { name: name.trim(), days_allowed: daysNum, color }, createdBy: profile?.id ?? '' })
+        toast('Leave type created', 'success')
+      }
+      onClose()
+    } catch {
+      toast('Failed to save leave type', 'error')
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-surface-1 border border-border-default rounded-xl p-6 w-full max-w-md shadow-2xl">
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="font-display font-bold text-[16px] text-text-1">{editing ? 'Edit Leave Type' : 'New Leave Type'}</h3>
+          <button onClick={onClose} className="text-text-4 hover:text-text-1 transition-colors"><X size={18} /></button>
+        </div>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Name</label>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Annual Leave"
+              className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-ui text-text-1 placeholder:text-text-4 outline-none focus:border-border-focus"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Days / Year</label>
+              <input
+                type="number"
+                min={0}
+                value={days}
+                onChange={(e) => setDays(e.target.value)}
+                className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-mono text-text-1 outline-none focus:border-border-focus"
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Color</label>
+              <Select value={color} onChange={setColor} options={LEAVE_COLOR_OPTIONS} />
+            </div>
+          </div>
+        </div>
+        <div className="flex gap-2.5 mt-5">
+          <Button variant="ghost" size="sm" className="flex-1" onClick={onClose}>Cancel</Button>
+          <Button size="sm" className="flex-1" onClick={handleSave}
+            disabled={!name.trim() || createMut.isPending || updateMut.isPending}>
+            <Check size={14} /> {editing ? 'Save' : 'Create'}
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ── Leave tab (types + quotas + request review) ──────────────────────────── */
+const LEAVE_STATUS_CLS: Record<string, string> = {
+  pending:  'bg-warning/10 text-warning border-warning/25',
+  approved: 'bg-success/10 text-success border-success/25',
+  rejected: 'bg-error/10 text-error border-error/25',
+}
+
+// Static class lookups so Tailwind JIT sees literal class names (no dynamic `bg-${color}`).
+const LEAVE_COLOR_CLS: Record<string, { dot: string; chip: string }> = {
+  'service-dev':    { dot: 'bg-service-dev',    chip: 'text-service-dev border-service-dev/30' },
+  'service-mkt':    { dot: 'bg-service-mkt',    chip: 'text-service-mkt border-service-mkt/30' },
+  'service-design': { dot: 'bg-service-design', chip: 'text-service-design border-service-design/30' },
+  success:          { dot: 'bg-success',        chip: 'text-success border-success/30' },
+  warning:          { dot: 'bg-warning',        chip: 'text-warning border-warning/30' },
+}
+const leaveColor = (c: string | null | undefined) => LEAVE_COLOR_CLS[c ?? 'service-dev'] ?? LEAVE_COLOR_CLS['service-dev']
+
+function LeaveTab() {
+  const toast = useToast()
+  const { profile } = useAuthContext()
+  const { data: types = [] } = useLeaveTypes()
+  const { data: requests = [] } = useAllLeaveRequests()
+  const deleteTypeMut = useDeleteLeaveType()
+  const reviewMut = useReviewLeave()
+
+  const [typeModalOpen, setTypeModalOpen] = useState(false)
+  const [editingType, setEditingType] = useState<LeaveType | null>(null)
+  const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [rejectTarget, setRejectTarget] = useState<LeaveRequestWithProfile | null>(null)
+  const [rejectNote, setRejectNote] = useState('')
+
+  const filtered = requests.filter((r) => statusFilter === 'all' || r.status === statusFilter)
+
+  const fmtRange = (start: string, end: string) => {
+    const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' }
+    const s = new Date(start + 'T00:00:00').toLocaleDateString('en-US', opts)
+    if (start === end) return s
+    const e = new Date(end + 'T00:00:00').toLocaleDateString('en-US', opts)
+    return `${s} – ${e}`
+  }
+
+  const openNewType = () => { setEditingType(null); setTypeModalOpen(true) }
+  const openEditType = (t: LeaveType) => { setEditingType(t); setTypeModalOpen(true) }
+
+  const deleteType = async (t: LeaveType) => {
+    try {
+      await deleteTypeMut.mutateAsync(t.id)
+      toast('Leave type removed', 'success')
+    } catch {
+      toast('Cannot delete — leave requests reference this type', 'error')
+    }
+  }
+
+  const approve = async (id: string) => {
+    try {
+      await reviewMut.mutateAsync({ id, status: 'approved', reviewedBy: profile?.id ?? '' })
+      toast('Leave approved — marked on attendance', 'success')
+    } catch {
+      toast('Failed to approve leave', 'error')
+    }
+  }
+
+  const confirmReject = async () => {
+    if (!rejectTarget) return
+    try {
+      await reviewMut.mutateAsync({ id: rejectTarget.id, status: 'rejected', reviewedBy: profile?.id ?? '', reviewNote: rejectNote.trim() || undefined })
+      toast('Leave rejected', 'error')
+      setRejectTarget(null); setRejectNote('')
+    } catch {
+      toast('Failed to reject leave', 'error')
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
+      {/* Leave types management */}
+      <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
+        <div className="flex items-center gap-3 px-5 py-3.5 border-b border-border-subtle">
+          <Plane size={14} className="text-text-3" />
+          <span className="font-ui font-semibold text-[13px] text-text-1">Leave Types</span>
+          <span className="font-mono text-[11px] text-text-4">Set the yearly allowance per type</span>
+          <Button size="sm" className="ml-auto" onClick={openNewType}>
+            <Plus size={13} /> Add Type
+          </Button>
+        </div>
+        {types.length === 0 ? (
+          <div className="py-10 text-center font-ui text-[13px] text-text-4">No leave types yet — add one to get started.</div>
+        ) : (
+          <div className="divide-y divide-border-subtle">
+            {types.map((t) => (
+              <div key={t.id} className="flex items-center gap-3 px-5 py-3">
+                <span className={cn('w-2.5 h-2.5 rounded-full flex-shrink-0', leaveColor(t.color).dot)} />
+                <span className="font-ui font-medium text-[13px] text-text-1 flex-1">{t.name}</span>
+                {!t.is_active && <span className="text-[10px] font-mono text-text-4 uppercase">inactive</span>}
+                <span className="font-mono text-[12px] text-text-3">{t.days_allowed} days / year</span>
+                <button onClick={() => openEditType(t)} className="ml-2 text-text-4 hover:text-text-1 transition-colors" aria-label="Edit">
+                  <Pencil size={14} />
+                </button>
+                <button onClick={() => deleteType(t)} className="text-text-4 hover:text-error transition-colors" aria-label="Delete">
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Leave requests review */}
+      <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
+        <div className="flex items-center gap-3 px-5 py-3.5 border-b border-border-subtle">
+          <ClipboardList size={14} className="text-text-3" />
+          <span className="font-ui font-semibold text-[13px] text-text-1">Leave Requests</span>
+          <Select
+            size="sm"
+            value={statusFilter}
+            onChange={setStatusFilter}
+            className="ml-auto"
+            options={[
+              { value: 'all', label: 'All Status' },
+              { value: 'pending', label: 'Pending' },
+              { value: 'approved', label: 'Approved' },
+              { value: 'rejected', label: 'Rejected' },
+            ]}
+          />
+        </div>
+        {filtered.length === 0 ? (
+          <div className="py-12 text-center font-ui text-[13px] text-text-4">No leave requests match this filter.</div>
+        ) : (
+          <div className="divide-y divide-border-subtle">
+            {filtered.map((req) => (
+              <div key={req.id} className="flex items-start gap-3 px-5 py-3.5">
+                <Avatar name={req.profiles?.name ?? '?'} size="sm" />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                    <span className="font-ui font-medium text-[13px] text-text-1">{req.profiles?.name ?? '?'}</span>
+                    <span className={cn('text-[10px] font-mono px-1.5 py-0.5 rounded-xs border', leaveColor(req.leave_types?.color).chip)}>
+                      {req.leave_types?.name ?? 'Leave'}
+                    </span>
+                    <span className="font-mono text-[11.5px] text-text-3">{fmtRange(req.start_date, req.end_date)}</span>
+                    <span className="font-display font-bold text-[12px] text-text-2">{req.days}d</span>
+                  </div>
+                  <p className="font-ui text-[12px] text-text-3 truncate">{req.reason}</p>
+                  {req.review_note && <p className="font-ui text-[11px] text-error mt-0.5 italic">"{req.review_note}"</p>}
+                </div>
+                {req.status === 'pending' ? (
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <button onClick={() => approve(req.id)}
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-sm bg-success/10 border border-success/30 text-success text-[11.5px] font-ui font-semibold hover:bg-success/20 transition-colors">
+                      <ThumbsUp size={12} /> Approve
+                    </button>
+                    <button onClick={() => { setRejectTarget(req); setRejectNote('') }}
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-sm bg-error/10 border border-error/30 text-error text-[11.5px] font-ui font-semibold hover:bg-error/20 transition-colors">
+                      <ThumbsDown size={12} /> Reject
+                    </button>
+                  </div>
+                ) : (
+                  <span className={cn('inline-flex items-center px-2 py-0.5 rounded-xs border text-[11px] font-mono font-semibold flex-shrink-0 mt-0.5',
+                    LEAVE_STATUS_CLS[req.status] ?? LEAVE_STATUS_CLS.pending)}>
+                    {req.status}
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <LeaveTypeModal open={typeModalOpen} onClose={() => setTypeModalOpen(false)} editing={editingType} />
+
+      {rejectTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setRejectTarget(null)} />
+          <div className="relative bg-surface-1 border border-border-default rounded-xl p-6 w-full max-w-sm shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-display font-bold text-[16px] text-text-1">Reject Leave</h3>
+              <button onClick={() => setRejectTarget(null)} className="text-text-4 hover:text-text-1"><X size={18} /></button>
+            </div>
+            <p className="text-[13px] font-ui text-text-2 mb-4">
+              Rejecting leave for <span className="font-semibold text-text-1">{rejectTarget.profiles?.name ?? 'this employee'}</span>.
+            </p>
+            <textarea
+              value={rejectNote}
+              onChange={(e) => setRejectNote(e.target.value)}
+              placeholder="Reason for rejection..."
+              rows={3}
+              className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-ui text-text-1 placeholder:text-text-4 outline-none focus:border-border-focus resize-none mb-4"
+              autoFocus
+            />
+            <div className="flex gap-2.5">
+              <Button variant="ghost" size="sm" className="flex-1" onClick={() => setRejectTarget(null)}>Cancel</Button>
+              <Button size="sm" variant="danger" className="flex-1" onClick={confirmReject} disabled={reviewMut.isPending}>
                 <X size={14} /> Reject
               </Button>
             </div>
@@ -1916,25 +2308,17 @@ function ReportsTab() {
           {workingDays} working days · {employeeStats.length} employees
         </span>
         <button
-          onClick={() => {
-            const csvRows = [
-              ['Employee', 'Present', 'Late', 'Absent', 'Half Day', 'Leave', 'Avg Check-in', 'Avg Hours', 'On-Time %'].join(','),
-              ...sorted.map((s) => [
-                s.name,
-                s.present, s.late, s.absent, s.halfDay, s.leave,
-                fmtTime(s.avgCheckinMin),
-                fmtMinutes(s.totalCheckins > 0 ? s.totalMinutes / s.totalCheckins : NaN),
-                s.present + s.late > 0 ? Math.round(((s.present - s.late + s.earlyCount + s.onTimeCount) / (s.present + s.late)) * 100) : 0,
-              ].join(',')),
-            ]
-            const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' })
-            const url  = URL.createObjectURL(blob)
-            const a    = document.createElement('a')
-            a.href = url
-            a.download = `attendance-${year}-${String(month).padStart(2, '0')}.csv`
-            a.click()
-            URL.revokeObjectURL(url)
-          }}
+          onClick={() => downloadCsv(
+            `attendance-${year}-${String(month).padStart(2, '0')}`,
+            ['Employee', 'Present', 'Late', 'Absent', 'Half Day', 'Leave', 'Avg Check-in', 'Avg Hours', 'On-Time %'],
+            sorted.map((s) => [
+              s.name,
+              s.present, s.late, s.absent, s.halfDay, s.leave,
+              fmtTime(s.avgCheckinMin),
+              fmtMinutes(s.totalCheckins > 0 ? s.totalMinutes / s.totalCheckins : NaN),
+              s.present + s.late > 0 ? Math.round(((s.present - s.late + s.earlyCount + s.onTimeCount) / (s.present + s.late)) * 100) : 0,
+            ]),
+          )}
           className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-sm bg-surface-1 border border-border-default text-[12px] font-ui font-medium text-text-2 hover:text-text-1 hover:border-border-strong transition-colors"
         >
           <Download size={13} /> Export CSV
@@ -2299,11 +2683,14 @@ function SettingsForm({ settings }: { settings: AttendanceSettings }) {
 }
 
 /* ── Page ──────────────────────────────────────────────────────────────────── */
-type Tab = 'records' | 'wfh' | 'exceptions' | 'devices' | 'holidays' | 'overtime' | 'reports' | 'settings'
+type Tab = 'records' | 'wfh' | 'leave' | 'exceptions' | 'devices' | 'holidays' | 'overtime' | 'reports' | 'settings'
 
 export default function AttendancePage() {
   const [view, setView] = useState<Tab>('records')
-  const pendingWFH = WFH_REQUESTS.filter((r) => r.status === 'pending').length
+  const { data: pendingWfhData = [] } = useAllWfhRequests('pending')
+  const pendingWFH = pendingWfhData.length
+  const { data: pendingLeaveData = [] } = useAllLeaveRequests('pending')
+  const pendingLeave = pendingLeaveData.length
   const { data: devices = [] } = useEnrolledDevices()
   const pendingDevices = devices.filter((d) => !d.approved_by && d.is_active).length
   const { data: pendingExcData = [] } = useAllAttendanceExceptions({ status: 'pending' })
@@ -2315,6 +2702,7 @@ export default function AttendancePage() {
   const tabs: { id: Tab; label: string; icon: typeof Users; badge?: number }[] = [
     { id: 'records',    label: 'Daily Records',    icon: Users },
     { id: 'wfh',        label: 'WFH Requests',     icon: Home,        badge: pendingWFH },
+    { id: 'leave',      label: 'Leave',            icon: Plane,       badge: pendingLeave },
     { id: 'exceptions', label: 'Exceptions',       icon: AlertCircle, badge: pendingExceptions },
     { id: 'devices',    label: 'Enrolled Devices', icon: Smartphone,  badge: pendingDevices },
     { id: 'holidays',   label: 'Schedule',         icon: Palmtree },
@@ -2360,6 +2748,7 @@ export default function AttendancePage() {
 
         {effectiveView === 'records'    && <DailyRecordsTab />}
         {effectiveView === 'wfh'        && <WFHRequestsTab />}
+        {effectiveView === 'leave'      && <LeaveTab />}
         {effectiveView === 'exceptions' && <ExceptionsTab />}
         {effectiveView === 'devices'    && <EnrolledDevicesTab />}
         {effectiveView === 'holidays'   && <HolidaysTab />}

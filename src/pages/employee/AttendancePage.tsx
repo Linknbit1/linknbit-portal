@@ -15,6 +15,7 @@ import {
   Hourglass,
   Palmtree,
   Calendar,
+  Plane,
 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Card } from '../../components/ui/Card'
@@ -33,6 +34,11 @@ import {
   useAttendanceSettings,
   useHolidays,
   useWorkingSaturdays,
+  useMyWfhRequests,
+  useSubmitWfh,
+  useMyLeaveRequests,
+  useSubmitLeave,
+  useMyLeaveBalances,
 } from '../../hooks/useAttendance'
 import { AttendanceCheckInCard } from '../../components/shared/AttendanceCheckInCard'
 import { useToast } from '../../components/ui/toast-context'
@@ -154,22 +160,25 @@ function SummaryStats({ records }: { records: AttendanceRow[] }) {
   const { data: holidays = [] }    = useHolidays(year)
   const { data: workingSats = [] } = useWorkingSaturdays(year)
 
-  // Compute absent: past working days this month (before today) with no record
+  // Absent = persisted 'absent' rows (marked by the daily job) + any past working
+  // day this month that has no record yet (not covered by the job). The two are
+  // mutually exclusive: a marked day already has a record, so the gap pass skips it.
   const absent = (() => {
     const holidaySet    = new Set(holidays.map((h) => h.date))
     const workingSatSet = new Set(workingSats.map((s) => s.date))
     const recordSet     = new Set(records.map((r) => r.date))
-    let count = 0
+    let gapDays = 0
     const d = new Date(now.getFullYear(), now.getMonth(), 1)
     while (d < now) {
       const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
       const dow = d.getDay()
       if (dow !== 0 && !(dow === 6 && !settings?.saturday_working && !workingSatSet.has(dateStr)) && !holidaySet.has(dateStr)) {
-        if (!recordSet.has(dateStr)) count++
+        if (!recordSet.has(dateStr)) gapDays++
       }
       d.setDate(d.getDate() + 1)
     }
-    return count
+    const absentRecords = records.filter((r) => r.status === 'absent').length
+    return absentRecords + gapDays
   })()
 
   const totalPresent = records.filter((r) => r.status === 'present').length
@@ -725,6 +734,260 @@ function OvertimeSection() {
   )
 }
 
+// ── WFH section ───────────────────────────────────────────────────────────────
+
+function WfhSection() {
+  const toast = useToast()
+  const [modalOpen, setModalOpen] = useState(false)
+  const [date, setDate] = useState(localToday)
+  const [reason, setReason] = useState('')
+  const { data: requests = [], isLoading } = useMyWfhRequests()
+  const submitMut = useSubmitWfh()
+
+  const handleSubmit = async () => {
+    if (!reason.trim()) return
+    try {
+      await submitMut.mutateAsync({ date, reason: reason.trim() })
+      toast('WFH request submitted — awaiting approval', 'success')
+      setModalOpen(false); setReason(''); setDate(localToday())
+    } catch {
+      toast('Failed to submit WFH request', 'error')
+    }
+  }
+
+  const fmtDate = (d: string) => new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  const todayStr = localToday()
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <h2 className="font-display font-semibold text-h4 text-text-1">Work From Home</h2>
+        <Button size="sm" onClick={() => setModalOpen(true)}>
+          <Plus size={13} /> Request WFH
+        </Button>
+      </div>
+
+      {isLoading ? (
+        <Card className="animate-pulse"><div className="h-16 bg-surface-2 rounded" /></Card>
+      ) : requests.length === 0 ? (
+        <Card className="py-8 text-center">
+          <Home size={24} className="mx-auto text-text-4 mb-2" />
+          <p className="font-ui text-[13px] text-text-3">No WFH requests yet</p>
+          <p className="font-ui text-caption text-text-4 mt-1">
+            Need to work remotely for a day? Request it here and HR will review.
+          </p>
+        </Card>
+      ) : (
+        <Card padding="none">
+          <div className="divide-y divide-border-subtle">
+            {requests.slice(0, 8).map((req) => (
+              <div key={req.id} className="flex items-start gap-3 px-5 py-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                    <span className="font-ui font-medium text-[13px] text-text-1">{fmtDate(req.date)}</span>
+                    {req.granted_directly && (
+                      <span className="text-[10px] font-mono bg-service-dev/10 text-service-dev border border-service-dev/20 px-1.5 py-0.5 rounded-xs uppercase tracking-wide">HR Granted</span>
+                    )}
+                  </div>
+                  <p className="font-ui text-[12px] text-text-3 truncate">{req.reason}</p>
+                  {req.review_note && <p className="font-ui text-[11px] text-error mt-0.5 italic">"{req.review_note}"</p>}
+                </div>
+                <span className={cn(
+                  'inline-flex items-center px-2 py-0.5 rounded-xs border text-[11px] font-mono font-semibold flex-shrink-0 mt-0.5',
+                  OT_STATUS_CLS[req.status] ?? OT_STATUS_CLS['pending'],
+                )}>
+                  {req.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {modalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setModalOpen(false)} />
+          <div className="relative bg-surface-1 border border-border-default rounded-xl p-6 w-full max-w-md shadow-2xl">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="font-display font-bold text-[16px] text-text-1">Request WFH</h3>
+              <button onClick={() => setModalOpen(false)} className="text-text-4 hover:text-text-1"><X size={18} /></button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Date</label>
+                <DatePicker value={date} onChange={setDate} minDate={todayStr} />
+              </div>
+              <div>
+                <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Reason</label>
+                <textarea
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  placeholder="Why do you need to work from home?"
+                  rows={3}
+                  className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-ui text-text-1 placeholder:text-text-4 outline-none focus:border-border-focus resize-none"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2.5 mt-5">
+              <Button variant="ghost" size="sm" className="flex-1" onClick={() => setModalOpen(false)}>Cancel</Button>
+              <Button size="sm" className="flex-1" onClick={handleSubmit} disabled={!reason.trim() || submitMut.isPending}>
+                <Check size={14} /> Submit
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Leave section ─────────────────────────────────────────────────────────────
+
+function LeaveSection() {
+  const toast = useToast()
+  const [modalOpen, setModalOpen] = useState(false)
+  const [typeId, setTypeId] = useState('')
+  const [startDate, setStartDate] = useState(localToday)
+  const [endDate, setEndDate] = useState(localToday)
+  const [reason, setReason] = useState('')
+  const { data: balances = [] } = useMyLeaveBalances()
+  const { data: requests = [], isLoading } = useMyLeaveRequests()
+  const submitMut = useSubmitLeave()
+
+  const handleSubmit = async () => {
+    if (!typeId || !reason.trim() || endDate < startDate) return
+    try {
+      await submitMut.mutateAsync({ leave_type_id: typeId, start_date: startDate, end_date: endDate, reason: reason.trim() })
+      toast('Leave request submitted — awaiting approval', 'success')
+      setModalOpen(false); setTypeId(''); setReason(''); setStartDate(localToday()); setEndDate(localToday())
+    } catch {
+      toast('Failed to submit leave request', 'error')
+    }
+  }
+
+  const fmtRange = (start: string, end: string) => {
+    const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' }
+    const s = new Date(start + 'T00:00:00').toLocaleDateString('en-US', opts)
+    if (start === end) return s
+    return `${s} – ${new Date(end + 'T00:00:00').toLocaleDateString('en-US', opts)}`
+  }
+
+  const todayStr = localToday()
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <h2 className="font-display font-semibold text-h4 text-text-1">Leave</h2>
+        <Button size="sm" onClick={() => setModalOpen(true)} disabled={balances.length === 0}>
+          <Plus size={13} /> Request Leave
+        </Button>
+      </div>
+
+      {/* Balances */}
+      {balances.length > 0 && (
+        <div className="grid grid-cols-3 gap-3">
+          {balances.map((b) => (
+            <div key={b.type.id} className="bg-surface-1 border border-border-default rounded-lg p-3">
+              <p className="font-ui text-[11.5px] text-text-3 truncate">{b.type.name}</p>
+              <p className="font-display font-bold text-[20px] text-text-1 leading-tight mt-0.5">
+                {b.remaining}
+                <span className="font-mono text-[11px] text-text-4 font-normal"> / {b.type.days_allowed}</span>
+              </p>
+              <p className="font-mono text-[10px] text-text-4">days left</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {isLoading ? (
+        <Card className="animate-pulse"><div className="h-16 bg-surface-2 rounded" /></Card>
+      ) : requests.length === 0 ? (
+        <Card className="py-8 text-center">
+          <Plane size={24} className="mx-auto text-text-4 mb-2" />
+          <p className="font-ui text-[13px] text-text-3">No leave requests yet</p>
+          <p className="font-ui text-caption text-text-4 mt-1">
+            Request annual, sick, or casual leave and track your remaining balance.
+          </p>
+        </Card>
+      ) : (
+        <Card padding="none">
+          <div className="divide-y divide-border-subtle">
+            {requests.slice(0, 8).map((req) => (
+              <div key={req.id} className="flex items-start gap-3 px-5 py-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                    <span className="font-ui font-medium text-[13px] text-text-1">{req.leave_types?.name ?? 'Leave'}</span>
+                    <span className="font-mono text-[11px] text-text-3">{fmtRange(req.start_date, req.end_date)}</span>
+                    <span className="font-display font-bold text-[12px] text-service-dev">{req.days}d</span>
+                  </div>
+                  <p className="font-ui text-[12px] text-text-3 truncate">{req.reason}</p>
+                  {req.review_note && <p className="font-ui text-[11px] text-error mt-0.5 italic">"{req.review_note}"</p>}
+                </div>
+                <span className={cn(
+                  'inline-flex items-center px-2 py-0.5 rounded-xs border text-[11px] font-mono font-semibold flex-shrink-0 mt-0.5',
+                  OT_STATUS_CLS[req.status] ?? OT_STATUS_CLS['pending'],
+                )}>
+                  {req.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {modalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setModalOpen(false)} />
+          <div className="relative bg-surface-1 border border-border-default rounded-xl p-6 w-full max-w-md shadow-2xl">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="font-display font-bold text-[16px] text-text-1">Request Leave</h3>
+              <button onClick={() => setModalOpen(false)} className="text-text-4 hover:text-text-1"><X size={18} /></button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Leave Type</label>
+                <Select
+                  value={typeId}
+                  onChange={setTypeId}
+                  placeholder="Select type…"
+                  options={balances.map((b) => ({ value: b.type.id, label: `${b.type.name} — ${b.remaining} of ${b.type.days_allowed} left` }))}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">From</label>
+                  <DatePicker value={startDate} onChange={(v) => { setStartDate(v); if (endDate < v) setEndDate(v) }} minDate={todayStr} />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">To</label>
+                  <DatePicker value={endDate} onChange={setEndDate} minDate={startDate} />
+                </div>
+              </div>
+              <div>
+                <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Reason</label>
+                <textarea
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  placeholder="Brief reason for leave…"
+                  rows={3}
+                  className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-ui text-text-1 placeholder:text-text-4 outline-none focus:border-border-focus resize-none"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2.5 mt-5">
+              <Button variant="ghost" size="sm" className="flex-1" onClick={() => setModalOpen(false)}>Cancel</Button>
+              <Button size="sm" className="flex-1" onClick={handleSubmit}
+                disabled={!typeId || !reason.trim() || endDate < startDate || submitMut.isPending}>
+                <Check size={14} /> Submit
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function EmployeeAttendancePage() {
@@ -763,6 +1026,12 @@ export default function EmployeeAttendancePage() {
         <div className="grid grid-cols-2 gap-6 items-start">
           <MyExceptionsSection />
           <OvertimeSection />
+        </div>
+
+        {/* WFH + Leave side by side */}
+        <div className="grid grid-cols-2 gap-6 items-start">
+          <WfhSection />
+          <LeaveSection />
         </div>
 
         {/* History */}

@@ -48,7 +48,8 @@
       "Bash(pnpm lint *)",
       "Bash(npx eslint *)",
       "Bash(git add *)",
-      "Bash(*)"
+      "Bash(*)",
+      "mcp__supabase__get_advisors"
     ]
   },
   "enableAllProjectMcpServers": true,

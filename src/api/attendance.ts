@@ -539,3 +539,251 @@ export async function reviewOvertimeRequest(
   if (error) throw error
   return data
 }
+
+// ── WFH requests ──────────────────────────────────────────────────────────────
+
+export type WfhRequest = Tables<'wfh_requests'>
+
+export interface WfhRequestWithProfile extends WfhRequest {
+  profiles: { name: string; avatar_url: string | null } | null
+}
+
+export async function submitWfhRequest(payload: { date: string; reason: string }): Promise<WfhRequest> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+  const { data, error } = await supabase
+    .from('wfh_requests')
+    .insert({ profile_id: user.id, date: payload.date, reason: payload.reason })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function fetchMyWfhRequests(): Promise<WfhRequest[]> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+  const { data, error } = await supabase
+    .from('wfh_requests')
+    .select('*')
+    .eq('profile_id', user.id)
+    .order('date', { ascending: false })
+  if (error) throw error
+  return data
+}
+
+export async function fetchAllWfhRequests(status?: string): Promise<WfhRequestWithProfile[]> {
+  let q = supabase
+    .from('wfh_requests')
+    .select('*, profiles!wfh_requests_profile_id_fkey(name, avatar_url)')
+    .order('created_at', { ascending: false })
+  if (status) q = q.eq('status', status)
+  const { data, error } = await q
+  if (error) throw error
+  // as unknown: Supabase cannot infer the joined shape when multiple FKs exist on profiles
+  return data as unknown as WfhRequestWithProfile[]
+}
+
+export async function reviewWfhRequest(
+  id: string,
+  status: 'approved' | 'rejected',
+  reviewedBy: string,
+  reviewNote?: string,
+): Promise<WfhRequest> {
+  const { data, error } = await supabase
+    .from('wfh_requests')
+    .update({
+      status,
+      reviewed_by: reviewedBy,
+      reviewed_at: new Date().toISOString(),
+      review_note: reviewNote ?? null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function grantWfh(
+  profileId: string,
+  date: string,
+  reason: string,
+  grantedBy: string,
+): Promise<WfhRequest> {
+  const { data, error } = await supabase
+    .from('wfh_requests')
+    .insert({
+      profile_id: profileId,
+      date,
+      reason,
+      status: 'approved',
+      granted_directly: true,
+      reviewed_by: grantedBy,
+      reviewed_at: new Date().toISOString(),
+    })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+// ── Leave types (admin-defined, with yearly quota) ────────────────────────────
+
+export type LeaveType = Tables<'leave_types'>
+
+export async function fetchLeaveTypes(activeOnly = false): Promise<LeaveType[]> {
+  let q = supabase.from('leave_types').select('*').order('name', { ascending: true })
+  if (activeOnly) q = q.eq('is_active', true)
+  const { data, error } = await q
+  if (error) throw error
+  return data
+}
+
+export interface LeaveTypePayload {
+  name: string
+  days_allowed: number
+  color?: string
+  is_active?: boolean
+}
+
+export async function createLeaveType(payload: LeaveTypePayload, createdBy: string): Promise<LeaveType> {
+  const { data, error } = await supabase
+    .from('leave_types')
+    .insert({ ...payload, created_by: createdBy })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function updateLeaveType(
+  id: string,
+  payload: TablesUpdate<'leave_types'>,
+): Promise<LeaveType> {
+  const { data, error } = await supabase
+    .from('leave_types')
+    .update({ ...payload, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function deleteLeaveType(id: string): Promise<void> {
+  const { error } = await supabase.from('leave_types').delete().eq('id', id)
+  if (error) throw error
+}
+
+// ── Leave requests ────────────────────────────────────────────────────────────
+
+export type LeaveRequest = Tables<'leave_requests'>
+
+export interface LeaveRequestWithType extends LeaveRequest {
+  leave_types: { name: string; color: string } | null
+}
+
+export interface LeaveRequestWithProfile extends LeaveRequest {
+  profiles: { name: string; avatar_url: string | null } | null
+  leave_types: { name: string; color: string } | null
+}
+
+export interface SubmitLeavePayload {
+  leave_type_id: string
+  start_date: string
+  end_date: string
+  reason: string
+}
+
+export async function submitLeaveRequest(payload: SubmitLeavePayload): Promise<LeaveRequest> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+  const { data, error } = await supabase
+    .from('leave_requests')
+    .insert({ ...payload, profile_id: user.id })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function fetchMyLeaveRequests(): Promise<LeaveRequestWithType[]> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+  const { data, error } = await supabase
+    .from('leave_requests')
+    .select('*, leave_types(name, color)')
+    .eq('profile_id', user.id)
+    .order('start_date', { ascending: false })
+  if (error) throw error
+  return data as unknown as LeaveRequestWithType[]
+}
+
+export async function fetchAllLeaveRequests(status?: string): Promise<LeaveRequestWithProfile[]> {
+  let q = supabase
+    .from('leave_requests')
+    .select('*, profiles!leave_requests_profile_id_fkey(name, avatar_url), leave_types(name, color)')
+    .order('created_at', { ascending: false })
+  if (status) q = q.eq('status', status)
+  const { data, error } = await q
+  if (error) throw error
+  // as unknown: Supabase cannot infer the joined shape when multiple FKs exist on profiles
+  return data as unknown as LeaveRequestWithProfile[]
+}
+
+export async function reviewLeaveRequest(
+  id: string,
+  status: 'approved' | 'rejected',
+  reviewedBy: string,
+  reviewNote?: string,
+): Promise<LeaveRequest> {
+  const { data, error } = await supabase
+    .from('leave_requests')
+    .update({
+      status,
+      reviewed_by: reviewedBy,
+      reviewed_at: new Date().toISOString(),
+      review_note: reviewNote ?? null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export interface LeaveBalance {
+  type: LeaveType
+  used: number
+  remaining: number
+}
+
+// Remaining = type allowance − approved leave days taken this calendar year.
+export async function fetchMyLeaveBalances(): Promise<LeaveBalance[]> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+  const year = new Date().getFullYear()
+
+  const [{ data: types, error: typeErr }, { data: requests, error: reqErr }] = await Promise.all([
+    supabase.from('leave_types').select('*').eq('is_active', true).order('name'),
+    supabase
+      .from('leave_requests')
+      .select('leave_type_id, days, status, start_date')
+      .eq('profile_id', user.id)
+      .eq('status', 'approved')
+      .gte('start_date', `${year}-01-01`)
+      .lte('start_date', `${year}-12-31`),
+  ])
+  if (typeErr) throw typeErr
+  if (reqErr) throw reqErr
+
+  return (types ?? []).map((type) => {
+    const used = (requests ?? [])
+      .filter((r) => r.leave_type_id === type.id)
+      .reduce((sum, r) => sum + (r.days ?? 0), 0)
+    return { type, used, remaining: Math.max(0, type.days_allowed - used) }
+  })
+}
