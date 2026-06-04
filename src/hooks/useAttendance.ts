@@ -27,6 +27,20 @@ import {
   fetchAllOvertimeRequests,
   submitOvertimeRequest,
   reviewOvertimeRequest,
+  submitWfhRequest,
+  fetchMyWfhRequests,
+  fetchAllWfhRequests,
+  reviewWfhRequest,
+  grantWfh,
+  fetchLeaveTypes,
+  createLeaveType,
+  updateLeaveType,
+  deleteLeaveType,
+  submitLeaveRequest,
+  fetchMyLeaveRequests,
+  fetchAllLeaveRequests,
+  reviewLeaveRequest,
+  fetchMyLeaveBalances,
 } from '../api/attendance'
 import type {
   MarkAttendancePayload,
@@ -34,6 +48,8 @@ import type {
   FetchExceptionsFilters,
   CreateHolidayPayload,
   SubmitOvertimePayload,
+  LeaveTypePayload,
+  SubmitLeavePayload,
 } from '../api/attendance'
 import type { TablesUpdate } from '../types/database'
 
@@ -50,6 +66,12 @@ export const ATTENDANCE_KEYS = {
   workingSaturdays: (year?: number) => ['attendance', 'working-saturdays', year] as const,
   myOvertime: ['attendance', 'overtime', 'my'] as const,
   allOvertime: (status?: string) => ['attendance', 'overtime', 'all', status] as const,
+  myWfh: ['attendance', 'wfh', 'my'] as const,
+  allWfh: (status?: string) => ['attendance', 'wfh', 'all', status] as const,
+  leaveTypes: (activeOnly?: boolean) => ['attendance', 'leave-types', activeOnly] as const,
+  myLeave: ['attendance', 'leave', 'my'] as const,
+  allLeave: (status?: string) => ['attendance', 'leave', 'all', status] as const,
+  myLeaveBalances: ['attendance', 'leave', 'balances', 'my'] as const,
 }
 
 export function useMyAttendanceHistory(days = 30) {
@@ -337,6 +359,145 @@ export function useReviewOvertime() {
     }) => reviewOvertimeRequest(id, status, reviewedBy, reviewNote),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['attendance', 'overtime'] })
+    },
+  })
+}
+
+// ── WFH requests ──────────────────────────────────────────────────────────────
+
+export function useMyWfhRequests() {
+  return useQuery({
+    queryKey: ATTENDANCE_KEYS.myWfh,
+    queryFn: fetchMyWfhRequests,
+  })
+}
+
+export function useAllWfhRequests(status?: string) {
+  return useQuery({
+    queryKey: ATTENDANCE_KEYS.allWfh(status),
+    queryFn: () => fetchAllWfhRequests(status),
+  })
+}
+
+export function useSubmitWfh() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: { date: string; reason: string }) => submitWfhRequest(payload),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['attendance', 'wfh'] })
+    },
+  })
+}
+
+export function useReviewWfh() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, status, reviewedBy, reviewNote }: {
+      id: string; status: 'approved' | 'rejected'; reviewedBy: string; reviewNote?: string
+    }) => reviewWfhRequest(id, status, reviewedBy, reviewNote),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['attendance', 'wfh'] })
+      qc.invalidateQueries({ queryKey: ['attendance', 'all'] })
+    },
+  })
+}
+
+export function useGrantWfh() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ profileId, date, reason, grantedBy }: {
+      profileId: string; date: string; reason: string; grantedBy: string
+    }) => grantWfh(profileId, date, reason, grantedBy),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['attendance', 'wfh'] })
+      qc.invalidateQueries({ queryKey: ['attendance', 'all'] })
+    },
+  })
+}
+
+// ── Leave types ───────────────────────────────────────────────────────────────
+
+export function useLeaveTypes(activeOnly = false) {
+  return useQuery({
+    queryKey: ATTENDANCE_KEYS.leaveTypes(activeOnly),
+    queryFn: () => fetchLeaveTypes(activeOnly),
+    staleTime: 1000 * 60 * 5,
+  })
+}
+
+export function useCreateLeaveType() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ payload, createdBy }: { payload: LeaveTypePayload; createdBy: string }) =>
+      createLeaveType(payload, createdBy),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['attendance', 'leave-types'] }),
+  })
+}
+
+export function useUpdateLeaveType() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: TablesUpdate<'leave_types'> }) =>
+      updateLeaveType(id, payload),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['attendance', 'leave-types'] })
+      qc.invalidateQueries({ queryKey: ATTENDANCE_KEYS.myLeaveBalances })
+    },
+  })
+}
+
+export function useDeleteLeaveType() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => deleteLeaveType(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['attendance', 'leave-types'] }),
+  })
+}
+
+// ── Leave requests ────────────────────────────────────────────────────────────
+
+export function useMyLeaveRequests() {
+  return useQuery({
+    queryKey: ATTENDANCE_KEYS.myLeave,
+    queryFn: fetchMyLeaveRequests,
+  })
+}
+
+export function useAllLeaveRequests(status?: string) {
+  return useQuery({
+    queryKey: ATTENDANCE_KEYS.allLeave(status),
+    queryFn: () => fetchAllLeaveRequests(status),
+  })
+}
+
+export function useMyLeaveBalances() {
+  return useQuery({
+    queryKey: ATTENDANCE_KEYS.myLeaveBalances,
+    queryFn: fetchMyLeaveBalances,
+    staleTime: 1000 * 60 * 5,
+  })
+}
+
+export function useSubmitLeave() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: SubmitLeavePayload) => submitLeaveRequest(payload),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['attendance', 'leave'] })
+    },
+  })
+}
+
+export function useReviewLeave() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, status, reviewedBy, reviewNote }: {
+      id: string; status: 'approved' | 'rejected'; reviewedBy: string; reviewNote?: string
+    }) => reviewLeaveRequest(id, status, reviewedBy, reviewNote),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['attendance', 'leave'] })
+      qc.invalidateQueries({ queryKey: ['attendance', 'all'] })
+      qc.invalidateQueries({ queryKey: ['attendance', 'monthly'] })
     },
   })
 }
