@@ -15,6 +15,7 @@ import AdminTaskDetailPage from './pages/admin/TaskDetailPage'
 import GamificationPage from './pages/admin/GamificationPage'
 import ClientsPage from './pages/admin/ClientsPage'
 import TeamsPage from './pages/admin/TeamsPage'
+import PeoplePage from './pages/admin/PeoplePage'
 import TasksPage from './pages/admin/TasksPage'
 import ReportsPage from './pages/admin/ReportsPage'
 import ClickUpPage from './pages/admin/ClickUpPage'
@@ -58,6 +59,7 @@ export default function App() {
                 <Route path="/admin/tasks" element={<TasksPage />} />
                 <Route path="/admin/clients" element={<ClientsPage />} />
                 <Route path="/admin/teams" element={<TeamsPage />} />
+                <Route path="/admin/people" element={<PeoplePage />} />
                 <Route path="/admin/attendance" element={<Navigate to="/attendance" replace />} />
                 <Route path="/admin/reports" element={<ReportsPage />} />
                 <Route path="/admin/gamification" element={<GamificationPage />} />
