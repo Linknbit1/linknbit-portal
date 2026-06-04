@@ -36,8 +36,8 @@
     "hash": "31037f9c2e71a71613dedef134c0d239"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\api\\gamification.ts": {
-    "mtime": 1779331639.3094425,
-    "hash": "6885509bbfa4709645b6567bff5cb277"
+    "mtime": 1780553390.2353938,
+    "hash": "41e8242a8696ab34c809419df40ccc5b"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\api\\index.ts": {
     "mtime": 1779462541.8415427,
@@ -144,8 +144,8 @@
     "hash": "6178435e7a185ccb72665edcabf990ec"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\Select.tsx": {
-    "mtime": 1778692588.27968,
-    "hash": "8a2905f3dc2dee19b44093cdba376f4a"
+    "mtime": 1780551516.3239217,
+    "hash": "eb3a523a5960c3b7ae5a8ac0d15642b9"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\Skeleton.tsx": {
     "mtime": 1778596599.7866092,
@@ -200,8 +200,8 @@
     "hash": "8baf7250cc3e9445f924a095155104db"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useGamification.ts": {
-    "mtime": 1779331671.392022,
-    "hash": "7c9e29e15b16b4a28eb4725c20f9e038"
+    "mtime": 1780565668.5060203,
+    "hash": "3f9bcfaa8d0f7059a9dfca772b1cd506"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useNotifications.ts": {
     "mtime": 1779329492.7850564,
@@ -227,6 +227,10 @@
     "mtime": 1779462541.8465452,
     "hash": "4ced2331b081289c4d264768f3c09cfb"
   },
+  "D:\\Projects\\react\\linknbit-portal\\src\\lib\\gamificationAccess.ts": {
+    "mtime": 1780553351.235615,
+    "hash": "39ce57f7edf3a4a5bc1d877445af3a50"
+  },
   "D:\\Projects\\react\\linknbit-portal\\src\\lib\\supabase.ts": {
     "mtime": 1779216780.9574878,
     "hash": "5bd526445bee0bea72af0a22837a24b5"
@@ -240,8 +244,8 @@
     "hash": "286a290b99f3ce4835c540818def8062"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\AttendancePage.tsx": {
-    "mtime": 1780550751.1161098,
-    "hash": "609e54855919657c2f9a77ef02f932ad"
+    "mtime": 1780551255.3520482,
+    "hash": "ead7ea4865afbd5917762cbb51e28af7"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\ClickUpPage.tsx": {
     "mtime": 1779132438.2582042,
@@ -256,8 +260,8 @@
     "hash": "2b8b01972e52e8548ccd017214dbb6c6"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\GamificationPage.tsx": {
-    "mtime": 1779462541.848542,
-    "hash": "c3934e290fc9902f3dc9112e3b259d2c"
+    "mtime": 1780565981.6098871,
+    "hash": "6023d9a3fbdcb03d57dcc44f7127a49b"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\NewProjectModal.tsx": {
     "mtime": 1778692792.8158236,
@@ -280,8 +284,8 @@
     "hash": "68f8b4480ec46ff05f96c884d6c721b9"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\SettingsPage.tsx": {
-    "mtime": 1780548660.6156728,
-    "hash": "c5af8910e64cdf72e0fafaab2d7ab511"
+    "mtime": 1780565913.830063,
+    "hash": "3c11969a9f86a7094c62beba0422ed19"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\TaskDetailDrawer.tsx": {
     "mtime": 1779132438.2612047,
@@ -352,8 +356,8 @@
     "hash": "012cecaf4ffc8cfa56fd58195d02b25f"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\types\\database.ts": {
-    "mtime": 1780549876.0909235,
-    "hash": "d7005c68bb3d26ad7aeea95f2d6e0fad"
+    "mtime": 1780553261.2016065,
+    "hash": "fc7093731bc58f4a8cac7a066a090a84"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\types\\index.ts": {
     "mtime": 1779210728.043267,
@@ -502,6 +506,30 @@
   "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260604000004_allow_system_attendance_source.sql": {
     "mtime": 1780550687.5494769,
     "hash": "c63afec39f49f1b827325f70bc6f8eee"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260604000005_gamification_currency_and_roles.sql": {
+    "mtime": 1780552756.686947,
+    "hash": "6582e59af2e919de4fa5a5d2aa423cb9"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260604000006_gamification_quest_board.sql": {
+    "mtime": 1780552789.2276213,
+    "hash": "13514c39ef09cbccf7d8c98d7b942f7a"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260604000007_gamification_shoutouts.sql": {
+    "mtime": 1780552809.8796585,
+    "hash": "8d64450ffd12a143a1ac637887db3d7d"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260604000008_gamification_rewards_redemptions.sql": {
+    "mtime": 1780552841.6173677,
+    "hash": "cc86a0b4102de1c52b12e01b770de1b8"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260604000009_gamification_badges.sql": {
+    "mtime": 1780552869.2871232,
+    "hash": "7a18d3e6c3d71048d21835d58f3a3c95"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260604000010_gamification_monthly_reset.sql": {
+    "mtime": 1780552883.1030798,
+    "hash": "967145219c1acd15106d63685d389afa"
   },
   "D:\\Projects\\react\\linknbit-portal\\AGENTS.md": {
     "mtime": 1778637729.709293,

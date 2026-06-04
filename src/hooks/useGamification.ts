@@ -1,36 +1,299 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
-  fetchXpTransactions,
+  fetchLeaderboard,
+  fetchProfileDirectory,
+  fetchOpenQuestTasks,
+  fetchAllQuestTasks,
+  fetchMyClaims,
+  fetchClaimsToReview,
+  createQuestTask,
+  updateQuestTask,
+  deleteQuestTask,
+  claimQuestTask,
+  submitQuestTask,
+  reviewQuestTask,
+  fetchApprovedShoutouts,
+  fetchPendingShoutouts,
+  giveShoutout,
+  reviewShoutout,
   fetchRewards,
   fetchAllRewards,
-  redeemReward,
   createReward,
   updateReward,
   deleteReward,
+  redeemReward,
   fetchMyRedemptions,
-  fetchQuests,
-  fetchAllQuests,
-  fetchQuestProgress,
-  fetchLeaderboard,
-  grantXp,
-  startQuest,
-  createQuest,
-  updateQuest,
-  deleteQuest,
+  fetchRedemptionQueue,
+  reviewRedemption,
+  fetchBadges,
+  fetchMyBadgeAwards,
+  awardBadge,
+  fetchXpTransactions,
+  grantLp,
+  setParticipationRestriction,
+  fetchMyLpHistory,
+  type QuestTaskRow,
   type RewardRow,
-  type QuestRow,
 } from '../api/gamification'
 
 export const GAMIFICATION_KEYS = {
-  xpTransactions: (profileId: string) => ['xp_transactions', profileId] as const,
-  rewards: () => ['rewards'] as const,
-  allRewards: () => ['rewards', 'all'] as const,
-  redemptions: (profileId: string) => ['reward_redemptions', profileId] as const,
-  quests: () => ['quests'] as const,
-  allQuests: () => ['quests', 'all'] as const,
-  questProgress: (profileId: string) => ['quest_progress', profileId] as const,
-  leaderboard: () => ['leaderboard'] as const,
+  leaderboard:      () => ['leaderboard'] as const,
+  directory:        () => ['profile_directory'] as const,
+  questTasksOpen:   () => ['quest_tasks', 'open'] as const,
+  questTasksAll:    () => ['quest_tasks', 'all'] as const,
+  myClaims:         (profileId: string) => ['quest_claims', 'mine', profileId] as const,
+  claimsToReview:   () => ['quest_claims', 'review'] as const,
+  shoutoutsFeed:    () => ['shoutouts', 'approved'] as const,
+  shoutoutsPending: () => ['shoutouts', 'pending'] as const,
+  rewards:          () => ['rewards'] as const,
+  allRewards:       () => ['rewards', 'all'] as const,
+  myRedemptions:    (profileId: string) => ['redemptions', 'mine', profileId] as const,
+  redemptionQueue:  () => ['redemptions', 'queue'] as const,
+  badges:           () => ['badges'] as const,
+  myBadges:         (profileId: string) => ['badge_awards', profileId] as const,
+  xpTransactions:   (profileId: string) => ['xp_transactions', profileId] as const,
+  lpHistory:        (profileId: string) => ['lp_history', profileId] as const,
 }
+
+// ── Leaderboard & directory ──────────────────────────────────────────────────────
+
+export function useLeaderboard() {
+  return useQuery({ queryKey: GAMIFICATION_KEYS.leaderboard(), queryFn: fetchLeaderboard, staleTime: 30_000 })
+}
+
+export function useProfileDirectory() {
+  return useQuery({ queryKey: GAMIFICATION_KEYS.directory(), queryFn: fetchProfileDirectory, staleTime: 5 * 60_000 })
+}
+
+// ── Quest board ──────────────────────────────────────────────────────────────────
+
+export function useOpenQuestTasks() {
+  return useQuery({ queryKey: GAMIFICATION_KEYS.questTasksOpen(), queryFn: fetchOpenQuestTasks, staleTime: 30_000 })
+}
+
+export function useAllQuestTasks() {
+  return useQuery({ queryKey: GAMIFICATION_KEYS.questTasksAll(), queryFn: fetchAllQuestTasks, staleTime: 30_000 })
+}
+
+export function useMyClaims(profileId: string) {
+  return useQuery({
+    queryKey: GAMIFICATION_KEYS.myClaims(profileId),
+    queryFn: () => fetchMyClaims(profileId),
+    enabled: !!profileId,
+  })
+}
+
+export function useClaimsToReview() {
+  return useQuery({ queryKey: GAMIFICATION_KEYS.claimsToReview(), queryFn: fetchClaimsToReview, staleTime: 15_000 })
+}
+
+export function useCreateQuestTask(actorId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (task: Pick<QuestTaskRow, 'title' | 'description' | 'difficulty' | 'lp_value' | 'max_claims' | 'requires_proof' | 'deadline'>) =>
+      createQuestTask(task, actorId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.questTasksOpen() })
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.questTasksAll() })
+    },
+  })
+}
+
+export function useUpdateQuestTask() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, updates }: { id: string; updates: Partial<QuestTaskRow> }) => updateQuestTask(id, updates),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.questTasksOpen() })
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.questTasksAll() })
+    },
+  })
+}
+
+export function useDeleteQuestTask() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => deleteQuestTask(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.questTasksOpen() })
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.questTasksAll() })
+    },
+  })
+}
+
+export function useClaimQuestTask(profileId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (taskId: string) => claimQuestTask(taskId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.myClaims(profileId) })
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.questTasksOpen() })
+    },
+  })
+}
+
+export function useSubmitQuestTask(profileId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ claimId, proofUrl, proofNote }: { claimId: string; proofUrl: string | null; proofNote: string | null }) =>
+      submitQuestTask(claimId, proofUrl, proofNote),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.myClaims(profileId) })
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.claimsToReview() })
+    },
+  })
+}
+
+export function useReviewQuestTask() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ claimId, approve, note }: { claimId: string; approve: boolean; note: string | null }) =>
+      reviewQuestTask(claimId, approve, note),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.claimsToReview() })
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.leaderboard() })
+    },
+  })
+}
+
+// ── Shoutouts ────────────────────────────────────────────────────────────────────
+
+export function useApprovedShoutouts() {
+  return useQuery({ queryKey: GAMIFICATION_KEYS.shoutoutsFeed(), queryFn: fetchApprovedShoutouts, staleTime: 30_000 })
+}
+
+export function usePendingShoutouts() {
+  return useQuery({ queryKey: GAMIFICATION_KEYS.shoutoutsPending(), queryFn: fetchPendingShoutouts, staleTime: 15_000 })
+}
+
+export function useGiveShoutout() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ toProfileId, category, message, impact }: { toProfileId: string; category: string; message: string; impact: 'standard' | 'high' }) =>
+      giveShoutout(toProfileId, category, message, impact),
+    onSuccess: () => qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.shoutoutsPending() }),
+  })
+}
+
+export function useReviewShoutout() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, approve, note }: { id: string; approve: boolean; note: string | null }) =>
+      reviewShoutout(id, approve, note),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.shoutoutsPending() })
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.shoutoutsFeed() })
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.leaderboard() })
+    },
+  })
+}
+
+// ── Rewards & redemptions ──────────────────────────────────────────────────────
+
+export function useRewards() {
+  return useQuery({ queryKey: GAMIFICATION_KEYS.rewards(), queryFn: fetchRewards, staleTime: 60_000 })
+}
+
+export function useAllRewards() {
+  return useQuery({ queryKey: GAMIFICATION_KEYS.allRewards(), queryFn: fetchAllRewards, staleTime: 30_000 })
+}
+
+export function useCreateReward(actorId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (reward: Pick<RewardRow, 'name' | 'description' | 'xp_cost' | 'quantity' | 'tier' | 'is_cash'>) =>
+      createReward(reward, actorId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.rewards() })
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.allRewards() })
+    },
+  })
+}
+
+export function useUpdateReward() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, updates }: { id: string; updates: Partial<RewardRow> }) => updateReward(id, updates),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.rewards() })
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.allRewards() })
+    },
+  })
+}
+
+export function useDeleteReward() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => deleteReward(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.rewards() })
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.allRewards() })
+    },
+  })
+}
+
+export function useRedeemReward(profileId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (rewardId: string) => redeemReward(profileId, rewardId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.rewards() })
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.myRedemptions(profileId) })
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.redemptionQueue() })
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.leaderboard() })
+    },
+  })
+}
+
+export function useMyRedemptions(profileId: string) {
+  return useQuery({
+    queryKey: GAMIFICATION_KEYS.myRedemptions(profileId),
+    queryFn: () => fetchMyRedemptions(profileId),
+    enabled: !!profileId,
+  })
+}
+
+export function useRedemptionQueue() {
+  return useQuery({ queryKey: GAMIFICATION_KEYS.redemptionQueue(), queryFn: fetchRedemptionQueue, staleTime: 15_000 })
+}
+
+export function useReviewRedemption() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, action, note }: { id: string; action: 'approve' | 'reject' | 'fulfill'; note: string | null }) =>
+      reviewRedemption(id, action, note),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.redemptionQueue() })
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.rewards() })
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.allRewards() })
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.leaderboard() })
+    },
+  })
+}
+
+// ── Badges ──────────────────────────────────────────────────────────────────────
+
+export function useBadges() {
+  return useQuery({ queryKey: GAMIFICATION_KEYS.badges(), queryFn: fetchBadges, staleTime: 5 * 60_000 })
+}
+
+export function useMyBadgeAwards(profileId: string) {
+  return useQuery({
+    queryKey: GAMIFICATION_KEYS.myBadges(profileId),
+    queryFn: () => fetchMyBadgeAwards(profileId),
+    enabled: !!profileId,
+  })
+}
+
+export function useAwardBadge() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ badgeId, profileId }: { badgeId: string; profileId: string }) => awardBadge(badgeId, profileId),
+    onSuccess: (_d, vars) => qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.myBadges(vars.profileId) }),
+  })
+}
+
+// ── LP ledger, grants, restriction, history ─────────────────────────────────────
 
 export function useXpTransactions(profileId: string) {
   return useQuery({
@@ -40,183 +303,31 @@ export function useXpTransactions(profileId: string) {
   })
 }
 
-export function useRewards() {
-  return useQuery({
-    queryKey: GAMIFICATION_KEYS.rewards(),
-    queryFn: fetchRewards,
-    staleTime: 60_000,
+export function useGrantLp(actorId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ profileId, amount, reason }: { profileId: string; amount: number; reason: string }) =>
+      grantLp(profileId, amount, reason, actorId),
+    onSuccess: (_d, vars) => {
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.xpTransactions(vars.profileId) })
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.leaderboard() })
+    },
   })
 }
 
-export function useAllRewards() {
-  return useQuery({
-    queryKey: GAMIFICATION_KEYS.allRewards(),
-    queryFn: fetchAllRewards,
-    staleTime: 30_000,
+export function useSetRestriction() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ profileId, restricted, reason }: { profileId: string; restricted: boolean; reason: string | null }) =>
+      setParticipationRestriction(profileId, restricted, reason),
+    onSuccess: () => qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.leaderboard() }),
   })
 }
 
-export function useMyRedemptions(profileId: string) {
+export function useMyLpHistory(profileId: string) {
   return useQuery({
-    queryKey: GAMIFICATION_KEYS.redemptions(profileId),
-    queryFn: () => fetchMyRedemptions(profileId),
+    queryKey: GAMIFICATION_KEYS.lpHistory(profileId),
+    queryFn: () => fetchMyLpHistory(profileId),
     enabled: !!profileId,
-  })
-}
-
-export function useRedeemReward(profileId: string) {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (rewardId: string) => redeemReward(profileId, rewardId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: GAMIFICATION_KEYS.rewards() })
-      queryClient.invalidateQueries({ queryKey: GAMIFICATION_KEYS.redemptions(profileId) })
-      queryClient.invalidateQueries({ queryKey: GAMIFICATION_KEYS.xpTransactions(profileId) })
-      // Invalidate leaderboard so XP totals refresh
-      queryClient.invalidateQueries({ queryKey: GAMIFICATION_KEYS.leaderboard() })
-    },
-  })
-}
-
-export function useCreateReward(actorId: string) {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (reward: Pick<RewardRow, 'name' | 'description' | 'xp_cost' | 'quantity'>) =>
-      createReward(reward, actorId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: GAMIFICATION_KEYS.rewards() })
-      queryClient.invalidateQueries({ queryKey: GAMIFICATION_KEYS.allRewards() })
-    },
-  })
-}
-
-export function useUpdateReward() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: ({
-      id,
-      updates,
-    }: {
-      id: string
-      updates: Partial<Pick<RewardRow, 'name' | 'description' | 'xp_cost' | 'quantity' | 'is_active'>>
-    }) => updateReward(id, updates),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: GAMIFICATION_KEYS.rewards() })
-      queryClient.invalidateQueries({ queryKey: GAMIFICATION_KEYS.allRewards() })
-    },
-  })
-}
-
-export function useQuests() {
-  return useQuery({
-    queryKey: GAMIFICATION_KEYS.quests(),
-    queryFn: fetchQuests,
-    staleTime: 60_000,
-  })
-}
-
-export function useQuestProgress(profileId: string) {
-  return useQuery({
-    queryKey: GAMIFICATION_KEYS.questProgress(profileId),
-    queryFn: () => fetchQuestProgress(profileId),
-    enabled: !!profileId,
-  })
-}
-
-export function useLeaderboard() {
-  return useQuery({
-    queryKey: GAMIFICATION_KEYS.leaderboard(),
-    queryFn: fetchLeaderboard,
-    staleTime: 30_000,
-  })
-}
-
-export function useGrantXp(actorId: string) {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: ({
-      profileId,
-      amount,
-      reason,
-    }: {
-      profileId: string
-      amount: number
-      reason: string
-    }) => grantXp(profileId, amount, reason, actorId),
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: GAMIFICATION_KEYS.xpTransactions(variables.profileId),
-      })
-      queryClient.invalidateQueries({ queryKey: GAMIFICATION_KEYS.leaderboard() })
-    },
-  })
-}
-
-export function useStartQuest(profileId: string) {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (questId: string) => startQuest(questId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: GAMIFICATION_KEYS.questProgress(profileId) })
-    },
-  })
-}
-
-export function useDeleteReward() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (rewardId: string) => deleteReward(rewardId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: GAMIFICATION_KEYS.rewards() })
-      queryClient.invalidateQueries({ queryKey: GAMIFICATION_KEYS.allRewards() })
-    },
-  })
-}
-
-export function useAllQuests() {
-  return useQuery({
-    queryKey: GAMIFICATION_KEYS.allQuests(),
-    queryFn: fetchAllQuests,
-    staleTime: 30_000,
-  })
-}
-
-export function useCreateQuest() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (quest: Pick<QuestRow, 'title' | 'description' | 'xp_reward' | 'condition_type' | 'condition_value' | 'repeatable' | 'is_active'>) =>
-      createQuest(quest),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: GAMIFICATION_KEYS.quests() })
-      queryClient.invalidateQueries({ queryKey: GAMIFICATION_KEYS.allQuests() })
-    },
-  })
-}
-
-export function useUpdateQuest() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: ({
-      id,
-      updates,
-    }: {
-      id: string
-      updates: Partial<Pick<QuestRow, 'title' | 'description' | 'xp_reward' | 'condition_type' | 'condition_value' | 'repeatable' | 'is_active'>>
-    }) => updateQuest(id, updates),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: GAMIFICATION_KEYS.quests() })
-      queryClient.invalidateQueries({ queryKey: GAMIFICATION_KEYS.allQuests() })
-    },
-  })
-}
-
-export function useDeleteQuest() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (questId: string) => deleteQuest(questId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: GAMIFICATION_KEYS.quests() })
-      queryClient.invalidateQueries({ queryKey: GAMIFICATION_KEYS.allQuests() })
-    },
   })
 }
