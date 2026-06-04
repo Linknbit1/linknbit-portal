@@ -12,7 +12,6 @@ import {
   useWorkingSaturdays,
 } from '../../hooks/useAttendance'
 import { getDeviceFingerprint, getDeviceName } from '../../lib/deviceUtils'
-import { useCanAccess } from '../../hooks/useRoleFlags'
 import { useToast } from '../ui/toast-context'
 import { Button } from '../ui/Button'
 import { cn } from '../../lib/cn'
@@ -42,8 +41,36 @@ function ErrorBanner({ msg }: { msg: string }) {
   )
 }
 
+// Shared root for both the live card and its skeleton — a fixed min-height with
+// vertical centering keeps every state (and the loading skeleton) the same
+// height, so the summary cards below never shift when data resolves.
+const CARD_ROOT_CLS =
+  'bg-surface-1 border border-border-default rounded-xl p-8 flex flex-col items-center justify-center gap-6 min-h-[392px]'
+
+function CheckInCardSkeleton() {
+  return (
+    <div className={cn(CARD_ROOT_CLS, 'animate-pulse')}>
+      {/* Date header */}
+      <div className="flex flex-col items-center gap-1.5">
+        <div className="h-[18px] w-40 rounded bg-surface-2" />
+        <div className="h-3 w-52 rounded bg-surface-2" />
+      </div>
+      {/* Action circle */}
+      <div className="w-24 h-24 rounded-full bg-surface-2" />
+      {/* Title + time */}
+      <div className="flex flex-col items-center gap-1.5">
+        <div className="h-[18px] w-28 rounded bg-surface-2" />
+        <div className="h-3.5 w-20 rounded bg-surface-2" />
+      </div>
+      {/* Device fingerprint line */}
+      <div className="h-3 w-44 rounded bg-surface-2" />
+      {/* Footer */}
+      <div className="h-3 w-56 rounded bg-surface-2" />
+    </div>
+  )
+}
+
 export function AttendanceCheckInCard() {
-  const canMarkAttendance = useCanAccess('can_mark_attendance')
   const toast = useToast()
 
   const now = new Date()
@@ -130,10 +157,10 @@ export function AttendanceCheckInCard() {
     }
   }
 
-  if (!canMarkAttendance) return null
+  if (isLoading) return <CheckInCardSkeleton />
 
   return (
-    <div className="bg-surface-1 border border-border-default rounded-xl p-8 flex flex-col items-center gap-6">
+    <div className={CARD_ROOT_CLS}>
 
       {/* Date header */}
       <div className="text-center">
@@ -141,13 +168,8 @@ export function AttendanceCheckInCard() {
         <p className="font-mono text-[12px] text-text-4 mt-1">{dateLabel}</p>
       </div>
 
-      {/* ── Loading ── */}
-      {isLoading && (
-        <div className="w-24 h-24 rounded-full bg-surface-2 animate-pulse" />
-      )}
-
       {/* ── Holiday ── */}
-      {!isLoading && todayHoliday && (
+      {todayHoliday && (
         <div className="flex flex-col items-center gap-3 text-center">
           <div className="w-24 h-24 rounded-full bg-text-4/10 border-2 border-text-4/20 flex items-center justify-center">
             <Palmtree size={40} className="text-text-3" />
@@ -160,7 +182,7 @@ export function AttendanceCheckInCard() {
       )}
 
       {/* ── Day off (Sunday or non-working Saturday) ── */}
-      {!isLoading && !todayHoliday && isDayOff && (
+      {!todayHoliday && isDayOff && (
         <div className="flex flex-col items-center gap-3 text-center">
           <div className="w-24 h-24 rounded-full bg-service-dev/10 border-2 border-service-dev/20 flex items-center justify-center">
             <Calendar size={40} className="text-service-dev" />
@@ -175,7 +197,7 @@ export function AttendanceCheckInCard() {
       )}
 
       {/* ── Checked in ── */}
-      {!isLoading && !todayHoliday && !isDayOff && today && (() => {
+      {!todayHoliday && !isDayOff && today && (() => {
         const checkedOut = Boolean(today.check_out)
         const isLate     = today.status === 'late'
         return (
@@ -233,7 +255,7 @@ export function AttendanceCheckInCard() {
       })()}
 
       {/* ── Not checked in ── */}
-      {!isLoading && !todayHoliday && !isDayOff && !today && (
+      {!todayHoliday && !isDayOff && !today && (
         <>
           {isWorkingSat && (
             <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-service-mkt/10 border border-service-mkt/25 text-[11px] font-mono font-semibold text-service-mkt">
