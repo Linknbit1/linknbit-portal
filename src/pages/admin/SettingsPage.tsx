@@ -68,11 +68,7 @@ const FEATURE_LABELS: Record<string, string> = {
   can_manage_clients:              'Manage Clients',
   can_view_clients:                'View Clients',
   can_view_projects:               'View Projects',
-  can_manage_rewards:              'Manage Rewards',
-  can_manage_quests:               'Manage Quests',
-  can_give_shoutout:               'Give Shoutouts',
   can_manage_people:               'Manage People',
-  can_grant_xp:                    'Grant XP',
   can_manage_integrations:         'Manage Integrations',
 }
 
@@ -81,7 +77,6 @@ const FEATURE_SECTIONS: { label: string; features: string[] }[] = [
   { label: 'Tasks',        features: ['can_approve_tasks'] },
   { label: 'Clients',      features: ['can_view_clients', 'can_manage_clients'] },
   { label: 'People',       features: ['can_manage_people'] },
-  { label: 'Gamification', features: ['can_manage_rewards', 'can_manage_quests', 'can_give_shoutout', 'can_grant_xp'] },
   { label: 'Reports',      features: ['can_view_reports'] },
   { label: 'Integrations', features: ['can_manage_integrations'] },
 ]
