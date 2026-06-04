@@ -13,6 +13,7 @@ import { ServiceChip } from '../../components/shared/ServiceChip'
 import { useToast } from '../../components/ui/toast-context'
 import { useAuthContext } from '../../context/AuthContext'
 import { useTeams } from '../../hooks/useTeams'
+import { useServices } from '../../hooks/useServices'
 import {
   usePeople, useInviteUser, useUpdatePersonRole, useUpdatePersonDetails, useSetPersonActive,
 } from '../../hooks/usePeople'
@@ -23,21 +24,14 @@ import {
 import { ROLE_LABELS } from '../../lib/utils'
 import { cn } from '../../lib/cn'
 
-const SERVICE_OPTIONS = [
-  { value: '', label: 'None' },
-  { value: 'design', label: 'Design' },
-  { value: 'development', label: 'Development' },
-  { value: 'marketing', label: 'Marketing' },
-]
-
-const isService = (s: string): s is 'design' | 'development' | 'marketing' =>
-  s === 'design' || s === 'development' || s === 'marketing'
+type Option = { value: string; label: string }
 
 // ── Invite modal ─────────────────────────────────────────────────────────────────
 
-function InviteModal({ actorRole, teams, onClose }: {
+function InviteModal({ actorRole, teams, serviceOptions, onClose }: {
   actorRole: string
   teams: { id: string; name: string }[]
+  serviceOptions: Option[]
   onClose: () => void
 }) {
   const toast = useToast()
@@ -112,7 +106,7 @@ function InviteModal({ actorRole, teams, onClose }: {
                 </div>
                 <div>
                   <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Service</label>
-                  <Select value={service} onChange={setService} options={SERVICE_OPTIONS} />
+                  <Select value={service} onChange={setService} options={serviceOptions} />
                 </div>
               </div>
             </div>
@@ -131,10 +125,11 @@ function InviteModal({ actorRole, teams, onClose }: {
 
 // ── Edit drawer ──────────────────────────────────────────────────────────────────
 
-function EditDrawer({ person, actorRole, teams, onClose }: {
+function EditDrawer({ person, actorRole, teams, serviceOptions, onClose }: {
   person: Person
   actorRole: string
   teams: { id: string; name: string }[]
+  serviceOptions: Option[]
   onClose: () => void
 }) {
   const toast = useToast()
@@ -207,7 +202,7 @@ function EditDrawer({ person, actorRole, teams, onClose }: {
             </div>
             <div>
               <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Service</label>
-              <Select value={service} onChange={setService} options={SERVICE_OPTIONS} />
+              <Select value={service} onChange={setService} options={serviceOptions} />
               <p className="font-mono text-[10px] text-text-4 mt-1">A team assignment overrides this with the team's service.</p>
             </div>
           </section>
@@ -235,7 +230,13 @@ export default function PeoplePage() {
 
   const { data: people = [], isLoading } = usePeople()
   const { data: teams = [] } = useTeams()
+  const { data: services = [] } = useServices()
   const { mutate: setActive } = useSetPersonActive()
+
+  const serviceOptions = useMemo(
+    () => [{ value: '', label: 'None' }, ...services.filter((s) => s.is_active).map((s) => ({ value: s.slug, label: s.name }))],
+    [services],
+  )
 
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState('')
@@ -307,7 +308,7 @@ export default function PeoplePage() {
                   </div>
                   <RoleBadge role={toUserRole(p.role)} />
                   <span className="font-ui text-[12px] text-text-2 truncate">{p.team_id ? teamName.get(p.team_id) ?? '—' : '—'}</span>
-                  <span>{isService(p.service_type ?? '') ? <ServiceChip service={p.service_type === 'design' ? 'design' : p.service_type === 'development' ? 'development' : 'marketing'} /> : <span className="font-mono text-[11px] text-text-4">—</span>}</span>
+                  <span>{p.service_type ? <ServiceChip service={p.service_type} /> : <span className="font-mono text-[11px] text-text-4">—</span>}</span>
                   <span className="font-display font-bold text-[12px] text-text-1">Lv {p.level}</span>
                   <div className="flex justify-end gap-1.5">
                     {canManage && (
@@ -334,8 +335,8 @@ export default function PeoplePage() {
         )}
       </div>
 
-      {inviteOpen && <InviteModal actorRole={myRole} teams={teams.map((t) => ({ id: t.id, name: t.name }))} onClose={() => setInviteOpen(false)} />}
-      {editing && <EditDrawer person={editing} actorRole={myRole} teams={teams.map((t) => ({ id: t.id, name: t.name }))} onClose={() => setEditing(null)} />}
+      {inviteOpen && <InviteModal actorRole={myRole} teams={teams.map((t) => ({ id: t.id, name: t.name }))} serviceOptions={serviceOptions} onClose={() => setInviteOpen(false)} />}
+      {editing && <EditDrawer person={editing} actorRole={myRole} teams={teams.map((t) => ({ id: t.id, name: t.name }))} serviceOptions={serviceOptions} onClose={() => setEditing(null)} />}
     </div>
   )
 }

@@ -1,23 +1,131 @@
 import React, { useState } from 'react'
-import { Check, Bell, Zap, Layers, Link2, Palette, Shield, ChevronRight, Loader2 } from 'lucide-react'
+import { Check, Bell, Zap, Layers, Link2, Palette, Shield, ChevronRight, Loader2, Shapes, Plus, Trash2 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Button } from '../../components/ui/Button'
 import { Toggle } from '../../components/ui/Toggle'
 import { useToast } from '../../components/ui/toast-context'
 import { useAuthContext } from '../../context/AuthContext'
 import { useRoleFlags, useUpdateRoleFlag } from '../../hooks/useRoleFlags'
+import {
+  useServices, useCreateService, useUpdateService, useDeleteService, useServiceUsage,
+} from '../../hooks/useServices'
+import type { Service } from '../../api/services'
 import { cn } from '../../lib/cn'
 
-type Tab = 'general' | 'xp' | 'stages' | 'notifications' | 'integrations' | 'permissions'
+type Tab = 'general' | 'xp' | 'services' | 'stages' | 'notifications' | 'integrations' | 'permissions'
 
 const TABS: { key: Tab; label: string; icon: typeof Check }[] = [
   { key: 'general',       label: 'General',       icon: Palette },
   { key: 'xp',           label: 'XP & Rewards',   icon: Zap },
+  { key: 'services',     label: 'Services',        icon: Shapes },
   { key: 'stages',       label: 'Stages',          icon: Layers },
   { key: 'notifications', label: 'Notifications', icon: Bell },
   { key: 'integrations', label: 'Integrations',    icon: Link2 },
   { key: 'permissions',  label: 'Permissions',     icon: Shield },
 ]
+
+// ── Services management ──────────────────────────────────────────────────────────
+
+function ServiceRow({ service, canManage }: { service: Service; canManage: boolean }) {
+  const toast = useToast()
+  const { mutate: update, isPending: saving } = useUpdateService()
+  const { mutate: del, isPending: deleting } = useDeleteService()
+  const [name, setName] = useState(service.name)
+  const [color, setColor] = useState(service.color)
+  const [confirming, setConfirming] = useState(false)
+  const usage = useServiceUsage(service.slug, confirming)
+  const dirty = name !== service.name || color !== service.color
+  const inUse = (usage.data?.people ?? 0) + (usage.data?.teams ?? 0) > 0
+
+  const save = () => update(
+    { id: service.id, updates: { name: name.trim(), color } },
+    { onSuccess: () => toast('Service updated', 'success'), onError: (e) => toast(e.message.includes('unique') ? 'That name already exists' : 'Update failed', 'error') },
+  )
+  const remove = () => del(service.id, {
+    onSuccess: () => { toast('Service deleted', 'success'); setConfirming(false) },
+    onError: () => toast('Could not delete service', 'error'),
+  })
+
+  return (
+    <div className="grid grid-cols-[36px_1fr_auto_auto] gap-3 items-center px-4 py-2.5 border-b border-border-subtle last:border-0">
+      <input type="color" value={color} disabled={!canManage} onChange={(e) => setColor(e.target.value)}
+        className="w-8 h-8 rounded-md bg-transparent border border-border-default cursor-pointer disabled:cursor-default" aria-label={`${service.name} colour`} />
+      <div className="flex items-center gap-2 min-w-0">
+        <input value={name} disabled={!canManage} onChange={(e) => setName(e.target.value)}
+          className="bg-surface-inset border border-border-default rounded-md px-3 py-1.5 text-[13px] font-ui text-text-1 outline-none focus:border-border-focus w-52 disabled:opacity-70" />
+        <span className="font-mono text-[10px] text-text-4 truncate">{service.slug}</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <Toggle checked={service.is_active} onChange={(v) => canManage && update({ id: service.id, updates: { is_active: v } }, { onSuccess: () => toast(v ? 'Activated' : 'Deactivated', 'success') })} />
+        <span className="font-mono text-[10px] text-text-4 w-7">{service.is_active ? 'On' : 'Off'}</span>
+      </div>
+      {canManage && (
+        confirming ? (
+          <div className="flex items-center gap-2">
+            {usage.isLoading ? <Loader2 size={12} className="animate-spin text-text-4" />
+              : inUse ? <span className="font-mono text-[10.5px] text-error">In use: {usage.data?.people}p · {usage.data?.teams}t</span>
+              : <button onClick={remove} disabled={deleting} className="font-mono text-[10.5px] text-error font-bold">Delete</button>}
+            <button onClick={() => setConfirming(false)} className="font-mono text-[10.5px] text-text-3">Cancel</button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1.5">
+            {dirty && <Button size="sm" variant="secondary" disabled={saving} onClick={save}>Save</Button>}
+            <button onClick={() => setConfirming(true)} className="p-1.5 text-text-4 hover:text-error" title="Delete service"><Trash2 size={13} /></button>
+          </div>
+        )
+      )}
+    </div>
+  )
+}
+
+function ServicesPanel({ canManage }: { canManage: boolean }) {
+  const toast = useToast()
+  const { data: services = [], isLoading } = useServices()
+  const { mutate: create, isPending: creating } = useCreateService()
+  const [newName, setNewName] = useState('')
+  const [newColor, setNewColor] = useState('#A78BFA')
+
+  const add = () => {
+    if (!newName.trim()) return
+    create({ name: newName.trim(), color: newColor }, {
+      onSuccess: () => { toast('Service created', 'success'); setNewName(''); setNewColor('#A78BFA') },
+      onError: (e) => toast(/unique|duplicate/i.test(e.message) ? 'That name already exists' : 'Could not create service', 'error'),
+    })
+  }
+
+  return (
+    <div>
+      <h2 className="font-display font-bold text-[16px] text-text-1 mb-1">Services</h2>
+      <p className="font-ui text-[13px] text-text-3 mb-5">
+        Create, rename, recolour, or retire the service lines used across teams, people, and projects.
+        A service in use can't be deleted — reassign or deactivate it first.
+      </p>
+
+      <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
+        <div className="grid grid-cols-[36px_1fr_auto_auto] gap-3 px-4 py-2 border-b border-border-subtle bg-surface-2">
+          {['', 'Name', 'Active', ''].map((h, i) => <span key={i} className="font-mono text-[10px] text-text-4 uppercase tracking-wider">{h}</span>)}
+        </div>
+        {isLoading ? (
+          <div className="flex justify-center py-10 text-text-4"><Loader2 size={18} className="animate-spin" /></div>
+        ) : (
+          services.map((s) => <ServiceRow key={s.id} service={s} canManage={canManage} />)
+        )}
+        {canManage && (
+          <div className="grid grid-cols-[36px_1fr_auto] gap-3 items-center px-4 py-3 bg-surface-2/40">
+            <input type="color" value={newColor} onChange={(e) => setNewColor(e.target.value)}
+              className="w-8 h-8 rounded-md bg-transparent border border-border-default cursor-pointer" aria-label="New service colour" />
+            <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="New service name (e.g. SEO)"
+              className="bg-surface-inset border border-border-default rounded-md px-3 py-1.5 text-[13px] font-ui text-text-1 placeholder:text-text-4 outline-none focus:border-border-focus w-64" />
+            <Button size="sm" disabled={!newName.trim() || creating} onClick={add}>
+              {creating ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />} Add
+            </Button>
+          </div>
+        )}
+      </div>
+      {!canManage && <p className="font-mono text-[11px] text-text-4 mt-3">Only Super Admins and Admins can manage services.</p>}
+    </div>
+  )
+}
 
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
@@ -209,6 +317,8 @@ export default function SettingsPage() {
                   </div>
                 </div>
               )}
+
+              {activeTab === 'services' && <ServicesPanel canManage={canEditFlags} />}
 
               {activeTab === 'stages' && (
                 <div>
