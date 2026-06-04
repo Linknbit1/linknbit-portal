@@ -1222,11 +1222,25 @@ export type Database = {
     }
     Functions: {
       admin_run_monthly_reset: { Args: never; Returns: undefined }
+      admin_set_profile_active: {
+        Args: { p_active: boolean; p_profile_id: string }
+        Returns: undefined
+      }
+      admin_update_profile_details: {
+        Args: { p_avatar_url?: string; p_name: string; p_profile_id: string }
+        Returns: undefined
+      }
+      admin_update_profile_role: {
+        Args: { p_profile_id: string; p_role: string; p_service_type?: string; p_team_id?: string }
+        Returns: undefined
+      }
       award_badge: {
         Args: { p_badge_id: string; p_profile_id: string }
         Returns: undefined
       }
       can_govern_gamification: { Args: never; Returns: boolean }
+      can_grant_role: { Args: { p_role: string }; Returns: boolean }
+      can_manage_target: { Args: { p_target_role: string }; Returns: boolean }
       can_recognize: { Args: never; Returns: boolean }
       claim_quest_task: { Args: { p_task_id: string }; Returns: string }
       current_user_role: { Args: never; Returns: string }
