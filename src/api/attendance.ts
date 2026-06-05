@@ -112,7 +112,9 @@ export async function fetchMyAttendance(days = 30): Promise<AttendanceRow[]> {
 export async function fetchMyTodayAttendance(): Promise<AttendanceRow | null> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
-  const today = new Date().toISOString().split('T')[0]
+  // Local calendar date (matches localToday() in the UI and the check-in Edge Function),
+  // NOT toISOString() which is UTC and rolls over a day early in UTC+ timezones.
+  const today = new Intl.DateTimeFormat('en-CA').format(new Date())
   const { data, error } = await supabase
     .from('attendance')
     .select('*')
