@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Check, Bell, Zap, Layers, Link2, Palette, Shield, ChevronRight, Loader2, Shapes, Plus, Trash2 } from 'lucide-react'
+import { Check, Bell, Layers, Link2, Palette, Shield, ChevronRight, Loader2, Shapes, Plus, Trash2 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Button } from '../../components/ui/Button'
 import { Toggle } from '../../components/ui/Toggle'
@@ -12,11 +12,10 @@ import {
 import type { Service } from '../../api/services'
 import { cn } from '../../lib/cn'
 
-type Tab = 'general' | 'xp' | 'services' | 'stages' | 'notifications' | 'integrations' | 'permissions'
+type Tab = 'general' | 'services' | 'stages' | 'notifications' | 'integrations' | 'permissions'
 
 const TABS: { key: Tab; label: string; icon: typeof Check }[] = [
   { key: 'general',       label: 'General',       icon: Palette },
-  { key: 'xp',           label: 'XP & Rewards',   icon: Zap },
   { key: 'services',     label: 'Services',        icon: Shapes },
   { key: 'stages',       label: 'Stages',          icon: Layers },
   { key: 'notifications', label: 'Notifications', icon: Bell },
@@ -139,19 +138,6 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
   )
 }
 
-function NumberInput({ value, onChange, min, max }: { value: number; onChange: (v: number) => void; min?: number; max?: number }) {
-  return (
-    <input
-      type="number"
-      value={value}
-      min={min}
-      max={max}
-      onChange={(e) => onChange(Number(e.target.value))}
-      className="w-20 bg-surface-inset border border-border-default rounded-md px-2.5 py-1.5 text-[13px] font-mono text-text-1 outline-none focus:border-border-focus text-right"
-    />
-  )
-}
-
 function TextInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
   return (
     <input
@@ -201,15 +187,6 @@ export default function SettingsPage() {
   // General
   const [agencyName, setAgencyName] = useState('Linknbit')
   const [timezone, setTimezone] = useState('Asia/Karachi')
-
-  // XP
-  const [easyTaskXP, setEasyTaskXP] = useState(25)
-  const [mediumTaskXP, setMediumTaskXP] = useState(50)
-  const [hardTaskXP, setHardTaskXP] = useState(85)
-  const [stdShoutoutXP, setStdShoutoutXP] = useState(100)
-  const [highShoutoutXP, setHighShoutoutXP] = useState(135)
-  const [monthlyReset, setMonthlyReset] = useState(true)
-  const [penaltyEnabled, setPenaltyEnabled] = useState(false)
 
   // Notifications
   const [notifTaskComplete, setNotifTaskComplete] = useState(true)
@@ -275,46 +252,6 @@ export default function SettingsPage() {
                       <option>USD — US Dollar</option>
                     </select>
                   </Field>
-                </div>
-              )}
-
-              {activeTab === 'xp' && (
-                <div>
-                  <h2 className="font-display font-bold text-[16px] text-text-1 mb-1">XP & Rewards Rules</h2>
-                  <p className="font-ui text-[13px] text-text-3 mb-5">Configure Link Points (LP) values per the rewards policy.</p>
-
-                  <div className="mb-4">
-                    <p className="font-mono text-[10.5px] text-text-4 uppercase tracking-wider mb-2">Task Completion</p>
-                    <Field label="Easy Task" hint="Simple tasks (20–30 LP recommended)">
-                      <NumberInput value={easyTaskXP} onChange={setEasyTaskXP} min={10} max={50} />
-                    </Field>
-                    <Field label="Medium Task" hint="Standard tasks (40–60 LP recommended)">
-                      <NumberInput value={mediumTaskXP} onChange={setMediumTaskXP} min={20} max={80} />
-                    </Field>
-                    <Field label="Hard Task" hint="Complex/urgent tasks (70–100 LP recommended)">
-                      <NumberInput value={hardTaskXP} onChange={setHardTaskXP} min={50} max={120} />
-                    </Field>
-                  </div>
-
-                  <div className="mb-4">
-                    <p className="font-mono text-[10.5px] text-text-4 uppercase tracking-wider mb-2">Shoutouts</p>
-                    <Field label="Standard Shoutout" hint="Manager/TL/HR issued (100 LP recommended)">
-                      <NumberInput value={stdShoutoutXP} onChange={setStdShoutoutXP} min={50} max={150} />
-                    </Field>
-                    <Field label="High Impact Shoutout" hint="Exceptional contribution (120–150 LP)">
-                      <NumberInput value={highShoutoutXP} onChange={setHighShoutoutXP} min={100} max={200} />
-                    </Field>
-                  </div>
-
-                  <div>
-                    <p className="font-mono text-[10.5px] text-text-4 uppercase tracking-wider mb-2">System Rules</p>
-                    <Field label="Monthly LP Reset" hint="LP resets to zero at end of each month">
-                      <Toggle checked={monthlyReset} onChange={setMonthlyReset} />
-                    </Field>
-                    <Field label="LP Penalty Deduction" hint="Disabled per policy — use participation restriction instead">
-                      <Toggle checked={penaltyEnabled} onChange={setPenaltyEnabled} />
-                    </Field>
-                  </div>
                 </div>
               )}
 

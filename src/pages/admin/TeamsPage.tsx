@@ -71,7 +71,7 @@ function TeamModal({ team, people, serviceOptions, onClose }: {
           <button onClick={onClose} className="text-text-4 hover:text-text-1"><X size={18} /></button>
         </div>
         <div className="space-y-3.5">
-          <Input label="Team name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Development Pod A" />
+          <Input label="Team name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Development Pod A" inputClassName="text-[13px]" />
           <div>
             <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Service</label>
             <Select value={service} onChange={setService} options={serviceOptions} />
