@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { useSignIn, useSendOtp, useVerifyOtp, useUpdatePassword } from '../../hooks/useAuth'
+import { LinknbitMark } from '../../components/brand/LinknbitLogo'
 
 type AuthView = 'login' | 'forgot' | 'otp' | 'new-password' | 'splash'
 type BootStep = 'done' | 'now' | 'pending'
@@ -168,14 +169,7 @@ function getCurrentMonthYear() {
 
 function LogoMark({ compact = false }: { compact?: boolean }) {
   return (
-    <span
-      className={cn(
-        'flex shrink-0 items-center justify-center rounded-sm bg-brand-red font-display font-bold text-white',
-        compact ? 'size-6 text-[13px]' : 'size-[30px] text-[16px]',
-      )}
-    >
-      L
-    </span>
+    <LinknbitMark surface="dark" className={compact ? 'h-7 w-6' : 'h-8 w-7'} />
   )
 }
 
