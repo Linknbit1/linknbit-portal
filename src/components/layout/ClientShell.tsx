@@ -24,6 +24,7 @@ import { cn } from '../../lib/cn'
 import { APPROVALS } from '../../data/mock'
 import { formatRelativeTime } from '../../lib/utils'
 import { useClickOutside } from '../../hooks/useClickOutside'
+import { LinknbitMark } from '../brand/LinknbitLogo'
 
 const dropdownVariants: Variants = {
   hidden: { opacity: 0, y: -8, scale: 0.97 },
@@ -139,16 +140,7 @@ export function ClientShell() {
       <header className="h-client-topbar bg-client-surface border-b border-client-border sticky top-0 z-30 flex items-center px-4 lg:px-10 gap-4 lg:gap-8">
         {/* Brand */}
         <div className="flex items-center gap-3 shrink-0">
-          <span className="w-8 h-8 rounded-md bg-client-accent flex items-center justify-center">
-            <svg viewBox="0 0 41 45" width="18" height="18" fill="none">
-              <rect x="0" y="3.5" width="10.5" height="10.5" rx="0.4" fill="white" />
-              <rect x="0" y="18.7" width="10.5" height="26" rx="0.4" fill="white" />
-              <rect x="15" y="3.5" width="10.5" height="25.9" rx="0.4" fill="white" />
-              <rect x="15" y="33.9" width="10.5" height="10.5" rx="0.4" fill="white" />
-              <rect x="30.4" y="3.5" width="10.5" height="10.5" rx="0.4" fill="white" opacity="0.7" />
-              <rect x="30.4" y="18.7" width="10.5" height="26" rx="0.4" fill="white" />
-            </svg>
-          </span>
+          <LinknbitMark surface="light" className="h-9 w-8" />
           <div>
             <p className="font-display font-bold text-[16px] leading-tight tracking-tight" style={{ color: '#1A1612' }}>
               Linknbit

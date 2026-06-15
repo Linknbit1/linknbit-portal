@@ -1,11 +1,11 @@
 # Graph Report - linknbit-portal  (2026-06-15)
 
 ## Corpus Check
-- 119 files · ~203,938 words
+- 123 files · ~214,994 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1273 nodes · 1818 edges · 32 communities detected
+- 1279 nodes · 1820 edges · 32 communities detected
 - Extraction: 91% EXTRACTED · 9% INFERRED · 0% AMBIGUOUS · INFERRED: 166 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
@@ -28,7 +28,7 @@
 - [[_COMMUNITY_Community 16|Community 16]]
 - [[_COMMUNITY_Community 17|Community 17]]
 - [[_COMMUNITY_Community 18|Community 18]]
-- [[_COMMUNITY_Community 20|Community 20]]
+- [[_COMMUNITY_Community 19|Community 19]]
 - [[_COMMUNITY_Community 22|Community 22]]
 - [[_COMMUNITY_Community 23|Community 23]]
 - [[_COMMUNITY_Community 24|Community 24]]
@@ -40,8 +40,8 @@
 - [[_COMMUNITY_Community 31|Community 31]]
 - [[_COMMUNITY_Community 32|Community 32]]
 - [[_COMMUNITY_Community 38|Community 38]]
-- [[_COMMUNITY_Community 43|Community 43]]
-- [[_COMMUNITY_Community 73|Community 73]]
+- [[_COMMUNITY_Community 44|Community 44]]
+- [[_COMMUNITY_Community 75|Community 75]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `$()` - 85 edges
@@ -71,7 +71,7 @@
 
 ### Community 0 - "Community 0"
 Cohesion: 0.03
-Nodes (196): $(), addCommentLink(), addImage(), addLink(), addReaction(), adminGiveShoutout(), attendanceCheckState(), attendanceStatusMeta() (+188 more)
+Nodes (186): $(), addCommentLink(), addImage(), addLink(), addReaction(), adminGiveShoutout(), attendanceCheckState(), attendanceStatusMeta() (+178 more)
 
 ### Community 1 - "Community 1"
 Cohesion: 0.03
@@ -79,7 +79,7 @@ Nodes (80): addWorkingSaturday(), adminCheckOut(), approveDevice(), checkOut(), 
 
 ### Community 2 - "Community 2"
 Cohesion: 0.02
-Nodes (92): Always-active conventions (every phase), code:block1 (Phase 0: Project Setup), code:block10 (src/api/gamification.ts     — fetchXpTransactions(), fetchRe), code:block11 (src/hooks/useGamification.ts    — useXpTransactions(), useRe), code:block12 (src/lib/deviceUtils.ts), code:bash (supabase migration new create_teams_table), code:block14 (src/api/attendance.ts   — checkIn(), checkOut(), fetchMyAtte), code:block15 (src/hooks/useAttendance.ts   — useMyAttendance(), useAllAtte) (+84 more)
+Nodes (104): Always-active conventions (every phase), code:block1 (Phase 0: Project Setup), code:block10 (src/api/gamification.ts     — fetchXpTransactions(), fetchRe), code:block11 (src/hooks/useGamification.ts    — useXpTransactions(), useRe), code:block12 (src/lib/deviceUtils.ts), code:bash (supabase migration new create_teams_table), code:block14 (src/api/attendance.ts   — checkIn(), checkOut(), fetchMyAtte), code:block15 (src/hooks/useAttendance.ts   — useMyAttendance(), useAllAtte) (+96 more)
 
 ### Community 3 - "Community 3"
 Cohesion: 0.02
@@ -122,12 +122,12 @@ Cohesion: 0.13
 Nodes (22): **1.10 Special Shoutouts (Examples)**, **1.11 System Discipline & Participation Restrictions**, **1.12 System Rules Summary**, **1.13 Simple Understanding of System**, **1.14 Final Note**, **1.1 Purpose of the System**, **1.2 System Overview**, **1.3 Currency System (Link Points \- LP)** (+14 more)
 
 ### Community 14 - "Community 14"
-Cohesion: 0.12
-Nodes (16): addColumn(), deleteColumn(), ensureProjectColumns(), refreshKanban(), renameColumn(), renderKanban(), renderListView(), renderProjectBoard() (+8 more)
-
-### Community 15 - "Community 15"
 Cohesion: 0.1
 Nodes (10): formatRelativeTime(), grantLp(), asDifficulty(), difficultyMeta(), handleClaim(), handleGrant(), handleRedeem(), nameOf() (+2 more)
+
+### Community 15 - "Community 15"
+Cohesion: 0.16
+Nodes (12): addColumn(), deleteColumn(), ensureProjectColumns(), refreshKanban(), renameColumn(), setColColor(), confirm(), fmt2() (+4 more)
 
 ### Community 16 - "Community 16"
 Cohesion: 0.12
@@ -138,12 +138,12 @@ Cohesion: 0.14
 Nodes (5): dcExport(), dcFlatten(), DCSection(), DesignCanvas(), save()
 
 ### Community 18 - "Community 18"
+Cohesion: 0.22
+Nodes (14): ensurePerformanceTeam(), fmtMonth(), getPerfMonths(), perfStatusLabel(), renderAdminDashboard(), renderAdminLeaderboard(), renderAdminPerformance(), renderEmpLeaderboard() (+6 more)
+
+### Community 19 - "Community 19"
 Cohesion: 0.24
 Nodes (6): dayStr(), isDisabled(), isSelected(), isToday(), select(), toStr()
-
-### Community 20 - "Community 20"
-Cohesion: 0.17
-Nodes (12): code:bash (supabase migration new create_sync_queue), code:bash (supabase migration new add_sync_queue_trigger), code:block27 (src/api/integrations.ts   — fetchIntegrations(), connectClic), code:block28 (src/hooks/useIntegrations.ts), Edge Functions, Frontend, Migrations, Outbound trigger (+4 more)
 
 ### Community 22 - "Community 22"
 Cohesion: 0.22
@@ -189,11 +189,11 @@ Nodes (2): visibleNavItems(), isAuthoritative()
 Cohesion: 0.5
 Nodes (3): Answer, Q: Why does cn() connect Community 0 to Community 1, Community 10, Community 3, and Community 5?, Source Nodes
 
-### Community 43 - "Community 43"
+### Community 44 - "Community 44"
 Cohesion: 1.0
 Nodes (2): useIsDesktop(), useMediaQuery()
 
-### Community 73 - "Community 73"
+### Community 75 - "Community 75"
 Cohesion: 1.0
 Nodes (1): graphify
 
@@ -208,20 +208,20 @@ Nodes (1): graphify
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 32`** (4 nodes): `visibleNavItems()`, `isAuthoritative()`, `navItems.ts`, `roles.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 43`** (3 nodes): `useMediaQuery.ts`, `useIsDesktop()`, `useMediaQuery()`
+- **Thin community `Community 44`** (3 nodes): `useMediaQuery.ts`, `useIsDesktop()`, `useMediaQuery()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 73`** (2 nodes): `AGENTS.md`, `graphify`
+- **Thin community `Community 75`** (2 nodes): `AGENTS.md`, `graphify`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `toast()` connect `Community 0` to `Community 1`, `Community 9`, `Community 14`, `Community 15`, `Community 17`, `Community 22`, `Community 26`, `Community 27`?**
-  _High betweenness centrality (0.148) - this node is a cross-community bridge._
-- **Why does `update()` connect `Community 1` to `Community 15`?**
-  _High betweenness centrality (0.080) - this node is a cross-community bridge._
+  _High betweenness centrality (0.166) - this node is a cross-community bridge._
+- **Why does `update()` connect `Community 1` to `Community 14`?**
+  _High betweenness centrality (0.090) - this node is a cross-community bridge._
 - **Why does `handleAdd()` connect `Community 1` to `Community 0`?**
-  _High betweenness centrality (0.075) - this node is a cross-community bridge._
+  _High betweenness centrality (0.084) - this node is a cross-community bridge._
 - **Are the 74 inferred relationships involving `select()` (e.g. with `fetchLeaderboard()` and `fetchProfileDirectory()`) actually correct?**
   _`select()` has 74 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 27 inferred relationships involving `toast()` (e.g. with `add()` and `handleCheckIn()`) actually correct?**
