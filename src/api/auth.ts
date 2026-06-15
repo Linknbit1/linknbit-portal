@@ -106,3 +106,14 @@ export async function fetchProfile(userId: string): Promise<ProfileRow | null> {
   }
   return data
 }
+
+export async function fetchActiveProfiles(): Promise<Pick<ProfileRow, 'id' | 'name'>[]> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, name')
+    .eq('is_active', true)
+    .not('role', 'in', '(client_owner,client_member)')
+    .order('name', { ascending: true })
+  if (error) throw error
+  return data ?? []
+}

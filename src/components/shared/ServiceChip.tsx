@@ -1,40 +1,40 @@
 import { cn } from '../../lib/cn'
-import type { ServiceType } from '../../types'
+import { useServices } from '../../hooks/useServices'
 
-const SERVICE_CONFIG = {
-  design: {
-    label: 'Design',
-    classes: 'bg-[rgba(167,139,250,0.12)] text-[#C4B5FD]',
-  },
-  development: {
-    label: 'Development',
-    classes: 'bg-[rgba(34,211,238,0.12)] text-[#67E8F9]',
-  },
-  marketing: {
-    label: 'Marketing',
-    classes: 'bg-[rgba(251,191,36,0.12)] text-[#FCD34D]',
-  },
-} as const
+// Fallback colours for the seeded services, so chips render correctly even
+// before the services query resolves (and on mock pages without live data).
+const FALLBACK: Record<string, { name: string; color: string }> = {
+  design: { name: 'Design', color: '#A78BFA' },
+  development: { name: 'Development', color: '#22D3EE' },
+  marketing: { name: 'Marketing', color: '#FBBF24' },
+}
+const NEUTRAL = '#8A93A3'
 
 interface ServiceChipProps {
-  service: ServiceType
+  /** A service slug (e.g. "design"). Colour + label resolve from the services table. */
+  service: string
   showDot?: boolean
   className?: string
 }
 
 export function ServiceChip({ service, showDot = true, className }: ServiceChipProps) {
-  const config = SERVICE_CONFIG[service]
+  const { data: services } = useServices()
+  const match = services?.find((s) => s.slug === service)
+  const fallback = FALLBACK[service]
+  const name = match?.name ?? fallback?.name ?? service
+  const color = match?.color ?? fallback?.color ?? NEUTRAL
 
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-[6px] py-[3px] px-[9px] rounded-full font-ui font-semibold text-[10.5px] uppercase tracking-[0.04em] leading-[1.4] whitespace-nowrap border border-transparent',
-        config.classes,
+        'inline-flex w-fit items-center gap-[6px] py-[3px] px-[9px] rounded-full font-ui font-semibold text-[10.5px] uppercase tracking-[0.04em] leading-[1.4] whitespace-nowrap border border-transparent',
         className,
       )}
+      // Dynamic per-service colour — the sanctioned inline-style case (value can't be a token).
+      style={{ color, backgroundColor: `${color}1F` }}
     >
       {showDot && <span className="w-[5px] h-[5px] rounded-full bg-current flex-shrink-0" />}
-      {config.label}
+      {name}
     </span>
   )
 }

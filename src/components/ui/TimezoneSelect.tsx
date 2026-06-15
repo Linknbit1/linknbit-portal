@@ -32,10 +32,6 @@ export function TimezoneSelect({ value, onChange, className }: TimezoneSelectPro
   }, [search])
 
   useEffect(() => {
-    setHighlighted(0)
-  }, [filtered])
-
-  useEffect(() => {
     if (!open) return
     const timeout = setTimeout(() => searchRef.current?.focus(), 30)
     return () => clearTimeout(timeout)
@@ -82,6 +78,11 @@ export function TimezoneSelect({ value, onChange, className }: TimezoneSelectPro
     setSearch('')
   }
 
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value)
+    setHighlighted(0)
+  }
+
   return (
     <div ref={containerRef} className={cn('relative', className)} onKeyDown={handleKeyDown}>
       {/* Trigger */}
@@ -113,7 +114,7 @@ export function TimezoneSelect({ value, onChange, className }: TimezoneSelectPro
               ref={searchRef}
               type="text"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={handleSearchChange}
               placeholder="Search timezones…"
               className="flex-1 bg-transparent font-mono text-[12px] text-text-1 placeholder:text-text-4 outline-none"
             />

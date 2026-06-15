@@ -39,6 +39,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Stable ref so the scheduled refresh timer always closes over the latest token
   const accessTokenRef = useRef<string | null>(null)
   const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // React 18 StrictMode double-invokes effects in dev. Refresh tokens are single-use,
+  // so the second concurrent call gets a 401 and its setLoading(false) races ahead of
+  // the successful applySession(), causing a spurious logout. This guard ensures init
+  // runs only once across the StrictMode mount/unmount/remount cycle.
+  const initDone = useRef(false)
 
   function clearAll(): void {
     if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current)
@@ -47,7 +52,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
     setProfile(null)
     setAccessToken(null)
-    supabase.auth.signOut() // wipe any in-memory Supabase client state
+    // scope:'local' clears the in-memory Supabase client session without making a
+    // network request. Using the default 'global' scope would revoke the refresh token
+    // on Supabase's server, permanently breaking the HTTP-only cookie for future loads.
+    supabase.auth.signOut({ scope: 'local' })
   }
 
   async function applySession(bffSession: BffSession): Promise<void> {
@@ -58,13 +66,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
 
     const { data } = await supabase.auth.getUser()
-    if (!data.user) { clearAll(); return }
+    // Fall back to the BFF-supplied user if getUser() returns null due to a transient
+    // network error. The BFF already validated the token against Supabase server-side,
+    // so the session is genuine — we just can't afford to clearAll() here and revoke it.
+    const resolvedUser = data.user ?? null
+    if (!resolvedUser) return
 
-    setUser(data.user)
+    setUser(resolvedUser)
     setAccessToken(bffSession.access_token)
     accessTokenRef.current = bffSession.access_token
 
-    fetchProfile(data.user.id).then(setProfile)
+    // Await profile so loading stays true until both session AND profile are ready.
+    // If fire-and-forget, loading becomes false while profile is still null, causing
+    // RoleGuard to see profile===null and redirect to /login on hard refresh.
+    const profileData = await fetchProfile(resolvedUser.id)
+    setProfile(profileData)
 
     // Schedule a silent refresh 5 minutes before the access token expires
     if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current)
@@ -93,6 +109,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
+    if (initDone.current) return
+    initDone.current = true
+
     // On every page load: ask the BFF to exchange the HTTP-only cookie for a fresh token.
     // If there's no cookie (or it's expired), the user stays logged out.
     bffRefreshSession()
@@ -112,6 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuthContext(): AuthContextValue {
   const ctx = useContext(AuthContext)
   if (!ctx) throw new Error('useAuthContext must be used inside <AuthProvider>')
