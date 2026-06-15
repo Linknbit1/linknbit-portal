@@ -3,13 +3,15 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ToastProvider } from './components/ui/Toast'
 import { AuthProvider } from './context/AuthContext'
 import { PrivateRoute } from './components/layout/PrivateRoute'
+import { RoleGuard } from './components/layout/RoleGuard'
 import { AppShell } from './components/layout/AppShell'
 import { ClientShell } from './components/layout/ClientShell'
 import { showWipFeatures } from './lib/featureFlags'
+import { AUTHORITATIVE_ROLES } from './lib/roles'
 
 import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
-import AdminDashboardPage from './pages/admin/DashboardPage'
+import DashboardPage from './pages/DashboardPage'
 import AdminProjectsPage from './pages/admin/ProjectsPage'
 import AdminProjectDetailPage from './pages/admin/ProjectDetailPage'
 import AdminTaskDetailPage from './pages/admin/TaskDetailPage'
@@ -22,7 +24,6 @@ import ReportsPage from './pages/admin/ReportsPage'
 import ClickUpPage from './pages/admin/ClickUpPage'
 import SettingsPage from './pages/admin/SettingsPage'
 import AttendancePage from './pages/AttendancePage'
-import EmployeeDashboardPage from './pages/employee/DashboardPage'
 
 import ClientDashboardPage from './pages/client/DashboardPage'
 import ClientProjectsPage from './pages/client/ProjectsPage'
@@ -53,11 +54,21 @@ export default function App() {
 
               {/* Internal portal (dark mode) */}
               <Route element={<PrivateRoute><AppShell /></PrivateRoute>}>
-                <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
-                <Route path="/admin/teams" element={<TeamsPage />} />
-                <Route path="/admin/people" element={<PeoplePage />} />
-                <Route path="/admin/attendance" element={<Navigate to="/attendance" replace />} />
-                <Route path="/admin/settings" element={<SettingsPage />} />
+                <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/attendance" element={<AttendancePage />} />
+                <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/employee/leaderboard" element={<GamificationPage />} />
+                <Route path="/employee/rewards" element={<GamificationPage />} />
+
+                {/* Management areas — authoritative roles only */}
+                <Route
+                  path="/people"
+                  element={<RoleGuard allowedRoles={AUTHORITATIVE_ROLES}><PeoplePage /></RoleGuard>}
+                />
+                <Route
+                  path="/teams"
+                  element={<RoleGuard allowedRoles={AUTHORITATIVE_ROLES}><TeamsPage /></RoleGuard>}
+                />
 
                 {/* Work-in-progress modules — only routable in development builds */}
                 {showWipFeatures && (
@@ -74,12 +85,14 @@ export default function App() {
                   </>
                 )}
 
-                {/* Employee portal */}
-                <Route path="/employee/dashboard" element={<EmployeeDashboardPage />} />
+                {/* Legacy path redirects */}
+                <Route path="/admin/dashboard" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/employee/dashboard" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/admin/people" element={<Navigate to="/people" replace />} />
+                <Route path="/admin/teams" element={<Navigate to="/teams" replace />} />
+                <Route path="/admin/settings" element={<Navigate to="/settings" replace />} />
+                <Route path="/admin/attendance" element={<Navigate to="/attendance" replace />} />
                 <Route path="/employee/attendance" element={<Navigate to="/attendance" replace />} />
-                <Route path="/attendance" element={<AttendancePage />} />
-                <Route path="/employee/leaderboard" element={<GamificationPage />} />
-                <Route path="/employee/rewards" element={<GamificationPage />} />
               </Route>
 
               {/* Client portal (light mode) */}

@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { showWipFeatures } from '../../lib/featureFlags'
+import { isAuthoritative } from '../../lib/roles'
 import { Avatar } from '../ui/Avatar'
 import { RoleBadge } from '../shared/RoleBadge'
 import { useAuthContext } from '../../context/AuthContext'
@@ -26,19 +27,21 @@ interface NavItem {
   badge?: number
   // Not yet production-ready — only rendered in development builds.
   devOnly?: boolean
+  // Only rendered for authoritative (management) roles.
+  authoritativeOnly?: boolean
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: 'Dashboard', icon: LayoutDashboard, to: '/admin/dashboard' },
+  { label: 'Dashboard', icon: LayoutDashboard, to: '/dashboard' },
   { label: 'Projects', icon: FolderOpen, to: '/admin/projects', badge: 2, devOnly: true },
   { label: 'Clients', icon: UserCircle, to: '/admin/clients', devOnly: true },
-  { label: 'Teams', icon: Users, to: '/admin/teams' },
-  { label: 'People', icon: UserCog, to: '/admin/people' },
+  { label: 'Teams', icon: Users, to: '/teams', authoritativeOnly: true },
+  { label: 'People', icon: UserCog, to: '/people', authoritativeOnly: true },
   { label: 'Tasks', icon: CheckSquare, to: '/admin/tasks', badge: 7, devOnly: true },
   { label: 'Attendance', icon: CalendarCheck, to: '/attendance' },
   { label: 'Reports', icon: BarChart2, to: '/admin/reports', devOnly: true },
   { label: 'ClickUp', icon: Link2, to: '/admin/clickup', devOnly: true },
-  { label: 'Settings', icon: Settings, to: '/admin/settings' },
+  { label: 'Settings', icon: Settings, to: '/settings' },
 ]
 
 export function Sidebar() {
@@ -46,7 +49,12 @@ export function Sidebar() {
   const { profile } = useAuthContext()
   const role = profile?.role ?? 'employee'
 
-  const navItems = NAV_ITEMS.filter((item) => showWipFeatures || !item.devOnly)
+  const authoritative = isAuthoritative(role)
+  const navItems = NAV_ITEMS.filter(
+    (item) =>
+      (showWipFeatures || !item.devOnly) &&
+      (authoritative || !item.authoritativeOnly),
+  )
 
   return (
     <aside className="w-sidebar-expanded bg-surface-1 border-r border-border-default flex flex-col sticky top-0 h-screen overflow-y-auto flex-shrink-0">
@@ -107,7 +115,7 @@ export function Sidebar() {
       {/* User pill */}
       <div className="border-t border-border-subtle px-3 py-3 mt-auto">
         <div className="flex items-center gap-2.5">
-          <Avatar name={profile?.name ?? '?'} size="sm" />
+          <Avatar name={profile?.name ?? '?'} src={profile?.avatar_url ?? undefined} size="sm" />
           <div className="flex-1 min-w-0">
             <p className="font-ui font-semibold text-body-sm text-text-1 leading-tight truncate">
               {profile?.name ?? '—'}

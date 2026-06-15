@@ -21,12 +21,7 @@ export function RoleGuard({ allowedRoles, children, redirectTo }: RoleGuardProps
   if (loading) return <Spinner />
   if (!profile) return <Navigate to="/login" replace />
   if (!allowedRoles.includes(profile.role)) {
-    const fallback =
-      redirectTo ??
-      (['employee', 'team_lead'].includes(profile.role)
-        ? '/employee/dashboard'
-        : '/admin/dashboard')
-    return <Navigate to={fallback} replace />
+    return <Navigate to={redirectTo ?? '/dashboard'} replace />
   }
   return <>{children}</>
 }

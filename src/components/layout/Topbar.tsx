@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import { Bell, Search, Check, CheckCheck } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Bell, Search, Check, CheckCheck, ChevronDown, UserCircle, LogOut } from 'lucide-react'
 import { cn } from '../../lib/cn'
+import { showWipFeatures } from '../../lib/featureFlags'
 import { Avatar } from '../ui/Avatar'
 import { RoleBadge } from '../shared/RoleBadge'
+import { ProfileDialog } from './ProfileDialog'
 import { useAuthContext } from '../../context/AuthContext'
 import { useNotifications, useMarkRead, useMarkAllRead } from '../../hooks/useNotifications'
 import { formatRelativeTime } from '../../lib/utils'
@@ -24,7 +27,8 @@ interface TopbarProps {
 }
 
 export function Topbar({ title, breadcrumb, className }: TopbarProps) {
-  const { profile } = useAuthContext()
+  const navigate = useNavigate()
+  const { profile, signOut } = useAuthContext()
   const profileId = profile?.id ?? ''
 
   const { data: notifications = [] } = useNotifications(profileId)
@@ -35,17 +39,31 @@ export function Topbar({ title, breadcrumb, className }: TopbarProps) {
   const [bellOpen, setBellOpen] = useState(false)
   const bellRef = useRef<HTMLDivElement>(null)
 
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+  const [profileOpen, setProfileOpen] = useState(false)
+
   useEffect(() => {
     function handleOutsideClick(e: MouseEvent) {
       if (bellRef.current && !bellRef.current.contains(e.target as Node)) {
         setBellOpen(false)
       }
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false)
+      }
     }
-    if (bellOpen) document.addEventListener('mousedown', handleOutsideClick)
+    if (bellOpen || menuOpen) document.addEventListener('mousedown', handleOutsideClick)
     return () => document.removeEventListener('mousedown', handleOutsideClick)
-  }, [bellOpen])
+  }, [bellOpen, menuOpen])
+
+  const handleLogout = async () => {
+    setMenuOpen(false)
+    await signOut()
+    navigate('/login', { replace: true })
+  }
 
   return (
+    <>
     <header
       className={cn(
         'h-topbar topbar-glass border-b border-border-default sticky top-0 z-40 flex items-center px-8 gap-6',
@@ -64,22 +82,25 @@ export function Topbar({ title, breadcrumb, className }: TopbarProps) {
         )}
       </div>
 
-      {/* Search */}
-      <div className="ml-8 flex-1 max-w-md bg-surface-1 border border-border-default rounded-sm h-9 flex items-center gap-2.5 px-3">
-        <Search size={14} className="text-text-3 flex-shrink-0" />
-        <input
-          type="text"
-          placeholder="Search projects, tasks, people..."
-          className="bg-transparent border-0 outline-none text-body font-ui text-text-1 placeholder:text-text-3 flex-1 min-w-0 font-medium"
-        />
-        <span className="font-mono text-[10px] text-text-4 border border-border-default rounded px-1.5 py-0.5 flex-shrink-0">
-          ⌘K
-        </span>
-      </div>
+      {/* Search — hidden in production until wired to real search */}
+      {showWipFeatures && (
+        <div className="ml-8 flex-1 max-w-md bg-surface-1 border border-border-default rounded-sm h-9 flex items-center gap-2.5 px-3">
+          <Search size={14} className="text-text-3 flex-shrink-0" />
+          <input
+            type="text"
+            placeholder="Search projects, tasks, people..."
+            className="bg-transparent border-0 outline-none text-body font-ui text-text-1 placeholder:text-text-3 flex-1 min-w-0 font-medium"
+          />
+          <span className="font-mono text-[10px] text-text-4 border border-border-default rounded px-1.5 py-0.5 flex-shrink-0">
+            ⌘K
+          </span>
+        </div>
+      )}
 
       {/* Actions */}
       <div className="ml-auto flex items-center gap-3.5">
-        {/* Notification bell */}
+        {/* Notification bell — hidden in production until wired to real notifications */}
+        {showWipFeatures && (
         <div ref={bellRef} className="relative">
           <button
             onClick={() => setBellOpen((o) => !o)}
@@ -150,20 +171,57 @@ export function Topbar({ title, breadcrumb, className }: TopbarProps) {
             </div>
           )}
         </div>
+        )}
 
-        {/* User */}
+        {/* User menu */}
         {profile && isUserRole(profile.role) && (
-          <button className="flex items-center gap-2.5 pl-1 pr-2.5 py-1 rounded-full bg-surface-1 border border-border-default hover:bg-surface-2 transition-colors">
-            <Avatar name={profile.name} size="sm" />
-            <div className="flex flex-col items-start leading-tight">
-              <span className="font-ui font-semibold text-[12.5px] text-text-1 whitespace-nowrap">
-                {profile.name}
-              </span>
-              <RoleBadge role={profile.role} size="sm" className="border-0 bg-transparent px-0 py-0 text-text-3" />
-            </div>
-          </button>
+          <div ref={menuRef} className="relative">
+            <button
+              onClick={() => setMenuOpen((o) => !o)}
+              className="flex items-center gap-2.5 pl-1 pr-2.5 py-1 rounded-full bg-surface-1 border border-border-default hover:bg-surface-2 transition-colors"
+              aria-haspopup="menu"
+              aria-expanded={menuOpen}
+            >
+              <Avatar name={profile.name} src={profile.avatar_url ?? undefined} size="sm" />
+              <div className="flex flex-col items-start leading-tight">
+                <span className="font-ui font-semibold text-[12.5px] text-text-1 whitespace-nowrap">
+                  {profile.name}
+                </span>
+                <RoleBadge role={profile.role} size="sm" className="border-0 bg-transparent px-0 py-0 text-text-3" />
+              </div>
+              <ChevronDown size={14} className="text-text-3 ml-0.5" />
+            </button>
+
+            {menuOpen && (
+              <div
+                role="menu"
+                className="absolute right-0 top-[calc(100%+8px)] w-52 bg-surface-1 border border-border-default rounded-xl shadow-2xl overflow-hidden z-50 py-1"
+              >
+                <div className="px-4 py-2.5 border-b border-border-subtle">
+                  <p className="font-ui font-semibold text-[12.5px] text-text-1 truncate">{profile.name}</p>
+                  <p className="font-mono text-[10.5px] text-text-4 truncate">{profile.email}</p>
+                </div>
+                <button
+                  role="menuitem"
+                  onClick={() => { setMenuOpen(false); setProfileOpen(true) }}
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[12.5px] font-ui font-medium text-text-2 hover:bg-surface-2 hover:text-text-1 transition-colors"
+                >
+                  <UserCircle size={15} className="text-text-3" /> My Profile
+                </button>
+                <button
+                  role="menuitem"
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[12.5px] font-ui font-medium text-error hover:bg-error/10 transition-colors"
+                >
+                  <LogOut size={15} /> Log out
+                </button>
+              </div>
+            )}
+          </div>
         )}
       </div>
     </header>
+    {profileOpen && <ProfileDialog onClose={() => setProfileOpen(false)} />}
+    </>
   )
 }

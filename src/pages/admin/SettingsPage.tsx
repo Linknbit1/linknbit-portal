@@ -5,6 +5,7 @@ import { Button } from '../../components/ui/Button'
 import { Toggle } from '../../components/ui/Toggle'
 import { useToast } from '../../components/ui/toast-context'
 import { useAuthContext } from '../../context/AuthContext'
+import { isAuthoritative } from '../../lib/roles'
 import { useRoleFlags, useUpdateRoleFlag } from '../../hooks/useRoleFlags'
 import {
   useServices, useCreateService, useUpdateService, useDeleteService, useServiceUsage,
@@ -14,11 +15,13 @@ import { cn } from '../../lib/cn'
 
 type Tab = 'general' | 'services' | 'stages' | 'notifications' | 'integrations' | 'permissions'
 
-const TABS: { key: Tab; label: string; icon: typeof Check }[] = [
+// `personal` tabs are available to every internal user; the rest are company
+// settings, shown only to authoritative (management) roles.
+const TABS: { key: Tab; label: string; icon: typeof Check; personal?: boolean }[] = [
   { key: 'general',       label: 'General',       icon: Palette },
   { key: 'services',     label: 'Services',        icon: Shapes },
   { key: 'stages',       label: 'Stages',          icon: Layers },
-  { key: 'notifications', label: 'Notifications', icon: Bell },
+  { key: 'notifications', label: 'Notifications', icon: Bell, personal: true },
   { key: 'integrations', label: 'Integrations',    icon: Link2 },
   { key: 'permissions',  label: 'Permissions',     icon: Shield },
 ]
@@ -182,7 +185,14 @@ export default function SettingsPage() {
   const { mutate: updateFlag, isPending: updatingFlag } = useUpdateRoleFlag()
   const canEditFlags = profile?.role === 'super_admin' || profile?.role === 'admin'
 
+  const authoritative = isAuthoritative(profile?.role)
+  const visibleTabs = authoritative ? TABS : TABS.filter((t) => t.personal)
+
   const [activeTab, setActiveTab] = useState<Tab>('general')
+  // Clamp to a visible tab (e.g. a non-authoritative user only has personal tabs).
+  const effectiveTab: Tab = visibleTabs.some((t) => t.key === activeTab)
+    ? activeTab
+    : visibleTabs[0].key
 
   // General
   const [agencyName, setAgencyName] = useState('Linknbit')
@@ -213,20 +223,20 @@ export default function SettingsPage() {
           {/* Sidebar */}
           <div className="w-48 flex-shrink-0">
             <nav className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
-              {TABS.map(({ key, label, icon: Icon }) => (
+              {visibleTabs.map(({ key, label, icon: Icon }) => (
                 <button
                   key={key}
                   onClick={() => setActiveTab(key)}
                   className={cn(
                     'w-full flex items-center gap-2.5 px-4 py-3 text-[13px] font-ui font-medium transition-colors border-b border-border-subtle last:border-0',
-                    activeTab === key
+                    effectiveTab === key
                       ? 'bg-brand-red/10 text-brand-red'
                       : 'text-text-2 hover:bg-surface-2 hover:text-text-1',
                   )}
                 >
                   <Icon size={14} />
                   {label}
-                  {activeTab === key && <ChevronRight size={12} className="ml-auto" />}
+                  {effectiveTab === key && <ChevronRight size={12} className="ml-auto" />}
                 </button>
               ))}
             </nav>
@@ -236,7 +246,7 @@ export default function SettingsPage() {
           <div className="flex-1 min-w-0">
             <div className="bg-surface-1 border border-border-default rounded-xl p-6">
 
-              {activeTab === 'general' && (
+              {effectiveTab === 'general' && (
                 <div>
                   <h2 className="font-display font-bold text-[16px] text-text-1 mb-1">General Settings</h2>
                   <p className="font-ui text-[13px] text-text-3 mb-5">Agency identity and regional settings.</p>
@@ -255,9 +265,9 @@ export default function SettingsPage() {
                 </div>
               )}
 
-              {activeTab === 'services' && <ServicesPanel canManage={canEditFlags} />}
+              {effectiveTab === 'services' && <ServicesPanel canManage={canEditFlags} />}
 
-              {activeTab === 'stages' && (
+              {effectiveTab === 'stages' && (
                 <div>
                   <h2 className="font-display font-bold text-[16px] text-text-1 mb-1">Stage Templates</h2>
                   <p className="font-ui text-[13px] text-text-3 mb-5">Manage service-based workflow stages.</p>
@@ -294,7 +304,7 @@ export default function SettingsPage() {
                 </div>
               )}
 
-              {activeTab === 'notifications' && (
+              {effectiveTab === 'notifications' && (
                 <div>
                   <h2 className="font-display font-bold text-[16px] text-text-1 mb-1">Notifications</h2>
                   <p className="font-ui text-[13px] text-text-3 mb-5">Control which events trigger notifications.</p>
@@ -316,7 +326,7 @@ export default function SettingsPage() {
                 </div>
               )}
 
-              {activeTab === 'integrations' && (
+              {effectiveTab === 'integrations' && (
                 <div>
                   <h2 className="font-display font-bold text-[16px] text-text-1 mb-1">Integrations</h2>
                   <p className="font-ui text-[13px] text-text-3 mb-5">Connect external services.</p>
@@ -347,7 +357,7 @@ export default function SettingsPage() {
                 </div>
               )}
 
-              {activeTab === 'permissions' && (
+              {effectiveTab === 'permissions' && (
                 <div>
                   <h2 className="font-display font-bold text-[16px] text-text-1 mb-1">Permissions</h2>
                   <p className="font-ui text-[13px] text-text-3 mb-1">Role-based feature access. Toggle to enable or disable per role.</p>
@@ -425,7 +435,7 @@ export default function SettingsPage() {
               )}
 
               {/* Save button */}
-              {activeTab !== 'permissions' && activeTab !== 'stages' && (
+              {effectiveTab !== 'permissions' && effectiveTab !== 'stages' && (
                 <div className="mt-6 pt-5 border-t border-border-subtle flex justify-end">
                   <Button onClick={handleSave}>
                     <Check size={14} /> Save Changes
