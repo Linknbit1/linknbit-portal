@@ -8,6 +8,7 @@ import { Avatar } from '../../components/ui/Avatar'
 import { Button } from '../../components/ui/Button'
 import { Tabs } from '../../components/ui/Tabs'
 import { Select } from '../../components/ui/Select'
+import { Input } from '../../components/ui/Input'
 import { Toggle } from '../../components/ui/Toggle'
 import { DatePicker } from '../../components/ui/DatePicker'
 import { useToast } from '../../components/ui/toast-context'
@@ -24,6 +25,7 @@ import {
   useRewards, useAllRewards, useCreateReward, useUpdateReward, useDeleteReward,
   useRedeemReward, useRedemptionQueue, useReviewRedemption,
   useBadges, useMyBadgeAwards, useAwardBadge,
+  useEmployeeOfMonth, useSetEmployeeOfMonth,
   useGrantLp, useSetRestriction,
 } from '../../hooks/useGamification'
 import { formatRelativeTime } from '../../lib/utils'
@@ -53,6 +55,28 @@ const asDifficulty = (d: string | null | undefined): 'easy' | 'medium' | 'hard' 
 const difficultyMeta = (d: string) => DIFFICULTY_META[asDifficulty(d)]
 
 const lp = (n: number) => `${n.toLocaleString()} LP`
+
+// ── Employee of the Month helpers ──────────────────────────────────────────────────
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+]
+const monthLabel = (year: number, month: number) => `${MONTH_NAMES[month - 1]} ${year}`
+
+// Previous calendar month relative to now (the spotlight shows last month's winner).
+const previousMonth = (d = new Date()): { year: number; month: number } => {
+  const m = d.getMonth() // 0-indexed
+  return m === 0 ? { year: d.getFullYear() - 1, month: 12 } : { year: d.getFullYear(), month: m }
+}
+
+// Last 12 completed months as <Select> options, value "YYYY-MM" (newest first).
+const recentMonthOptions = (d = new Date()): { value: string; label: string }[] =>
+  Array.from({ length: 12 }, (_, i) => {
+    const dt = new Date(d.getFullYear(), d.getMonth() - 1 - i, 1)
+    const y = dt.getFullYear()
+    const m = dt.getMonth() + 1
+    return { value: `${y}-${String(m).padStart(2, '0')}`, label: monthLabel(y, m) }
+  })
 
 // ── Leaderboard podium (top 3 by monthly LP) ───────────────────────────────────────
 
@@ -537,6 +561,15 @@ export default function GamificationPage() {
   const { mutate: setRestriction } = useSetRestriction()
   const { mutate: awardBadge } = useAwardBadge()
 
+  // Employee of the Month
+  const eotmPrev = previousMonth()
+  const { data: eotmWinner } = useEmployeeOfMonth(eotmPrev.year, eotmPrev.month)
+  const { mutate: setEotm, isPending: settingEotm } = useSetEmployeeOfMonth()
+  const monthOptions = useMemo(() => recentMonthOptions(), [])
+  const [eotmForm, setEotmForm] = useState({ period: monthOptions[0].value, profileId: '', note: '' })
+  const [eotmSelYear, eotmSelMonth] = eotmForm.period.split('-').map(Number)
+  const { data: eotmSelected } = useEmployeeOfMonth(eotmSelYear, eotmSelMonth)
+
   // Derived
   const me = leaderboard.find((e) => e.profile_id === profileId)
   const myLP = me?.lp_balance ?? 0
@@ -552,6 +585,18 @@ export default function GamificationPage() {
   const reviewCount = claimsReview.length + pendingShouts.length + redemptionQueue.filter((r) => r.status === 'pending').length
 
   // Handlers
+  const handleSetEotm = () => {
+    if (!eotmForm.profileId) return
+    const [y, m] = eotmForm.period.split('-').map(Number)
+    setEotm(
+      { year: y, month: m, profileId: eotmForm.profileId, note: eotmForm.note.trim() || null },
+      {
+        onSuccess: () => { toast('Employee of the Month announced 🏆', 'success'); setEotmForm((f) => ({ ...f, profileId: '', note: '' })) },
+        onError: () => toast('Could not set Employee of the Month', 'error'),
+      },
+    )
+  }
+
   const handleClaim = (taskId: string) => claimTask(taskId, {
     onSuccess: () => toast('Task claimed — complete it, then submit proof.', 'success'),
     onError: (e) => toast(
@@ -634,6 +679,26 @@ export default function GamificationPage() {
             <div className="flex items-center justify-between">
               <p className="font-mono text-[11.5px] text-text-3">Ranked by Link Points earned this month · cash rewards go to top performers (≥500 LP)</p>
               {isRecognizer && <Button size="sm" onClick={() => setShoutoutOpen(true)}><Star size={13} /> Give Shoutout</Button>}
+            </div>
+
+            {/* Employee of the Month — last month's winner, visible to everyone */}
+            <div className="bg-gradient-to-br from-coin-gold/15 via-surface-1 to-surface-1 border border-coin-gold/40 rounded-xl p-5 flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-coin-gold/20 border border-coin-gold/40 flex items-center justify-center text-[26px] flex-shrink-0">🏆</div>
+              {eotmWinner ? (
+                <>
+                  <Avatar name={nameOf(eotmWinner.profile_id)} src={directory[eotmWinner.profile_id]?.avatar_url ?? undefined} size="lg" />
+                  <div className="min-w-0">
+                    <p className="font-mono text-[10.5px] text-coin-gold uppercase tracking-wider">Employee of the Month · {monthLabel(eotmPrev.year, eotmPrev.month)}</p>
+                    <p className="font-display font-bold text-[18px] text-text-1 leading-tight truncate">{nameOf(eotmWinner.profile_id)}</p>
+                    {eotmWinner.note && <p className="font-ui text-[12.5px] text-text-3 mt-0.5 line-clamp-2">{eotmWinner.note}</p>}
+                  </div>
+                </>
+              ) : (
+                <div>
+                  <p className="font-mono text-[10.5px] text-coin-gold uppercase tracking-wider">Employee of the Month · {monthLabel(eotmPrev.year, eotmPrev.month)}</p>
+                  <p className="font-ui text-[13px] text-text-3 mt-0.5">Not announced yet.</p>
+                </div>
+              )}
             </div>
             {lbLoading && <div className="flex justify-center py-16 text-text-4"><Loader2 size={20} className="animate-spin" /></div>}
             {lbError && <div className="flex items-center gap-2 text-error text-[13px] py-8 justify-center"><AlertCircle size={16} /> Failed to load leaderboard</div>}
@@ -1021,6 +1086,37 @@ export default function GamificationPage() {
                         options={[{ value: '', label: 'Award to…' }, ...leaderboard.map((e) => ({ value: e.profile_id, label: e.name }))]} />
                     </div>
                   ))}
+                </div>
+              </section>
+            )}
+
+            {/* Employee of the Month (governors) */}
+            {isGovernor && (
+              <section>
+                <h2 className="font-display font-bold text-[16px] text-text-1 flex items-center gap-2 mb-3"><Trophy size={16} className="text-coin-gold" /> Employee of the Month</h2>
+                <div className="bg-surface-1 border border-border-default rounded-xl p-5 flex flex-col gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-label font-ui font-semibold text-text-2 uppercase tracking-wider">Month</label>
+                      <Select value={eotmForm.period} onChange={(v) => setEotmForm((f) => ({ ...f, period: v }))} options={monthOptions} />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-label font-ui font-semibold text-text-2 uppercase tracking-wider">Employee</label>
+                      <Select value={eotmForm.profileId} onChange={(v) => setEotmForm((f) => ({ ...f, profileId: v }))}
+                        options={[{ value: '', label: 'Select employee…' }, ...leaderboard.map((e) => ({ value: e.profile_id, label: e.name }))]} />
+                    </div>
+                  </div>
+                  <Input label="Citation (optional)" value={eotmForm.note} onChange={(e) => setEotmForm((f) => ({ ...f, note: e.target.value }))} placeholder="Why they earned it…" />
+                  {eotmSelected && (
+                    <p className="font-mono text-[11px] text-text-4">
+                      Current winner for {monthLabel(eotmSelYear, eotmSelMonth)}: <span className="text-text-2">{nameOf(eotmSelected.profile_id)}</span>. Saving replaces it.
+                    </p>
+                  )}
+                  <div className="flex justify-end">
+                    <Button size="sm" disabled={!eotmForm.profileId || settingEotm} onClick={handleSetEotm}>
+                      {settingEotm ? <Loader2 size={13} className="animate-spin" /> : <Trophy size={13} />} Announce winner
+                    </Button>
+                  </div>
                 </div>
               </section>
             )}

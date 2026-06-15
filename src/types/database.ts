@@ -281,6 +281,54 @@ export type Database = {
         }
         Relationships: []
       }
+      employee_of_the_month: {
+        Row: {
+          awarded_by: string | null
+          created_at: string
+          id: string
+          month: number
+          note: string | null
+          profile_id: string
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          awarded_by?: string | null
+          created_at?: string
+          id?: string
+          month: number
+          note?: string | null
+          profile_id: string
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          awarded_by?: string | null
+          created_at?: string
+          id?: string
+          month?: number
+          note?: string | null
+          profile_id?: string
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_of_the_month_awarded_by_fkey"
+            columns: ["awarded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_of_the_month_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       enrolled_devices: {
         Row: {
           approved_at: string | null
@@ -721,6 +769,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "profiles_service_type_fkey"
+            columns: ["service_type"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["slug"]
+          },
         ]
       }
       quest_task_claims: {
@@ -1118,6 +1173,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "teams_service_type_fkey"
+            columns: ["service_type"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["slug"]
+          },
         ]
       }
       wfh_requests: {
@@ -1269,7 +1331,12 @@ export type Database = {
         Returns: undefined
       }
       admin_update_profile_role: {
-        Args: { p_profile_id: string; p_role: string; p_service_type?: string; p_team_id?: string }
+        Args: {
+          p_profile_id: string
+          p_role: string
+          p_service_type?: string
+          p_team_id?: string
+        }
         Returns: undefined
       }
       award_badge: {
@@ -1313,6 +1380,15 @@ export type Database = {
       }
       review_shoutout: {
         Args: { p_approve: boolean; p_id: string; p_note?: string }
+        Returns: undefined
+      }
+      set_employee_of_the_month: {
+        Args: {
+          p_month: number
+          p_note?: string
+          p_profile_id: string
+          p_year: number
+        }
         Returns: undefined
       }
       set_participation_restriction: {
