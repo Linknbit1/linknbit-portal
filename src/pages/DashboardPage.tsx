@@ -18,7 +18,7 @@ interface QuickLink {
 const ProductionDashboard = ({ name, authoritative }: { name: string; authoritative: boolean }) => {
   const links: QuickLink[] = [
     { label: 'Attendance', description: 'Check in, view your attendance history and requests.', to: '/attendance', icon: CalendarCheck },
-    { label: 'Leaderboard & Rewards', description: 'Track your reputation points and redeem rewards.', to: '/employee/leaderboard', icon: Trophy },
+    { label: 'Leaderboard & Rewards', description: 'Track your reputation points and redeem rewards.', to: '/gamification', icon: Trophy },
     ...(authoritative
       ? [
           { label: 'People', description: 'Manage the team directory, roles, and access.', to: '/people', icon: UserCog },

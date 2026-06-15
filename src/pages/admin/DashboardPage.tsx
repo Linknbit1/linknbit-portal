@@ -610,7 +610,7 @@ export default function DashboardPage() {
                 })}
               </div>
               <div className="px-5 py-3 border-t border-border-subtle">
-                <Link to="/employee/leaderboard" className="text-caption text-brand-red hover:text-brand-red-hover flex items-center gap-1 transition-colors font-ui font-semibold">
+                <Link to="/gamification" className="text-caption text-brand-red hover:text-brand-red-hover flex items-center gap-1 transition-colors font-ui font-semibold">
                   Full leaderboard <ArrowRight size={11} />
                 </Link>
               </div>

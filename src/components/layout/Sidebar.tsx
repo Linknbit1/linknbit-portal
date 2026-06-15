@@ -6,6 +6,7 @@ import {
   UserCog,
   CheckSquare,
   BarChart2,
+  Trophy,
   Link2,
   Settings,
   UserCircle,
@@ -16,8 +17,6 @@ import {
 import { cn } from '../../lib/cn'
 import { showWipFeatures } from '../../lib/featureFlags'
 import { isAuthoritative } from '../../lib/roles'
-import { Avatar } from '../ui/Avatar'
-import { RoleBadge } from '../shared/RoleBadge'
 import { useAuthContext } from '../../context/AuthContext'
 
 interface NavItem {
@@ -39,6 +38,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'People', icon: UserCog, to: '/people', authoritativeOnly: true },
   { label: 'Tasks', icon: CheckSquare, to: '/admin/tasks', badge: 7, devOnly: true },
   { label: 'Attendance', icon: CalendarCheck, to: '/attendance' },
+  { label: 'Gamification', icon: Trophy, to: '/gamification' },
   { label: 'Reports', icon: BarChart2, to: '/admin/reports', devOnly: true },
   { label: 'ClickUp', icon: Link2, to: '/admin/clickup', devOnly: true },
   { label: 'Settings', icon: Settings, to: '/settings' },
@@ -111,22 +111,6 @@ export function Sidebar() {
           )
         })}
       </nav>
-
-      {/* User pill */}
-      <div className="border-t border-border-subtle px-3 py-3 mt-auto">
-        <div className="flex items-center gap-2.5">
-          <Avatar name={profile?.name ?? '?'} src={profile?.avatar_url ?? undefined} size="sm" />
-          <div className="flex-1 min-w-0">
-            <p className="font-ui font-semibold text-body-sm text-text-1 leading-tight truncate">
-              {profile?.name ?? '—'}
-            </p>
-            <RoleBadge role={role as import('../../types').UserRole} size="sm" className="mt-0.5" />
-          </div>
-          <button className="w-6 h-6 rounded flex items-center justify-center text-text-3 hover:text-text-1 hover:bg-surface-2 transition-colors">
-            <ChevronRight size={12} />
-          </button>
-        </div>
-      </div>
     </aside>
   )
 }

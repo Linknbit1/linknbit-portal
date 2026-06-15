@@ -56,6 +56,7 @@ export default function App() {
               <Route element={<PrivateRoute><AppShell /></PrivateRoute>}>
                 <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/attendance" element={<AttendancePage />} />
+                <Route path="/gamification" element={<GamificationPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/employee/leaderboard" element={<GamificationPage />} />
                 <Route path="/employee/rewards" element={<GamificationPage />} />
@@ -91,6 +92,7 @@ export default function App() {
                 <Route path="/admin/people" element={<Navigate to="/people" replace />} />
                 <Route path="/admin/teams" element={<Navigate to="/teams" replace />} />
                 <Route path="/admin/settings" element={<Navigate to="/settings" replace />} />
+                <Route path="/admin/gamification" element={<Navigate to="/gamification" replace />} />
                 <Route path="/admin/attendance" element={<Navigate to="/attendance" replace />} />
                 <Route path="/employee/attendance" element={<Navigate to="/attendance" replace />} />
               </Route>
