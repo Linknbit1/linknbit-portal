@@ -218,17 +218,17 @@ export default function SettingsPage() {
     <div className="flex flex-col flex-1">
       <Topbar title="Settings" />
 
-      <div className="p-6 max-w-content mx-auto w-full">
-        <div className="flex gap-6">
-          {/* Sidebar */}
-          <div className="w-48 flex-shrink-0">
-            <nav className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
+      <div className="px-4 py-6 lg:p-6 max-w-content mx-auto w-full">
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Section nav — horizontal scroll on mobile, sidebar on desktop */}
+          <div className="w-full lg:w-48 flex-shrink-0">
+            <nav className="flex lg:flex-col bg-surface-1 border border-border-default rounded-xl overflow-x-auto">
               {visibleTabs.map(({ key, label, icon: Icon }) => (
                 <button
                   key={key}
                   onClick={() => setActiveTab(key)}
                   className={cn(
-                    'w-full flex items-center gap-2.5 px-4 py-3 text-[13px] font-ui font-medium transition-colors border-b border-border-subtle last:border-0',
+                    'flex-shrink-0 lg:w-full flex items-center gap-2.5 px-4 py-3 text-[13px] font-ui font-medium whitespace-nowrap transition-colors border-r lg:border-r-0 lg:border-b border-border-subtle last:border-0',
                     effectiveTab === key
                       ? 'bg-brand-red/10 text-brand-red'
                       : 'text-text-2 hover:bg-surface-2 hover:text-text-1',
@@ -236,7 +236,7 @@ export default function SettingsPage() {
                 >
                   <Icon size={14} />
                   {label}
-                  {effectiveTab === key && <ChevronRight size={12} className="ml-auto" />}
+                  {effectiveTab === key && <ChevronRight size={12} className="ml-auto hidden lg:block" />}
                 </button>
               ))}
             </nav>

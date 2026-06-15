@@ -31,7 +31,7 @@ const ProductionDashboard = ({ name, authoritative }: { name: string; authoritat
   return (
     <div className="flex flex-col flex-1">
       <Topbar title="Dashboard" />
-      <div className="p-7 flex flex-col gap-6 max-w-content mx-auto w-full">
+      <div className="px-4 py-6 lg:p-7 flex flex-col gap-6 max-w-content mx-auto w-full">
         <div>
           <h2 className="font-display font-bold text-[22px] text-text-1 tracking-tight">
             Welcome back{name ? `, ${name.split(' ')[0]}` : ''}.

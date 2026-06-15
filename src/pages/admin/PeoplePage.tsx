@@ -67,9 +67,9 @@ function InviteModal({ actorRole, teams, serviceOptions, onClose }: {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-surface-1 border border-border-default rounded-xl p-6 w-full max-w-md shadow-2xl">
+      <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-md shadow-2xl max-h-[92vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-display font-bold text-[16px] text-text-1 flex items-center gap-2"><Mail size={16} className="text-brand-red" /> Invite User</h3>
           <button onClick={onClose} className="text-text-4 hover:text-text-1"><X size={18} /></button>
@@ -268,7 +268,7 @@ export default function PeoplePage() {
   return (
     <div className="flex flex-col flex-1">
       <Topbar title="People" />
-      <div className="p-6 flex flex-col gap-5 max-w-content mx-auto w-full">
+      <div className="px-4 py-6 lg:p-6 flex flex-col gap-5 max-w-content mx-auto w-full">
         <div className="flex items-center gap-3">
           <div className="relative flex-1 max-w-sm">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-4" />
@@ -288,14 +288,14 @@ export default function PeoplePage() {
           <div className="flex justify-center py-16 text-text-4"><Loader2 size={20} className="animate-spin" /></div>
         ) : (
           <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
-            <div className="grid grid-cols-[1fr_130px_140px_120px_90px_120px] gap-3 px-5 py-2.5 border-b border-border-subtle bg-surface-2">
+            <div className="hidden lg:grid grid-cols-[1fr_130px_140px_120px_90px_120px] gap-3 px-5 py-2.5 border-b border-border-subtle bg-surface-2">
               {['Member', 'Role', 'Team', 'Service', 'Level', ''].map((h) => <span key={h} className="font-mono text-[10px] text-text-4 uppercase tracking-wider">{h}</span>)}
             </div>
             {filtered.length === 0 && <div className="px-5 py-10 text-center text-text-4 font-ui text-[13px]">No people match.</div>}
             {filtered.map((p) => {
               const mayManage = canManageTarget(myRole, p.role)
               return (
-                <div key={p.id} className={cn('grid grid-cols-[1fr_130px_140px_120px_90px_120px] gap-3 items-center px-5 py-3 border-b border-border-subtle last:border-0', !p.is_active && 'opacity-55')}>
+                <div key={p.id} className={cn('flex flex-col gap-3 lg:grid lg:grid-cols-[1fr_130px_140px_120px_90px_120px] lg:gap-3 lg:items-center px-4 lg:px-5 py-3.5 lg:py-3 border-b border-border-subtle last:border-0', !p.is_active && 'opacity-55')}>
                   <div className="flex items-center gap-2.5 min-w-0">
                     <Avatar name={p.name} size="sm" />
                     <div className="min-w-0">
@@ -306,11 +306,13 @@ export default function PeoplePage() {
                       <p className="font-mono text-[11px] text-text-3 truncate">{p.email}</p>
                     </div>
                   </div>
-                  <RoleBadge role={toUserRole(p.role)} />
-                  <span className="font-ui text-[12px] text-text-2 truncate">{p.team_id ? teamName.get(p.team_id) ?? '—' : '—'}</span>
-                  <span>{p.service_type ? <ServiceChip service={p.service_type} /> : <span className="font-mono text-[11px] text-text-4">—</span>}</span>
-                  <span className="font-display font-bold text-[12px] text-text-1">Lv {p.level}</span>
-                  <div className="flex justify-end gap-1.5">
+                  <div className="flex flex-wrap items-center gap-2 lg:contents">
+                    <RoleBadge role={toUserRole(p.role)} />
+                    <span className="font-ui text-[12px] text-text-2 truncate">{p.team_id ? teamName.get(p.team_id) ?? '—' : '—'}</span>
+                    <span>{p.service_type ? <ServiceChip service={p.service_type} /> : <span className="font-mono text-[11px] text-text-4">—</span>}</span>
+                    <span className="font-display font-bold text-[12px] text-text-1">Lv {p.level}</span>
+                  </div>
+                  <div className="flex justify-start lg:justify-end gap-1.5">
                     {canManage && (
                       <Button size="sm" variant="ghost" disabled={!mayManage && !canEditDetails(myRole)} onClick={() => setEditing(p)}>Edit</Button>
                     )}

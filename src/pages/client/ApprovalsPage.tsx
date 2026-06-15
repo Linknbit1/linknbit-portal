@@ -472,7 +472,7 @@ export default function ClientApprovalsPage() {
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         {[
           { label: 'Awaiting Review', value: pendingCount, icon: Clock, color: '#EE2737', bg: 'rgba(238,39,55,0.08)' },
           { label: 'Approved', value: approvedCount, icon: CheckCircle2, color: '#1F9D55', bg: 'rgba(31,157,85,0.08)' },

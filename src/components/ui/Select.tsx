@@ -54,7 +54,7 @@ export function Select({ value, onChange, options, placeholder, label, className
       </button>
 
       {open && (
-        <div className="absolute top-full left-0 mt-1 z-50 min-w-full bg-surface-2 border border-border-strong rounded-md shadow-lg overflow-hidden">
+        <div className="absolute top-full left-0 mt-1 z-50 min-w-full max-w-[calc(100vw-2rem)] bg-surface-2 border border-border-strong rounded-md shadow-lg overflow-hidden">
           {options.map((opt) => (
             <button
               key={opt.value}

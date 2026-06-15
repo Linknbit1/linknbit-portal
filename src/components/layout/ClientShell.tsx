@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { NavLink, Outlet, useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { Variants } from 'framer-motion'
@@ -15,10 +15,15 @@ import {
   AlertCircle,
   MessageSquare,
   User,
+  LayoutDashboard,
+  FolderOpen,
+  BarChart2,
+  type LucideIcon,
 } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { APPROVALS } from '../../data/mock'
 import { formatRelativeTime } from '../../lib/utils'
+import { useClickOutside } from '../../hooks/useClickOutside'
 
 const dropdownVariants: Variants = {
   hidden: { opacity: 0, y: -8, scale: 0.97 },
@@ -69,19 +74,21 @@ const CLIENT_NOTIFICATIONS = [
   },
 ]
 
-function useClickOutside(
-  ref: React.RefObject<HTMLElement | null>,
-  handler: () => void,
-) {
-  useEffect(() => {
-    const listener = (e: MouseEvent) => {
-      if (!ref.current || ref.current.contains(e.target as Node)) return
-      handler()
-    }
-    document.addEventListener('mousedown', listener)
-    return () => document.removeEventListener('mousedown', listener)
-  }, [ref, handler])
+interface ClientNavItem {
+  label: string
+  shortLabel: string
+  to: string
+  icon: LucideIcon
+  badgeKey?: 'approvals'
 }
+
+const CLIENT_NAV: ClientNavItem[] = [
+  { label: 'Dashboard', shortLabel: 'Home', to: '/client/dashboard', icon: LayoutDashboard },
+  { label: 'My Projects', shortLabel: 'Projects', to: '/client/projects', icon: FolderOpen },
+  { label: 'Approvals', shortLabel: 'Approvals', to: '/client/approvals', icon: CheckCircle2, badgeKey: 'approvals' },
+  { label: 'Files & Deliverables', shortLabel: 'Files', to: '/client/files', icon: FileText },
+  { label: 'Reports', shortLabel: 'Reports', to: '/client/reports', icon: BarChart2 },
+]
 
 export function ClientShell() {
   const navigate = useNavigate()
@@ -129,7 +136,7 @@ export function ClientShell() {
   return (
     <div className="client-portal min-h-screen bg-client-bg font-ui" style={{ color: '#1A1612' }}>
       {/* ── Top navigation ── */}
-      <header className="h-client-topbar bg-client-surface border-b border-client-border sticky top-0 z-30 flex items-center px-10 gap-8">
+      <header className="h-client-topbar bg-client-surface border-b border-client-border sticky top-0 z-30 flex items-center px-4 lg:px-10 gap-4 lg:gap-8">
         {/* Brand */}
         <div className="flex items-center gap-3 shrink-0">
           <span className="w-8 h-8 rounded-md bg-client-accent flex items-center justify-center">
@@ -153,17 +160,11 @@ export function ClientShell() {
         </div>
 
         {/* Divider */}
-        <div className="w-px h-6 shrink-0" style={{ background: '#EAE3D6' }} />
+        <div className="w-px h-6 shrink-0 hidden lg:block" style={{ background: '#EAE3D6' }} />
 
-        {/* Nav */}
-        <nav className="flex items-center gap-0.5">
-          {[
-            { label: 'Dashboard', to: '/client/dashboard' },
-            { label: 'My Projects', to: '/client/projects' },
-            { label: 'Approvals', to: '/client/approvals', badge: pendingApprovals },
-            { label: 'Files & Deliverables', to: '/client/files' },
-            { label: 'Reports', to: '/client/reports' },
-          ].map((item) => (
+        {/* Nav (desktop) */}
+        <nav className="hidden lg:flex items-center gap-0.5">
+          {CLIENT_NAV.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
@@ -182,12 +183,12 @@ export function ClientShell() {
               {({ isActive }) => (
                 <>
                   {item.label}
-                  {item.badge !== undefined && item.badge > 0 && (
+                  {item.badgeKey === 'approvals' && pendingApprovals > 0 && (
                     <span
                       className="text-[10px] font-bold px-1.5 py-px rounded-full text-white"
                       style={{ background: '#EE2737' }}
                     >
-                      {item.badge}
+                      {pendingApprovals}
                     </span>
                   )}
                   {isActive && (
@@ -324,7 +325,7 @@ export function ClientShell() {
               >
                 IS
               </span>
-              <div className="flex flex-col items-start leading-none">
+              <div className="hidden sm:flex flex-col items-start leading-none">
                 <span className="font-semibold text-[13px]" style={{ color: '#1A1612' }}>
                   Imran Shah
                 </span>
@@ -341,7 +342,7 @@ export function ClientShell() {
               </div>
               <ChevronDown
                 size={13}
-                className={cn('transition-transform ml-0.5', profileOpen && 'rotate-180')}
+                className={cn('transition-transform ml-0.5 hidden sm:block', profileOpen && 'rotate-180')}
                 style={{ color: '#B7AE9D' }}
               />
             </button>
@@ -426,9 +427,37 @@ export function ClientShell() {
       </header>
 
       {/* Content */}
-      <main className="max-w-content-client mx-auto px-10">
+      <main className="max-w-content-client mx-auto px-4 lg:px-10 pb-20 lg:pb-0">
         <Outlet />
       </main>
+
+      {/* Bottom tab bar (mobile) */}
+      <nav
+        className="fixed bottom-0 inset-x-0 z-30 lg:hidden bg-client-surface border-t border-client-border flex items-stretch pb-[env(safe-area-inset-bottom)]"
+        aria-label="Primary"
+      >
+        {CLIENT_NAV.map((item) => (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            className="relative flex-1 flex flex-col items-center justify-center gap-1 py-2 font-medium text-[10.5px]"
+            style={({ isActive }) => ({ color: isActive ? '#EE2737' : '#4F4940' })}
+          >
+            <span className="relative">
+              <item.icon size={20} />
+              {item.badgeKey === 'approvals' && pendingApprovals > 0 && (
+                <span
+                  className="absolute -top-1.5 -right-2 text-[9px] font-bold px-1 rounded-full text-white leading-tight"
+                  style={{ background: '#EE2737' }}
+                >
+                  {pendingApprovals}
+                </span>
+              )}
+            </span>
+            {item.shortLabel}
+          </NavLink>
+        ))}
+      </nav>
     </div>
   )
 }

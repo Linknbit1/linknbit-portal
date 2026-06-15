@@ -1,6 +1,8 @@
 import { useEffect, type ReactNode } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { X } from 'lucide-react'
+import { cn } from '../../lib/cn'
+import { useIsDesktop } from '../../hooks/useMediaQuery'
 
 interface DrawerProps {
   open: boolean
@@ -8,16 +10,19 @@ interface DrawerProps {
   title?: ReactNode
   children: ReactNode
   footer?: ReactNode
+  /** Desktop width in px for a right-side drawer (ignored on mobile / bottom). */
   width?: number
+  side?: 'right' | 'bottom'
 }
 
-export function Drawer({ open, onClose, title, children, footer, width = 520 }: DrawerProps) {
+export function Drawer({ open, onClose, title, children, footer, width = 520, side = 'right' }: DrawerProps) {
+  const isDesktop = useIsDesktop()
+  // A bottom drawer is always a bottom sheet; a right drawer becomes a full-screen
+  // sheet on mobile and a fixed-width side panel on desktop.
+  const asBottom = side === 'bottom'
+
   useEffect(() => {
-    if (open) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
-    }
+    document.body.style.overflow = open ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
   }, [open])
 
@@ -29,10 +34,14 @@ export function Drawer({ open, onClose, title, children, footer, width = 520 }: 
     return () => window.removeEventListener('keydown', onKey)
   }, [open, onClose])
 
+  const motionProps = asBottom
+    ? { initial: { y: '100%' }, animate: { y: 0 }, exit: { y: '100%' } }
+    : { initial: { x: '100%' }, animate: { x: 0 }, exit: { x: '100%' } }
+
   return (
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-50 flex justify-end">
+        <div className={cn('fixed inset-0 z-50 flex', asBottom ? 'items-end' : 'justify-end')}>
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -44,12 +53,15 @@ export function Drawer({ open, onClose, title, children, footer, width = 520 }: 
           />
           {/* Panel */}
           <motion.aside
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
+            {...motionProps}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="relative flex flex-col bg-surface-1 border-l border-border-default shadow-pop overflow-hidden"
-            style={{ width }}
+            className={cn(
+              'relative flex flex-col bg-surface-1 shadow-pop overflow-hidden',
+              asBottom
+                ? 'w-full max-h-[90vh] rounded-t-2xl border-t border-border-default'
+                : 'h-full w-full lg:w-auto border-l border-border-default',
+            )}
+            style={!asBottom && isDesktop ? { width } : undefined}
           >
             {/* Header */}
             <div className="flex items-start justify-between gap-4 p-5 border-b border-border-default flex-shrink-0">

@@ -87,7 +87,7 @@ export default function DashboardPage() {
     <div className="flex flex-col flex-1">
       <Topbar title="Dashboard" />
 
-      <div className="p-7 flex flex-col gap-6 max-w-content mx-auto w-full">
+      <div className="px-4 py-6 lg:p-7 flex flex-col gap-6 max-w-content mx-auto w-full">
 
         {/* ── Greeting row ── */}
         <div className="flex items-center justify-between gap-4">
@@ -121,7 +121,7 @@ export default function DashboardPage() {
         </div>
 
         {/* ── KPI row ── */}
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Active Projects */}
           <div className="bg-surface-1 border border-border-default rounded-lg p-5 flex flex-col gap-3 relative overflow-hidden">
             <div className="flex items-center justify-between">
@@ -307,7 +307,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Legend */}
-              <div className="mt-4 grid grid-cols-4 gap-3">
+              <div className="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-3">
                 {[
                   { label: 'In Progress', count: inProgress, pct: total ? Math.round((inProgress / total) * 100) : 0, color: 'border-success' },
                   { label: 'Awaiting', count: awaiting, pct: total ? Math.round((awaiting / total) * 100) : 0, color: 'border-warning' },

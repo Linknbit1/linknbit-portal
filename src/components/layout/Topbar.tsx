@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bell, Search, Check, CheckCheck, ChevronDown, UserCircle, LogOut } from 'lucide-react'
+import { Bell, Search, Check, CheckCheck, ChevronDown, UserCircle, LogOut, Menu } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { showWipFeatures } from '../../lib/featureFlags'
 import { Avatar } from '../ui/Avatar'
 import { RoleBadge } from '../shared/RoleBadge'
 import { ProfileDialog } from './ProfileDialog'
+import { useMobileNav } from './MobileNavContext'
 import { useAuthContext } from '../../context/AuthContext'
 import { useNotifications, useMarkRead, useMarkAllRead } from '../../hooks/useNotifications'
 import { formatRelativeTime } from '../../lib/utils'
@@ -28,6 +29,7 @@ interface TopbarProps {
 
 export function Topbar({ title, breadcrumb, className }: TopbarProps) {
   const navigate = useNavigate()
+  const mobileNav = useMobileNav()
   const { profile, signOut } = useAuthContext()
   const profileId = profile?.id ?? ''
 
@@ -66,17 +68,28 @@ export function Topbar({ title, breadcrumb, className }: TopbarProps) {
     <>
     <header
       className={cn(
-        'h-topbar topbar-glass border-b border-border-default sticky top-0 z-40 flex items-center px-8 gap-6',
+        'h-topbar topbar-glass border-b border-border-default sticky top-0 z-40 flex items-center px-4 lg:px-8 gap-3 lg:gap-6',
         className,
       )}
     >
+      {/* Mobile hamburger */}
+      {mobileNav && (
+        <button
+          onClick={mobileNav.openNav}
+          className="lg:hidden w-9 h-9 -ml-1 rounded-sm flex items-center justify-center text-text-2 hover:bg-surface-2 hover:text-text-1 transition-colors flex-shrink-0"
+          aria-label="Open navigation"
+        >
+          <Menu size={18} />
+        </button>
+      )}
+
       {/* Title */}
-      <div className="flex items-baseline gap-2.5">
+      <div className="flex items-baseline gap-2.5 min-w-0">
         {breadcrumb && (
-          <span className="font-mono text-[11px] text-text-4 uppercase tracking-wider">{breadcrumb}</span>
+          <span className="font-mono text-[11px] text-text-4 uppercase tracking-wider hidden sm:inline">{breadcrumb}</span>
         )}
         {title && (
-          <h1 className="font-display font-bold text-[20px] text-text-1 leading-none tracking-tight m-0">
+          <h1 className="font-display font-bold text-[17px] lg:text-[20px] text-text-1 leading-none tracking-tight m-0 truncate">
             {title}
           </h1>
         )}
@@ -183,13 +196,13 @@ export function Topbar({ title, breadcrumb, className }: TopbarProps) {
               aria-expanded={menuOpen}
             >
               <Avatar name={profile.name} src={profile.avatar_url ?? undefined} size="sm" />
-              <div className="flex flex-col items-start leading-tight">
+              <div className="hidden sm:flex flex-col items-start leading-tight">
                 <span className="font-ui font-semibold text-[12.5px] text-text-1 whitespace-nowrap">
                   {profile.name}
                 </span>
                 <RoleBadge role={profile.role} size="sm" className="border-0 bg-transparent px-0 py-0 text-text-3" />
               </div>
-              <ChevronDown size={14} className="text-text-3 ml-0.5" />
+              <ChevronDown size={14} className="text-text-3 ml-0.5 hidden sm:block" />
             </button>
 
             {menuOpen && (

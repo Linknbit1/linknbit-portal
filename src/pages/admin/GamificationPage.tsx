@@ -124,9 +124,9 @@ function NoteDialog({ open, title, confirmLabel, danger, onClose, onConfirm, isP
   const [note, setNote] = useState('')
   if (!open) return null
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-surface-1 border border-border-default rounded-xl p-6 w-full max-w-sm shadow-2xl">
+      <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-sm shadow-2xl max-h-[92vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-display font-bold text-[15px] text-text-1">{title}</h3>
           <button onClick={onClose} className="text-text-4 hover:text-text-1"><X size={18} /></button>
@@ -181,9 +181,9 @@ function ShoutoutModal({ open, onClose, recipients, profileId }: {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-surface-1 border border-border-default rounded-xl p-6 w-full max-w-md shadow-2xl">
+      <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-md shadow-2xl max-h-[92vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-display font-bold text-[16px] text-text-1 flex items-center gap-2">
             <Star size={16} className="text-coin-gold" /> Give Shoutout
@@ -279,9 +279,9 @@ function QuestTaskModal({ task, actorId, onClose }: {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-surface-1 border border-border-default rounded-xl p-6 w-full max-w-md shadow-2xl">
+      <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-md shadow-2xl max-h-[92vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-display font-bold text-[16px] text-text-1">{isEdit ? 'Edit Task' : 'Post Quest Task'}</h3>
           <button onClick={onClose} className="text-text-4 hover:text-text-1"><X size={18} /></button>
@@ -361,9 +361,9 @@ function SubmitProofModal({ claim, taskTitle, profileId, onClose }: {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-surface-1 border border-border-default rounded-xl p-6 w-full max-w-md shadow-2xl">
+      <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-md shadow-2xl max-h-[92vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-display font-bold text-[15px] text-text-1">Submit: {taskTitle}</h3>
           <button onClick={onClose} className="text-text-4 hover:text-text-1"><X size={18} /></button>
@@ -414,9 +414,9 @@ function RewardModal({ actorId, onClose }: { actorId: string; onClose: () => voi
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-surface-1 border border-border-default rounded-xl p-6 w-full max-w-md shadow-2xl">
+      <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-md shadow-2xl max-h-[92vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-display font-bold text-[16px] text-text-1">Create Reward</h3>
           <button onClick={onClose} className="text-text-4 hover:text-text-1"><X size={18} /></button>
@@ -480,9 +480,9 @@ function RedeemModal({ reward, myLP, onClose, onConfirm, isPending }: {
   const cashBlocked = reward.is_cash && myLP < 500
   const canAfford = myLP >= reward.xp_cost && !cashBlocked
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-surface-1 border border-border-default rounded-xl p-6 w-full max-w-sm shadow-2xl text-center">
+      <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-sm shadow-2xl max-h-[92vh] overflow-y-auto text-center">
         <div className="w-14 h-14 rounded-xl bg-coin-gold/15 border border-coin-gold/30 flex items-center justify-center mx-auto mb-3">
           <Gift size={24} className="text-coin-gold" />
         </div>
@@ -654,9 +654,9 @@ export default function GamificationPage() {
   return (
     <div className="flex flex-col flex-1">
       <Topbar title="Gamification" />
-      <div className="p-6 flex flex-col gap-5 max-w-content mx-auto w-full">
+      <div className="px-4 py-6 lg:p-6 flex flex-col gap-5 max-w-content mx-auto w-full">
         {/* My LP / reputation summary */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="bg-surface-1 border border-border-default rounded-xl px-5 py-4 flex items-center gap-3">
             <div className="w-11 h-11 rounded-xl bg-coin-gold/15 border border-coin-gold/30 flex items-center justify-center"><Coins size={19} className="text-coin-gold" /></div>
             <div><p className="font-display font-bold text-[24px] text-coin-gold leading-none">{myLP.toLocaleString()}</p><p className="font-ui text-[11.5px] text-text-3 mt-0.5">Link Points · this month</p></div>
@@ -722,11 +722,11 @@ export default function GamificationPage() {
 
             {!lbLoading && !lbError && (
               <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
-                <div className="grid grid-cols-[40px_1fr_110px_110px_70px] gap-3 px-5 py-2.5 border-b border-border-subtle bg-surface-2">
+                <div className="hidden lg:grid grid-cols-[40px_1fr_110px_110px_70px] gap-3 px-5 py-2.5 border-b border-border-subtle bg-surface-2">
                   {['#', 'Name', 'LP (month)', 'Reputation', 'Level'].map((h) => <span key={h} className="font-mono text-[10px] text-text-4 uppercase tracking-wider">{h}</span>)}
                 </div>
                 {ranked.map((e) => (
-                  <div key={e.profile_id} className={cn('grid grid-cols-[40px_1fr_110px_110px_70px] gap-3 items-center px-5 py-3 border-b border-border-subtle last:border-0', e.isMe && 'bg-service-dev/8')}>
+                  <div key={e.profile_id} className={cn('grid grid-cols-[40px_1fr] gap-3 items-center lg:grid-cols-[40px_1fr_110px_110px_70px] px-4 lg:px-5 py-3 border-b border-border-subtle last:border-0', e.isMe && 'bg-service-dev/8')}>
                     <span className={cn('font-display font-bold text-[14px]', e.rank <= 3 ? 'text-coin-gold' : 'text-text-4')}>{e.rank}</span>
                     <div className="flex items-center gap-2.5 min-w-0">
                       <Avatar name={e.name} size="sm" />
@@ -738,9 +738,11 @@ export default function GamificationPage() {
                         <p className="text-[11px] font-mono text-text-3 capitalize">{e.role.replace(/_/g, ' ')}</p>
                       </div>
                     </div>
-                    <span className="font-mono font-bold text-[13px] text-coin-gold flex items-center gap-1"><Zap size={11} /> {e.lp_balance.toLocaleString()}</span>
-                    <span className="font-mono text-[13px] text-text-2">{e.reputation_total.toLocaleString()}</span>
-                    <span className="font-display font-bold text-[13px] text-text-1">Lv {e.level}</span>
+                    <div className="col-span-2 lg:col-span-1 lg:contents flex flex-wrap items-center gap-x-4 gap-y-1 pl-[52px] lg:pl-0">
+                      <span className="font-mono font-bold text-[13px] text-coin-gold flex items-center gap-1"><Zap size={11} /> {e.lp_balance.toLocaleString()}</span>
+                      <span className="font-mono text-[13px] text-text-2">{e.reputation_total.toLocaleString()} <span className="lg:hidden text-text-4 text-[11px]">rep</span></span>
+                      <span className="font-display font-bold text-[13px] text-text-1">Lv {e.level}</span>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -784,7 +786,7 @@ export default function GamificationPage() {
             <div>
               <h3 className="font-display font-semibold text-[15px] text-text-1 mb-3">Available Tasks</h3>
               {openTasks.length === 0 && !tasksLoading && <div className="py-12 text-center text-text-4 font-ui text-[13px]">No open tasks right now.</div>}
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {openTasks.map((t) => {
                   const mine = myClaimByTask.get(t.id)
                   const meta = difficultyMeta(t.difficulty)
@@ -841,7 +843,7 @@ export default function GamificationPage() {
         {mainTab === 'badges' && (
           <div className="flex flex-col gap-3">
             <p className="font-mono text-[11.5px] text-text-3">Badges are earned automatically by hitting milestones — or awarded by HR.</p>
-            <div className="grid grid-cols-5 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
               {badges.map((b) => {
                 const earned = earnedBadgeIds.has(b.id)
                 return (
@@ -869,7 +871,7 @@ export default function GamificationPage() {
             </div>
             {rwLoading && <div className="flex justify-center py-16 text-text-4"><Loader2 size={20} className="animate-spin" /></div>}
             {!rwLoading && (
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {rewards.map((r) => {
                   const cashBlocked = r.is_cash && myLP < 500
                   const canAfford = myLP >= r.xp_cost && !cashBlocked
