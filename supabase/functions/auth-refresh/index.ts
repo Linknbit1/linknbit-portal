@@ -1,9 +1,33 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { REFRESH_COOKIE, COOKIE_MAX_AGE, parseCookie, setCookie, clearCookie } from '../_shared/cookie.ts'
+
+// Cookie helpers inlined (kept self-contained so this critical auth function
+// has no cross-file dependency at deploy time). Mirrors _shared/cookie.ts.
+const REFRESH_COOKIE = 'sb-refresh-token'
+const COOKIE_MAX_AGE = 60 * 60 * 24 * 30 // 30 days
+function parseCookie(header: string, name: string): string | null {
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const match = header.match(new RegExp(`(?:^|;\\s*)${escaped}=([^;]*)`))
+  return match ? decodeURIComponent(match[1]) : null
+}
+// Only mark Secure on HTTPS origins — browsers (esp. iOS Safari) drop Secure
+// cookies on plain-HTTP origins (local/LAN dev), which breaks login persistence.
+function isSecureRequest(req: Request): boolean {
+  const origin = req.headers.get('origin') ?? ''
+  if (origin.startsWith('http://')) return false
+  if (origin.startsWith('https://')) return true
+  return (req.headers.get('x-forwarded-proto') ?? 'https') !== 'http'
+}
+function setCookie(name: string, value: string, maxAge: number, secure: boolean): string {
+  return `${name}=${encodeURIComponent(value)}; HttpOnly${secure ? '; Secure' : ''}; SameSite=Lax; Path=/; Max-Age=${maxAge}`
+}
+function clearCookie(name: string, secure: boolean): string {
+  return `${name}=; HttpOnly${secure ? '; Secure' : ''}; SameSite=Lax; Path=/; Max-Age=0`
+}
 
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response(null, { status: 204 })
 
+  const secure = isSecureRequest(req)
   const refreshToken = parseCookie(req.headers.get('cookie') ?? '', REFRESH_COOKIE)
 
   if (!refreshToken) return json({ error: 'No session' }, 401)
@@ -18,13 +42,13 @@ Deno.serve(async (req: Request) => {
 
   if (error || !data.session) {
     const headers = new Headers({ 'Content-Type': 'application/json' })
-    headers.append('Set-Cookie', clearCookie(REFRESH_COOKIE))
+    headers.append('Set-Cookie', clearCookie(REFRESH_COOKIE, secure))
     return new Response(JSON.stringify({ error: 'Session expired' }), { status: 401, headers })
   }
 
   const { session, user } = data
   const headers = new Headers({ 'Content-Type': 'application/json' })
-  headers.append('Set-Cookie', setCookie(REFRESH_COOKIE, session.refresh_token, COOKIE_MAX_AGE))
+  headers.append('Set-Cookie', setCookie(REFRESH_COOKIE, session.refresh_token, COOKIE_MAX_AGE, secure))
 
   return new Response(
     JSON.stringify({
