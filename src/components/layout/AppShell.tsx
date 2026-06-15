@@ -15,7 +15,7 @@ export function AppShell() {
         <main className="flex-1 min-w-0 flex flex-col bg-bg-base overflow-x-hidden pb-16 lg:pb-0">
           <Outlet />
         </main>
-        <BottomTabBar onOpenMenu={() => setNavOpen(true)} />
+        <BottomTabBar />
         <MobileNavDrawer open={navOpen} onClose={() => setNavOpen(false)} />
       </div>
     </MobileNavContext.Provider>

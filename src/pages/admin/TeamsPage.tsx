@@ -180,7 +180,7 @@ export default function TeamsPage() {
         ) : teams.length === 0 ? (
           <div className="py-16 text-center text-text-4 font-ui text-[13px]">No teams yet.</div>
         ) : (
-          <div className="grid grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
             {teams.map((team) => {
               const members = membersByTeam.get(team.id) ?? []
               const lead = people.find((p) => p.id === team.lead_id)
@@ -192,7 +192,7 @@ export default function TeamsPage() {
                       <div className="w-10 h-10 rounded-lg bg-surface-2 flex items-center justify-center flex-shrink-0"><Users size={18} className="text-text-3" /></div>
                       <div className="min-w-0">
                         <p className="font-display font-bold text-[15px] text-text-1 truncate">{team.name}</p>
-                        <div className="flex items-center gap-2 mt-0.5"><ServiceChip service={team.service_type} /><span className="font-mono text-[11px] text-text-4">{members.length} member{members.length === 1 ? '' : 's'}</span></div>
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1"><ServiceChip service={team.service_type} /><span className="font-mono text-[11px] text-text-4">{members.length} member{members.length === 1 ? '' : 's'}</span></div>
                       </div>
                     </div>
                     {canManage && <Button size="sm" variant="ghost" onClick={() => setTeamModal(team)}><Pencil size={13} /></Button>}
@@ -210,7 +210,7 @@ export default function TeamsPage() {
                         <Avatar name={m.name} size="xs" />
                         <span className="font-ui text-[12.5px] text-text-2 flex-1 truncate">{m.name}{m.id === team.lead_id && <span className="ml-1.5 font-mono text-[9px] text-coin-gold">LEAD</span>}</span>
                         {canManage && (
-                          <button onClick={() => removeMember(team, m)} className="p-1 text-text-4 hover:text-error opacity-0 group-hover:opacity-100 transition-opacity" title="Remove from team"><UserMinus size={13} /></button>
+                          <button onClick={() => removeMember(team, m)} className="p-1 text-text-4 hover:text-error opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity" title="Remove from team"><UserMinus size={13} /></button>
                         )}
                       </div>
                     ))}

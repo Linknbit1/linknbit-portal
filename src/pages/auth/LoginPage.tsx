@@ -834,15 +834,15 @@ function SplashScreen({ user, onDone }: { user: SplashUser; onDone: () => void }
   }, [onDone])
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_50%_50%,#0F1620_0%,#06080C_70%)] px-16 py-14">
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_50%_50%,#0F1620_0%,#06080C_70%)] px-[clamp(16px,5vw,64px)] py-[clamp(20px,4vh,56px)]">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,rgba(122,133,151,0.07)_1px,transparent_1px)] bg-[length:40px_40px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_30%,transparent_100%)]" />
-      <div className="absolute left-8 right-8 top-8 flex items-center justify-between font-mono text-[10.5px] uppercase tracking-[0.12em] text-text-4">
+      <div className="absolute left-[clamp(16px,5vw,32px)] right-[clamp(16px,5vw,32px)] top-[clamp(16px,3vh,32px)] flex items-center justify-between gap-3 font-mono text-[10.5px] uppercase tracking-[0.12em] text-text-4">
         <div className="flex items-center gap-3">
           <LogoMark />
           <span className="font-display text-[16px] font-bold text-text-1">Linknbit</span>
         </div>
         <div className="flex items-center gap-3.5">
-          <span>
+          <span className="hidden sm:inline">
             Session <b className="font-medium text-text-2">8a3f-2c91</b>
           </span>
           <span className="flex items-center gap-1.5 text-success">
@@ -852,22 +852,22 @@ function SplashScreen({ user, onDone }: { user: SplashUser; onDone: () => void }
         </div>
       </div>
 
-      <div className="relative z-10 flex flex-col items-center gap-7 text-center">
-        <div className="relative flex size-[132px] items-center justify-center">
+      <div className="relative z-10 flex flex-col items-center gap-[clamp(18px,3.5vh,28px)] text-center">
+        <div className="relative flex size-[clamp(104px,24vw,132px)] items-center justify-center">
           <div className="splash-orbit splash-orbit-mkt" />
           <div className="splash-orbit splash-orbit-design" />
           <div className="splash-orbit splash-orbit-dev" />
-          <div className="relative z-3 flex size-[88px] items-center justify-center rounded-full border-2 border-surface-2 bg-[linear-gradient(135deg,#A78BFA,#8B5CF6)] font-display text-[32px] font-bold text-white shadow-[0_0_60px_rgba(167,139,250,0.25)]">
+          <div className="relative z-3 flex size-[clamp(68px,16vw,88px)] items-center justify-center rounded-full border-2 border-surface-2 bg-[linear-gradient(135deg,#A78BFA,#8B5CF6)] font-display text-[clamp(24px,6vw,32px)] font-bold text-white shadow-[0_0_60px_rgba(167,139,250,0.25)]">
             {user.initials}
           </div>
         </div>
 
         <div>
-          <h1 className="m-0 font-display text-h1 font-bold tracking-[-0.02em] text-text-1">
+          <h1 className="m-0 font-display text-[clamp(24px,6vw,34px)] font-bold leading-[1.1] tracking-[-0.02em] text-text-1">
             <span className="font-medium text-text-3">Welcome,</span> <span>{user.name}</span>
             <span className="text-brand-red">.</span>
           </h1>
-          <div className="mt-3.5">
+          <div className="mt-[clamp(10px,2vh,14px)]">
             <span className="inline-flex items-center gap-2 rounded-full border border-border-default bg-surface-2 py-[5px] pl-[5px] pr-3 font-ui text-[12.5px] font-semibold text-text-1">
               <span className="inline-flex size-6 items-center justify-center rounded-full bg-[linear-gradient(135deg,#A78BFA,#8B5CF6)] text-white">
                 <LayoutGrid size={13} />
@@ -877,7 +877,7 @@ function SplashScreen({ user, onDone }: { user: SplashUser; onDone: () => void }
           </div>
         </div>
 
-        <div className="flex w-[480px] max-w-[90vw] flex-col gap-1 rounded-md border border-border-subtle bg-surface-1/50 px-[22px] py-[18px] text-left backdrop-blur-sm">
+        <div className="flex w-[480px] max-w-[90vw] flex-col gap-1 rounded-md border border-border-subtle bg-surface-1/50 px-[clamp(16px,4vw,22px)] py-[clamp(14px,2.5vh,18px)] text-left backdrop-blur-sm">
           <BootItem status="done" label="Verifying credentials" ms="142ms" />
           <BootItem status="done" label="Loading role permissions" ms="87ms" />
           <BootItem status={step3} label="Syncing your projects from ClickUp" ms={step3 === 'now' ? '...' : '203ms'} />

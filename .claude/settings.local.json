@@ -50,7 +50,9 @@
       "Bash(git add *)",
       "Bash(*)",
       "mcp__supabase__get_advisors",
-      "mcp__supabase__list_edge_functions"
+      "mcp__supabase__list_edge_functions",
+      "PowerShell(npx tsc --noEmit -p tsconfig.app.json 2>&1 | Select-Object -First 40)",
+      "PowerShell(npx tsc -b 2>&1 | Select-Object -First 40; \"exit: $LASTEXITCODE\")"
     ]
   },
   "enableAllProjectMcpServers": true,
