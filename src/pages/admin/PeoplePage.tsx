@@ -23,6 +23,7 @@ import {
 } from '../../lib/peopleAccess'
 import { ROLE_LABELS } from '../../lib/utils'
 import { cn } from '../../lib/cn'
+import { ModalShell } from '../../components/ui/ModalShell'
 
 type Option = { value: string; label: string }
 
@@ -67,9 +68,7 @@ function InviteModal({ actorRole, teams, serviceOptions, onClose }: {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-md shadow-2xl max-h-[92vh] overflow-y-auto">
+    <ModalShell onClose={onClose} size="md" contentClassName="p-5 sm:p-6">
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-display font-bold text-[16px] text-text-1 flex items-center gap-2"><Mail size={16} className="text-brand-red" /> Invite User</h3>
           <button onClick={onClose} className="text-text-4 hover:text-text-1"><X size={18} /></button>
@@ -118,8 +117,7 @@ function InviteModal({ actorRole, teams, serviceOptions, onClose }: {
             </div>
           </>
         )}
-      </div>
-    </div>
+    </ModalShell>
   )
 }
 

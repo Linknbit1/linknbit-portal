@@ -33,6 +33,7 @@ import { cn } from '../../lib/cn'
 import type {
   RewardRow, QuestTaskRow, ShoutoutRow, QuestTaskClaimRow,
 } from '../../api/gamification'
+import { ModalShell } from '../../components/ui/ModalShell'
 
 // ── Constants ────────────────────────────────────────────────────────────────────
 
@@ -124,9 +125,7 @@ function NoteDialog({ open, title, confirmLabel, danger, onClose, onConfirm, isP
   const [note, setNote] = useState('')
   if (!open) return null
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-sm shadow-2xl max-h-[92vh] overflow-y-auto">
+    <ModalShell onClose={onClose} size="sm" contentClassName="p-5 sm:p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-display font-bold text-[15px] text-text-1">{title}</h3>
           <button onClick={onClose} className="text-text-4 hover:text-text-1"><X size={18} /></button>
@@ -149,8 +148,7 @@ function NoteDialog({ open, title, confirmLabel, danger, onClose, onConfirm, isP
             {confirmLabel}
           </Button>
         </div>
-      </div>
-    </div>
+    </ModalShell>
   )
 }
 
@@ -181,9 +179,7 @@ function ShoutoutModal({ open, onClose, recipients, profileId }: {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-md shadow-2xl max-h-[92vh] overflow-y-auto">
+    <ModalShell onClose={onClose} size="md" contentClassName="p-5 sm:p-6">
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-display font-bold text-[16px] text-text-1 flex items-center gap-2">
             <Star size={16} className="text-coin-gold" /> Give Shoutout
@@ -225,8 +221,7 @@ function ShoutoutModal({ open, onClose, recipients, profileId }: {
             {isPending ? <Loader2 size={13} className="animate-spin" /> : <Star size={13} />} Submit
           </Button>
         </div>
-      </div>
-    </div>
+    </ModalShell>
   )
 }
 
@@ -279,9 +274,7 @@ function QuestTaskModal({ task, actorId, onClose }: {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-md shadow-2xl max-h-[92vh] overflow-y-auto">
+    <ModalShell onClose={onClose} size="md" contentClassName="p-5 sm:p-6">
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-display font-bold text-[16px] text-text-1">{isEdit ? 'Edit Task' : 'Post Quest Task'}</h3>
           <button onClick={onClose} className="text-text-4 hover:text-text-1"><X size={18} /></button>
@@ -335,8 +328,7 @@ function QuestTaskModal({ task, actorId, onClose }: {
             {isEdit ? 'Save' : 'Post Task'}
           </Button>
         </div>
-      </div>
-    </div>
+    </ModalShell>
   )
 }
 
@@ -361,9 +353,7 @@ function SubmitProofModal({ claim, taskTitle, profileId, onClose }: {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-md shadow-2xl max-h-[92vh] overflow-y-auto">
+    <ModalShell onClose={onClose} size="md" contentClassName="p-5 sm:p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-display font-bold text-[15px] text-text-1">Submit: {taskTitle}</h3>
           <button onClick={onClose} className="text-text-4 hover:text-text-1"><X size={18} /></button>
@@ -386,8 +376,7 @@ function SubmitProofModal({ claim, taskTitle, profileId, onClose }: {
             {isPending ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />} Submit
           </Button>
         </div>
-      </div>
-    </div>
+    </ModalShell>
   )
 }
 
@@ -414,9 +403,7 @@ function RewardModal({ actorId, onClose }: { actorId: string; onClose: () => voi
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-md shadow-2xl max-h-[92vh] overflow-y-auto">
+    <ModalShell onClose={onClose} size="md" contentClassName="p-5 sm:p-6">
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-display font-bold text-[16px] text-text-1">Create Reward</h3>
           <button onClick={onClose} className="text-text-4 hover:text-text-1"><X size={18} /></button>
@@ -462,8 +449,7 @@ function RewardModal({ actorId, onClose }: { actorId: string; onClose: () => voi
             {isPending ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />} Create
           </Button>
         </div>
-      </div>
-    </div>
+    </ModalShell>
   )
 }
 
@@ -480,9 +466,7 @@ function RedeemModal({ reward, myLP, onClose, onConfirm, isPending }: {
   const cashBlocked = reward.is_cash && myLP < 500
   const canAfford = myLP >= reward.xp_cost && !cashBlocked
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-sm shadow-2xl max-h-[92vh] overflow-y-auto text-center">
+    <ModalShell onClose={onClose} size="sm" contentClassName="p-5 sm:p-6">
         <div className="w-14 h-14 rounded-xl bg-coin-gold/15 border border-coin-gold/30 flex items-center justify-center mx-auto mb-3">
           <Gift size={24} className="text-coin-gold" />
         </div>
@@ -497,8 +481,7 @@ function RedeemModal({ reward, myLP, onClose, onConfirm, isPending }: {
             {cashBlocked ? 'Need 500 LP' : canAfford ? 'Confirm' : 'Locked'}
           </Button>
         </div>
-      </div>
-    </div>
+    </ModalShell>
   )
 }
 
