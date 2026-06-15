@@ -186,9 +186,9 @@ function WFHRequestModal({
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-surface-1 border border-border-default rounded-xl p-6 w-full max-w-md shadow-2xl">
+      <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-md shadow-2xl max-h-[92vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-service-dev/15 flex items-center justify-center">
@@ -277,7 +277,7 @@ export default function EmployeeDashboardPage() {
     <div className="flex flex-col flex-1">
       <Topbar title="My Dashboard" />
 
-      <div className="p-8 flex flex-col gap-6 max-w-content mx-auto w-full">
+      <div className="px-4 py-6 lg:p-8 flex flex-col gap-6 max-w-content mx-auto w-full">
         {/* Hero card */}
         <div className="bg-surface-1 border border-border-default rounded-xl p-6 relative overflow-hidden">
           {/* Ambient glow */}
@@ -323,7 +323,7 @@ export default function EmployeeDashboardPage() {
         {/* Today's attendance */}
         <TodayAttendanceCard />
 
-        <div className="grid grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
           {/* My Tasks */}
           <div className="col-span-2 flex flex-col gap-4">
             <Card padding="none">
@@ -384,7 +384,7 @@ export default function EmployeeDashboardPage() {
                 <Trophy size={16} className="text-coin-gold" />
                 Active Quests
               </h3>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {QUESTS.filter((q) => q.status !== 'completed').slice(0, 3).map((quest) => {
                   const isAlmostDone = quest.progress / quest.total >= 0.6
                   return (

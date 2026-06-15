@@ -140,7 +140,7 @@ export function TimePicker({
       </button>
 
       {open && (
-        <div className="absolute z-50 top-full left-0 mt-1 bg-surface-1 border border-border-default rounded-xl shadow-2xl overflow-hidden w-[180px]">
+        <div className="absolute z-50 top-full left-0 mt-1 bg-surface-1 border border-border-default rounded-xl shadow-2xl overflow-hidden w-[180px] max-w-[calc(100vw-2rem)]">
           <div className="flex divide-x divide-border-subtle">
             {/* Hours column */}
             <div className="flex-1 flex flex-col">

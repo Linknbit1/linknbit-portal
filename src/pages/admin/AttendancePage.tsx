@@ -131,9 +131,9 @@ function MarkModal({ open, onClose, dateFilter }: MarkModalProps) {
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-surface-1 border border-border-default rounded-xl p-6 w-full max-w-md shadow-2xl">
+      <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-md shadow-2xl max-h-[92vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-display font-bold text-[16px] text-text-1">Mark Attendance</h3>
           <button onClick={onClose} className="text-text-4 hover:text-text-1 transition-colors"><X size={18} /></button>
@@ -248,7 +248,7 @@ function DailyRecordsTab() {
   return (
     <>
       {/* Stats row */}
-      <div className="grid grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         {[
           { label: 'Present',  value: stats.present,  icon: CheckCircle2, color: 'text-success',         bg: 'bg-success/10 border-success/20' },
           { label: 'Late',     value: stats.late,     icon: Clock,        color: 'text-warning',         bg: 'bg-warning/10 border-warning/20' },
@@ -270,7 +270,7 @@ function DailyRecordsTab() {
 
       {/* Table */}
       <div className="bg-surface-1 border border-border-default rounded-xl">
-        <div className="flex items-center gap-3 px-5 py-3.5 border-b border-border-subtle">
+        <div className="flex flex-wrap items-center gap-3 px-4 lg:px-5 py-3.5 border-b border-border-subtle">
           <Calendar size={15} className="text-text-3 flex-shrink-0" />
           <DatePicker
             value={dateFilter}
@@ -306,7 +306,7 @@ function DailyRecordsTab() {
           </div>
         </div>
 
-        <table className="w-full">
+        <table className="w-full hidden lg:table">
           <thead>
             <tr className="border-b border-border-subtle bg-surface-2">
               {['Member', 'Status', 'Check In', 'Check Out', 'Duration', 'Source', 'Device', 'Note', ''].map((h) => (
@@ -390,6 +390,48 @@ function DailyRecordsTab() {
             )}
           </tbody>
         </table>
+
+        {/* Mobile cards */}
+        <div className="lg:hidden flex flex-col">
+          {isLoading ? (
+            <div className="px-4 py-12 text-center font-mono text-[12px] text-text-4">Loading…</div>
+          ) : filtered.length === 0 ? (
+            <div className="px-4 py-12 text-center font-mono text-[12px] text-text-4">No records for this date / filter</div>
+          ) : (
+            filtered.map((rec) => (
+              <div key={rec.id} className="px-4 py-3.5 border-b border-border-subtle last:border-0 flex flex-col gap-2.5">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <Avatar name={rec.profiles?.name ?? '?'} size="sm" />
+                    <span className="font-ui font-medium text-[13px] text-text-1 truncate">
+                      {rec.profiles?.name ?? rec.profile_id.slice(0, 8)}
+                    </span>
+                    {rec.wifi_validated && <Wifi size={12} className="text-success flex-shrink-0" aria-label="WiFi validated" />}
+                  </div>
+                  <StatusChip status={rec.status} />
+                </div>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[12px] text-text-2 pl-[42px]">
+                  <span>In: <span className="text-text-1">{fmtTime(rec.check_in)}</span></span>
+                  {rec.check_out ? (
+                    <span>Out: <span className="text-text-1">{fmtTime(rec.check_out)}</span></span>
+                  ) : rec.check_in ? (
+                    <button
+                      onClick={() => handleCheckOut(rec)}
+                      disabled={adminCheckOutMutation.isPending}
+                      className="flex items-center gap-1 text-[11.5px] font-ui font-semibold text-warning hover:text-warning/80"
+                    >
+                      <LogOut size={12} /> Check Out
+                    </button>
+                  ) : null}
+                  <span>{durationLabel(rec)}</span>
+                  <span className={cn('uppercase tracking-wider text-[11px]', rec.source === 'self' ? 'text-success' : 'text-text-3')}>{rec.source}</span>
+                  {rec.device_flagged && <span className="flex items-center gap-1 text-[11px] font-ui text-warning"><AlertCircle size={11} /> Flagged</span>}
+                </div>
+                {rec.note && <p className="font-ui text-[12px] text-text-3 pl-[42px]">{rec.note}</p>}
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
       <MarkModal open={markOpen} onClose={() => setMarkOpen(false)} dateFilter={dateFilter} />
@@ -422,9 +464,9 @@ function GrantWfhModal({ open, onClose }: { open: boolean; onClose: () => void }
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-surface-1 border border-border-default rounded-xl p-6 w-full max-w-md shadow-2xl">
+      <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-md shadow-2xl max-h-[92vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-display font-bold text-[16px] text-text-1">Grant WFH</h3>
           <button onClick={onClose} className="text-text-4 hover:text-text-1 transition-colors"><X size={18} /></button>
@@ -506,7 +548,7 @@ function WFHRequestsTab() {
   return (
     <div className="flex flex-col gap-5">
       {/* Summary */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
           { label: 'Pending Review', value: pending,  icon: Clock,        color: 'text-warning', bg: 'bg-warning/10 border-warning/20' },
           { label: 'Approved',       value: approved, icon: CheckCircle2, color: 'text-success', bg: 'bg-success/10 border-success/20' },
@@ -611,9 +653,9 @@ function WFHRequestsTab() {
       <GrantWfhModal open={grantOpen} onClose={() => setGrantOpen(false)} />
 
       {rejectTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setRejectTarget(null)} />
-          <div className="relative bg-surface-1 border border-border-default rounded-xl p-6 w-full max-w-sm shadow-2xl">
+          <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-sm shadow-2xl max-h-[92vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-display font-bold text-[16px] text-text-1">Reject Request</h3>
               <button onClick={() => setRejectTarget(null)} className="text-text-4 hover:text-text-1"><X size={18} /></button>
@@ -695,9 +737,9 @@ function LeaveTypeForm({ onClose, editing }: { onClose: () => void; editing: Lea
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-surface-1 border border-border-default rounded-xl p-6 w-full max-w-md shadow-2xl">
+      <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-md shadow-2xl max-h-[92vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-display font-bold text-[16px] text-text-1">{editing ? 'Edit Leave Type' : 'New Leave Type'}</h3>
           <button onClick={onClose} className="text-text-4 hover:text-text-1 transition-colors"><X size={18} /></button>
@@ -911,9 +953,9 @@ function LeaveTab() {
       <LeaveTypeModal open={typeModalOpen} onClose={() => setTypeModalOpen(false)} editing={editingType} />
 
       {rejectTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setRejectTarget(null)} />
-          <div className="relative bg-surface-1 border border-border-default rounded-xl p-6 w-full max-w-sm shadow-2xl">
+          <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-sm shadow-2xl max-h-[92vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-display font-bold text-[16px] text-text-1">Reject Leave</h3>
               <button onClick={() => setRejectTarget(null)} className="text-text-4 hover:text-text-1"><X size={18} /></button>
@@ -1087,7 +1129,7 @@ function EnrolledDevicesTab() {
   return (
     <div className="flex flex-col gap-5">
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: 'Pending Review',  value: pending.length,         icon: AlertCircle, color: 'text-warning', bg: 'bg-warning/10 border-warning/20' },
           { label: 'Approved',        value: approved.length,        icon: Shield,      color: 'text-success', bg: 'bg-success/10 border-success/20' },
@@ -1218,7 +1260,7 @@ function ExceptionsTab() {
   return (
     <div className="flex flex-col gap-5">
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
           { label: 'Pending Review', value: pendingCount,  icon: Clock,        color: 'text-warning', bg: 'bg-warning/10 border-warning/20' },
           { label: 'Approved',       value: approvedCount, icon: CheckCircle2, color: 'text-success', bg: 'bg-success/10 border-success/20' },
@@ -1358,9 +1400,9 @@ function ExceptionsTab() {
 
       {/* Reject modal */}
       {rejectTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => { setRejectTarget(null); setRejectNote('') }} />
-          <div className="relative bg-surface-1 border border-border-default rounded-xl p-6 w-full max-w-sm shadow-2xl">
+          <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-sm shadow-2xl max-h-[92vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-display font-bold text-[16px] text-text-1">Reject Exception</h3>
               <button onClick={() => { setRejectTarget(null); setRejectNote('') }} className="text-text-4 hover:text-text-1"><X size={18} /></button>
@@ -1589,9 +1631,9 @@ function HolidaysTab() {
 
       {/* Add holiday modal */}
       {addOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setAddOpen(false)} />
-          <div className="relative bg-surface-1 border border-border-default rounded-xl p-6 w-full max-w-md shadow-2xl">
+          <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-md shadow-2xl max-h-[92vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-5">
               <h3 className="font-display font-bold text-[16px] text-text-1">Add Holiday</h3>
               <button onClick={() => setAddOpen(false)} className="text-text-4 hover:text-text-1"><X size={18} /></button>
@@ -1701,9 +1743,9 @@ function HolidaysTab() {
 
       {/* Delete confirm modal */}
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setDeleteTarget(null)} />
-          <div className="relative bg-surface-1 border border-border-default rounded-xl p-6 w-full max-w-sm shadow-2xl">
+          <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-sm shadow-2xl max-h-[92vh] overflow-y-auto">
             <h3 className="font-display font-bold text-[16px] text-text-1 mb-2">Remove Holiday?</h3>
             <p className="font-ui text-[13px] text-text-3 mb-5">
               This will remove the holiday. Attendance records already flipped to "holiday" status will not be automatically reverted.
@@ -1769,9 +1811,9 @@ function HolidaysTab() {
 
       {/* Add working Saturday modal */}
       {satPickerOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSatPickerOpen(false)} />
-          <div className="relative bg-surface-1 border border-border-default rounded-xl p-6 w-full max-w-sm shadow-2xl">
+          <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-sm shadow-2xl max-h-[92vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-5">
               <h3 className="font-display font-bold text-[16px] text-text-1">Mark Working Saturday</h3>
               <button onClick={() => setSatPickerOpen(false)} className="text-text-4 hover:text-text-1"><X size={18} /></button>
@@ -1811,9 +1853,9 @@ function HolidaysTab() {
 
       {/* Remove working Saturday confirm */}
       {satDeleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSatDeleteTarget(null)} />
-          <div className="relative bg-surface-1 border border-border-default rounded-xl p-6 w-full max-w-sm shadow-2xl">
+          <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-sm shadow-2xl max-h-[92vh] overflow-y-auto">
             <h3 className="font-display font-bold text-[16px] text-text-1 mb-2">Remove Working Saturday?</h3>
             <p className="font-ui text-[13px] text-text-3 mb-5">This Saturday will revert to a regular weekend day.</p>
             <div className="flex gap-2.5">
@@ -1892,7 +1934,7 @@ function OvertimeTab() {
     <div className="flex flex-col gap-5">
 
       {/* Summary cards */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: 'Pending Review',   value: pending,                              icon: Clock,        color: 'text-warning',      bg: 'bg-warning/10 border-warning/20' },
           { label: 'Approved',         value: approved,                             icon: CheckCircle2, color: 'text-success',      bg: 'bg-success/10 border-success/20' },
@@ -2020,9 +2062,9 @@ function OvertimeTab() {
 
       {/* Reject modal */}
       {rejectTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => { setRejectTarget(null); setRejectNote('') }} />
-          <div className="relative bg-surface-1 border border-border-default rounded-xl p-6 w-full max-w-sm shadow-2xl">
+          <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-sm shadow-2xl max-h-[92vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-display font-bold text-[16px] text-text-1">Reject Overtime</h3>
               <button onClick={() => { setRejectTarget(null); setRejectNote('') }} className="text-text-4 hover:text-text-1"><X size={18} /></button>
@@ -2326,7 +2368,7 @@ function ReportsTab() {
       </div>
 
       {/* Summary stat cards */}
-      <div className="grid grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         {[
           { label: 'Attendance Rate', value: `${attendanceRate}%`, icon: BarChart2,    color: attendanceRate >= 80 ? 'text-success' : attendanceRate >= 60 ? 'text-warning' : 'text-error', bg: attendanceRate >= 80 ? 'bg-success/10 border-success/20' : attendanceRate >= 60 ? 'bg-warning/10 border-warning/20' : 'bg-error/10 border-error/20' },
           { label: 'On-Time Rate',    value: `${onTimeRate}%`,    icon: CheckCircle2, color: onTimeRate >= 80 ? 'text-success' : onTimeRate >= 60 ? 'text-warning' : 'text-error', bg: onTimeRate >= 80 ? 'bg-success/10 border-success/20' : onTimeRate >= 60 ? 'bg-warning/10 border-warning/20' : 'bg-error/10 border-error/20' },
@@ -2717,7 +2759,7 @@ export default function AttendancePage() {
     <div className="flex flex-col flex-1">
       <Topbar title="Attendance" />
 
-      <div className="p-6 flex flex-col gap-6 max-w-content mx-auto w-full">
+      <div className="px-4 py-6 lg:p-6 flex flex-col gap-6 max-w-content mx-auto w-full">
 
         {/* Self Check-In Card */}
         <AttendanceCheckInCard />

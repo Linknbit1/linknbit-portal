@@ -1,63 +1,16 @@
 import { NavLink, useLocation } from 'react-router-dom'
-import {
-  LayoutDashboard,
-  FolderOpen,
-  Users,
-  UserCog,
-  CheckSquare,
-  BarChart2,
-  Trophy,
-  Link2,
-  Settings,
-  UserCircle,
-  ChevronRight,
-  CalendarCheck,
-  type LucideIcon,
-} from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import { cn } from '../../lib/cn'
-import { showWipFeatures } from '../../lib/featureFlags'
-import { isAuthoritative } from '../../lib/roles'
 import { useAuthContext } from '../../context/AuthContext'
-
-interface NavItem {
-  label: string
-  icon: LucideIcon
-  to: string
-  badge?: number
-  // Not yet production-ready — only rendered in development builds.
-  devOnly?: boolean
-  // Only rendered for authoritative (management) roles.
-  authoritativeOnly?: boolean
-}
-
-const NAV_ITEMS: NavItem[] = [
-  { label: 'Dashboard', icon: LayoutDashboard, to: '/dashboard' },
-  { label: 'Projects', icon: FolderOpen, to: '/admin/projects', badge: 2, devOnly: true },
-  { label: 'Clients', icon: UserCircle, to: '/admin/clients', devOnly: true },
-  { label: 'Teams', icon: Users, to: '/teams', authoritativeOnly: true },
-  { label: 'People', icon: UserCog, to: '/people', authoritativeOnly: true },
-  { label: 'Tasks', icon: CheckSquare, to: '/admin/tasks', badge: 7, devOnly: true },
-  { label: 'Attendance', icon: CalendarCheck, to: '/attendance' },
-  { label: 'Gamification', icon: Trophy, to: '/gamification' },
-  { label: 'Reports', icon: BarChart2, to: '/admin/reports', devOnly: true },
-  { label: 'ClickUp', icon: Link2, to: '/admin/clickup', devOnly: true },
-  { label: 'Settings', icon: Settings, to: '/settings' },
-]
+import { visibleNavItems } from './navItems'
 
 export function Sidebar() {
   const location = useLocation()
   const { profile } = useAuthContext()
-  const role = profile?.role ?? 'employee'
-
-  const authoritative = isAuthoritative(role)
-  const navItems = NAV_ITEMS.filter(
-    (item) =>
-      (showWipFeatures || !item.devOnly) &&
-      (authoritative || !item.authoritativeOnly),
-  )
+  const navItems = visibleNavItems(profile?.role)
 
   return (
-    <aside className="w-sidebar-expanded bg-surface-1 border-r border-border-default flex flex-col sticky top-0 h-screen overflow-y-auto flex-shrink-0">
+    <aside className="w-sidebar-expanded bg-surface-1 border-r border-border-default hidden lg:flex flex-col sticky top-0 h-screen overflow-y-auto flex-shrink-0">
       {/* Brand */}
       <div className="flex items-center gap-3 px-4 pt-5 pb-4 border-b border-border-subtle">
         <span className="w-7 h-7 rounded-sm bg-brand-red flex items-center justify-center flex-shrink-0">
