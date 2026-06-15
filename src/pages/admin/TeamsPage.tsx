@@ -1,52 +1,91 @@
-import { useState } from 'react'
-import { Users, Plus, Search, MoreHorizontal, Zap, CheckCircle2, X, Check } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { Users, Plus, X, Loader2, Pencil, UserPlus, UserMinus, Crown } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Avatar } from '../../components/ui/Avatar'
 import { Button } from '../../components/ui/Button'
+import { Input } from '../../components/ui/Input'
 import { Select } from '../../components/ui/Select'
 import { ServiceChip } from '../../components/shared/ServiceChip'
 import { useToast } from '../../components/ui/toast-context'
-import { TEAMS, USERS, PROJECTS, TEAM_PERFORMANCE } from '../../data/mock'
-import type { Team } from '../../types'
-import { cn } from '../../lib/cn'
+import { useAuthContext } from '../../context/AuthContext'
+import { useTeams, useCreateTeam, useUpdateTeam } from '../../hooks/useTeams'
+import { usePeople, useUpdatePersonRole } from '../../hooks/usePeople'
+import { useServices } from '../../hooks/useServices'
+import type { Team } from '../../api/teams'
+import type { Person } from '../../api/people'
+import { canManagePeople } from '../../lib/peopleAccess'
 
-const WORKLOAD_META = {
-  light:  { label: 'Light',  cls: 'text-success bg-success/10 border-success/30' },
-  medium: { label: 'Medium', cls: 'text-warning bg-warning/10 border-warning/30' },
-  heavy:  { label: 'Heavy',  cls: 'text-error bg-error/10 border-error/30' },
-}
+type Option = { value: string; label: string }
 
+// ── Create / edit team modal ───────────────────────────────────────────────────
 
-function AddMemberModal({ open, team, onClose, onAdd }: {
-  open: boolean
+function TeamModal({ team, people, serviceOptions, onClose }: {
   team: Team | null
+  people: Person[]
+  serviceOptions: Option[]
   onClose: () => void
-  onAdd: (teamId: string, userId: string) => void
 }) {
-  const [selected, setSelected] = useState('')
-  if (!open || !team) return null
+  const toast = useToast()
+  const { mutate: create, isPending: creating } = useCreateTeam()
+  const { mutate: update, isPending: updating } = useUpdateTeam()
+  const isEdit = team !== null
+  const [name, setName] = useState(team?.name ?? '')
+  const [service, setService] = useState(team?.service_type ?? serviceOptions[0]?.value ?? '')
+  const [leadId, setLeadId] = useState(team?.lead_id ?? '')
+  const isPending = creating || updating
 
-  const available = USERS.filter(
-    (u) => u.role !== 'client_owner' && u.role !== 'client_member' && !team.memberIds.includes(u.id)
-  )
+  // Only users who hold the Team Lead role may lead a team. Keep the current
+  // lead selectable even if their role later changed, so editing doesn't drop it.
+  const leadOptions = useMemo(() => {
+    const eligible = people.filter((p) => p.role === 'team_lead')
+    const opts = [{ value: '', label: 'No lead' }, ...eligible.map((p) => ({ value: p.id, label: p.name }))]
+    if (team?.lead_id && !eligible.some((p) => p.id === team.lead_id)) {
+      const cur = people.find((p) => p.id === team.lead_id)
+      if (cur) opts.splice(1, 0, { value: cur.id, label: `${cur.name} (current)` })
+    }
+    return opts
+  }, [people, team])
+
+  const submit = () => {
+    if (!name.trim()) return
+    const payload = { name: name.trim(), service_type: service, lead_id: leadId || null }
+    if (isEdit) {
+      update({ id: team.id, payload }, {
+        onSuccess: () => { toast('Team updated', 'success'); onClose() },
+        onError: (e) => toast(e.message.includes('unique') ? 'A team with that name exists' : 'Failed to update team', 'error'),
+      })
+    } else {
+      create(payload, {
+        onSuccess: () => { toast(`Team "${name}" created`, 'success'); onClose() },
+        onError: (e) => toast(e.message.includes('unique') ? 'A team with that name exists' : 'Failed to create team', 'error'),
+      })
+    }
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-surface-1 border border-border-default rounded-xl p-6 w-full max-w-sm shadow-2xl">
+      <div className="relative bg-surface-1 border border-border-default rounded-xl p-6 w-full max-w-md shadow-2xl">
         <div className="flex items-center justify-between mb-5">
-          <h3 className="font-display font-bold text-[16px] text-text-1">Add to {team.name}</h3>
-          <button onClick={onClose} className="text-text-4 hover:text-text-1 transition-colors"><X size={18} /></button>
+          <h3 className="font-display font-bold text-[16px] text-text-1">{isEdit ? 'Edit Team' : 'Create Team'}</h3>
+          <button onClick={onClose} className="text-text-4 hover:text-text-1"><X size={18} /></button>
         </div>
-        <Select
-          value={selected}
-          onChange={setSelected}
-          options={[{ value: '', label: 'Select member...' }, ...available.map((u) => ({ value: u.id, label: u.name }))]}
-        />
-        <div className="flex gap-2.5 mt-4">
+        <div className="space-y-3.5">
+          <Input label="Team name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Development Pod A" inputClassName="text-[13px]" />
+          <div>
+            <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Service</label>
+            <Select value={service} onChange={setService} options={serviceOptions} />
+          </div>
+          <div>
+            <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Team lead</label>
+            <Select value={leadId} onChange={setLeadId} options={leadOptions} />
+            {leadOptions.length === 1 && <p className="font-mono text-[10px] text-text-4 mt-1">No users with the Team Lead role yet.</p>}
+          </div>
+        </div>
+        <div className="flex gap-2.5 mt-5">
           <Button variant="ghost" size="sm" className="flex-1" onClick={onClose}>Cancel</Button>
-          <Button size="sm" className="flex-1" disabled={!selected} onClick={() => { onAdd(team.id, selected); onClose(); setSelected('') }}>
-            <Check size={14} /> Add
+          <Button size="sm" className="flex-1" disabled={!name.trim() || isPending} onClick={submit}>
+            {isPending ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />} {isEdit ? 'Save' : 'Create'}
           </Button>
         </div>
       </div>
@@ -54,174 +93,148 @@ function AddMemberModal({ open, team, onClose, onAdd }: {
   )
 }
 
-export default function TeamsPage() {
+// ── Add member modal ───────────────────────────────────────────────────────────
+
+function AddMemberModal({ team, candidates, onClose }: {
+  team: Team
+  candidates: Person[]
+  onClose: () => void
+}) {
   const toast = useToast()
-  const [teams, setTeams] = useState<Team[]>(TEAMS)
-  const [search, setSearch] = useState('')
-  const [addModal, setAddModal] = useState<{ open: boolean; team: Team | null }>({ open: false, team: null })
+  const { mutate: assign, isPending } = useUpdatePersonRole()
+  const [selected, setSelected] = useState('')
 
-  const filtered = teams.filter((t) =>
-    t.name.toLowerCase().includes(search.toLowerCase()) || t.leadName.toLowerCase().includes(search.toLowerCase())
-  )
-
-  const handleAddMember = (teamId: string, userId: string) => {
-    setTeams((prev) => prev.map((t) =>
-      t.id === teamId ? { ...t, memberIds: [...t.memberIds, userId] } : t
-    ))
-    const user = USERS.find((u) => u.id === userId)
-    toast(`${user?.name} added to team`, 'success')
+  const add = () => {
+    const person = candidates.find((p) => p.id === selected)
+    if (!person) return
+    assign({ profileId: person.id, role: person.role, teamId: team.id, serviceType: null }, {
+      onSuccess: () => { toast(`${person.name} added to ${team.name}`, 'success'); onClose() },
+      onError: () => toast('Failed to add member', 'error'),
+    })
   }
 
-  const handleRemoveMember = (teamId: string, userId: string) => {
-    const user = USERS.find((u) => u.id === userId)
-    setTeams((prev) => prev.map((t) =>
-      t.id === teamId ? { ...t, memberIds: t.memberIds.filter((id) => id !== userId) } : t
-    ))
-    toast(`${user?.name} removed from team`, 'info')
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-surface-1 border border-border-default rounded-xl p-6 w-full max-w-sm shadow-2xl">
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="font-display font-bold text-[16px] text-text-1">Add to {team.name}</h3>
+          <button onClick={onClose} className="text-text-4 hover:text-text-1"><X size={18} /></button>
+        </div>
+        <Select value={selected} onChange={setSelected} options={[{ value: '', label: 'Select member…' }, ...candidates.map((p) => ({ value: p.id, label: p.name }))]} />
+        <div className="flex gap-2.5 mt-4">
+          <Button variant="ghost" size="sm" className="flex-1" onClick={onClose}>Cancel</Button>
+          <Button size="sm" className="flex-1" disabled={!selected || isPending} onClick={add}>
+            {isPending ? <Loader2 size={13} className="animate-spin" /> : <UserPlus size={13} />} Add
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Page ─────────────────────────────────────────────────────────────────────────
+
+export default function TeamsPage() {
+  const toast = useToast()
+  const { profile } = useAuthContext()
+  const canManage = canManagePeople(profile?.role)
+
+  const { data: teams = [], isLoading } = useTeams()
+  const { data: people = [] } = usePeople()
+  const { data: services = [] } = useServices()
+  const { mutate: assign } = useUpdatePersonRole()
+
+  const serviceOptions = useMemo(
+    () => services.filter((s) => s.is_active).map((s) => ({ value: s.slug, label: s.name })),
+    [services],
+  )
+
+  const [teamModal, setTeamModal] = useState<Team | null | 'new'>(null)
+  const [addTo, setAddTo] = useState<Team | null>(null)
+
+  const membersByTeam = useMemo(() => {
+    const map = new Map<string, Person[]>()
+    for (const p of people) {
+      if (!p.team_id) continue
+      const list = map.get(p.team_id) ?? []
+      list.push(p)
+      map.set(p.team_id, list)
+    }
+    return map
+  }, [people])
+
+  const removeMember = (team: Team, person: Person) => {
+    assign({ profileId: person.id, role: person.role, teamId: null, serviceType: person.service_type }, {
+      onSuccess: () => toast(`${person.name} removed from ${team.name}`, 'success'),
+      onError: () => toast('Failed to remove member', 'error'),
+    })
   }
 
   return (
     <div className="flex flex-col flex-1">
       <Topbar title="Teams" />
-
-      <div className="p-6 flex flex-col gap-6 max-w-content mx-auto w-full">
-
-        {/* Header */}
-        <div className="flex items-center gap-3">
-          <div className="relative flex-1 max-w-[280px]">
-            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-4" />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search teams..."
-              className="w-full pl-8 pr-3 py-2 bg-surface-1 border border-border-default rounded-md text-[13px] font-ui text-text-1 placeholder:text-text-4 outline-none focus:border-border-focus"
-            />
-          </div>
-          <div className="ml-auto">
-            <Button onClick={() => toast('Create team modal coming soon', 'info')}>
-              <Plus size={14} /> New Team
-            </Button>
-          </div>
+      <div className="p-6 flex flex-col gap-5 max-w-content mx-auto w-full">
+        <div className="flex items-center justify-between">
+          <p className="font-mono text-[11.5px] text-text-3">{teams.length} team{teams.length === 1 ? '' : 's'} · {people.length} internal members</p>
+          {canManage && <Button size="sm" onClick={() => setTeamModal('new')}><Plus size={13} /> Create Team</Button>}
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-4">
-          {[
-            { label: 'Total Members', value: USERS.filter((u) => u.role === 'employee' || u.role === 'team_lead').length, icon: Users, color: 'text-service-dev' },
-            { label: 'Active Projects', value: PROJECTS.filter((p) => p.status === 'in_progress').length, icon: CheckCircle2, color: 'text-success' },
-            { label: 'Total XP Earned', value: TEAM_PERFORMANCE.reduce((s, m) => s + m.xp, 0).toLocaleString(), icon: Zap, color: 'text-coin-gold' },
-          ].map(({ label, value, icon: Icon, color }) => (
-            <div key={label} className="bg-surface-1 border border-border-default rounded-xl p-5 flex items-center gap-4">
-              <div className="w-11 h-11 rounded-xl bg-surface-2 border border-border-default flex items-center justify-center flex-shrink-0">
-                <Icon size={20} className={color} />
-              </div>
-              <div>
-                <p className="font-display font-bold text-[26px] text-text-1 leading-none">{value}</p>
-                <p className="font-ui text-[12px] text-text-3 mt-1">{label}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Teams */}
-        <div className="grid gap-5">
-          {filtered.map((team) => {
-            const members = USERS.filter((u) => team.memberIds.includes(u.id))
-            const perf = TEAM_PERFORMANCE.filter((p) => team.memberIds.includes(p.id))
-            const wl = WORKLOAD_META[team.avgWorkload]
-
-            return (
-              <div key={team.id} className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
-                {/* Team Header */}
-                <div className="flex items-center gap-4 px-6 py-4 border-b border-border-subtle">
-                  <div className="flex flex-col gap-1 flex-1 min-w-0">
-                    <div className="flex items-center gap-2.5">
-                      <h3 className="font-display font-bold text-[15px] text-text-1">{team.name}</h3>
-                      <ServiceChip service={team.department} />
-                      <span className={cn('text-[10.5px] font-ui font-semibold px-2 py-0.5 rounded-full border', wl.cls)}>
-                        {wl.label} workload
-                      </span>
+        {isLoading ? (
+          <div className="flex justify-center py-16 text-text-4"><Loader2 size={20} className="animate-spin" /></div>
+        ) : teams.length === 0 ? (
+          <div className="py-16 text-center text-text-4 font-ui text-[13px]">No teams yet.</div>
+        ) : (
+          <div className="grid grid-cols-2 gap-5">
+            {teams.map((team) => {
+              const members = membersByTeam.get(team.id) ?? []
+              const lead = people.find((p) => p.id === team.lead_id)
+              const candidates = people.filter((p) => p.team_id !== team.id && p.is_active)
+              return (
+                <div key={team.id} className="bg-surface-1 border border-border-default rounded-xl p-5 flex flex-col gap-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-lg bg-surface-2 flex items-center justify-center flex-shrink-0"><Users size={18} className="text-text-3" /></div>
+                      <div className="min-w-0">
+                        <p className="font-display font-bold text-[15px] text-text-1 truncate">{team.name}</p>
+                        <div className="flex items-center gap-2 mt-0.5"><ServiceChip service={team.service_type} /><span className="font-mono text-[11px] text-text-4">{members.length} member{members.length === 1 ? '' : 's'}</span></div>
+                      </div>
                     </div>
-                    <p className="text-[12px] font-mono text-text-4">
-                      Lead: <span className="text-text-2">{team.leadName}</span> · {members.length} members · {team.activeProjects} active projects
-                    </p>
+                    {canManage && <Button size="sm" variant="ghost" onClick={() => setTeamModal(team)}><Pencil size={13} /></Button>}
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setAddModal({ open: true, team })}
-                      className="h-8 px-3 bg-surface-2 border border-border-default rounded-md text-[12px] font-ui font-semibold text-text-2 hover:bg-surface-3 hover:text-text-1 flex items-center gap-1.5 transition-colors"
-                    >
-                      <Plus size={12} /> Add Member
-                    </button>
-                    <button
-                      onClick={() => toast('Team options menu', 'info')}
-                      className="w-8 h-8 bg-surface-2 border border-border-default rounded-md text-text-3 hover:text-text-1 flex items-center justify-center transition-colors"
-                    >
-                      <MoreHorizontal size={14} />
-                    </button>
-                  </div>
-                </div>
 
-                {/* Members */}
-                <div className="divide-y divide-border-subtle">
-                  {members.map((member) => {
-                    const memberPerf = perf.find((p) => p.id === member.id)
-                    const isLead = member.id === team.leadId
-                    return (
-                      <div key={member.id} className="flex items-center gap-4 px-6 py-3.5 hover:bg-white/[0.015] transition-colors">
-                        <Avatar name={member.name} size="sm" />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="font-ui font-semibold text-[13px] text-text-1">{member.name}</span>
-                            {isLead && (
-                              <span className="text-[9.5px] font-mono font-semibold text-brand-red bg-brand-red/10 border border-brand-red/30 px-1.5 py-[1px] rounded uppercase tracking-wider">
-                                Lead
-                              </span>
-                            )}
-                          </div>
-                          <p className="font-mono text-[11px] text-text-4 capitalize">{member.role.replace('_', ' ')}</p>
-                        </div>
-                        {memberPerf && (
-                          <div className="flex items-center gap-5 text-right">
-                            <div>
-                              <p className="font-mono text-[13px] font-semibold text-text-1">{memberPerf.tasksCompleted}</p>
-                              <p className="font-ui text-[10px] text-text-4">Tasks</p>
-                            </div>
-                            <div>
-                              <p className="font-mono text-[13px] font-semibold text-coin-gold">{memberPerf.xp.toLocaleString()}</p>
-                              <p className="font-ui text-[10px] text-text-4">XP</p>
-                            </div>
-                            <div>
-                              <span className={cn('text-[10.5px] font-ui font-semibold px-2 py-0.5 rounded-full border', WORKLOAD_META[memberPerf.workload].cls)}>
-                                {WORKLOAD_META[memberPerf.workload].label}
-                              </span>
-                            </div>
-                          </div>
-                        )}
-                        {!isLead && (
-                          <button
-                            onClick={() => handleRemoveMember(team.id, member.id)}
-                            className="w-7 h-7 rounded-md bg-surface-2 border border-border-default text-text-4 hover:text-error hover:border-error/30 hover:bg-error/10 flex items-center justify-center transition-colors ml-2"
-                          >
-                            <X size={12} />
-                          </button>
+                  <div className="flex items-center gap-2 text-[12px] font-ui text-text-3">
+                    <Crown size={13} className="text-coin-gold" />
+                    {lead ? <span className="text-text-2">{lead.name}</span> : <span className="text-text-4">No lead assigned</span>}
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    {members.length === 0 && <p className="font-ui text-[12px] text-text-4">No members yet.</p>}
+                    {members.map((m) => (
+                      <div key={m.id} className="flex items-center gap-2.5 group">
+                        <Avatar name={m.name} size="xs" />
+                        <span className="font-ui text-[12.5px] text-text-2 flex-1 truncate">{m.name}{m.id === team.lead_id && <span className="ml-1.5 font-mono text-[9px] text-coin-gold">LEAD</span>}</span>
+                        {canManage && (
+                          <button onClick={() => removeMember(team, m)} className="p-1 text-text-4 hover:text-error opacity-0 group-hover:opacity-100 transition-opacity" title="Remove from team"><UserMinus size={13} /></button>
                         )}
                       </div>
-                    )
-                  })}
+                    ))}
+                  </div>
+
+                  {canManage && (
+                    <Button size="sm" variant="secondary" className="w-full" disabled={candidates.length === 0} onClick={() => setAddTo(team)}>
+                      <UserPlus size={13} /> Add Member
+                    </Button>
+                  )}
                 </div>
-              </div>
-            )
-          })}
-        </div>
+              )
+            })}
+          </div>
+        )}
       </div>
 
-      <AddMemberModal
-        open={addModal.open}
-        team={addModal.team}
-        onClose={() => setAddModal({ open: false, team: null })}
-        onAdd={handleAddMember}
-      />
+      {teamModal !== null && <TeamModal team={teamModal === 'new' ? null : teamModal} people={people} serviceOptions={serviceOptions} onClose={() => setTeamModal(null)} />}
+      {addTo && <AddMemberModal team={addTo} candidates={people.filter((p) => p.team_id !== addTo.id && p.is_active)} onClose={() => setAddTo(null)} />}
     </div>
   )
 }

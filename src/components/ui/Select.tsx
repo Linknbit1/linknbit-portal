@@ -38,7 +38,7 @@ export function Select({ value, onChange, options, placeholder, label, className
         type="button"
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          'flex items-center gap-2 bg-surface-2 border border-border-default rounded-sm text-text-1 cursor-pointer whitespace-nowrap hover:bg-surface-3 transition-colors',
+          'w-full flex items-center gap-2 bg-surface-inset border border-border-default rounded-sm text-text-1 cursor-pointer whitespace-nowrap hover:bg-surface-2 transition-colors',
           size === 'sm' ? 'h-[30px] px-2.5 text-[11.5px]' : 'h-9 px-3 text-[12.5px]',
           open && 'border-border-focus',
         )}

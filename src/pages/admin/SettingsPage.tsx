@@ -1,23 +1,130 @@
-import { useState } from 'react'
-import { Check, Bell, Zap, Layers, Link2, Palette, Shield, ChevronRight, Loader2 } from 'lucide-react'
+import React, { useState } from 'react'
+import { Check, Bell, Layers, Link2, Palette, Shield, ChevronRight, Loader2, Shapes, Plus, Trash2 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Button } from '../../components/ui/Button'
 import { Toggle } from '../../components/ui/Toggle'
 import { useToast } from '../../components/ui/toast-context'
 import { useAuthContext } from '../../context/AuthContext'
 import { useRoleFlags, useUpdateRoleFlag } from '../../hooks/useRoleFlags'
+import {
+  useServices, useCreateService, useUpdateService, useDeleteService, useServiceUsage,
+} from '../../hooks/useServices'
+import type { Service } from '../../api/services'
 import { cn } from '../../lib/cn'
 
-type Tab = 'general' | 'xp' | 'stages' | 'notifications' | 'integrations' | 'permissions'
+type Tab = 'general' | 'services' | 'stages' | 'notifications' | 'integrations' | 'permissions'
 
 const TABS: { key: Tab; label: string; icon: typeof Check }[] = [
   { key: 'general',       label: 'General',       icon: Palette },
-  { key: 'xp',           label: 'XP & Rewards',   icon: Zap },
+  { key: 'services',     label: 'Services',        icon: Shapes },
   { key: 'stages',       label: 'Stages',          icon: Layers },
   { key: 'notifications', label: 'Notifications', icon: Bell },
   { key: 'integrations', label: 'Integrations',    icon: Link2 },
   { key: 'permissions',  label: 'Permissions',     icon: Shield },
 ]
+
+// ── Services management ──────────────────────────────────────────────────────────
+
+function ServiceRow({ service, canManage }: { service: Service; canManage: boolean }) {
+  const toast = useToast()
+  const { mutate: update, isPending: saving } = useUpdateService()
+  const { mutate: del, isPending: deleting } = useDeleteService()
+  const [name, setName] = useState(service.name)
+  const [color, setColor] = useState(service.color)
+  const [confirming, setConfirming] = useState(false)
+  const usage = useServiceUsage(service.slug, confirming)
+  const dirty = name !== service.name || color !== service.color
+  const inUse = (usage.data?.people ?? 0) + (usage.data?.teams ?? 0) > 0
+
+  const save = () => update(
+    { id: service.id, updates: { name: name.trim(), color } },
+    { onSuccess: () => toast('Service updated', 'success'), onError: (e) => toast(e.message.includes('unique') ? 'That name already exists' : 'Update failed', 'error') },
+  )
+  const remove = () => del(service.id, {
+    onSuccess: () => { toast('Service deleted', 'success'); setConfirming(false) },
+    onError: () => toast('Could not delete service', 'error'),
+  })
+
+  return (
+    <div className="grid grid-cols-[36px_1fr_auto_auto] gap-3 items-center px-4 py-2.5 border-b border-border-subtle last:border-0">
+      <input type="color" value={color} disabled={!canManage} onChange={(e) => setColor(e.target.value)}
+        className="w-8 h-8 rounded-md bg-transparent border border-border-default cursor-pointer disabled:cursor-default" aria-label={`${service.name} colour`} />
+      <div className="flex items-center gap-2 min-w-0">
+        <input value={name} disabled={!canManage} onChange={(e) => setName(e.target.value)}
+          className="bg-surface-inset border border-border-default rounded-md px-3 py-1.5 text-[13px] font-ui text-text-1 outline-none focus:border-border-focus w-52 disabled:opacity-70" />
+        <span className="font-mono text-[10px] text-text-4 truncate">{service.slug}</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <Toggle checked={service.is_active} onChange={(v) => canManage && update({ id: service.id, updates: { is_active: v } }, { onSuccess: () => toast(v ? 'Activated' : 'Deactivated', 'success') })} />
+        <span className="font-mono text-[10px] text-text-4 w-7">{service.is_active ? 'On' : 'Off'}</span>
+      </div>
+      {canManage && (
+        confirming ? (
+          <div className="flex items-center gap-2">
+            {usage.isLoading ? <Loader2 size={12} className="animate-spin text-text-4" />
+              : inUse ? <span className="font-mono text-[10.5px] text-error">In use: {usage.data?.people}p · {usage.data?.teams}t</span>
+              : <button onClick={remove} disabled={deleting} className="font-mono text-[10.5px] text-error font-bold">Delete</button>}
+            <button onClick={() => setConfirming(false)} className="font-mono text-[10.5px] text-text-3">Cancel</button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1.5">
+            {dirty && <Button size="sm" variant="secondary" disabled={saving} onClick={save}>Save</Button>}
+            <button onClick={() => setConfirming(true)} className="p-1.5 text-text-4 hover:text-error" title="Delete service"><Trash2 size={13} /></button>
+          </div>
+        )
+      )}
+    </div>
+  )
+}
+
+function ServicesPanel({ canManage }: { canManage: boolean }) {
+  const toast = useToast()
+  const { data: services = [], isLoading } = useServices()
+  const { mutate: create, isPending: creating } = useCreateService()
+  const [newName, setNewName] = useState('')
+  const [newColor, setNewColor] = useState('#A78BFA')
+
+  const add = () => {
+    if (!newName.trim()) return
+    create({ name: newName.trim(), color: newColor }, {
+      onSuccess: () => { toast('Service created', 'success'); setNewName(''); setNewColor('#A78BFA') },
+      onError: (e) => toast(/unique|duplicate/i.test(e.message) ? 'That name already exists' : 'Could not create service', 'error'),
+    })
+  }
+
+  return (
+    <div>
+      <h2 className="font-display font-bold text-[16px] text-text-1 mb-1">Services</h2>
+      <p className="font-ui text-[13px] text-text-3 mb-5">
+        Create, rename, recolour, or retire the service lines used across teams, people, and projects.
+        A service in use can't be deleted — reassign or deactivate it first.
+      </p>
+
+      <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
+        <div className="grid grid-cols-[36px_1fr_auto_auto] gap-3 px-4 py-2 border-b border-border-subtle bg-surface-2">
+          {['', 'Name', 'Active', ''].map((h, i) => <span key={i} className="font-mono text-[10px] text-text-4 uppercase tracking-wider">{h}</span>)}
+        </div>
+        {isLoading ? (
+          <div className="flex justify-center py-10 text-text-4"><Loader2 size={18} className="animate-spin" /></div>
+        ) : (
+          services.map((s) => <ServiceRow key={s.id} service={s} canManage={canManage} />)
+        )}
+        {canManage && (
+          <div className="grid grid-cols-[36px_1fr_auto] gap-3 items-center px-4 py-3 bg-surface-2/40">
+            <input type="color" value={newColor} onChange={(e) => setNewColor(e.target.value)}
+              className="w-8 h-8 rounded-md bg-transparent border border-border-default cursor-pointer" aria-label="New service colour" />
+            <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="New service name (e.g. SEO)"
+              className="bg-surface-inset border border-border-default rounded-md px-3 py-1.5 text-[13px] font-ui text-text-1 placeholder:text-text-4 outline-none focus:border-border-focus w-64" />
+            <Button size="sm" disabled={!newName.trim() || creating} onClick={add}>
+              {creating ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />} Add
+            </Button>
+          </div>
+        )}
+      </div>
+      {!canManage && <p className="font-mono text-[11px] text-text-4 mt-3">Only Super Admins and Admins can manage services.</p>}
+    </div>
+  )
+}
 
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
@@ -28,19 +135,6 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
       </div>
       <div className="flex-shrink-0 ml-6">{children}</div>
     </div>
-  )
-}
-
-function NumberInput({ value, onChange, min, max }: { value: number; onChange: (v: number) => void; min?: number; max?: number }) {
-  return (
-    <input
-      type="number"
-      value={value}
-      min={min}
-      max={max}
-      onChange={(e) => onChange(Number(e.target.value))}
-      className="w-20 bg-surface-inset border border-border-default rounded-md px-2.5 py-1.5 text-[13px] font-mono text-text-1 outline-none focus:border-border-focus text-right"
-    />
   )
 }
 
@@ -61,29 +155,25 @@ const ROLE_LABELS: Record<string, string> = {
   super_admin: 'Super Admin', admin: 'Admin', project_manager: 'PM',
   team_lead: 'Team Lead', employee: 'Employee', hr: 'HR', finance: 'Finance',
 }
-const FEATURE_ORDER = [
-  'can_view_reports', 'can_approve_tasks', 'can_delete_projects',
-  'can_manage_clients', 'can_view_clients', 'can_view_projects',
-  'can_manage_rewards', 'can_manage_quests', 'can_give_shoutout',
-  'can_mark_attendance', 'can_view_all_attendance',
-  'can_manage_people', 'can_grant_xp', 'can_manage_integrations',
-] as const
 const FEATURE_LABELS: Record<string, string> = {
-  can_view_reports: 'View Reports',
-  can_approve_tasks: 'Approve Tasks',
-  can_delete_projects: 'Delete Projects',
-  can_manage_clients: 'Manage Clients',
-  can_view_clients: 'View Clients',
-  can_view_projects: 'View Projects',
-  can_manage_rewards: 'Manage Rewards',
-  can_manage_quests: 'Manage Quests',
-  can_give_shoutout: 'Give Shoutouts',
-  can_mark_attendance: 'Mark Attendance',
-  can_view_all_attendance: 'View All Attendance',
-  can_manage_people: 'Manage People',
-  can_grant_xp: 'Grant XP',
-  can_manage_integrations: 'Manage Integrations',
+  can_view_reports:                'View Reports',
+  can_approve_tasks:               'Approve Tasks',
+  can_delete_projects:             'Delete Projects',
+  can_manage_clients:              'Manage Clients',
+  can_view_clients:                'View Clients',
+  can_view_projects:               'View Projects',
+  can_manage_people:               'Manage People',
+  can_manage_integrations:         'Manage Integrations',
 }
+
+const FEATURE_SECTIONS: { label: string; features: string[] }[] = [
+  { label: 'Projects',     features: ['can_view_projects', 'can_delete_projects'] },
+  { label: 'Tasks',        features: ['can_approve_tasks'] },
+  { label: 'Clients',      features: ['can_view_clients', 'can_manage_clients'] },
+  { label: 'People',       features: ['can_manage_people'] },
+  { label: 'Reports',      features: ['can_view_reports'] },
+  { label: 'Integrations', features: ['can_manage_integrations'] },
+]
 
 export default function SettingsPage() {
   const toast = useToast()
@@ -97,15 +187,6 @@ export default function SettingsPage() {
   // General
   const [agencyName, setAgencyName] = useState('Linknbit')
   const [timezone, setTimezone] = useState('Asia/Karachi')
-
-  // XP
-  const [easyTaskXP, setEasyTaskXP] = useState(25)
-  const [mediumTaskXP, setMediumTaskXP] = useState(50)
-  const [hardTaskXP, setHardTaskXP] = useState(85)
-  const [stdShoutoutXP, setStdShoutoutXP] = useState(100)
-  const [highShoutoutXP, setHighShoutoutXP] = useState(135)
-  const [monthlyReset, setMonthlyReset] = useState(true)
-  const [penaltyEnabled, setPenaltyEnabled] = useState(false)
 
   // Notifications
   const [notifTaskComplete, setNotifTaskComplete] = useState(true)
@@ -174,45 +255,7 @@ export default function SettingsPage() {
                 </div>
               )}
 
-              {activeTab === 'xp' && (
-                <div>
-                  <h2 className="font-display font-bold text-[16px] text-text-1 mb-1">XP & Rewards Rules</h2>
-                  <p className="font-ui text-[13px] text-text-3 mb-5">Configure Link Points (LP) values per the rewards policy.</p>
-
-                  <div className="mb-4">
-                    <p className="font-mono text-[10.5px] text-text-4 uppercase tracking-wider mb-2">Task Completion</p>
-                    <Field label="Easy Task" hint="Simple tasks (20–30 LP recommended)">
-                      <NumberInput value={easyTaskXP} onChange={setEasyTaskXP} min={10} max={50} />
-                    </Field>
-                    <Field label="Medium Task" hint="Standard tasks (40–60 LP recommended)">
-                      <NumberInput value={mediumTaskXP} onChange={setMediumTaskXP} min={20} max={80} />
-                    </Field>
-                    <Field label="Hard Task" hint="Complex/urgent tasks (70–100 LP recommended)">
-                      <NumberInput value={hardTaskXP} onChange={setHardTaskXP} min={50} max={120} />
-                    </Field>
-                  </div>
-
-                  <div className="mb-4">
-                    <p className="font-mono text-[10.5px] text-text-4 uppercase tracking-wider mb-2">Shoutouts</p>
-                    <Field label="Standard Shoutout" hint="Manager/TL/HR issued (100 LP recommended)">
-                      <NumberInput value={stdShoutoutXP} onChange={setStdShoutoutXP} min={50} max={150} />
-                    </Field>
-                    <Field label="High Impact Shoutout" hint="Exceptional contribution (120–150 LP)">
-                      <NumberInput value={highShoutoutXP} onChange={setHighShoutoutXP} min={100} max={200} />
-                    </Field>
-                  </div>
-
-                  <div>
-                    <p className="font-mono text-[10.5px] text-text-4 uppercase tracking-wider mb-2">System Rules</p>
-                    <Field label="Monthly LP Reset" hint="LP resets to zero at end of each month">
-                      <Toggle checked={monthlyReset} onChange={setMonthlyReset} />
-                    </Field>
-                    <Field label="LP Penalty Deduction" hint="Disabled per policy — use participation restriction instead">
-                      <Toggle checked={penaltyEnabled} onChange={setPenaltyEnabled} />
-                    </Field>
-                  </div>
-                </div>
-              )}
+              {activeTab === 'services' && <ServicesPanel canManage={canEditFlags} />}
 
               {activeTab === 'stages' && (
                 <div>
@@ -322,7 +365,7 @@ export default function SettingsPage() {
                       <table className="w-full text-[12px] min-w-[700px]">
                         <thead>
                           <tr className="border-b border-border-subtle">
-                            <th className="text-left py-2 font-mono text-text-4 uppercase text-[10px] tracking-wider pr-6 min-w-[160px]">Feature</th>
+                            <th className="text-left py-2 font-mono text-text-4 uppercase text-[10px] tracking-wider pr-6 min-w-[180px]">Feature</th>
                             {INTERNAL_ROLES.map((role) => (
                               <th key={role} className="text-center py-2 font-ui font-semibold text-text-3 px-2 min-w-[70px]">
                                 {ROLE_LABELS[role]}
@@ -331,34 +374,49 @@ export default function SettingsPage() {
                           </tr>
                         </thead>
                         <tbody>
-                          {FEATURE_ORDER.map((featureKey) => {
-                            const label = FEATURE_LABELS[featureKey] ?? featureKey
-                            return (
-                              <tr key={featureKey} className="border-b border-border-subtle last:border-0">
-                                <td className="py-3 font-ui text-[13px] text-text-2 pr-6 whitespace-nowrap">{label}</td>
-                                {INTERNAL_ROLES.map((role) => {
-                                  const flag = flags.find((f) => f.role === role && f.feature_key === featureKey)
-                                  const enabled = flag?.enabled ?? false
-                                  return (
-                                    <td key={role} className="text-center py-3 px-2">
-                                      <div className="flex justify-center">
-                                        <Toggle
-                                          checked={enabled}
-                                          onChange={(val) => {
-                                            if (!canEditFlags || updatingFlag) return
-                                            updateFlag(
-                                              { role, featureKey, enabled: val },
-                                              { onError: () => toast('Failed to update permission', 'error') },
-                                            )
-                                          }}
-                                        />
-                                      </div>
-                                    </td>
-                                  )
-                                })}
+                          {FEATURE_SECTIONS.map((section) => (
+                            <React.Fragment key={section.label}>
+                              <tr className="border-b border-border-subtle">
+                                <td
+                                  colSpan={INTERNAL_ROLES.length + 1}
+                                  className="py-2 px-3 bg-surface-2"
+                                >
+                                  <span className="font-mono text-[10px] font-semibold text-text-4 uppercase tracking-widest">
+                                    {section.label}
+                                  </span>
+                                </td>
                               </tr>
-                            )
-                          })}
+                              {section.features.map((featureKey, i) => {
+                                const label = FEATURE_LABELS[featureKey] ?? featureKey
+                                const isLast = i === section.features.length - 1
+                                return (
+                                  <tr key={featureKey} className={cn('border-b border-border-subtle', isLast && 'border-border-default')}>
+                                    <td className="py-3 pl-3 font-ui text-[13px] text-text-2 pr-6 whitespace-nowrap">{label}</td>
+                                    {INTERNAL_ROLES.map((role) => {
+                                      const flag = flags.find((f) => f.role === role && f.feature_key === featureKey)
+                                      const enabled = flag?.enabled ?? false
+                                      return (
+                                        <td key={role} className="text-center py-3 px-2">
+                                          <div className="flex justify-center">
+                                            <Toggle
+                                              checked={enabled}
+                                              onChange={(val) => {
+                                                if (!canEditFlags || updatingFlag) return
+                                                updateFlag(
+                                                  { role, featureKey, enabled: val },
+                                                  { onError: () => toast('Failed to update permission', 'error') },
+                                                )
+                                              }}
+                                            />
+                                          </div>
+                                        </td>
+                                      )
+                                    })}
+                                  </tr>
+                                )
+                              })}
+                            </React.Fragment>
+                          ))}
                         </tbody>
                       </table>
                     </div>

@@ -1,7 +1,3 @@
-// AUTO-GENERATED — do not hand-edit this file.
-// Regenerate after every migration:
-//   pnpm sb:types
-
 export type Json =
   | string
   | number
@@ -160,6 +156,7 @@ export type Database = {
         Row: {
           grace_period_min: number
           office_ip_cidr: string | null
+          saturday_working: boolean
           singleton: boolean
           timezone: string
           updated_at: string
@@ -171,6 +168,7 @@ export type Database = {
         Insert: {
           grace_period_min?: number
           office_ip_cidr?: string | null
+          saturday_working?: boolean
           singleton?: boolean
           timezone?: string
           updated_at?: string
@@ -182,6 +180,7 @@ export type Database = {
         Update: {
           grace_period_min?: number
           office_ip_cidr?: string | null
+          saturday_working?: boolean
           singleton?: boolean
           timezone?: string
           updated_at?: string
@@ -199,6 +198,88 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      badge_awards: {
+        Row: {
+          awarded_at: string
+          awarded_by: string | null
+          badge_id: string
+          id: string
+          profile_id: string
+        }
+        Insert: {
+          awarded_at?: string
+          awarded_by?: string | null
+          badge_id: string
+          id?: string
+          profile_id: string
+        }
+        Update: {
+          awarded_at?: string
+          awarded_by?: string | null
+          badge_id?: string
+          id?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "badge_awards_awarded_by_fkey"
+            columns: ["awarded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "badge_awards_badge_id_fkey"
+            columns: ["badge_id"]
+            isOneToOne: false
+            referencedRelation: "badges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "badge_awards_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      badges: {
+        Row: {
+          category: string
+          created_at: string
+          criteria_type: string
+          criteria_value: number
+          description: string | null
+          icon: string
+          id: string
+          is_active: boolean
+          name: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          criteria_type: string
+          criteria_value?: number
+          description?: string | null
+          icon?: string
+          id?: string
+          is_active?: boolean
+          name: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          criteria_type?: string
+          criteria_value?: number
+          description?: string | null
+          icon?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+        }
+        Relationships: []
       }
       enrolled_devices: {
         Row: {
@@ -251,6 +332,152 @@ export type Database = {
           },
         ]
       }
+      holidays: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          date: string
+          id: string
+          name: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          date: string
+          id?: string
+          name: string
+          type?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          date?: string
+          id?: string
+          name?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "holidays_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leave_requests: {
+        Row: {
+          created_at: string
+          days: number
+          end_date: string
+          id: string
+          leave_type_id: string
+          profile_id: string
+          reason: string
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          start_date: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          days?: number
+          end_date: string
+          id?: string
+          leave_type_id: string
+          profile_id: string
+          reason: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          start_date: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          days?: number
+          end_date?: string
+          id?: string
+          leave_type_id?: string
+          profile_id?: string
+          reason?: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          start_date?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leave_requests_leave_type_id_fkey"
+            columns: ["leave_type_id"]
+            isOneToOne: false
+            referencedRelation: "leave_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leave_requests_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leave_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leave_types: {
+        Row: {
+          color: string
+          created_at: string
+          created_by: string | null
+          days_allowed: number
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          created_by?: string | null
+          days_allowed?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          created_by?: string | null
+          days_allowed?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leave_types_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       levels: {
         Row: {
           label: string | null
@@ -268,6 +495,41 @@ export type Database = {
           xp_required?: number
         }
         Relationships: []
+      }
+      monthly_lp_history: {
+        Row: {
+          created_at: string
+          id: string
+          lp_final: number
+          period: string
+          profile_id: string
+          rank: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lp_final: number
+          period: string
+          profile_id: string
+          rank?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lp_final?: number
+          period?: string
+          profile_id?: string
+          rank?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monthly_lp_history_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notifications: {
         Row: {
@@ -310,6 +572,69 @@ export type Database = {
           },
         ]
       }
+      overtime_requests: {
+        Row: {
+          created_at: string
+          date: string
+          end_time: string
+          hours: number
+          id: string
+          profile_id: string
+          reason: string
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          start_time: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          end_time: string
+          hours: number
+          id?: string
+          profile_id: string
+          reason: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          start_time: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          end_time?: string
+          hours?: number
+          id?: string
+          profile_id?: string
+          reason?: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          start_time?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "overtime_requests_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "overtime_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -318,14 +643,19 @@ export type Database = {
           email: string
           id: string
           is_active: boolean
+          is_restricted: boolean
           last_seen_at: string | null
           level: number
+          lp_balance: number
           name: string
+          reputation_total: number
+          restricted_at: string | null
+          restricted_by: string | null
+          restricted_reason: string | null
           role: string
           service_type: string | null
           team_id: string | null
           updated_at: string
-          xp_total: number
         }
         Insert: {
           avatar_url?: string | null
@@ -334,14 +664,19 @@ export type Database = {
           email: string
           id: string
           is_active?: boolean
+          is_restricted?: boolean
           last_seen_at?: string | null
           level?: number
+          lp_balance?: number
           name: string
+          reputation_total?: number
+          restricted_at?: string | null
+          restricted_by?: string | null
+          restricted_reason?: string | null
           role?: string
           service_type?: string | null
           team_id?: string | null
           updated_at?: string
-          xp_total?: number
         }
         Update: {
           avatar_url?: string | null
@@ -350,14 +685,19 @@ export type Database = {
           email?: string
           id?: string
           is_active?: boolean
+          is_restricted?: boolean
           last_seen_at?: string | null
           level?: number
+          lp_balance?: number
           name?: string
+          reputation_total?: number
+          restricted_at?: string | null
+          restricted_by?: string | null
+          restricted_reason?: string | null
           role?: string
           service_type?: string | null
           team_id?: string | null
           updated_at?: string
-          xp_total?: number
         }
         Relationships: [
           {
@@ -374,82 +714,134 @@ export type Database = {
             referencedRelation: "levels"
             referencedColumns: ["level"]
           },
+          {
+            foreignKeyName: "profiles_restricted_by_fkey"
+            columns: ["restricted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
-      quest_progress: {
+      quest_task_claims: {
         Row: {
-          completed: boolean
-          completed_at: string | null
+          claimed_at: string
+          id: string
+          lp_awarded: number | null
           profile_id: string
-          progress: number
-          quest_id: string
+          proof_note: string | null
+          proof_url: string | null
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          submitted_at: string | null
+          task_id: string
         }
         Insert: {
-          completed?: boolean
-          completed_at?: string | null
+          claimed_at?: string
+          id?: string
+          lp_awarded?: number | null
           profile_id: string
-          progress?: number
-          quest_id: string
+          proof_note?: string | null
+          proof_url?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string | null
+          task_id: string
         }
         Update: {
-          completed?: boolean
-          completed_at?: string | null
+          claimed_at?: string
+          id?: string
+          lp_awarded?: number | null
           profile_id?: string
-          progress?: number
-          quest_id?: string
+          proof_note?: string | null
+          proof_url?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string | null
+          task_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "quest_progress_profile_id_fkey"
+            foreignKeyName: "quest_task_claims_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "quest_progress_quest_id_fkey"
-            columns: ["quest_id"]
+            foreignKeyName: "quest_task_claims_reviewed_by_fkey"
+            columns: ["reviewed_by"]
             isOneToOne: false
-            referencedRelation: "quests"
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quest_task_claims_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "quest_tasks"
             referencedColumns: ["id"]
           },
         ]
       }
-      quests: {
+      quest_tasks: {
         Row: {
-          condition_type: string
-          condition_value: Json
           created_at: string
+          created_by: string | null
+          deadline: string | null
           description: string | null
+          difficulty: string
           id: string
-          is_active: boolean
-          repeatable: boolean
+          lp_value: number
+          max_claims: number
+          requires_proof: boolean
+          status: string
           title: string
-          xp_reward: number
+          updated_at: string
         }
         Insert: {
-          condition_type: string
-          condition_value: Json
           created_at?: string
+          created_by?: string | null
+          deadline?: string | null
           description?: string | null
+          difficulty: string
           id?: string
-          is_active?: boolean
-          repeatable?: boolean
+          lp_value: number
+          max_claims?: number
+          requires_proof?: boolean
+          status?: string
           title: string
-          xp_reward: number
+          updated_at?: string
         }
         Update: {
-          condition_type?: string
-          condition_value?: Json
           created_at?: string
+          created_by?: string | null
+          deadline?: string | null
           description?: string | null
+          difficulty?: string
           id?: string
-          is_active?: boolean
-          repeatable?: boolean
+          lp_value?: number
+          max_claims?: number
+          requires_proof?: boolean
+          status?: string
           title?: string
-          xp_reward?: number
+          updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "quest_tasks_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reward_redemptions: {
         Row: {
@@ -517,8 +909,10 @@ export type Database = {
           id: string
           image_url: string | null
           is_active: boolean
+          is_cash: boolean
           name: string
           quantity: number | null
+          tier: string
           xp_cost: number
         }
         Insert: {
@@ -528,8 +922,10 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean
+          is_cash?: boolean
           name: string
           quantity?: number | null
+          tier?: string
           xp_cost: number
         }
         Update: {
@@ -539,8 +935,10 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean
+          is_cash?: boolean
           name?: string
           quantity?: number | null
+          tier?: string
           xp_cost?: number
         }
         Relationships: [
@@ -585,6 +983,111 @@ export type Database = {
           },
         ]
       }
+      services: {
+        Row: {
+          color: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          name: string
+          slug: string
+        }
+        Insert: {
+          color: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          slug: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          slug?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "services_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shoutouts: {
+        Row: {
+          category: string
+          created_at: string
+          from_profile_id: string
+          id: string
+          impact: string
+          lp_value: number
+          message: string
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          to_profile_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          from_profile_id: string
+          id?: string
+          impact?: string
+          lp_value: number
+          message: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          to_profile_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          from_profile_id?: string
+          id?: string
+          impact?: string
+          lp_value?: number
+          message?: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          to_profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shoutouts_from_profile_id_fkey"
+            columns: ["from_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shoutouts_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shoutouts_to_profile_id_fkey"
+            columns: ["to_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       teams: {
         Row: {
           created_at: string
@@ -611,6 +1114,95 @@ export type Database = {
           {
             foreignKeyName: "teams_lead_id_fkey"
             columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wfh_requests: {
+        Row: {
+          created_at: string
+          date: string
+          granted_directly: boolean
+          id: string
+          profile_id: string
+          reason: string
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          granted_directly?: boolean
+          id?: string
+          profile_id: string
+          reason: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          granted_directly?: boolean
+          id?: string
+          profile_id?: string
+          reason?: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wfh_requests_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wfh_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      working_saturdays: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          date: string
+          id: string
+          note: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          date: string
+          id?: string
+          note?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          date?: string
+          id?: string
+          note?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "working_saturdays_created_by_fkey"
+            columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -667,14 +1259,74 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_run_monthly_reset: { Args: never; Returns: undefined }
+      admin_set_profile_active: {
+        Args: { p_active: boolean; p_profile_id: string }
+        Returns: undefined
+      }
+      admin_update_profile_details: {
+        Args: { p_avatar_url?: string; p_name: string; p_profile_id: string }
+        Returns: undefined
+      }
+      admin_update_profile_role: {
+        Args: { p_profile_id: string; p_role: string; p_service_type?: string; p_team_id?: string }
+        Returns: undefined
+      }
+      award_badge: {
+        Args: { p_badge_id: string; p_profile_id: string }
+        Returns: undefined
+      }
+      can_govern_gamification: { Args: never; Returns: boolean }
+      can_grant_role: { Args: { p_role: string }; Returns: boolean }
+      can_manage_target: { Args: { p_target_role: string }; Returns: boolean }
+      can_recognize: { Args: never; Returns: boolean }
+      claim_quest_task: { Args: { p_task_id: string }; Returns: string }
       current_user_role: { Args: never; Returns: string }
+      fn_auto_checkout_missing: { Args: never; Returns: undefined }
+      fn_award_badges: { Args: { p_profile_id: string }; Returns: undefined }
+      fn_is_working_day: { Args: { d: string }; Returns: boolean }
+      fn_mark_absent_for_date: { Args: { d: string }; Returns: undefined }
+      fn_mark_absent_today: { Args: never; Returns: undefined }
+      fn_monthly_lp_reset: { Args: never; Returns: undefined }
+      give_shoutout: {
+        Args: {
+          p_category: string
+          p_impact?: string
+          p_message: string
+          p_to_profile_id: string
+        }
+        Returns: string
+      }
       is_internal: { Args: never; Returns: boolean }
       is_project_member: { Args: { p_project_id: string }; Returns: boolean }
       redeem_reward: {
         Args: { p_profile_id: string; p_reward_id: string }
         Returns: string
       }
-      start_quest: { Args: { p_quest_id: string }; Returns: undefined }
+      review_quest_task: {
+        Args: { p_approve: boolean; p_claim_id: string; p_note?: string }
+        Returns: undefined
+      }
+      review_redemption: {
+        Args: { p_action: string; p_id: string; p_note?: string }
+        Returns: undefined
+      }
+      review_shoutout: {
+        Args: { p_approve: boolean; p_id: string; p_note?: string }
+        Returns: undefined
+      }
+      set_participation_restriction: {
+        Args: { p_profile_id: string; p_reason?: string; p_restricted: boolean }
+        Returns: undefined
+      }
+      submit_quest_task: {
+        Args: {
+          p_claim_id: string
+          p_proof_note?: string
+          p_proof_url?: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       queue_status: "pending" | "processing" | "done" | "failed"

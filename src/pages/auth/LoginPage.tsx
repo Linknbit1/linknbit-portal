@@ -37,37 +37,103 @@ interface DemoAccount extends SplashUser {
 
 const DEMO_ACCOUNTS: DemoAccount[] = [
   {
-    email: 'ghayas@linknbit.com',
-    password: 'demo-admin',
+    email: 'ghayasleo99@gmail.com',
+    password: '@@0Ghayas!!!',
     label: 'Admin',
     labelClass: 'text-brand-red',
-    initials: 'GK',
-    name: 'Ghayas Karimi',
+    initials: 'GU',
+    name: 'Ghayas Ud Din',
     role: 'Operations Admin',
-    pod: 'Admin pod',
+    pod: 'Admin',
     path: '/admin/dashboard',
   },
   {
-    email: 'usman@linknbit.com',
-    password: 'demo-employee',
+    email: 'super.admin@linknbit.com',
+    password: 'Linknbit@123',
+    label: 'Super Admin',
+    labelClass: 'text-brand-red',
+    initials: 'AR',
+    name: 'Ahmad Raza',
+    role: 'Super Admin',
+    pod: 'Admin',
+    path: '/admin/dashboard',
+  },
+  {
+    email: 'project.manager@linknbit.com',
+    password: 'Linknbit@123',
+    label: 'Proj. Manager',
+    labelClass: 'text-service-dev',
+    initials: 'ZM',
+    name: 'Zain Malik',
+    role: 'Project Manager',
+    pod: 'Dev pod',
+    path: '/admin/dashboard',
+  },
+  {
+    email: 'team.lead@linknbit.com',
+    password: 'Linknbit@123',
+    label: 'Team Lead',
+    labelClass: 'text-service-dev',
+    initials: 'SQ',
+    name: 'Sara Qureshi',
+    role: 'Team Lead',
+    pod: 'Dev pod',
+    path: '/admin/dashboard',
+  },
+  {
+    email: 'employee@linknbit.com',
+    password: 'Linknbit@123',
     label: 'Employee',
     labelClass: 'text-service-dev',
-    initials: 'UT',
-    name: 'Usman Tariq',
-    role: 'Lead Developer',
+    initials: 'BA',
+    name: 'Bilal Ahmed',
+    role: 'Employee',
     pod: 'Dev pod',
     path: '/employee/dashboard',
   },
   {
-    email: 'imran@cricketsansar.com',
-    password: 'demo-client',
-    label: 'Client',
+    email: 'hr@linknbit.com',
+    password: 'Linknbit@123',
+    label: 'HR',
+    labelClass: 'text-service-design',
+    initials: 'HR',
+    name: 'Hina Rizvi',
+    role: 'HR Manager',
+    pod: 'People',
+    path: '/admin/dashboard',
+  },
+  {
+    email: 'finance@linknbit.com',
+    password: 'Linknbit@123',
+    label: 'Finance',
     labelClass: 'text-service-mkt',
-    initials: 'IK',
-    name: 'Imran Khan',
-    role: 'Client',
+    initials: 'UT',
+    name: 'Usman Tariq',
+    role: 'Finance',
+    pod: 'Finance',
+    path: '/admin/dashboard',
+  },
+  {
+    email: 'client.owner@cricketsansar.com',
+    password: 'Linknbit@123',
+    label: 'Client Owner',
+    labelClass: 'text-service-mkt',
+    initials: 'RG',
+    name: 'Rahim Gul',
+    role: 'Client Owner',
     pod: 'Cricket Sansar',
-    path: '/client/projects',
+    path: '/client/dashboard',
+  },
+  {
+    email: 'client.member@cricketsansar.com',
+    password: 'Linknbit@123',
+    label: 'Client Member',
+    labelClass: 'text-service-mkt',
+    initials: 'IT',
+    name: 'Irene Teo',
+    role: 'Client Member',
+    pod: 'Cricket Sansar',
+    path: '/client/dashboard',
   },
 ]
 
@@ -284,19 +350,19 @@ function OtpBoxes({
   onChange: (v: string[]) => void
   invalid?: boolean
 }) {
-  const refs = Array.from({ length: 6 }, () => useRef<HTMLInputElement>(null))
+  const refs = useRef<Array<HTMLInputElement | null>>([])
 
   function handleChange(index: number, raw: string) {
     const digit = raw.replace(/\D/g, '').slice(-1)
     const next = [...value]
     next[index] = digit
     onChange(next)
-    if (digit && index < 5) refs[index + 1].current?.focus()
+    if (digit && index < 5) refs.current[index + 1]?.focus()
   }
 
   function handleKeyDown(index: number, e: React.KeyboardEvent) {
     if (e.key === 'Backspace' && !value[index] && index > 0) {
-      refs[index - 1].current?.focus()
+      refs.current[index - 1]?.focus()
     }
   }
 
@@ -308,15 +374,15 @@ function OtpBoxes({
     digits.split('').forEach((d, i) => { next[i] = d })
     onChange(next)
     const focusIdx = Math.min(digits.length, 5)
-    refs[focusIdx].current?.focus()
+    refs.current[focusIdx]?.focus()
   }
 
   return (
     <div className="flex justify-center gap-3">
-      {refs.map((ref, i) => (
+      {Array.from({ length: 6 }, (_, i) => (
         <input
           key={i}
-          ref={ref}
+          ref={(node) => { refs.current[i] = node }}
           type="text"
           inputMode="numeric"
           maxLength={1}

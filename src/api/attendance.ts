@@ -5,6 +5,8 @@ export type AttendanceRow = Tables<'attendance'>
 export type AttendanceSettings = Tables<'attendance_settings'>
 export type EnrolledDevice = Tables<'enrolled_devices'>
 export type AttendanceException = Tables<'attendance_exceptions'>
+export type HolidayRow = Tables<'holidays'>
+export type OvertimeRequest = Tables<'overtime_requests'>
 
 export interface CheckInResult {
   status: 'present' | 'late'
@@ -110,7 +112,9 @@ export async function fetchMyAttendance(days = 30): Promise<AttendanceRow[]> {
 export async function fetchMyTodayAttendance(): Promise<AttendanceRow | null> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
-  const today = new Date().toISOString().split('T')[0]
+  // Local calendar date (matches localToday() in the UI and the check-in Edge Function),
+  // NOT toISOString() which is UTC and rolls over a day early in UTC+ timezones.
+  const today = new Intl.DateTimeFormat('en-CA').format(new Date())
   const { data, error } = await supabase
     .from('attendance')
     .select('*')
@@ -324,6 +328,32 @@ export async function logOooReturn(id: string): Promise<AttendanceException> {
   return data
 }
 
+// ── Monthly attendance report (admin/HR) ─────────────────────────────────────
+
+export interface MonthlyReportRow extends AttendanceWithProfile {
+  profiles: { name: string; avatar_url: string | null; role: string } | null
+}
+
+export async function fetchMonthlyAttendance(
+  year: number,
+  month: number, // 1-indexed
+): Promise<MonthlyReportRow[]> {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const from = `${year}-${pad(month)}-01`
+  // Last day of the month
+  const last = new Date(year, month, 0).getDate()
+  const to   = `${year}-${pad(month)}-${pad(last)}`
+
+  const { data, error } = await supabase
+    .from('attendance')
+    .select('*, profiles!attendance_profile_id_fkey(name, avatar_url, role)')
+    .gte('date', from)
+    .lte('date', to)
+    .order('date', { ascending: true })
+  if (error) throw error
+  return data as unknown as MonthlyReportRow[]
+}
+
 // ── Admin: exceptions with profile join ───────────────────────────────────────
 
 export interface AttendanceExceptionWithProfile extends AttendanceException {
@@ -345,4 +375,417 @@ export async function fetchAllAttendanceExceptions(
   if (error) throw error
   // as unknown: Supabase cannot infer the joined shape when multiple FKs exist on profiles
   return data as unknown as AttendanceExceptionWithProfile[]
+}
+
+// ── Holidays ──────────────────────────────────────────────────────────────────
+
+export async function fetchHolidays(year?: number): Promise<HolidayRow[]> {
+  let q = supabase.from('holidays').select('*').order('date', { ascending: true })
+  if (year) {
+    q = q.gte('date', `${year}-01-01`).lte('date', `${year}-12-31`)
+  }
+  const { data, error } = await q
+  if (error) throw error
+  return data
+}
+
+export interface CreateHolidayPayload {
+  date: string
+  name: string
+  type: 'public_holiday' | 'company_off' | 'optional'
+}
+
+export async function createHoliday(
+  payload: CreateHolidayPayload,
+  createdBy: string,
+): Promise<HolidayRow> {
+  const { data, error } = await supabase
+    .from('holidays')
+    .insert({ ...payload, created_by: createdBy })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function createHolidayRange(
+  startDate: string,
+  endDate: string,
+  name: string,
+  type: CreateHolidayPayload['type'],
+  createdBy: string,
+): Promise<HolidayRow[]> {
+  const dates: string[] = []
+  const cur = new Date(startDate + 'T00:00:00')
+  const end = new Date(endDate   + 'T00:00:00')
+  while (cur <= end) {
+    const y = cur.getFullYear()
+    const m = String(cur.getMonth() + 1).padStart(2, '0')
+    const d = String(cur.getDate()).padStart(2, '0')
+    dates.push(`${y}-${m}-${d}`)
+    cur.setDate(cur.getDate() + 1)
+  }
+  const rows = dates.map((date) => ({ date, name, type, created_by: createdBy }))
+  const { data, error } = await supabase.from('holidays').insert(rows).select()
+  if (error) throw error
+  return data
+}
+
+export async function deleteHoliday(id: string): Promise<void> {
+  const { error } = await supabase.from('holidays').delete().eq('id', id)
+  if (error) throw error
+}
+
+// ── Working Saturdays ─────────────────────────────────────────────────────────
+
+export type WorkingSaturday = Tables<'working_saturdays'>
+
+export async function fetchWorkingSaturdays(year?: number): Promise<WorkingSaturday[]> {
+  let q = supabase.from('working_saturdays').select('*').order('date', { ascending: true })
+  if (year) q = q.gte('date', `${year}-01-01`).lte('date', `${year}-12-31`)
+  const { data, error } = await q
+  if (error) throw error
+  return data
+}
+
+export async function addWorkingSaturday(
+  date: string,
+  note: string | null,
+  createdBy: string,
+): Promise<WorkingSaturday> {
+  const { data, error } = await supabase
+    .from('working_saturdays')
+    .insert({ date, note, created_by: createdBy })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function removeWorkingSaturday(id: string): Promise<void> {
+  const { error } = await supabase.from('working_saturdays').delete().eq('id', id)
+  if (error) throw error
+}
+
+// ── Overtime requests ─────────────────────────────────────────────────────────
+
+export interface OvertimeRequestWithProfile extends OvertimeRequest {
+  profiles: { name: string; avatar_url: string | null } | null
+}
+
+export interface SubmitOvertimePayload {
+  date: string
+  start_time: string
+  end_time: string
+  hours: number
+  reason: string
+}
+
+export async function submitOvertimeRequest(
+  payload: SubmitOvertimePayload,
+): Promise<OvertimeRequest> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+  const { data, error } = await supabase
+    .from('overtime_requests')
+    .insert({ ...payload, profile_id: user.id })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function fetchMyOvertimeRequests(): Promise<OvertimeRequest[]> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+  const { data, error } = await supabase
+    .from('overtime_requests')
+    .select('*')
+    .eq('profile_id', user.id)
+    .order('date', { ascending: false })
+  if (error) throw error
+  return data
+}
+
+export async function fetchAllOvertimeRequests(
+  status?: string,
+): Promise<OvertimeRequestWithProfile[]> {
+  let q = supabase
+    .from('overtime_requests')
+    .select('*, profiles!overtime_requests_profile_id_fkey(name, avatar_url)')
+    .order('date', { ascending: false })
+  if (status) q = q.eq('status', status)
+  const { data, error } = await q
+  if (error) throw error
+  return data as unknown as OvertimeRequestWithProfile[]
+}
+
+export async function reviewOvertimeRequest(
+  id: string,
+  status: 'approved' | 'rejected',
+  reviewedBy: string,
+  reviewNote?: string,
+): Promise<OvertimeRequest> {
+  const { data, error } = await supabase
+    .from('overtime_requests')
+    .update({
+      status,
+      reviewed_by: reviewedBy,
+      reviewed_at: new Date().toISOString(),
+      review_note: reviewNote ?? null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+// ── WFH requests ──────────────────────────────────────────────────────────────
+
+export type WfhRequest = Tables<'wfh_requests'>
+
+export interface WfhRequestWithProfile extends WfhRequest {
+  profiles: { name: string; avatar_url: string | null } | null
+}
+
+export async function submitWfhRequest(payload: { date: string; reason: string }): Promise<WfhRequest> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+  const { data, error } = await supabase
+    .from('wfh_requests')
+    .insert({ profile_id: user.id, date: payload.date, reason: payload.reason })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function fetchMyWfhRequests(): Promise<WfhRequest[]> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+  const { data, error } = await supabase
+    .from('wfh_requests')
+    .select('*')
+    .eq('profile_id', user.id)
+    .order('date', { ascending: false })
+  if (error) throw error
+  return data
+}
+
+export async function fetchAllWfhRequests(status?: string): Promise<WfhRequestWithProfile[]> {
+  let q = supabase
+    .from('wfh_requests')
+    .select('*, profiles!wfh_requests_profile_id_fkey(name, avatar_url)')
+    .order('created_at', { ascending: false })
+  if (status) q = q.eq('status', status)
+  const { data, error } = await q
+  if (error) throw error
+  // as unknown: Supabase cannot infer the joined shape when multiple FKs exist on profiles
+  return data as unknown as WfhRequestWithProfile[]
+}
+
+export async function reviewWfhRequest(
+  id: string,
+  status: 'approved' | 'rejected',
+  reviewedBy: string,
+  reviewNote?: string,
+): Promise<WfhRequest> {
+  const { data, error } = await supabase
+    .from('wfh_requests')
+    .update({
+      status,
+      reviewed_by: reviewedBy,
+      reviewed_at: new Date().toISOString(),
+      review_note: reviewNote ?? null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function grantWfh(
+  profileId: string,
+  date: string,
+  reason: string,
+  grantedBy: string,
+): Promise<WfhRequest> {
+  const { data, error } = await supabase
+    .from('wfh_requests')
+    .insert({
+      profile_id: profileId,
+      date,
+      reason,
+      status: 'approved',
+      granted_directly: true,
+      reviewed_by: grantedBy,
+      reviewed_at: new Date().toISOString(),
+    })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+// ── Leave types (admin-defined, with yearly quota) ────────────────────────────
+
+export type LeaveType = Tables<'leave_types'>
+
+export async function fetchLeaveTypes(activeOnly = false): Promise<LeaveType[]> {
+  let q = supabase.from('leave_types').select('*').order('name', { ascending: true })
+  if (activeOnly) q = q.eq('is_active', true)
+  const { data, error } = await q
+  if (error) throw error
+  return data
+}
+
+export interface LeaveTypePayload {
+  name: string
+  days_allowed: number
+  color?: string
+  is_active?: boolean
+}
+
+export async function createLeaveType(payload: LeaveTypePayload, createdBy: string): Promise<LeaveType> {
+  const { data, error } = await supabase
+    .from('leave_types')
+    .insert({ ...payload, created_by: createdBy })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function updateLeaveType(
+  id: string,
+  payload: TablesUpdate<'leave_types'>,
+): Promise<LeaveType> {
+  const { data, error } = await supabase
+    .from('leave_types')
+    .update({ ...payload, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function deleteLeaveType(id: string): Promise<void> {
+  const { error } = await supabase.from('leave_types').delete().eq('id', id)
+  if (error) throw error
+}
+
+// ── Leave requests ────────────────────────────────────────────────────────────
+
+export type LeaveRequest = Tables<'leave_requests'>
+
+export interface LeaveRequestWithType extends LeaveRequest {
+  leave_types: { name: string; color: string } | null
+}
+
+export interface LeaveRequestWithProfile extends LeaveRequest {
+  profiles: { name: string; avatar_url: string | null } | null
+  leave_types: { name: string; color: string } | null
+}
+
+export interface SubmitLeavePayload {
+  leave_type_id: string
+  start_date: string
+  end_date: string
+  reason: string
+}
+
+export async function submitLeaveRequest(payload: SubmitLeavePayload): Promise<LeaveRequest> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+  const { data, error } = await supabase
+    .from('leave_requests')
+    .insert({ ...payload, profile_id: user.id })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function fetchMyLeaveRequests(): Promise<LeaveRequestWithType[]> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+  const { data, error } = await supabase
+    .from('leave_requests')
+    .select('*, leave_types(name, color)')
+    .eq('profile_id', user.id)
+    .order('start_date', { ascending: false })
+  if (error) throw error
+  return data as unknown as LeaveRequestWithType[]
+}
+
+export async function fetchAllLeaveRequests(status?: string): Promise<LeaveRequestWithProfile[]> {
+  let q = supabase
+    .from('leave_requests')
+    .select('*, profiles!leave_requests_profile_id_fkey(name, avatar_url), leave_types(name, color)')
+    .order('created_at', { ascending: false })
+  if (status) q = q.eq('status', status)
+  const { data, error } = await q
+  if (error) throw error
+  // as unknown: Supabase cannot infer the joined shape when multiple FKs exist on profiles
+  return data as unknown as LeaveRequestWithProfile[]
+}
+
+export async function reviewLeaveRequest(
+  id: string,
+  status: 'approved' | 'rejected',
+  reviewedBy: string,
+  reviewNote?: string,
+): Promise<LeaveRequest> {
+  const { data, error } = await supabase
+    .from('leave_requests')
+    .update({
+      status,
+      reviewed_by: reviewedBy,
+      reviewed_at: new Date().toISOString(),
+      review_note: reviewNote ?? null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export interface LeaveBalance {
+  type: LeaveType
+  used: number
+  remaining: number
+}
+
+// Remaining = type allowance − approved leave days taken this calendar year.
+export async function fetchMyLeaveBalances(): Promise<LeaveBalance[]> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+  const year = new Date().getFullYear()
+
+  const [{ data: types, error: typeErr }, { data: requests, error: reqErr }] = await Promise.all([
+    supabase.from('leave_types').select('*').eq('is_active', true).order('name'),
+    supabase
+      .from('leave_requests')
+      .select('leave_type_id, days, status, start_date')
+      .eq('profile_id', user.id)
+      .eq('status', 'approved')
+      .gte('start_date', `${year}-01-01`)
+      .lte('start_date', `${year}-12-31`),
+  ])
+  if (typeErr) throw typeErr
+  if (reqErr) throw reqErr
+
+  return (types ?? []).map((type) => {
+    const used = (requests ?? [])
+      .filter((r) => r.leave_type_id === type.id)
+      .reduce((sum, r) => sum + (r.days ?? 0), 0)
+    return { type, used, remaining: Math.max(0, type.days_allowed - used) }
+  })
 }

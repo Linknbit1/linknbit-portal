@@ -3,7 +3,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ToastProvider } from './components/ui/Toast'
 import { AuthProvider } from './context/AuthContext'
 import { PrivateRoute } from './components/layout/PrivateRoute'
-import { RoleGuard, ATTENDANCE_ADMIN_ROLES } from './components/layout/RoleGuard'
 import { AppShell } from './components/layout/AppShell'
 import { ClientShell } from './components/layout/ClientShell'
 
@@ -16,13 +15,13 @@ import AdminTaskDetailPage from './pages/admin/TaskDetailPage'
 import GamificationPage from './pages/admin/GamificationPage'
 import ClientsPage from './pages/admin/ClientsPage'
 import TeamsPage from './pages/admin/TeamsPage'
+import PeoplePage from './pages/admin/PeoplePage'
 import TasksPage from './pages/admin/TasksPage'
 import ReportsPage from './pages/admin/ReportsPage'
 import ClickUpPage from './pages/admin/ClickUpPage'
 import SettingsPage from './pages/admin/SettingsPage'
-import AttendancePage from './pages/admin/AttendancePage'
+import AttendancePage from './pages/AttendancePage'
 import EmployeeDashboardPage from './pages/employee/DashboardPage'
-import EmployeeAttendancePage from './pages/employee/AttendancePage'
 
 import ClientDashboardPage from './pages/client/DashboardPage'
 import ClientProjectsPage from './pages/client/ProjectsPage'
@@ -60,11 +59,8 @@ export default function App() {
                 <Route path="/admin/tasks" element={<TasksPage />} />
                 <Route path="/admin/clients" element={<ClientsPage />} />
                 <Route path="/admin/teams" element={<TeamsPage />} />
-                <Route path="/admin/attendance" element={
-                  <RoleGuard allowedRoles={ATTENDANCE_ADMIN_ROLES}>
-                    <AttendancePage />
-                  </RoleGuard>
-                } />
+                <Route path="/admin/people" element={<PeoplePage />} />
+                <Route path="/admin/attendance" element={<Navigate to="/attendance" replace />} />
                 <Route path="/admin/reports" element={<ReportsPage />} />
                 <Route path="/admin/gamification" element={<GamificationPage />} />
                 <Route path="/admin/clickup" element={<ClickUpPage />} />
@@ -74,7 +70,8 @@ export default function App() {
                 <Route path="/employee/dashboard" element={<EmployeeDashboardPage />} />
                 <Route path="/employee/tasks" element={<TasksPage />} />
                 <Route path="/employee/projects" element={<AdminProjectsPage />} />
-                <Route path="/employee/attendance" element={<EmployeeAttendancePage />} />
+                <Route path="/employee/attendance" element={<Navigate to="/attendance" replace />} />
+                <Route path="/attendance" element={<AttendancePage />} />
                 <Route path="/employee/leaderboard" element={<GamificationPage />} />
                 <Route path="/employee/rewards" element={<GamificationPage />} />
               </Route>

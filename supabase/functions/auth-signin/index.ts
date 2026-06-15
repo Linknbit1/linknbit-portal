@@ -1,5 +1,12 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { REFRESH_COOKIE, COOKIE_MAX_AGE, setCookie } from '../_shared/cookie.ts'
+
+// Cookie helpers inlined (kept self-contained so this critical auth function
+// has no cross-file dependency at deploy time). Mirrors _shared/cookie.ts.
+const REFRESH_COOKIE = 'sb-refresh-token'
+const COOKIE_MAX_AGE = 60 * 60 * 24 * 30 // 30 days
+function setCookie(name: string, value: string, maxAge: number): string {
+  return `${name}=${encodeURIComponent(value)}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${maxAge}`
+}
 
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response(null, { status: 204 })
@@ -29,6 +36,19 @@ Deno.serve(async (req: Request) => {
   }
 
   const { session, user } = data
+
+  // Reject deactivated accounts (HR/admin set this via admin_set_profile_active).
+  // The client is now authenticated in-memory, so RLS lets it read the own profile row.
+  const { data: prof } = await supabase
+    .from('profiles')
+    .select('is_active')
+    .eq('id', user.id)
+    .maybeSingle()
+  if (prof && prof.is_active === false) {
+    await supabase.auth.signOut()
+    return json({ error: 'Your account has been deactivated. Please contact your administrator.' }, 403)
+  }
+
   const headers = new Headers({ 'Content-Type': 'application/json' })
   headers.append('Set-Cookie', setCookie(REFRESH_COOKIE, session.refresh_token, COOKIE_MAX_AGE))
 

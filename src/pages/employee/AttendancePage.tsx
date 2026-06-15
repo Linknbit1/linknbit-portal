@@ -1,19 +1,21 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
   CalendarCheck,
+  CheckCircle2,
+  Clock,
+  AlertTriangle,
+  Home,
   LogIn,
   LogOut,
-  AlertTriangle,
-  CheckCircle2,
-  XCircle,
-  Wifi,
-  WifiOff,
-  Fingerprint,
   MapPin,
   Plus,
   X,
   Check,
   ClipboardList,
+  Hourglass,
+  Palmtree,
+  Calendar,
+  Plane,
 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Card } from '../../components/ui/Card'
@@ -22,19 +24,30 @@ import { Select } from '../../components/ui/Select'
 import { DatePicker } from '../../components/ui/DatePicker'
 import { TimePicker } from '../../components/ui/TimePicker'
 import {
-  useMyTodayAttendance,
   useMyAttendanceHistory,
-  useCheckIn,
-  useCheckOut,
   useMyExceptions,
   useRequestException,
   useLogOooDeparture,
   useLogOooReturn,
+  useMyOvertimeRequests,
+  useSubmitOvertime,
+  useAttendanceSettings,
+  useHolidays,
+  useWorkingSaturdays,
+  useMyWfhRequests,
+  useSubmitWfh,
+  useMyLeaveRequests,
+  useSubmitLeave,
+  useMyLeaveBalances,
 } from '../../hooks/useAttendance'
-import { getDeviceFingerprint, getDeviceName } from '../../lib/deviceUtils'
+import { AttendanceCheckInCard } from '../../components/shared/AttendanceCheckInCard'
 import { useToast } from '../../components/ui/toast-context'
 import { cn } from '../../lib/cn'
 import type { AttendanceRow } from '../../api/attendance'
+
+function localToday(): string {
+  return new Intl.DateTimeFormat('en-CA').format(new Date())
+}
 
 function formatTime(iso: string | null | undefined): string {
   if (!iso) return '—'
@@ -73,230 +86,124 @@ function StatusPill({ status }: { status: string }) {
   )
 }
 
-// ── Check-in card ─────────────────────────────────────────────────────────────
+// ── Upcoming schedule section ─────────────────────────────────────────────────
 
-function CheckInCard() {
-  const toast = useToast()
-  const { data: today, isLoading: todayLoading } = useMyTodayAttendance()
-  const checkInMut = useCheckIn()
-  const checkOutMut = useCheckOut()
+function UpcomingScheduleSection() {
+  const now = new Date()
+  const year = now.getFullYear()
+  const todayStr = `${year}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+  const cutoff = new Date(now)
+  cutoff.setDate(cutoff.getDate() + 30)
+  const cutoffStr = `${cutoff.getFullYear()}-${String(cutoff.getMonth() + 1).padStart(2, '0')}-${String(cutoff.getDate()).padStart(2, '0')}`
 
-  const [deviceReady, setDeviceReady] = useState(false)
-  const [deviceFingerprint, setDeviceFingerprint] = useState('')
-  const [deviceName, setDeviceName] = useState('')
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
-  const [time, setTime] = useState('')
+  const { data: holidays = [] }    = useHolidays(year)
+  const { data: workingSats = [] } = useWorkingSaturdays(year)
 
-  useEffect(() => {
-    Promise.all([getDeviceFingerprint(), Promise.resolve(getDeviceName())]).then(([fp, name]) => {
-      setDeviceFingerprint(fp)
-      setDeviceName(name)
-      setDeviceReady(true)
-    })
-  }, [])
+  const upcomingHolidays = holidays.filter((h) => h.date > todayStr && h.date <= cutoffStr)
+  const upcomingSats     = workingSats.filter((s) => s.date > todayStr && s.date <= cutoffStr)
 
-  useEffect(() => {
-    const tick = () => setTime(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }))
-    tick()
-    const id = setInterval(tick, 1000)
-    return () => clearInterval(id)
-  }, [])
+  if (upcomingHolidays.length === 0 && upcomingSats.length === 0) return null
 
-  const handleCheckIn = async () => {
-    setErrorMsg(null)
-    try {
-      const result = await checkInMut.mutateAsync({ deviceFingerprint, deviceName })
-      toast(
-        result.status === 'late'
-          ? 'Checked in — marked as late'
-          : 'Checked in successfully — have a great day!',
-        result.status === 'late' ? 'warning' : 'success',
-      )
-    } catch (err: unknown) {
-      const code = (err as { code?: string }).code ?? ''
-      const msg  = err instanceof Error ? err.message : 'Check-in failed'
-      if (code === 'outside_window') {
-        setErrorMsg(msg)
-      } else if (code === 'wrong_network') {
-        setErrorMsg('You must be connected to the office WiFi to check in.')
-      } else if (code === 'duplicate') {
-        setErrorMsg('You have already checked in today.')
-      } else {
-        setErrorMsg(msg || 'Check-in failed. Please try again or contact HR.')
-      }
-    }
-  }
+  const items = [
+    ...upcomingHolidays.map((h) => ({ type: 'holiday'     as const, date: h.date, label: h.name })),
+    ...upcomingSats.map((s)     => ({ type: 'working_sat' as const, date: s.date, label: s.note ?? 'Working Saturday' })),
+  ].sort((a, b) => a.date.localeCompare(b.date))
 
-  const handleCheckOut = async () => {
-    if (!today?.id) return
-    setErrorMsg(null)
-    try {
-      await checkOutMut.mutateAsync(today.id)
-      toast('Checked out — see you tomorrow!', 'success')
-    } catch (err: unknown) {
-      const code = (err as { code?: string }).code ?? ''
-      const msg  = err instanceof Error ? err.message : 'Check-out failed'
-      if (code === 'early_checkout') {
-        setErrorMsg(msg || 'You cannot check out before work ends. Submit an early departure exception request if needed.')
-      } else if (code === 'duplicate_checkout') {
-        setErrorMsg('You have already checked out today.')
-      } else {
-        toast('Check-out failed. Please try again.', 'error')
-      }
-    }
-  }
-
-  const dateStr = new Date().toLocaleDateString('en-US', {
-    weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
-  })
-
-  if (todayLoading) {
-    return (
-      <div className="bg-surface-1 border border-border-default rounded-xl p-8 flex flex-col items-center gap-6">
-        <div className="w-24 h-24 rounded-full bg-surface-2 animate-pulse" />
-      </div>
-    )
-  }
-
-  /* ── Already checked in ── */
-  if (today) {
-    const checkedOut = Boolean(today.check_out)
-    const isLate = today.status === 'late'
-    return (
-      <div className="bg-surface-1 border border-border-default rounded-xl p-8 flex flex-col items-center gap-5">
-        <div className="text-center">
-          <h2 className="font-display font-bold text-[18px] text-text-1">Your Attendance</h2>
-          <p className="font-mono text-[12px] text-text-4 mt-1">{dateStr}</p>
-        </div>
-
-        {today.device_flagged && (
-          <div className="w-full flex items-start gap-3 bg-warning/8 border border-warning/25 rounded-md px-4 py-3">
-            <AlertTriangle size={15} className="text-warning flex-shrink-0 mt-0.5" />
-            <p className="font-ui text-[12.5px] text-warning">
-              Unrecognised device — HR has been notified and will review it shortly.
-            </p>
-          </div>
-        )}
-
-        {errorMsg && (
-          <div className="w-full flex items-start gap-3 bg-error/8 border border-error/25 rounded-md px-4 py-3">
-            <XCircle size={15} className="text-error flex-shrink-0 mt-0.5" />
-            <p className="font-ui text-[12.5px] text-error">{errorMsg}</p>
-          </div>
-        )}
-
-        <div className={cn(
-          'w-24 h-24 rounded-full border-2 flex items-center justify-center',
-          checkedOut
-            ? 'bg-text-4/10 border-text-4/20'
-            : isLate
-              ? 'bg-warning/15 border-warning/40'
-              : 'bg-success/15 border-success/40',
-        )}>
-          <CheckCircle2 size={40} className={checkedOut ? 'text-text-4' : isLate ? 'text-warning' : 'text-success'} />
-        </div>
-
-        <div className="text-center">
-          <p className={cn(
-            'font-display font-bold text-[18px]',
-            checkedOut ? 'text-text-2' : isLate ? 'text-warning' : 'text-success',
-          )}>
-            {checkedOut ? 'Day Complete' : isLate ? 'Checked In (Late)' : 'Checked In'}
-          </p>
-          <p className="font-mono text-[13px] text-text-3 mt-0.5">
-            {formatTime(today.check_in)}
-            {checkedOut && today.check_out && <> → {formatTime(today.check_out)}</>}
-          </p>
-        </div>
-
-        {!checkedOut && (
-          <Button variant="secondary" onClick={handleCheckOut} disabled={checkOutMut.isPending}>
-            <LogOut size={15} />
-            {checkOutMut.isPending ? 'Checking out…' : 'Check Out'}
-          </Button>
-        )}
-
-        <div className="flex items-center gap-5 text-[11.5px] font-mono text-text-4">
-          {today.wifi_validated
-            ? <span className="flex items-center gap-1.5"><Wifi size={12} className="text-success" /> Office WiFi</span>
-            : <span className="flex items-center gap-1.5"><WifiOff size={12} /> No WiFi check</span>
-          }
-        </div>
-      </div>
-    )
-  }
-
-  /* ── Not yet checked in ── */
   return (
-    <div className="bg-surface-1 border border-border-default rounded-xl p-8 flex flex-col items-center gap-5">
-      <div className="text-center">
-        <h2 className="font-display font-bold text-[18px] text-text-1">Your Attendance</h2>
-        <p className="font-mono text-[12px] text-text-4 mt-1">{dateStr}</p>
+    <Card padding="none">
+      <div className="flex items-center gap-2 px-5 py-3.5 border-b border-border-subtle">
+        <Calendar size={14} className="text-text-3" />
+        <span className="font-ui font-semibold text-[13px] text-text-1">Upcoming Schedule</span>
+        <span className="font-mono text-[11px] text-text-4 ml-1">Next 30 days</span>
       </div>
-
-      {errorMsg && (
-        <div className="w-full flex items-start gap-3 bg-error/8 border border-error/25 rounded-md px-4 py-3">
-          <XCircle size={15} className="text-error flex-shrink-0 mt-0.5" />
-          <p className="font-ui text-[12.5px] text-error">{errorMsg}</p>
-        </div>
-      )}
-
-      <button
-        onClick={handleCheckIn}
-        disabled={!deviceReady || checkInMut.isPending}
-        className={cn(
-          'w-24 h-24 rounded-full border-2 flex items-center justify-center transition-all duration-200',
-          'border-brand-red/50 bg-brand-red/10 hover:bg-brand-red/20 hover:border-brand-red hover:scale-105 active:scale-95',
-          (!deviceReady || checkInMut.isPending) && 'opacity-70 cursor-not-allowed',
-        )}
-      >
-        {checkInMut.isPending
-          ? <span className="w-7 h-7 border-2 border-brand-red border-t-transparent rounded-full animate-spin" />
-          : <MapPin size={36} className="text-brand-red" />
-        }
-      </button>
-
-      <div className="text-center">
-        <p className="font-display font-bold text-[18px] text-text-1">Check In</p>
-        <p className="font-mono text-[13px] text-text-3 mt-0.5">{time}</p>
+      <div className="divide-y divide-border-subtle">
+        {items.map((item) => {
+          const d = new Date(item.date + 'T00:00:00')
+          const dateLabel = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+          const isHoliday = item.type === 'holiday'
+          return (
+            <div key={item.date + item.type} className="flex items-center gap-3 px-5 py-3">
+              <div className={cn(
+                'w-7 h-7 rounded-sm flex items-center justify-center flex-shrink-0',
+                isHoliday ? 'bg-text-4/10' : 'bg-service-mkt/10',
+              )}>
+                {isHoliday
+                  ? <Palmtree size={14} className="text-text-3" />
+                  : <Calendar size={14} className="text-service-mkt" />
+                }
+              </div>
+              <p className="flex-1 font-ui font-medium text-[13px] text-text-1 truncate">{item.label}</p>
+              <span className="font-mono text-[11.5px] text-text-3 flex-shrink-0">{dateLabel}</span>
+              <span className={cn(
+                'text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full border flex-shrink-0',
+                isHoliday
+                  ? 'bg-text-4/10 text-text-3 border-border-default'
+                  : 'bg-service-mkt/10 text-service-mkt border-service-mkt/25',
+              )}>
+                {isHoliday ? 'Holiday' : 'Working'}
+              </span>
+            </div>
+          )
+        })}
       </div>
-
-      {deviceReady && (
-        <div className="flex items-center gap-1.5 font-mono text-[10.5px] text-text-4">
-          <Fingerprint size={11} />
-          <span>{deviceName} · {deviceFingerprint.slice(0, 12)}…</span>
-        </div>
-      )}
-
-      <div className="flex items-center gap-6 text-[12px] font-mono text-text-3">
-        <span className="flex items-center gap-1.5"><Wifi size={12} className="text-success" /> Office Network Required</span>
-      </div>
-    </div>
+    </Card>
   )
 }
-
 
 // ── Summary stats ─────────────────────────────────────────────────────────────
 
 function SummaryStats({ records }: { records: AttendanceRow[] }) {
-  const present = records.filter((r) => r.status === 'present').length
-  const late    = records.filter((r) => r.status === 'late').length
-  const wfh     = records.filter((r) => r.status === 'wfh').length
+  const now  = new Date()
+  const year = now.getFullYear()
+
+  const { data: settings }         = useAttendanceSettings()
+  const { data: holidays = [] }    = useHolidays(year)
+  const { data: workingSats = [] } = useWorkingSaturdays(year)
+
+  // Absent = persisted 'absent' rows (marked by the daily job) + any past working
+  // day this month that has no record yet (not covered by the job). The two are
+  // mutually exclusive: a marked day already has a record, so the gap pass skips it.
+  const absent = (() => {
+    const holidaySet    = new Set(holidays.map((h) => h.date))
+    const workingSatSet = new Set(workingSats.map((s) => s.date))
+    const recordSet     = new Set(records.map((r) => r.date))
+    let gapDays = 0
+    const d = new Date(now.getFullYear(), now.getMonth(), 1)
+    while (d < now) {
+      const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+      const dow = d.getDay()
+      if (dow !== 0 && !(dow === 6 && !settings?.saturday_working && !workingSatSet.has(dateStr)) && !holidaySet.has(dateStr)) {
+        if (!recordSet.has(dateStr)) gapDays++
+      }
+      d.setDate(d.getDate() + 1)
+    }
+    const absentRecords = records.filter((r) => r.status === 'absent').length
+    return absentRecords + gapDays
+  })()
+
+  const totalPresent = records.filter((r) => r.status === 'present').length
+  const late         = records.filter((r) => r.status === 'late').length
+  const leave        = records.filter((r) => r.status === 'leave').length
 
   const stats = [
-    { label: 'Present',   value: present,               cls: 'text-success' },
-    { label: 'Late',      value: late,                   cls: 'text-warning' },
-    { label: 'WFH',       value: wfh,                    cls: 'text-service-dev' },
-    { label: 'Days Recorded', value: records.length,     cls: 'text-text-2' },
+    { label: 'Present', value: totalPresent, icon: CheckCircle2,  color: 'text-success',        bg: 'bg-success/10 border-success/20' },
+    { label: 'Late',    value: late,         icon: Clock,          color: 'text-warning',        bg: 'bg-warning/10 border-warning/20' },
+    { label: 'Absent',  value: absent,       icon: AlertTriangle,  color: 'text-error',          bg: 'bg-error/10 border-error/20' },
+    { label: 'Leave',   value: leave,        icon: Home,           color: 'text-service-dev',    bg: 'bg-service-dev/10 border-service-dev/20' },
   ]
 
   return (
-    <div className="grid grid-cols-4 gap-3">
-      {stats.map((s) => (
-        <Card key={s.label} className="text-center py-4">
-          <p className={cn('font-display font-bold text-h2 leading-none', s.cls)}>{s.value}</p>
-          <p className="font-ui text-caption text-text-4 mt-1">{s.label}</p>
-        </Card>
+    <div className="grid grid-cols-4 gap-4">
+      {stats.map(({ label, value, icon: Icon, color, bg }) => (
+        <div key={label} className="bg-surface-1 border border-border-default rounded-xl p-4 flex flex-col gap-2">
+          <div className={cn('w-9 h-9 rounded-lg border flex items-center justify-center', bg)}>
+            <Icon size={16} className={color} />
+          </div>
+          <div>
+            <p className={cn('font-display font-bold text-[28px] leading-none', color)}>{value}</p>
+            <p className="font-ui text-[12px] text-text-3 mt-1">{label}</p>
+          </div>
+        </div>
       ))}
     </div>
   )
@@ -379,7 +286,7 @@ function OooSection() {
   const logDepartureMut = useLogOooDeparture()
   const logReturnMut    = useLogOooReturn()
 
-  const todayStr = new Date().toISOString().split('T')[0]
+  const todayStr = localToday()
   const todayOoo = myExceptions.find(
     (e) => e.exception_type === 'out_of_office' && e.status === 'approved' && e.date === todayStr
   )
@@ -443,7 +350,7 @@ function RequestExceptionModal({ open, onClose }: RequestExceptionModalProps) {
   const toast = useToast()
   const requestMut = useRequestException()
   const [excType, setExcType] = useState<'late_arrival' | 'early_departure' | 'out_of_office'>('late_arrival')
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0])
+  const [date, setDate] = useState(localToday)
   const [requestedTime, setRequestedTime] = useState('')
   const [returnTime, setReturnTime] = useState('')
   const [reason, setReason] = useState('')
@@ -454,7 +361,7 @@ function RequestExceptionModal({ open, onClose }: RequestExceptionModalProps) {
     out_of_office:   'Departure Time',
   }
 
-  const todayStr = new Date().toISOString().split('T')[0]
+  const todayStr = localToday()
   const now = new Date()
   const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
   const requestedTimeMin = date === todayStr ? currentTimeStr : undefined
@@ -592,7 +499,7 @@ function MyExceptionsSection() {
     new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 
   return (
-    <>
+    <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h2 className="font-display font-semibold text-h4 text-text-1">Exception Requests</h2>
         <Button size="sm" onClick={() => setModalOpen(true)}>
@@ -644,7 +551,440 @@ function MyExceptionsSection() {
       )}
 
       <RequestExceptionModal open={modalOpen} onClose={() => setModalOpen(false)} />
-    </>
+    </div>
+  )
+}
+
+// ── Overtime section ──────────────────────────────────────────────────────────
+
+const OT_STATUS_CLS: Record<string, string> = {
+  pending:  'bg-warning/10 text-warning border-warning/25',
+  approved: 'bg-success/10 text-success border-success/25',
+  rejected: 'bg-error/10 text-error border-error/25',
+}
+
+function OvertimeSection() {
+  const toast = useToast()
+  const [modalOpen, setModalOpen] = useState(false)
+  const [form, setForm] = useState({
+    date: localToday(),
+    startTime: '',
+    endTime: '',
+    reason: '',
+  })
+
+  const { data: requests = [], isLoading } = useMyOvertimeRequests()
+  const submitMut = useSubmitOvertime()
+
+  const computedHours = (() => {
+    if (!form.startTime || !form.endTime) return 0
+    const [sh, sm] = form.startTime.split(':').map(Number)
+    const [eh, em] = form.endTime.split(':').map(Number)
+    const diff = (eh * 60 + em) - (sh * 60 + sm)
+    return diff > 0 ? parseFloat((diff / 60).toFixed(2)) : 0
+  })()
+
+  const handleSubmit = async () => {
+    if (!form.date || !form.startTime || !form.endTime || !form.reason.trim() || computedHours <= 0) return
+    try {
+      await submitMut.mutateAsync({
+        date: form.date,
+        start_time: form.startTime,
+        end_time: form.endTime,
+        hours: computedHours,
+        reason: form.reason.trim(),
+      })
+      toast('Overtime request submitted — awaiting HR approval', 'success')
+      setModalOpen(false)
+      setForm({ date: localToday(), startTime: '', endTime: '', reason: '' })
+    } catch {
+      toast('Failed to submit overtime request', 'error')
+    }
+  }
+
+  const fmtDate = (d: string) =>
+    new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  const fmtT = (t: string) => {
+    const [h, m] = t.split(':').map(Number)
+    return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`
+  }
+
+  const todayStr = localToday()
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <h2 className="font-display font-semibold text-h4 text-text-1">Overtime Requests</h2>
+        <Button size="sm" onClick={() => setModalOpen(true)}>
+          <Plus size={13} /> Log Overtime
+        </Button>
+      </div>
+
+      {isLoading ? (
+        <Card className="animate-pulse"><div className="h-16 bg-surface-2 rounded" /></Card>
+      ) : requests.length === 0 ? (
+        <Card className="py-8 text-center">
+          <Hourglass size={24} className="mx-auto text-text-4 mb-2" />
+          <p className="font-ui text-[13px] text-text-3">No overtime requests yet</p>
+          <p className="font-ui text-caption text-text-4 mt-1">
+            Worked extra hours? Log it here and HR will review it.
+          </p>
+        </Card>
+      ) : (
+        <Card padding="none">
+          <div className="divide-y divide-border-subtle">
+            {requests.slice(0, 8).map((req) => (
+              <div key={req.id} className="flex items-start gap-3 px-5 py-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                    <span className="font-ui font-medium text-[13px] text-text-1">
+                      {fmtDate(req.date)}
+                    </span>
+                    <span className="font-mono text-[11px] text-text-3">
+                      {fmtT(req.start_time)} – {fmtT(req.end_time)}
+                    </span>
+                    <span className="font-display font-bold text-[13px] text-service-mkt">{req.hours}h</span>
+                  </div>
+                  <p className="font-ui text-[12px] text-text-3 truncate">{req.reason}</p>
+                  {req.review_note && (
+                    <p className="font-ui text-[11px] text-error mt-0.5 italic">"{req.review_note}"</p>
+                  )}
+                </div>
+                <span className={cn(
+                  'inline-flex items-center px-2 py-0.5 rounded-xs border text-[11px] font-mono font-semibold flex-shrink-0 mt-0.5',
+                  OT_STATUS_CLS[req.status] ?? OT_STATUS_CLS['pending'],
+                )}>
+                  {req.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Submit modal */}
+      {modalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setModalOpen(false)} />
+          <div className="relative bg-surface-1 border border-border-default rounded-xl p-6 w-full max-w-md shadow-2xl">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="font-display font-bold text-[16px] text-text-1">Log Overtime</h3>
+              <button onClick={() => setModalOpen(false)} className="text-text-4 hover:text-text-1"><X size={18} /></button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Date</label>
+                <DatePicker
+                  value={form.date}
+                  onChange={(v) => setForm((f) => ({ ...f, date: v, startTime: '', endTime: '' }))}
+                  maxDate={todayStr}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Start Time</label>
+                  <TimePicker
+                    value={form.startTime}
+                    onChange={(v) => setForm((f) => ({ ...f, startTime: v, endTime: '' }))}
+                    placeholder="Start…"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">End Time</label>
+                  <TimePicker
+                    value={form.endTime}
+                    onChange={(v) => setForm((f) => ({ ...f, endTime: v }))}
+                    minTime={form.startTime || undefined}
+                    placeholder="End…"
+                  />
+                </div>
+              </div>
+              {computedHours > 0 && (
+                <div className="flex items-center gap-2 px-3 py-2 bg-service-mkt/8 border border-service-mkt/20 rounded-md">
+                  <Hourglass size={13} className="text-service-mkt" />
+                  <span className="font-mono text-[12px] text-service-mkt font-semibold">{computedHours}h overtime</span>
+                </div>
+              )}
+              <div>
+                <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Reason</label>
+                <textarea
+                  value={form.reason}
+                  onChange={(e) => setForm((f) => ({ ...f, reason: e.target.value }))}
+                  placeholder="What work did you do during this time?"
+                  rows={3}
+                  className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-ui text-text-1 placeholder:text-text-4 outline-none focus:border-border-focus resize-none"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2.5 mt-5">
+              <Button variant="ghost" size="sm" className="flex-1" onClick={() => setModalOpen(false)}>Cancel</Button>
+              <Button
+                size="sm"
+                className="flex-1"
+                disabled={!form.date || !form.startTime || !form.endTime || !form.reason.trim() || computedHours <= 0 || submitMut.isPending}
+                onClick={handleSubmit}
+              >
+                <Check size={14} /> Submit
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── WFH section ───────────────────────────────────────────────────────────────
+
+function WfhSection() {
+  const toast = useToast()
+  const [modalOpen, setModalOpen] = useState(false)
+  const [date, setDate] = useState(localToday)
+  const [reason, setReason] = useState('')
+  const { data: requests = [], isLoading } = useMyWfhRequests()
+  const submitMut = useSubmitWfh()
+
+  const handleSubmit = async () => {
+    if (!reason.trim()) return
+    try {
+      await submitMut.mutateAsync({ date, reason: reason.trim() })
+      toast('WFH request submitted — awaiting approval', 'success')
+      setModalOpen(false); setReason(''); setDate(localToday())
+    } catch {
+      toast('Failed to submit WFH request', 'error')
+    }
+  }
+
+  const fmtDate = (d: string) => new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  const todayStr = localToday()
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <h2 className="font-display font-semibold text-h4 text-text-1">Work From Home</h2>
+        <Button size="sm" onClick={() => setModalOpen(true)}>
+          <Plus size={13} /> Request WFH
+        </Button>
+      </div>
+
+      {isLoading ? (
+        <Card className="animate-pulse"><div className="h-16 bg-surface-2 rounded" /></Card>
+      ) : requests.length === 0 ? (
+        <Card className="py-8 text-center">
+          <Home size={24} className="mx-auto text-text-4 mb-2" />
+          <p className="font-ui text-[13px] text-text-3">No WFH requests yet</p>
+          <p className="font-ui text-caption text-text-4 mt-1">
+            Need to work remotely for a day? Request it here and HR will review.
+          </p>
+        </Card>
+      ) : (
+        <Card padding="none">
+          <div className="divide-y divide-border-subtle">
+            {requests.slice(0, 8).map((req) => (
+              <div key={req.id} className="flex items-start gap-3 px-5 py-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                    <span className="font-ui font-medium text-[13px] text-text-1">{fmtDate(req.date)}</span>
+                    {req.granted_directly && (
+                      <span className="text-[10px] font-mono bg-service-dev/10 text-service-dev border border-service-dev/20 px-1.5 py-0.5 rounded-xs uppercase tracking-wide">HR Granted</span>
+                    )}
+                  </div>
+                  <p className="font-ui text-[12px] text-text-3 truncate">{req.reason}</p>
+                  {req.review_note && <p className="font-ui text-[11px] text-error mt-0.5 italic">"{req.review_note}"</p>}
+                </div>
+                <span className={cn(
+                  'inline-flex items-center px-2 py-0.5 rounded-xs border text-[11px] font-mono font-semibold flex-shrink-0 mt-0.5',
+                  OT_STATUS_CLS[req.status] ?? OT_STATUS_CLS['pending'],
+                )}>
+                  {req.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {modalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setModalOpen(false)} />
+          <div className="relative bg-surface-1 border border-border-default rounded-xl p-6 w-full max-w-md shadow-2xl">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="font-display font-bold text-[16px] text-text-1">Request WFH</h3>
+              <button onClick={() => setModalOpen(false)} className="text-text-4 hover:text-text-1"><X size={18} /></button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Date</label>
+                <DatePicker value={date} onChange={setDate} minDate={todayStr} />
+              </div>
+              <div>
+                <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Reason</label>
+                <textarea
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  placeholder="Why do you need to work from home?"
+                  rows={3}
+                  className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-ui text-text-1 placeholder:text-text-4 outline-none focus:border-border-focus resize-none"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2.5 mt-5">
+              <Button variant="ghost" size="sm" className="flex-1" onClick={() => setModalOpen(false)}>Cancel</Button>
+              <Button size="sm" className="flex-1" onClick={handleSubmit} disabled={!reason.trim() || submitMut.isPending}>
+                <Check size={14} /> Submit
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Leave section ─────────────────────────────────────────────────────────────
+
+function LeaveSection() {
+  const toast = useToast()
+  const [modalOpen, setModalOpen] = useState(false)
+  const [typeId, setTypeId] = useState('')
+  const [startDate, setStartDate] = useState(localToday)
+  const [endDate, setEndDate] = useState(localToday)
+  const [reason, setReason] = useState('')
+  const { data: balances = [] } = useMyLeaveBalances()
+  const { data: requests = [], isLoading } = useMyLeaveRequests()
+  const submitMut = useSubmitLeave()
+
+  const handleSubmit = async () => {
+    if (!typeId || !reason.trim() || endDate < startDate) return
+    try {
+      await submitMut.mutateAsync({ leave_type_id: typeId, start_date: startDate, end_date: endDate, reason: reason.trim() })
+      toast('Leave request submitted — awaiting approval', 'success')
+      setModalOpen(false); setTypeId(''); setReason(''); setStartDate(localToday()); setEndDate(localToday())
+    } catch {
+      toast('Failed to submit leave request', 'error')
+    }
+  }
+
+  const fmtRange = (start: string, end: string) => {
+    const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' }
+    const s = new Date(start + 'T00:00:00').toLocaleDateString('en-US', opts)
+    if (start === end) return s
+    return `${s} – ${new Date(end + 'T00:00:00').toLocaleDateString('en-US', opts)}`
+  }
+
+  const todayStr = localToday()
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <h2 className="font-display font-semibold text-h4 text-text-1">Leave</h2>
+        <Button size="sm" onClick={() => setModalOpen(true)} disabled={balances.length === 0}>
+          <Plus size={13} /> Request Leave
+        </Button>
+      </div>
+
+      {/* Balances */}
+      {balances.length > 0 && (
+        <div className="grid grid-cols-3 gap-3">
+          {balances.map((b) => (
+            <div key={b.type.id} className="bg-surface-1 border border-border-default rounded-lg p-3">
+              <p className="font-ui text-[11.5px] text-text-3 truncate">{b.type.name}</p>
+              <p className="font-display font-bold text-[20px] text-text-1 leading-tight mt-0.5">
+                {b.remaining}
+                <span className="font-mono text-[11px] text-text-4 font-normal"> / {b.type.days_allowed}</span>
+              </p>
+              <p className="font-mono text-[10px] text-text-4">days left</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {isLoading ? (
+        <Card className="animate-pulse"><div className="h-16 bg-surface-2 rounded" /></Card>
+      ) : requests.length === 0 ? (
+        <Card className="py-8 text-center">
+          <Plane size={24} className="mx-auto text-text-4 mb-2" />
+          <p className="font-ui text-[13px] text-text-3">No leave requests yet</p>
+          <p className="font-ui text-caption text-text-4 mt-1">
+            Request annual, sick, or casual leave and track your remaining balance.
+          </p>
+        </Card>
+      ) : (
+        <Card padding="none">
+          <div className="divide-y divide-border-subtle">
+            {requests.slice(0, 8).map((req) => (
+              <div key={req.id} className="flex items-start gap-3 px-5 py-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                    <span className="font-ui font-medium text-[13px] text-text-1">{req.leave_types?.name ?? 'Leave'}</span>
+                    <span className="font-mono text-[11px] text-text-3">{fmtRange(req.start_date, req.end_date)}</span>
+                    <span className="font-display font-bold text-[12px] text-service-dev">{req.days}d</span>
+                  </div>
+                  <p className="font-ui text-[12px] text-text-3 truncate">{req.reason}</p>
+                  {req.review_note && <p className="font-ui text-[11px] text-error mt-0.5 italic">"{req.review_note}"</p>}
+                </div>
+                <span className={cn(
+                  'inline-flex items-center px-2 py-0.5 rounded-xs border text-[11px] font-mono font-semibold flex-shrink-0 mt-0.5',
+                  OT_STATUS_CLS[req.status] ?? OT_STATUS_CLS['pending'],
+                )}>
+                  {req.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {modalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setModalOpen(false)} />
+          <div className="relative bg-surface-1 border border-border-default rounded-xl p-6 w-full max-w-md shadow-2xl">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="font-display font-bold text-[16px] text-text-1">Request Leave</h3>
+              <button onClick={() => setModalOpen(false)} className="text-text-4 hover:text-text-1"><X size={18} /></button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Leave Type</label>
+                <Select
+                  value={typeId}
+                  onChange={setTypeId}
+                  placeholder="Select type…"
+                  options={balances.map((b) => ({ value: b.type.id, label: `${b.type.name} — ${b.remaining} of ${b.type.days_allowed} left` }))}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">From</label>
+                  <DatePicker value={startDate} onChange={(v) => { setStartDate(v); if (endDate < v) setEndDate(v) }} minDate={todayStr} />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">To</label>
+                  <DatePicker value={endDate} onChange={setEndDate} minDate={startDate} />
+                </div>
+              </div>
+              <div>
+                <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Reason</label>
+                <textarea
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  placeholder="Brief reason for leave…"
+                  rows={3}
+                  className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-ui text-text-1 placeholder:text-text-4 outline-none focus:border-border-focus resize-none"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2.5 mt-5">
+              <Button variant="ghost" size="sm" className="flex-1" onClick={() => setModalOpen(false)}>Cancel</Button>
+              <Button size="sm" className="flex-1" onClick={handleSubmit}
+                disabled={!typeId || !reason.trim() || endDate < startDate || submitMut.isPending}>
+                <Check size={14} /> Submit
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -657,17 +997,42 @@ export default function EmployeeAttendancePage() {
     <div className="flex flex-col flex-1">
       <Topbar title="My Attendance" />
 
-      <div className="p-8 flex flex-col gap-6 max-w-content mx-auto w-full">
-        <CheckInCard />
+      <div className="p-6 flex flex-col gap-6 max-w-content mx-auto w-full">
+        <AttendanceCheckInCard />
+
+        {/* Stats — skeleton while history loads, then real values */}
+        {isLoading ? (
+          <div className="grid grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-surface-1 border border-border-default rounded-xl p-4 flex flex-col gap-2 animate-pulse">
+                <div className="w-9 h-9 rounded-lg bg-surface-2" />
+                <div>
+                  <div className="h-7 w-10 bg-surface-2 rounded mb-1" />
+                  <div className="h-3 w-14 bg-surface-2 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <SummaryStats records={history} />
+        )}
+
+        <UpcomingScheduleSection />
 
         {/* OOO active state — shown only when employee has an approved OOO today */}
         <OooSection />
 
-        {/* Exception requests */}
-        <MyExceptionsSection />
+        {/* Exception requests + Overtime side by side */}
+        <div className="grid grid-cols-2 gap-6 items-start">
+          <MyExceptionsSection />
+          <OvertimeSection />
+        </div>
 
-        {/* Summary stats */}
-        {!isLoading && history.length > 0 && <SummaryStats records={history} />}
+        {/* WFH + Leave side by side */}
+        <div className="grid grid-cols-2 gap-6 items-start">
+          <WfhSection />
+          <LeaveSection />
+        </div>
 
         {/* History */}
         {isLoading ? (
