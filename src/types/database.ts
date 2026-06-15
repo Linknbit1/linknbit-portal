@@ -685,66 +685,87 @@ export type Database = {
       }
       profiles: {
         Row: {
+          age: number | null
           avatar_url: string | null
+          bio: string | null
           clickup_user_id: string | null
           created_at: string
           email: string
           id: string
           is_active: boolean
           is_restricted: boolean
+          job_title: string | null
           last_seen_at: string | null
           level: number
+          location: string | null
           lp_balance: number
           name: string
+          phone: string | null
           reputation_total: number
           restricted_at: string | null
           restricted_by: string | null
           restricted_reason: string | null
           role: string
           service_type: string | null
+          skills: string[]
           team_id: string | null
+          tech_stacks: string[]
           updated_at: string
         }
         Insert: {
+          age?: number | null
           avatar_url?: string | null
+          bio?: string | null
           clickup_user_id?: string | null
           created_at?: string
           email: string
           id: string
           is_active?: boolean
           is_restricted?: boolean
+          job_title?: string | null
           last_seen_at?: string | null
           level?: number
+          location?: string | null
           lp_balance?: number
           name: string
+          phone?: string | null
           reputation_total?: number
           restricted_at?: string | null
           restricted_by?: string | null
           restricted_reason?: string | null
           role?: string
           service_type?: string | null
+          skills?: string[]
           team_id?: string | null
+          tech_stacks?: string[]
           updated_at?: string
         }
         Update: {
+          age?: number | null
           avatar_url?: string | null
+          bio?: string | null
           clickup_user_id?: string | null
           created_at?: string
           email?: string
           id?: string
           is_active?: boolean
           is_restricted?: boolean
+          job_title?: string | null
           last_seen_at?: string | null
           level?: number
+          location?: string | null
           lp_balance?: number
           name?: string
+          phone?: string | null
           reputation_total?: number
           restricted_at?: string | null
           restricted_by?: string | null
           restricted_reason?: string | null
           role?: string
           service_type?: string | null
+          skills?: string[]
           team_id?: string | null
+          tech_stacks?: string[]
           updated_at?: string
         }
         Relationships: [

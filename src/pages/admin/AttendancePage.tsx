@@ -1162,7 +1162,7 @@ function EnrolledDevicesTab() {
           </p>
         </div>
 
-        <table className="w-full">
+        <table className="w-full block overflow-x-auto whitespace-nowrap lg:whitespace-normal">
           <thead>
             <tr className="border-b border-border-subtle bg-surface-2">
               {['Employee', 'Device', 'First Seen', 'Last Seen', 'Status', 'Actions'].map((h) => (
@@ -1309,7 +1309,7 @@ function ExceptionsTab() {
           </div>
         </div>
 
-        <table className="w-full">
+        <table className="w-full block overflow-x-auto whitespace-nowrap lg:whitespace-normal">
           <thead>
             <tr className="border-b border-border-subtle bg-surface-2">
               {['Employee', 'Date', 'Type', 'Requested Time', 'Reason', 'Status', 'OOO Tracking', 'Actions'].map((h) => (
@@ -1985,7 +1985,7 @@ function OvertimeTab() {
         ) : requests.length === 0 ? (
           <div className="py-16 text-center font-ui text-[13px] text-text-4">No overtime requests match this filter.</div>
         ) : (
-          <table className="w-full">
+          <table className="w-full block overflow-x-auto whitespace-nowrap lg:whitespace-normal">
             <thead>
               <tr className="border-b border-border-subtle bg-surface-2">
                 {['Employee', 'Date', 'Time', 'Hours', 'Reason', 'Status', 'Actions'].map((h) => (
@@ -2405,7 +2405,7 @@ function ReportsTab() {
             No attendance records for {MONTH_NAMES[month - 1]} {year}.
           </div>
         ) : (
-          <table className="w-full">
+          <table className="w-full block overflow-x-auto whitespace-nowrap lg:whitespace-normal">
             <thead>
               <tr className="border-b border-border-subtle bg-surface-2">
                 <SortTh label="Employee"     col="name"         sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} />
@@ -2765,13 +2765,13 @@ export default function AttendancePage() {
         <AttendanceCheckInCard />
 
         {/* Tab switcher */}
-        <div className="flex items-center gap-1 bg-surface-1 border border-border-default rounded-lg p-1 self-start">
+        <div className="flex items-center gap-1 bg-surface-1 border border-border-default rounded-lg p-1 overflow-x-auto no-scrollbar max-w-full">
           {tabs.map(({ id, label, icon: Icon, badge }) => (
             <button
               key={id}
               onClick={() => setView(id)}
               className={cn(
-                'flex items-center gap-2 px-4 py-2 rounded-sm text-[13px] font-ui font-medium transition-colors relative',
+                'flex items-center gap-2 px-4 py-2 rounded-sm text-[13px] font-ui font-medium transition-colors relative flex-shrink-0 whitespace-nowrap',
                 effectiveView === id
                   ? 'bg-surface-3 text-text-1 shadow-sm'
                   : 'text-text-3 hover:text-text-2',

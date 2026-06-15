@@ -1,18 +1,19 @@
 import { NavLink, useLocation } from 'react-router-dom'
-import { Menu } from 'lucide-react'
 import { cn } from '../../lib/cn'
+import { Avatar } from '../ui/Avatar'
 import { useAuthContext } from '../../context/AuthContext'
 import { visibleNavItems } from './navItems'
 
 interface BottomTabBarProps {
-  onMore: () => void
+  onOpenMenu: () => void
 }
 
 /** Mobile primary navigation. Hidden at lg+ where the sidebar takes over. */
-export function BottomTabBar({ onMore }: BottomTabBarProps) {
+export function BottomTabBar({ onOpenMenu }: BottomTabBarProps) {
   const location = useLocation()
   const { profile } = useAuthContext()
   const primary = visibleNavItems(profile?.role).filter((i) => i.primaryMobile)
+  const profileActive = location.pathname.startsWith('/profile')
 
   return (
     <nav
@@ -36,12 +37,15 @@ export function BottomTabBar({ onMore }: BottomTabBarProps) {
         )
       })}
       <button
-        onClick={onMore}
-        className="flex-1 flex flex-col items-center justify-center gap-1 py-2 font-ui font-medium text-[10.5px] text-text-3 hover:text-text-1 transition-colors"
-        aria-label="More navigation"
+        onClick={onOpenMenu}
+        className={cn(
+          'flex-1 flex flex-col items-center justify-center gap-1 py-2 font-ui font-medium text-[10.5px] transition-colors',
+          profileActive ? 'text-brand-red' : 'text-text-3 hover:text-text-1',
+        )}
+        aria-label="Open profile menu"
       >
-        <Menu size={20} />
-        <span>More</span>
+        <Avatar name={profile?.name ?? '?'} src={profile?.avatar_url ?? undefined} size="xs" />
+        <span>Profile</span>
       </button>
     </nav>
   )
