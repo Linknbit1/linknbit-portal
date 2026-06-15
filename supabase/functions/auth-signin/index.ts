@@ -4,8 +4,16 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 // has no cross-file dependency at deploy time). Mirrors _shared/cookie.ts.
 const REFRESH_COOKIE = 'sb-refresh-token'
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 30 // 30 days
-function setCookie(name: string, value: string, maxAge: number): string {
-  return `${name}=${encodeURIComponent(value)}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${maxAge}`
+// Only mark Secure on HTTPS origins — browsers (esp. iOS Safari) drop Secure
+// cookies on plain-HTTP origins (local/LAN dev), which breaks login persistence.
+function isSecureRequest(req: Request): boolean {
+  const origin = req.headers.get('origin') ?? ''
+  if (origin.startsWith('http://')) return false
+  if (origin.startsWith('https://')) return true
+  return (req.headers.get('x-forwarded-proto') ?? 'https') !== 'http'
+}
+function setCookie(name: string, value: string, maxAge: number, secure: boolean): string {
+  return `${name}=${encodeURIComponent(value)}; HttpOnly${secure ? '; Secure' : ''}; SameSite=Lax; Path=/; Max-Age=${maxAge}`
 }
 
 Deno.serve(async (req: Request) => {
@@ -50,7 +58,7 @@ Deno.serve(async (req: Request) => {
   }
 
   const headers = new Headers({ 'Content-Type': 'application/json' })
-  headers.append('Set-Cookie', setCookie(REFRESH_COOKIE, session.refresh_token, COOKIE_MAX_AGE))
+  headers.append('Set-Cookie', setCookie(REFRESH_COOKIE, session.refresh_token, COOKIE_MAX_AGE, isSecureRequest(req)))
 
   return new Response(
     JSON.stringify({

@@ -56,7 +56,7 @@ export function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps) {
           >
             {/* Brand + close */}
             <div className="flex items-center gap-3 px-4 pt-5 pb-4 border-b border-border-subtle">
-              <span className="w-7 h-7 rounded-sm bg-brand-red flex items-center justify-center flex-shrink-0">
+              <span className="w-7 h-7 rounded-sm bg-brand-red flex items-center justify-center">
                 <svg viewBox="0 0 41 45" width="20" height="20" fill="none">
                   <rect x="0" y="3.5" width="10.5" height="10.5" rx="0.4" fill="white" />
                   <rect x="0" y="18.7" width="10.5" height="26" rx="0.4" fill="white" />
@@ -68,7 +68,7 @@ export function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps) {
               </span>
               <div className="flex-1 min-w-0">
                 <p className="font-display font-bold text-body-sm text-text-1 leading-tight">Linknbit</p>
-                <p className="font-mono text-[9px] text-text-4 uppercase tracking-wider mt-0.5">Operations Portal</p>
+                <p className="font-mono text-[9px] text-text-2 uppercase tracking-wider mt-0.5">Operations Portal</p>
               </div>
               <button
                 onClick={onClose}
@@ -91,7 +91,7 @@ export function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps) {
                     className={cn(
                       'flex items-center gap-2.5 px-2.5 py-2.5 rounded-sm font-ui font-medium text-body-sm transition-colors relative',
                       isActive
-                        ? 'bg-brand-red/[0.13] text-white nav-active-indicator'
+                        ? 'bg-brand-red/13 text-white nav-active-indicator'
                         : 'text-text-2 hover:bg-surface-2 hover:text-text-1',
                     )}
                   >
