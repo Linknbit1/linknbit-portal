@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { X, LogOut } from 'lucide-react'
@@ -20,6 +21,13 @@ export function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps) {
   const navigate = useNavigate()
   const { profile, signOut } = useAuthContext()
   const navItems = visibleNavItems(profile?.role)
+
+  // Prevent the page behind the drawer from scrolling while it's open.
+  useEffect(() => {
+    if (!open) return
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = '' }
+  }, [open])
 
   const handleLogout = async () => {
     onClose()
@@ -102,21 +110,13 @@ export function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps) {
             {/* Account */}
             {profile && (
               <div className="border-t border-border-subtle p-3 flex flex-col gap-1">
-                <NavLink
-                  to="/profile"
-                  onClick={onClose}
-                  className={({ isActive }) => cn(
-                    'flex items-center gap-2.5 px-2 py-2 rounded-sm transition-colors',
-                    isActive ? 'bg-brand-red/[0.13]' : 'hover:bg-surface-2',
-                  )}
-                >
+                <div className="flex items-center gap-2.5 px-2 py-2">
                   <Avatar name={profile.name} src={profile.avatar_url ?? undefined} size="sm" />
                   <div className="flex-1 min-w-0">
                     <p className="font-ui font-semibold text-body-sm text-text-1 leading-tight truncate">{profile.name}</p>
                     <RoleBadge role={toUserRole(profile.role)} size="sm" className="mt-0.5" />
                   </div>
-                  <span className="font-mono text-[10px] text-text-4 uppercase tracking-wider">View profile</span>
-                </NavLink>
+                </div>
                 <InstallAppButton />
                 <button
                   onClick={handleLogout}

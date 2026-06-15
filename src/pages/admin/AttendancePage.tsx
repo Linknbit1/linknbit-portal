@@ -2697,6 +2697,19 @@ type Tab = 'records' | 'wfh' | 'leave' | 'exceptions' | 'devices' | 'holidays' |
 
 export default function AttendancePage() {
   const [view, setView] = useState<Tab>('records')
+  const tabStripRef = React.useRef<HTMLDivElement>(null)
+
+  // Keep the selected tab centered within the horizontally scrollable strip.
+  React.useEffect(() => {
+    const container = tabStripRef.current
+    if (!container) return
+    const active = container.querySelector<HTMLElement>('[data-active="true"]')
+    if (!active) return
+    const target = active.offsetLeft - (container.clientWidth - active.offsetWidth) / 2
+    const max = container.scrollWidth - container.clientWidth
+    container.scrollTo({ left: Math.max(0, Math.min(target, max)), behavior: 'smooth' })
+  }, [view])
+
   const { data: pendingWfhData = [] } = useAllWfhRequests('pending')
   const pendingWFH = pendingWfhData.length
   const { data: pendingLeaveData = [] } = useAllLeaveRequests('pending')
@@ -2733,10 +2746,11 @@ export default function AttendancePage() {
         <AttendanceCheckInCard />
 
         {/* Tab switcher */}
-        <div className="flex items-center gap-1 bg-surface-1 border border-border-default rounded-lg p-1 overflow-x-auto no-scrollbar max-w-full">
+        <div ref={tabStripRef} className="flex items-center gap-1 bg-surface-1 border border-border-default rounded-lg p-1 overflow-x-auto no-scrollbar max-w-full scroll-smooth">
           {tabs.map(({ id, label, icon: Icon, badge }) => (
             <button
               key={id}
+              data-active={effectiveView === id}
               onClick={() => setView(id)}
               className={cn(
                 'flex items-center gap-2 px-4 py-2 rounded-sm text-[13px] font-ui font-medium transition-colors relative flex-shrink-0 whitespace-nowrap',
