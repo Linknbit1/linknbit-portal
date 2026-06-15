@@ -6,29 +6,38 @@ import {
   UserCog,
   CheckSquare,
   BarChart2,
-  Trophy,
   Link2,
   Settings,
   UserCircle,
   ChevronRight,
   CalendarCheck,
+  type LucideIcon,
 } from 'lucide-react'
 import { cn } from '../../lib/cn'
+import { showWipFeatures } from '../../lib/featureFlags'
 import { Avatar } from '../ui/Avatar'
 import { RoleBadge } from '../shared/RoleBadge'
 import { useAuthContext } from '../../context/AuthContext'
 
-const NAV_ITEMS = [
+interface NavItem {
+  label: string
+  icon: LucideIcon
+  to: string
+  badge?: number
+  // Not yet production-ready — only rendered in development builds.
+  devOnly?: boolean
+}
+
+const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', icon: LayoutDashboard, to: '/admin/dashboard' },
-  { label: 'Projects', icon: FolderOpen, to: '/admin/projects', badge: 2 },
-  { label: 'Clients', icon: UserCircle, to: '/admin/clients' },
+  { label: 'Projects', icon: FolderOpen, to: '/admin/projects', badge: 2, devOnly: true },
+  { label: 'Clients', icon: UserCircle, to: '/admin/clients', devOnly: true },
   { label: 'Teams', icon: Users, to: '/admin/teams' },
   { label: 'People', icon: UserCog, to: '/admin/people' },
-  { label: 'Tasks', icon: CheckSquare, to: '/admin/tasks', badge: 7 },
+  { label: 'Tasks', icon: CheckSquare, to: '/admin/tasks', badge: 7, devOnly: true },
   { label: 'Attendance', icon: CalendarCheck, to: '/attendance' },
-  { label: 'Reports', icon: BarChart2, to: '/admin/reports' },
-  { label: 'Gamification', icon: Trophy, to: '/admin/gamification' },
-  { label: 'ClickUp', icon: Link2, to: '/admin/clickup' },
+  { label: 'Reports', icon: BarChart2, to: '/admin/reports', devOnly: true },
+  { label: 'ClickUp', icon: Link2, to: '/admin/clickup', devOnly: true },
   { label: 'Settings', icon: Settings, to: '/admin/settings' },
 ]
 
@@ -37,7 +46,7 @@ export function Sidebar() {
   const { profile } = useAuthContext()
   const role = profile?.role ?? 'employee'
 
-  const navItems = NAV_ITEMS
+  const navItems = NAV_ITEMS.filter((item) => showWipFeatures || !item.devOnly)
 
   return (
     <aside className="w-sidebar-expanded bg-surface-1 border-r border-border-default flex flex-col sticky top-0 h-screen overflow-y-auto flex-shrink-0">
