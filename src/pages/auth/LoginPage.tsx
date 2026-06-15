@@ -45,7 +45,7 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
     name: 'Ghayas Ud Din',
     role: 'Operations Admin',
     pod: 'Admin',
-    path: '/admin/dashboard',
+    path: '/dashboard',
   },
   {
     email: 'super.admin@linknbit.com',
@@ -56,7 +56,7 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
     name: 'Ahmad Raza',
     role: 'Super Admin',
     pod: 'Admin',
-    path: '/admin/dashboard',
+    path: '/dashboard',
   },
   {
     email: 'project.manager@linknbit.com',
@@ -67,7 +67,7 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
     name: 'Zain Malik',
     role: 'Project Manager',
     pod: 'Dev pod',
-    path: '/admin/dashboard',
+    path: '/dashboard',
   },
   {
     email: 'team.lead@linknbit.com',
@@ -78,7 +78,7 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
     name: 'Sara Qureshi',
     role: 'Team Lead',
     pod: 'Dev pod',
-    path: '/admin/dashboard',
+    path: '/dashboard',
   },
   {
     email: 'employee@linknbit.com',
@@ -89,7 +89,7 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
     name: 'Bilal Ahmed',
     role: 'Employee',
     pod: 'Dev pod',
-    path: '/employee/dashboard',
+    path: '/dashboard',
   },
   {
     email: 'hr@linknbit.com',
@@ -100,7 +100,7 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
     name: 'Hina Rizvi',
     role: 'HR Manager',
     pod: 'People',
-    path: '/admin/dashboard',
+    path: '/dashboard',
   },
   {
     email: 'finance@linknbit.com',
@@ -111,7 +111,7 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
     name: 'Usman Tariq',
     role: 'Finance',
     pod: 'Finance',
-    path: '/admin/dashboard',
+    path: '/dashboard',
   },
   {
     email: 'client.owner@cricketsansar.com',
@@ -428,7 +428,7 @@ function LoginForm({
               name: email.split('@')[0],
               role: 'Team Member',
               pod: 'Linknbit',
-              path: '/admin/dashboard',
+              path: '/dashboard',
             },
           )
         },

@@ -17,6 +17,7 @@ interface AuthContextValue {
   loading: boolean
   signIn: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
+  refreshProfile: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -97,6 +98,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, delay)
   }
 
+  async function refreshProfile(): Promise<void> {
+    const uid = user?.id
+    if (!uid) return
+    const profileData = await fetchProfile(uid)
+    setProfile(profileData)
+  }
+
   async function signIn(email: string, password: string): Promise<void> {
     const session = await bffSignIn(email, password)
     await applySession(session)
@@ -125,7 +133,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <AuthContext.Provider value={{ user, profile, accessToken, loading, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, profile, accessToken, loading, signIn, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   )
