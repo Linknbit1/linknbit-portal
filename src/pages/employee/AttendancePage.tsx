@@ -41,6 +41,8 @@ import {
   useMyLeaveBalances,
 } from '../../hooks/useAttendance'
 import { AttendanceCheckInCard } from '../../components/shared/AttendanceCheckInCard'
+import { TeamAttendancePanel } from '../../components/shared/TeamAttendancePanel'
+import { useAuthContext } from '../../context/AuthContext'
 import { useToast } from '../../components/ui/toast-context'
 import { cn } from '../../lib/cn'
 import type { AttendanceRow } from '../../api/attendance'
@@ -992,6 +994,8 @@ function LeaveSection() {
 
 export default function EmployeeAttendancePage() {
   const { data: history = [], isLoading } = useMyAttendanceHistory(30)
+  const { profile } = useAuthContext()
+  const canSeeTeam = profile?.role === 'team_lead' || profile?.role === 'project_manager'
 
   return (
     <div className="flex flex-col flex-1">
@@ -999,6 +1003,9 @@ export default function EmployeeAttendancePage() {
 
       <div className="px-4 py-6 lg:p-6 flex flex-col gap-6 max-w-content mx-auto w-full">
         <AttendanceCheckInCard />
+
+        {/* Team leads / PMs: read-only visibility into their team */}
+        {canSeeTeam && <TeamAttendancePanel />}
 
         {/* Stats — skeleton while history loads, then real values */}
         {isLoading ? (
@@ -1023,13 +1030,13 @@ export default function EmployeeAttendancePage() {
         <OooSection />
 
         {/* Exception requests + Overtime side by side */}
-        <div className="grid grid-cols-2 gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
           <MyExceptionsSection />
           <OvertimeSection />
         </div>
 
         {/* WFH + Leave side by side */}
-        <div className="grid grid-cols-2 gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
           <WfhSection />
           <LeaveSection />
         </div>
