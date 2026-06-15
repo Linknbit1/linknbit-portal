@@ -52,7 +52,9 @@
       "mcp__supabase__get_advisors",
       "mcp__supabase__list_edge_functions",
       "PowerShell(npx tsc --noEmit -p tsconfig.app.json 2>&1 | Select-Object -First 40)",
-      "PowerShell(npx tsc -b 2>&1 | Select-Object -First 40; \"exit: $LASTEXITCODE\")"
+      "PowerShell(npx tsc -b 2>&1 | Select-Object -First 40; \"exit: $LASTEXITCODE\")",
+      "PowerShell(npx supabase projects list 2>&1 | Select-Object -First 15; \"exit: $LASTEXITCODE\")",
+      "PowerShell(npx tsc -b 2>&1 | Select-Object -First 30; \"exit: $LASTEXITCODE\")"
     ]
   },
   "enableAllProjectMcpServers": true,

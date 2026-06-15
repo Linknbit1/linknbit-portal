@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import {
   MapPin, CheckCircle2, LogOut, Wifi, WifiOff,
   AlertCircle, Fingerprint, Palmtree, Calendar,
+  Home, Plane, XCircle,
 } from 'lucide-react'
 import {
   useMyTodayAttendance,
@@ -196,8 +197,31 @@ export function AttendanceCheckInCard() {
         </div>
       )}
 
-      {/* ── Checked in ── */}
-      {!todayHoliday && !isDayOff && today && (() => {
+      {/* ── Non-attendance day states (absent / leave / WFH) ── */}
+      {/* A row can exist without a real check-in: the daily absence job inserts an
+          'absent' row, and approved Leave/WFH sync 'leave'/'wfh' rows. Render the
+          actual status instead of treating any row as "Checked In". */}
+      {!todayHoliday && !isDayOff && today && !today.check_in && (() => {
+        const meta = today.status === 'wfh'
+          ? { icon: Home, ring: 'bg-service-dev/10 border-service-dev/30', fg: 'text-service-dev', title: 'Working From Home', sub: today.note || 'Approved work-from-home day.' }
+          : today.status === 'leave'
+          ? { icon: Plane, ring: 'bg-service-design/10 border-service-design/30', fg: 'text-service-design', title: 'On Leave', sub: today.note || 'Approved leave for today.' }
+          : { icon: XCircle, ring: 'bg-error/10 border-error/30', fg: 'text-error', title: 'Marked Absent', sub: 'No check-in was recorded for today.' }
+        return (
+          <div className="flex flex-col items-center gap-3 text-center">
+            <div className={cn('w-24 h-24 rounded-full border-2 flex items-center justify-center', meta.ring)}>
+              <meta.icon size={40} className={meta.fg} />
+            </div>
+            <div>
+              <p className={cn('font-display font-bold text-[18px]', meta.fg)}>{meta.title}</p>
+              <p className="font-ui text-[13px] text-text-3 mt-0.5">{meta.sub}</p>
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* ── Checked in (real self/admin check-in with a timestamp) ── */}
+      {!todayHoliday && !isDayOff && today && today.check_in && (() => {
         const checkedOut = Boolean(today.check_out)
         const isLate     = today.status === 'late'
         return (
