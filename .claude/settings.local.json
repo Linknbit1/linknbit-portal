@@ -55,7 +55,12 @@
       "PowerShell(npx tsc -b 2>&1 | Select-Object -First 40; \"exit: $LASTEXITCODE\")",
       "PowerShell(npx supabase projects list 2>&1 | Select-Object -First 15; \"exit: $LASTEXITCODE\")",
       "PowerShell(npx tsc -b 2>&1 | Select-Object -First 30; \"exit: $LASTEXITCODE\")",
-      "PowerShell(npx tsc -b 2>&1 | Select-Object -First 20; \"exit: $LASTEXITCODE\")"
+      "PowerShell(npx tsc -b 2>&1 | Select-Object -First 20; \"exit: $LASTEXITCODE\")",
+      "mcp__claude_ai_Vercel__search_vercel_documentation",
+      "PowerShell(pnpm add *)",
+      "PowerShell(node scripts/generate-pwa-assets.mjs 2>&1)",
+      "PowerShell(node \"D:/Projects/react/linknbit-portal/scripts/generate-pwa-assets.mjs\" 2>&1)",
+      "PowerShell(npm run *)"
     ]
   },
   "enableAllProjectMcpServers": true,
