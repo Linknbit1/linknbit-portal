@@ -14,6 +14,11 @@ const CORS_HEADERS = {
 
 const INTERNAL_ROLES = ['super_admin', 'admin', 'project_manager', 'team_lead', 'employee', 'hr', 'finance']
 
+// Where invited users land after accepting. Invites are clicked from an email, so
+// this must be the real frontend — never the caller's dev/LAN origin. Override
+// with the PUBLIC_SITE_URL secret if the production URL ever changes.
+const DEFAULT_SITE_URL = 'https://portal.linknbit.com'
+
 function json(body: unknown, status: number): Response {
   return new Response(JSON.stringify(body), {
     status,
@@ -73,7 +78,7 @@ Deno.serve(async (req: Request) => {
   }
 
   // 2. Create the user + invite link (also fires fn_handle_new_user → profile row)
-  const siteUrl = Deno.env.get('PUBLIC_SITE_URL') ?? req.headers.get('Origin') ?? ''
+  const siteUrl = (Deno.env.get('PUBLIC_SITE_URL') ?? DEFAULT_SITE_URL).replace(/\/+$/, '')
   const { data: linkData, error: linkError } = await service.auth.admin.generateLink({
     type: 'invite',
     email,
