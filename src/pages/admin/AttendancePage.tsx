@@ -57,6 +57,7 @@ import { useEnrolledDevices, useApproveDevice, useDeactivateDevice } from '../..
 import type { AttendanceWithProfile } from '../../api/attendance'
 import { downloadCsv } from '../../lib/csv'
 import { cn } from '../../lib/cn'
+import { ModalShell } from '../../components/ui/ModalShell'
 
 function localToday(): string {
   return new Intl.DateTimeFormat('en-CA').format(new Date())
@@ -131,9 +132,7 @@ function MarkModal({ open, onClose, dateFilter }: MarkModalProps) {
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-md shadow-2xl max-h-[92vh] overflow-y-auto">
+    <ModalShell onClose={onClose} size="md" contentClassName="p-5 sm:p-6">
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-display font-bold text-[16px] text-text-1">Mark Attendance</h3>
           <button onClick={onClose} className="text-text-4 hover:text-text-1 transition-colors"><X size={18} /></button>
@@ -173,8 +172,7 @@ function MarkModal({ open, onClose, dateFilter }: MarkModalProps) {
             <Check size={14} /> Save
           </Button>
         </div>
-      </div>
-    </div>
+    </ModalShell>
   )
 }
 
@@ -464,9 +462,7 @@ function GrantWfhModal({ open, onClose }: { open: boolean; onClose: () => void }
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-md shadow-2xl max-h-[92vh] overflow-y-auto">
+    <ModalShell onClose={onClose} size="md" contentClassName="p-5 sm:p-6">
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-display font-bold text-[16px] text-text-1">Grant WFH</h3>
           <button onClick={onClose} className="text-text-4 hover:text-text-1 transition-colors"><X size={18} /></button>
@@ -502,8 +498,7 @@ function GrantWfhModal({ open, onClose }: { open: boolean; onClose: () => void }
             <Check size={14} /> Grant
           </Button>
         </div>
-      </div>
-    </div>
+    </ModalShell>
   )
 }
 
@@ -653,9 +648,7 @@ function WFHRequestsTab() {
       <GrantWfhModal open={grantOpen} onClose={() => setGrantOpen(false)} />
 
       {rejectTarget && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setRejectTarget(null)} />
-          <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-sm shadow-2xl max-h-[92vh] overflow-y-auto">
+        <ModalShell onClose={() => setRejectTarget(null)} size="sm" contentClassName="p-5 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-display font-bold text-[16px] text-text-1">Reject Request</h3>
               <button onClick={() => setRejectTarget(null)} className="text-text-4 hover:text-text-1"><X size={18} /></button>
@@ -684,8 +677,7 @@ function WFHRequestsTab() {
                 <X size={14} /> Reject
               </Button>
             </div>
-          </div>
-        </div>
+        </ModalShell>
       )}
     </div>
   )
@@ -737,9 +729,7 @@ function LeaveTypeForm({ onClose, editing }: { onClose: () => void; editing: Lea
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-md shadow-2xl max-h-[92vh] overflow-y-auto">
+    <ModalShell onClose={onClose} size="md" contentClassName="p-5 sm:p-6">
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-display font-bold text-[16px] text-text-1">{editing ? 'Edit Leave Type' : 'New Leave Type'}</h3>
           <button onClick={onClose} className="text-text-4 hover:text-text-1 transition-colors"><X size={18} /></button>
@@ -778,8 +768,7 @@ function LeaveTypeForm({ onClose, editing }: { onClose: () => void; editing: Lea
             <Check size={14} /> {editing ? 'Save' : 'Create'}
           </Button>
         </div>
-      </div>
-    </div>
+    </ModalShell>
   )
 }
 
@@ -953,9 +942,7 @@ function LeaveTab() {
       <LeaveTypeModal open={typeModalOpen} onClose={() => setTypeModalOpen(false)} editing={editingType} />
 
       {rejectTarget && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setRejectTarget(null)} />
-          <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-sm shadow-2xl max-h-[92vh] overflow-y-auto">
+        <ModalShell onClose={() => setRejectTarget(null)} size="sm" contentClassName="p-5 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-display font-bold text-[16px] text-text-1">Reject Leave</h3>
               <button onClick={() => setRejectTarget(null)} className="text-text-4 hover:text-text-1"><X size={18} /></button>
@@ -977,8 +964,7 @@ function LeaveTab() {
                 <X size={14} /> Reject
               </Button>
             </div>
-          </div>
-        </div>
+        </ModalShell>
       )}
     </div>
   )
@@ -1400,9 +1386,7 @@ function ExceptionsTab() {
 
       {/* Reject modal */}
       {rejectTarget && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => { setRejectTarget(null); setRejectNote('') }} />
-          <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-sm shadow-2xl max-h-[92vh] overflow-y-auto">
+        <ModalShell onClose={() => { setRejectTarget(null); setRejectNote('') }} size="sm" contentClassName="p-5 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-display font-bold text-[16px] text-text-1">Reject Exception</h3>
               <button onClick={() => { setRejectTarget(null); setRejectNote('') }} className="text-text-4 hover:text-text-1"><X size={18} /></button>
@@ -1428,8 +1412,7 @@ function ExceptionsTab() {
                 <X size={14} /> Reject
               </Button>
             </div>
-          </div>
-        </div>
+        </ModalShell>
       )}
     </div>
   )
@@ -1631,9 +1614,7 @@ function HolidaysTab() {
 
       {/* Add holiday modal */}
       {addOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setAddOpen(false)} />
-          <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-md shadow-2xl max-h-[92vh] overflow-y-auto">
+        <ModalShell onClose={() => setAddOpen(false)} size="md" contentClassName="p-5 sm:p-6">
             <div className="flex items-center justify-between mb-5">
               <h3 className="font-display font-bold text-[16px] text-text-1">Add Holiday</h3>
               <button onClick={() => setAddOpen(false)} className="text-text-4 hover:text-text-1"><X size={18} /></button>
@@ -1737,15 +1718,12 @@ function HolidaysTab() {
                 <Check size={14} /> {addMode === 'range' ? `Save ${rangeCount > 0 ? rangeCount + ' Days' : 'Range'}` : 'Save Holiday'}
               </Button>
             </div>
-          </div>
-        </div>
+        </ModalShell>
       )}
 
       {/* Delete confirm modal */}
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setDeleteTarget(null)} />
-          <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-sm shadow-2xl max-h-[92vh] overflow-y-auto">
+        <ModalShell onClose={() => setDeleteTarget(null)} size="sm" contentClassName="p-5 sm:p-6">
             <h3 className="font-display font-bold text-[16px] text-text-1 mb-2">Remove Holiday?</h3>
             <p className="font-ui text-[13px] text-text-3 mb-5">
               This will remove the holiday. Attendance records already flipped to "holiday" status will not be automatically reverted.
@@ -1756,8 +1734,7 @@ function HolidaysTab() {
                 <X size={14} /> Remove
               </Button>
             </div>
-          </div>
-        </div>
+        </ModalShell>
       )}
 
       {/* ── Working Saturdays ─────────────────────────────────────────────── */}
@@ -1811,9 +1788,7 @@ function HolidaysTab() {
 
       {/* Add working Saturday modal */}
       {satPickerOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSatPickerOpen(false)} />
-          <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-sm shadow-2xl max-h-[92vh] overflow-y-auto">
+        <ModalShell onClose={() => setSatPickerOpen(false)} size="sm" contentClassName="p-5 sm:p-6">
             <div className="flex items-center justify-between mb-5">
               <h3 className="font-display font-bold text-[16px] text-text-1">Mark Working Saturday</h3>
               <button onClick={() => setSatPickerOpen(false)} className="text-text-4 hover:text-text-1"><X size={18} /></button>
@@ -1847,15 +1822,12 @@ function HolidaysTab() {
                 <Check size={14} /> Save
               </Button>
             </div>
-          </div>
-        </div>
+        </ModalShell>
       )}
 
       {/* Remove working Saturday confirm */}
       {satDeleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSatDeleteTarget(null)} />
-          <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-sm shadow-2xl max-h-[92vh] overflow-y-auto">
+        <ModalShell onClose={() => setSatDeleteTarget(null)} size="sm" contentClassName="p-5 sm:p-6">
             <h3 className="font-display font-bold text-[16px] text-text-1 mb-2">Remove Working Saturday?</h3>
             <p className="font-ui text-[13px] text-text-3 mb-5">This Saturday will revert to a regular weekend day.</p>
             <div className="flex gap-2.5">
@@ -1864,8 +1836,7 @@ function HolidaysTab() {
                 <X size={14} /> Remove
               </Button>
             </div>
-          </div>
-        </div>
+        </ModalShell>
       )}
     </div>
   )
@@ -2062,9 +2033,7 @@ function OvertimeTab() {
 
       {/* Reject modal */}
       {rejectTarget && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => { setRejectTarget(null); setRejectNote('') }} />
-          <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-sm shadow-2xl max-h-[92vh] overflow-y-auto">
+        <ModalShell onClose={() => { setRejectTarget(null); setRejectNote('') }} size="sm" contentClassName="p-5 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-display font-bold text-[16px] text-text-1">Reject Overtime</h3>
               <button onClick={() => { setRejectTarget(null); setRejectNote('') }} className="text-text-4 hover:text-text-1"><X size={18} /></button>
@@ -2084,8 +2053,7 @@ function OvertimeTab() {
                 <X size={14} /> Reject
               </Button>
             </div>
-          </div>
-        </div>
+        </ModalShell>
       )}
     </div>
   )

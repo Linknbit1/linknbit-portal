@@ -19,6 +19,7 @@ import { TASKS, LEADERBOARD, QUESTS, BADGES, WFH_REQUESTS } from '../../data/moc
 import type { WFHRequest, WFHStatus } from '../../types'
 import { formatDate, formatRelativeTime } from '../../lib/utils'
 import { cn } from '../../lib/cn'
+import { ModalShell } from '../../components/ui/ModalShell'
 
 const MY_USER_ID = 'u5'
 
@@ -186,9 +187,7 @@ function WFHRequestModal({
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-md shadow-2xl max-h-[92vh] overflow-y-auto">
+    <ModalShell onClose={onClose} size="md" contentClassName="p-5 sm:p-6">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-service-dev/15 flex items-center justify-center">
@@ -236,8 +235,7 @@ function WFHRequestModal({
             <Home size={14} /> Submit Request
           </Button>
         </div>
-      </div>
-    </div>
+    </ModalShell>
   )
 }
 

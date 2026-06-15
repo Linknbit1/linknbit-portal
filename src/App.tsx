@@ -6,7 +6,6 @@ import { PrivateRoute } from './components/layout/PrivateRoute'
 import { RoleGuard } from './components/layout/RoleGuard'
 import { AppShell } from './components/layout/AppShell'
 import { ClientShell } from './components/layout/ClientShell'
-import { PWAInstallPrompt } from './components/pwa/PWAInstallPrompt'
 import { showWipFeatures } from './lib/featureFlags'
 import { AUTHORITATIVE_ROLES } from './lib/roles'
 
@@ -116,7 +115,6 @@ export default function App() {
 
               <Route path="*" element={<Navigate to="/login" replace />} />
             </Routes>
-            <PWAInstallPrompt />
           </AuthProvider>
         </BrowserRouter>
       </ToastProvider>

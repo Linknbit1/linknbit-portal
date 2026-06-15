@@ -4,6 +4,7 @@ import { cn } from '../../lib/cn'
 import { useAuthContext } from '../../context/AuthContext'
 import { visibleNavItems } from './navItems'
 import { LinknbitMark } from '../brand/LinknbitLogo'
+import { InstallAppButton } from '../pwa/InstallAppButton'
 
 export function Sidebar() {
   const location = useLocation()
@@ -56,6 +57,11 @@ export function Sidebar() {
           )
         })}
       </nav>
+
+      {/* Install app (shown only when installable) */}
+      <div className="px-3 pb-3 pt-1">
+        <InstallAppButton />
+      </div>
     </aside>
   )
 }

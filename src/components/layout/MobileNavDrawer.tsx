@@ -7,6 +7,7 @@ import { RoleBadge } from '../shared/RoleBadge'
 import { useAuthContext } from '../../context/AuthContext'
 import { toUserRole } from '../../lib/peopleAccess'
 import { visibleNavItems } from './navItems'
+import { InstallAppButton } from '../pwa/InstallAppButton'
 
 interface MobileNavDrawerProps {
   open: boolean
@@ -116,6 +117,7 @@ export function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps) {
                   </div>
                   <span className="font-mono text-[10px] text-text-4 uppercase tracking-wider">View profile</span>
                 </NavLink>
+                <InstallAppButton />
                 <button
                   onClick={handleLogout}
                   className="flex items-center gap-2.5 px-2.5 py-2 rounded-sm font-ui font-medium text-body-sm text-error hover:bg-error/10 transition-colors"

@@ -14,6 +14,7 @@ import { useServices } from '../../hooks/useServices'
 import type { Team } from '../../api/teams'
 import type { Person } from '../../api/people'
 import { canManagePeople } from '../../lib/peopleAccess'
+import { ModalShell } from '../../components/ui/ModalShell'
 
 type Option = { value: string; label: string }
 
@@ -63,9 +64,7 @@ function TeamModal({ team, people, serviceOptions, onClose }: {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-md shadow-2xl max-h-[92vh] overflow-y-auto">
+    <ModalShell onClose={onClose} size="md" contentClassName="p-5 sm:p-6">
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-display font-bold text-[16px] text-text-1">{isEdit ? 'Edit Team' : 'Create Team'}</h3>
           <button onClick={onClose} className="text-text-4 hover:text-text-1"><X size={18} /></button>
@@ -88,8 +87,7 @@ function TeamModal({ team, people, serviceOptions, onClose }: {
             {isPending ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />} {isEdit ? 'Save' : 'Create'}
           </Button>
         </div>
-      </div>
-    </div>
+    </ModalShell>
   )
 }
 
@@ -114,9 +112,7 @@ function AddMemberModal({ team, candidates, onClose }: {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-sm shadow-2xl max-h-[92vh] overflow-y-auto">
+    <ModalShell onClose={onClose} size="sm" contentClassName="p-5 sm:p-6">
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-display font-bold text-[16px] text-text-1">Add to {team.name}</h3>
           <button onClick={onClose} className="text-text-4 hover:text-text-1"><X size={18} /></button>
@@ -128,8 +124,7 @@ function AddMemberModal({ team, candidates, onClose }: {
             {isPending ? <Loader2 size={13} className="animate-spin" /> : <UserPlus size={13} />} Add
           </Button>
         </div>
-      </div>
-    </div>
+    </ModalShell>
   )
 }
 

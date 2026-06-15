@@ -46,6 +46,7 @@ import { useAuthContext } from '../../context/AuthContext'
 import { useToast } from '../../components/ui/toast-context'
 import { cn } from '../../lib/cn'
 import type { AttendanceRow } from '../../api/attendance'
+import { ModalShell } from '../../components/ui/ModalShell'
 
 function localToday(): string {
   return new Intl.DateTimeFormat('en-CA').format(new Date())
@@ -392,9 +393,7 @@ function RequestExceptionModal({ open, onClose }: RequestExceptionModalProps) {
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-md shadow-2xl max-h-[92vh] overflow-y-auto">
+    <ModalShell onClose={onClose} size="md" contentClassName="p-5 sm:p-6">
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-display font-bold text-[16px] text-text-1">Request Attendance Exception</h3>
           <button onClick={onClose} className="text-text-4 hover:text-text-1 transition-colors"><X size={18} /></button>
@@ -473,8 +472,7 @@ function RequestExceptionModal({ open, onClose }: RequestExceptionModalProps) {
             <Check size={14} /> Submit Request
           </Button>
         </div>
-      </div>
-    </div>
+    </ModalShell>
   )
 }
 
@@ -666,9 +664,7 @@ function OvertimeSection() {
 
       {/* Submit modal */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setModalOpen(false)} />
-          <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-md shadow-2xl max-h-[92vh] overflow-y-auto">
+        <ModalShell onClose={() => setModalOpen(false)} size="md" contentClassName="p-5 sm:p-6">
             <div className="flex items-center justify-between mb-5">
               <h3 className="font-display font-bold text-[16px] text-text-1">Log Overtime</h3>
               <button onClick={() => setModalOpen(false)} className="text-text-4 hover:text-text-1"><X size={18} /></button>
@@ -729,8 +725,7 @@ function OvertimeSection() {
                 <Check size={14} /> Submit
               </Button>
             </div>
-          </div>
-        </div>
+        </ModalShell>
       )}
     </div>
   )
@@ -807,9 +802,7 @@ function WfhSection() {
       )}
 
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setModalOpen(false)} />
-          <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-md shadow-2xl max-h-[92vh] overflow-y-auto">
+        <ModalShell onClose={() => setModalOpen(false)} size="md" contentClassName="p-5 sm:p-6">
             <div className="flex items-center justify-between mb-5">
               <h3 className="font-display font-bold text-[16px] text-text-1">Request WFH</h3>
               <button onClick={() => setModalOpen(false)} className="text-text-4 hover:text-text-1"><X size={18} /></button>
@@ -836,8 +829,7 @@ function WfhSection() {
                 <Check size={14} /> Submit
               </Button>
             </div>
-          </div>
-        </div>
+        </ModalShell>
       )}
     </div>
   )
@@ -938,9 +930,7 @@ function LeaveSection() {
       )}
 
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setModalOpen(false)} />
-          <div className="relative bg-surface-1 border border-border-default rounded-t-2xl sm:rounded-xl p-5 sm:p-6 w-full max-w-md shadow-2xl max-h-[92vh] overflow-y-auto">
+        <ModalShell onClose={() => setModalOpen(false)} size="md" contentClassName="p-5 sm:p-6">
             <div className="flex items-center justify-between mb-5">
               <h3 className="font-display font-bold text-[16px] text-text-1">Request Leave</h3>
               <button onClick={() => setModalOpen(false)} className="text-text-4 hover:text-text-1"><X size={18} /></button>
@@ -983,8 +973,7 @@ function LeaveSection() {
                 <Check size={14} /> Submit
               </Button>
             </div>
-          </div>
-        </div>
+        </ModalShell>
       )}
     </div>
   )
