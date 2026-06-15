@@ -1,8 +1,9 @@
-<svg width="500" height="678" viewBox="0 0 500 678" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title">
+<svg width="400" height="542.857" viewBox="0 0 400 542.857" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title">
   <title id="title">Linknbit mark for dark surfaces</title>
-  <rect y="2.253" width="136.208" height="675.116" rx="1" fill="white"/>
-  <rect x="361.541" width="138.46" height="138.46" rx="1" fill="#EE2737"/>
-  <rect x="76.987" y="369.421" width="420.467" height="136.208" rx="2.825" fill="white"/>
-  <rect y="2.253" width="331.932" height="136.208" rx="1" fill="white"/>
-  <rect x="361.246" y="168.071" width="136.208" height="337.558" rx="1" fill="white"/>
+  <rect x="0" y="257.143" width="109.524" height="285.714" rx="1" fill="white"/>
+  <rect x="0" y="0" width="109.524" height="204.762" rx="1" fill="white"/>
+  <rect x="290.476" y="0" width="109.524" height="109.524" rx="1" fill="#EE2737"/>
+  <rect x="61.905" y="295.238" width="338.095" height="109.524" rx="2.82544" fill="white"/>
+  <rect x="0" y="0" width="242.857" height="109.524" rx="1" fill="white"/>
+  <rect x="290.476" y="157.143" width="109.524" height="247.619" rx="1" fill="white"/>
 </svg>
