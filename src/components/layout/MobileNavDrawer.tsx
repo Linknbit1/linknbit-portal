@@ -42,8 +42,8 @@ export function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps) {
             initial={{ x: '-100%' }}
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
-            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="relative flex flex-col w-[82%] max-w-xs bg-surface-1 border-r border-border-default shadow-pop"
+            transition={{ type: 'spring', damping: 32, stiffness: 340 }}
+            className="relative flex flex-col w-full bg-surface-1 shadow-pop pb-[env(safe-area-inset-bottom)]"
           >
             {/* Brand + close */}
             <div className="flex items-center gap-3 px-4 pt-5 pb-4 border-b border-border-subtle">
@@ -100,14 +100,22 @@ export function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps) {
 
             {/* Account */}
             {profile && (
-              <div className="border-t border-border-subtle p-3 flex flex-col gap-2">
-                <div className="flex items-center gap-2.5 px-1">
+              <div className="border-t border-border-subtle p-3 flex flex-col gap-1">
+                <NavLink
+                  to="/profile"
+                  onClick={onClose}
+                  className={({ isActive }) => cn(
+                    'flex items-center gap-2.5 px-2 py-2 rounded-sm transition-colors',
+                    isActive ? 'bg-brand-red/[0.13]' : 'hover:bg-surface-2',
+                  )}
+                >
                   <Avatar name={profile.name} src={profile.avatar_url ?? undefined} size="sm" />
                   <div className="flex-1 min-w-0">
                     <p className="font-ui font-semibold text-body-sm text-text-1 leading-tight truncate">{profile.name}</p>
                     <RoleBadge role={toUserRole(profile.role)} size="sm" className="mt-0.5" />
                   </div>
-                </div>
+                  <span className="font-mono text-[10px] text-text-4 uppercase tracking-wider">View profile</span>
+                </NavLink>
                 <button
                   onClick={handleLogout}
                   className="flex items-center gap-2.5 px-2.5 py-2 rounded-sm font-ui font-medium text-body-sm text-error hover:bg-error/10 transition-colors"

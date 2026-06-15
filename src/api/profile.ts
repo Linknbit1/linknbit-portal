@@ -1,12 +1,15 @@
 import { supabase } from '../lib/supabase'
 import type { Tables, TablesUpdate } from '../types/database'
 
-type ProfileSelfUpdate = Pick<TablesUpdate<'profiles'>, 'name' | 'avatar_url'>
+type ProfileSelfUpdate = Pick<
+  TablesUpdate<'profiles'>,
+  'name' | 'avatar_url' | 'bio' | 'age' | 'phone' | 'job_title' | 'location' | 'skills' | 'tech_stacks'
+>
 
 /**
  * Update the signed-in user's own profile. RLS (p_profiles_self_update) restricts
  * this to the caller's row and forbids changing the role, so only personal fields
- * (name, avatar) can be written here.
+ * can be written here.
  */
 export async function updateOwnProfile(
   userId: string,
@@ -20,6 +23,12 @@ export async function updateOwnProfile(
     .single()
   if (error) throw error
   return data
+}
+
+/** Change the signed-in user's password via Supabase Auth. */
+export async function updatePassword(newPassword: string): Promise<void> {
+  const { error } = await supabase.auth.updateUser({ password: newPassword })
+  if (error) throw error
 }
 
 /** Upload an avatar to the public 'avatars' bucket under the user's folder; returns the public URL. */

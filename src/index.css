@@ -200,6 +200,10 @@
   .client-portal ::-webkit-scrollbar-thumb { background: #DBD2C0; border: 2px solid #FAF7F2; }
   .client-portal ::-webkit-scrollbar-thumb:hover { background: #C9BFAB; }
 
+  /* Hide scrollbar but keep scrolling (mobile tab strips, etc.) */
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+
   a { color: inherit; text-decoration: none; }
   button { font-family: inherit; cursor: pointer; }
   svg { display: block; }

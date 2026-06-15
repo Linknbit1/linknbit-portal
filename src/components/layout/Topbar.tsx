@@ -5,7 +5,6 @@ import { cn } from '../../lib/cn'
 import { showWipFeatures } from '../../lib/featureFlags'
 import { Avatar } from '../ui/Avatar'
 import { RoleBadge } from '../shared/RoleBadge'
-import { ProfileDialog } from './ProfileDialog'
 import { useMobileNav } from './MobileNavContext'
 import { useAuthContext } from '../../context/AuthContext'
 import { useNotifications, useMarkRead, useMarkAllRead } from '../../hooks/useNotifications'
@@ -43,7 +42,6 @@ export function Topbar({ title, breadcrumb, className }: TopbarProps) {
 
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
-  const [profileOpen, setProfileOpen] = useState(false)
 
   useEffect(() => {
     function handleOutsideClick(e: MouseEvent) {
@@ -65,7 +63,6 @@ export function Topbar({ title, breadcrumb, className }: TopbarProps) {
   }
 
   return (
-    <>
     <header
       className={cn(
         'h-topbar topbar-glass border-b border-border-default sticky top-0 z-40 flex items-center px-4 lg:px-8 gap-3 lg:gap-6',
@@ -216,7 +213,7 @@ export function Topbar({ title, breadcrumb, className }: TopbarProps) {
                 </div>
                 <button
                   role="menuitem"
-                  onClick={() => { setMenuOpen(false); setProfileOpen(true) }}
+                  onClick={() => { setMenuOpen(false); navigate('/profile') }}
                   className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[12.5px] font-ui font-medium text-text-2 hover:bg-surface-2 hover:text-text-1 transition-colors"
                 >
                   <UserCircle size={15} className="text-text-3" /> My Profile
@@ -234,7 +231,5 @@ export function Topbar({ title, breadcrumb, className }: TopbarProps) {
         )}
       </div>
     </header>
-    {profileOpen && <ProfileDialog onClose={() => setProfileOpen(false)} />}
-    </>
   )
 }

@@ -13,6 +13,7 @@ import { AUTHORITATIVE_ROLES } from './lib/roles'
 import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
 import DashboardPage from './pages/DashboardPage'
+import ProfilePage from './pages/ProfilePage'
 import AdminProjectsPage from './pages/admin/ProjectsPage'
 import AdminProjectDetailPage from './pages/admin/ProjectDetailPage'
 import AdminTaskDetailPage from './pages/admin/TaskDetailPage'
@@ -56,6 +57,7 @@ export default function App() {
               {/* Internal portal (dark mode) */}
               <Route element={<PrivateRoute><AppShell /></PrivateRoute>}>
                 <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/profile" element={<ProfilePage />} />
                 <Route path="/attendance" element={<AttendancePage />} />
                 <Route path="/gamification" element={<GamificationPage />} />
                 <Route path="/settings" element={<SettingsPage />} />

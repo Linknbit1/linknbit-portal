@@ -228,7 +228,7 @@ function HistoryTable({ records }: { records: AttendanceRow[] }) {
         <h3 className="font-display font-semibold text-h4 text-text-1">Last 30 Days</h3>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full">
+        <table className="w-full block overflow-x-auto whitespace-nowrap lg:whitespace-normal">
           <thead>
             <tr className="border-b border-border-subtle">
               {['Date', 'Status', 'Check In', 'Check Out', 'Hours', 'Source', 'Device'].map((h) => (

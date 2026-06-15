@@ -19,7 +19,7 @@ export function Tabs({ tabs, activeKey, onChange, variant = 'underline', classNa
   return (
     <div
       className={cn(
-        'flex items-center',
+        'flex items-center overflow-x-auto no-scrollbar',
         variant === 'underline' ? 'border-b border-border-default gap-1' : 'gap-1 bg-surface-inset rounded-md p-1',
         className,
       )}
@@ -34,7 +34,7 @@ export function Tabs({ tabs, activeKey, onChange, variant = 'underline', classNa
             aria-selected={active}
             onClick={() => onChange(tab.key)}
             className={cn(
-              'inline-flex items-center gap-2 font-ui font-medium text-body-sm transition-colors duration-150 focus:outline-none',
+              'inline-flex items-center gap-2 font-ui font-medium text-body-sm transition-colors duration-150 focus:outline-none flex-shrink-0 whitespace-nowrap',
               variant === 'underline'
                 ? cn(
                     'px-3 pb-2.5 pt-1 border-b-2 -mb-px',
