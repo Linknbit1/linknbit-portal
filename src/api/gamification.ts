@@ -326,6 +326,41 @@ export async function awardBadge(badgeId: string, profileId: string): Promise<vo
   if (error) throw error
 }
 
+// ── Employee of the Month ────────────────────────────────────────────────────────
+
+export type EmployeeOfMonthRow = Tables<'employee_of_the_month'>
+
+/** Winner for a specific month (1-indexed), or null if none set yet. */
+export async function fetchEmployeeOfMonth(
+  year: number,
+  month: number,
+): Promise<EmployeeOfMonthRow | null> {
+  const { data, error } = await supabase
+    .from('employee_of_the_month')
+    .select('*')
+    .eq('year', year)
+    .eq('month', month)
+    .maybeSingle()
+  if (error) throw error
+  return data
+}
+
+/** Governors only (RLS-enforced): set or replace the winner for a month. */
+export async function setEmployeeOfMonth(
+  year: number,
+  month: number,
+  profileId: string,
+  note: string | null,
+): Promise<void> {
+  const { error } = await supabase.rpc('set_employee_of_the_month', {
+    p_year: year,
+    p_month: month,
+    p_profile_id: profileId,
+    p_note: note ?? undefined,
+  })
+  if (error) throw error
+}
+
 // ── LP ledger, grants, restriction, monthly history ─────────────────────────────
 
 export async function fetchXpTransactions(profileId: string): Promise<XpTransactionRow[]> {

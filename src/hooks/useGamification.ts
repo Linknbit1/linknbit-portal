@@ -28,6 +28,8 @@ import {
   fetchBadges,
   fetchMyBadgeAwards,
   awardBadge,
+  fetchEmployeeOfMonth,
+  setEmployeeOfMonth,
   fetchXpTransactions,
   grantLp,
   setParticipationRestriction,
@@ -53,6 +55,7 @@ export const GAMIFICATION_KEYS = {
   myBadges:         (profileId: string) => ['badge_awards', profileId] as const,
   xpTransactions:   (profileId: string) => ['xp_transactions', profileId] as const,
   lpHistory:        (profileId: string) => ['lp_history', profileId] as const,
+  employeeOfMonth:  (year: number, month: number) => ['employee_of_month', year, month] as const,
 }
 
 // ── Leaderboard & directory ──────────────────────────────────────────────────────
@@ -290,6 +293,28 @@ export function useAwardBadge() {
   return useMutation({
     mutationFn: ({ badgeId, profileId }: { badgeId: string; profileId: string }) => awardBadge(badgeId, profileId),
     onSuccess: (_d, vars) => qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.myBadges(vars.profileId) }),
+  })
+}
+
+// ── Employee of the Month ────────────────────────────────────────────────────────
+
+export function useEmployeeOfMonth(year: number, month: number) {
+  return useQuery({
+    queryKey: GAMIFICATION_KEYS.employeeOfMonth(year, month),
+    queryFn: () => fetchEmployeeOfMonth(year, month),
+    staleTime: 5 * 60_000,
+  })
+}
+
+export function useSetEmployeeOfMonth() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ year, month, profileId, note }: { year: number; month: number; profileId: string; note: string | null }) =>
+      setEmployeeOfMonth(year, month, profileId, note),
+    onSuccess: (_d, vars) => {
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.employeeOfMonth(vars.year, vars.month) })
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.myBadges(vars.profileId) })
+    },
   })
 }
 
