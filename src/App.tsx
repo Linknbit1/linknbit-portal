@@ -5,6 +5,7 @@ import { AuthProvider } from './context/AuthContext'
 import { PrivateRoute } from './components/layout/PrivateRoute'
 import { AppShell } from './components/layout/AppShell'
 import { ClientShell } from './components/layout/ClientShell'
+import { showWipFeatures } from './lib/featureFlags'
 
 import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
@@ -53,23 +54,28 @@ export default function App() {
               {/* Internal portal (dark mode) */}
               <Route element={<PrivateRoute><AppShell /></PrivateRoute>}>
                 <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
-                <Route path="/admin/projects" element={<AdminProjectsPage />} />
-                <Route path="/admin/projects/:id" element={<AdminProjectDetailPage />} />
-                <Route path="/admin/tasks/:id" element={<AdminTaskDetailPage />} />
-                <Route path="/admin/tasks" element={<TasksPage />} />
-                <Route path="/admin/clients" element={<ClientsPage />} />
                 <Route path="/admin/teams" element={<TeamsPage />} />
                 <Route path="/admin/people" element={<PeoplePage />} />
                 <Route path="/admin/attendance" element={<Navigate to="/attendance" replace />} />
-                <Route path="/admin/reports" element={<ReportsPage />} />
-                <Route path="/admin/gamification" element={<GamificationPage />} />
-                <Route path="/admin/clickup" element={<ClickUpPage />} />
                 <Route path="/admin/settings" element={<SettingsPage />} />
+
+                {/* Work-in-progress modules — only routable in development builds */}
+                {showWipFeatures && (
+                  <>
+                    <Route path="/admin/projects" element={<AdminProjectsPage />} />
+                    <Route path="/admin/projects/:id" element={<AdminProjectDetailPage />} />
+                    <Route path="/admin/tasks/:id" element={<AdminTaskDetailPage />} />
+                    <Route path="/admin/tasks" element={<TasksPage />} />
+                    <Route path="/admin/clients" element={<ClientsPage />} />
+                    <Route path="/admin/reports" element={<ReportsPage />} />
+                    <Route path="/admin/clickup" element={<ClickUpPage />} />
+                    <Route path="/employee/tasks" element={<TasksPage />} />
+                    <Route path="/employee/projects" element={<AdminProjectsPage />} />
+                  </>
+                )}
 
                 {/* Employee portal */}
                 <Route path="/employee/dashboard" element={<EmployeeDashboardPage />} />
-                <Route path="/employee/tasks" element={<TasksPage />} />
-                <Route path="/employee/projects" element={<AdminProjectsPage />} />
                 <Route path="/employee/attendance" element={<Navigate to="/attendance" replace />} />
                 <Route path="/attendance" element={<AttendancePage />} />
                 <Route path="/employee/leaderboard" element={<GamificationPage />} />
