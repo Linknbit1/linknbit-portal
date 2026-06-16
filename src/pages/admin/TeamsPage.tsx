@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react'
-import { Users, Plus, X, Loader2, Pencil, UserPlus, UserMinus, Crown } from 'lucide-react'
+import { Users, Plus, X, Loader2, Pencil, UserPlus, UserMinus, Crown, Sparkles, ShieldCheck } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
-import { Avatar } from '../../components/ui/Avatar'
+import { Avatar, AvatarGroup } from '../../components/ui/Avatar'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Select } from '../../components/ui/Select'
 import { ServiceChip } from '../../components/shared/ServiceChip'
+import { RoleBadge } from '../../components/shared/RoleBadge'
 import { useToast } from '../../components/ui/toast-context'
 import { useAuthContext } from '../../context/AuthContext'
 import { useTeams, useCreateTeam, useUpdateTeam } from '../../hooks/useTeams'
@@ -13,6 +14,7 @@ import { usePeople, useUpdatePersonRole } from '../../hooks/usePeople'
 import { useServices } from '../../hooks/useServices'
 import type { Team } from '../../api/teams'
 import type { Person } from '../../api/people'
+import type { UserRole } from '../../types'
 import { canManagePeople } from '../../lib/peopleAccess'
 import { ModalShell } from '../../components/ui/ModalShell'
 
@@ -186,42 +188,124 @@ export default function TeamsPage() {
               const lead = people.find((p) => p.id === team.lead_id)
               const candidates = people.filter((p) => p.team_id !== team.id && p.is_active)
               return (
-                <div key={team.id} className="bg-surface-1 border border-border-default rounded-xl p-5 flex flex-col gap-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-lg bg-surface-2 flex items-center justify-center flex-shrink-0"><Users size={18} className="text-text-3" /></div>
-                      <div className="min-w-0">
-                        <p className="font-display font-bold text-[15px] text-text-1 truncate">{team.name}</p>
-                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1"><ServiceChip service={team.service_type} /><span className="font-mono text-[11px] text-text-4">{members.length} member{members.length === 1 ? '' : 's'}</span></div>
+                <section
+                  key={team.id}
+                  className="group overflow-hidden rounded-lg border border-border-default bg-surface-1 shadow-[0_18px_50px_rgba(0,0,0,0.16)] transition-colors hover:border-border-strong"
+                >
+                  <div className="border-b border-border-subtle bg-[linear-gradient(135deg,rgba(34,211,238,0.08),rgba(238,39,55,0.04)_45%,rgba(20,29,42,0)_100%)] p-5">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex min-w-0 items-start gap-3.5">
+                        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg border border-border-subtle bg-surface-2 text-service-dev shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+                          <Users size={20} />
+                        </div>
+                        <div className="min-w-0 pt-0.5">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="font-display text-[17px] font-bold leading-tight text-text-1 truncate">{team.name}</p>
+                            {lead && (
+                              <span className="inline-flex items-center gap-1 rounded-full border border-coin-gold/25 bg-coin-gold/10 px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-coin-gold">
+                                <Crown size={10} /> Led
+                              </span>
+                            )}
+                          </div>
+                          <div className="mt-2 flex flex-wrap items-center gap-2">
+                            <ServiceChip service={team.service_type} />
+                            <span className="rounded-full border border-border-subtle bg-surface-2 px-2.5 py-1 font-mono text-[10.5px] text-text-3">
+                              {members.length} member{members.length === 1 ? '' : 's'}
+                            </span>
+                          </div>
+                        </div>
                       </div>
+                      {canManage && (
+                        <button
+                          onClick={() => setTeamModal(team)}
+                          className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md text-text-4 transition-colors hover:bg-surface-2 hover:text-text-1"
+                          aria-label={`Edit ${team.name}`}
+                          title="Edit team"
+                        >
+                          <Pencil size={14} />
+                        </button>
+                      )}
                     </div>
-                    {canManage && <Button size="sm" variant="ghost" onClick={() => setTeamModal(team)}><Pencil size={13} /></Button>}
+
+                    <div className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-[1fr_auto] sm:items-center">
+                      <div className="flex items-center gap-2.5 rounded-md border border-border-subtle bg-bg-base/35 px-3 py-2.5">
+                        <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md bg-coin-gold/10 text-coin-gold">
+                          <Crown size={14} />
+                        </span>
+                        <div className="min-w-0">
+                          <p className="font-mono text-[9.5px] font-semibold uppercase tracking-wider text-text-4">Team lead</p>
+                          {lead ? (
+                            <p className="truncate font-ui text-[12.5px] font-semibold text-text-1">{lead.name}</p>
+                          ) : (
+                            <p className="font-ui text-[12.5px] text-text-4">Assign a lead to give this team ownership.</p>
+                          )}
+                        </div>
+                      </div>
+                      {members.length > 0 && (
+                        <div className="flex items-center justify-between gap-3 rounded-md border border-border-subtle bg-bg-base/35 px-3 py-2.5 sm:justify-end">
+                          <span className="font-mono text-[10px] uppercase tracking-wider text-text-4">Roster</span>
+                          <AvatarGroup users={members.map((m) => ({ id: m.id, name: m.name }))} max={4} size="sm" />
+                        </div>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-2 text-[12px] font-ui text-text-3">
-                    <Crown size={13} className="text-coin-gold" />
-                    {lead ? <span className="text-text-2">{lead.name}</span> : <span className="text-text-4">No lead assigned</span>}
-                  </div>
+                  <div className="flex flex-col gap-3 p-5">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="font-ui text-[13px] font-semibold text-text-1">Members</p>
+                        <p className="mt-0.5 font-mono text-[10.5px] text-text-4">People assigned to this team</p>
+                      </div>
+                      {members.length > 0 && (
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-2 px-2.5 py-1 font-mono text-[10px] text-text-3">
+                          <ShieldCheck size={11} /> Active roster
+                        </span>
+                      )}
+                    </div>
 
-                  <div className="flex flex-col gap-1.5">
-                    {members.length === 0 && <p className="font-ui text-[12px] text-text-4">No members yet.</p>}
+                    {members.length === 0 && (
+                      <div className="rounded-md border border-dashed border-border-default bg-surface-2/40 px-4 py-5 text-center">
+                        <Sparkles size={16} className="mx-auto text-text-4" />
+                        <p className="mt-2 font-ui text-[13px] font-semibold text-text-2">No members yet</p>
+                        <p className="mt-1 font-ui text-[12px] text-text-4">Add teammates to make this card useful at a glance.</p>
+                      </div>
+                    )}
                     {members.map((m) => (
-                      <div key={m.id} className="flex items-center gap-2.5 group">
-                        <Avatar name={m.name} size="xs" />
-                        <span className="font-ui text-[12.5px] text-text-2 flex-1 truncate">{m.name}{m.id === team.lead_id && <span className="ml-1.5 font-mono text-[9px] text-coin-gold">LEAD</span>}</span>
+                      <div
+                        key={m.id}
+                        className="flex items-center gap-3 rounded-md border border-transparent bg-surface-2/35 px-3 py-2.5 transition-colors hover:border-border-subtle hover:bg-surface-2"
+                      >
+                        <Avatar name={m.name} size="sm" />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex min-w-0 items-center gap-2">
+                            <span className="truncate font-ui text-[13px] font-semibold text-text-1">{m.name}</span>
+                            {m.id === team.lead_id && <span className="font-mono text-[9px] font-semibold uppercase tracking-wider text-coin-gold">Lead</span>}
+                          </div>
+                          <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                            <RoleBadge role={m.role as UserRole} />
+                            {m.service_type && <ServiceChip service={m.service_type} className="py-0.5 px-2 text-[9.5px]" />}
+                          </div>
+                        </div>
                         {canManage && (
-                          <button onClick={() => removeMember(team, m)} className="p-1 text-text-4 hover:text-error opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity" title="Remove from team"><UserMinus size={13} /></button>
+                          <button
+                            onClick={() => removeMember(team, m)}
+                            className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md text-text-4 opacity-100 transition-all hover:bg-error/10 hover:text-error lg:opacity-0 lg:group-hover:opacity-100"
+                            title="Remove from team"
+                            aria-label={`Remove ${m.name} from ${team.name}`}
+                          >
+                            <UserMinus size={13} />
+                          </button>
                         )}
                       </div>
                     ))}
-                  </div>
 
-                  {canManage && (
-                    <Button size="sm" variant="secondary" className="w-full" disabled={candidates.length === 0} onClick={() => setAddTo(team)}>
-                      <UserPlus size={13} /> Add Member
-                    </Button>
-                  )}
-                </div>
+                    {canManage && (
+                      <Button size="sm" variant="secondary" className="mt-1 w-full" disabled={candidates.length === 0} onClick={() => setAddTo(team)}>
+                        <UserPlus size={13} /> {candidates.length === 0 ? 'Everyone is assigned' : 'Add Member'}
+                      </Button>
+                    )}
+                  </div>
+                </section>
               )
             })}
           </div>
