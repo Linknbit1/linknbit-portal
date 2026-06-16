@@ -1,8 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   fetchEnrolledDevices,
+  fetchMyEnrolledDevices,
   approveDevice,
   deactivateDevice,
+  registerDevice,
   type EnrolledDeviceWithProfile,
 } from '../api/attendance'
 
@@ -10,12 +12,31 @@ export type { EnrolledDeviceWithProfile }
 
 export const DEVICE_KEYS = {
   all: ['enrolled_devices'] as const,
+  mine: ['enrolled_devices', 'mine'] as const,
 }
 
 export function useEnrolledDevices() {
   return useQuery({
     queryKey: DEVICE_KEYS.all,
     queryFn: fetchEnrolledDevices,
+  })
+}
+
+export function useMyEnrolledDevices() {
+  return useQuery({
+    queryKey: DEVICE_KEYS.mine,
+    queryFn: fetchMyEnrolledDevices,
+  })
+}
+
+export function useRegisterDevice() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: { deviceFingerprint: string; deviceName: string }) => registerDevice(payload),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: DEVICE_KEYS.mine })
+      qc.invalidateQueries({ queryKey: DEVICE_KEYS.all })
+    },
   })
 }
 

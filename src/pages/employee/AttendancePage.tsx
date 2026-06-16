@@ -41,6 +41,7 @@ import {
   useMyLeaveBalances,
 } from '../../hooks/useAttendance'
 import { AttendanceCheckInCard } from '../../components/shared/AttendanceCheckInCard'
+import { MyDevicesCard } from '../../components/shared/MyDevicesCard'
 import { TeamAttendancePanel } from '../../components/shared/TeamAttendancePanel'
 import { useAuthContext } from '../../context/AuthContext'
 import { useToast } from '../../components/ui/toast-context'
@@ -992,6 +993,8 @@ export default function EmployeeAttendancePage() {
 
       <div className="px-4 py-6 lg:p-6 flex flex-col gap-6 max-w-content mx-auto w-full">
         <AttendanceCheckInCard />
+
+        <MyDevicesCard />
 
         {/* Team leads / PMs: read-only visibility into their team */}
         {canSeeTeam && <TeamAttendancePanel />}

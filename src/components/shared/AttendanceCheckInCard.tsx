@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type ReactNode } from 'react'
 import {
   MapPin, CheckCircle2, LogOut, Wifi, WifiOff,
   AlertCircle, Fingerprint, Palmtree, Calendar,
-  Home, Plane, XCircle,
+  Home, Plane, XCircle, Clock, ShieldX,
 } from 'lucide-react'
 import {
   useMyTodayAttendance,
@@ -12,7 +12,8 @@ import {
   useHolidays,
   useWorkingSaturdays,
 } from '../../hooks/useAttendance'
-import { getDeviceFingerprint, getDeviceName } from '../../lib/deviceUtils'
+import { useCurrentDevice } from '../../hooks/useCurrentDevice'
+import { useRegisterDevice } from '../../hooks/useEnrolledDevices'
 import { useToast } from '../ui/toast-context'
 import { Button } from '../ui/Button'
 import { cn } from '../../lib/cn'
@@ -38,6 +39,38 @@ function ErrorBanner({ msg }: { msg: string }) {
     <div className="w-full flex items-start gap-2.5 bg-error/8 border border-error/25 rounded-md px-3.5 py-2.5">
       <AlertCircle size={14} className="text-error flex-shrink-0 mt-0.5" />
       <p className="font-ui text-[12px] text-error">{msg}</p>
+    </div>
+  )
+}
+
+type DeviceNoticeTone = 'info' | 'pending' | 'blocked'
+
+const DEVICE_NOTICE_TONE: Record<DeviceNoticeTone, { ring: string; fg: string }> = {
+  info:    { ring: 'bg-brand-red/10 border-brand-red/30', fg: 'text-brand-red' },
+  pending: { ring: 'bg-warning/10 border-warning/30',     fg: 'text-warning' },
+  blocked: { ring: 'bg-error/10 border-error/30',         fg: 'text-error' },
+}
+
+function DeviceNotice({
+  tone, icon: Icon, title, body, action,
+}: {
+  tone: DeviceNoticeTone
+  icon: typeof Fingerprint
+  title: string
+  body: string
+  action?: ReactNode
+}) {
+  const t = DEVICE_NOTICE_TONE[tone]
+  return (
+    <div className="flex flex-col items-center gap-3 text-center">
+      <div className={cn('w-24 h-24 rounded-full border-2 flex items-center justify-center', t.ring)}>
+        <Icon size={38} className={t.fg} />
+      </div>
+      <div className="max-w-[280px]">
+        <p className={cn('font-display font-bold text-[18px]', t.fg)}>{title}</p>
+        <p className="font-ui text-[12.5px] text-text-3 mt-1">{body}</p>
+      </div>
+      {action}
     </div>
   )
 }
@@ -84,20 +117,13 @@ export function AttendanceCheckInCard() {
   const { data: workingSats = [] } = useWorkingSaturdays(year)
   const checkInMut  = useCheckIn()
   const checkOutMut = useCheckOut()
+  const registerMut = useRegisterDevice()
 
-  const [fingerprint, setFingerprint] = useState('')
-  const [deviceNameVal, setDeviceNameVal] = useState('')
-  const [deviceReady, setDeviceReady]     = useState(false)
+  const { fingerprint, deviceName: deviceNameVal, ready: deviceReady, status: deviceStatus, canCheckIn } =
+    useCurrentDevice()
+
   const [errorMsg, setErrorMsg]           = useState<string | null>(null)
   const [clock, setClock]                 = useState('')
-
-  useEffect(() => {
-    Promise.all([getDeviceFingerprint(), Promise.resolve(getDeviceName())]).then(([fp, name]) => {
-      setFingerprint(fp)
-      setDeviceNameVal(name)
-      setDeviceReady(true)
-    })
-  }, [])
 
   useEffect(() => {
     const tick = () => setClock(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }))
@@ -131,15 +157,34 @@ export function AttendanceCheckInCard() {
         result.status === 'late' ? 'Checked in — marked as late' : 'Checked in successfully!',
         result.status === 'late' ? 'warning' : 'success',
       )
-      if (result.device_flagged) toast('Unrecognised device — HR has been notified.', 'warning')
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? ''
       const msg  = err instanceof Error ? err.message : 'Check-in failed'
-      if      (code === 'outside_window') setErrorMsg(msg)
-      else if (code === 'wrong_network')  setErrorMsg('You must be on the office WiFi to check in.')
-      else if (code === 'duplicate')      setErrorMsg('You have already checked in today.')
-      else if (code === 'device_blocked') setErrorMsg('This device is blocked. Contact HR to reactivate it.')
-      else                                setErrorMsg(msg || 'Check-in failed. Please try again.')
+      if      (code === 'outside_window')      setErrorMsg(msg)
+      else if (code === 'wrong_network')       setErrorMsg('You must be on the office WiFi to check in.')
+      else if (code === 'duplicate')           setErrorMsg('You have already checked in today.')
+      else if (code === 'device_unregistered') setErrorMsg('This device isn’t registered. Register it below, then ask an admin to approve it.')
+      else if (code === 'device_pending')      setErrorMsg('This device is awaiting admin approval.')
+      else if (code === 'device_blocked')      setErrorMsg('This device has been blocked. Contact your admin to use it.')
+      else                                     setErrorMsg(msg || 'Check-in failed. Please try again.')
+    }
+  }
+
+  const handleRegister = async () => {
+    setErrorMsg(null)
+    try {
+      const res = await registerMut.mutateAsync({ deviceFingerprint: fingerprint, deviceName: deviceNameVal })
+      toast(
+        res.status === 'approved'
+          ? 'Device registered and approved — you can check in now.'
+          : 'Device registered — an admin will review it shortly.',
+        'success',
+      )
+    } catch (err: unknown) {
+      const code = (err as { code?: string }).code ?? ''
+      const msg  = err instanceof Error ? err.message : 'Registration failed'
+      if (code === 'device_blocked') setErrorMsg('This device has been blocked. Contact your admin to use it.')
+      else                           setErrorMsg(msg || 'Registration failed. Please try again.')
     }
   }
 
@@ -226,12 +271,6 @@ export function AttendanceCheckInCard() {
         const isLate     = today.status === 'late'
         return (
           <>
-            {today.device_flagged && (
-              <div className="w-full flex items-start gap-2.5 bg-warning/8 border border-warning/25 rounded-md px-3.5 py-2.5">
-                <AlertCircle size={14} className="text-warning flex-shrink-0 mt-0.5" />
-                <p className="font-ui text-[12px] text-warning">Unrecognised device — HR has been notified and will review it.</p>
-              </div>
-            )}
             {errorMsg && <ErrorBanner msg={errorMsg} />}
 
             <div className={cn(
@@ -288,37 +327,69 @@ export function AttendanceCheckInCard() {
           )}
           {errorMsg && <ErrorBanner msg={errorMsg} />}
 
-          <button
-            onClick={handleCheckIn}
-            disabled={!deviceReady || checkInMut.isPending}
-            className={cn(
-              'w-24 h-24 rounded-full border-2 flex items-center justify-center transition-all duration-200',
-              'border-brand-red/50 bg-brand-red/10 hover:bg-brand-red/20 hover:border-brand-red hover:scale-105 active:scale-95',
-              (!deviceReady || checkInMut.isPending) && 'opacity-70 cursor-not-allowed',
-            )}
-          >
-            {checkInMut.isPending
-              ? <span className="w-7 h-7 border-2 border-brand-red border-t-transparent rounded-full animate-spin" />
-              : <MapPin size={36} className="text-brand-red" />
-            }
-          </button>
+          {/* Device gating — only admins and approved devices reach the check-in button. */}
+          {deviceReady && !canCheckIn && deviceStatus === 'unregistered' ? (
+            <DeviceNotice
+              tone="info"
+              icon={Fingerprint}
+              title="Register this device"
+              body="Check-in is only allowed from devices an admin has approved. Register this device, then an admin will review it."
+              action={
+                <Button size="sm" onClick={handleRegister} disabled={registerMut.isPending}>
+                  <Fingerprint size={14} />
+                  {registerMut.isPending ? 'Registering…' : 'Register this device'}
+                </Button>
+              }
+            />
+          ) : deviceReady && !canCheckIn && deviceStatus === 'pending' ? (
+            <DeviceNotice
+              tone="pending"
+              icon={Clock}
+              title="Awaiting approval"
+              body="This device is registered and waiting for an admin to approve it. You can check in once it’s approved."
+            />
+          ) : deviceReady && !canCheckIn && deviceStatus === 'blocked' ? (
+            <DeviceNotice
+              tone="blocked"
+              icon={ShieldX}
+              title="Device blocked"
+              body="An admin has blocked this device. Contact your admin or use an approved device to check in."
+            />
+          ) : (
+            <>
+              <button
+                onClick={handleCheckIn}
+                disabled={!deviceReady || checkInMut.isPending}
+                className={cn(
+                  'w-24 h-24 rounded-full border-2 flex items-center justify-center transition-all duration-200',
+                  'border-brand-red/50 bg-brand-red/10 hover:bg-brand-red/20 hover:border-brand-red hover:scale-105 active:scale-95',
+                  (!deviceReady || checkInMut.isPending) && 'opacity-70 cursor-not-allowed',
+                )}
+              >
+                {checkInMut.isPending
+                  ? <span className="w-7 h-7 border-2 border-brand-red border-t-transparent rounded-full animate-spin" />
+                  : <MapPin size={36} className="text-brand-red" />
+                }
+              </button>
 
-          <div className="text-center">
-            <p className="font-display font-bold text-[18px] text-text-1">Check In</p>
-            <p className="font-mono text-[13px] text-text-3 mt-0.5">{clock}</p>
-          </div>
+              <div className="text-center">
+                <p className="font-display font-bold text-[18px] text-text-1">Check In</p>
+                <p className="font-mono text-[13px] text-text-3 mt-0.5">{clock}</p>
+              </div>
 
-          {deviceReady && (
-            <div className="flex items-center gap-1.5 font-mono text-[10.5px] text-text-4">
-              <Fingerprint size={11} />
-              <span>{deviceNameVal} · {fingerprint.slice(0, 12)}…</span>
-            </div>
+              {deviceReady && (
+                <div className="flex items-center gap-1.5 font-mono text-[10.5px] text-text-4">
+                  <Fingerprint size={11} />
+                  <span>{deviceNameVal} · {fingerprint.slice(0, 12)}…</span>
+                </div>
+              )}
+
+              <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1 text-[11.5px] font-mono text-text-3">
+                <span className="flex items-center gap-1.5"><Wifi size={12} className="text-success" /> Office Network Required</span>
+                <span className="text-text-4">{fmtHHMM(workStart)} – {fmtHHMM(workEnd)} · {grace}m grace</span>
+              </div>
+            </>
           )}
-
-          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1 text-[11.5px] font-mono text-text-3">
-            <span className="flex items-center gap-1.5"><Wifi size={12} className="text-success" /> Office Network Required</span>
-            <span className="text-text-4">{fmtHHMM(workStart)} – {fmtHHMM(workEnd)} · {grace}m grace</span>
-          </div>
         </>
       )}
 
