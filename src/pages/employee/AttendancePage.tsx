@@ -841,6 +841,7 @@ function LeaveSection() {
   const toast = useToast()
   const [modalOpen, setModalOpen] = useState(false)
   const [typeId, setTypeId] = useState('')
+  const [dayPart, setDayPart] = useState<'full' | 'first_half' | 'second_half'>('full')
   const [startDate, setStartDate] = useState(localToday)
   const [endDate, setEndDate] = useState(localToday)
   const [reason, setReason] = useState('')
@@ -848,12 +849,24 @@ function LeaveSection() {
   const { data: requests = [], isLoading } = useMyLeaveRequests()
   const submitMut = useSubmitLeave()
 
+  const isHalf = dayPart !== 'full'
+  // Half-day is always a single day.
+  const effectiveEnd = isHalf ? startDate : endDate
+  const invalid = !typeId || !reason.trim() || effectiveEnd < startDate
+
   const handleSubmit = async () => {
-    if (!typeId || !reason.trim() || endDate < startDate) return
+    if (invalid) return
     try {
-      await submitMut.mutateAsync({ leave_type_id: typeId, start_date: startDate, end_date: endDate, reason: reason.trim() })
+      await submitMut.mutateAsync({
+        leave_type_id: typeId,
+        start_date: startDate,
+        end_date: effectiveEnd,
+        reason: reason.trim(),
+        day_part: dayPart,
+      })
       toast('Leave request submitted — awaiting approval', 'success')
-      setModalOpen(false); setTypeId(''); setReason(''); setStartDate(localToday()); setEndDate(localToday())
+      setModalOpen(false); setTypeId(''); setReason(''); setDayPart('full')
+      setStartDate(localToday()); setEndDate(localToday())
     } catch {
       toast('Failed to submit leave request', 'error')
     }
@@ -913,6 +926,11 @@ function LeaveSection() {
                     <span className="font-ui font-medium text-[13px] text-text-1">{req.leave_types?.name ?? 'Leave'}</span>
                     <span className="font-mono text-[11px] text-text-3">{fmtRange(req.start_date, req.end_date)}</span>
                     <span className="font-display font-bold text-[12px] text-service-dev">{req.days}d</span>
+                    {req.day_part !== 'full' && (
+                      <span className="px-1.5 py-0.5 rounded-xs bg-service-design/10 border border-service-design/25 text-service-design text-[10px] font-mono font-semibold">
+                        Half day
+                      </span>
+                    )}
                   </div>
                   <p className="font-ui text-[12px] text-text-3 truncate">{req.reason}</p>
                   {req.review_note && <p className="font-ui text-[11px] text-error mt-0.5 italic">"{req.review_note}"</p>}
@@ -945,16 +963,38 @@ function LeaveSection() {
                   options={balances.map((b) => ({ value: b.type.id, label: `${b.type.name} — ${b.remaining} of ${b.type.days_allowed} left` }))}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">From</label>
-                  <DatePicker value={startDate} onChange={(v) => { setStartDate(v); if (endDate < v) setEndDate(v) }} minDate={todayStr} />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">To</label>
-                  <DatePicker value={endDate} onChange={setEndDate} minDate={startDate} />
-                </div>
+              <div>
+                <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Duration</label>
+                <Select
+                  value={dayPart}
+                  onChange={(v) => setDayPart(v === 'first_half' || v === 'second_half' ? v : 'full')}
+                  options={[
+                    { value: 'full',        label: 'Full day(s)' },
+                    { value: 'first_half',  label: 'Half day — first half' },
+                    { value: 'second_half', label: 'Half day — second half' },
+                  ]}
+                />
+                {isHalf && (
+                  <p className="text-[11px] font-ui text-text-4 mt-1">Half day counts as 0.5 and applies to a single day.</p>
+                )}
               </div>
+              {isHalf ? (
+                <div>
+                  <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Date</label>
+                  <DatePicker value={startDate} onChange={setStartDate} minDate={todayStr} />
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">From</label>
+                    <DatePicker value={startDate} onChange={(v) => { setStartDate(v); if (endDate < v) setEndDate(v) }} minDate={todayStr} />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">To</label>
+                    <DatePicker value={endDate} onChange={setEndDate} minDate={startDate} />
+                  </div>
+                </div>
+              )}
               <div>
                 <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Reason</label>
                 <textarea
@@ -969,7 +1009,7 @@ function LeaveSection() {
             <div className="flex gap-2.5 mt-5">
               <Button variant="ghost" size="sm" className="flex-1" onClick={() => setModalOpen(false)}>Cancel</Button>
               <Button size="sm" className="flex-1" onClick={handleSubmit}
-                disabled={!typeId || !reason.trim() || endDate < startDate || submitMut.isPending}>
+                disabled={invalid || submitMut.isPending}>
                 <Check size={14} /> Submit
               </Button>
             </div>
