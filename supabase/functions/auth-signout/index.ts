@@ -1,5 +1,17 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { REFRESH_COOKIE, clearCookie } from '../_shared/cookie.ts'
+
+// Cookie helpers inlined (kept self-contained so this critical auth function
+// has no cross-file dependency at deploy time). Mirrors _shared/cookie.ts.
+const REFRESH_COOKIE = 'sb-refresh-token'
+function isSecureRequest(req: Request): boolean {
+  const origin = req.headers.get('origin') ?? ''
+  if (origin.startsWith('http://')) return false
+  if (origin.startsWith('https://')) return true
+  return (req.headers.get('x-forwarded-proto') ?? 'https') !== 'http'
+}
+function clearCookie(name: string, secure: boolean): string {
+  return `${name}=; HttpOnly${secure ? '; Secure' : ''}; SameSite=Lax; Path=/; Max-Age=0`
+}
 
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response(null, { status: 204 })
@@ -18,7 +30,7 @@ Deno.serve(async (req: Request) => {
   }
 
   const headers = new Headers({ 'Content-Type': 'application/json' })
-  headers.append('Set-Cookie', clearCookie(REFRESH_COOKIE))
+  headers.append('Set-Cookie', clearCookie(REFRESH_COOKIE, isSecureRequest(req)))
 
   return new Response(JSON.stringify({ success: true }), { headers })
 })

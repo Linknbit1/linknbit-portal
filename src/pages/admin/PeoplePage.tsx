@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Plus, Search, Loader2, X, Mail, Copy, Check, UserCheck, UserX, ShieldAlert,
+  Pencil, MoreVertical, Users,
 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Avatar } from '../../components/ui/Avatar'
@@ -218,13 +219,175 @@ function humanizeError(msg: string): string {
   return msg
 }
 
+// ── Person row (responsive: desktop table row + mobile card) ───────────────────────
+
+const GRID_COLS = 'grid-cols-[1fr_130px_140px_120px_90px_120px]'
+
+function TeamCell({ label }: { label: string | null }) {
+  if (!label) {
+    return <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-surface-inset border border-dashed border-border-default font-mono text-[10.5px] text-text-4">No team</span>
+  }
+  return (
+    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-surface-2 border border-border-subtle font-ui text-[11.5px] text-text-2 max-w-full">
+      <Users size={11} className="text-text-4 flex-shrink-0" />
+      <span className="truncate">{label}</span>
+    </span>
+  )
+}
+
+function ServiceCell({ service }: { service: string | null }) {
+  if (!service) {
+    return <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-surface-inset border border-dashed border-border-default font-mono text-[10.5px] text-text-4">No service</span>
+  }
+  return <ServiceChip service={service} />
+}
+
+function PersonRow({ person, myRole, teamLabel, onEdit, onToggleActive }: {
+  person: Person
+  myRole: string
+  teamLabel: string | null
+  onEdit: () => void
+  onToggleActive: () => void
+}) {
+  const mayManage = canManageTarget(myRole, person.role)
+  const mayEdit = mayManage || canEditDetails(myRole)
+  const showAnyAction = canManagePeople(myRole) && (mayEdit || mayManage)
+
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [confirming, setConfirming] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!menuOpen) return
+    const onClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false)
+    }
+    document.addEventListener('mousedown', onClick)
+    return () => document.removeEventListener('mousedown', onClick)
+  }, [menuOpen])
+
+  const confirmDeactivate = () => { onToggleActive(); setConfirming(false) }
+
+  const inactiveBadge = !person.is_active && (
+    <span className="font-mono text-[9px] text-error bg-error/10 px-1 py-0.5 rounded-xs">INACTIVE</span>
+  )
+  const levelLabel = <>Lv {person.level}</>
+
+  return (
+    <>
+      {/* Desktop table row */}
+      <div className={cn('hidden lg:grid items-center gap-3 px-5 py-3 border-b border-border-subtle last:border-0', GRID_COLS, !person.is_active && 'opacity-55')}>
+        <div className="flex items-center gap-2.5 min-w-0">
+          <Avatar name={person.name} size="sm" />
+          <div className="min-w-0">
+            <p className="font-ui font-semibold text-[13px] text-text-1 truncate flex items-center gap-1.5">{person.name}{inactiveBadge}</p>
+            <p className="font-mono text-[11px] text-text-3 truncate">{person.email}</p>
+          </div>
+        </div>
+        <RoleBadge role={toUserRole(person.role)} />
+        <span className="font-ui text-[12px] text-text-2 truncate">{teamLabel ?? <span className="text-text-4">—</span>}</span>
+        <span>{person.service_type ? <ServiceChip service={person.service_type} /> : <span className="font-mono text-[11px] text-text-4">—</span>}</span>
+        <span className="font-display font-bold text-[12px] text-text-1">{levelLabel}</span>
+        <div className="flex justify-end items-center gap-1.5">
+          {showAnyAction && (
+            <button
+              onClick={onEdit}
+              disabled={!mayEdit}
+              className="p-1.5 rounded-sm text-text-4 hover:text-text-1 hover:bg-surface-2 transition-colors disabled:opacity-40 disabled:hover:bg-transparent"
+              title="Edit"
+            >
+              <Pencil size={14} />
+            </button>
+          )}
+          {canManagePeople(myRole) && mayManage && (
+            confirming ? (
+              <div className="flex items-center gap-1">
+                <button onClick={confirmDeactivate} className="font-mono text-[10.5px] text-error font-bold">Confirm</button>
+                <span className="text-text-4 text-[10px]">/</span>
+                <button onClick={() => setConfirming(false)} className="font-mono text-[10.5px] text-text-3">No</button>
+              </div>
+            ) : (
+              <button onClick={() => setConfirming(true)} className={cn('p-1.5 rounded-sm hover:bg-surface-2 transition-colors', person.is_active ? 'text-text-4 hover:text-error' : 'text-text-4 hover:text-success')} title={person.is_active ? 'Deactivate' : 'Reactivate'}>
+                {person.is_active ? <UserX size={14} /> : <UserCheck size={14} />}
+              </button>
+            )
+          )}
+        </div>
+      </div>
+
+      {/* Mobile / tablet card */}
+      <div className={cn('lg:hidden relative px-4 py-4 border-b border-border-subtle last:border-0', !person.is_active && 'opacity-60')}>
+        <div className="flex items-start gap-3">
+          <Avatar name={person.name} size="md" />
+          <div className="flex-1 min-w-0">
+            <p className="font-ui font-semibold text-[14px] text-text-1 truncate flex items-center gap-1.5">{person.name}{inactiveBadge}</p>
+            <p className="font-mono text-[11.5px] text-text-3 truncate mt-0.5">{person.email}</p>
+          </div>
+          {showAnyAction && (
+            <div ref={menuRef} className="relative flex-shrink-0 -mr-1 -mt-1">
+              <button
+                onClick={() => setMenuOpen((o) => !o)}
+                className="w-8 h-8 rounded-md flex items-center justify-center text-text-3 hover:text-text-1 hover:bg-surface-2 transition-colors"
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+                aria-label="Actions"
+              >
+                <MoreVertical size={17} />
+              </button>
+              {menuOpen && (
+                <div role="menu" className="absolute right-0 top-[calc(100%+4px)] z-20 w-44 bg-surface-1 border border-border-default rounded-lg shadow-2xl overflow-hidden py-1">
+                  <button
+                    role="menuitem"
+                    disabled={!mayEdit}
+                    onClick={() => { setMenuOpen(false); onEdit() }}
+                    className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] font-ui font-medium text-text-2 hover:bg-surface-2 hover:text-text-1 transition-colors disabled:opacity-40"
+                  >
+                    <Pencil size={14} className="text-text-3" /> Edit
+                  </button>
+                  {mayManage && (
+                    <button
+                      role="menuitem"
+                      onClick={() => { setMenuOpen(false); setConfirming(true) }}
+                      className={cn('w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] font-ui font-medium transition-colors', person.is_active ? 'text-error hover:bg-error/10' : 'text-success hover:bg-success/10')}
+                    >
+                      {person.is_active ? <><UserX size={14} /> Deactivate</> : <><UserCheck size={14} /> Reactivate</>}
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <RoleBadge role={toUserRole(person.role)} />
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-surface-2 font-display font-bold text-[11px] text-text-1">{levelLabel}</span>
+          <TeamCell label={teamLabel} />
+          <ServiceCell service={person.service_type} />
+        </div>
+
+        {confirming && (
+          <div className="mt-3 flex items-center justify-between gap-3 rounded-md bg-surface-inset border border-border-default px-3 py-2.5">
+            <span className="font-ui text-[12px] text-text-2">
+              {person.is_active ? 'Deactivate' : 'Reactivate'} {person.name}?
+            </span>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <button onClick={() => setConfirming(false)} className="font-ui text-[12px] font-medium text-text-3 px-2 py-1">Cancel</button>
+              <button onClick={confirmDeactivate} className={cn('font-ui text-[12px] font-bold px-3 py-1 rounded-sm text-white', person.is_active ? 'bg-error' : 'bg-success')}>Confirm</button>
+            </div>
+          </div>
+        )}
+      </div>
+    </>
+  )
+}
+
 // ── Page ─────────────────────────────────────────────────────────────────────────
 
 export default function PeoplePage() {
   const toast = useToast()
   const { profile } = useAuthContext()
   const myRole = profile?.role ?? ''
-  const canManage = canManagePeople(myRole)
 
   const { data: people = [], isLoading } = usePeople()
   const { data: teams = [] } = useTeams()
@@ -240,7 +403,6 @@ export default function PeoplePage() {
   const [roleFilter, setRoleFilter] = useState('')
   const [inviteOpen, setInviteOpen] = useState(false)
   const [editing, setEditing] = useState<Person | null>(null)
-  const [confirmActive, setConfirmActive] = useState<string | null>(null)
 
   const teamName = useMemo(() => new Map(teams.map((t) => [t.id, t.name])), [teams])
 
@@ -253,8 +415,8 @@ export default function PeoplePage() {
 
   const toggleActive = (p: Person) => {
     setActive({ profileId: p.id, active: !p.is_active }, {
-      onSuccess: () => { toast(p.is_active ? `${p.name} deactivated` : `${p.name} reactivated`, 'success'); setConfirmActive(null) },
-      onError: (e) => { toast(humanizeError(e.message), 'error'); setConfirmActive(null) },
+      onSuccess: () => toast(p.is_active ? `${p.name} deactivated` : `${p.name} reactivated`, 'success'),
+      onError: (e) => toast(humanizeError(e.message), 'error'),
     })
   }
 
@@ -267,8 +429,8 @@ export default function PeoplePage() {
     <div className="flex flex-col flex-1">
       <Topbar title="People" />
       <div className="px-4 py-6 lg:p-6 flex flex-col gap-5 max-w-content mx-auto w-full">
-        <div className="flex items-center gap-3">
-          <div className="relative flex-1 max-w-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="relative flex-1 sm:max-w-sm">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-4" />
             <input
               value={search}
@@ -277,60 +439,30 @@ export default function PeoplePage() {
               className="w-full bg-surface-inset border border-border-default rounded-md pl-9 pr-3 py-2 text-[13px] font-ui text-text-1 placeholder:text-text-4 outline-none focus:border-border-focus"
             />
           </div>
-          <div className="w-44"><Select value={roleFilter} onChange={setRoleFilter} options={roleFilterOptions} /></div>
-          <div className="flex-1" />
-          {canInvite(myRole) && <Button size="sm" onClick={() => setInviteOpen(true)}><Plus size={13} /> Invite User</Button>}
+          <div className="flex items-center gap-3">
+            <div className="flex-1 sm:flex-none sm:w-44"><Select value={roleFilter} onChange={setRoleFilter} options={roleFilterOptions} /></div>
+            {canInvite(myRole) && <Button size="sm" className="flex-shrink-0" onClick={() => setInviteOpen(true)}><Plus size={13} /> Invite</Button>}
+          </div>
         </div>
 
         {isLoading ? (
           <div className="flex justify-center py-16 text-text-4"><Loader2 size={20} className="animate-spin" /></div>
         ) : (
-          <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
-            <div className="hidden lg:grid grid-cols-[1fr_130px_140px_120px_90px_120px] gap-3 px-5 py-2.5 border-b border-border-subtle bg-surface-2">
+          <div className="bg-surface-1 border border-border-default rounded-xl overflow-visible">
+            <div className={cn('hidden lg:grid gap-3 px-5 py-2.5 border-b border-border-subtle bg-surface-2 rounded-t-xl', GRID_COLS)}>
               {['Member', 'Role', 'Team', 'Service', 'Level', ''].map((h) => <span key={h} className="font-mono text-[10px] text-text-4 uppercase tracking-wider">{h}</span>)}
             </div>
             {filtered.length === 0 && <div className="px-5 py-10 text-center text-text-4 font-ui text-[13px]">No people match.</div>}
-            {filtered.map((p) => {
-              const mayManage = canManageTarget(myRole, p.role)
-              return (
-                <div key={p.id} className={cn('flex flex-col gap-3 lg:grid lg:grid-cols-[1fr_130px_140px_120px_90px_120px] lg:gap-3 lg:items-center px-4 lg:px-5 py-3.5 lg:py-3 border-b border-border-subtle last:border-0', !p.is_active && 'opacity-55')}>
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <Avatar name={p.name} size="sm" />
-                    <div className="min-w-0">
-                      <p className="font-ui font-semibold text-[13px] text-text-1 truncate flex items-center gap-1.5">
-                        {p.name}
-                        {!p.is_active && <span className="font-mono text-[9px] text-error bg-error/10 px-1 py-0.5 rounded-xs">INACTIVE</span>}
-                      </p>
-                      <p className="font-mono text-[11px] text-text-3 truncate">{p.email}</p>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2 lg:contents">
-                    <RoleBadge role={toUserRole(p.role)} />
-                    <span className="font-ui text-[12px] text-text-2 truncate">{p.team_id ? teamName.get(p.team_id) ?? '—' : '—'}</span>
-                    <span>{p.service_type ? <ServiceChip service={p.service_type} /> : <span className="font-mono text-[11px] text-text-4">—</span>}</span>
-                    <span className="font-display font-bold text-[12px] text-text-1">Lv {p.level}</span>
-                  </div>
-                  <div className="flex justify-start lg:justify-end gap-1.5">
-                    {canManage && (
-                      <Button size="sm" variant="ghost" disabled={!mayManage && !canEditDetails(myRole)} onClick={() => setEditing(p)}>Edit</Button>
-                    )}
-                    {canManage && mayManage && (
-                      confirmActive === p.id ? (
-                        <div className="flex items-center gap-1">
-                          <button onClick={() => toggleActive(p)} className="font-mono text-[10.5px] text-error font-bold">Confirm</button>
-                          <span className="text-text-4 text-[10px]">/</span>
-                          <button onClick={() => setConfirmActive(null)} className="font-mono text-[10.5px] text-text-3">No</button>
-                        </div>
-                      ) : (
-                        <button onClick={() => setConfirmActive(p.id)} className={cn('p-1.5', p.is_active ? 'text-text-4 hover:text-error' : 'text-text-4 hover:text-success')} title={p.is_active ? 'Deactivate' : 'Reactivate'}>
-                          {p.is_active ? <UserX size={14} /> : <UserCheck size={14} />}
-                        </button>
-                      )
-                    )}
-                  </div>
-                </div>
-              )
-            })}
+            {filtered.map((p) => (
+              <PersonRow
+                key={p.id}
+                person={p}
+                myRole={myRole}
+                teamLabel={p.team_id ? teamName.get(p.team_id) ?? null : null}
+                onEdit={() => setEditing(p)}
+                onToggleActive={() => toggleActive(p)}
+              />
+            ))}
           </div>
         )}
       </div>

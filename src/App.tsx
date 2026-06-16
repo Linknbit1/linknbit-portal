@@ -11,6 +11,7 @@ import { AUTHORITATIVE_ROLES } from './lib/roles'
 
 import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
+import ResetPasswordPage from './pages/auth/ResetPasswordPage'
 import DashboardPage from './pages/DashboardPage'
 import ProfilePage from './pages/ProfilePage'
 import AdminProjectsPage from './pages/admin/ProjectsPage'
@@ -52,6 +53,7 @@ export default function App() {
               <Route path="/" element={<Navigate to="/login" replace />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
 
               {/* Internal portal (dark mode) */}
               <Route element={<PrivateRoute><AppShell /></PrivateRoute>}>

@@ -1,5 +1,15 @@
+import { useEffect, useRef, type ReactNode } from 'react'
 import { cn } from '../../lib/cn'
-import type { ReactNode } from 'react'
+
+/** Smoothly scroll the active tab to the horizontal center of its scroll container. */
+function centerActiveTab(container: HTMLDivElement | null) {
+  if (!container) return
+  const active = container.querySelector<HTMLElement>('[aria-selected="true"]')
+  if (!active) return
+  const target = active.offsetLeft - (container.clientWidth - active.offsetWidth) / 2
+  const max = container.scrollWidth - container.clientWidth
+  container.scrollTo({ left: Math.max(0, Math.min(target, max)), behavior: 'smooth' })
+}
 
 export interface Tab {
   key: string
@@ -16,10 +26,16 @@ interface TabsProps {
 }
 
 export function Tabs({ tabs, activeKey, onChange, variant = 'underline', className }: TabsProps) {
+  const listRef = useRef<HTMLDivElement>(null)
+
+  // Keep the selected tab centered as the user moves through a scrollable strip.
+  useEffect(() => { centerActiveTab(listRef.current) }, [activeKey])
+
   return (
     <div
+      ref={listRef}
       className={cn(
-        'flex items-center overflow-x-auto no-scrollbar',
+        'flex items-center overflow-x-auto no-scrollbar scroll-smooth',
         variant === 'underline' ? 'border-b border-border-default gap-1' : 'gap-1 bg-surface-inset rounded-md p-1',
         className,
       )}

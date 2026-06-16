@@ -33,8 +33,11 @@ export function ModalShell({ onClose, size = 'md', busy = false, contentClassNam
   const isDesktop = useIsDesktop()
 
   useEffect(() => {
+    // Restore the prior value (not just '') so closing a modal opened on top of
+    // another scroll-locking surface (e.g. the mobile nav drawer) keeps it locked.
+    const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = '' }
+    return () => { document.body.style.overflow = prev }
   }, [])
 
   useEffect(() => {
