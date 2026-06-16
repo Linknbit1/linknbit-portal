@@ -142,7 +142,7 @@ export function ClientShell() {
         <div className="flex items-center gap-3 shrink-0">
           <LinknbitMark surface="light" className="h-9 w-8" />
           <div>
-            <p className="font-display font-bold text-[16px] leading-tight tracking-tight" style={{ color: '#1A1612' }}>
+            <p className="font-display font-bold text-body-lg/tight tracking-tight" style={{ color: '#1A1612' }}>
               Linknbit
             </p>
             <p className="font-mono text-[9px] uppercase tracking-widest mt-px" style={{ color: '#B7AE9D' }}>
@@ -185,7 +185,7 @@ export function ClientShell() {
                   )}
                   {isActive && (
                     <span
-                      className="absolute bottom-0 left-3.5 right-3.5 h-0.5 rounded-full"
+                      className="absolute bottom-0 inset-x-3.5 h-0.5 rounded-full"
                       style={{ background: '#EE2737' }}
                     />
                   )}
@@ -202,7 +202,7 @@ export function ClientShell() {
             <button
               onClick={handleBellClick}
               className={cn(
-                'relative w-9 h-9 rounded-lg flex items-center justify-center transition-colors',
+                'relative size-9 rounded-lg flex items-center justify-center transition-colors',
                 notifOpen ? 'bg-client-bg-alt' : 'hover:bg-client-bg-alt',
               )}
               style={{ color: '#4F4940' }}
@@ -211,7 +211,7 @@ export function ClientShell() {
               <Bell size={17} />
               {unreadCount > 0 && (
                 <span
-                  className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full border-2 border-client-surface"
+                  className="absolute top-1.5 right-1.5 size-2 rounded-full border-2 border-client-surface"
                   style={{ background: '#EE2737' }}
                 />
               )}
@@ -243,7 +243,7 @@ export function ClientShell() {
                     )}
                     <button
                       onClick={() => setNotifOpen(false)}
-                      className="w-6 h-6 flex items-center justify-center rounded-md transition-colors hover:bg-client-bg-alt"
+                      className="size-6 flex items-center justify-center rounded-md transition-colors hover:bg-client-bg-alt"
                       style={{ color: '#877F71' }}
                     >
                       <X size={14} />
@@ -261,13 +261,13 @@ export function ClientShell() {
                         style={isNew ? { background: 'rgba(251,191,36,0.04)' } : {}}
                       >
                         <div
-                          className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5"
+                          className="size-7 rounded-full flex items-center justify-center shrink-0 mt-0.5"
                           style={{ background: '#F2EDE4' }}
                         >
                           {notifIcon(n.type)}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-[13px] leading-snug" style={{ color: '#1A1612' }}>
+                          <p className="text-body-sm/snug" style={{ color: '#1A1612' }}>
                             {n.message}
                           </p>
                           <p className="text-[11px] font-mono mt-0.5" style={{ color: '#B7AE9D' }}>
@@ -276,7 +276,7 @@ export function ClientShell() {
                         </div>
                         {isNew && (
                           <div
-                            className="w-2 h-2 rounded-full shrink-0 mt-1.5"
+                            className="size-2 rounded-full shrink-0 mt-1.5"
                             style={{ background: '#EE2737' }}
                           />
                         )}
@@ -312,7 +312,7 @@ export function ClientShell() {
               style={{ background: '#F2EDE4', borderColor: '#EAE3D6' }}
             >
               <span
-                className="w-7 h-7 rounded-full bg-linear-to-br from-amber-400 to-amber-600 font-bold text-[11px] flex items-center justify-center shrink-0"
+                className="size-7 rounded-full bg-linear-to-br from-amber-400 to-amber-600 font-bold text-[11px] flex items-center justify-center shrink-0"
                 style={{ color: '#78350F' }}
               >
                 IS
@@ -326,7 +326,7 @@ export function ClientShell() {
                   style={{ color: '#FBBF24' }}
                 >
                   <span
-                    className="w-1.5 h-1.5 rounded-full inline-block"
+                    className="size-1.5 rounded-full inline-block"
                     style={{ background: '#FBBF24' }}
                   />
                   Client Owner
@@ -357,7 +357,7 @@ export function ClientShell() {
                 >
                   <div className="flex items-center gap-2.5 mb-2">
                     <span
-                      className="w-9 h-9 rounded-full bg-linear-to-br from-amber-400 to-amber-600 font-bold text-[12px] flex items-center justify-center shrink-0"
+                      className="size-9 rounded-full bg-linear-to-br from-amber-400 to-amber-600 font-bold text-[12px] flex items-center justify-center shrink-0"
                       style={{ color: '#78350F' }}
                     >
                       IS
@@ -387,7 +387,7 @@ export function ClientShell() {
                       key={item.label}
                       to={item.to}
                       onClick={() => setProfileOpen(false)}
-                      className="w-full px-4 py-2.5 flex items-center gap-3 transition-colors hover:bg-[#FAF7F2] text-left"
+                      className="w-full px-4 py-2.5 flex items-center gap-3 transition-colors hover:bg-client-bg text-left"
                     >
                       <item.icon size={15} style={{ color: '#877F71' }} />
                       <p className="text-[13px] font-medium" style={{ color: '#1A1612' }}>

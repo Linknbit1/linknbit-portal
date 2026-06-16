@@ -38,7 +38,7 @@ export function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps) {
   return (
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-[55] flex lg:hidden">
+        <div className="fixed inset-0 z-55 flex lg:hidden">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -56,7 +56,7 @@ export function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps) {
           >
             {/* Brand + close */}
             <div className="flex items-center gap-3 px-4 pt-5 pb-4 border-b border-border-subtle">
-              <span className="w-7 h-7 rounded-sm bg-brand-red flex items-center justify-center">
+              <span className="size-7 rounded-sm bg-brand-red flex items-center justify-center">
                 <svg viewBox="0 0 41 45" width="20" height="20" fill="none">
                   <rect x="0" y="3.5" width="10.5" height="10.5" rx="0.4" fill="white" />
                   <rect x="0" y="18.7" width="10.5" height="26" rx="0.4" fill="white" />
@@ -67,12 +67,12 @@ export function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps) {
                 </svg>
               </span>
               <div className="flex-1 min-w-0">
-                <p className="font-display font-bold text-body-sm text-text-1 leading-tight">Linknbit</p>
+                <p className="font-display font-bold text-body-sm/tight text-text-1">Linknbit</p>
                 <p className="font-mono text-[9px] text-text-2 uppercase tracking-wider mt-0.5">Operations Portal</p>
               </div>
               <button
                 onClick={onClose}
-                className="w-7 h-7 rounded-md flex items-center justify-center text-text-3 hover:text-text-1 hover:bg-surface-2 transition-colors"
+                className="size-7 rounded-md flex items-center justify-center text-text-3 hover:text-text-1 hover:bg-surface-2 transition-colors"
                 aria-label="Close navigation"
               >
                 <X size={16} />
@@ -89,13 +89,13 @@ export function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps) {
                     to={item.to}
                     onClick={onClose}
                     className={cn(
-                      'flex items-center gap-2.5 px-2.5 py-2.5 rounded-sm font-ui font-medium text-body-sm transition-colors relative',
+                      'flex items-center gap-2.5 p-2.5 rounded-sm font-ui font-medium text-body-sm transition-colors relative',
                       isActive
                         ? 'bg-brand-red/13 text-white nav-active-indicator'
                         : 'text-text-2 hover:bg-surface-2 hover:text-text-1',
                     )}
                   >
-                    <item.icon size={16} className={cn('flex-shrink-0', isActive ? 'text-brand-red' : 'text-text-3')} />
+                    <item.icon size={16} className={cn('shrink-0', isActive ? 'text-brand-red' : 'text-text-3')} />
                     <span>{item.label}</span>
                     {item.badge && item.badge > 0 && (
                       <span className="ml-auto bg-brand-red text-white font-ui font-bold text-[10px] px-1.5 py-px rounded-full leading-tight">
@@ -110,10 +110,10 @@ export function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps) {
             {/* Account */}
             {profile && (
               <div className="border-t border-border-subtle p-3 flex flex-col gap-1">
-                <div className="flex items-center gap-2.5 px-2 py-2">
+                <div className="flex items-center gap-2.5 p-2">
                   <Avatar name={profile.name} src={profile.avatar_url ?? undefined} size="sm" />
                   <div className="flex-1 min-w-0">
-                    <p className="font-ui font-semibold text-body-sm text-text-1 leading-tight truncate">{profile.name}</p>
+                    <p className="font-ui font-semibold text-body-sm/tight text-text-1 truncate">{profile.name}</p>
                     <RoleBadge role={toUserRole(profile.role)} size="sm" className="mt-0.5" />
                   </div>
                 </div>

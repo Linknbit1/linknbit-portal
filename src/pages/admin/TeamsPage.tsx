@@ -195,7 +195,7 @@ export default function TeamsPage() {
                   <div className="border-b border-border-subtle bg-[linear-gradient(135deg,rgba(34,211,238,0.08),rgba(238,39,55,0.04)_45%,rgba(20,29,42,0)_100%)] p-5">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex min-w-0 items-start gap-3.5">
-                        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg border border-border-subtle bg-surface-2 text-service-dev shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+                        <div className="flex size-12 shrink-0 items-center justify-center rounded-lg border border-border-subtle bg-surface-2 text-service-dev shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
                           <Users size={20} />
                         </div>
                         <div className="min-w-0 pt-0.5">
@@ -218,7 +218,7 @@ export default function TeamsPage() {
                       {canManage && (
                         <button
                           onClick={() => setTeamModal(team)}
-                          className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md text-text-4 transition-colors hover:bg-surface-2 hover:text-text-1"
+                          className="flex size-8 shrink-0 items-center justify-center rounded-md text-text-4 transition-colors hover:bg-surface-2 hover:text-text-1"
                           aria-label={`Edit ${team.name}`}
                           title="Edit team"
                         >
@@ -229,7 +229,7 @@ export default function TeamsPage() {
 
                     <div className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-[1fr_auto] sm:items-center">
                       <div className="flex items-center gap-2.5 rounded-md border border-border-subtle bg-bg-base/35 px-3 py-2.5">
-                        <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md bg-coin-gold/10 text-coin-gold">
+                        <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-coin-gold/10 text-coin-gold">
                           <Crown size={14} />
                         </span>
                         <div className="min-w-0">
@@ -289,7 +289,7 @@ export default function TeamsPage() {
                         {canManage && (
                           <button
                             onClick={() => removeMember(team, m)}
-                            className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md text-text-4 opacity-100 transition-all hover:bg-error/10 hover:text-error lg:opacity-0 lg:group-hover:opacity-100"
+                            className="flex size-7 shrink-0 items-center justify-center rounded-md text-text-4 opacity-100 transition-all hover:bg-error/10 hover:text-error lg:opacity-0 lg:group-hover:opacity-100"
                             title="Remove from team"
                             aria-label={`Remove ${m.name} from ${team.name}`}
                           >

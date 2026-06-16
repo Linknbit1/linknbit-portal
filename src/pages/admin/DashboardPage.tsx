@@ -106,7 +106,7 @@ export default function DashboardPage() {
                   key={p}
                   onClick={() => setPeriod(p)}
                   className={cn(
-                    'px-3 py-1.5 rounded-[4px] text-[12px] font-ui font-semibold capitalize transition-colors',
+                    'px-3 py-1.5 rounded-xs text-[12px] font-ui font-semibold capitalize transition-colors',
                     period === p
                       ? 'bg-surface-3 text-text-1 shadow-sm'
                       : 'text-text-3 hover:text-text-2',
@@ -126,12 +126,12 @@ export default function DashboardPage() {
           <div className="bg-surface-1 border border-border-default rounded-lg p-5 flex flex-col gap-3 relative overflow-hidden">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-[11px] font-ui font-semibold text-text-3 uppercase tracking-widest">
-                <span className="w-7 h-7 rounded-[7px] bg-surface-2 border border-border-subtle text-text-2 flex items-center justify-center">
+                <span className="size-7 rounded-[7px] bg-surface-2 border border-border-subtle text-text-2 flex items-center justify-center">
                   <TrendingUp size={14} />
                 </span>
                 Active Projects
               </div>
-              <button className="w-6 h-6 rounded-[5px] text-text-4 hover:bg-surface-2 hover:text-text-2 flex items-center justify-center">
+              <button className="size-6 rounded-[5px] text-text-4 hover:bg-surface-2 hover:text-text-2 flex items-center justify-center">
                 <MoreHorizontal size={14} />
               </button>
             </div>
@@ -149,17 +149,17 @@ export default function DashboardPage() {
           {/* Overdue Tasks */}
           <div className="bg-error/5 border border-error/30 rounded-lg p-5 flex flex-col gap-3 relative overflow-hidden">
             <div
-              className="absolute top-0 right-0 w-20 h-20 pointer-events-none"
+              className="absolute top-0 right-0 size-20 pointer-events-none"
               style={{ background: 'radial-gradient(circle at top right, rgba(244,54,76,0.18), transparent 70%)' }}
             />
             <div className="flex items-center justify-between relative">
               <div className="flex items-center gap-2 text-[11px] font-ui font-semibold text-text-3 uppercase tracking-widest">
-                <span className="w-7 h-7 rounded-[7px] bg-error/15 border border-error/30 text-error flex items-center justify-center">
+                <span className="size-7 rounded-[7px] bg-error/15 border border-error/30 text-error flex items-center justify-center">
                   <AlertTriangle size={14} />
                 </span>
                 Overdue Tasks
               </div>
-              <button className="w-6 h-6 rounded-[5px] text-text-4 hover:bg-surface-2 hover:text-text-2 flex items-center justify-center">
+              <button className="size-6 rounded-[5px] text-text-4 hover:bg-surface-2 hover:text-text-2 flex items-center justify-center">
                 <MoreHorizontal size={14} />
               </button>
             </div>
@@ -177,12 +177,12 @@ export default function DashboardPage() {
           <div className="bg-surface-1 border border-border-default rounded-lg p-5 flex flex-col gap-3 relative overflow-hidden">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-[11px] font-ui font-semibold text-text-3 uppercase tracking-widest">
-                <span className="w-7 h-7 rounded-[7px] bg-surface-2 border border-border-subtle text-text-2 flex items-center justify-center">
+                <span className="size-7 rounded-[7px] bg-surface-2 border border-border-subtle text-text-2 flex items-center justify-center">
                   <Users size={14} />
                 </span>
                 Team Utilization
               </div>
-              <button className="w-6 h-6 rounded-[5px] text-text-4 hover:bg-surface-2 hover:text-text-2 flex items-center justify-center">
+              <button className="size-6 rounded-[5px] text-text-4 hover:bg-surface-2 hover:text-text-2 flex items-center justify-center">
                 <MoreHorizontal size={14} />
               </button>
             </div>
@@ -200,12 +200,12 @@ export default function DashboardPage() {
           <div className="bg-surface-1 border border-border-default rounded-lg p-5 flex flex-col gap-3 relative overflow-hidden">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-[11px] font-ui font-semibold text-text-3 uppercase tracking-widest">
-                <span className="w-7 h-7 rounded-[7px] bg-coin-gold/12 border border-coin-gold/30 text-coin-gold flex items-center justify-center">
+                <span className="size-7 rounded-[7px] bg-coin-gold/12 border border-coin-gold/30 text-coin-gold flex items-center justify-center">
                   <Zap size={14} />
                 </span>
                 XP Awarded
               </div>
-              <button className="w-6 h-6 rounded-[5px] text-text-4 hover:bg-surface-2 hover:text-text-2 flex items-center justify-center">
+              <button className="size-6 rounded-[5px] text-text-4 hover:bg-surface-2 hover:text-text-2 flex items-center justify-center">
                 <MoreHorizontal size={14} />
               </button>
             </div>
@@ -252,7 +252,7 @@ export default function DashboardPage() {
                         : 'border-border-default bg-surface-1 text-text-2',
                     )}
                   >
-                    {dot && <span className="w-1.5 h-1.5 rounded-full" style={{ background: dot }} />}
+                    {dot && <span className="size-1.5 rounded-full" style={{ background: dot }} />}
                     {s === 'all' ? 'All' : s.charAt(0).toUpperCase() + s.slice(1)}
                   </button>
                 )
@@ -336,7 +336,7 @@ export default function DashboardPage() {
                 { label: 'Marketing', count: byService.marketing, dot: SERVICE_COLORS.marketing },
               ].map((row) => (
                 <div key={row.label} className="flex items-center gap-2.5 py-2 border-b border-dashed border-border-subtle last:border-0">
-                  <span className="w-2 h-2 rounded-[2px] flex-shrink-0" style={{ background: row.dot }} />
+                  <span className="size-2 rounded-[2px] shrink-0" style={{ background: row.dot }} />
                   <div className="flex-1 min-w-0">
                     <span className="font-ui font-medium text-[13px] text-text-1">{row.label}</span>
                     <span className="font-mono text-[10.5px] text-text-3 block mt-0.5">
@@ -377,7 +377,7 @@ export default function DashboardPage() {
               <div
                 key={h}
                 className={cn(
-                  'px-3 py-3 bg-surface-2 border-b border-border-default font-ui font-semibold text-[10.5px] text-text-3 uppercase tracking-wider',
+                  'p-3 bg-surface-2 border-b border-border-default font-ui font-semibold text-[10.5px] text-text-3 uppercase tracking-wider',
                   i === 0 && 'pl-6',
                   i === 4 && 'pr-6 text-right',
                 )}
@@ -393,11 +393,11 @@ export default function DashboardPage() {
               return (
                 <div key={project.id} className="contents group">
                   {/* Project name */}
-                  <div className={cn('pl-6 pr-3 py-[14px] border-b border-border-subtle flex items-center gap-2 min-w-0 group-hover:bg-white/[0.015] transition-colors', isUrgent && 'bg-error/4 group-hover:bg-error/7')}>
+                  <div className={cn('pl-6 pr-3 py-[14px] border-b border-border-subtle flex items-center gap-2 min-w-0 group-hover:bg-white/1.5 transition-colors', isUrgent && 'bg-error/4 group-hover:bg-error/7')}>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 min-w-0">
                         <span
-                          className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                          className="size-1.5 rounded-full shrink-0"
                           style={{ background: SERVICE_COLORS[project.serviceType] }}
                         />
                         <span className="font-display font-semibold text-[13.5px] text-text-1 truncate tracking-tight">
@@ -412,15 +412,15 @@ export default function DashboardPage() {
                   </div>
 
                   {/* Stage */}
-                  <div className={cn('px-3 py-[14px] border-b border-border-subtle flex items-center gap-2 group-hover:bg-white/[0.015] transition-colors', isUrgent && 'bg-error/4 group-hover:bg-error/7')}>
-                    <span className="w-[18px] h-[18px] rounded-[4px] bg-surface-2 border border-border-default flex items-center justify-center font-mono text-[9px] text-text-3 flex-shrink-0">
+                  <div className={cn('px-3 py-[14px] border-b border-border-subtle flex items-center gap-2 group-hover:bg-white/1.5 transition-colors', isUrgent && 'bg-error/4 group-hover:bg-error/7')}>
+                    <span className="size-[18px] rounded-xs bg-surface-2 border border-border-default flex items-center justify-center font-mono text-[9px] text-text-3 shrink-0">
                       {project.stages.findIndex((s) => s.status === 'current' || s.status === 'blocked') + 1 || '?'}
                     </span>
                     <span className="text-[12.5px] font-ui font-medium text-text-2 truncate">{project.currentStage}</span>
                   </div>
 
                   {/* Deadline */}
-                  <div className={cn('px-3 py-[14px] border-b border-border-subtle group-hover:bg-white/[0.015] transition-colors', isUrgent && 'bg-error/4 group-hover:bg-error/7')}>
+                  <div className={cn('px-3 py-[14px] border-b border-border-subtle group-hover:bg-white/1.5 transition-colors', isUrgent && 'bg-error/4 group-hover:bg-error/7')}>
                     <div className={cn('flex items-center gap-1.5', days <= 2 ? 'text-error' : days <= 5 ? 'text-warning' : 'text-text-1')}>
                       <span className="font-display font-bold text-[16px] tabular-nums">{days}</span>
                       <span className="font-ui font-medium text-[11px]">days</span>
@@ -429,18 +429,18 @@ export default function DashboardPage() {
                   </div>
 
                   {/* PM */}
-                  <div className={cn('px-3 py-[14px] border-b border-border-subtle flex items-center gap-2 min-w-0 group-hover:bg-white/[0.015] transition-colors', isUrgent && 'bg-error/4 group-hover:bg-error/7')}>
+                  <div className={cn('px-3 py-[14px] border-b border-border-subtle flex items-center gap-2 min-w-0 group-hover:bg-white/1.5 transition-colors', isUrgent && 'bg-error/4 group-hover:bg-error/7')}>
                     <Avatar name={project.pm.name} size="xs" />
                     <span className="text-[12px] font-ui font-medium text-text-1 truncate min-w-0">{project.pm.name}</span>
                   </div>
 
                   {/* Actions */}
-                  <div className={cn('pr-6 px-3 py-[14px] border-b border-border-subtle flex items-center gap-1.5 justify-end group-hover:bg-white/[0.015] transition-colors', isUrgent && 'bg-error/4 group-hover:bg-error/7')}>
+                  <div className={cn('pr-6 px-3 py-[14px] border-b border-border-subtle flex items-center gap-1.5 justify-end group-hover:bg-white/1.5 transition-colors', isUrgent && 'bg-error/4 group-hover:bg-error/7')}>
                     <ClickUpStatus status={project.clickUpSync} />
                     <StatusChip status={project.status} type="project" />
                     <Link
                       to={`/admin/projects/${project.id}`}
-                      className="h-7 px-2.5 rounded-[6px] bg-transparent border border-border-default text-text-1 font-ui font-semibold text-[11.5px] flex items-center gap-1 hover:bg-surface-2 hover:border-border-strong transition-colors whitespace-nowrap"
+                      className="h-7 px-2.5 rounded-sm bg-transparent border border-border-default text-text-1 font-ui font-semibold text-[11.5px] flex items-center gap-1 hover:bg-surface-2 hover:border-border-strong transition-colors whitespace-nowrap"
                     >
                       View <ArrowRight size={11} />
                     </Link>
@@ -474,7 +474,7 @@ export default function DashboardPage() {
                 <div
                   key={h}
                   className={cn(
-                    'px-3 py-3 bg-surface-2 border-b border-border-default font-ui font-semibold text-[10.5px] text-text-3 uppercase tracking-wider',
+                    'p-3 bg-surface-2 border-b border-border-default font-ui font-semibold text-[10.5px] text-text-3 uppercase tracking-wider',
                     i === 0 && 'pl-6',
                     i === 4 && 'pr-6 text-right',
                   )}
@@ -488,26 +488,26 @@ export default function DashboardPage() {
                              member.role.toLowerCase().includes('market') ? 'marketing' : 'development'
                 return (
                   <div key={member.id} className="contents group">
-                    <div className={cn('pl-6 pr-3 py-[14px] flex items-center gap-2.5 group-hover:bg-white/[0.015] transition-colors', idx < TEAM_PERFORMANCE.length - 1 && 'border-b border-border-subtle')}>
+                    <div className={cn('pl-6 pr-3 py-[14px] flex items-center gap-2.5 group-hover:bg-white/1.5 transition-colors', idx < TEAM_PERFORMANCE.length - 1 && 'border-b border-border-subtle')}>
                       <Avatar name={member.name} size="sm" />
                       <div className="min-w-0">
                         <span className="font-display font-semibold text-[13.5px] text-text-1 tracking-tight block truncate">{member.name}</span>
                         <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className="w-[5px] h-[5px] rounded-full" style={{ background: SERVICE_COLORS[dept as ServiceType] }} />
+                          <span className="size-[5px] rounded-full" style={{ background: SERVICE_COLORS[dept as ServiceType] }} />
                           <span className="text-[11.5px] text-text-3">{member.role}</span>
                         </div>
                       </div>
                     </div>
-                    <div className={cn('px-3 py-[14px] flex items-center group-hover:bg-white/[0.015] transition-colors', idx < TEAM_PERFORMANCE.length - 1 && 'border-b border-border-subtle')}>
+                    <div className={cn('px-3 py-[14px] flex items-center group-hover:bg-white/1.5 transition-colors', idx < TEAM_PERFORMANCE.length - 1 && 'border-b border-border-subtle')}>
                       <span className="font-display font-bold text-[17px] text-text-1 tabular-nums">{member.tasksCompleted}<span className="font-ui font-medium text-[11.5px] text-text-3 ml-1">tasks</span></span>
                     </div>
-                    <div className={cn('px-3 py-[14px] flex items-center group-hover:bg-white/[0.015] transition-colors', idx < TEAM_PERFORMANCE.length - 1 && 'border-b border-border-subtle')}>
+                    <div className={cn('px-3 py-[14px] flex items-center group-hover:bg-white/1.5 transition-colors', idx < TEAM_PERFORMANCE.length - 1 && 'border-b border-border-subtle')}>
                       <span className="font-display font-bold text-[17px] text-text-1 tabular-nums">{member.avgDays}<span className="font-ui font-medium text-[11.5px] text-text-3 ml-1">d</span></span>
                     </div>
-                    <div className={cn('px-3 py-[14px] flex items-center group-hover:bg-white/[0.015] transition-colors', idx < TEAM_PERFORMANCE.length - 1 && 'border-b border-border-subtle')}>
+                    <div className={cn('px-3 py-[14px] flex items-center group-hover:bg-white/1.5 transition-colors', idx < TEAM_PERFORMANCE.length - 1 && 'border-b border-border-subtle')}>
                       <span className="font-display font-bold text-[17px] text-coin-gold tabular-nums">{member.xp.toLocaleString()}<span className="font-ui font-medium text-[11.5px] text-coin-gold/70 ml-1">xp</span></span>
                     </div>
-                    <div className={cn('pr-6 px-3 py-[14px] flex items-center justify-end group-hover:bg-white/[0.015] transition-colors', idx < TEAM_PERFORMANCE.length - 1 && 'border-b border-border-subtle')}>
+                    <div className={cn('pr-6 px-3 py-[14px] flex items-center justify-end group-hover:bg-white/1.5 transition-colors', idx < TEAM_PERFORMANCE.length - 1 && 'border-b border-border-subtle')}>
                       <WorkloadBars level={member.workload} />
                     </div>
                   </div>
@@ -522,7 +522,7 @@ export default function DashboardPage() {
             <div className="bg-surface-1 border border-border-default rounded-lg overflow-hidden">
               <div className="flex items-center justify-between px-5 py-[14px] border-b border-border-subtle">
                 <h3 className="font-display font-semibold text-[15px] text-text-1 tracking-tight">Recent Activity</h3>
-                <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
+                <span className="size-2 rounded-full bg-success animate-pulse" />
               </div>
               <div className="py-1.5">
                 {ACTIVITY_FEED.slice(0, 5).map((item, idx) => {
@@ -541,7 +541,7 @@ export default function DashboardPage() {
                       {idx < ACTIVITY_FEED.slice(0, 5).length - 1 && (
                         <div className="absolute left-[33px] top-[42px] bottom-[-12px] w-px bg-border-subtle" />
                       )}
-                      <span className={cn('w-7 h-7 rounded-full border flex items-center justify-center flex-shrink-0 relative z-10', iconInfo.cls)}>
+                      <span className={cn('size-7 rounded-full border flex items-center justify-center shrink-0 relative z-10', iconInfo.cls)}>
                         <Icon size={13} />
                       </span>
                       <div className="min-w-0">
@@ -583,7 +583,7 @@ export default function DashboardPage() {
                   return (
                     <div
                       key={entry.user.id}
-                      className="grid items-center gap-2.5 px-4 py-[11px] border-b border-border-subtle last:border-0 hover:bg-white/[0.015] transition-colors"
+                      className="grid items-center gap-2.5 px-4 py-[11px] border-b border-border-subtle last:border-0 hover:bg-white/1.5 transition-colors"
                       style={{ gridTemplateColumns: '24px 32px minmax(0,1fr) auto' }}
                     >
                       <span className={cn('font-display font-bold text-[14px] text-center tabular-nums', rankCls)}>
@@ -591,7 +591,7 @@ export default function DashboardPage() {
                       </span>
                       <Avatar name={entry.user.name} size="sm" />
                       <div className="min-w-0">
-                        <span className="font-ui font-semibold text-[13px] text-text-1 block truncate leading-tight">{entry.user.name}</span>
+                        <span className="font-ui font-semibold text-body-sm/tight text-text-1 block truncate">{entry.user.name}</span>
                         <div className="flex items-center gap-1.5 mt-1.5">
                           <div className="flex-1 h-1 bg-surface-inset rounded-full overflow-hidden">
                             <div

@@ -37,7 +37,7 @@ function sessionDuration(checkIn: string, checkOut: string): string {
 function ErrorBanner({ msg }: { msg: string }) {
   return (
     <div className="w-full flex items-start gap-2.5 bg-error/8 border border-error/25 rounded-md px-3.5 py-2.5">
-      <AlertCircle size={14} className="text-error flex-shrink-0 mt-0.5" />
+      <AlertCircle size={14} className="text-error shrink-0 mt-0.5" />
       <p className="font-ui text-[12px] text-error">{msg}</p>
     </div>
   )
@@ -63,7 +63,7 @@ function DeviceNotice({
   const t = DEVICE_NOTICE_TONE[tone]
   return (
     <div className="flex flex-col items-center gap-3 text-center">
-      <div className={cn('w-24 h-24 rounded-full border-2 flex items-center justify-center', t.ring)}>
+      <div className={cn('size-24 rounded-full border-2 flex items-center justify-center', t.ring)}>
         <Icon size={38} className={t.fg} />
       </div>
       <div className="max-w-[280px]">
@@ -90,7 +90,7 @@ function CheckInCardSkeleton() {
         <div className="h-3 w-52 rounded bg-surface-2" />
       </div>
       {/* Action circle */}
-      <div className="w-24 h-24 rounded-full bg-surface-2" />
+      <div className="size-24 rounded-full bg-surface-2" />
       {/* Title + time */}
       <div className="flex flex-col items-center gap-1.5">
         <div className="h-[18px] w-28 rounded bg-surface-2" />
@@ -219,7 +219,7 @@ export function AttendanceCheckInCard() {
       {/* ── Holiday ── */}
       {todayHoliday && (
         <div className="flex flex-col items-center gap-3 text-center">
-          <div className="w-24 h-24 rounded-full bg-text-4/10 border-2 border-text-4/20 flex items-center justify-center">
+          <div className="size-24 rounded-full bg-text-4/10 border-2 border-text-4/20 flex items-center justify-center">
             <Palmtree size={40} className="text-text-3" />
           </div>
           <div>
@@ -232,7 +232,7 @@ export function AttendanceCheckInCard() {
       {/* ── Day off (Sunday or non-working Saturday) ── */}
       {!todayHoliday && isDayOff && (
         <div className="flex flex-col items-center gap-3 text-center">
-          <div className="w-24 h-24 rounded-full bg-service-dev/10 border-2 border-service-dev/20 flex items-center justify-center">
+          <div className="size-24 rounded-full bg-service-dev/10 border-2 border-service-dev/20 flex items-center justify-center">
             <Calendar size={40} className="text-service-dev" />
           </div>
           <div>
@@ -256,7 +256,7 @@ export function AttendanceCheckInCard() {
           : { icon: XCircle, ring: 'bg-error/10 border-error/30', fg: 'text-error', title: 'Marked Absent', sub: 'No check-in was recorded for today.' }
         return (
           <div className="flex flex-col items-center gap-3 text-center">
-            <div className={cn('w-24 h-24 rounded-full border-2 flex items-center justify-center', meta.ring)}>
+            <div className={cn('size-24 rounded-full border-2 flex items-center justify-center', meta.ring)}>
               <meta.icon size={40} className={meta.fg} />
             </div>
             <div>
@@ -293,7 +293,7 @@ export function AttendanceCheckInCard() {
             {errorMsg && <ErrorBanner msg={errorMsg} />}
 
             <div className={cn(
-              'w-24 h-24 rounded-full border-2 flex items-center justify-center',
+              'size-24 rounded-full border-2 flex items-center justify-center',
               checkedOut ? 'bg-text-4/10 border-text-4/20'
                 : isLate ? 'bg-warning/15 border-warning/40'
                 : 'bg-success/15 border-success/40',
@@ -380,13 +380,13 @@ export function AttendanceCheckInCard() {
                 onClick={handleCheckIn}
                 disabled={!deviceReady || checkInMut.isPending}
                 className={cn(
-                  'w-24 h-24 rounded-full border-2 flex items-center justify-center transition-all duration-200',
+                  'size-24 rounded-full border-2 flex items-center justify-center transition-all duration-200',
                   'border-brand-red/50 bg-brand-red/10 hover:bg-brand-red/20 hover:border-brand-red hover:scale-105 active:scale-95',
                   (!deviceReady || checkInMut.isPending) && 'opacity-70 cursor-not-allowed',
                 )}
               >
                 {checkInMut.isPending
-                  ? <span className="w-7 h-7 border-2 border-brand-red border-t-transparent rounded-full animate-spin" />
+                  ? <span className="size-7 border-2 border-brand-red border-t-transparent rounded-full animate-spin" />
                   : <MapPin size={36} className="text-brand-red" />
                 }
               </button>

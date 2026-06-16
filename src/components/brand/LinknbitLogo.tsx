@@ -11,7 +11,7 @@ export function LinknbitMark({ surface = 'dark', className, imageClassName }: Li
 
   return (
     <span className={cn('flex shrink-0 items-center justify-center overflow-hidden', className)}>
-      <img src={src} alt="" className={cn('block h-full w-full object-contain', imageClassName)} />
+      <img src={src} alt="" className={cn('block size-full object-contain', imageClassName)} />
     </span>
   )
 }

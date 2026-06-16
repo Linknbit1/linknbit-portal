@@ -125,7 +125,7 @@ export default function ClientProjectsPage() {
             style={{ borderColor: '#EAE3D6' }}
           >
             <div
-              className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+              className="size-10 rounded-lg flex items-center justify-center shrink-0"
               style={{ background: `${s.color}18` }}
             >
               <s.icon size={18} style={{ color: s.color }} />
@@ -171,8 +171,8 @@ export default function ClientProjectsPage() {
                     tab.key === 'action_needed' && tab.count > 0
                       ? 'bg-red-500 text-white'
                       : filter === tab.key
-                        ? 'bg-[#EAE3D6] text-[#4F4940]'
-                        : 'bg-[#D6CFC5] text-[#4F4940]',
+                        ? 'bg-client-border text-client-ink-2'
+                        : 'bg-[#D6CFC5] text-client-ink-2',
                   )}
                 >
                   {tab.count}
@@ -243,7 +243,7 @@ export default function ClientProjectsPage() {
                       </span>
                     </div>
                     <h3
-                      className="font-display font-bold text-[18px] leading-tight"
+                      className="font-display font-bold text-h4/tight"
                       style={{ color: '#1A1612' }}
                     >
                       {project.name}
@@ -253,7 +253,7 @@ export default function ClientProjectsPage() {
                     </p>
                   </div>
                   <span
-                    className="text-[11px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap border flex-shrink-0"
+                    className="text-[11px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap border shrink-0"
                     style={{
                       background: sts.bg,
                       color: sts.text,
@@ -299,7 +299,7 @@ export default function ClientProjectsPage() {
                 >
                   <div className="flex items-center gap-2">
                     <div
-                      className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold text-white flex-shrink-0"
+                      className="size-6 rounded-full flex items-center justify-center text-[9px] font-bold text-white shrink-0"
                       style={{
                         background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)',
                       }}

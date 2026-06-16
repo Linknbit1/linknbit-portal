@@ -45,12 +45,12 @@ export function Select({ value, onChange, options, placeholder, label, className
       >
         {label && <span className="text-text-3 font-ui font-medium">{label}</span>}
         {selected?.dot && (
-          <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: selected.dot }} />
+          <span className="size-2 rounded-full shrink-0" style={{ background: selected.dot }} />
         )}
         <span className={cn('font-ui font-semibold flex-1 min-w-0 text-left', !selected && 'text-text-3 font-medium')}>
           {selected?.label ?? placeholder ?? 'Select'}
         </span>
-        <ChevronDown size={12} className="text-text-3 flex-shrink-0" />
+        <ChevronDown size={12} className="text-text-3 shrink-0" />
       </button>
 
       {open && (
@@ -66,7 +66,7 @@ export function Select({ value, onChange, options, placeholder, label, className
               )}
             >
               {opt.dot && (
-                <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: opt.dot }} />
+                <span className="size-2 rounded-full shrink-0" style={{ background: opt.dot }} />
               )}
               {opt.label}
             </button>

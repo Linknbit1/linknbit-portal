@@ -151,7 +151,7 @@ export default function ResetPasswordPage() {
             {error && (
               <div className="mb-4 flex items-start gap-2.5 rounded-sm border border-error-border bg-error-soft px-3.5 py-3">
                 <AlertCircle size={16} className="mt-px shrink-0 text-error" />
-                <p className="font-ui text-[12.5px] leading-[1.5] text-text-1">{error}</p>
+                <p className="font-ui text-[12.5px] leading-normal text-text-1">{error}</p>
               </div>
             )}
 
@@ -198,7 +198,7 @@ export default function ResetPasswordPage() {
               {status === 'saving' ? <><Loader2 size={16} className="animate-spin" /> Saving…</> : <>Set password & continue <ArrowRight size={16} /></>}
             </button>
 
-            <p className="mt-6 font-ui text-caption leading-[1.5] text-text-3">
+            <p className="mt-6 font-ui text-caption/normal text-text-3">
               Use at least <strong className="font-semibold text-text-2">8 characters</strong> with a capital letter and a number.
             </p>
           </form>

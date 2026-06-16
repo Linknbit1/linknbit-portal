@@ -51,7 +51,7 @@ function ServiceRow({ service, canManage }: { service: Service; canManage: boole
   return (
     <div className="grid grid-cols-[36px_1fr_auto_auto] gap-3 items-center px-4 py-2.5 border-b border-border-subtle last:border-0">
       <input type="color" value={color} disabled={!canManage} onChange={(e) => setColor(e.target.value)}
-        className="w-8 h-8 rounded-md bg-transparent border border-border-default cursor-pointer disabled:cursor-default" aria-label={`${service.name} colour`} />
+        className="size-8 rounded-md bg-transparent border border-border-default cursor-pointer disabled:cursor-default" aria-label={`${service.name} colour`} />
       <div className="flex items-center gap-2 min-w-0">
         <input value={name} disabled={!canManage} onChange={(e) => setName(e.target.value)}
           className="bg-surface-inset border border-border-default rounded-md px-3 py-1.5 text-[13px] font-ui text-text-1 outline-none focus:border-border-focus w-52 disabled:opacity-70" />
@@ -115,7 +115,7 @@ function ServicesPanel({ canManage }: { canManage: boolean }) {
         {canManage && (
           <div className="grid grid-cols-[36px_1fr_auto] gap-3 items-center px-4 py-3 bg-surface-2/40">
             <input type="color" value={newColor} onChange={(e) => setNewColor(e.target.value)}
-              className="w-8 h-8 rounded-md bg-transparent border border-border-default cursor-pointer" aria-label="New service colour" />
+              className="size-8 rounded-md bg-transparent border border-border-default cursor-pointer" aria-label="New service colour" />
             <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="New service name (e.g. SEO)"
               className="bg-surface-inset border border-border-default rounded-md px-3 py-1.5 text-[13px] font-ui text-text-1 placeholder:text-text-4 outline-none focus:border-border-focus w-64" />
             <Button size="sm" disabled={!newName.trim() || creating} onClick={add}>
@@ -136,7 +136,7 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
         <p className="font-ui font-medium text-[13.5px] text-text-1">{label}</p>
         {hint && <p className="font-ui text-[12px] text-text-3 mt-0.5">{hint}</p>}
       </div>
-      <div className="flex-shrink-0 ml-6">{children}</div>
+      <div className="shrink-0 ml-6">{children}</div>
     </div>
   )
 }
@@ -221,14 +221,14 @@ export default function SettingsPage() {
       <div className="px-4 py-6 lg:p-6 max-w-content mx-auto w-full">
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Section nav — horizontal scroll on mobile, sidebar on desktop */}
-          <div className="w-full lg:w-48 flex-shrink-0">
+          <div className="w-full lg:w-48 shrink-0">
             <nav className="flex lg:flex-col bg-surface-1 border border-border-default rounded-xl overflow-x-auto">
               {visibleTabs.map(({ key, label, icon: Icon }) => (
                 <button
                   key={key}
                   onClick={() => setActiveTab(key)}
                   className={cn(
-                    'flex-shrink-0 lg:w-full flex items-center gap-2.5 px-4 py-3 text-[13px] font-ui font-medium whitespace-nowrap transition-colors border-r lg:border-r-0 lg:border-b border-border-subtle last:border-0',
+                    'shrink-0 lg:w-full flex items-center gap-2.5 px-4 py-3 text-[13px] font-ui font-medium whitespace-nowrap transition-colors border-r lg:border-r-0 lg:border-b border-border-subtle last:border-0',
                     effectiveTab === key
                       ? 'bg-brand-red/10 text-brand-red'
                       : 'text-text-2 hover:bg-surface-2 hover:text-text-1',
@@ -278,7 +278,7 @@ export default function SettingsPage() {
                   ].map(({ service, color, stages }) => (
                     <div key={service} className="mb-5 last:mb-0">
                       <div className="flex items-center gap-2 mb-3">
-                        <span className="w-2.5 h-2.5 rounded-full" style={{ background: color }} />
+                        <span className="size-2.5 rounded-full" style={{ background: color }} />
                         <span className="font-display font-semibold text-[13.5px] text-text-1">{service}</span>
                         <span className="font-mono text-[10px] text-text-4 bg-surface-2 px-1.5 py-0.5 rounded">{stages.length} stages</span>
                         <button
@@ -377,7 +377,7 @@ export default function SettingsPage() {
                           <tr className="border-b border-border-subtle">
                             <th className="text-left py-2 font-mono text-text-4 uppercase text-[10px] tracking-wider pr-6 min-w-[180px]">Feature</th>
                             {INTERNAL_ROLES.map((role) => (
-                              <th key={role} className="text-center py-2 font-ui font-semibold text-text-3 px-2 min-w-[70px]">
+                              <th key={role} className="text-center p-2 font-ui font-semibold text-text-3 min-w-[70px]">
                                 {ROLE_LABELS[role]}
                               </th>
                             ))}

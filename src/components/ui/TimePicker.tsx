@@ -132,11 +132,11 @@ export function TimePicker({
           open ? 'border-border-focus' : 'border-border-default hover:border-border-strong',
         )}
       >
-        <Clock size={13} className="text-text-4 flex-shrink-0" />
+        <Clock size={13} className="text-text-4 shrink-0" />
         <span className={cn('flex-1 font-mono text-[13px]', triggerLabel ? 'text-text-1' : 'text-text-4')}>
           {triggerLabel ?? placeholder}
         </span>
-        <ChevronDown size={13} className={cn('text-text-4 flex-shrink-0 transition-transform', open && 'rotate-180')} />
+        <ChevronDown size={13} className={cn('text-text-4 shrink-0 transition-transform', open && 'rotate-180')} />
       </button>
 
       {open && (

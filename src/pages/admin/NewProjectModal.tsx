@@ -58,7 +58,7 @@ export function NewProjectModal({ onClose }: NewProjectModalProps) {
           </div>
           <button
             onClick={onClose}
-            className="ml-auto w-8 h-8 rounded-[6px] border border-border-default bg-surface-2 text-text-2 hover:bg-surface-3 hover:text-text-1 flex items-center justify-center transition-colors"
+            className="ml-auto size-8 rounded-sm border border-border-default bg-surface-2 text-text-2 hover:bg-surface-3 hover:text-text-1 flex items-center justify-center transition-colors"
           >
             <X size={15} />
           </button>
@@ -130,7 +130,7 @@ export function NewProjectModal({ onClose }: NewProjectModalProps) {
                 type="date"
                 value={deadline}
                 onChange={(e) => setDeadline(e.target.value)}
-                className="h-9 bg-surface-2 border border-border-default rounded-sm px-3 text-[12.5px] font-mono text-text-1 outline-none focus:border-border-focus transition-colors [color-scheme:dark]"
+                className="h-9 bg-surface-2 border border-border-default rounded-sm px-3 text-[12.5px] font-mono text-text-1 outline-none focus:border-border-focus transition-colors scheme-dark"
               />
             </div>
           </div>
@@ -162,7 +162,7 @@ export function NewProjectModal({ onClose }: NewProjectModalProps) {
               onChange={(e) => setNote(e.target.value)}
               placeholder="Any internal notes or context for the team..."
               rows={3}
-              className="bg-surface-2 border border-border-default rounded-sm px-3 py-2.5 text-[13px] font-ui text-text-1 placeholder:text-text-3 outline-none focus:border-border-focus transition-colors resize-none leading-relaxed"
+              className="bg-surface-2 border border-border-default rounded-sm px-3 py-2.5 text-body-sm/relaxed font-ui text-text-1 placeholder:text-text-3 outline-none focus:border-border-focus transition-colors resize-none"
             />
           </div>
         </div>

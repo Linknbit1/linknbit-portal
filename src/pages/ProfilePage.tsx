@@ -141,7 +141,7 @@ export default function ProfilePage() {
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="relative group rounded-full flex-shrink-0"
+            className="relative group rounded-full shrink-0"
             aria-label="Change avatar"
           >
             <Avatar name={name || profile.name} src={preview ?? profile.avatar_url ?? undefined} size="xl" />

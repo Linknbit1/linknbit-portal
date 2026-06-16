@@ -41,8 +41,8 @@ export default function ClickUpPage() {
             : 'bg-success/6 border-success/25',
         )}>
           {errorProjects.length > 0
-            ? <AlertTriangle size={20} className="text-error flex-shrink-0" />
-            : <CheckCircle2 size={20} className="text-success flex-shrink-0" />
+            ? <AlertTriangle size={20} className="text-error shrink-0" />
+            : <CheckCircle2 size={20} className="text-success shrink-0" />
           }
           <div className="flex-1">
             <p className="font-display font-semibold text-[14px] text-text-1">
@@ -130,7 +130,7 @@ export default function ClickUpPage() {
                       {project.clickUpFolder && (
                         <button
                           onClick={() => toast('Opening in ClickUp...', 'info')}
-                          className="w-7 h-7 rounded-md bg-surface-2 border border-border-default text-text-3 hover:text-text-1 hover:bg-surface-3 flex items-center justify-center transition-colors"
+                          className="size-7 rounded-md bg-surface-2 border border-border-default text-text-3 hover:text-text-1 hover:bg-surface-3 flex items-center justify-center transition-colors"
                         >
                           <ExternalLink size={11} />
                         </button>

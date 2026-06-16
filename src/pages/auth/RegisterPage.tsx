@@ -173,7 +173,7 @@ export default function RegisterPage() {
           {updatePassword.isError && (
             <div className="mb-4 flex items-start gap-2.5 rounded-sm border border-error-border bg-error-soft px-3.5 py-3">
               <AlertCircle size={16} className="mt-px shrink-0 text-error" />
-              <p className="font-ui text-[12.5px] leading-[1.5] text-text-1">
+              <p className="font-ui text-[12.5px] leading-normal text-text-1">
                 {(updatePassword.error as Error).message ?? 'Could not set password. Try again.'}
               </p>
             </div>
@@ -229,7 +229,7 @@ export default function RegisterPage() {
             </button>
           </div>
 
-          <div className="mt-6 flex items-center gap-2.5 rounded-sm border border-border-subtle bg-surface-1 px-3.5 py-3 font-ui text-caption leading-[1.5] text-text-3">
+          <div className="mt-6 flex items-center gap-2.5 rounded-sm border border-border-subtle bg-surface-1 px-3.5 py-3 font-ui text-caption/normal text-text-3">
             <ShieldCheck size={14} className="shrink-0 text-text-3" />
             <span>
               Use at least{' '}

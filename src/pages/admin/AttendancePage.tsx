@@ -85,7 +85,7 @@ function StatusChip({ status }: { status: string }) {
   const m = STATUS_META[status] ?? STATUS_META['absent']
   return (
     <span className={cn('inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-ui font-semibold border', m.cls)}>
-      <span className="w-1.5 h-1.5 rounded-full" style={{ background: m.dot }} />
+      <span className="size-1.5 rounded-full" style={{ background: m.dot }} />
       {m.label}
     </span>
   )
@@ -95,7 +95,7 @@ function WFHStatusChip({ status }: { status: string }) {
   const m = WFH_META[status] ?? WFH_META.pending
   return (
     <span className={cn('inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-ui font-semibold border', m.cls)}>
-      <span className="w-1.5 h-1.5 rounded-full" style={{ background: m.dot }} />
+      <span className="size-1.5 rounded-full" style={{ background: m.dot }} />
       {m.label}
     </span>
   )
@@ -256,7 +256,7 @@ function DailyRecordsTab() {
           { label: 'Leave',    value: stats.leave,    icon: Wifi,         color: 'text-service-dev',     bg: 'bg-service-dev/10 border-service-dev/20' },
         ].map(({ label, value, icon: Icon, color, bg }) => (
           <div key={label} className="bg-surface-1 border border-border-default rounded-xl p-4 flex flex-col gap-2">
-            <div className={cn('w-9 h-9 rounded-lg border flex items-center justify-center', bg)}>
+            <div className={cn('size-9 rounded-lg border flex items-center justify-center', bg)}>
               <Icon size={16} className={color} />
             </div>
             <div>
@@ -270,7 +270,7 @@ function DailyRecordsTab() {
       {/* Table */}
       <div className="bg-surface-1 border border-border-default rounded-xl">
         <div className="flex flex-wrap items-center gap-3 px-4 lg:px-5 py-3.5 border-b border-border-subtle">
-          <Calendar size={15} className="text-text-3 flex-shrink-0" />
+          <Calendar size={15} className="text-text-3 shrink-0" />
           <DatePicker
             value={dateFilter}
             onChange={setDateFilter}
@@ -330,7 +330,7 @@ function DailyRecordsTab() {
               </tr>
             ) : (
               filtered.map((rec) => (
-                <tr key={rec.id} className="border-b border-border-subtle hover:bg-white/[0.015] transition-colors">
+                <tr key={rec.id} className="border-b border-border-subtle hover:bg-white/1.5 transition-colors">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2.5">
                       <Avatar name={rec.profiles?.name ?? '?'} size="sm" />
@@ -405,7 +405,7 @@ function DailyRecordsTab() {
                     <span className="font-ui font-medium text-[13px] text-text-1 truncate">
                       {rec.profiles?.name ?? rec.profile_id.slice(0, 8)}
                     </span>
-                    {rec.wifi_validated && <Wifi size={12} className="text-success flex-shrink-0" aria-label="WiFi validated" />}
+                    {rec.wifi_validated && <Wifi size={12} className="text-success shrink-0" aria-label="WiFi validated" />}
                   </div>
                   <StatusChip status={rec.status} />
                 </div>
@@ -551,7 +551,7 @@ function WFHRequestsTab() {
           { label: 'Rejected',       value: rejected, icon: AlertTriangle,color: 'text-error',   bg: 'bg-error/10 border-error/20' },
         ].map(({ label, value, icon: Icon, color, bg }) => (
           <div key={label} className="bg-surface-1 border border-border-default rounded-xl p-4 flex items-center gap-4">
-            <div className={cn('w-10 h-10 rounded-lg border flex items-center justify-center flex-shrink-0', bg)}>
+            <div className={cn('size-10 rounded-lg border flex items-center justify-center shrink-0', bg)}>
               <Icon size={18} className={color} />
             </div>
             <div>
@@ -591,7 +591,7 @@ function WFHRequestsTab() {
             {filtered.map((req) => {
               const isExpanded = expandedId === req.id
               return (
-                <div key={req.id} className="hover:bg-white/[0.015] transition-colors">
+                <div key={req.id} className="hover:bg-white/1.5 transition-colors">
                   <div className="flex items-center gap-3 px-5 py-3.5">
                     <Avatar name={req.profiles?.name ?? '?'} size="sm" />
                     <div className="flex-1 min-w-0">
@@ -603,11 +603,11 @@ function WFHRequestsTab() {
                       </div>
                       <p className="text-[12px] font-ui text-text-3 truncate max-w-[340px]">{req.reason}</p>
                     </div>
-                    <div className="flex items-center gap-1.5 text-[12px] font-mono text-text-2 flex-shrink-0">
+                    <div className="flex items-center gap-1.5 text-[12px] font-mono text-text-2 shrink-0">
                       <Calendar size={12} className="text-text-4" />
                       {req.date}
                     </div>
-                    <div className="flex-shrink-0 text-[11.5px] font-mono text-text-4">{fmt(req.created_at)}</div>
+                    <div className="shrink-0 text-[11.5px] font-mono text-text-4">{fmt(req.created_at)}</div>
                     <WFHStatusChip status={req.status} />
                     {req.status === 'pending' ? (
                       <div className="flex items-center gap-1.5 ml-1">
@@ -864,7 +864,7 @@ function LeaveTab() {
           <div className="divide-y divide-border-subtle">
             {types.map((t) => (
               <div key={t.id} className="flex items-center gap-3 px-5 py-3">
-                <span className={cn('w-2.5 h-2.5 rounded-full flex-shrink-0', leaveColor(t.color).dot)} />
+                <span className={cn('size-2.5 rounded-full shrink-0', leaveColor(t.color).dot)} />
                 <span className="font-ui font-medium text-[13px] text-text-1 flex-1">{t.name}</span>
                 {!t.is_active && <span className="text-[10px] font-mono text-text-4 uppercase">inactive</span>}
                 <span className="font-mono text-[12px] text-text-3">{t.days_allowed} days / year</span>
@@ -918,7 +918,7 @@ function LeaveTab() {
                   {req.review_note && <p className="font-ui text-[11px] text-error mt-0.5 italic">"{req.review_note}"</p>}
                 </div>
                 {req.status === 'pending' ? (
-                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <div className="flex items-center gap-1.5 shrink-0">
                     <button onClick={() => approve(req.id)}
                       className="flex items-center gap-1 px-2.5 py-1.5 rounded-sm bg-success/10 border border-success/30 text-success text-[11.5px] font-ui font-semibold hover:bg-success/20 transition-colors">
                       <ThumbsUp size={12} /> Approve
@@ -929,7 +929,7 @@ function LeaveTab() {
                     </button>
                   </div>
                 ) : (
-                  <span className={cn('inline-flex items-center px-2 py-0.5 rounded-xs border text-[11px] font-mono font-semibold flex-shrink-0 mt-0.5',
+                  <span className={cn('inline-flex items-center px-2 py-0.5 rounded-xs border text-[11px] font-mono font-semibold shrink-0 mt-0.5',
                     LEAVE_STATUS_CLS[req.status] ?? LEAVE_STATUS_CLS.pending)}>
                     {req.status}
                   </span>
@@ -1037,8 +1037,8 @@ function EnrolledDevicesTab() {
 
     return (
     <tr className={cn(
-      'border-b border-border-subtle hover:bg-white/[0.015] transition-colors',
-      isShared && 'bg-warning/[0.03]',
+      'border-b border-border-subtle hover:bg-white/1.5 transition-colors',
+      isShared && 'bg-warning/3',
     )}>
       <td className="px-4 py-3">
         <div className="flex items-center gap-2.5">
@@ -1048,7 +1048,7 @@ function EnrolledDevicesTab() {
       </td>
       <td className="px-4 py-3">
         <div className="flex items-center gap-2 flex-wrap">
-          <Smartphone size={13} className="text-text-4 flex-shrink-0" />
+          <Smartphone size={13} className="text-text-4 shrink-0" />
           <span className="font-ui text-[12.5px] text-text-1">{d.device_name}</span>
           {isShared && (
             <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-xs bg-warning/15 border border-warning/30 text-warning text-[10px] font-mono font-semibold uppercase tracking-wide">
@@ -1129,7 +1129,7 @@ function EnrolledDevicesTab() {
           { label: 'Shared Devices',  value: sharedDevicesCount,     icon: Users,       color: 'text-warning', bg: 'bg-warning/10 border-warning/20' },
         ].map(({ label, value, icon: Icon, color, bg }) => (
           <div key={label} className="bg-surface-1 border border-border-default rounded-xl p-4 flex items-center gap-4">
-            <div className={cn('w-10 h-10 rounded-lg border flex items-center justify-center flex-shrink-0', bg)}>
+            <div className={cn('size-10 rounded-lg border flex items-center justify-center shrink-0', bg)}>
               <Icon size={18} className={color} />
             </div>
             <div>
@@ -1190,7 +1190,7 @@ function ExcStatusChip({ status }: { status: string }) {
   const m = EXC_STATUS_META[status] ?? EXC_STATUS_META['pending']
   return (
     <span className={cn('inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-ui font-semibold border', m.cls)}>
-      <span className="w-1.5 h-1.5 rounded-full" style={{ background: m.dot }} />
+      <span className="size-1.5 rounded-full" style={{ background: m.dot }} />
       {m.label}
     </span>
   )
@@ -1259,7 +1259,7 @@ function ExceptionsTab() {
           { label: 'Rejected',       value: rejectedCount, icon: AlertTriangle, color: 'text-error',  bg: 'bg-error/10 border-error/20' },
         ].map(({ label, value, icon: Icon, color, bg }) => (
           <div key={label} className="bg-surface-1 border border-border-default rounded-xl p-4 flex items-center gap-4">
-            <div className={cn('w-10 h-10 rounded-lg border flex items-center justify-center flex-shrink-0', bg)}>
+            <div className={cn('size-10 rounded-lg border flex items-center justify-center shrink-0', bg)}>
               <Icon size={18} className={color} />
             </div>
             <div>
@@ -1321,7 +1321,7 @@ function ExceptionsTab() {
                 const typeMeta = TYPE_META[exc.exception_type] ?? TYPE_META['late_arrival']
                 const excWp = exc as AttendanceExceptionWithProfile
                 return (
-                  <tr key={exc.id} className="border-b border-border-subtle hover:bg-white/[0.015] transition-colors">
+                  <tr key={exc.id} className="border-b border-border-subtle hover:bg-white/1.5 transition-colors">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2.5">
                         <Avatar name={excWp.profiles?.name ?? '?'} size="sm" />
@@ -1540,7 +1540,7 @@ function HolidaysTab() {
 
       {/* Header row */}
       <div className="flex items-center gap-3">
-        <button onClick={() => setYear((y) => y - 1)} className="w-8 h-8 rounded-sm bg-surface-1 border border-border-default flex items-center justify-center text-text-3 hover:text-text-1 hover:border-border-strong transition-colors">
+        <button onClick={() => setYear((y) => y - 1)} className="size-8 rounded-sm bg-surface-1 border border-border-default flex items-center justify-center text-text-3 hover:text-text-1 hover:border-border-strong transition-colors">
           <ChevronLeft size={15} />
         </button>
         <div className="bg-surface-1 border border-border-default rounded-lg px-5 py-2 flex items-center gap-2">
@@ -1548,7 +1548,7 @@ function HolidaysTab() {
           <span className="font-display font-semibold text-[15px] text-text-1">{year} Holidays</span>
           <span className="ml-1 font-mono text-[11px] text-text-4">{holidays.length} day{holidays.length !== 1 ? 's' : ''}</span>
         </div>
-        <button onClick={() => setYear((y) => y + 1)} className="w-8 h-8 rounded-sm bg-surface-1 border border-border-default flex items-center justify-center text-text-3 hover:text-text-1 hover:border-border-strong transition-colors">
+        <button onClick={() => setYear((y) => y + 1)} className="size-8 rounded-sm bg-surface-1 border border-border-default flex items-center justify-center text-text-3 hover:text-text-1 hover:border-border-strong transition-colors">
           <ChevronRight size={15} />
         </button>
         <button
@@ -1563,7 +1563,7 @@ function HolidaysTab() {
       <div className="flex items-center gap-3">
         {Object.entries(HOLIDAY_TYPE_META).map(([k, v]) => (
           <span key={k} className={cn('inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-ui font-semibold border', v.cls)}>
-            <span className="w-1.5 h-1.5 rounded-full" style={{ background: v.dot }} />
+            <span className="size-1.5 rounded-full" style={{ background: v.dot }} />
             {v.label}
           </span>
         ))}
@@ -1591,8 +1591,8 @@ function HolidaysTab() {
                 {items.map((h) => {
                   const meta = HOLIDAY_TYPE_META[h.type] ?? HOLIDAY_TYPE_META['public_holiday']
                   return (
-                    <div key={h.id} className="flex items-center gap-4 px-5 py-3.5 hover:bg-white/[0.015] transition-colors">
-                      <div className="w-10 h-10 rounded-lg bg-surface-2 border border-border-default flex items-center justify-center flex-shrink-0">
+                    <div key={h.id} className="flex items-center gap-4 px-5 py-3.5 hover:bg-white/1.5 transition-colors">
+                      <div className="size-10 rounded-lg bg-surface-2 border border-border-default flex items-center justify-center shrink-0">
                         <Palmtree size={16} className="text-text-3" />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -1600,7 +1600,7 @@ function HolidaysTab() {
                         <p className="font-mono text-[11px] text-text-4 mt-0.5">{fmtDate(h.date)}</p>
                       </div>
                       <span className={cn('inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-ui font-semibold border', meta.cls)}>
-                        <span className="w-1.5 h-1.5 rounded-full" style={{ background: meta.dot }} />
+                        <span className="size-1.5 rounded-full" style={{ background: meta.dot }} />
                         {meta.label}
                       </span>
                       <button
@@ -1677,7 +1677,7 @@ function HolidaysTab() {
               {/* Range preview */}
               {addMode === 'range' && rangeCount > 0 && (
                 <div className="flex items-center gap-2 px-3 py-2 bg-surface-2 border border-border-default rounded-md">
-                  <Calendar size={12} className="text-text-4 flex-shrink-0" />
+                  <Calendar size={12} className="text-text-4 shrink-0" />
                   <span className="font-mono text-[12px] text-text-2">
                     <span className="text-text-1 font-semibold">{rangeCount}</span> day{rangeCount !== 1 ? 's' : ''}
                     {' '}— {new Date(form.date + 'T00:00:00').toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
@@ -1766,8 +1766,8 @@ function HolidaysTab() {
           <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
             <div className="divide-y divide-border-subtle">
               {workingSaturdays.map((s) => (
-                <div key={s.id} className="flex items-center gap-4 px-5 py-3 hover:bg-white/[0.015] transition-colors">
-                  <div className="w-8 h-8 rounded-md bg-surface-2 border border-border-default flex items-center justify-center flex-shrink-0">
+                <div key={s.id} className="flex items-center gap-4 px-5 py-3 hover:bg-white/1.5 transition-colors">
+                  <div className="size-8 rounded-md bg-surface-2 border border-border-default flex items-center justify-center shrink-0">
                     <Calendar size={13} className="text-text-3" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -1919,7 +1919,7 @@ function OvertimeTab() {
           { label: 'Approved Hours',   value: `${totalApprovedHours.toFixed(1)}h`,  icon: Star,         color: 'text-service-mkt',  bg: 'bg-service-mkt/10 border-service-mkt/20' },
         ].map(({ label, value, icon: Icon, color, bg }) => (
           <div key={label} className="bg-surface-1 border border-border-default rounded-xl p-4 flex items-center gap-4">
-            <div className={cn('w-10 h-10 rounded-lg border flex items-center justify-center flex-shrink-0', bg)}>
+            <div className={cn('size-10 rounded-lg border flex items-center justify-center shrink-0', bg)}>
               <Icon size={18} className={color} />
             </div>
             <div>
@@ -1957,7 +1957,7 @@ function OvertimeTab() {
 
         {isLoading ? (
           <div className="py-16 flex items-center justify-center gap-2 font-mono text-[12px] text-text-4">
-            <span className="w-4 h-4 border-2 border-text-4 border-t-brand-red rounded-full animate-spin" /> Loading…
+            <span className="size-4 border-2 border-text-4 border-t-brand-red rounded-full animate-spin" /> Loading…
           </div>
         ) : requests.length === 0 ? (
           <div className="py-16 text-center font-ui text-[13px] text-text-4">No overtime requests match this filter.</div>
@@ -1977,7 +1977,7 @@ function OvertimeTab() {
                 const meta = OT_STATUS_META[req.status] ?? OT_STATUS_META['pending']
                 const r = req as typeof req & { profiles?: { name: string; avatar_url: string | null } | null }
                 return (
-                  <tr key={req.id} className="border-b border-border-subtle hover:bg-white/[0.015] transition-colors">
+                  <tr key={req.id} className="border-b border-border-subtle hover:bg-white/1.5 transition-colors">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2.5">
                         <Avatar name={r.profiles?.name ?? '?'} size="sm" />
@@ -1996,7 +1996,7 @@ function OvertimeTab() {
                     </td>
                     <td className="px-4 py-3">
                       <span className={cn('inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-ui font-semibold border', meta.cls)}>
-                        <span className="w-1.5 h-1.5 rounded-full" style={{ background: meta.dot }} />
+                        <span className="size-1.5 rounded-full" style={{ background: meta.dot }} />
                         {meta.label}
                       </span>
                       {req.review_note && (
@@ -2308,7 +2308,7 @@ function ReportsTab() {
       <div className="flex items-center gap-3">
         <button
           onClick={prevMonth}
-          className="w-8 h-8 rounded-sm bg-surface-1 border border-border-default flex items-center justify-center text-text-3 hover:text-text-1 hover:border-border-strong transition-colors"
+          className="size-8 rounded-sm bg-surface-1 border border-border-default flex items-center justify-center text-text-3 hover:text-text-1 hover:border-border-strong transition-colors"
         >
           <ChevronLeft size={15} />
         </button>
@@ -2326,7 +2326,7 @@ function ReportsTab() {
         <button
           onClick={nextMonth}
           disabled={isCurrentMonth}
-          className="w-8 h-8 rounded-sm bg-surface-1 border border-border-default flex items-center justify-center text-text-3 hover:text-text-1 hover:border-border-strong transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          className="size-8 rounded-sm bg-surface-1 border border-border-default flex items-center justify-center text-text-3 hover:text-text-1 hover:border-border-strong transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <ChevronRight size={15} />
         </button>
@@ -2363,7 +2363,7 @@ function ReportsTab() {
           { label: 'Leaves',          value: totalLeave,          icon: Home,         color: 'text-service-dev', bg: 'bg-service-dev/10 border-service-dev/20' },
         ].map(({ label, value, icon: Icon, color, bg }) => (
           <div key={label} className="bg-surface-1 border border-border-default rounded-xl p-4 flex items-center gap-3">
-            <div className={cn('w-10 h-10 rounded-lg border flex items-center justify-center flex-shrink-0', bg)}>
+            <div className={cn('size-10 rounded-lg border flex items-center justify-center shrink-0', bg)}>
               <Icon size={18} className={color} />
             </div>
             <div>
@@ -2384,7 +2384,7 @@ function ReportsTab() {
 
         {isLoading ? (
           <div className="py-16 flex items-center justify-center gap-2 text-text-4 font-mono text-[12px]">
-            <span className="w-4 h-4 border-2 border-text-4 border-t-brand-red rounded-full animate-spin" /> Loading…
+            <span className="size-4 border-2 border-text-4 border-t-brand-red rounded-full animate-spin" /> Loading…
           </div>
         ) : employeeStats.length === 0 ? (
           <div className="py-16 text-center font-ui text-[13px] text-text-4">
@@ -2424,7 +2424,7 @@ function ReportsTab() {
                   <React.Fragment key={s.profileId}>
                     <tr
                       onClick={() => setExpandedId(isExpanded ? null : s.profileId)}
-                      className="border-b border-border-subtle hover:bg-white/[0.02] transition-colors cursor-pointer"
+                      className="border-b border-border-subtle hover:bg-white/2 transition-colors cursor-pointer"
                     >
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2.5">
@@ -2524,9 +2524,9 @@ function ReportsTab() {
                                       <p className="font-ui text-[10px] text-text-3">{statusLabel}{isEarly ? ' · Early' : ''}</p>
                                     </div>
                                     {/* Arrow */}
-                                    <div className="w-2 h-2 bg-surface-3 border-r border-b border-border-strong rotate-45 mx-auto -mt-1" />
+                                    <div className="size-2 bg-surface-3 border-r border-b border-border-strong rotate-45 mx-auto -mt-1" />
                                   </div>
-                                  <div className={cn('w-8 h-8 rounded-sm border flex items-center justify-center text-[11px] font-mono font-bold transition-colors', statusCls)}>
+                                  <div className={cn('size-8 rounded-sm border flex items-center justify-center text-[11px] font-mono font-bold transition-colors', statusCls)}>
                                     {dayNum}
                                   </div>
                                 </div>
@@ -2534,11 +2534,11 @@ function ReportsTab() {
                             })}
                           </div>
                           <div className="flex items-center gap-4 mt-2.5 text-[10.5px] font-mono text-text-4">
-                            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-xs bg-success/20 border border-success/40 inline-block" /> Present</span>
-                            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-xs bg-warning/15 border border-warning/35 inline-block" /> Late</span>
-                            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-xs bg-error/10 border border-error/25 inline-block" /> Absent</span>
-                            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-xs bg-service-design/10 border border-service-design/25 inline-block" /> Half Day</span>
-                            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-xs bg-service-dev/10 border border-service-dev/25 inline-block" /> Leave</span>
+                            <span className="flex items-center gap-1"><span className="size-2.5 rounded-xs bg-success/20 border border-success/40 inline-block" /> Present</span>
+                            <span className="flex items-center gap-1"><span className="size-2.5 rounded-xs bg-warning/15 border border-warning/35 inline-block" /> Late</span>
+                            <span className="flex items-center gap-1"><span className="size-2.5 rounded-xs bg-error/10 border border-error/25 inline-block" /> Absent</span>
+                            <span className="flex items-center gap-1"><span className="size-2.5 rounded-xs bg-service-design/10 border border-service-design/25 inline-block" /> Half Day</span>
+                            <span className="flex items-center gap-1"><span className="size-2.5 rounded-xs bg-service-dev/10 border border-service-dev/25 inline-block" /> Leave</span>
                           </div>
                         </td>
                       </tr>
@@ -2601,7 +2601,7 @@ function SettingsForm({ settings }: { settings: AttendanceSettings }) {
   return (
     <div className="bg-surface-1 border border-border-default rounded-xl p-6">
       <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border-subtle">
-        <div className="w-9 h-9 rounded-lg bg-brand-red/10 border border-brand-red/20 flex items-center justify-center">
+        <div className="size-9 rounded-lg bg-brand-red/10 border border-brand-red/20 flex items-center justify-center">
           <SettingsIcon size={16} className="text-brand-red" />
         </div>
         <div>
@@ -2674,13 +2674,13 @@ function SettingsForm({ settings }: { settings: AttendanceSettings }) {
               type="button"
               onClick={() => setSaturdayWorking((v) => !v)}
               className={cn(
-                'relative flex-shrink-0 rounded-full transition-colors duration-200',
+                'relative shrink-0 rounded-full transition-colors duration-200',
                 saturdayWorking ? 'bg-brand-red' : 'bg-surface-3 border border-border-strong',
               )}
               style={{ width: 40, height: 22 }}
             >
               <span
-                className="absolute top-[3px] w-4 h-4 rounded-full bg-white shadow transition-transform duration-200"
+                className="absolute top-[3px] size-4 rounded-full bg-white shadow transition-transform duration-200"
                 style={{ left: 3, transform: saturdayWorking ? 'translateX(18px)' : 'translateX(0)' }}
               />
             </button>
@@ -2723,7 +2723,7 @@ function SettingsForm({ settings }: { settings: AttendanceSettings }) {
               style={{ width: 40, height: 22 }}
             >
               <span
-                className="absolute top-0.75 w-4 h-4 rounded-full bg-white shadow transition-transform duration-200"
+                className="absolute top-0.75 size-4 rounded-full bg-white shadow transition-transform duration-200"
                 style={{ left: 3, transform: autoCheckout ? 'translateX(18px)' : 'translateX(0)' }}
               />
             </button>
@@ -2824,7 +2824,7 @@ export default function AttendancePage() {
               data-active={effectiveView === id}
               onClick={() => setView(id)}
               className={cn(
-                'flex items-center gap-2 px-4 py-2 rounded-sm text-[13px] font-ui font-medium transition-colors relative flex-shrink-0 whitespace-nowrap',
+                'flex items-center gap-2 px-4 py-2 rounded-sm text-[13px] font-ui font-medium transition-colors relative shrink-0 whitespace-nowrap',
                 effectiveView === id
                   ? 'bg-surface-3 text-text-1 shadow-sm'
                   : 'text-text-3 hover:text-text-2',

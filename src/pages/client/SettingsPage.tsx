@@ -33,7 +33,7 @@ function Toggle({
       role="switch"
     >
       <motion.span
-        className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm"
+        className="absolute top-0.5 size-4 rounded-full bg-white shadow-sm"
         animate={{ x: checked ? 20 : 2 }}
         transition={{ type: 'spring', stiffness: 500, damping: 35 }}
       />
@@ -170,7 +170,7 @@ export default function ClientSettingsPage() {
           description="Choose how and when you receive updates."
         >
           <div className="flex items-center gap-3 px-6 py-3 border-b" style={{ borderColor: '#F2EDE4' }}>
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(238,39,55,0.08)' }}>
+            <div className="size-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(238,39,55,0.08)' }}>
               <Bell size={13} style={{ color: '#EE2737' }} />
             </div>
             <span className="text-[12px] font-mono uppercase tracking-wider" style={{ color: '#B7AE9D' }}>
@@ -186,7 +186,7 @@ export default function ClientSettingsPage() {
         {/* Portal preferences */}
         <Section title="Preferences" description="Customise your portal experience.">
           <div className="flex items-center gap-3 px-6 py-3 border-b" style={{ borderColor: '#F2EDE4' }}>
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(14,139,154,0.08)' }}>
+            <div className="size-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(14,139,154,0.08)' }}>
               <Monitor size={13} style={{ color: '#0E8B9A' }} />
             </div>
             <span className="text-[12px] font-mono uppercase tracking-wider" style={{ color: '#B7AE9D' }}>
@@ -201,7 +201,7 @@ export default function ClientSettingsPage() {
         {/* Security */}
         <Section title="Security" description="Keep your account safe.">
           <div className="flex items-center gap-3 px-6 py-3 border-b" style={{ borderColor: '#F2EDE4' }}>
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(238,39,55,0.08)' }}>
+            <div className="size-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(238,39,55,0.08)' }}>
               <Lock size={13} style={{ color: '#EE2737' }} />
             </div>
             <span className="text-[12px] font-mono uppercase tracking-wider" style={{ color: '#B7AE9D' }}>
@@ -250,7 +250,7 @@ export default function ClientSettingsPage() {
             </div>
           </div>
           <div className="flex items-center gap-3 px-6 py-3 border-t" style={{ borderColor: '#F2EDE4' }}>
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(31,157,85,0.08)' }}>
+            <div className="size-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(31,157,85,0.08)' }}>
               <Shield size={13} style={{ color: '#1F9D55' }} />
             </div>
             <span className="text-[12px] font-mono uppercase tracking-wider" style={{ color: '#B7AE9D' }}>

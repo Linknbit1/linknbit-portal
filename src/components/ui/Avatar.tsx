@@ -33,7 +33,7 @@ interface AvatarProps {
 
 export function Avatar({ name, size = 'md', online, className, src }: AvatarProps) {
   return (
-    <span className={cn('relative inline-flex flex-shrink-0', className)}>
+    <span className={cn('relative inline-flex shrink-0', className)}>
       {src ? (
         <img
           src={src}
@@ -43,7 +43,7 @@ export function Avatar({ name, size = 'md', online, className, src }: AvatarProp
       ) : (
         <span
           className={cn(
-            'rounded-full bg-gradient-to-br inline-flex items-center justify-center font-ui font-bold text-white flex-shrink-0',
+            'rounded-full bg-linear-to-br inline-flex items-center justify-center font-ui font-bold text-white shrink-0',
             SIZE_CLASSES[size],
             getGradient(name),
           )}
@@ -56,7 +56,7 @@ export function Avatar({ name, size = 'md', online, className, src }: AvatarProp
         <span
           className={cn(
             'absolute bottom-0 right-0 rounded-full border-2 border-bg-base',
-            size === 'xs' || size === 'sm' ? 'w-1.5 h-1.5' : 'w-2 h-2',
+            size === 'xs' || size === 'sm' ? 'size-1.5' : 'size-2',
             online ? 'bg-success' : 'bg-text-4',
           )}
         />
