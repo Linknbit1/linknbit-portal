@@ -27,8 +27,8 @@ import {
   useMyAttendanceHistory,
   useMyExceptions,
   useRequestException,
-  useLogOooDeparture,
-  useLogOooReturn,
+  useOooDepart,
+  useOooReturn,
   useMyOvertimeRequests,
   useSubmitOvertime,
   useAttendanceSettings,
@@ -63,9 +63,10 @@ function formatDateLabel(dateStr: string): string {
   return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
 }
 
-function calcHours(checkIn: string | null, checkOut: string | null): string {
+function calcHours(checkIn: string | null, checkOut: string | null, excludedMinutes = 0): string {
   if (!checkIn || !checkOut) return '—'
-  const diff = new Date(checkOut).getTime() - new Date(checkIn).getTime()
+  const diff = new Date(checkOut).getTime() - new Date(checkIn).getTime() - excludedMinutes * 60_000
+  if (diff <= 0) return '0h 0m'
   const h = Math.floor(diff / 3_600_000)
   const m = Math.floor((diff % 3_600_000) / 60_000)
   return `${h}h ${m}m`
@@ -258,7 +259,12 @@ function HistoryTable({ records }: { records: AttendanceRow[] }) {
                   {formatTime(row.check_out)}
                 </td>
                 <td className="px-5 py-3 font-mono text-[12px] text-text-3 whitespace-nowrap">
-                  {calcHours(row.check_in, row.check_out)}
+                  {calcHours(row.check_in, row.check_out, row.excluded_minutes)}
+                  {row.excluded_minutes > 0 && (
+                    <span className="text-text-4 ml-1" title="Out-of-office time excluded">
+                      (−{row.excluded_minutes}m OOO)
+                    </span>
+                  )}
                 </td>
                 <td className="px-5 py-3">
                   <span className={cn(
@@ -287,8 +293,8 @@ function HistoryTable({ records }: { records: AttendanceRow[] }) {
 function OooSection() {
   const toast = useToast()
   const { data: myExceptions = [] } = useMyExceptions()
-  const logDepartureMut = useLogOooDeparture()
-  const logReturnMut    = useLogOooReturn()
+  const departMut = useOooDepart()
+  const returnMut = useOooReturn()
 
   const todayStr = localToday()
   const todayOoo = myExceptions.find(
@@ -299,19 +305,19 @@ function OooSection() {
 
   const handleDeparture = async () => {
     try {
-      await logDepartureMut.mutateAsync(todayOoo.id)
+      await departMut.mutateAsync()
       toast('Out of office logged — see you back soon!', 'success')
-    } catch {
-      toast('Failed to log departure', 'error')
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Failed to log departure', 'error')
     }
   }
 
   const handleReturn = async () => {
     try {
-      await logReturnMut.mutateAsync(todayOoo.id)
+      await returnMut.mutateAsync()
       toast('Welcome back! Return logged.', 'success')
-    } catch {
-      toast('Failed to log return', 'error')
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Failed to log return', 'error')
     }
   }
 
@@ -330,11 +336,11 @@ function OooSection() {
           </p>
         </div>
         {!todayOoo.actual_departure ? (
-          <Button size="sm" onClick={handleDeparture} disabled={logDepartureMut.isPending}>
+          <Button size="sm" onClick={handleDeparture} disabled={departMut.isPending}>
             <LogOut size={14} /> I'm Heading Out
           </Button>
         ) : (
-          <Button size="sm" variant="secondary" onClick={handleReturn} disabled={logReturnMut.isPending}>
+          <Button size="sm" variant="secondary" onClick={handleReturn} disabled={returnMut.isPending}>
             <LogIn size={14} /> I'm Back
           </Button>
         )}
