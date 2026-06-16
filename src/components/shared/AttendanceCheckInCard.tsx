@@ -163,6 +163,8 @@ export function AttendanceCheckInCard() {
       if      (code === 'outside_window')      setErrorMsg(msg)
       else if (code === 'wrong_network')       setErrorMsg('You must be on the office WiFi to check in.')
       else if (code === 'duplicate')           setErrorMsg('You have already checked in today.')
+      else if (code === 'on_leave')            setErrorMsg('You are on approved leave today.')
+      else if (code === 'holiday')             setErrorMsg(msg || 'Check-in is not allowed on a holiday.')
       else if (code === 'device_unregistered') setErrorMsg('This device isn’t registered. Register it below, then ask an admin to approve it.')
       else if (code === 'device_pending')      setErrorMsg('This device is awaiting admin approval.')
       else if (code === 'device_blocked')      setErrorMsg('This device has been blocked. Contact your admin to use it.')
@@ -261,6 +263,23 @@ export function AttendanceCheckInCard() {
               <p className={cn('font-display font-bold text-[18px]', meta.fg)}>{meta.title}</p>
               <p className="font-ui text-[13px] text-text-3 mt-0.5">{meta.sub}</p>
             </div>
+            {/* WFH days can still be checked in to track worked hours (no office WiFi). */}
+            {today.status === 'wfh' && (
+              <>
+                {errorMsg && <ErrorBanner msg={errorMsg} />}
+                {canCheckIn ? (
+                  <Button size="sm" onClick={handleCheckIn} disabled={!deviceReady || checkInMut.isPending}>
+                    <MapPin size={14} />
+                    {checkInMut.isPending ? 'Checking in…' : 'Check In (WFH)'}
+                  </Button>
+                ) : (
+                  <p className="font-ui text-[11.5px] text-text-4 max-w-[260px]">
+                    Approve this device under “My Devices” to log your work-from-home hours.
+                  </p>
+                )}
+                <p className="font-mono text-[10.5px] text-text-4">Office WiFi not required for WFH</p>
+              </>
+            )}
           </div>
         )
       })()}

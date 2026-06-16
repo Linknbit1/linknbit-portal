@@ -25,6 +25,7 @@ import {
   useAllAttendanceExceptions,
   useReviewException,
   useMonthlyAttendance,
+  useMonthlyOvertime,
   useHolidays,
   useCreateHoliday,
   useCreateHolidayRange,
@@ -2076,7 +2077,8 @@ interface EmployeeStat {
   leave: number
   holiday: number
   totalCheckins: number   // rows with check_in != null
-  totalMinutes: number    // sum of session durations
+  totalMinutes: number    // sum of session durations (office hours, OOO time excluded)
+  overtimeMinutes: number // approved overtime for the month
   earlyCount: number      // check_in before work_start
   onTimeCount: number     // check_in within grace
   avgCheckinMin: number   // average check_in minutes-since-midnight
@@ -2142,6 +2144,7 @@ function ReportsTab() {
   const { data: activeProfiles = [] } = useActiveProfiles()
   const { data: holidays = [] } = useHolidays(year)
   const { data: workingSaturdays = [] } = useWorkingSaturdays(year)
+  const { data: monthlyOvertime = [] } = useMonthlyOvertime(year, month)
 
   const workStartMin = settings
     ? (() => {
@@ -2194,7 +2197,7 @@ function ReportsTab() {
     statsMap.set(p.id, {
       profileId: p.id, name: p.name,
       present: 0, late: 0, absent: 0, halfDay: 0, leave: 0, holiday: 0,
-      totalCheckins: 0, totalMinutes: 0, earlyCount: 0, onTimeCount: 0, avgCheckinMin: 0,
+      totalCheckins: 0, totalMinutes: 0, overtimeMinutes: 0, earlyCount: 0, onTimeCount: 0, avgCheckinMin: 0,
     })
   }
 
@@ -2210,7 +2213,7 @@ function ReportsTab() {
       statsMap.set(id, {
         profileId: id, name,
         present: 0, late: 0, absent: 0, halfDay: 0, leave: 0, holiday: 0,
-        totalCheckins: 0, totalMinutes: 0, earlyCount: 0, onTimeCount: 0, avgCheckinMin: 0,
+        totalCheckins: 0, totalMinutes: 0, overtimeMinutes: 0, earlyCount: 0, onTimeCount: 0, avgCheckinMin: 0,
       })
     }
 
@@ -2236,7 +2239,9 @@ function ReportsTab() {
     }
 
     if (rec.check_in && rec.check_out) {
+      // Office hours = worked span minus any out-of-office time recorded for the day.
       const diff = (new Date(rec.check_out).getTime() - new Date(rec.check_in).getTime()) / 60000
+        - (rec.excluded_minutes ?? 0)
       if (diff > 0) s.totalMinutes += diff
     }
   }
@@ -2247,6 +2252,12 @@ function ReportsTab() {
     for (const dateStr of pastWorkingDaySet) {
       if (!empDates?.has(dateStr)) s.absent++
     }
+  }
+
+  // Fold approved overtime (logged in hours) into each employee's stats.
+  for (const ot of monthlyOvertime) {
+    const s = statsMap.get(ot.profile_id)
+    if (s) s.overtimeMinutes += Math.round((ot.hours ?? 0) * 60)
   }
 
   const employeeStats = [...statsMap.values()]
@@ -2325,12 +2336,14 @@ function ReportsTab() {
         <button
           onClick={() => downloadCsv(
             `attendance-${year}-${String(month).padStart(2, '0')}`,
-            ['Employee', 'Present', 'Late', 'Absent', 'Half Day', 'Leave', 'Avg Check-in', 'Avg Hours', 'On-Time %'],
+            ['Employee', 'Present', 'Late', 'Absent', 'Half Day', 'Leave', 'Avg Check-in', 'Avg Office Hours', 'Total Office Hours', 'Overtime (h)', 'On-Time %'],
             sorted.map((s) => [
               s.name,
               s.present, s.late, s.absent, s.halfDay, s.leave,
               fmtTime(s.avgCheckinMin),
               fmtMinutes(s.totalCheckins > 0 ? s.totalMinutes / s.totalCheckins : NaN),
+              fmtMinutes(s.totalMinutes),
+              (s.overtimeMinutes / 60).toFixed(2),
               s.present + s.late > 0 ? Math.round(((s.present - s.late + s.earlyCount + s.onTimeCount) / (s.present + s.late)) * 100) : 0,
             ]),
           )}
@@ -2387,9 +2400,10 @@ function ReportsTab() {
                 <SortTh label="Absent"       col="absent"       sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} />
                 <SortTh label="Half Day"     col="halfDay"      sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} />
                 <SortTh label="Leave"        col="leave"        sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} />
-                <SortTh label="Avg Check-in" col="avgCheckinMin" sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} />
-                <SortTh label="Avg Hours"    col="totalMinutes" sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} />
-                <SortTh label="Early"        col="earlyCount"   sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} />
+                <SortTh label="Avg Check-in"  col="avgCheckinMin" sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} />
+                <SortTh label="Office Hrs"    col="totalMinutes" sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} />
+                <SortTh label="Overtime"      col="overtimeMinutes" sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} />
+                <SortTh label="Early"         col="earlyCount"   sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} />
                 <SortTh label="On-Time %"    col="onTimeCount"  sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} />
                 <th className="px-4 py-2.5" />
               </tr>
@@ -2435,7 +2449,12 @@ function ReportsTab() {
                       <td className="px-4 py-3 font-mono text-[13px] text-service-design">{s.halfDay || '—'}</td>
                       <td className="px-4 py-3 font-mono text-[13px] text-service-dev">{s.leave || '—'}</td>
                       <td className="px-4 py-3 font-mono text-[12px] text-text-2">{s.totalCheckins > 0 ? fmtTime(s.avgCheckinMin) : '—'}</td>
-                      <td className="px-4 py-3 font-mono text-[12px] text-text-2">{fmtMinutes(avgHours)}</td>
+                      <td className="px-4 py-3 font-mono text-[12px] text-text-2" title={`Avg ${fmtMinutes(avgHours)}/day`}>
+                        {s.totalMinutes > 0 ? fmtMinutes(s.totalMinutes) : '—'}
+                      </td>
+                      <td className="px-4 py-3 font-mono text-[12px] text-service-mkt">
+                        {s.overtimeMinutes > 0 ? `+${(s.overtimeMinutes / 60).toFixed(1)}h` : '—'}
+                      </td>
                       <td className="px-4 py-3">
                         <span className="inline-flex items-center gap-1 font-mono text-[12px] text-success">
                           <TrendingUp size={11} /> {s.earlyCount}
@@ -2466,7 +2485,7 @@ function ReportsTab() {
                     </tr>
                     {isExpanded && (
                       <tr key={`${s.profileId}-expanded`} className="border-b border-border-subtle bg-surface-2/50">
-                        <td colSpan={11} className="px-6 py-3">
+                        <td colSpan={12} className="px-6 py-3">
                           <div className="text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-2">
                             Daily log — {MONTH_NAMES[month - 1]} {year}
                           </div>
@@ -2558,6 +2577,7 @@ function SettingsForm({ settings }: { settings: AttendanceSettings }) {
   const [xp, setXp] = useState(() => String(settings.xp_on_time_checkin))
   const [ipCidr, setIpCidr] = useState(() => settings.office_ip_cidr ?? '')
   const [saturdayWorking, setSaturdayWorking] = useState(() => settings.saturday_working)
+  const [autoCheckout, setAutoCheckout] = useState(() => settings.auto_checkout)
 
   const handleSave = async () => {
     try {
@@ -2570,6 +2590,7 @@ function SettingsForm({ settings }: { settings: AttendanceSettings }) {
         xp_on_time_checkin: parseInt(xp, 10),
         office_ip_cidr: ipCidr.trim() || null,
         saturday_working: saturdayWorking,
+        auto_checkout: autoCheckout,
       })
       toast('Attendance settings saved', 'success')
     } catch {
@@ -2670,7 +2691,7 @@ function SettingsForm({ settings }: { settings: AttendanceSettings }) {
           <h4 className="font-display font-semibold text-[13px] text-text-2">Gamification & Network</h4>
 
           <div>
-            <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">XP for On-Time Check-In</label>
+            <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">LP for Early / On-Time Check-In</label>
             <input
               type="number"
               min={0}
@@ -2678,6 +2699,34 @@ function SettingsForm({ settings }: { settings: AttendanceSettings }) {
               onChange={(e) => setXp(e.target.value)}
               className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-mono text-text-1 outline-none focus:border-border-focus"
             />
+            <p className="text-[11px] font-ui text-text-4 mt-1">
+              Link Points awarded automatically when an employee checks in by start time + grace (status “Present”).
+            </p>
+          </div>
+
+          <div className="flex items-center justify-between px-4 py-3 bg-surface-inset border border-border-default rounded-md">
+            <div>
+              <p className="font-ui font-semibold text-[13px] text-text-1">Auto Check-Out</p>
+              <p className="font-ui text-[11px] text-text-4 mt-0.5">
+                {autoCheckout
+                  ? 'Anyone still checked in at day end is auto-checked-out at work end time'
+                  : 'Employees who forget to check out stay open until corrected'}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setAutoCheckout((v) => !v)}
+              className={cn(
+                'relative shrink-0 rounded-full transition-colors duration-200',
+                autoCheckout ? 'bg-brand-red' : 'bg-surface-3 border border-border-strong',
+              )}
+              style={{ width: 40, height: 22 }}
+            >
+              <span
+                className="absolute top-0.75 w-4 h-4 rounded-full bg-white shadow transition-transform duration-200"
+                style={{ left: 3, transform: autoCheckout ? 'translateX(18px)' : 'translateX(0)' }}
+              />
+            </button>
           </div>
 
           <div>

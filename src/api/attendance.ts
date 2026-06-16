@@ -351,26 +351,42 @@ export async function reviewException(
   return data
 }
 
-export async function logOooDeparture(id: string): Promise<AttendanceException> {
-  const { data, error } = await supabase
-    .from('attendance_exceptions')
-    .update({ actual_departure: new Date().toISOString() })
-    .eq('id', id)
-    .select()
-    .single()
-  if (error) throw error
+// Out-of-office two-session tracking (calls Edge Function so the 10-minute grace and
+// the worked-hours exclusion are enforced server-side). The function derives the
+// employee's approved OOO for today from the auth context — no id needed.
+export interface OooResult {
+  actual_departure?: string
+  actual_return?: string
+  excluded_minutes?: number
+}
+
+async function invokeOoo(action: 'depart' | 'return'): Promise<OooResult> {
+  const { data, error } = await supabase.functions.invoke<OooResult>('attendance-ooo', {
+    body: { action },
+  })
+  if (error) {
+    const ctx = (error as { context?: Response }).context
+    if (ctx) {
+      let body: { error?: string; code?: string } | null = null
+      try { body = await ctx.json() } catch { /* non-JSON body */ }
+      if (body?.code) {
+        const enriched = new Error(body.error ?? error.message) as Error & { code: string }
+        enriched.code = body.code
+        throw enriched
+      }
+    }
+    throw error
+  }
+  if (!data) throw new Error('No response from attendance-ooo')
   return data
 }
 
-export async function logOooReturn(id: string): Promise<AttendanceException> {
-  const { data, error } = await supabase
-    .from('attendance_exceptions')
-    .update({ actual_return: new Date().toISOString() })
-    .eq('id', id)
-    .select()
-    .single()
-  if (error) throw error
-  return data
+export function oooDepart(): Promise<OooResult> {
+  return invokeOoo('depart')
+}
+
+export function oooReturn(): Promise<OooResult> {
+  return invokeOoo('return')
 }
 
 // ── Monthly attendance report (admin/HR) ─────────────────────────────────────
@@ -563,6 +579,22 @@ export async function fetchAllOvertimeRequests(
   const { data, error } = await q
   if (error) throw error
   return data as unknown as OvertimeRequestWithProfile[]
+}
+
+// Approved overtime for a whole month (all employees) — folded into the attendance report.
+export async function fetchMonthlyOvertime(year: number, month: number): Promise<OvertimeRequest[]> {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const from = `${year}-${pad(month)}-01`
+  const last = new Date(year, month, 0).getDate()
+  const to   = `${year}-${pad(month)}-${pad(last)}`
+  const { data, error } = await supabase
+    .from('overtime_requests')
+    .select('*')
+    .eq('status', 'approved')
+    .gte('date', from)
+    .lte('date', to)
+  if (error) throw error
+  return data
 }
 
 export async function reviewOvertimeRequest(

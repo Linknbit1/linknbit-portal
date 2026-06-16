@@ -96,10 +96,12 @@ Deno.serve(async (req: Request) => {
       }, 422)
     }
 
-    // Verify the exception allows checkout at the current time
+    // Verify the exception allows checkout at the current time (10-minute grace before
+    // the approved departure time).
+    const EXC_GRACE_MIN = 10
     const [excH, excM] = exception.requested_time.split(':').map(Number)
     const excMinutes = excH * 60 + excM
-    if (localMinutes < excMinutes) {
+    if (localMinutes < excMinutes - EXC_GRACE_MIN) {
       return json({
         error: `Your approved early departure is at ${exception.requested_time}. It is too early to check out.`,
         code: 'early_checkout',
