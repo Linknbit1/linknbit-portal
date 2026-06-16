@@ -118,7 +118,7 @@ export default function ClientsPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search clients..."
-                className="pl-7 pr-3 py-1.5 bg-surface-inset border border-border-default rounded-md text-[12.5px] font-ui text-text-1 placeholder:text-text-4 outline-none focus:border-border-focus w-[220px]"
+                className="pl-7 pr-3 py-1.5 bg-surface-inset border border-border-default rounded-md text-[12.5px] font-ui text-text-1 placeholder:text-text-4 outline-none focus:border-border-focus w-55"
               />
             </div>
             <Select
@@ -156,7 +156,7 @@ export default function ClientsPage() {
                   <tr key={client.id} className="border-b border-border-subtle hover:bg-white/[0.018] transition-colors last:border-0">
                     <td className="pl-5 pr-4 py-3.5">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-surface-2 border border-border-default flex items-center justify-center flex-shrink-0">
+                        <div className="size-9 rounded-lg bg-surface-2 border border-border-default flex items-center justify-center shrink-0">
                           <span className="font-display font-bold text-[13px] text-text-2">
                             {client.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()}
                           </span>
@@ -200,13 +200,13 @@ export default function ClientsPage() {
                       <div className="flex items-center gap-1.5 justify-end">
                         <button
                           onClick={() => toast(`Viewing ${client.company} details`, 'info')}
-                          className="w-7 h-7 rounded-md bg-surface-2 border border-border-default text-text-3 hover:text-text-1 hover:bg-surface-3 flex items-center justify-center transition-colors"
+                          className="size-7 rounded-md bg-surface-2 border border-border-default text-text-3 hover:text-text-1 hover:bg-surface-3 flex items-center justify-center transition-colors"
                         >
                           <ExternalLink size={11} />
                         </button>
                         <button
                           onClick={() => toast(`${client.company} options`, 'info')}
-                          className="w-7 h-7 rounded-md bg-surface-2 border border-border-default text-text-3 hover:text-text-1 hover:bg-surface-3 flex items-center justify-center transition-colors"
+                          className="size-7 rounded-md bg-surface-2 border border-border-default text-text-3 hover:text-text-1 hover:bg-surface-3 flex items-center justify-center transition-colors"
                         >
                           <MoreHorizontal size={11} />
                         </button>

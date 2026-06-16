@@ -27,8 +27,8 @@ import {
   useMyAttendanceHistory,
   useMyExceptions,
   useRequestException,
-  useLogOooDeparture,
-  useLogOooReturn,
+  useOooDepart,
+  useOooReturn,
   useMyOvertimeRequests,
   useSubmitOvertime,
   useAttendanceSettings,
@@ -41,6 +41,7 @@ import {
   useMyLeaveBalances,
 } from '../../hooks/useAttendance'
 import { AttendanceCheckInCard } from '../../components/shared/AttendanceCheckInCard'
+import { MyDevicesCard } from '../../components/shared/MyDevicesCard'
 import { TeamAttendancePanel } from '../../components/shared/TeamAttendancePanel'
 import { useAuthContext } from '../../context/AuthContext'
 import { useToast } from '../../components/ui/toast-context'
@@ -62,9 +63,10 @@ function formatDateLabel(dateStr: string): string {
   return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
 }
 
-function calcHours(checkIn: string | null, checkOut: string | null): string {
+function calcHours(checkIn: string | null, checkOut: string | null, excludedMinutes = 0): string {
   if (!checkIn || !checkOut) return '—'
-  const diff = new Date(checkOut).getTime() - new Date(checkIn).getTime()
+  const diff = new Date(checkOut).getTime() - new Date(checkIn).getTime() - excludedMinutes * 60_000
+  if (diff <= 0) return '0h 0m'
   const h = Math.floor(diff / 3_600_000)
   const m = Math.floor((diff % 3_600_000) / 60_000)
   return `${h}h ${m}m`
@@ -83,7 +85,7 @@ function StatusPill({ status }: { status: string }) {
   const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.absent
   return (
     <span className={cn('inline-flex items-center gap-1.5 text-[11px] font-mono font-semibold px-2 py-0.5 rounded-xs border', cfg.cls)}>
-      <span className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', cfg.dot)} />
+      <span className={cn('size-1.5 rounded-full shrink-0', cfg.dot)} />
       {cfg.label}
     </span>
   )
@@ -127,7 +129,7 @@ function UpcomingScheduleSection() {
           return (
             <div key={item.date + item.type} className="flex items-center gap-3 px-5 py-3">
               <div className={cn(
-                'w-7 h-7 rounded-sm flex items-center justify-center flex-shrink-0',
+                'size-7 rounded-sm flex items-center justify-center shrink-0',
                 isHoliday ? 'bg-text-4/10' : 'bg-service-mkt/10',
               )}>
                 {isHoliday
@@ -136,9 +138,9 @@ function UpcomingScheduleSection() {
                 }
               </div>
               <p className="flex-1 font-ui font-medium text-[13px] text-text-1 truncate">{item.label}</p>
-              <span className="font-mono text-[11.5px] text-text-3 flex-shrink-0">{dateLabel}</span>
+              <span className="font-mono text-[11.5px] text-text-3 shrink-0">{dateLabel}</span>
               <span className={cn(
-                'text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full border flex-shrink-0',
+                'text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full border shrink-0',
                 isHoliday
                   ? 'bg-text-4/10 text-text-3 border-border-default'
                   : 'bg-service-mkt/10 text-service-mkt border-service-mkt/25',
@@ -199,7 +201,7 @@ function SummaryStats({ records }: { records: AttendanceRow[] }) {
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       {stats.map(({ label, value, icon: Icon, color, bg }) => (
         <div key={label} className="bg-surface-1 border border-border-default rounded-xl p-4 flex flex-col gap-2">
-          <div className={cn('w-9 h-9 rounded-lg border flex items-center justify-center', bg)}>
+          <div className={cn('size-9 rounded-lg border flex items-center justify-center', bg)}>
             <Icon size={16} className={color} />
           </div>
           <div>
@@ -231,7 +233,7 @@ function HistoryTable({ records }: { records: AttendanceRow[] }) {
         <h3 className="font-display font-semibold text-h4 text-text-1">Last 30 Days</h3>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full block overflow-x-auto whitespace-nowrap lg:whitespace-normal">
+        <table className="w-full overflow-x-auto whitespace-nowrap lg:whitespace-normal">
           <thead>
             <tr className="border-b border-border-subtle">
               {['Date', 'Status', 'Check In', 'Check Out', 'Hours', 'Source', 'Device'].map((h) => (
@@ -257,7 +259,12 @@ function HistoryTable({ records }: { records: AttendanceRow[] }) {
                   {formatTime(row.check_out)}
                 </td>
                 <td className="px-5 py-3 font-mono text-[12px] text-text-3 whitespace-nowrap">
-                  {calcHours(row.check_in, row.check_out)}
+                  {calcHours(row.check_in, row.check_out, row.excluded_minutes)}
+                  {row.excluded_minutes > 0 && (
+                    <span className="text-text-4 ml-1" title="Out-of-office time excluded">
+                      (−{row.excluded_minutes}m OOO)
+                    </span>
+                  )}
                 </td>
                 <td className="px-5 py-3">
                   <span className={cn(
@@ -269,7 +276,7 @@ function HistoryTable({ records }: { records: AttendanceRow[] }) {
                     {row.source === 'self' ? 'Self' : 'Admin'}
                   </span>
                 </td>
-                <td className="px-5 py-3 font-mono text-[11px] text-text-4 max-w-[160px] truncate" title={row.device_name ?? ''}>
+                <td className="px-5 py-3 font-mono text-[11px] text-text-4 max-w-40 truncate" title={row.device_name ?? ''}>
                   {row.device_name ?? '—'}
                 </td>
               </tr>
@@ -286,8 +293,8 @@ function HistoryTable({ records }: { records: AttendanceRow[] }) {
 function OooSection() {
   const toast = useToast()
   const { data: myExceptions = [] } = useMyExceptions()
-  const logDepartureMut = useLogOooDeparture()
-  const logReturnMut    = useLogOooReturn()
+  const departMut = useOooDepart()
+  const returnMut = useOooReturn()
 
   const todayStr = localToday()
   const todayOoo = myExceptions.find(
@@ -298,26 +305,26 @@ function OooSection() {
 
   const handleDeparture = async () => {
     try {
-      await logDepartureMut.mutateAsync(todayOoo.id)
+      await departMut.mutateAsync()
       toast('Out of office logged — see you back soon!', 'success')
-    } catch {
-      toast('Failed to log departure', 'error')
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Failed to log departure', 'error')
     }
   }
 
   const handleReturn = async () => {
     try {
-      await logReturnMut.mutateAsync(todayOoo.id)
+      await returnMut.mutateAsync()
       toast('Welcome back! Return logged.', 'success')
-    } catch {
-      toast('Failed to log return', 'error')
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Failed to log return', 'error')
     }
   }
 
   return (
     <Card className="border-service-dev/30">
       <div className="flex items-center gap-4">
-        <div className="w-10 h-10 rounded-lg bg-service-dev/10 border border-service-dev/20 flex items-center justify-center flex-shrink-0">
+        <div className="size-10 rounded-lg bg-service-dev/10 border border-service-dev/20 flex items-center justify-center shrink-0">
           <MapPin size={18} className="text-service-dev" />
         </div>
         <div className="flex-1 min-w-0">
@@ -329,11 +336,11 @@ function OooSection() {
           </p>
         </div>
         {!todayOoo.actual_departure ? (
-          <Button size="sm" onClick={handleDeparture} disabled={logDepartureMut.isPending}>
+          <Button size="sm" onClick={handleDeparture} disabled={departMut.isPending}>
             <LogOut size={14} /> I'm Heading Out
           </Button>
         ) : (
-          <Button size="sm" variant="secondary" onClick={handleReturn} disabled={logReturnMut.isPending}>
+          <Button size="sm" variant="secondary" onClick={handleReturn} disabled={returnMut.isPending}>
             <LogIn size={14} /> I'm Back
           </Button>
         )}
@@ -539,7 +546,7 @@ function MyExceptionsSection() {
                   )}
                 </div>
                 <span className={cn(
-                  'inline-flex items-center px-2 py-0.5 rounded-xs border text-[11px] font-mono font-semibold flex-shrink-0 mt-0.5',
+                  'inline-flex items-center px-2 py-0.5 rounded-xs border text-[11px] font-mono font-semibold shrink-0 mt-0.5',
                   EXC_STATUS_CLS[exc.status] ?? EXC_STATUS_CLS['pending'],
                 )}>
                   {exc.status}
@@ -651,7 +658,7 @@ function OvertimeSection() {
                   )}
                 </div>
                 <span className={cn(
-                  'inline-flex items-center px-2 py-0.5 rounded-xs border text-[11px] font-mono font-semibold flex-shrink-0 mt-0.5',
+                  'inline-flex items-center px-2 py-0.5 rounded-xs border text-[11px] font-mono font-semibold shrink-0 mt-0.5',
                   OT_STATUS_CLS[req.status] ?? OT_STATUS_CLS['pending'],
                 )}>
                   {req.status}
@@ -790,7 +797,7 @@ function WfhSection() {
                   {req.review_note && <p className="font-ui text-[11px] text-error mt-0.5 italic">"{req.review_note}"</p>}
                 </div>
                 <span className={cn(
-                  'inline-flex items-center px-2 py-0.5 rounded-xs border text-[11px] font-mono font-semibold flex-shrink-0 mt-0.5',
+                  'inline-flex items-center px-2 py-0.5 rounded-xs border text-[11px] font-mono font-semibold shrink-0 mt-0.5',
                   OT_STATUS_CLS[req.status] ?? OT_STATUS_CLS['pending'],
                 )}>
                   {req.status}
@@ -936,7 +943,7 @@ function LeaveSection() {
                   {req.review_note && <p className="font-ui text-[11px] text-error mt-0.5 italic">"{req.review_note}"</p>}
                 </div>
                 <span className={cn(
-                  'inline-flex items-center px-2 py-0.5 rounded-xs border text-[11px] font-mono font-semibold flex-shrink-0 mt-0.5',
+                  'inline-flex items-center px-2 py-0.5 rounded-xs border text-[11px] font-mono font-semibold shrink-0 mt-0.5',
                   OT_STATUS_CLS[req.status] ?? OT_STATUS_CLS['pending'],
                 )}>
                   {req.status}
@@ -1033,6 +1040,8 @@ export default function EmployeeAttendancePage() {
       <div className="px-4 py-6 lg:p-6 flex flex-col gap-6 max-w-content mx-auto w-full">
         <AttendanceCheckInCard />
 
+        <MyDevicesCard />
+
         {/* Team leads / PMs: read-only visibility into their team */}
         {canSeeTeam && <TeamAttendancePanel />}
 
@@ -1041,7 +1050,7 @@ export default function EmployeeAttendancePage() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="bg-surface-1 border border-border-default rounded-xl p-4 flex flex-col gap-2 animate-pulse">
-                <div className="w-9 h-9 rounded-lg bg-surface-2" />
+                <div className="size-9 rounded-lg bg-surface-2" />
                 <div>
                   <div className="h-7 w-10 bg-surface-2 rounded mb-1" />
                   <div className="h-3 w-14 bg-surface-2 rounded" />

@@ -69,7 +69,7 @@ function FileTypeIcon({ type }: { type: string }) {
   const Icon = s.icon
   return (
     <div
-      className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+      className="size-10 rounded-xl flex items-center justify-center shrink-0"
       style={{ background: s.bg, color: s.color }}
     >
       <Icon size={16} />
@@ -160,7 +160,7 @@ export default function ClientFilesPage() {
             style={{ borderColor: '#EAE3D6' }}
           >
             <div
-              className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+              className="size-10 rounded-lg flex items-center justify-center shrink-0"
               style={{ background: `${s.color}18` }}
             >
               <s.icon size={18} style={{ color: s.color }} />
@@ -267,7 +267,7 @@ export default function ClientFilesPage() {
               <div key={projectId}>
                 <div className="flex items-center gap-2.5 mb-3">
                   <div
-                    className="w-2 h-2 rounded-full"
+                    className="size-2 rounded-full"
                     style={{ background: SERVICE_DOT[project.serviceType] }}
                   />
                   <h3

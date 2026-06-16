@@ -78,7 +78,7 @@ export default function ResetPasswordPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-bg-base px-6 py-10">
-      <div className="w-full max-w-[400px]">
+      <div className="w-full max-w-100">
         <div className="mb-8 flex items-center gap-2.5">
           <LinknbitMark surface="dark" className="h-8 w-7" />
           <span className="font-display text-body font-semibold text-text-2">Operations Portal</span>
@@ -106,7 +106,7 @@ export default function ResetPasswordPage() {
             </div>
             <button
               onClick={() => navigate('/login', { replace: true })}
-              className="inline-flex h-[46px] w-full items-center justify-center gap-2.5 rounded-sm bg-brand-red font-ui text-body font-semibold text-white shadow-[0_4px_14px_rgba(238,39,55,0.22)] transition-colors hover:bg-brand-red-hover"
+              className="inline-flex h-11.5 w-full items-center justify-center gap-2.5 rounded-sm bg-brand-red font-ui text-body font-semibold text-white shadow-[0_4px_14px_rgba(238,39,55,0.22)] transition-colors hover:bg-brand-red-hover"
             >
               Back to sign in <ArrowRight size={16} />
             </button>
@@ -128,7 +128,7 @@ export default function ResetPasswordPage() {
             </div>
             <button
               onClick={() => navigate('/login', { replace: true })}
-              className="inline-flex h-[46px] w-full items-center justify-center gap-2.5 rounded-sm bg-brand-red font-ui text-body font-semibold text-white shadow-[0_4px_14px_rgba(238,39,55,0.22)] transition-colors hover:bg-brand-red-hover"
+              className="inline-flex h-11.5 w-full items-center justify-center gap-2.5 rounded-sm bg-brand-red font-ui text-body font-semibold text-white shadow-[0_4px_14px_rgba(238,39,55,0.22)] transition-colors hover:bg-brand-red-hover"
             >
               Go to sign in <ArrowRight size={16} />
             </button>
@@ -151,16 +151,16 @@ export default function ResetPasswordPage() {
             {error && (
               <div className="mb-4 flex items-start gap-2.5 rounded-sm border border-error-border bg-error-soft px-3.5 py-3">
                 <AlertCircle size={16} className="mt-px shrink-0 text-error" />
-                <p className="font-ui text-[12.5px] leading-[1.5] text-text-1">{error}</p>
+                <p className="font-ui text-[12.5px] leading-normal text-text-1">{error}</p>
               </div>
             )}
 
-            <div className="mb-4 flex flex-col gap-[7px]">
+            <div className="mb-4 flex flex-col gap-1.75">
               <div className="flex items-baseline justify-between font-ui text-label font-semibold uppercase tracking-[0.08em] text-text-2">
                 <span>New password</span>
                 {strengthLabel && <span className={cn('font-ui text-[11.5px] font-medium normal-case tracking-normal', strengthColor)}>{strengthLabel}</span>}
               </div>
-              <div className="flex h-[46px] items-center gap-2.5 rounded-sm border border-border-default bg-surface-inset px-3.5 focus-within:border-brand-red focus-within:shadow-ring-focus">
+              <div className="flex h-11.5 items-center gap-2.5 rounded-sm border border-border-default bg-surface-inset px-3.5 focus-within:border-brand-red focus-within:shadow-ring-focus">
                 <Lock size={16} strokeWidth={1.75} className="shrink-0 text-text-3" />
                 <input
                   type={showPass ? 'text' : 'password'}
@@ -175,9 +175,9 @@ export default function ResetPasswordPage() {
               </div>
             </div>
 
-            <div className="mb-4 flex flex-col gap-[7px]">
+            <div className="mb-4 flex flex-col gap-1.75">
               <span className="font-ui text-label font-semibold uppercase tracking-[0.08em] text-text-2">Confirm password</span>
-              <div className={cn('flex h-[46px] items-center gap-2.5 rounded-sm border bg-surface-inset px-3.5', mismatch ? 'border-error' : 'border-border-default focus-within:border-brand-red focus-within:shadow-ring-focus')}>
+              <div className={cn('flex h-11.5 items-center gap-2.5 rounded-sm border bg-surface-inset px-3.5', mismatch ? 'border-error' : 'border-border-default focus-within:border-brand-red focus-within:shadow-ring-focus')}>
                 <Lock size={16} strokeWidth={1.75} className="shrink-0 text-text-3" />
                 <input
                   type={showPass ? 'text' : 'password'}
@@ -193,12 +193,12 @@ export default function ResetPasswordPage() {
             <button
               type="submit"
               disabled={!isStrong || mismatch || status === 'saving'}
-              className="mt-2 inline-flex h-[46px] w-full items-center justify-center gap-2.5 rounded-sm bg-brand-red font-ui text-body font-semibold text-white shadow-[0_4px_14px_rgba(238,39,55,0.22)] transition-colors hover:bg-brand-red-hover disabled:cursor-not-allowed disabled:opacity-50"
+              className="mt-2 inline-flex h-11.5 w-full items-center justify-center gap-2.5 rounded-sm bg-brand-red font-ui text-body font-semibold text-white shadow-[0_4px_14px_rgba(238,39,55,0.22)] transition-colors hover:bg-brand-red-hover disabled:cursor-not-allowed disabled:opacity-50"
             >
               {status === 'saving' ? <><Loader2 size={16} className="animate-spin" /> Saving…</> : <>Set password & continue <ArrowRight size={16} /></>}
             </button>
 
-            <p className="mt-6 font-ui text-caption leading-[1.5] text-text-3">
+            <p className="mt-6 font-ui text-caption/normal text-text-3">
               Use at least <strong className="font-semibold text-text-2">8 characters</strong> with a capital letter and a number.
             </p>
           </form>

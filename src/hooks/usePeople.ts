@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
-  fetchPeople, inviteUser, updatePersonRole, updatePersonDetails, setPersonActive,
+  fetchPeople, inviteUser, updatePersonRole, updatePersonDetails, uploadPersonAvatar, setPersonActive, deletePerson,
   type InvitePayload,
 } from '../api/people'
 
@@ -35,8 +35,10 @@ export function useUpdatePersonRole() {
 export function useUpdatePersonDetails() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ profileId, name, avatarUrl }: { profileId: string; name: string; avatarUrl: string | null }) =>
-      updatePersonDetails(profileId, name, avatarUrl),
+    mutationFn: async ({ profileId, name, avatarUrl, avatarFile }: { profileId: string; name: string; avatarUrl: string | null; avatarFile?: File | null }) => {
+      const nextAvatarUrl = avatarFile ? await uploadPersonAvatar(profileId, avatarFile) : avatarUrl
+      return updatePersonDetails(profileId, name, nextAvatarUrl)
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: PEOPLE_KEYS.all }),
   })
 }
@@ -47,5 +49,16 @@ export function useSetPersonActive() {
     mutationFn: ({ profileId, active }: { profileId: string; active: boolean }) =>
       setPersonActive(profileId, active),
     onSuccess: () => qc.invalidateQueries({ queryKey: PEOPLE_KEYS.all }),
+  })
+}
+
+export function useDeletePerson() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ profileId }: { profileId: string }) => deletePerson(profileId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: PEOPLE_KEYS.all })
+      qc.invalidateQueries({ queryKey: ['teams'] })
+    },
   })
 }

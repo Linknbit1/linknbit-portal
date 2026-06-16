@@ -26,6 +26,7 @@ import {
   useReviewException,
   useMonthlyAttendance,
   useMonthlyHalfDayLeaves,
+  useMonthlyOvertime,
   useHolidays,
   useCreateHoliday,
   useCreateHolidayRange,
@@ -87,7 +88,7 @@ function StatusChip({ status }: { status: string }) {
   const m = STATUS_META[status] ?? STATUS_META['absent']
   return (
     <span className={cn('inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-ui font-semibold border', m.cls)}>
-      <span className="w-1.5 h-1.5 rounded-full" style={{ background: m.dot }} />
+      <span className="size-1.5 rounded-full" style={{ background: m.dot }} />
       {m.label}
     </span>
   )
@@ -97,7 +98,7 @@ function WFHStatusChip({ status }: { status: string }) {
   const m = WFH_META[status] ?? WFH_META.pending
   return (
     <span className={cn('inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-ui font-semibold border', m.cls)}>
-      <span className="w-1.5 h-1.5 rounded-full" style={{ background: m.dot }} />
+      <span className="size-1.5 rounded-full" style={{ background: m.dot }} />
       {m.label}
     </span>
   )
@@ -298,7 +299,7 @@ function DailyRecordsTab() {
           { label: 'Leave',    value: stats.leave,    icon: Wifi,         color: 'text-service-dev',     bg: 'bg-service-dev/10 border-service-dev/20' },
         ].map(({ label, value, icon: Icon, color, bg }) => (
           <div key={label} className="bg-surface-1 border border-border-default rounded-xl p-4 flex flex-col gap-2">
-            <div className={cn('w-9 h-9 rounded-lg border flex items-center justify-center', bg)}>
+            <div className={cn('size-9 rounded-lg border flex items-center justify-center', bg)}>
               <Icon size={16} className={color} />
             </div>
             <div>
@@ -312,14 +313,14 @@ function DailyRecordsTab() {
       {/* Table */}
       <div className="bg-surface-1 border border-border-default rounded-xl">
         <div className="flex flex-wrap items-center gap-3 px-4 lg:px-5 py-3.5 border-b border-border-subtle">
-          <Calendar size={15} className="text-text-3 flex-shrink-0" />
+          <Calendar size={15} className="text-text-3 shrink-0" />
           <DatePicker
             value={dateFilter}
             onChange={setDateFilter}
             placeholder="Select date…"
-            className="w-[160px]"
+            className="w-40"
           />
-          <div className="relative flex-1 max-w-[220px]">
+          <div className="relative flex-1 max-w-55">
             <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-4" />
             <input
               value={search}
@@ -372,7 +373,7 @@ function DailyRecordsTab() {
               </tr>
             ) : (
               filtered.map((rec) => (
-                <tr key={rec.id} className="border-b border-border-subtle hover:bg-white/[0.015] transition-colors">
+                <tr key={rec.id} className="border-b border-border-subtle hover:bg-white/1.5 transition-colors">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2.5">
                       <Avatar name={rec.profiles?.name ?? '?'} size="sm" />
@@ -413,12 +414,12 @@ function DailyRecordsTab() {
                         <AlertCircle size={11} /> Flagged
                       </span>
                     ) : rec.device_name ? (
-                      <span className="font-mono text-[11px] text-text-3 truncate max-w-[120px] block">{rec.device_name}</span>
+                      <span className="font-mono text-[11px] text-text-3 truncate max-w-30 block">{rec.device_name}</span>
                     ) : (
                       <span className="font-mono text-[11px] text-text-4">—</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 font-ui text-[12px] text-text-3 max-w-[140px] truncate">
+                  <td className="px-4 py-3 font-ui text-[12px] text-text-3 max-w-35 truncate">
                     {rec.note ?? ''}
                   </td>
                   <td className="px-4 py-3">
@@ -447,11 +448,11 @@ function DailyRecordsTab() {
                     <span className="font-ui font-medium text-[13px] text-text-1 truncate">
                       {rec.profiles?.name ?? rec.profile_id.slice(0, 8)}
                     </span>
-                    {rec.wifi_validated && <Wifi size={12} className="text-success flex-shrink-0" aria-label="WiFi validated" />}
+                    {rec.wifi_validated && <Wifi size={12} className="text-success shrink-0" aria-label="WiFi validated" />}
                   </div>
                   <StatusChip status={rec.status} />
                 </div>
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[12px] text-text-2 pl-[42px]">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[12px] text-text-2 pl-10.5">
                   <span>In: <span className="text-text-1">{fmtTime(rec.check_in)}</span></span>
                   {rec.check_out ? (
                     <span>Out: <span className="text-text-1">{fmtTime(rec.check_out)}</span></span>
@@ -468,7 +469,7 @@ function DailyRecordsTab() {
                   <span className={cn('uppercase tracking-wider text-[11px]', rec.source === 'self' ? 'text-success' : 'text-text-3')}>{rec.source}</span>
                   {rec.device_flagged && <span className="flex items-center gap-1 text-[11px] font-ui text-warning"><AlertCircle size={11} /> Flagged</span>}
                 </div>
-                {rec.note && <p className="font-ui text-[12px] text-text-3 pl-[42px]">{rec.note}</p>}
+                {rec.note && <p className="font-ui text-[12px] text-text-3 pl-10.5">{rec.note}</p>}
               </div>
             ))
           )}
@@ -593,7 +594,7 @@ function WFHRequestsTab() {
           { label: 'Rejected',       value: rejected, icon: AlertTriangle,color: 'text-error',   bg: 'bg-error/10 border-error/20' },
         ].map(({ label, value, icon: Icon, color, bg }) => (
           <div key={label} className="bg-surface-1 border border-border-default rounded-xl p-4 flex items-center gap-4">
-            <div className={cn('w-10 h-10 rounded-lg border flex items-center justify-center flex-shrink-0', bg)}>
+            <div className={cn('size-10 rounded-lg border flex items-center justify-center shrink-0', bg)}>
               <Icon size={18} className={color} />
             </div>
             <div>
@@ -633,7 +634,7 @@ function WFHRequestsTab() {
             {filtered.map((req) => {
               const isExpanded = expandedId === req.id
               return (
-                <div key={req.id} className="hover:bg-white/[0.015] transition-colors">
+                <div key={req.id} className="hover:bg-white/1.5 transition-colors">
                   <div className="flex items-center gap-3 px-5 py-3.5">
                     <Avatar name={req.profiles?.name ?? '?'} size="sm" />
                     <div className="flex-1 min-w-0">
@@ -643,13 +644,13 @@ function WFHRequestsTab() {
                           <span className="text-[10px] font-mono bg-service-dev/10 text-service-dev border border-service-dev/20 px-1.5 py-0.5 rounded-xs uppercase tracking-wide">HR Granted</span>
                         )}
                       </div>
-                      <p className="text-[12px] font-ui text-text-3 truncate max-w-[340px]">{req.reason}</p>
+                      <p className="text-[12px] font-ui text-text-3 truncate max-w-85">{req.reason}</p>
                     </div>
-                    <div className="flex items-center gap-1.5 text-[12px] font-mono text-text-2 flex-shrink-0">
+                    <div className="flex items-center gap-1.5 text-[12px] font-mono text-text-2 shrink-0">
                       <Calendar size={12} className="text-text-4" />
                       {req.date}
                     </div>
-                    <div className="flex-shrink-0 text-[11.5px] font-mono text-text-4">{fmt(req.created_at)}</div>
+                    <div className="shrink-0 text-[11.5px] font-mono text-text-4">{fmt(req.created_at)}</div>
                     <WFHStatusChip status={req.status} />
                     {req.status === 'pending' ? (
                       <div className="flex items-center gap-1.5 ml-1">
@@ -906,7 +907,7 @@ function LeaveTab() {
           <div className="divide-y divide-border-subtle">
             {types.map((t) => (
               <div key={t.id} className="flex items-center gap-3 px-5 py-3">
-                <span className={cn('w-2.5 h-2.5 rounded-full flex-shrink-0', leaveColor(t.color).dot)} />
+                <span className={cn('size-2.5 rounded-full shrink-0', leaveColor(t.color).dot)} />
                 <span className="font-ui font-medium text-[13px] text-text-1 flex-1">{t.name}</span>
                 {!t.is_active && <span className="text-[10px] font-mono text-text-4 uppercase">inactive</span>}
                 <span className="font-mono text-[12px] text-text-3">{t.days_allowed} days / year</span>
@@ -965,7 +966,7 @@ function LeaveTab() {
                   {req.review_note && <p className="font-ui text-[11px] text-error mt-0.5 italic">"{req.review_note}"</p>}
                 </div>
                 {req.status === 'pending' ? (
-                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <div className="flex items-center gap-1.5 shrink-0">
                     <button onClick={() => approve(req.id)}
                       className="flex items-center gap-1 px-2.5 py-1.5 rounded-sm bg-success/10 border border-success/30 text-success text-[11.5px] font-ui font-semibold hover:bg-success/20 transition-colors">
                       <ThumbsUp size={12} /> Approve
@@ -976,7 +977,7 @@ function LeaveTab() {
                     </button>
                   </div>
                 ) : (
-                  <span className={cn('inline-flex items-center px-2 py-0.5 rounded-xs border text-[11px] font-mono font-semibold flex-shrink-0 mt-0.5',
+                  <span className={cn('inline-flex items-center px-2 py-0.5 rounded-xs border text-[11px] font-mono font-semibold shrink-0 mt-0.5',
                     LEAVE_STATUS_CLS[req.status] ?? LEAVE_STATUS_CLS.pending)}>
                     {req.status}
                   </span>
@@ -1022,6 +1023,11 @@ function LeaveTab() {
 function EnrolledDevicesTab() {
   const toast = useToast()
   const { profile } = useAuthContext()
+  // Approving/reactivating a device authorises check-in. Admins/super_admins approve any
+  // device; HR approve others' devices but not their own (self-approval is blocked, RLS too).
+  // Anyone with access to this tab may deactivate (block).
+  const isAdmin = profile?.role === 'admin' || profile?.role === 'super_admin'
+  const isHr    = profile?.role === 'hr'
   const { data: devices = [], isLoading } = useEnrolledDevices()
   const approveMutation = useApproveDevice()
   const deactivateMutation = useDeactivateDevice()
@@ -1073,6 +1079,8 @@ function EnrolledDevicesTab() {
   }
 
   const DeviceRow = ({ d }: { d: typeof devices[number] }) => {
+    // HR cannot approve/reactivate their own device; admins can approve anyone's.
+    const canApproveThis = isAdmin || (isHr && d.profile_id !== profile?.id)
     const isShared = sharedFingerprints.has(d.device_fingerprint)
     const sharedWith = isShared
       ? (fingerprintMap.get(d.device_fingerprint) ?? [])
@@ -1082,8 +1090,8 @@ function EnrolledDevicesTab() {
 
     return (
     <tr className={cn(
-      'border-b border-border-subtle hover:bg-white/[0.015] transition-colors',
-      isShared && 'bg-warning/[0.03]',
+      'border-b border-border-subtle hover:bg-white/1.5 transition-colors',
+      isShared && 'bg-warning/3',
     )}>
       <td className="px-4 py-3">
         <div className="flex items-center gap-2.5">
@@ -1093,7 +1101,7 @@ function EnrolledDevicesTab() {
       </td>
       <td className="px-4 py-3">
         <div className="flex items-center gap-2 flex-wrap">
-          <Smartphone size={13} className="text-text-4 flex-shrink-0" />
+          <Smartphone size={13} className="text-text-4 shrink-0" />
           <span className="font-ui text-[12.5px] text-text-1">{d.device_name}</span>
           {isShared && (
             <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-xs bg-warning/15 border border-warning/30 text-warning text-[10px] font-mono font-semibold uppercase tracking-wide">
@@ -1127,7 +1135,7 @@ function EnrolledDevicesTab() {
       </td>
       <td className="px-4 py-3">
         <div className="flex items-center gap-1.5">
-          {!d.approved_by && d.is_active && (
+          {!d.approved_by && d.is_active && canApproveThis && (
             <button
               onClick={() => handleApprove(d.id)}
               disabled={approveMutation.isPending}
@@ -1145,7 +1153,7 @@ function EnrolledDevicesTab() {
               <X size={12} /> Deactivate
             </button>
           )}
-          {!d.is_active && (
+          {!d.is_active && canApproveThis && (
             <button
               onClick={() => handleReactivate(d.id)}
               disabled={approveMutation.isPending}
@@ -1153,6 +1161,11 @@ function EnrolledDevicesTab() {
             >
               <CheckCircle2 size={12} /> Reactivate
             </button>
+          )}
+          {!d.approved_by && d.is_active && !canApproveThis && (
+            <span className="font-ui text-[11px] text-text-4 italic">
+              {isHr && d.profile_id === profile?.id ? 'You can’t approve your own device' : 'Admin approval required'}
+            </span>
           )}
         </div>
       </td>
@@ -1171,7 +1184,7 @@ function EnrolledDevicesTab() {
           { label: 'Shared Devices',  value: sharedDevicesCount,     icon: Users,       color: 'text-warning', bg: 'bg-warning/10 border-warning/20' },
         ].map(({ label, value, icon: Icon, color, bg }) => (
           <div key={label} className="bg-surface-1 border border-border-default rounded-xl p-4 flex items-center gap-4">
-            <div className={cn('w-10 h-10 rounded-lg border flex items-center justify-center flex-shrink-0', bg)}>
+            <div className={cn('size-10 rounded-lg border flex items-center justify-center shrink-0', bg)}>
               <Icon size={18} className={color} />
             </div>
             <div>
@@ -1187,7 +1200,7 @@ function EnrolledDevicesTab() {
           <Smartphone size={14} className="text-text-3" />
           <span className="font-ui font-semibold text-[13px] text-text-1">Enrolled Devices</span>
           {pending.length > 0 && (
-            <span className="ml-1 min-w-[18px] h-[18px] px-1 rounded-full bg-warning text-[10px] font-bold text-amber-900 flex items-center justify-center">
+            <span className="ml-1 min-w-4.5 h-4.5 px-1 rounded-full bg-warning text-[10px] font-bold text-amber-900 flex items-center justify-center">
               {pending.length}
             </span>
           )}
@@ -1196,7 +1209,7 @@ function EnrolledDevicesTab() {
           </p>
         </div>
 
-        <table className="w-full block overflow-x-auto whitespace-nowrap lg:whitespace-normal">
+        <table className="w-full overflow-x-auto whitespace-nowrap lg:whitespace-normal">
           <thead>
             <tr className="border-b border-border-subtle bg-surface-2">
               {['Employee', 'Device', 'First Seen', 'Last Seen', 'Status', 'Actions'].map((h) => (
@@ -1232,7 +1245,7 @@ function ExcStatusChip({ status }: { status: string }) {
   const m = EXC_STATUS_META[status] ?? EXC_STATUS_META['pending']
   return (
     <span className={cn('inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-ui font-semibold border', m.cls)}>
-      <span className="w-1.5 h-1.5 rounded-full" style={{ background: m.dot }} />
+      <span className="size-1.5 rounded-full" style={{ background: m.dot }} />
       {m.label}
     </span>
   )
@@ -1301,7 +1314,7 @@ function ExceptionsTab() {
           { label: 'Rejected',       value: rejectedCount, icon: AlertTriangle, color: 'text-error',  bg: 'bg-error/10 border-error/20' },
         ].map(({ label, value, icon: Icon, color, bg }) => (
           <div key={label} className="bg-surface-1 border border-border-default rounded-xl p-4 flex items-center gap-4">
-            <div className={cn('w-10 h-10 rounded-lg border flex items-center justify-center flex-shrink-0', bg)}>
+            <div className={cn('size-10 rounded-lg border flex items-center justify-center shrink-0', bg)}>
               <Icon size={18} className={color} />
             </div>
             <div>
@@ -1343,7 +1356,7 @@ function ExceptionsTab() {
           </div>
         </div>
 
-        <table className="w-full block overflow-x-auto whitespace-nowrap lg:whitespace-normal">
+        <table className="w-full overflow-x-auto whitespace-nowrap lg:whitespace-normal">
           <thead>
             <tr className="border-b border-border-subtle bg-surface-2">
               {['Employee', 'Date', 'Type', 'Requested Time', 'Reason', 'Status', 'OOO Tracking', 'Actions'].map((h) => (
@@ -1363,7 +1376,7 @@ function ExceptionsTab() {
                 const typeMeta = TYPE_META[exc.exception_type] ?? TYPE_META['late_arrival']
                 const excWp = exc as AttendanceExceptionWithProfile
                 return (
-                  <tr key={exc.id} className="border-b border-border-subtle hover:bg-white/[0.015] transition-colors">
+                  <tr key={exc.id} className="border-b border-border-subtle hover:bg-white/1.5 transition-colors">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2.5">
                         <Avatar name={excWp.profiles?.name ?? '?'} size="sm" />
@@ -1384,7 +1397,7 @@ function ExceptionsTab() {
                         <span className="text-text-4 ml-1">→ {fmtTimeStr(exc.return_time)}</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 font-ui text-[12px] text-text-2 max-w-[160px]">
+                    <td className="px-4 py-3 font-ui text-[12px] text-text-2 max-w-40">
                       <span className="line-clamp-2">{exc.reason}</span>
                     </td>
                     <td className="px-4 py-3"><ExcStatusChip status={exc.status} /></td>
@@ -1582,7 +1595,7 @@ function HolidaysTab() {
 
       {/* Header row */}
       <div className="flex items-center gap-3">
-        <button onClick={() => setYear((y) => y - 1)} className="w-8 h-8 rounded-sm bg-surface-1 border border-border-default flex items-center justify-center text-text-3 hover:text-text-1 hover:border-border-strong transition-colors">
+        <button onClick={() => setYear((y) => y - 1)} className="size-8 rounded-sm bg-surface-1 border border-border-default flex items-center justify-center text-text-3 hover:text-text-1 hover:border-border-strong transition-colors">
           <ChevronLeft size={15} />
         </button>
         <div className="bg-surface-1 border border-border-default rounded-lg px-5 py-2 flex items-center gap-2">
@@ -1590,7 +1603,7 @@ function HolidaysTab() {
           <span className="font-display font-semibold text-[15px] text-text-1">{year} Holidays</span>
           <span className="ml-1 font-mono text-[11px] text-text-4">{holidays.length} day{holidays.length !== 1 ? 's' : ''}</span>
         </div>
-        <button onClick={() => setYear((y) => y + 1)} className="w-8 h-8 rounded-sm bg-surface-1 border border-border-default flex items-center justify-center text-text-3 hover:text-text-1 hover:border-border-strong transition-colors">
+        <button onClick={() => setYear((y) => y + 1)} className="size-8 rounded-sm bg-surface-1 border border-border-default flex items-center justify-center text-text-3 hover:text-text-1 hover:border-border-strong transition-colors">
           <ChevronRight size={15} />
         </button>
         <button
@@ -1605,7 +1618,7 @@ function HolidaysTab() {
       <div className="flex items-center gap-3">
         {Object.entries(HOLIDAY_TYPE_META).map(([k, v]) => (
           <span key={k} className={cn('inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-ui font-semibold border', v.cls)}>
-            <span className="w-1.5 h-1.5 rounded-full" style={{ background: v.dot }} />
+            <span className="size-1.5 rounded-full" style={{ background: v.dot }} />
             {v.label}
           </span>
         ))}
@@ -1633,8 +1646,8 @@ function HolidaysTab() {
                 {items.map((h) => {
                   const meta = HOLIDAY_TYPE_META[h.type] ?? HOLIDAY_TYPE_META['public_holiday']
                   return (
-                    <div key={h.id} className="flex items-center gap-4 px-5 py-3.5 hover:bg-white/[0.015] transition-colors">
-                      <div className="w-10 h-10 rounded-lg bg-surface-2 border border-border-default flex items-center justify-center flex-shrink-0">
+                    <div key={h.id} className="flex items-center gap-4 px-5 py-3.5 hover:bg-white/1.5 transition-colors">
+                      <div className="size-10 rounded-lg bg-surface-2 border border-border-default flex items-center justify-center shrink-0">
                         <Palmtree size={16} className="text-text-3" />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -1642,7 +1655,7 @@ function HolidaysTab() {
                         <p className="font-mono text-[11px] text-text-4 mt-0.5">{fmtDate(h.date)}</p>
                       </div>
                       <span className={cn('inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-ui font-semibold border', meta.cls)}>
-                        <span className="w-1.5 h-1.5 rounded-full" style={{ background: meta.dot }} />
+                        <span className="size-1.5 rounded-full" style={{ background: meta.dot }} />
                         {meta.label}
                       </span>
                       <button
@@ -1719,7 +1732,7 @@ function HolidaysTab() {
               {/* Range preview */}
               {addMode === 'range' && rangeCount > 0 && (
                 <div className="flex items-center gap-2 px-3 py-2 bg-surface-2 border border-border-default rounded-md">
-                  <Calendar size={12} className="text-text-4 flex-shrink-0" />
+                  <Calendar size={12} className="text-text-4 shrink-0" />
                   <span className="font-mono text-[12px] text-text-2">
                     <span className="text-text-1 font-semibold">{rangeCount}</span> day{rangeCount !== 1 ? 's' : ''}
                     {' '}— {new Date(form.date + 'T00:00:00').toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
@@ -1808,8 +1821,8 @@ function HolidaysTab() {
           <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
             <div className="divide-y divide-border-subtle">
               {workingSaturdays.map((s) => (
-                <div key={s.id} className="flex items-center gap-4 px-5 py-3 hover:bg-white/[0.015] transition-colors">
-                  <div className="w-8 h-8 rounded-md bg-surface-2 border border-border-default flex items-center justify-center flex-shrink-0">
+                <div key={s.id} className="flex items-center gap-4 px-5 py-3 hover:bg-white/1.5 transition-colors">
+                  <div className="size-8 rounded-md bg-surface-2 border border-border-default flex items-center justify-center shrink-0">
                     <Calendar size={13} className="text-text-3" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -1961,7 +1974,7 @@ function OvertimeTab() {
           { label: 'Approved Hours',   value: `${totalApprovedHours.toFixed(1)}h`,  icon: Star,         color: 'text-service-mkt',  bg: 'bg-service-mkt/10 border-service-mkt/20' },
         ].map(({ label, value, icon: Icon, color, bg }) => (
           <div key={label} className="bg-surface-1 border border-border-default rounded-xl p-4 flex items-center gap-4">
-            <div className={cn('w-10 h-10 rounded-lg border flex items-center justify-center flex-shrink-0', bg)}>
+            <div className={cn('size-10 rounded-lg border flex items-center justify-center shrink-0', bg)}>
               <Icon size={18} className={color} />
             </div>
             <div>
@@ -1978,7 +1991,7 @@ function OvertimeTab() {
           <Hourglass size={14} className="text-text-3" />
           <span className="font-ui font-semibold text-[13px] text-text-1">Overtime Requests</span>
           {pending > 0 && (
-            <span className="ml-1 min-w-[18px] h-[18px] px-1 rounded-full bg-warning text-[10px] font-bold text-amber-900 flex items-center justify-center">
+            <span className="ml-1 min-w-4.5 h-4.5 px-1 rounded-full bg-warning text-[10px] font-bold text-amber-900 flex items-center justify-center">
               {pending}
             </span>
           )}
@@ -1999,12 +2012,12 @@ function OvertimeTab() {
 
         {isLoading ? (
           <div className="py-16 flex items-center justify-center gap-2 font-mono text-[12px] text-text-4">
-            <span className="w-4 h-4 border-2 border-text-4 border-t-brand-red rounded-full animate-spin" /> Loading…
+            <span className="size-4 border-2 border-text-4 border-t-brand-red rounded-full animate-spin" /> Loading…
           </div>
         ) : requests.length === 0 ? (
           <div className="py-16 text-center font-ui text-[13px] text-text-4">No overtime requests match this filter.</div>
         ) : (
-          <table className="w-full block overflow-x-auto whitespace-nowrap lg:whitespace-normal">
+          <table className="w-full overflow-x-auto whitespace-nowrap lg:whitespace-normal">
             <thead>
               <tr className="border-b border-border-subtle bg-surface-2">
                 {['Employee', 'Date', 'Time', 'Hours', 'Reason', 'Status', 'Actions'].map((h) => (
@@ -2019,7 +2032,7 @@ function OvertimeTab() {
                 const meta = OT_STATUS_META[req.status] ?? OT_STATUS_META['pending']
                 const r = req as typeof req & { profiles?: { name: string; avatar_url: string | null } | null }
                 return (
-                  <tr key={req.id} className="border-b border-border-subtle hover:bg-white/[0.015] transition-colors">
+                  <tr key={req.id} className="border-b border-border-subtle hover:bg-white/1.5 transition-colors">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2.5">
                         <Avatar name={r.profiles?.name ?? '?'} size="sm" />
@@ -2033,16 +2046,16 @@ function OvertimeTab() {
                     <td className="px-4 py-3">
                       <span className="font-display font-bold text-[15px] text-service-mkt">{req.hours}h</span>
                     </td>
-                    <td className="px-4 py-3 font-ui text-[12px] text-text-2 max-w-[200px]">
+                    <td className="px-4 py-3 font-ui text-[12px] text-text-2 max-w-50">
                       <span className="line-clamp-2">{req.reason}</span>
                     </td>
                     <td className="px-4 py-3">
                       <span className={cn('inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-ui font-semibold border', meta.cls)}>
-                        <span className="w-1.5 h-1.5 rounded-full" style={{ background: meta.dot }} />
+                        <span className="size-1.5 rounded-full" style={{ background: meta.dot }} />
                         {meta.label}
                       </span>
                       {req.review_note && (
-                        <p className="font-ui text-[10.5px] text-text-4 mt-0.5 max-w-[160px] truncate italic">"{req.review_note}"</p>
+                        <p className="font-ui text-[10.5px] text-text-4 mt-0.5 max-w-40 truncate italic">"{req.review_note}"</p>
                       )}
                     </td>
                     <td className="px-4 py-3">
@@ -2119,7 +2132,8 @@ interface EmployeeStat {
   leave: number
   holiday: number
   totalCheckins: number   // rows with check_in != null
-  totalMinutes: number    // sum of session durations
+  totalMinutes: number    // sum of session durations (office hours, OOO time excluded)
+  overtimeMinutes: number // approved overtime for the month
   earlyCount: number      // check_in before work_start
   onTimeCount: number     // check_in within grace
   avgCheckinMin: number   // average check_in minutes-since-midnight
@@ -2198,6 +2212,7 @@ function ReportsTab() {
   const { data: holidays = [] } = useHolidays(year)
   const { data: workingSaturdays = [] } = useWorkingSaturdays(year)
   const { data: halfDayLeaves = [] } = useMonthlyHalfDayLeaves(year, month)
+  const { data: monthlyOvertime = [] } = useMonthlyOvertime(year, month)
 
   const hhmmToMin = (t: string) => {
     const [h, m] = t.split(':').map(Number)
@@ -2277,7 +2292,7 @@ function ReportsTab() {
     statsMap.set(p.id, {
       profileId: p.id, name: p.name,
       present: 0, late: 0, absent: 0, halfDay: 0, leave: 0, holiday: 0,
-      totalCheckins: 0, totalMinutes: 0, earlyCount: 0, onTimeCount: 0, avgCheckinMin: 0,
+      totalCheckins: 0, totalMinutes: 0, overtimeMinutes: 0, earlyCount: 0, onTimeCount: 0, avgCheckinMin: 0,
       expectedMin: 0, workedMin: 0, overtimeMin: 0, netMin: 0,
     })
   }
@@ -2294,7 +2309,7 @@ function ReportsTab() {
       statsMap.set(id, {
         profileId: id, name,
         present: 0, late: 0, absent: 0, halfDay: 0, leave: 0, holiday: 0,
-        totalCheckins: 0, totalMinutes: 0, earlyCount: 0, onTimeCount: 0, avgCheckinMin: 0,
+        totalCheckins: 0, totalMinutes: 0, overtimeMinutes: 0, earlyCount: 0, onTimeCount: 0, avgCheckinMin: 0,
         expectedMin: 0, workedMin: 0, overtimeMin: 0, netMin: 0,
       })
     }
@@ -2321,7 +2336,9 @@ function ReportsTab() {
     }
 
     if (rec.check_in && rec.check_out) {
+      // Office hours = worked span minus any out-of-office time recorded for the day.
       const diff = (new Date(rec.check_out).getTime() - new Date(rec.check_in).getTime()) / 60000
+        - (rec.excluded_minutes ?? 0)
       if (diff > 0) s.totalMinutes += diff
     }
   }
@@ -2332,6 +2349,12 @@ function ReportsTab() {
     for (const dateStr of pastWorkingDaySet) {
       if (!empDates?.has(dateStr)) s.absent++
     }
+  }
+
+  // Fold approved overtime (logged in hours) into each employee's stats.
+  for (const ot of monthlyOvertime) {
+    const s = statsMap.get(ot.profile_id)
+    if (s) s.overtimeMinutes += Math.round((ot.hours ?? 0) * 60)
   }
 
   // Monthly hours per employee (expected vs worked + overtime + net make-up).
@@ -2410,7 +2433,7 @@ function ReportsTab() {
       <div className="flex items-center gap-3">
         <button
           onClick={prevMonth}
-          className="w-8 h-8 rounded-sm bg-surface-1 border border-border-default flex items-center justify-center text-text-3 hover:text-text-1 hover:border-border-strong transition-colors"
+          className="size-8 rounded-sm bg-surface-1 border border-border-default flex items-center justify-center text-text-3 hover:text-text-1 hover:border-border-strong transition-colors"
         >
           <ChevronLeft size={15} />
         </button>
@@ -2428,7 +2451,7 @@ function ReportsTab() {
         <button
           onClick={nextMonth}
           disabled={isCurrentMonth}
-          className="w-8 h-8 rounded-sm bg-surface-1 border border-border-default flex items-center justify-center text-text-3 hover:text-text-1 hover:border-border-strong transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          className="size-8 rounded-sm bg-surface-1 border border-border-default flex items-center justify-center text-text-3 hover:text-text-1 hover:border-border-strong transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <ChevronRight size={15} />
         </button>
@@ -2438,12 +2461,14 @@ function ReportsTab() {
         <button
           onClick={() => downloadCsv(
             `attendance-${year}-${String(month).padStart(2, '0')}`,
-            ['Employee', 'Present', 'Late', 'Absent', 'Half Day', 'Leave', 'Avg Check-in', 'Avg Hours', 'Expected', 'Worked', 'Overtime', 'Net', 'On-Time %'],
+            ['Employee', 'Present', 'Late', 'Absent', 'Half Day', 'Leave', 'Avg Check-in', 'Avg Office Hours', 'Total Office Hours', 'Approved OT (h)', 'Expected', 'Worked', 'Overtime', 'Net', 'On-Time %'],
             sorted.map((s) => [
               s.name,
               s.present, s.late, s.absent, s.halfDay, s.leave,
               fmtTime(s.avgCheckinMin),
               fmtMinutes(s.totalCheckins > 0 ? s.totalMinutes / s.totalCheckins : NaN),
+              fmtMinutes(s.totalMinutes),
+              (s.overtimeMinutes / 60).toFixed(2),
               fmtMinutes(s.expectedMin),
               fmtMinutes(s.workedMin),
               fmtMinutes(s.overtimeMin),
@@ -2467,7 +2492,7 @@ function ReportsTab() {
           { label: 'Leaves',          value: totalLeave,          icon: Home,         color: 'text-service-dev', bg: 'bg-service-dev/10 border-service-dev/20' },
         ].map(({ label, value, icon: Icon, color, bg }) => (
           <div key={label} className="bg-surface-1 border border-border-default rounded-xl p-4 flex items-center gap-3">
-            <div className={cn('w-10 h-10 rounded-lg border flex items-center justify-center flex-shrink-0', bg)}>
+            <div className={cn('size-10 rounded-lg border flex items-center justify-center shrink-0', bg)}>
               <Icon size={18} className={color} />
             </div>
             <div>
@@ -2488,14 +2513,14 @@ function ReportsTab() {
 
         {isLoading ? (
           <div className="py-16 flex items-center justify-center gap-2 text-text-4 font-mono text-[12px]">
-            <span className="w-4 h-4 border-2 border-text-4 border-t-brand-red rounded-full animate-spin" /> Loading…
+            <span className="size-4 border-2 border-text-4 border-t-brand-red rounded-full animate-spin" /> Loading…
           </div>
         ) : employeeStats.length === 0 ? (
           <div className="py-16 text-center font-ui text-[13px] text-text-4">
             No attendance records for {MONTH_NAMES[month - 1]} {year}.
           </div>
         ) : (
-          <table className="w-full block overflow-x-auto whitespace-nowrap lg:whitespace-normal">
+          <table className="w-full overflow-x-auto whitespace-nowrap lg:whitespace-normal">
             <thead>
               <tr className="border-b border-border-subtle bg-surface-2">
                 <SortTh label="Employee"     col="name"         sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} />
@@ -2505,7 +2530,8 @@ function ReportsTab() {
                 <SortTh label="Half Day"     col="halfDay"      sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} />
                 <SortTh label="Leave"        col="leave"        sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} />
                 <SortTh label="Avg Check-in" col="avgCheckinMin" sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} />
-                <SortTh label="Avg Hours"    col="totalMinutes" sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} />
+                <SortTh label="Office Hrs"   col="totalMinutes" sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} />
+                <SortTh label="Approved OT"  col="overtimeMinutes" sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} />
                 <SortTh label="Expected"     col="expectedMin"  sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} />
                 <SortTh label="Worked"       col="workedMin"    sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} />
                 <SortTh label="Overtime"     col="overtimeMin"  sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} />
@@ -2531,7 +2557,7 @@ function ReportsTab() {
                   <React.Fragment key={s.profileId}>
                     <tr
                       onClick={() => setExpandedId(isExpanded ? null : s.profileId)}
-                      className="border-b border-border-subtle hover:bg-white/[0.02] transition-colors cursor-pointer"
+                      className="border-b border-border-subtle hover:bg-white/2 transition-colors cursor-pointer"
                     >
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2.5">
@@ -2556,7 +2582,12 @@ function ReportsTab() {
                       <td className="px-4 py-3 font-mono text-[13px] text-service-design">{s.halfDay || '—'}</td>
                       <td className="px-4 py-3 font-mono text-[13px] text-service-dev">{s.leave || '—'}</td>
                       <td className="px-4 py-3 font-mono text-[12px] text-text-2">{s.totalCheckins > 0 ? fmtTime(s.avgCheckinMin) : '—'}</td>
-                      <td className="px-4 py-3 font-mono text-[12px] text-text-2">{fmtMinutes(avgHours)}</td>
+                      <td className="px-4 py-3 font-mono text-[12px] text-text-2" title={`Avg ${fmtMinutes(avgHours)}/day`}>
+                        {s.totalMinutes > 0 ? fmtMinutes(s.totalMinutes) : '—'}
+                      </td>
+                      <td className="px-4 py-3 font-mono text-[12px] text-service-mkt">
+                        {s.overtimeMinutes > 0 ? `+${(s.overtimeMinutes / 60).toFixed(1)}h` : '—'}
+                      </td>
                       <td className="px-4 py-3 font-mono text-[12px] text-text-3">{fmtMinutes(s.expectedMin)}</td>
                       <td className="px-4 py-3 font-mono text-[12px] text-text-1">{fmtMinutes(s.workedMin)}</td>
                       <td className="px-4 py-3 font-mono text-[12px] text-service-mkt">{s.overtimeMin > 0 ? fmtMinutes(s.overtimeMin) : '—'}</td>
@@ -2595,7 +2626,7 @@ function ReportsTab() {
                     </tr>
                     {isExpanded && (
                       <tr key={`${s.profileId}-expanded`} className="border-b border-border-subtle bg-surface-2/50">
-                        <td colSpan={15} className="px-6 py-3">
+                        <td colSpan={16} className="px-6 py-3">
                           <div className="text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-2">
                             Daily log — {MONTH_NAMES[month - 1]} {year}
                           </div>
@@ -2634,9 +2665,9 @@ function ReportsTab() {
                                       <p className="font-ui text-[10px] text-text-3">{statusLabel}{isEarly ? ' · Early' : ''}</p>
                                     </div>
                                     {/* Arrow */}
-                                    <div className="w-2 h-2 bg-surface-3 border-r border-b border-border-strong rotate-45 mx-auto -mt-1" />
+                                    <div className="size-2 bg-surface-3 border-r border-b border-border-strong rotate-45 mx-auto -mt-1" />
                                   </div>
-                                  <div className={cn('w-8 h-8 rounded-sm border flex items-center justify-center text-[11px] font-mono font-bold transition-colors', statusCls)}>
+                                  <div className={cn('size-8 rounded-sm border flex items-center justify-center text-[11px] font-mono font-bold transition-colors', statusCls)}>
                                     {dayNum}
                                   </div>
                                 </div>
@@ -2644,11 +2675,11 @@ function ReportsTab() {
                             })}
                           </div>
                           <div className="flex items-center gap-4 mt-2.5 text-[10.5px] font-mono text-text-4">
-                            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-xs bg-success/20 border border-success/40 inline-block" /> Present</span>
-                            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-xs bg-warning/15 border border-warning/35 inline-block" /> Late</span>
-                            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-xs bg-error/10 border border-error/25 inline-block" /> Absent</span>
-                            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-xs bg-service-design/10 border border-service-design/25 inline-block" /> Half Day</span>
-                            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-xs bg-service-dev/10 border border-service-dev/25 inline-block" /> Leave</span>
+                            <span className="flex items-center gap-1"><span className="size-2.5 rounded-xs bg-success/20 border border-success/40 inline-block" /> Present</span>
+                            <span className="flex items-center gap-1"><span className="size-2.5 rounded-xs bg-warning/15 border border-warning/35 inline-block" /> Late</span>
+                            <span className="flex items-center gap-1"><span className="size-2.5 rounded-xs bg-error/10 border border-error/25 inline-block" /> Absent</span>
+                            <span className="flex items-center gap-1"><span className="size-2.5 rounded-xs bg-service-design/10 border border-service-design/25 inline-block" /> Half Day</span>
+                            <span className="flex items-center gap-1"><span className="size-2.5 rounded-xs bg-service-dev/10 border border-service-dev/25 inline-block" /> Leave</span>
                           </div>
                         </td>
                       </tr>
@@ -2688,6 +2719,7 @@ function SettingsForm({ settings }: { settings: AttendanceSettings }) {
   const [xp, setXp] = useState(() => String(settings.xp_on_time_checkin))
   const [ipCidr, setIpCidr] = useState(() => settings.office_ip_cidr ?? '')
   const [saturdayWorking, setSaturdayWorking] = useState(() => settings.saturday_working)
+  const [autoCheckout, setAutoCheckout] = useState(() => settings.auto_checkout)
 
   const handleSave = async () => {
     try {
@@ -2701,6 +2733,7 @@ function SettingsForm({ settings }: { settings: AttendanceSettings }) {
         xp_on_time_checkin: parseInt(xp, 10),
         office_ip_cidr: ipCidr.trim() || null,
         saturday_working: saturdayWorking,
+        auto_checkout: autoCheckout,
       })
       toast('Attendance settings saved', 'success')
     } catch {
@@ -2711,7 +2744,7 @@ function SettingsForm({ settings }: { settings: AttendanceSettings }) {
   return (
     <div className="bg-surface-1 border border-border-default rounded-xl p-6">
       <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border-subtle">
-        <div className="w-9 h-9 rounded-lg bg-brand-red/10 border border-brand-red/20 flex items-center justify-center">
+        <div className="size-9 rounded-lg bg-brand-red/10 border border-brand-red/20 flex items-center justify-center">
           <SettingsIcon size={16} className="text-brand-red" />
         </div>
         <div>
@@ -2799,13 +2832,13 @@ function SettingsForm({ settings }: { settings: AttendanceSettings }) {
               type="button"
               onClick={() => setSaturdayWorking((v) => !v)}
               className={cn(
-                'relative flex-shrink-0 rounded-full transition-colors duration-200',
+                'relative shrink-0 rounded-full transition-colors duration-200',
                 saturdayWorking ? 'bg-brand-red' : 'bg-surface-3 border border-border-strong',
               )}
               style={{ width: 40, height: 22 }}
             >
               <span
-                className="absolute top-[3px] w-4 h-4 rounded-full bg-white shadow transition-transform duration-200"
+                className="absolute top-0.75 size-4 rounded-full bg-white shadow transition-transform duration-200"
                 style={{ left: 3, transform: saturdayWorking ? 'translateX(18px)' : 'translateX(0)' }}
               />
             </button>
@@ -2816,7 +2849,7 @@ function SettingsForm({ settings }: { settings: AttendanceSettings }) {
           <h4 className="font-display font-semibold text-[13px] text-text-2">Gamification & Network</h4>
 
           <div>
-            <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">XP for On-Time Check-In</label>
+            <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">LP for Early / On-Time Check-In</label>
             <input
               type="number"
               min={0}
@@ -2824,6 +2857,34 @@ function SettingsForm({ settings }: { settings: AttendanceSettings }) {
               onChange={(e) => setXp(e.target.value)}
               className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-mono text-text-1 outline-none focus:border-border-focus"
             />
+            <p className="text-[11px] font-ui text-text-4 mt-1">
+              Link Points awarded automatically when an employee checks in by start time + grace (status “Present”).
+            </p>
+          </div>
+
+          <div className="flex items-center justify-between px-4 py-3 bg-surface-inset border border-border-default rounded-md">
+            <div>
+              <p className="font-ui font-semibold text-[13px] text-text-1">Auto Check-Out</p>
+              <p className="font-ui text-[11px] text-text-4 mt-0.5">
+                {autoCheckout
+                  ? 'Anyone still checked in at day end is auto-checked-out at work end time'
+                  : 'Employees who forget to check out stay open until corrected'}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setAutoCheckout((v) => !v)}
+              className={cn(
+                'relative shrink-0 rounded-full transition-colors duration-200',
+                autoCheckout ? 'bg-brand-red' : 'bg-surface-3 border border-border-strong',
+              )}
+              style={{ width: 40, height: 22 }}
+            >
+              <span
+                className="absolute top-0.75 size-4 rounded-full bg-white shadow transition-transform duration-200"
+                style={{ left: 3, transform: autoCheckout ? 'translateX(18px)' : 'translateX(0)' }}
+              />
+            </button>
           </div>
 
           <div>
@@ -2921,7 +2982,7 @@ export default function AttendancePage() {
               data-active={effectiveView === id}
               onClick={() => setView(id)}
               className={cn(
-                'flex items-center gap-2 px-4 py-2 rounded-sm text-[13px] font-ui font-medium transition-colors relative flex-shrink-0 whitespace-nowrap',
+                'flex items-center gap-2 px-4 py-2 rounded-sm text-[13px] font-ui font-medium transition-colors relative shrink-0 whitespace-nowrap',
                 effectiveView === id
                   ? 'bg-surface-3 text-text-1 shadow-sm'
                   : 'text-text-3 hover:text-text-2',
@@ -2930,7 +2991,7 @@ export default function AttendancePage() {
               <Icon size={14} />
               {label}
               {badge != null && badge > 0 && (
-                <span className="ml-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-warning text-[10px] font-bold text-amber-900 flex items-center justify-center">
+                <span className="ml-0.5 min-w-4.5 h-4.5 px-1 rounded-full bg-warning text-[10px] font-bold text-amber-900 flex items-center justify-center">
                   {badge}
                 </span>
               )}

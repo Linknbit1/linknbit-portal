@@ -73,7 +73,7 @@ export function Topbar({ title, breadcrumb, className }: TopbarProps) {
       {mobileNav && (
         <button
           onClick={mobileNav.openNav}
-          className="lg:hidden w-9 h-9 -ml-1 rounded-sm flex items-center justify-center text-text-2 hover:bg-surface-2 hover:text-text-1 transition-colors flex-shrink-0"
+          className="lg:hidden size-9 -ml-1 rounded-sm flex items-center justify-center text-text-2 hover:bg-surface-2 hover:text-text-1 transition-colors shrink-0"
           aria-label="Open navigation"
         >
           <Menu size={18} />
@@ -95,13 +95,13 @@ export function Topbar({ title, breadcrumb, className }: TopbarProps) {
       {/* Search — hidden in production until wired to real search */}
       {showWipFeatures && (
         <div className="ml-8 flex-1 max-w-md bg-surface-1 border border-border-default rounded-sm h-9 flex items-center gap-2.5 px-3">
-          <Search size={14} className="text-text-3 flex-shrink-0" />
+          <Search size={14} className="text-text-3 shrink-0" />
           <input
             type="text"
             placeholder="Search projects, tasks, people..."
             className="bg-transparent border-0 outline-none text-body font-ui text-text-1 placeholder:text-text-3 flex-1 min-w-0 font-medium"
           />
-          <span className="font-mono text-[10px] text-text-4 border border-border-default rounded px-1.5 py-0.5 flex-shrink-0">
+          <span className="font-mono text-[10px] text-text-4 border border-border-default rounded px-1.5 py-0.5 shrink-0">
             ⌘K
           </span>
         </div>
@@ -114,7 +114,7 @@ export function Topbar({ title, breadcrumb, className }: TopbarProps) {
         <div ref={bellRef} className="relative">
           <button
             onClick={() => setBellOpen((o) => !o)}
-            className="relative w-9 h-9 rounded-sm bg-surface-1 border border-border-default text-text-2 hover:bg-surface-2 hover:text-text-1 flex items-center justify-center transition-colors"
+            className="relative size-9 rounded-sm bg-surface-1 border border-border-default text-text-2 hover:bg-surface-2 hover:text-text-1 flex items-center justify-center transition-colors"
           >
             <Bell size={16} />
             {unreadCount > 0 && (
@@ -153,11 +153,11 @@ export function Topbar({ title, breadcrumb, className }: TopbarProps) {
                       onClick={() => { if (!notif.read) markRead(notif.id) }}
                       className={cn(
                         'w-full text-left px-4 py-3 border-b border-border-subtle last:border-0 hover:bg-surface-2/60 transition-colors flex gap-3 items-start',
-                        !notif.read && 'bg-brand-red/[0.04]',
+                        !notif.read && 'bg-brand-red/4',
                       )}
                     >
                       <div className={cn(
-                        'w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0',
+                        'size-1.5 rounded-full mt-1.5 shrink-0',
                         notif.read ? 'bg-transparent' : 'bg-brand-red',
                       )} />
                       <div className="flex-1 min-w-0">
@@ -173,7 +173,7 @@ export function Topbar({ title, breadcrumb, className }: TopbarProps) {
                           {formatRelativeTime(notif.created_at)}
                         </p>
                       </div>
-                      {notif.read && <Check size={12} className="text-text-4 flex-shrink-0 mt-1" />}
+                      {notif.read && <Check size={12} className="text-text-4 shrink-0 mt-1" />}
                     </button>
                   ))
                 )}
@@ -188,7 +188,7 @@ export function Topbar({ title, breadcrumb, className }: TopbarProps) {
           <div ref={menuRef} className="relative">
             <button
               onClick={() => setMenuOpen((o) => !o)}
-              className="flex items-center gap-2.5 pl-1 pr-1 sm:pr-2.5 py-1 rounded-full bg-surface-1 border border-border-default hover:bg-surface-2 transition-colors"
+              className="flex items-center gap-2.5 p-1 sm:pr-2.5 rounded-full bg-surface-1 border border-border-default hover:bg-surface-2 transition-colors"
               aria-haspopup="menu"
               aria-expanded={menuOpen}
             >
@@ -197,7 +197,7 @@ export function Topbar({ title, breadcrumb, className }: TopbarProps) {
                 <span className="font-ui font-semibold text-[12.5px] text-text-1 whitespace-nowrap">
                   {profile.name}
                 </span>
-                <RoleBadge role={profile.role} size="sm" className="border-0 bg-transparent px-0 py-0 text-text-3" />
+                <RoleBadge role={profile.role} size="sm" className="border-0 bg-transparent p-0 text-text-3" />
               </div>
               <ChevronDown size={14} className="text-text-3 ml-0.5 hidden sm:block" />
             </button>

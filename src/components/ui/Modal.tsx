@@ -22,12 +22,12 @@ export function Modal({ open, onClose, title, children, footer, size = 'md', bus
   return (
     <ModalShell onClose={onClose} size={size} busy={busy} scroll={false}>
       {title && (
-        <div className="flex items-center justify-between gap-4 px-5 py-4 border-b border-border-subtle flex-shrink-0">
+        <div className="flex items-center justify-between gap-4 px-5 py-4 border-b border-border-subtle shrink-0">
           <h2 className="font-display font-bold text-[16px] text-text-1 min-w-0 truncate">{title}</h2>
           <button
             onClick={onClose}
             disabled={busy}
-            className="w-7 h-7 rounded-md flex items-center justify-center text-text-3 hover:text-text-1 hover:bg-surface-2 transition-colors flex-shrink-0"
+            className="size-7 rounded-md flex items-center justify-center text-text-3 hover:text-text-1 hover:bg-surface-2 transition-colors shrink-0"
             aria-label="Close"
           >
             <X size={16} />
@@ -36,7 +36,7 @@ export function Modal({ open, onClose, title, children, footer, size = 'md', bus
       )}
       <div className="flex-1 overflow-y-auto pb-[env(safe-area-inset-bottom)] sm:pb-0">{children}</div>
       {footer && (
-        <div className="flex-shrink-0 border-t border-border-subtle px-5 py-4">{footer}</div>
+        <div className="shrink-0 border-t border-border-subtle px-5 py-4">{footer}</div>
       )}
     </ModalShell>
   )

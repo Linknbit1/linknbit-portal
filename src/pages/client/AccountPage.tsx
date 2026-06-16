@@ -55,7 +55,7 @@ function Field({
     <div className="flex items-start gap-4 py-4 border-b last:border-b-0" style={{ borderColor: '#F2EDE4' }}>
       {Icon && (
         <div
-          className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
+          className="size-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
           style={{ background: '#FAF7F2' }}
         >
           <Icon size={14} style={{ color: '#877F71' }} />
@@ -151,13 +151,13 @@ export default function ClientAccountPage() {
           >
             <div className="relative mb-4">
               <div
-                className="w-20 h-20 rounded-full flex items-center justify-center font-bold text-[26px]"
+                className="size-20 rounded-full flex items-center justify-center font-bold text-[26px]"
                 style={{ background: 'linear-gradient(135deg, #FBBF24, #D97706)', color: '#78350F' }}
               >
                 IS
               </div>
               <button
-                className="absolute bottom-0 right-0 w-7 h-7 rounded-full flex items-center justify-center border-2 border-white"
+                className="absolute bottom-0 right-0 size-7 rounded-full flex items-center justify-center border-2 border-white"
                 style={{ background: '#EE2737' }}
               >
                 <Camera size={12} color="white" />

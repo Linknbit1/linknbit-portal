@@ -66,6 +66,13 @@ Deno.serve(async (req: Request) => {
   if (authError || !user) return json({ error: 'Unauthorized' }, 401)
   const profileId = user.id
 
+  const { data: callerProfile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', profileId)
+    .maybeSingle()
+  const privileged = callerProfile?.role === 'admin' || callerProfile?.role === 'super_admin'
+
   // 3. Load settings
   const { data: settings, error: settingsError } = await supabase
     .from('attendance_settings')
@@ -112,21 +119,52 @@ Deno.serve(async (req: Request) => {
     }
   }
 
+  // 4b. Holiday gate — no check-in on a company holiday (any weekday).
+  const { data: holiday } = await supabase
+    .from('holidays')
+    .select('name')
+    .eq('date', today)
+    .maybeSingle()
+  if (holiday) {
+    return json({
+      error: `Check-in is not allowed on a holiday${holiday.name ? ` (${holiday.name})` : ''}.`,
+      code: 'holiday',
+    }, 422)
+  }
+
   const [startH, startM] = settings.work_start_time.split(':').map(Number)
   const [endH, endM] = settings.work_end_time.split(':').map(Number)
   const graceMin = settings.grace_period_min
 
   const earlyMin = settings.early_checkin_min ?? 0
+  const EXC_GRACE_MIN = 10 // grace applied to approved exception times
 
   const startMinutes = startH * 60 + startM
   const openMinutes  = startMinutes - earlyMin
-  const lateCutoff   = startMinutes + graceMin
   const endMinutes   = endH * 60 + endM
+  let   lateCutoff   = startMinutes + graceMin
 
   const fmtHHMM = (m: number) =>
     `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`
 
-  if (localMinutes < openMinutes) {
+  // 4c. Approved late-arrival exception widens the late cutoff to requested_time + grace
+  //     and waives the early-window lower bound (they are arriving late on purpose).
+  let lowerBoundActive = true
+  const { data: lateExc } = await supabase
+    .from('attendance_exceptions')
+    .select('requested_time')
+    .eq('profile_id', profileId)
+    .eq('date', today)
+    .eq('exception_type', 'late_arrival')
+    .eq('status', 'approved')
+    .maybeSingle()
+  if (lateExc?.requested_time) {
+    const [eh, em] = lateExc.requested_time.split(':').map(Number)
+    lateCutoff = eh * 60 + em + EXC_GRACE_MIN
+    lowerBoundActive = false
+  }
+
+  if (lowerBoundActive && localMinutes < openMinutes) {
     return json({
       error: `Check-in is not allowed before ${fmtHHMM(openMinutes)} (${tz})`,
       code: 'outside_window',
@@ -139,9 +177,34 @@ Deno.serve(async (req: Request) => {
     }, 422)
   }
 
-  // 5. WiFi / IP check
+  // 5. Existing-row handling.
+  //    An approved WFH/Leave or the daily absence job may have already written a
+  //    'system' row for today. WFH employees may still check in (to record hours);
+  //    Leave blocks; a real self row is a true duplicate; any other system row
+  //    (e.g. 'absent') is overridden by a normal check-in.
+  const { data: existing } = await supabase
+    .from('attendance')
+    .select('id, source, status')
+    .eq('profile_id', profileId)
+    .eq('date', today)
+    .maybeSingle()
+
+  let wfhOverride = false
+  if (existing) {
+    if (existing.source === 'self') {
+      return json({ error: 'Already checked in today', code: 'duplicate' }, 409)
+    }
+    if (existing.source === 'system' && existing.status === 'leave') {
+      return json({ error: 'You are on approved leave today.', code: 'on_leave' }, 409)
+    }
+    if (existing.source === 'system' && existing.status === 'wfh') {
+      wfhOverride = true
+    }
+  }
+
+  // 6. WiFi / IP check — waived for WFH (the employee is off-site).
   let wifiValidated = false
-  if (settings.office_ip_cidr) {
+  if (!wfhOverride && settings.office_ip_cidr) {
     const forwarded = req.headers.get('X-Forwarded-For')
     const clientIp = forwarded ? forwarded.split(',')[0].trim() : ''
     if (!clientIp || !ipInCidr(clientIp, settings.office_ip_cidr)) {
@@ -153,91 +216,112 @@ Deno.serve(async (req: Request) => {
     wifiValidated = true
   }
 
-  // 6. Duplicate check
-  const { data: existing } = await supabase
-    .from('attendance')
-    .select('id')
-    .eq('profile_id', profileId)
-    .eq('date', today)
-    .maybeSingle()
-  if (existing) {
-    return json({ error: 'Already checked in today', code: 'duplicate' }, 409)
-  }
+  // 7. Device gating (register-first model)
+  // Devices are no longer auto-enrolled on check-in. An employee must self-register a
+  // device and have an admin approve it first; admins/super-admins are auto-approved.
+  const deviceFlagged = false
 
-  // 7. Device enrollment check
-  let deviceFlagged = false
+  if (privileged) {
+    // Admins/super-admins silently auto-approve their own device — no notification.
+    await supabase.from('enrolled_devices').upsert(
+      {
+        profile_id: profileId,
+        device_fingerprint: deviceFingerprint,
+        device_name: deviceName,
+        is_active: true,
+        approved_by: profileId,
+        approved_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
+      },
+      { onConflict: 'profile_id,device_fingerprint' },
+    )
+  } else {
+    const { data: device } = await supabase
+      .from('enrolled_devices')
+      .select('id, is_active, approved_by')
+      .eq('profile_id', profileId)
+      .eq('device_fingerprint', deviceFingerprint)
+      .maybeSingle()
 
-  // Block check-in if this profile's device was explicitly deactivated by HR/admin.
-  // Must run before the active-device query so the auto-enroll upsert below never
-  // re-activates a device that was intentionally blocked.
-  const { data: blockedRecord } = await supabase
-    .from('enrolled_devices')
-    .select('id')
-    .eq('profile_id', profileId)
-    .eq('device_fingerprint', deviceFingerprint)
-    .eq('is_active', false)
-    .maybeSingle()
+    if (!device) {
+      return json({
+        error: 'This device is not registered. Register it on the Attendance page and ask an admin to approve it before checking in.',
+        code: 'device_unregistered',
+      }, 403)
+    }
+    if (!device.is_active) {
+      return json({
+        error: 'This device has been blocked by an admin. Contact your admin or use an approved device to check in.',
+        code: 'device_blocked',
+      }, 403)
+    }
+    if (!device.approved_by) {
+      return json({
+        error: 'This device is awaiting admin approval. You can check in once it has been approved.',
+        code: 'device_pending',
+      }, 403)
+    }
 
-  if (blockedRecord) {
-    return json({
-      error: 'This device has been blocked by HR. Please contact HR or use an approved device to check in.',
-      code: 'device_blocked',
-    }, 403)
-  }
-
-  const { data: matchedDevices } = await supabase
-    .from('enrolled_devices')
-    .select('id, profile_id, is_active')
-    .eq('device_fingerprint', deviceFingerprint)
-    .eq('is_active', true)
-
-  if (!matchedDevices || matchedDevices.length === 0) {
     await supabase
       .from('enrolled_devices')
-      .upsert(
-        { profile_id: profileId, device_fingerprint: deviceFingerprint, device_name: deviceName, is_active: true },
-        { onConflict: 'profile_id,device_fingerprint' },
-      )
-    deviceFlagged = true
-
-    const { data: hrProfiles } = await supabase
-      .from('profiles')
-      .select('id')
-      .in('role', ['hr', 'admin', 'super_admin'])
-    if (hrProfiles) {
-      const notifications = hrProfiles.map((p: { id: string }) => ({
-        profile_id: p.id,
-        title: 'Unrecognised device check-in',
-        body: `An employee checked in from an unrecognised device (${deviceName}). Review enrolled devices.`,
-        resource_type: 'enrolled_device',
-        resource_id: deviceFingerprint,
-      }))
-      await supabase.from('notifications').insert(notifications)
-    }
-  } else {
-    const foreign = matchedDevices.find((d: { profile_id: string }) => d.profile_id !== profileId)
-    if (foreign) {
-      deviceFlagged = true
-      // Enroll this user on the shared device as pending review
-      await supabase
-        .from('enrolled_devices')
-        .upsert(
-          { profile_id: profileId, device_fingerprint: deviceFingerprint, device_name: deviceName, is_active: true },
-          { onConflict: 'profile_id,device_fingerprint' },
-        )
-    } else {
-      await supabase
-        .from('enrolled_devices')
-        .update({ last_seen_at: new Date().toISOString() })
-        .eq('profile_id', profileId)
-        .eq('device_fingerprint', deviceFingerprint)
-    }
+      .update({ last_seen_at: new Date().toISOString() })
+      .eq('id', device.id)
   }
 
-  // 8. Insert attendance row
+  // 8. Write attendance.
   const checkInTime = new Date().toISOString()
+
+  // 8a. WFH override — keep status 'wfh' and source 'system' (so the BEFORE-UPDATE status
+  //     trigger, which only acts on source='self', won't overwrite it) and record hours.
+  //     No LP: the on-time LP trigger is AFTER INSERT only, and WFH is not an arrival.
+  if (wfhOverride && existing) {
+    const { data: updated, error: updErr } = await supabase
+      .from('attendance')
+      .update({
+        check_in: checkInTime,
+        device_name: deviceName,
+        device_fingerprint: deviceFingerprint,
+        wifi_validated: false,
+        device_flagged: deviceFlagged,
+      })
+      .eq('id', existing.id)
+      .select()
+      .single()
+    if (updErr) return json({ error: updErr.message }, 500)
+    return json({
+      status: updated.status,
+      check_in: updated.check_in,
+      device_flagged: updated.device_flagged,
+    }, 200)
+  }
+
   const attendanceStatus = localMinutes <= lateCutoff ? 'present' : 'late'
 
+  // 8b. Override a non-blocking system row (e.g. 'absent') with a real self check-in.
+  if (existing) {
+    const { data: updated, error: updErr } = await supabase
+      .from('attendance')
+      .update({
+        check_in: checkInTime,
+        source: 'self',
+        status: attendanceStatus,
+        device_name: deviceName,
+        device_fingerprint: deviceFingerprint,
+        wifi_validated: wifiValidated,
+        device_flagged: deviceFlagged,
+      })
+      .eq('id', existing.id)
+      .select()
+      .single()
+    if (updErr) return json({ error: updErr.message }, 500)
+    return json({
+      status: updated.status,
+      check_in: updated.check_in,
+      device_flagged: updated.device_flagged,
+    }, 200)
+  }
+
+  // 8c. Normal first check-in of the day (fires the on-time LP trigger when present).
   const { data: inserted, error: insertError } = await supabase
     .from('attendance')
     .insert({

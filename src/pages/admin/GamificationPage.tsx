@@ -96,7 +96,7 @@ function PodiumSlot({ entry, place }: {
       {entry ? (
         <Avatar name={entry.name} size={place === 1 ? 'xl' : 'lg'} />
       ) : (
-        <div className="w-10 h-10 rounded-full bg-surface-2 border border-border-subtle flex items-center justify-center">
+        <div className="size-10 rounded-full bg-surface-2 border border-border-subtle flex items-center justify-center">
           <span className="font-mono text-[12px] text-text-4">?</span>
         </div>
       )}
@@ -104,7 +104,7 @@ function PodiumSlot({ entry, place }: {
         <p className={cn('font-display font-bold text-[13px] truncate w-24', entry?.isMe ? 'text-service-dev' : 'text-text-1')}>{entry?.name ?? '—'}</p>
         <p className="font-mono text-[11px] text-coin-gold">{entry ? `${entry.lp_balance.toLocaleString()} LP` : '0 LP'}</p>
       </div>
-      <div className={cn('w-20 rounded-t-lg bg-gradient-to-b flex items-end justify-center pb-2', heights[place], colors[place])}>
+      <div className={cn('w-20 rounded-t-lg bg-linear-to-b flex items-end justify-center pb-2', heights[place], colors[place])}>
         <span className="font-display font-bold text-[22px] text-white">{place}</span>
       </div>
     </div>
@@ -467,7 +467,7 @@ function RedeemModal({ reward, myLP, onClose, onConfirm, isPending }: {
   const canAfford = myLP >= reward.xp_cost && !cashBlocked
   return (
     <ModalShell onClose={onClose} size="sm" contentClassName="p-5 sm:p-6">
-        <div className="w-14 h-14 rounded-xl bg-coin-gold/15 border border-coin-gold/30 flex items-center justify-center mx-auto mb-3">
+        <div className="size-14 rounded-xl bg-coin-gold/15 border border-coin-gold/30 flex items-center justify-center mx-auto mb-3">
           <Gift size={24} className="text-coin-gold" />
         </div>
         <h3 className="font-display font-bold text-[17px] text-text-1 mb-1">{reward.name}</h3>
@@ -641,15 +641,15 @@ export default function GamificationPage() {
         {/* My LP / reputation summary */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="bg-surface-1 border border-border-default rounded-xl px-5 py-4 flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-coin-gold/15 border border-coin-gold/30 flex items-center justify-center"><Coins size={19} className="text-coin-gold" /></div>
+            <div className="size-11 rounded-xl bg-coin-gold/15 border border-coin-gold/30 flex items-center justify-center"><Coins size={19} className="text-coin-gold" /></div>
             <div><p className="font-display font-bold text-[24px] text-coin-gold leading-none">{myLP.toLocaleString()}</p><p className="font-ui text-[11.5px] text-text-3 mt-0.5">Link Points · this month</p></div>
           </div>
           <div className="bg-surface-1 border border-border-default rounded-xl px-5 py-4 flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-service-design/15 border border-service-design/30 flex items-center justify-center"><Trophy size={19} className="text-service-design" /></div>
+            <div className="size-11 rounded-xl bg-service-design/15 border border-service-design/30 flex items-center justify-center"><Trophy size={19} className="text-service-design" /></div>
             <div><p className="font-display font-bold text-[24px] text-text-1 leading-none">{myReputation.toLocaleString()}</p><p className="font-ui text-[11.5px] text-text-3 mt-0.5">Reputation · Level {me?.level ?? profile?.level ?? 1}</p></div>
           </div>
           <div className="bg-surface-1 border border-border-default rounded-xl px-5 py-4 flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-service-dev/15 border border-service-dev/30 flex items-center justify-center"><Award size={19} className="text-service-dev" /></div>
+            <div className="size-11 rounded-xl bg-service-dev/15 border border-service-dev/30 flex items-center justify-center"><Award size={19} className="text-service-dev" /></div>
             <div><p className="font-display font-bold text-[24px] text-text-1 leading-none">{earnedBadgeIds.size}</p><p className="font-ui text-[11.5px] text-text-3 mt-0.5">Badges earned</p></div>
           </div>
         </div>
@@ -665,14 +665,14 @@ export default function GamificationPage() {
             </div>
 
             {/* Employee of the Month — last month's winner, visible to everyone */}
-            <div className="bg-gradient-to-br from-coin-gold/15 via-surface-1 to-surface-1 border border-coin-gold/40 rounded-xl p-5 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-coin-gold/20 border border-coin-gold/40 flex items-center justify-center text-[26px] flex-shrink-0">🏆</div>
+            <div className="bg-linear-to-br from-coin-gold/15 via-surface-1 to-surface-1 border border-coin-gold/40 rounded-xl p-5 flex items-center gap-4">
+              <div className="size-12 rounded-xl bg-coin-gold/20 border border-coin-gold/40 flex items-center justify-center text-[26px] shrink-0">🏆</div>
               {eotmWinner ? (
                 <>
                   <Avatar name={nameOf(eotmWinner.profile_id)} src={directory[eotmWinner.profile_id]?.avatar_url ?? undefined} size="lg" />
                   <div className="min-w-0">
                     <p className="font-mono text-[10.5px] text-coin-gold uppercase tracking-wider">Employee of the Month · {monthLabel(eotmPrev.year, eotmPrev.month)}</p>
-                    <p className="font-display font-bold text-[18px] text-text-1 leading-tight truncate">{nameOf(eotmWinner.profile_id)}</p>
+                    <p className="font-display font-bold text-h4/tight text-text-1 truncate">{nameOf(eotmWinner.profile_id)}</p>
                     {eotmWinner.note && <p className="font-ui text-[12.5px] text-text-3 mt-0.5 line-clamp-2">{eotmWinner.note}</p>}
                   </div>
                 </>
@@ -721,7 +721,7 @@ export default function GamificationPage() {
                         <p className="text-[11px] font-mono text-text-3 capitalize">{e.role.replace(/_/g, ' ')}</p>
                       </div>
                     </div>
-                    <div className="col-span-2 lg:col-span-1 lg:contents flex flex-wrap items-center gap-x-4 gap-y-1 pl-[52px] lg:pl-0">
+                    <div className="col-span-2 lg:col-span-1 lg:contents flex flex-wrap items-center gap-x-4 gap-y-1 pl-13 lg:pl-0">
                       <span className="font-mono font-bold text-[13px] text-coin-gold flex items-center gap-1"><Zap size={11} /> {e.lp_balance.toLocaleString()}</span>
                       <span className="font-mono text-[13px] text-text-2">{e.reputation_total.toLocaleString()} <span className="lg:hidden text-text-4 text-[11px]">rep</span></span>
                       <span className="font-display font-bold text-[13px] text-text-1">Lv {e.level}</span>
@@ -745,7 +745,7 @@ export default function GamificationPage() {
             {/* My active claims */}
             {myClaims.filter((c) => c.status === 'claimed' || c.status === 'submitted').length > 0 && (
               <div>
-                <h3 className="font-display font-semibold text-[15px] text-text-1 mb-3 flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-brand-red" /> My Active Tasks</h3>
+                <h3 className="font-display font-semibold text-[15px] text-text-1 mb-3 flex items-center gap-2"><span className="size-2 rounded-full bg-brand-red" /> My Active Tasks</h3>
                 <div className="grid grid-cols-2 gap-3">
                   {myClaims.filter((c) => c.status === 'claimed' || c.status === 'submitted').map((c) => {
                     const t = taskMap.get(c.task_id)
@@ -776,8 +776,8 @@ export default function GamificationPage() {
                   return (
                     <div key={t.id} className="bg-surface-1 border border-border-default rounded-xl p-5 flex flex-col">
                       <div className="flex items-start justify-between mb-2 gap-2">
-                        <h4 className="font-display font-bold text-[14px] text-text-1 leading-tight">{t.title}</h4>
-                        <span className={cn('font-mono text-[9px] px-1.5 py-0.5 rounded-xs uppercase flex-shrink-0', meta.cls)}>{meta.label}</span>
+                        <h4 className="font-display font-bold text-body/tight text-text-1">{t.title}</h4>
+                        <span className={cn('font-mono text-[9px] px-1.5 py-0.5 rounded-xs uppercase shrink-0', meta.cls)}>{meta.label}</span>
                       </div>
                       <p className="font-ui text-[12.5px] text-text-2 mb-3 leading-snug flex-1">{t.description}</p>
                       <div className="flex items-center justify-between">
@@ -806,14 +806,14 @@ export default function GamificationPage() {
               {shoutFeed.length === 0 && <div className="py-12 text-center text-text-4 font-ui text-[13px]">No shoutouts yet.</div>}
               {shoutFeed.map((s: ShoutoutRow) => (
                 <div key={s.id} className="bg-surface-1 border border-border-default rounded-xl p-5 flex gap-4">
-                  <div className="w-10 h-10 rounded-full bg-coin-gold/15 border border-coin-gold/30 flex items-center justify-center flex-shrink-0"><Star size={16} className="text-coin-gold" /></div>
+                  <div className="size-10 rounded-full bg-coin-gold/15 border border-coin-gold/30 flex items-center justify-center shrink-0"><Star size={16} className="text-coin-gold" /></div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-display font-bold text-[14px] text-text-1">{nameOf(s.to_profile_id)}</span>
-                      <span className="font-mono text-[10px] text-coin-gold bg-coin-gold/12 border border-coin-gold/30 px-1.5 py-[1px] rounded uppercase">+{s.lp_value} LP</span>
-                      <span className="font-mono text-[10px] text-service-design bg-service-design/10 border border-service-design/25 px-1.5 py-[1px] rounded">{s.category}</span>
+                      <span className="font-mono text-[10px] text-coin-gold bg-coin-gold/12 border border-coin-gold/30 px-1.5 py-px rounded uppercase">+{s.lp_value} LP</span>
+                      <span className="font-mono text-[10px] text-service-design bg-service-design/10 border border-service-design/25 px-1.5 py-px rounded">{s.category}</span>
                     </div>
-                    <p className="font-ui text-[13px] text-text-2 mt-1.5 leading-relaxed">"{s.message}"</p>
+                    <p className="font-ui text-body-sm/relaxed text-text-2 mt-1.5">"{s.message}"</p>
                     <p className="font-mono text-[11px] text-text-4 mt-1.5">From {nameOf(s.from_profile_id)} · {formatRelativeTime(s.created_at)}</p>
                   </div>
                 </div>
@@ -833,7 +833,7 @@ export default function GamificationPage() {
                   <div key={b.id} className={cn('bg-surface-1 border rounded-xl p-4 flex flex-col items-center gap-2 text-center transition-all', earned ? 'border-coin-gold/40' : 'border-border-subtle opacity-55')}>
                     <span className="text-[32px]">{b.icon}</span>
                     <p className="font-display font-bold text-[12.5px] text-text-1 leading-tight">{b.name}</p>
-                    <p className="font-ui text-[11px] text-text-3 leading-snug">{b.description}</p>
+                    <p className="font-ui text-label/snug text-text-3">{b.description}</p>
                     {earned
                       ? <span className="font-mono text-[10px] text-success">Earned</span>
                       : <span className="font-mono text-[10px] text-text-4 capitalize">{b.criteria_type === 'manual' ? 'HR award' : `${b.criteria_value} ${b.criteria_type.replace(/_/g, ' ')}`}</span>}
@@ -848,7 +848,7 @@ export default function GamificationPage() {
         {mainTab === 'rewards' && (
           <div className="flex flex-col gap-5">
             <div className="flex items-center gap-4 bg-surface-1 border border-border-default rounded-xl px-6 py-4">
-              <div className="w-12 h-12 rounded-xl bg-coin-gold/15 border border-coin-gold/30 flex items-center justify-center"><Coins size={20} className="text-coin-gold" /></div>
+              <div className="size-12 rounded-xl bg-coin-gold/15 border border-coin-gold/30 flex items-center justify-center"><Coins size={20} className="text-coin-gold" /></div>
               <div><p className="font-display font-bold text-[28px] text-coin-gold leading-none">{myLP.toLocaleString()}</p><p className="font-ui text-[12px] text-text-3 mt-0.5">LP available · resets monthly</p></div>
               <p className="ml-auto font-mono text-[11px] text-text-4">1 LP = PKR 10</p>
             </div>
@@ -862,11 +862,11 @@ export default function GamificationPage() {
                   return (
                     <div key={r.id} className={cn('bg-surface-1 border rounded-xl p-5 flex flex-col transition-all', canAfford && !out ? 'border-border-default hover:border-coin-gold/35' : 'border-border-subtle opacity-60')}>
                       <div className="flex items-start justify-between mb-3">
-                        <div className="w-10 h-10 rounded-lg bg-surface-2 flex items-center justify-center"><Gift size={18} className={canAfford && !out ? 'text-coin-gold' : 'text-text-4'} /></div>
+                        <div className="size-10 rounded-lg bg-surface-2 flex items-center justify-center"><Gift size={18} className={canAfford && !out ? 'text-coin-gold' : 'text-text-4'} /></div>
                         {r.tier === 'premium' && <span className="font-mono text-[9px] text-service-design bg-service-design/10 px-1.5 py-0.5 rounded-xs uppercase">Premium</span>}
                       </div>
                       <h4 className="font-display font-bold text-[13.5px] text-text-1 mb-1 leading-tight">{r.name}</h4>
-                      <p className="font-ui text-[12px] text-text-3 flex-1 mb-3 leading-relaxed">{r.description}</p>
+                      <p className="font-ui text-caption/relaxed text-text-3 flex-1 mb-3">{r.description}</p>
                       {r.quantity !== -1 && r.quantity !== null && <p className="font-mono text-[10px] text-text-4 mb-2">{r.quantity} remaining</p>}
                       <div className="flex items-center justify-between">
                         <span className={cn('font-mono font-bold text-[13px]', canAfford && !out ? 'text-coin-gold' : 'text-text-4')}>{lp(r.xp_cost)}</span>
@@ -1041,7 +1041,7 @@ export default function GamificationPage() {
                 </div>
                 <div>
                   <h2 className="font-display font-bold text-[16px] text-text-1 flex items-center gap-2 mb-3"><ShieldAlert size={16} className="text-error" /> Participation</h2>
-                  <div className="bg-surface-1 border border-border-default rounded-xl p-5 space-y-2 max-h-[260px] overflow-y-auto">
+                  <div className="bg-surface-1 border border-border-default rounded-xl p-5 space-y-2 max-h-65 overflow-y-auto">
                     {leaderboard.filter((e) => e.profile_id !== profileId).map((e) => (
                       <div key={e.profile_id} className="flex items-center justify-between gap-2">
                         <span className="font-ui text-[12.5px] text-text-2 truncate">{e.name}</span>

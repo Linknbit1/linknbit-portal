@@ -100,7 +100,7 @@ function FileAttachment({ file }: { file: { id: string; name: string; type: stri
       transition={{ duration: 0.15 }}
     >
       <div
-        className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+        className="size-8 rounded-lg flex items-center justify-center shrink-0"
         style={{
           background: isDesign ? 'rgba(122,63,217,0.1)' : 'rgba(238,39,55,0.07)',
           color: isDesign ? '#7A3FD9' : '#EE2737',
@@ -252,7 +252,7 @@ function ApprovalCard({
             style={{ background: '#FAF7F2', border: '1px solid #EAE3D6' }}
           >
             <p
-              className={cn('text-[13px] leading-relaxed', !isPending && 'line-clamp-3')}
+              className={cn('text-body-sm/relaxed', !isPending && 'line-clamp-3')}
               style={{ color: '#4F4940' }}
             >
               {approval.message}
@@ -314,7 +314,7 @@ function ApprovalCard({
               transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
               className="overflow-hidden"
             >
-              <label className="block text-[12px] font-semibold mb-2 mt-2" style={{ color: '#1A1612' }}>
+              <label className="block text-[12px] font-semibold my-2" style={{ color: '#1A1612' }}>
                 What needs to change?
               </label>
               <textarea
@@ -488,7 +488,7 @@ export default function ClientApprovalsPage() {
             whileHover={{ boxShadow: '0 4px 14px rgba(26,22,18,0.07)' }}
           >
             <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+              className="size-10 rounded-xl flex items-center justify-center shrink-0"
               style={{ background: s.bg }}
             >
               <s.icon size={18} style={{ color: s.color }} />
@@ -519,7 +519,7 @@ export default function ClientApprovalsPage() {
           >
             {t.label}
             <span
-              className={cn('text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center')}
+              className={cn('text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-4.5 text-center')}
               style={
                 t.key === 'pending' && t.count > 0
                   ? { background: '#EE2737', color: 'white' }

@@ -50,7 +50,7 @@ export function Tabs({ tabs, activeKey, onChange, variant = 'underline', classNa
             aria-selected={active}
             onClick={() => onChange(tab.key)}
             className={cn(
-              'inline-flex items-center gap-2 font-ui font-medium text-body-sm transition-colors duration-150 focus:outline-none flex-shrink-0 whitespace-nowrap',
+              'inline-flex items-center gap-2 font-ui font-medium text-body-sm transition-colors duration-150 focus:outline-none shrink-0 whitespace-nowrap',
               variant === 'underline'
                 ? cn(
                     'px-3 pb-2.5 pt-1 border-b-2 -mb-px',
