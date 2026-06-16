@@ -188,7 +188,7 @@ export function Topbar({ title, breadcrumb, className }: TopbarProps) {
           <div ref={menuRef} className="relative">
             <button
               onClick={() => setMenuOpen((o) => !o)}
-              className="flex items-center gap-2.5 pl-1 pr-2.5 py-1 rounded-full bg-surface-1 border border-border-default hover:bg-surface-2 transition-colors"
+              className="flex items-center gap-2.5 pl-1 pr-1 sm:pr-2.5 py-1 rounded-full bg-surface-1 border border-border-default hover:bg-surface-2 transition-colors"
               aria-haspopup="menu"
               aria-expanded={menuOpen}
             >

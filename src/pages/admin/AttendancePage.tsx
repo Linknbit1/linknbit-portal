@@ -2548,6 +2548,7 @@ function SettingsForm({ settings }: { settings: AttendanceSettings }) {
   const [workStart, setWorkStart] = useState(() => settings.work_start_time.slice(0, 5))
   const [workEnd, setWorkEnd] = useState(() => settings.work_end_time.slice(0, 5))
   const [grace, setGrace] = useState(() => String(settings.grace_period_min))
+  const [earlyCheckin, setEarlyCheckin] = useState(() => String(settings.early_checkin_min))
   const [tz, setTz] = useState(() => settings.timezone)
   const [xp, setXp] = useState(() => String(settings.xp_on_time_checkin))
   const [ipCidr, setIpCidr] = useState(() => settings.office_ip_cidr ?? '')
@@ -2559,6 +2560,7 @@ function SettingsForm({ settings }: { settings: AttendanceSettings }) {
         work_start_time: workStart,
         work_end_time: workEnd,
         grace_period_min: parseInt(grace, 10),
+        early_checkin_min: parseInt(earlyCheckin, 10),
         timezone: tz,
         xp_on_time_checkin: parseInt(xp, 10),
         office_ip_cidr: ipCidr.trim() || null,
@@ -2617,6 +2619,21 @@ function SettingsForm({ settings }: { settings: AttendanceSettings }) {
             />
             <p className="text-[11px] font-ui text-text-4 mt-1">
               Check-ins within {grace || '?'} min after start time are marked Late (not rejected)
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Early Check-In Window (minutes)</label>
+            <input
+              type="number"
+              min={0}
+              max={120}
+              value={earlyCheckin}
+              onChange={(e) => setEarlyCheckin(e.target.value)}
+              className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-mono text-text-1 outline-none focus:border-border-focus"
+            />
+            <p className="text-[11px] font-ui text-text-4 mt-1">
+              Employees may check in up to {earlyCheckin || '?'} min before start time (e.g. early arrivals)
             </p>
           </div>
 

@@ -116,13 +116,19 @@ Deno.serve(async (req: Request) => {
   const [endH, endM] = settings.work_end_time.split(':').map(Number)
   const graceMin = settings.grace_period_min
 
+  const earlyMin = settings.early_checkin_min ?? 0
+
   const startMinutes = startH * 60 + startM
+  const openMinutes  = startMinutes - earlyMin
   const lateCutoff   = startMinutes + graceMin
   const endMinutes   = endH * 60 + endM
 
-  if (localMinutes < startMinutes) {
+  const fmtHHMM = (m: number) =>
+    `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`
+
+  if (localMinutes < openMinutes) {
     return json({
-      error: `Check-in is not allowed before ${settings.work_start_time} (${tz})`,
+      error: `Check-in is not allowed before ${fmtHHMM(openMinutes)} (${tz})`,
       code: 'outside_window',
     }, 422)
   }
