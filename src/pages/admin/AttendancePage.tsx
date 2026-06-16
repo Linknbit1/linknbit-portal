@@ -25,6 +25,7 @@ import {
   useAllAttendanceExceptions,
   useReviewException,
   useMonthlyAttendance,
+  useMonthlyHalfDayLeaves,
   useHolidays,
   useCreateHoliday,
   useCreateHolidayRange,
@@ -57,6 +58,8 @@ import { useEnrolledDevices, useApproveDevice, useDeactivateDevice } from '../..
 import type { AttendanceWithProfile } from '../../api/attendance'
 import { downloadCsv } from '../../lib/csv'
 import { cn } from '../../lib/cn'
+import { zonedWallTimeToIso, isoToZonedMinutes } from '../../lib/timezone'
+import { computeEmployeeHours } from '../../lib/attendanceHours'
 import { ModalShell } from '../../components/ui/ModalShell'
 
 function localToday(): string {
@@ -102,23 +105,49 @@ function WFHStatusChip({ status }: { status: string }) {
 
 /* ── Mark Attendance modal ────────────────────────────────────────────────── */
 interface MarkModalProps {
-  open: boolean
   onClose: () => void
   dateFilter: string
 }
 
-function MarkModal({ open, onClose, dateFilter }: MarkModalProps) {
+// Current wall-clock time (HH:MM, 24h) in the given office timezone.
+function officeNowHHMM(timeZone: string): string {
+  return new Intl.DateTimeFormat('en-GB', {
+    timeZone, hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+  }).format(new Date())
+}
+
+// Statuses that carry a clocked check-in/out time.
+const CLOCKED_STATUSES = new Set(['present', 'late', 'half_day'])
+
+function MarkModal({ onClose, dateFilter }: MarkModalProps) {
   const toast = useToast()
   const markMutation = useMarkAttendance()
   const { data: people = [] } = useActiveProfiles()
+  const { data: settings } = useAttendanceSettings()
+  const tz = settings?.timezone ?? 'Asia/Karachi'
+
   const [profileId, setProfileId] = useState('')
   const [status, setStatus] = useState('present')
+  // Defaults to the selected date and the current office time (mounts fresh on open).
+  const [date, setDate] = useState(dateFilter)
+  const [checkInTime, setCheckInTime] = useState(() => officeNowHHMM(tz))
+  const [checkOutTime, setCheckOutTime] = useState('')
   const [note, setNote] = useState('')
+
+  const showTimes = CLOCKED_STATUSES.has(status)
 
   const handleSave = async () => {
     if (!profileId) return
+    const clocked = showTimes
     try {
-      await markMutation.mutateAsync({ profileId, date: dateFilter, status, note: note.trim() || undefined })
+      await markMutation.mutateAsync({
+        profileId,
+        date,
+        status,
+        note: note.trim() || undefined,
+        checkIn: clocked && checkInTime ? zonedWallTimeToIso(date, checkInTime, tz) : undefined,
+        checkOut: clocked && checkOutTime ? zonedWallTimeToIso(date, checkOutTime, tz) : undefined,
+      })
       toast('Attendance marked', 'success')
       onClose()
       setProfileId('')
@@ -128,8 +157,6 @@ function MarkModal({ open, onClose, dateFilter }: MarkModalProps) {
       toast('Failed to mark attendance', 'error')
     }
   }
-
-  if (!open) return null
 
   return (
     <ModalShell onClose={onClose} size="md" contentClassName="p-5 sm:p-6">
@@ -155,6 +182,22 @@ function MarkModal({ open, onClose, dateFilter }: MarkModalProps) {
               options={Object.entries(STATUS_META).map(([k, v]) => ({ value: k, label: v.label }))}
             />
           </div>
+          <div>
+            <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Date</label>
+            <DatePicker value={date} onChange={setDate} placeholder="Select date…" />
+          </div>
+          {showTimes && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Check in</label>
+                <TimePicker value={checkInTime} onChange={setCheckInTime} placeholder="Time…" />
+              </div>
+              <div>
+                <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Check out (optional)</label>
+                <TimePicker value={checkOutTime} onChange={setCheckOutTime} placeholder="Time…" />
+              </div>
+            </div>
+          )}
           <div>
             <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Note (optional)</label>
             <textarea
@@ -432,7 +475,7 @@ function DailyRecordsTab() {
         </div>
       </div>
 
-      <MarkModal open={markOpen} onClose={() => setMarkOpen(false)} dateFilter={dateFilter} />
+      {markOpen && <MarkModal onClose={() => setMarkOpen(false)} dateFilter={dateFilter} />}
     </>
   )
 }
@@ -912,6 +955,11 @@ function LeaveTab() {
                     </span>
                     <span className="font-mono text-[11.5px] text-text-3">{fmtRange(req.start_date, req.end_date)}</span>
                     <span className="font-display font-bold text-[12px] text-text-2">{req.days}d</span>
+                    {req.day_part !== 'full' && (
+                      <span className="px-1.5 py-0.5 rounded-xs bg-service-design/10 border border-service-design/25 text-service-design text-[10px] font-mono font-semibold">
+                        Half day
+                      </span>
+                    )}
                   </div>
                   <p className="font-ui text-[12px] text-text-3 truncate">{req.reason}</p>
                   {req.review_note && <p className="font-ui text-[11px] text-error mt-0.5 italic">"{req.review_note}"</p>}
@@ -2075,6 +2123,10 @@ interface EmployeeStat {
   earlyCount: number      // check_in before work_start
   onTimeCount: number     // check_in within grace
   avgCheckinMin: number   // average check_in minutes-since-midnight
+  expectedMin: number     // required minutes over elapsed working days
+  workedMin: number       // real worked minutes (capped + OT − excluded)
+  overtimeMin: number     // minutes worked beyond work_end (past buffer)
+  netMin: number          // workedMin − expectedMin (− = owed make-up)
 }
 
 function minutesSinceMidnight(iso: string): number {
@@ -2095,6 +2147,14 @@ function fmtTime(mins: number): string {
   const m = Math.round(mins % 60)
   const ampm = h >= 12 ? 'PM' : 'AM'
   return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${ampm}`
+}
+
+// Signed hours (e.g. "+2h 0m" surplus, "−1h 30m" owed make-up).
+function fmtNet(mins: number): string {
+  const rounded = Math.round(mins)
+  if (rounded === 0) return '0h 0m'
+  const sign = rounded > 0 ? '+' : '−'
+  return `${sign}${fmtMinutes(Math.abs(rounded))}`
 }
 
 interface SortThProps {
@@ -2137,15 +2197,43 @@ function ReportsTab() {
   const { data: activeProfiles = [] } = useActiveProfiles()
   const { data: holidays = [] } = useHolidays(year)
   const { data: workingSaturdays = [] } = useWorkingSaturdays(year)
+  const { data: halfDayLeaves = [] } = useMonthlyHalfDayLeaves(year, month)
 
-  const workStartMin = settings
-    ? (() => {
-        const [h, m] = settings.work_start_time.split(':').map(Number)
-        return h * 60 + m
-      })()
-    : 9 * 60  // fallback 9:00
-
+  const hhmmToMin = (t: string) => {
+    const [h, m] = t.split(':').map(Number)
+    return h * 60 + m
+  }
+  const workStartMin = settings ? hhmmToMin(settings.work_start_time) : 9 * 60
+  const workEndMin   = settings ? hhmmToMin(settings.work_end_time) : 17 * 60
+  const checkoutBufferMin = settings?.checkout_buffer_min ?? 30
   const graceMin = settings?.grace_period_min ?? 15
+  const tz = settings?.timezone ?? 'Asia/Karachi'
+  const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: tz }).format(now)
+
+  // Half-day leave dates grouped by employee (forces half credit even when the
+  // attendance row stayed 'present' because the employee checked in pre-approval).
+  const halfDayByProfile = (() => {
+    const map = new Map<string, Set<string>>()
+    for (const h of halfDayLeaves) {
+      if (!map.has(h.profileId)) map.set(h.profileId, new Set())
+      map.get(h.profileId)!.add(h.date)
+    }
+    return map
+  })()
+
+  // Reusable working-day test for the hours engine.
+  const isWorkingDay = (() => {
+    const holidaySet = new Set(holidays.map((h) => h.date))
+    const workingSatSet = new Set(workingSaturdays.map((s) => s.date))
+    return (dateStr: string): boolean => {
+      const [yy, mm, dd] = dateStr.split('-').map(Number)
+      const dow = new Date(yy, mm - 1, dd).getDay()
+      if (dow === 0) return false
+      if (dow === 6 && !settings?.saturday_working && !workingSatSet.has(dateStr)) return false
+      if (holidaySet.has(dateStr)) return false
+      return true
+    }
+  })()
 
   // Compute working days for the entire month (for the header count + totalExpected)
   const workingDays = (() => {
@@ -2190,6 +2278,7 @@ function ReportsTab() {
       profileId: p.id, name: p.name,
       present: 0, late: 0, absent: 0, halfDay: 0, leave: 0, holiday: 0,
       totalCheckins: 0, totalMinutes: 0, earlyCount: 0, onTimeCount: 0, avgCheckinMin: 0,
+      expectedMin: 0, workedMin: 0, overtimeMin: 0, netMin: 0,
     })
   }
 
@@ -2206,6 +2295,7 @@ function ReportsTab() {
         profileId: id, name,
         present: 0, late: 0, absent: 0, halfDay: 0, leave: 0, holiday: 0,
         totalCheckins: 0, totalMinutes: 0, earlyCount: 0, onTimeCount: 0, avgCheckinMin: 0,
+        expectedMin: 0, workedMin: 0, overtimeMin: 0, netMin: 0,
       })
     }
 
@@ -2242,6 +2332,34 @@ function ReportsTab() {
     for (const dateStr of pastWorkingDaySet) {
       if (!empDates?.has(dateStr)) s.absent++
     }
+  }
+
+  // Monthly hours per employee (expected vs worked + overtime + net make-up).
+  const recordsByProfile = new Map<string, typeof records>()
+  for (const rec of records) {
+    if (!recordsByProfile.has(rec.profile_id)) recordsByProfile.set(rec.profile_id, [])
+    recordsByProfile.get(rec.profile_id)!.push(rec)
+  }
+  const toLocalMinutes = (iso: string) => isoToZonedMinutes(iso, tz)
+  const emptyDates = new Set<string>()
+  for (const [profileId, s] of statsMap) {
+    const empRecords = (recordsByProfile.get(profileId) ?? []).map((r) => ({
+      date: r.date, status: r.status, check_in: r.check_in, check_out: r.check_out,
+      excluded_minutes: r.excluded_minutes,
+    }))
+    const h = computeEmployeeHours({
+      records: empRecords,
+      year, month,
+      settings: { workStartMin, workEndMin, checkoutBufferMin },
+      isWorkingDay,
+      halfDayDates: halfDayByProfile.get(profileId) ?? emptyDates,
+      todayStr,
+      toLocalMinutes,
+    })
+    s.expectedMin  = h.expectedMin
+    s.workedMin    = h.workedMin
+    s.overtimeMin  = h.overtimeMin
+    s.netMin       = h.netMin
   }
 
   const employeeStats = [...statsMap.values()]
@@ -2320,12 +2438,16 @@ function ReportsTab() {
         <button
           onClick={() => downloadCsv(
             `attendance-${year}-${String(month).padStart(2, '0')}`,
-            ['Employee', 'Present', 'Late', 'Absent', 'Half Day', 'Leave', 'Avg Check-in', 'Avg Hours', 'On-Time %'],
+            ['Employee', 'Present', 'Late', 'Absent', 'Half Day', 'Leave', 'Avg Check-in', 'Avg Hours', 'Expected', 'Worked', 'Overtime', 'Net', 'On-Time %'],
             sorted.map((s) => [
               s.name,
               s.present, s.late, s.absent, s.halfDay, s.leave,
               fmtTime(s.avgCheckinMin),
               fmtMinutes(s.totalCheckins > 0 ? s.totalMinutes / s.totalCheckins : NaN),
+              fmtMinutes(s.expectedMin),
+              fmtMinutes(s.workedMin),
+              fmtMinutes(s.overtimeMin),
+              fmtNet(s.netMin),
               s.present + s.late > 0 ? Math.round(((s.present - s.late + s.earlyCount + s.onTimeCount) / (s.present + s.late)) * 100) : 0,
             ]),
           )}
@@ -2384,6 +2506,10 @@ function ReportsTab() {
                 <SortTh label="Leave"        col="leave"        sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} />
                 <SortTh label="Avg Check-in" col="avgCheckinMin" sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} />
                 <SortTh label="Avg Hours"    col="totalMinutes" sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} />
+                <SortTh label="Expected"     col="expectedMin"  sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} />
+                <SortTh label="Worked"       col="workedMin"    sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} />
+                <SortTh label="Overtime"     col="overtimeMin"  sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} />
+                <SortTh label="Net"          col="netMin"       sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} />
                 <SortTh label="Early"        col="earlyCount"   sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} />
                 <SortTh label="On-Time %"    col="onTimeCount"  sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} />
                 <th className="px-4 py-2.5" />
@@ -2431,6 +2557,14 @@ function ReportsTab() {
                       <td className="px-4 py-3 font-mono text-[13px] text-service-dev">{s.leave || '—'}</td>
                       <td className="px-4 py-3 font-mono text-[12px] text-text-2">{s.totalCheckins > 0 ? fmtTime(s.avgCheckinMin) : '—'}</td>
                       <td className="px-4 py-3 font-mono text-[12px] text-text-2">{fmtMinutes(avgHours)}</td>
+                      <td className="px-4 py-3 font-mono text-[12px] text-text-3">{fmtMinutes(s.expectedMin)}</td>
+                      <td className="px-4 py-3 font-mono text-[12px] text-text-1">{fmtMinutes(s.workedMin)}</td>
+                      <td className="px-4 py-3 font-mono text-[12px] text-service-mkt">{s.overtimeMin > 0 ? fmtMinutes(s.overtimeMin) : '—'}</td>
+                      <td className="px-4 py-3">
+                        <span className={cn('font-mono text-[12px] font-semibold', s.netMin < 0 ? 'text-error' : 'text-success')}>
+                          {fmtNet(s.netMin)}
+                        </span>
+                      </td>
                       <td className="px-4 py-3">
                         <span className="inline-flex items-center gap-1 font-mono text-[12px] text-success">
                           <TrendingUp size={11} /> {s.earlyCount}
@@ -2461,7 +2595,7 @@ function ReportsTab() {
                     </tr>
                     {isExpanded && (
                       <tr key={`${s.profileId}-expanded`} className="border-b border-border-subtle bg-surface-2/50">
-                        <td colSpan={11} className="px-6 py-3">
+                        <td colSpan={15} className="px-6 py-3">
                           <div className="text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-2">
                             Daily log — {MONTH_NAMES[month - 1]} {year}
                           </div>
@@ -2549,6 +2683,7 @@ function SettingsForm({ settings }: { settings: AttendanceSettings }) {
   const [workEnd, setWorkEnd] = useState(() => settings.work_end_time.slice(0, 5))
   const [grace, setGrace] = useState(() => String(settings.grace_period_min))
   const [earlyCheckin, setEarlyCheckin] = useState(() => String(settings.early_checkin_min))
+  const [checkoutBuffer, setCheckoutBuffer] = useState(() => String(settings.checkout_buffer_min))
   const [tz, setTz] = useState(() => settings.timezone)
   const [xp, setXp] = useState(() => String(settings.xp_on_time_checkin))
   const [ipCidr, setIpCidr] = useState(() => settings.office_ip_cidr ?? '')
@@ -2561,6 +2696,7 @@ function SettingsForm({ settings }: { settings: AttendanceSettings }) {
         work_end_time: workEnd,
         grace_period_min: parseInt(grace, 10),
         early_checkin_min: parseInt(earlyCheckin, 10),
+        checkout_buffer_min: parseInt(checkoutBuffer, 10),
         timezone: tz,
         xp_on_time_checkin: parseInt(xp, 10),
         office_ip_cidr: ipCidr.trim() || null,
@@ -2634,6 +2770,21 @@ function SettingsForm({ settings }: { settings: AttendanceSettings }) {
             />
             <p className="text-[11px] font-ui text-text-4 mt-1">
               Employees may check in up to {earlyCheckin || '?'} min before start time (e.g. early arrivals)
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Checkout Buffer (minutes)</label>
+            <input
+              type="number"
+              min={0}
+              max={120}
+              value={checkoutBuffer}
+              onChange={(e) => setCheckoutBuffer(e.target.value)}
+              className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-mono text-text-1 outline-none focus:border-border-focus"
+            />
+            <p className="text-[11px] font-ui text-text-4 mt-1">
+              Checking out up to {checkoutBuffer || '?'} min after end time still counts as a full day; overtime accrues only beyond it
             </p>
           </div>
 

@@ -23,6 +23,7 @@ export type Database = {
           device_fingerprint: string | null
           device_flagged: boolean
           device_name: string | null
+          excluded_minutes: number
           id: string
           ip_address: unknown
           marked_by: string | null
@@ -41,6 +42,7 @@ export type Database = {
           device_fingerprint?: string | null
           device_flagged?: boolean
           device_name?: string | null
+          excluded_minutes?: number
           id?: string
           ip_address?: unknown
           marked_by?: string | null
@@ -59,6 +61,7 @@ export type Database = {
           device_fingerprint?: string | null
           device_flagged?: boolean
           device_name?: string | null
+          excluded_minutes?: number
           id?: string
           ip_address?: unknown
           marked_by?: string | null
@@ -154,6 +157,8 @@ export type Database = {
       }
       attendance_settings: {
         Row: {
+          auto_checkout: boolean
+          checkout_buffer_min: number
           early_checkin_min: number
           grace_period_min: number
           office_ip_cidr: string | null
@@ -167,6 +172,8 @@ export type Database = {
           xp_on_time_checkin: number
         }
         Insert: {
+          auto_checkout?: boolean
+          checkout_buffer_min?: number
           early_checkin_min?: number
           grace_period_min?: number
           office_ip_cidr?: string | null
@@ -180,6 +187,8 @@ export type Database = {
           xp_on_time_checkin?: number
         }
         Update: {
+          auto_checkout?: boolean
+          checkout_buffer_min?: number
           early_checkin_min?: number
           grace_period_min?: number
           office_ip_cidr?: string | null
@@ -421,6 +430,7 @@ export type Database = {
       leave_requests: {
         Row: {
           created_at: string
+          day_part: string
           days: number
           end_date: string
           id: string
@@ -436,6 +446,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          day_part?: string
           days?: number
           end_date: string
           id?: string
@@ -451,6 +462,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          day_part?: string
           days?: number
           end_date?: string
           id?: string

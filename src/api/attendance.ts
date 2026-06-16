@@ -27,6 +27,10 @@ export interface MarkAttendancePayload {
   date: string
   status: string
   note?: string
+  /** ISO timestamp; only written when provided (lets HR record times). */
+  checkIn?: string | null
+  /** ISO timestamp; only written when provided. */
+  checkOut?: string | null
 }
 
 // ── Employee self check-in (calls Edge Function) ──────────────────────────────
@@ -148,6 +152,9 @@ export async function markAttendance(payload: MarkAttendancePayload): Promise<At
     source: 'admin',
     note: payload.note,
   }
+  // Only set times when supplied so a plain status mark doesn't wipe existing ones.
+  if (payload.checkIn !== undefined)  insert.check_in  = payload.checkIn
+  if (payload.checkOut !== undefined) insert.check_out = payload.checkOut
   const { data, error } = await supabase
     .from('attendance')
     .upsert(insert, { onConflict: 'profile_id,date' })
@@ -692,11 +699,15 @@ export interface LeaveRequestWithProfile extends LeaveRequest {
   leave_types: { name: string; color: string } | null
 }
 
+export type LeaveDayPart = 'full' | 'first_half' | 'second_half'
+
 export interface SubmitLeavePayload {
   leave_type_id: string
   start_date: string
   end_date: string
   reason: string
+  /** Defaults to 'full'. Half-day requests must be a single day and deduct 0.5. */
+  day_part?: LeaveDayPart
 }
 
 export async function submitLeaveRequest(payload: SubmitLeavePayload): Promise<LeaveRequest> {
@@ -788,4 +799,34 @@ export async function fetchMyLeaveBalances(): Promise<LeaveBalance[]> {
       .reduce((sum, r) => sum + (r.days ?? 0), 0)
     return { type, used, remaining: Math.max(0, type.days_allowed - used) }
   })
+}
+
+// ── Half-day leave dates for a month (drives report half-credit) ──────────────
+
+export interface HalfDayLeaveDate {
+  profileId: string
+  date: string // YYYY-MM-DD
+}
+
+// Approved half-day (non-'full') leave is always a single day, so start_date IS
+// the date. The report uses this to halve a day's expected hours even when the
+// employee checked in before approval (so the attendance row stayed 'present').
+export async function fetchHalfDayLeaveDates(
+  year: number,
+  month: number, // 1-indexed
+): Promise<HalfDayLeaveDate[]> {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const from = `${year}-${pad(month)}-01`
+  const last = new Date(year, month, 0).getDate()
+  const to   = `${year}-${pad(month)}-${pad(last)}`
+
+  const { data, error } = await supabase
+    .from('leave_requests')
+    .select('profile_id, start_date')
+    .eq('status', 'approved')
+    .neq('day_part', 'full')
+    .gte('start_date', from)
+    .lte('start_date', to)
+  if (error) throw error
+  return (data ?? []).map((r) => ({ profileId: r.profile_id, date: r.start_date }))
 }
