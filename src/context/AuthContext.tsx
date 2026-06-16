@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import type { User } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import {
@@ -32,6 +33,7 @@ function getTokenExpiry(token: string): number {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient()
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<ProfileRow | null>(null)
   const [accessToken, setAccessToken] = useState<string | null>(null)
@@ -53,6 +55,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
     setProfile(null)
     setAccessToken(null)
+    // Wipe all server-state caches so the next user who signs in (without a full
+    // page reload) never sees the previous user's data. Query keys are not
+    // user-scoped, so this is the only safe boundary to purge them.
+    queryClient.clear()
     // scope:'local' clears the in-memory Supabase client session without making a
     // network request. Using the default 'global' scope would revoke the refresh token
     // on Supabase's server, permanently breaking the HTTP-only cookie for future loads.

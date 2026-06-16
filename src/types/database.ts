@@ -154,6 +154,7 @@ export type Database = {
       }
       attendance_settings: {
         Row: {
+          early_checkin_min: number
           grace_period_min: number
           office_ip_cidr: string | null
           saturday_working: boolean
@@ -166,6 +167,7 @@ export type Database = {
           xp_on_time_checkin: number
         }
         Insert: {
+          early_checkin_min?: number
           grace_period_min?: number
           office_ip_cidr?: string | null
           saturday_working?: boolean
@@ -178,6 +180,7 @@ export type Database = {
           xp_on_time_checkin?: number
         }
         Update: {
+          early_checkin_min?: number
           grace_period_min?: number
           office_ip_cidr?: string | null
           saturday_working?: boolean

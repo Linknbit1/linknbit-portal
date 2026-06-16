@@ -4,12 +4,8 @@ import { Avatar } from '../ui/Avatar'
 import { useAuthContext } from '../../context/AuthContext'
 import { visibleNavItems } from './navItems'
 
-interface BottomTabBarProps {
-  onOpenMenu: () => void
-}
-
 /** Mobile primary navigation. Hidden at lg+ where the sidebar takes over. */
-export function BottomTabBar({ onOpenMenu }: BottomTabBarProps) {
+export function BottomTabBar() {
   const location = useLocation()
   const { profile } = useAuthContext()
   const primary = visibleNavItems(profile?.role).filter((i) => i.primaryMobile)
@@ -36,17 +32,17 @@ export function BottomTabBar({ onOpenMenu }: BottomTabBarProps) {
           </NavLink>
         )
       })}
-      <button
-        onClick={onOpenMenu}
+      <NavLink
+        to="/profile"
         className={cn(
           'flex-1 flex flex-col items-center justify-center gap-1 py-2 font-ui font-medium text-[10.5px] transition-colors',
           profileActive ? 'text-brand-red' : 'text-text-3 hover:text-text-1',
         )}
-        aria-label="Open profile menu"
+        aria-label="Open profile"
       >
         <Avatar name={profile?.name ?? '?'} src={profile?.avatar_url ?? undefined} size="xs" />
         <span>Profile</span>
-      </button>
+      </NavLink>
     </nav>
   )
 }
