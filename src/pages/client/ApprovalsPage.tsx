@@ -519,7 +519,7 @@ export default function ClientApprovalsPage() {
           >
             {t.label}
             <span
-              className={cn('text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center')}
+              className={cn('text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-4.5 text-center')}
               style={
                 t.key === 'pending' && t.count > 0
                   ? { background: '#EE2737', color: 'white' }

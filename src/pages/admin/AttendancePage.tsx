@@ -275,9 +275,9 @@ function DailyRecordsTab() {
             value={dateFilter}
             onChange={setDateFilter}
             placeholder="Select date…"
-            className="w-[160px]"
+            className="w-40"
           />
-          <div className="relative flex-1 max-w-[220px]">
+          <div className="relative flex-1 max-w-55">
             <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-4" />
             <input
               value={search}
@@ -371,12 +371,12 @@ function DailyRecordsTab() {
                         <AlertCircle size={11} /> Flagged
                       </span>
                     ) : rec.device_name ? (
-                      <span className="font-mono text-[11px] text-text-3 truncate max-w-[120px] block">{rec.device_name}</span>
+                      <span className="font-mono text-[11px] text-text-3 truncate max-w-30 block">{rec.device_name}</span>
                     ) : (
                       <span className="font-mono text-[11px] text-text-4">—</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 font-ui text-[12px] text-text-3 max-w-[140px] truncate">
+                  <td className="px-4 py-3 font-ui text-[12px] text-text-3 max-w-35 truncate">
                     {rec.note ?? ''}
                   </td>
                   <td className="px-4 py-3">
@@ -409,7 +409,7 @@ function DailyRecordsTab() {
                   </div>
                   <StatusChip status={rec.status} />
                 </div>
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[12px] text-text-2 pl-[42px]">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[12px] text-text-2 pl-10.5">
                   <span>In: <span className="text-text-1">{fmtTime(rec.check_in)}</span></span>
                   {rec.check_out ? (
                     <span>Out: <span className="text-text-1">{fmtTime(rec.check_out)}</span></span>
@@ -426,7 +426,7 @@ function DailyRecordsTab() {
                   <span className={cn('uppercase tracking-wider text-[11px]', rec.source === 'self' ? 'text-success' : 'text-text-3')}>{rec.source}</span>
                   {rec.device_flagged && <span className="flex items-center gap-1 text-[11px] font-ui text-warning"><AlertCircle size={11} /> Flagged</span>}
                 </div>
-                {rec.note && <p className="font-ui text-[12px] text-text-3 pl-[42px]">{rec.note}</p>}
+                {rec.note && <p className="font-ui text-[12px] text-text-3 pl-10.5">{rec.note}</p>}
               </div>
             ))
           )}
@@ -601,7 +601,7 @@ function WFHRequestsTab() {
                           <span className="text-[10px] font-mono bg-service-dev/10 text-service-dev border border-service-dev/20 px-1.5 py-0.5 rounded-xs uppercase tracking-wide">HR Granted</span>
                         )}
                       </div>
-                      <p className="text-[12px] font-ui text-text-3 truncate max-w-[340px]">{req.reason}</p>
+                      <p className="text-[12px] font-ui text-text-3 truncate max-w-85">{req.reason}</p>
                     </div>
                     <div className="flex items-center gap-1.5 text-[12px] font-mono text-text-2 shrink-0">
                       <Calendar size={12} className="text-text-4" />
@@ -1145,7 +1145,7 @@ function EnrolledDevicesTab() {
           <Smartphone size={14} className="text-text-3" />
           <span className="font-ui font-semibold text-[13px] text-text-1">Enrolled Devices</span>
           {pending.length > 0 && (
-            <span className="ml-1 min-w-[18px] h-[18px] px-1 rounded-full bg-warning text-[10px] font-bold text-amber-900 flex items-center justify-center">
+            <span className="ml-1 min-w-4.5 h-4.5 px-1 rounded-full bg-warning text-[10px] font-bold text-amber-900 flex items-center justify-center">
               {pending.length}
             </span>
           )}
@@ -1342,7 +1342,7 @@ function ExceptionsTab() {
                         <span className="text-text-4 ml-1">→ {fmtTimeStr(exc.return_time)}</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 font-ui text-[12px] text-text-2 max-w-[160px]">
+                    <td className="px-4 py-3 font-ui text-[12px] text-text-2 max-w-40">
                       <span className="line-clamp-2">{exc.reason}</span>
                     </td>
                     <td className="px-4 py-3"><ExcStatusChip status={exc.status} /></td>
@@ -1936,7 +1936,7 @@ function OvertimeTab() {
           <Hourglass size={14} className="text-text-3" />
           <span className="font-ui font-semibold text-[13px] text-text-1">Overtime Requests</span>
           {pending > 0 && (
-            <span className="ml-1 min-w-[18px] h-[18px] px-1 rounded-full bg-warning text-[10px] font-bold text-amber-900 flex items-center justify-center">
+            <span className="ml-1 min-w-4.5 h-4.5 px-1 rounded-full bg-warning text-[10px] font-bold text-amber-900 flex items-center justify-center">
               {pending}
             </span>
           )}
@@ -1991,7 +1991,7 @@ function OvertimeTab() {
                     <td className="px-4 py-3">
                       <span className="font-display font-bold text-[15px] text-service-mkt">{req.hours}h</span>
                     </td>
-                    <td className="px-4 py-3 font-ui text-[12px] text-text-2 max-w-[200px]">
+                    <td className="px-4 py-3 font-ui text-[12px] text-text-2 max-w-50">
                       <span className="line-clamp-2">{req.reason}</span>
                     </td>
                     <td className="px-4 py-3">
@@ -2000,7 +2000,7 @@ function OvertimeTab() {
                         {meta.label}
                       </span>
                       {req.review_note && (
-                        <p className="font-ui text-[10.5px] text-text-4 mt-0.5 max-w-[160px] truncate italic">"{req.review_note}"</p>
+                        <p className="font-ui text-[10.5px] text-text-4 mt-0.5 max-w-40 truncate italic">"{req.review_note}"</p>
                       )}
                     </td>
                     <td className="px-4 py-3">
@@ -2680,7 +2680,7 @@ function SettingsForm({ settings }: { settings: AttendanceSettings }) {
               style={{ width: 40, height: 22 }}
             >
               <span
-                className="absolute top-[3px] size-4 rounded-full bg-white shadow transition-transform duration-200"
+                className="absolute top-0.75 size-4 rounded-full bg-white shadow transition-transform duration-200"
                 style={{ left: 3, transform: saturdayWorking ? 'translateX(18px)' : 'translateX(0)' }}
               />
             </button>
@@ -2833,7 +2833,7 @@ export default function AttendancePage() {
               <Icon size={14} />
               {label}
               {badge != null && badge > 0 && (
-                <span className="ml-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-warning text-[10px] font-bold text-amber-900 flex items-center justify-center">
+                <span className="ml-0.5 min-w-4.5 h-4.5 px-1 rounded-full bg-warning text-[10px] font-bold text-amber-900 flex items-center justify-center">
                   {badge}
                 </span>
               )}

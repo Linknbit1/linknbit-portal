@@ -49,7 +49,7 @@ function ChipInput({ label, values, onChange, placeholder }: {
           onKeyDown={onKeyDown}
           onBlur={add}
           placeholder={values.length ? '' : placeholder}
-          className="flex-1 min-w-[80px] bg-transparent outline-none text-[13px] font-ui text-text-1 placeholder:text-text-4 py-0.5"
+          className="flex-1 min-w-20 bg-transparent outline-none text-[13px] font-ui text-text-1 placeholder:text-text-4 py-0.5"
         />
       </div>
     </div>

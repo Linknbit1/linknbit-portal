@@ -66,7 +66,7 @@ export default function TasksPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search tasks or assignees..."
-                className="pl-7 pr-3 py-1.5 bg-surface-inset border border-border-default rounded-md text-[12.5px] font-ui text-text-1 placeholder:text-text-4 outline-none focus:border-border-focus w-[220px]"
+                className="pl-7 pr-3 py-1.5 bg-surface-inset border border-border-default rounded-md text-[12.5px] font-ui text-text-1 placeholder:text-text-4 outline-none focus:border-border-focus w-55"
               />
             </div>
             <Select
@@ -161,7 +161,7 @@ export default function TasksPage() {
                       <td className="px-4 py-3">
                         <Link
                           to={`/admin/projects/${task.projectId}`}
-                          className="font-ui text-[12.5px] text-text-2 hover:text-text-1 transition-colors truncate max-w-[140px] block"
+                          className="font-ui text-[12.5px] text-text-2 hover:text-text-1 transition-colors truncate max-w-35 block"
                         >
                           {task.projectName}
                         </Link>
@@ -169,7 +169,7 @@ export default function TasksPage() {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           <Avatar name={task.assignee.name} size="xs" />
-                          <span className="font-ui text-[12.5px] text-text-1 truncate max-w-[100px]">{task.assignee.name}</span>
+                          <span className="font-ui text-[12.5px] text-text-1 truncate max-w-25">{task.assignee.name}</span>
                         </div>
                       </td>
                       <td className="px-4 py-3"><StatusChip status={task.status} /></td>
@@ -185,7 +185,7 @@ export default function TasksPage() {
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="inline-flex items-center gap-1 bg-coin-gold/12 border border-coin-gold/30 text-coin-gold font-mono font-bold text-[11px] rounded-full px-2 py-[2px]">
+                        <span className="inline-flex items-center gap-1 bg-coin-gold/12 border border-coin-gold/30 text-coin-gold font-mono font-bold text-[11px] rounded-full px-2 py-0.5">
                           <Zap size={9} />{task.xpReward}
                         </span>
                       </td>

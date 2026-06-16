@@ -26,14 +26,14 @@ function AuthInput({
 }) {
   const [focused, setFocused] = useState(false)
   return (
-    <div className="mb-4 flex flex-col gap-[7px]">
+    <div className="mb-4 flex flex-col gap-1.75">
       <div className="flex items-baseline justify-between font-ui text-label font-semibold uppercase tracking-[0.08em] text-text-2">
         <span>{label}</span>
         {labelRight}
       </div>
       <div
         className={cn(
-          'flex h-[46px] items-center gap-2.5 rounded-sm border bg-surface-inset px-3.5 transition-[border-color,box-shadow]',
+          'flex h-11.5 items-center gap-2.5 rounded-sm border bg-surface-inset px-3.5 transition-[border-color,box-shadow]',
           invalid
             ? 'border-error'
             : focused
@@ -108,7 +108,7 @@ export default function RegisterPage() {
   if (!session) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-bg-base px-6">
-        <div className="w-full max-w-[400px] text-center">
+        <div className="w-full max-w-100 text-center">
           <div className="mb-6 flex size-14 items-center justify-center rounded-lg border border-error-border bg-error-soft mx-auto">
             <AlertCircle size={26} className="text-error" />
           </div>
@@ -121,7 +121,7 @@ export default function RegisterPage() {
           </p>
           <button
             onClick={() => navigate('/login')}
-            className="inline-flex h-[46px] w-full items-center justify-center gap-2.5 rounded-sm border border-transparent bg-brand-red font-ui text-body font-semibold text-white hover:bg-brand-red-hover transition-colors"
+            className="inline-flex h-11.5 w-full items-center justify-center gap-2.5 rounded-sm border border-transparent bg-brand-red font-ui text-body font-semibold text-white hover:bg-brand-red-hover transition-colors"
           >
             Back to sign in <ArrowRight size={16} />
           </button>
@@ -133,7 +133,7 @@ export default function RegisterPage() {
   if (done) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-bg-base px-6">
-        <div className="w-full max-w-[400px] text-center">
+        <div className="w-full max-w-100 text-center">
           <div className="mb-6 flex size-14 items-center justify-center rounded-lg border border-border-default bg-[linear-gradient(160deg,#1A2433_0%,#131C28_100%)] text-success shadow-[0_0_0_6px_rgba(34,197,94,0.06)] mx-auto">
             <ShieldCheck size={26} strokeWidth={1.75} />
           </div>
@@ -145,7 +145,7 @@ export default function RegisterPage() {
           </p>
           <button
             onClick={() => navigate('/dashboard')}
-            className="inline-flex h-[46px] w-full items-center justify-center gap-2.5 rounded-sm border border-transparent bg-brand-red font-ui text-body font-semibold text-white hover:bg-brand-red-hover transition-colors"
+            className="inline-flex h-11.5 w-full items-center justify-center gap-2.5 rounded-sm border border-transparent bg-brand-red font-ui text-body font-semibold text-white hover:bg-brand-red-hover transition-colors"
           >
             Go to workspace <ArrowRight size={16} />
           </button>
@@ -156,7 +156,7 @@ export default function RegisterPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-bg-base px-6">
-      <div className="w-full max-w-[400px]">
+      <div className="w-full max-w-100">
         <form onSubmit={handleSubmit}>
           <div className="mb-6 flex size-14 items-center justify-center rounded-lg border border-border-default bg-[linear-gradient(160deg,#1A2433_0%,#131C28_100%)] text-brand-red shadow-[0_0_0_6px_rgba(238,39,55,0.06)]">
             <ShieldCheck size={26} strokeWidth={1.75} />
@@ -223,7 +223,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={!isStrong || mismatch || password !== confirm || updatePassword.isPending}
-              className="inline-flex h-[46px] w-full items-center justify-center gap-2.5 rounded-sm border border-transparent bg-brand-red font-ui text-body font-semibold text-white shadow-[0_4px_14px_rgba(238,39,55,0.22)] hover:bg-brand-red-hover transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-11.5 w-full items-center justify-center gap-2.5 rounded-sm border border-transparent bg-brand-red font-ui text-body font-semibold text-white shadow-[0_4px_14px_rgba(238,39,55,0.22)] hover:bg-brand-red-hover transition-colors disabled:cursor-not-allowed disabled:opacity-50"
             >
               {updatePassword.isPending ? 'Activating…' : <>Activate account <ArrowRight size={16} /></>}
             </button>

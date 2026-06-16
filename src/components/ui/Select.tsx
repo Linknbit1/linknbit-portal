@@ -39,7 +39,7 @@ export function Select({ value, onChange, options, placeholder, label, className
         onClick={() => setOpen((v) => !v)}
         className={cn(
           'w-full flex items-center gap-2 bg-surface-inset border border-border-default rounded-sm text-text-1 cursor-pointer whitespace-nowrap hover:bg-surface-2 transition-colors',
-          size === 'sm' ? 'h-[30px] px-2.5 text-[11.5px]' : 'h-9 px-3 text-[12.5px]',
+          size === 'sm' ? 'h-7.5 px-2.5 text-[11.5px]' : 'h-9 px-3 text-[12.5px]',
           open && 'border-border-focus',
         )}
       >

@@ -135,14 +135,14 @@ export default function TaskDetailPage() {
 
           {/* Header card */}
           <section className="bg-surface-1 border border-border-default rounded-xl p-5 relative overflow-hidden" style={{ borderLeft: `3px solid ${accent.border}` }}>
-            <div className="absolute top-0 right-0 size-[280px] pointer-events-none" style={{ background: `radial-gradient(circle at top right, ${accent.glow}, transparent 65%)` }} />
+            <div className="absolute top-0 right-0 size-70 pointer-events-none" style={{ background: `radial-gradient(circle at top right, ${accent.glow}, transparent 65%)` }} />
             <div className="relative">
               <div className="flex items-start gap-2 flex-wrap mb-2">
                 <span className={cn('inline-flex items-center gap-1 py-0.5 px-2.5 rounded-full border font-ui font-semibold text-[11px] uppercase tracking-wide', STATUS_COLORS[status])}>
-                  <span className="size-[5px] rounded-full bg-current" />{STATUS_LABELS[status]}
+                  <span className="size-1.25 rounded-full bg-current" />{STATUS_LABELS[status]}
                 </span>
                 <span className={cn('inline-flex items-center gap-1 py-0.5 px-2.5 rounded-full border font-ui font-semibold text-[11px] uppercase tracking-wide', PRIORITY_COLORS[priority])}>
-                  <span className="size-[5px] rounded-full bg-current" />{PRIORITY_LABELS[priority]}
+                  <span className="size-1.25 rounded-full bg-current" />{PRIORITY_LABELS[priority]}
                 </span>
                 <span className="inline-flex items-center gap-1 py-0.5 px-2.5 rounded-full border border-coin-gold/30 bg-coin-gold/12 text-coin-gold font-ui font-semibold text-[11px] uppercase tracking-wide">
                   <Zap size={10} />{task.xpReward} XP
@@ -188,7 +188,7 @@ export default function TaskDetailPage() {
                   onClick={() => toggleSubtask(st.id)}
                   className="flex items-center gap-3 p-2 rounded-lg hover:bg-surface-2 transition-colors cursor-pointer"
                 >
-                  <span className={cn('size-[18px] rounded-[5px] border-[1.5px] flex items-center justify-center shrink-0 transition-colors',
+                  <span className={cn('size-4.5 rounded-[5px] border-[1.5px] flex items-center justify-center shrink-0 transition-colors',
                     st.completed ? 'bg-success border-success text-[#062013]' : 'border-border-strong bg-surface-inset',
                   )}>
                     <Check size={11} strokeWidth={3.5} className={cn(!st.completed && 'opacity-0')} />
@@ -310,7 +310,7 @@ export default function TaskDetailPage() {
                   >
                     <span className={cn(!commentIsClient ? 'text-warning font-semibold' : 'text-text-4')}>Internal</span>
                     <span className={cn('relative inline-block w-9 h-5 rounded-full border transition-colors', commentIsClient ? 'bg-success/15 border-success/40' : 'bg-surface-3 border-border-default')}>
-                      <span className={cn('absolute top-[3px] size-3.5 rounded-full transition-all', commentIsClient ? 'left-[18px] bg-success' : 'left-[3px] bg-text-3')} />
+                      <span className={cn('absolute top-0.75 size-3.5 rounded-full transition-all', commentIsClient ? 'left-4.5 bg-success' : 'left-0.75 bg-text-3')} />
                     </span>
                     <span className={cn(commentIsClient ? 'text-success font-semibold' : 'text-text-4')}>Client</span>
                   </button>
@@ -383,7 +383,7 @@ export default function TaskDetailPage() {
                   onClick={() => setClientVisible((v) => !v)}
                   className={cn('relative w-9 h-5 rounded-full border transition-colors', clientVisible ? 'bg-success/15 border-success/40' : 'bg-surface-3 border-border-default')}
                 >
-                  <span className={cn('absolute top-[3px] size-3.5 rounded-full transition-all', clientVisible ? 'left-[18px] bg-success' : 'left-[3px] bg-text-3')} />
+                  <span className={cn('absolute top-0.75 size-3.5 rounded-full transition-all', clientVisible ? 'left-4.5 bg-success' : 'left-0.75 bg-text-3')} />
                 </button>
               </div>
 

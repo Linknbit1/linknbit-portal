@@ -721,7 +721,7 @@ export default function GamificationPage() {
                         <p className="text-[11px] font-mono text-text-3 capitalize">{e.role.replace(/_/g, ' ')}</p>
                       </div>
                     </div>
-                    <div className="col-span-2 lg:col-span-1 lg:contents flex flex-wrap items-center gap-x-4 gap-y-1 pl-[52px] lg:pl-0">
+                    <div className="col-span-2 lg:col-span-1 lg:contents flex flex-wrap items-center gap-x-4 gap-y-1 pl-13 lg:pl-0">
                       <span className="font-mono font-bold text-[13px] text-coin-gold flex items-center gap-1"><Zap size={11} /> {e.lp_balance.toLocaleString()}</span>
                       <span className="font-mono text-[13px] text-text-2">{e.reputation_total.toLocaleString()} <span className="lg:hidden text-text-4 text-[11px]">rep</span></span>
                       <span className="font-display font-bold text-[13px] text-text-1">Lv {e.level}</span>
@@ -1041,7 +1041,7 @@ export default function GamificationPage() {
                 </div>
                 <div>
                   <h2 className="font-display font-bold text-[16px] text-text-1 flex items-center gap-2 mb-3"><ShieldAlert size={16} className="text-error" /> Participation</h2>
-                  <div className="bg-surface-1 border border-border-default rounded-xl p-5 space-y-2 max-h-[260px] overflow-y-auto">
+                  <div className="bg-surface-1 border border-border-default rounded-xl p-5 space-y-2 max-h-65 overflow-y-auto">
                     {leaderboard.filter((e) => e.profile_id !== profileId).map((e) => (
                       <div key={e.profile_id} className="flex items-center justify-between gap-2">
                         <span className="font-ui text-[12.5px] text-text-2 truncate">{e.name}</span>

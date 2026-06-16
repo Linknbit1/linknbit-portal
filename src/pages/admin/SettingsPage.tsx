@@ -372,12 +372,12 @@ export default function SettingsPage() {
                     </div>
                   ) : (
                     <div className="overflow-x-auto">
-                      <table className="w-full text-[12px] min-w-[700px]">
+                      <table className="w-full text-[12px] min-w-175">
                         <thead>
                           <tr className="border-b border-border-subtle">
-                            <th className="text-left py-2 font-mono text-text-4 uppercase text-[10px] tracking-wider pr-6 min-w-[180px]">Feature</th>
+                            <th className="text-left py-2 font-mono text-text-4 uppercase text-[10px] tracking-wider pr-6 min-w-45">Feature</th>
                             {INTERNAL_ROLES.map((role) => (
-                              <th key={role} className="text-center p-2 font-ui font-semibold text-text-3 min-w-[70px]">
+                              <th key={role} className="text-center p-2 font-ui font-semibold text-text-3 min-w-17.5">
                                 {ROLE_LABELS[role]}
                               </th>
                             ))}

@@ -43,7 +43,7 @@ function TaskRow({ task, onOpen }: { task: Task; onOpen: (t: Task) => void }) {
         isBlocked && 'shadow-[inset_2px_0_0_#F4364C] bg-error/3',
       )}>
         <div className="min-w-0">
-          <button onClick={() => onOpen(task)} className="font-ui font-medium text-[13px] text-text-1 hover:text-brand-red transition-colors text-left truncate max-w-[260px] block">
+          <button onClick={() => onOpen(task)} className="font-ui font-medium text-[13px] text-text-1 hover:text-brand-red transition-colors text-left truncate max-w-65 block">
             {task.title}
           </button>
           {days < 0 && (
@@ -214,9 +214,9 @@ export default function ProjectDetailPage() {
               </div>
               <div className="relative flex items-start gap-0" style={{ gridTemplateColumns: `repeat(${project.stages.length}, 1fr)` }}>
                 {/* Connector line */}
-                <div className="absolute top-[17px] inset-x-[24px] h-[2px] bg-border-subtle z-0" />
+                <div className="absolute top-4.25 inset-x-6 h-0.5 bg-border-subtle z-0" />
                 <div
-                  className="absolute top-[17px] left-[24px] h-[2px] bg-success z-0 transition-all"
+                  className="absolute top-4.25 left-6 h-0.5 bg-success z-0 transition-all"
                   style={{ width: currentStageIndex > 0 ? `${(currentStageIndex / (project.stages.length - 1)) * 100}%` : '0%' }}
                 />
 
@@ -239,7 +239,7 @@ export default function ProjectDetailPage() {
                           {isDone ? <CheckCircle2 size={16} /> : i + 1}
                         </div>
                         <span className={cn(
-                          'font-ui font-semibold text-label/snug text-center max-w-[80px]',
+                          'font-ui font-semibold text-label/snug text-center max-w-20',
                           isDone ? 'text-text-2' : isCurrent || isBlocked ? 'text-text-1' : 'text-text-3',
                         )}>
                           {stage.name}
@@ -310,7 +310,7 @@ export default function ProjectDetailPage() {
                 />
                 <button
                   onClick={() => toast('Add task dialog would open', 'info')}
-                  className="h-[30px] px-2.5 bg-brand-red text-white rounded-lg font-ui font-semibold text-[11.5px] flex items-center gap-1 hover:bg-brand-red-hover transition-colors"
+                  className="h-7.5 px-2.5 bg-brand-red text-white rounded-lg font-ui font-semibold text-[11.5px] flex items-center gap-1 hover:bg-brand-red-hover transition-colors"
                 >
                   <Plus size={12} /> Add Task
                 </button>
@@ -337,7 +337,7 @@ export default function ProjectDetailPage() {
                         onClick={() => toggleStage(stage.id)}
                         className="flex items-center gap-2.5 px-5 py-2 bg-surface-2/60 border-b border-border-subtle cursor-pointer hover:bg-surface-3/50 transition-colors select-none"
                       >
-                        <span className={cn('size-[16px] rounded flex items-center justify-center font-mono text-[9px] border font-semibold shrink-0',
+                        <span className={cn('size-4 rounded flex items-center justify-center font-mono text-[9px] border font-semibold shrink-0',
                           stage.status === 'completed' ? 'bg-success/15 border-success/30 text-success' :
                           stage.status === 'blocked' ? 'bg-error/15 border-error/30 text-error' :
                           stage.status === 'current' ? 'bg-service-dev/15 border-service-dev/30 text-service-dev' :
@@ -376,7 +376,7 @@ export default function ProjectDetailPage() {
         </div>
 
         {/* RIGHT PANEL */}
-        <div className="flex flex-col gap-4 sticky top-[88px]" style={{ alignSelf: 'start' }}>
+        <div className="flex flex-col gap-4 sticky top-22" style={{ alignSelf: 'start' }}>
 
           {/* Team */}
           <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">

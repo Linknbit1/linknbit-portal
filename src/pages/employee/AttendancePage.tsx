@@ -276,7 +276,7 @@ function HistoryTable({ records }: { records: AttendanceRow[] }) {
                     {row.source === 'self' ? 'Self' : 'Admin'}
                   </span>
                 </td>
-                <td className="px-5 py-3 font-mono text-[11px] text-text-4 max-w-[160px] truncate" title={row.device_name ?? ''}>
+                <td className="px-5 py-3 font-mono text-[11px] text-text-4 max-w-40 truncate" title={row.device_name ?? ''}>
                   {row.device_name ?? '—'}
                 </td>
               </tr>

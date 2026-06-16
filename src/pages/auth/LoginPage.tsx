@@ -233,16 +233,16 @@ function BrandPanel() {
           <br />
           operations<span className="text-brand-red">.</span>
         </h2>
-        <p className="mt-5 max-w-[400px] font-ui text-[14.5px] leading-[1.6] text-text-2">
+        <p className="mt-5 max-w-100 font-ui text-[14.5px] leading-[1.6] text-text-2">
           One workspace for the three sides of Linknbit - design, engineering, and growth. Sign in to
           pick up where your team left off.
         </p>
       </div>
 
       <div className="relative z-10 flex shrink-0 items-center justify-between font-mono text-[11px] uppercase tracking-[0.08em] text-text-4">
-        <div className="flex gap-[18px]">
+        <div className="flex gap-4.5">
           {serviceLegend.map((service) => (
-            <span key={service.label} className="flex items-center gap-[7px]">
+            <span key={service.label} className="flex items-center gap-1.75">
               <span className={cn('size-1.5 shrink-0 rounded-[2px]', service.dotClass)} />
               {service.label}
             </span>
@@ -279,14 +279,14 @@ function AuthInput({
 }) {
   const [focused, setFocused] = useState(false)
   return (
-    <div className="mb-4 flex flex-col gap-[7px]">
+    <div className="mb-4 flex flex-col gap-1.75">
       <div className="flex items-baseline justify-between font-ui text-label font-semibold uppercase tracking-[0.08em] text-text-2">
         <span>{label}</span>
         {labelRight}
       </div>
       <div
         className={cn(
-          'flex h-[46px] items-center gap-2.5 rounded-sm border bg-surface-inset px-3.5 transition-[border-color,box-shadow]',
+          'flex h-11.5 items-center gap-2.5 rounded-sm border bg-surface-inset px-3.5 transition-[border-color,box-shadow]',
           invalid ? 'border-error' : focused ? 'border-brand-red shadow-ring-focus' : 'border-border-default',
         )}
       >
@@ -325,7 +325,7 @@ function AuthBtn({
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        'inline-flex h-[46px] w-full items-center justify-center gap-2.5 rounded-sm border font-ui text-body font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50',
+        'inline-flex h-11.5 w-full items-center justify-center gap-2.5 rounded-sm border font-ui text-body font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50',
         variant === 'primary' && 'border-transparent bg-brand-red shadow-[0_4px_14px_rgba(238,39,55,0.22)] hover:bg-brand-red-hover',
         variant === 'ghost' && 'border-border-default bg-surface-1 hover:bg-surface-2',
       )}
@@ -443,7 +443,7 @@ function LoginForm({
       </p>
 
       {hasError && (
-        <div className="mb-[18px] flex items-start gap-2.5 rounded-sm border border-error-border bg-error-soft px-3.5 py-3">
+        <div className="mb-4.5 flex items-start gap-2.5 rounded-sm border border-error-border bg-error-soft px-3.5 py-3">
           <AlertCircle size={16} className="mt-px shrink-0 text-error" />
           <div className="font-ui text-[12.5px] leading-normal text-text-1">
             <strong className="font-semibold text-error">That email and password don't match.</strong>{' '}
@@ -503,7 +503,7 @@ function LoginForm({
         </span>
       </div>
 
-      <div className="mt-6 border-t border-surface-2 pt-[18px]">
+      <div className="mt-6 border-t border-surface-2 pt-4.5">
         <p className="mb-2.5 font-mono text-[9.5px] uppercase tracking-[0.14em] text-text-4">
           Prototype — demo accounts
         </p>
@@ -557,7 +557,7 @@ function ForgotForm({
       </p>
 
       {sendOtp.isError && (
-        <div className="mb-[18px] flex items-start gap-2.5 rounded-sm border border-error-border bg-error-soft px-3.5 py-3">
+        <div className="mb-4.5 flex items-start gap-2.5 rounded-sm border border-error-border bg-error-soft px-3.5 py-3">
           <AlertCircle size={16} className="mt-px shrink-0 text-error" />
           <p className="font-ui text-[12.5px] leading-normal text-text-1">
             {(sendOtp.error as Error).message ?? 'Could not send code. Try again.'}
@@ -581,7 +581,7 @@ function ForgotForm({
       <button
         type="button"
         onClick={onBack}
-        className="mt-[22px] inline-flex items-center gap-[7px] rounded-sm bg-transparent py-1.5 pl-1.5 pr-2.5 font-ui text-body-sm text-text-2 hover:text-text-1"
+        className="mt-5.5 inline-flex items-center gap-1.75 rounded-sm bg-transparent py-1.5 pl-1.5 pr-2.5 font-ui text-body-sm text-text-2 hover:text-text-1"
       >
         <ChevronLeft size={14} /> Back to sign in
       </button>
@@ -651,7 +651,7 @@ function OtpView({
         We sent a 6-digit code to
       </p>
       <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border-default bg-surface-1 px-3 py-1.5 font-mono text-mono text-text-1">
-        <span className="size-[5px] shrink-0 rounded-full bg-success" />
+        <span className="size-1.25 shrink-0 rounded-full bg-success" />
         {maskEmail(email)}
       </div>
 
@@ -685,7 +685,7 @@ function OtpView({
         <button
           type="button"
           onClick={onChangeEmail}
-          className="mt-1 inline-flex items-center justify-center gap-[7px] bg-transparent px-2.5 py-1.5 font-ui text-body-sm text-text-2 hover:text-text-1"
+          className="mt-1 inline-flex items-center justify-center gap-1.75 bg-transparent px-2.5 py-1.5 font-ui text-body-sm text-text-2 hover:text-text-1"
         >
           <ChevronLeft size={14} /> Change email
         </button>
@@ -868,7 +868,7 @@ function SplashScreen({ user, onDone }: { user: SplashUser; onDone: () => void }
             <span className="text-brand-red">.</span>
           </h1>
           <div className="mt-[clamp(10px,2vh,14px)]">
-            <span className="inline-flex items-center gap-2 rounded-full border border-border-default bg-surface-2 py-[5px] pl-[5px] pr-3 font-ui text-[12.5px] font-semibold text-text-1">
+            <span className="inline-flex items-center gap-2 rounded-full border border-border-default bg-surface-2 py-1.25 pl-1.25 pr-3 font-ui text-[12.5px] font-semibold text-text-1">
               <span className="inline-flex size-6 items-center justify-center rounded-full bg-[linear-gradient(135deg,#A78BFA,#8B5CF6)] text-white">
                 <LayoutGrid size={13} />
               </span>
@@ -877,14 +877,14 @@ function SplashScreen({ user, onDone }: { user: SplashUser; onDone: () => void }
           </div>
         </div>
 
-        <div className="flex w-[480px] max-w-[90vw] flex-col gap-1 rounded-md border border-border-subtle bg-surface-1/50 px-[clamp(16px,4vw,22px)] py-[clamp(14px,2.5vh,18px)] text-left backdrop-blur-sm">
+        <div className="flex w-120 max-w-[90vw] flex-col gap-1 rounded-md border border-border-subtle bg-surface-1/50 px-[clamp(16px,4vw,22px)] py-[clamp(14px,2.5vh,18px)] text-left backdrop-blur-sm">
           <BootItem status="done" label="Verifying credentials" ms="142ms" />
           <BootItem status="done" label="Loading role permissions" ms="87ms" />
           <BootItem status={step3} label="Syncing your projects from ClickUp" ms={step3 === 'now' ? '...' : '203ms'} />
           <BootItem status={step4} label="Preparing your dashboard" ms={step4 === 'pending' ? 'queued' : step4 === 'now' ? '...' : 'ready'} />
         </div>
 
-        <div className="relative h-1 w-[480px] max-w-[90vw] overflow-hidden rounded-full bg-surface-inset">
+        <div className="relative h-1 w-120 max-w-[90vw] overflow-hidden rounded-full bg-surface-inset">
           <div className="splash-progress-fill" />
         </div>
 
@@ -940,7 +940,7 @@ export default function LoginPage() {
               <div className="relative size-14 shrink-0">
                 <span className="absolute left-0 top-0 size-9 rounded-full bg-[radial-gradient(circle_at_35%_35%,#C4B5FD_0%,#8B5CF6_45%,transparent_75%)] opacity-80 mix-blend-screen blur-[1px]" />
                 <span className="absolute left-3 top-2.5 size-9 rounded-full bg-[radial-gradient(circle_at_65%_40%,#67E8F9_0%,#06B6D4_45%,transparent_75%)] opacity-80 mix-blend-screen blur-[1px]" />
-                <span className="absolute left-1.5 top-[18px] size-9 rounded-full bg-[radial-gradient(circle_at_50%_60%,#FCD34D_0%,#F59E0B_45%,transparent_75%)] opacity-80 mix-blend-screen blur-[1px]" />
+                <span className="absolute left-1.5 top-4.5 size-9 rounded-full bg-[radial-gradient(circle_at_50%_60%,#FCD34D_0%,#F59E0B_45%,transparent_75%)] opacity-80 mix-blend-screen blur-[1px]" />
               </div>
               <div>
                 <p className="m-0 font-display text-[16px] font-bold tracking-[-0.015em] text-text-1">
@@ -952,7 +952,7 @@ export default function LoginPage() {
           </div>
 
           <div className="flex flex-1 items-center justify-center px-6 py-8 sm:px-10 lg:px-20">
-            <div className="w-full max-w-[400px]">
+            <div className="w-full max-w-100">
               {view === 'login' && (
                 <LoginForm onSuccess={triggerSplash} onForgot={() => setView('forgot')} />
               )}
