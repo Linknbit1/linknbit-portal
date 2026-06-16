@@ -199,6 +199,51 @@ export async function updateAttendanceSettings(
 
 // ── Enrolled devices ──────────────────────────────────────────────────────────
 
+export async function fetchMyEnrolledDevices(): Promise<EnrolledDevice[]> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+  const { data, error } = await supabase
+    .from('enrolled_devices')
+    .select('*')
+    .eq('profile_id', user.id)
+    .order('first_seen_at', { ascending: false })
+  if (error) throw error
+  return data
+}
+
+export interface RegisterDeviceResult {
+  status: 'approved' | 'pending'
+}
+
+// Self-service device registration (calls Edge Function). Employees/HR land in "pending"
+// (an admin must approve); admins/super-admins are auto-approved.
+export async function registerDevice(payload: {
+  deviceFingerprint: string
+  deviceName: string
+}): Promise<RegisterDeviceResult> {
+  const { data, error } = await supabase.functions.invoke<RegisterDeviceResult>('register-device', {
+    body: {
+      device_fingerprint: payload.deviceFingerprint,
+      device_name: payload.deviceName,
+    },
+  })
+  if (error) {
+    const ctx = (error as { context?: Response }).context
+    if (ctx) {
+      let body: { error?: string; code?: string } | null = null
+      try { body = await ctx.json() } catch { /* non-JSON body */ }
+      if (body?.code) {
+        const enriched = new Error(body.error ?? error.message) as Error & { code: string }
+        enriched.code = body.code
+        throw enriched
+      }
+    }
+    throw error
+  }
+  if (!data) throw new Error('No response from register-device')
+  return data
+}
+
 export async function fetchEnrolledDevices(): Promise<EnrolledDeviceWithProfile[]> {
   const { data, error } = await supabase
     .from('enrolled_devices')

@@ -974,6 +974,8 @@ function LeaveTab() {
 function EnrolledDevicesTab() {
   const toast = useToast()
   const { profile } = useAuthContext()
+  // Approving/reactivating a device authorises check-in — admins only. HR may block.
+  const canApprove = profile?.role === 'admin' || profile?.role === 'super_admin'
   const { data: devices = [], isLoading } = useEnrolledDevices()
   const approveMutation = useApproveDevice()
   const deactivateMutation = useDeactivateDevice()
@@ -1079,7 +1081,7 @@ function EnrolledDevicesTab() {
       </td>
       <td className="px-4 py-3">
         <div className="flex items-center gap-1.5">
-          {!d.approved_by && d.is_active && (
+          {!d.approved_by && d.is_active && canApprove && (
             <button
               onClick={() => handleApprove(d.id)}
               disabled={approveMutation.isPending}
@@ -1097,7 +1099,7 @@ function EnrolledDevicesTab() {
               <X size={12} /> Deactivate
             </button>
           )}
-          {!d.is_active && (
+          {!d.is_active && canApprove && (
             <button
               onClick={() => handleReactivate(d.id)}
               disabled={approveMutation.isPending}
@@ -1105,6 +1107,9 @@ function EnrolledDevicesTab() {
             >
               <CheckCircle2 size={12} /> Reactivate
             </button>
+          )}
+          {!d.approved_by && d.is_active && !canApprove && (
+            <span className="font-ui text-[11px] text-text-4 italic">Admin approval required</span>
           )}
         </div>
       </td>

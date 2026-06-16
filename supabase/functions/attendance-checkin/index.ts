@@ -66,6 +66,13 @@ Deno.serve(async (req: Request) => {
   if (authError || !user) return json({ error: 'Unauthorized' }, 401)
   const profileId = user.id
 
+  const { data: callerProfile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', profileId)
+    .maybeSingle()
+  const privileged = callerProfile?.role === 'admin' || callerProfile?.role === 'super_admin'
+
   // 3. Load settings
   const { data: settings, error: settingsError } = await supabase
     .from('attendance_settings')
@@ -164,74 +171,56 @@ Deno.serve(async (req: Request) => {
     return json({ error: 'Already checked in today', code: 'duplicate' }, 409)
   }
 
-  // 7. Device enrollment check
-  let deviceFlagged = false
+  // 7. Device gating (register-first model)
+  // Devices are no longer auto-enrolled on check-in. An employee must self-register a
+  // device and have an admin approve it first; admins/super-admins are auto-approved.
+  const deviceFlagged = false
 
-  // Block check-in if this profile's device was explicitly deactivated by HR/admin.
-  // Must run before the active-device query so the auto-enroll upsert below never
-  // re-activates a device that was intentionally blocked.
-  const { data: blockedRecord } = await supabase
-    .from('enrolled_devices')
-    .select('id')
-    .eq('profile_id', profileId)
-    .eq('device_fingerprint', deviceFingerprint)
-    .eq('is_active', false)
-    .maybeSingle()
+  if (privileged) {
+    // Admins/super-admins silently auto-approve their own device — no notification.
+    await supabase.from('enrolled_devices').upsert(
+      {
+        profile_id: profileId,
+        device_fingerprint: deviceFingerprint,
+        device_name: deviceName,
+        is_active: true,
+        approved_by: profileId,
+        approved_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
+      },
+      { onConflict: 'profile_id,device_fingerprint' },
+    )
+  } else {
+    const { data: device } = await supabase
+      .from('enrolled_devices')
+      .select('id, is_active, approved_by')
+      .eq('profile_id', profileId)
+      .eq('device_fingerprint', deviceFingerprint)
+      .maybeSingle()
 
-  if (blockedRecord) {
-    return json({
-      error: 'This device has been blocked by HR. Please contact HR or use an approved device to check in.',
-      code: 'device_blocked',
-    }, 403)
-  }
+    if (!device) {
+      return json({
+        error: 'This device is not registered. Register it on the Attendance page and ask an admin to approve it before checking in.',
+        code: 'device_unregistered',
+      }, 403)
+    }
+    if (!device.is_active) {
+      return json({
+        error: 'This device has been blocked by an admin. Contact your admin or use an approved device to check in.',
+        code: 'device_blocked',
+      }, 403)
+    }
+    if (!device.approved_by) {
+      return json({
+        error: 'This device is awaiting admin approval. You can check in once it has been approved.',
+        code: 'device_pending',
+      }, 403)
+    }
 
-  const { data: matchedDevices } = await supabase
-    .from('enrolled_devices')
-    .select('id, profile_id, is_active')
-    .eq('device_fingerprint', deviceFingerprint)
-    .eq('is_active', true)
-
-  if (!matchedDevices || matchedDevices.length === 0) {
     await supabase
       .from('enrolled_devices')
-      .upsert(
-        { profile_id: profileId, device_fingerprint: deviceFingerprint, device_name: deviceName, is_active: true },
-        { onConflict: 'profile_id,device_fingerprint' },
-      )
-    deviceFlagged = true
-
-    const { data: hrProfiles } = await supabase
-      .from('profiles')
-      .select('id')
-      .in('role', ['hr', 'admin', 'super_admin'])
-    if (hrProfiles) {
-      const notifications = hrProfiles.map((p: { id: string }) => ({
-        profile_id: p.id,
-        title: 'Unrecognised device check-in',
-        body: `An employee checked in from an unrecognised device (${deviceName}). Review enrolled devices.`,
-        resource_type: 'enrolled_device',
-        resource_id: deviceFingerprint,
-      }))
-      await supabase.from('notifications').insert(notifications)
-    }
-  } else {
-    const foreign = matchedDevices.find((d: { profile_id: string }) => d.profile_id !== profileId)
-    if (foreign) {
-      deviceFlagged = true
-      // Enroll this user on the shared device as pending review
-      await supabase
-        .from('enrolled_devices')
-        .upsert(
-          { profile_id: profileId, device_fingerprint: deviceFingerprint, device_name: deviceName, is_active: true },
-          { onConflict: 'profile_id,device_fingerprint' },
-        )
-    } else {
-      await supabase
-        .from('enrolled_devices')
-        .update({ last_seen_at: new Date().toISOString() })
-        .eq('profile_id', profileId)
-        .eq('device_fingerprint', deviceFingerprint)
-    }
+      .update({ last_seen_at: new Date().toISOString() })
+      .eq('id', device.id)
   }
 
   // 8. Insert attendance row

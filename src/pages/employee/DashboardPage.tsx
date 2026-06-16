@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Zap, Flame, Target, ArrowUp, ArrowDown, Minus, Trophy, Home, X, Clock, CheckCircle2, XCircle, LogIn, LogOut, CalendarCheck, AlertTriangle } from 'lucide-react'
+import { Zap, Flame, Target, ArrowUp, ArrowDown, Minus, Trophy, Home, X, Clock, CheckCircle2, XCircle, LogIn, LogOut, CalendarCheck, Fingerprint } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Card } from '../../components/ui/Card'
 import { Avatar } from '../../components/ui/Avatar'
@@ -14,7 +14,7 @@ import { XPBar } from '../../components/shared/XPBar'
 import { useToast } from '../../components/ui/toast-context'
 import { DatePicker } from '../../components/ui/DatePicker'
 import { useMyTodayAttendance, useCheckIn, useCheckOut } from '../../hooks/useAttendance'
-import { getDeviceFingerprint, getDeviceName } from '../../lib/deviceUtils'
+import { useCurrentDevice } from '../../hooks/useCurrentDevice'
 import { TASKS, LEADERBOARD, QUESTS, BADGES, WFH_REQUESTS } from '../../data/mock'
 import type { WFHRequest, WFHStatus } from '../../types'
 import { formatDate, formatRelativeTime } from '../../lib/utils'
@@ -34,17 +34,7 @@ function TodayAttendanceCard() {
   const checkInMut = useCheckIn()
   const checkOutMut = useCheckOut()
 
-  const [deviceReady, setDeviceReady] = useState(false)
-  const [deviceFingerprint, setDeviceFingerprint] = useState('')
-  const [deviceName, setDeviceName] = useState('')
-
-  useEffect(() => {
-    Promise.all([getDeviceFingerprint(), Promise.resolve(getDeviceName())]).then(([fp, name]) => {
-      setDeviceFingerprint(fp)
-      setDeviceName(name)
-      setDeviceReady(true)
-    })
-  }, [])
+  const { fingerprint: deviceFingerprint, deviceName, ready: deviceReady, canCheckIn } = useCurrentDevice()
 
   const handleCheckIn = async () => {
     try {
@@ -99,9 +89,6 @@ function TodayAttendanceCard() {
         <div className="flex items-center gap-2">
           <span className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', statusCfg.dot)} />
           <p className={cn('font-ui font-semibold text-body-sm', statusCfg.text)}>{statusCfg.label}</p>
-          {today?.device_flagged && (
-            <AlertTriangle size={12} className="text-warning" aria-label="Unrecognised device" />
-          )}
         </div>
         <div className="flex items-center gap-3 mt-0.5">
           {isCheckedIn && (
@@ -124,14 +111,23 @@ function TodayAttendanceCard() {
 
       <div className="flex items-center gap-2 flex-shrink-0">
         {!isCheckedIn ? (
-          <Button
-            size="sm"
-            onClick={handleCheckIn}
-            disabled={!deviceReady || checkInMut.isPending}
-          >
-            <LogIn size={13} />
-            {checkInMut.isPending ? 'Checking in…' : 'Check In'}
-          </Button>
+          deviceReady && !canCheckIn ? (
+            <Link
+              to="/employee/attendance"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm bg-surface-2 border border-border-default font-ui font-semibold text-[12px] text-text-2 hover:bg-surface-3 transition-colors whitespace-nowrap"
+            >
+              <Fingerprint size={13} /> Set up device
+            </Link>
+          ) : (
+            <Button
+              size="sm"
+              onClick={handleCheckIn}
+              disabled={!deviceReady || checkInMut.isPending}
+            >
+              <LogIn size={13} />
+              {checkInMut.isPending ? 'Checking in…' : 'Check In'}
+            </Button>
+          )
         ) : !isCheckedOut ? (
           <Button
             size="sm"
