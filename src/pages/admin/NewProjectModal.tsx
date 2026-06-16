@@ -49,7 +49,7 @@ export function NewProjectModal({ onClose }: NewProjectModalProps) {
       />
 
       {/* Modal */}
-      <div className="relative bg-surface-1 border border-border-default rounded-xl shadow-pop w-full max-w-[540px] mx-4 z-10">
+      <div className="relative bg-surface-1 border border-border-default rounded-xl shadow-pop w-full max-w-135 mx-4 z-10">
         {/* Header */}
         <div className="flex items-center gap-3 px-6 py-5 border-b border-border-subtle">
           <div>

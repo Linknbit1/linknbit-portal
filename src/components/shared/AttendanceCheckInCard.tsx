@@ -66,7 +66,7 @@ function DeviceNotice({
       <div className={cn('size-24 rounded-full border-2 flex items-center justify-center', t.ring)}>
         <Icon size={38} className={t.fg} />
       </div>
-      <div className="max-w-[280px]">
+      <div className="max-w-70">
         <p className={cn('font-display font-bold text-[18px]', t.fg)}>{title}</p>
         <p className="font-ui text-[12.5px] text-text-3 mt-1">{body}</p>
       </div>
@@ -79,21 +79,21 @@ function DeviceNotice({
 // vertical centering keeps every state (and the loading skeleton) the same
 // height, so the summary cards below never shift when data resolves.
 const CARD_ROOT_CLS =
-  'bg-surface-1 border border-border-default rounded-xl p-8 flex flex-col items-center justify-center gap-6 min-h-[392px]'
+  'bg-surface-1 border border-border-default rounded-xl p-8 flex flex-col items-center justify-center gap-6 min-h-98'
 
 function CheckInCardSkeleton() {
   return (
     <div className={cn(CARD_ROOT_CLS, 'animate-pulse')}>
       {/* Date header */}
       <div className="flex flex-col items-center gap-1.5">
-        <div className="h-[18px] w-40 rounded bg-surface-2" />
+        <div className="h-4.5 w-40 rounded bg-surface-2" />
         <div className="h-3 w-52 rounded bg-surface-2" />
       </div>
       {/* Action circle */}
       <div className="size-24 rounded-full bg-surface-2" />
       {/* Title + time */}
       <div className="flex flex-col items-center gap-1.5">
-        <div className="h-[18px] w-28 rounded bg-surface-2" />
+        <div className="h-4.5 w-28 rounded bg-surface-2" />
         <div className="h-3.5 w-20 rounded bg-surface-2" />
       </div>
       {/* Device fingerprint line */}
@@ -273,7 +273,7 @@ export function AttendanceCheckInCard() {
                     {checkInMut.isPending ? 'Checking in…' : 'Check In (WFH)'}
                   </Button>
                 ) : (
-                  <p className="font-ui text-[11.5px] text-text-4 max-w-[260px]">
+                  <p className="font-ui text-[11.5px] text-text-4 max-w-65">
                     Approve this device under “My Devices” to log your work-from-home hours.
                   </p>
                 )}

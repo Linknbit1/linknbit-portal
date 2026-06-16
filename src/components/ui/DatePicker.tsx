@@ -119,7 +119,7 @@ export function DatePicker({ value, onChange, minDate, maxDate, allowedDow, plac
       </button>
 
       {open && (
-        <div className="absolute z-50 top-full left-0 mt-1 bg-surface-1 border border-border-default rounded-xl shadow-2xl overflow-hidden w-[272px] max-w-[calc(100vw-2rem)]">
+        <div className="absolute z-50 top-full left-0 mt-1 bg-surface-1 border border-border-default rounded-xl shadow-2xl overflow-hidden w-68 max-w-[calc(100vw-2rem)]">
           {/* Month navigation */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-border-subtle">
             <button

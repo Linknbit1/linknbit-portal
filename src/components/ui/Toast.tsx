@@ -38,7 +38,7 @@ function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: (id: string) =
     <div
       className={cn(
         'flex items-center gap-3 px-4 py-3 rounded-lg border shadow-xl backdrop-blur-sm',
-        'font-ui text-[13px] font-medium min-w-[280px] max-w-[380px]',
+        'font-ui text-[13px] font-medium min-w-70 max-w-95',
         'animate-in slide-in-from-right-4 fade-in duration-200',
         STYLES[toast.type],
       )}

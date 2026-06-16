@@ -90,7 +90,7 @@ function KanbanCard({ project, colStatus, isDragging, isMenuOpen, onMenuToggle, 
         isUrgent ? 'bg-linear-to-b from-error/8 to-error/2 border-error/30' : 'border-border-default',
       )}
     >
-      {isUrgent && <span className="absolute left-0 inset-y-3 w-[2px] rounded-full bg-error" />}
+      {isUrgent && <span className="absolute left-0 inset-y-3 w-0.5 rounded-full bg-error" />}
 
       <div className="p-[12px_14px] flex flex-col gap-2.5">
         {/* Header */}
@@ -106,12 +106,12 @@ function KanbanCard({ project, colStatus, isDragging, isMenuOpen, onMenuToggle, 
           >
             <button
               onClick={onMenuToggle}
-              className="size-[22px] rounded-xs text-text-4 hover:bg-white/5 hover:text-text-2 flex items-center justify-center transition-colors"
+              className="size-5.5 rounded-xs text-text-4 hover:bg-white/5 hover:text-text-2 flex items-center justify-center transition-colors"
             >
               <MoreHorizontal size={12} />
             </button>
             {isMenuOpen && (
-              <div className="absolute right-0 top-full mt-1 z-50 bg-surface-2 border border-border-strong rounded-md shadow-xl overflow-hidden min-w-[164px]">
+              <div className="absolute right-0 top-full mt-1 z-50 bg-surface-2 border border-border-strong rounded-md shadow-xl overflow-hidden min-w-41">
                 <button
                   className="w-full flex items-center gap-2.5 px-3 py-2 text-[12.5px] font-ui text-text-1 hover:bg-surface-3 transition-colors text-left"
                   onClick={(e) => { e.stopPropagation(); navigate(`/admin/projects/${project.id}`) }}
@@ -223,7 +223,7 @@ function TimelineView({ projects }: { projects: typeof PROJECTS }) {
     <div className="bg-surface-1 border border-border-default rounded-md overflow-hidden">
       <div className="flex items-center gap-3 px-5 py-3.5 border-b border-border-subtle">
         <span className="font-display font-semibold text-[14px] text-text-1">Timeline</span>
-        <span className="font-mono text-[10.5px] text-text-3 bg-surface-2 rounded-full px-2 py-[2px] uppercase tracking-wider">{parsed.length} projects</span>
+        <span className="font-mono text-[10.5px] text-text-3 bg-surface-2 rounded-full px-2 py-0.5 uppercase tracking-wider">{parsed.length} projects</span>
         <div className="ml-auto flex items-center gap-1.5 font-mono text-[10.5px] text-text-3">
           <span className="size-2 rounded-full bg-brand-red inline-block" />
           Today · May 16 '26
@@ -234,7 +234,7 @@ function TimelineView({ projects }: { projects: typeof PROJECTS }) {
         <div style={{ minWidth: 900 }}>
           {/* Month header */}
           <div className="flex border-b border-border-subtle bg-surface-2">
-            <div className="w-[220px] shrink-0 px-5 py-2.5 font-ui font-semibold text-[10px] text-text-3 uppercase tracking-wider border-r border-border-subtle">
+            <div className="w-55 shrink-0 px-5 py-2.5 font-ui font-semibold text-[10px] text-text-3 uppercase tracking-wider border-r border-border-subtle">
               Project
             </div>
             <div className="flex-1 relative h-9">
@@ -261,7 +261,7 @@ function TimelineView({ projects }: { projects: typeof PROJECTS }) {
             const isOverdue = project.end < TODAY
             return (
               <div key={project.id} className="flex items-center border-b border-border-subtle last:border-b-0 hover:bg-white/1.5 transition-colors">
-                <div className="w-[220px] shrink-0 px-4 py-3 border-r border-border-subtle flex items-center gap-2.5 min-w-0">
+                <div className="w-55 shrink-0 px-4 py-3 border-r border-border-subtle flex items-center gap-2.5 min-w-0">
                   <div
                     className="size-7 rounded-sm flex items-center justify-center font-display font-bold text-[11px] shrink-0"
                     style={{ background: TILE_GRADIENT[project.serviceType], color: TILE_TEXT[project.serviceType] }}
@@ -273,7 +273,7 @@ function TimelineView({ projects }: { projects: typeof PROJECTS }) {
                     <p className="font-mono text-[9.5px] text-text-3 uppercase tracking-wider">{project.progress}% done</p>
                   </div>
                 </div>
-                <div className="flex-1 relative h-[52px]">
+                <div className="flex-1 relative h-13">
                   {/* Month gridlines */}
                   {months.map((month, i) => (
                     <div key={i} className="absolute inset-y-0 border-r border-border-subtle/50" style={{ left: `${month.left + month.width}%` }} />
@@ -303,7 +303,7 @@ function TimelineView({ projects }: { projects: typeof PROJECTS }) {
                   </div>
                   {/* Deadline dot */}
                   <div
-                    className={cn('absolute top-1/2 -translate-y-1/2 size-[7px] rounded-full ml-[-3px] z-20', isOverdue ? 'bg-error' : 'bg-text-3')}
+                    className={cn('absolute top-1/2 -translate-y-1/2 size-1.75 rounded-full ml-[-3px] z-20', isOverdue ? 'bg-error' : 'bg-text-3')}
                     style={{ left: `${endPct}%` }}
                   />
                 </div>
@@ -347,12 +347,12 @@ function MilestonesView({ projects }: { projects: typeof PROJECTS }) {
     <div className="bg-surface-1 border border-border-default rounded-md overflow-hidden">
       <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-border-subtle">
         <span className="font-display font-semibold text-[14px] text-text-1">Milestones</span>
-        <span className="font-mono text-[10.5px] text-text-3 bg-surface-2 rounded-full px-2 py-[2px] uppercase tracking-wider">{rows.length} total</span>
+        <span className="font-mono text-[10.5px] text-text-3 bg-surface-2 rounded-full px-2 py-0.5 uppercase tracking-wider">{rows.length} total</span>
         {blockedCount > 0 && (
-          <span className="font-mono text-[10.5px] text-error bg-error/12 border border-error/30 rounded-full px-2 py-[2px] uppercase tracking-wider">{blockedCount} blocked</span>
+          <span className="font-mono text-[10.5px] text-error bg-error/12 border border-error/30 rounded-full px-2 py-0.5 uppercase tracking-wider">{blockedCount} blocked</span>
         )}
         {pendingCount > 0 && (
-          <span className="font-mono text-[10.5px] text-warning bg-warning/12 border border-warning/30 rounded-full px-2 py-[2px] uppercase tracking-wider">{pendingCount} awaiting approval</span>
+          <span className="font-mono text-[10.5px] text-warning bg-warning/12 border border-warning/30 rounded-full px-2 py-0.5 uppercase tracking-wider">{pendingCount} awaiting approval</span>
         )}
       </div>
 
@@ -399,19 +399,19 @@ function MilestonesView({ projects }: { projects: typeof PROJECTS }) {
 
           <div className="px-4 py-3.5 flex items-center">
             {stage.status === 'completed' ? (
-              <span className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider px-2 py-[3px] rounded-xs font-semibold border bg-success/12 text-success border-success/30">
+              <span className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider px-2 py-0.75 rounded-xs font-semibold border bg-success/12 text-success border-success/30">
                 <CheckCircle2 size={10} /> Done
               </span>
             ) : stage.status === 'blocked' ? (
-              <span className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider px-2 py-[3px] rounded-xs font-semibold border bg-error/12 text-error border-error/30">
+              <span className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider px-2 py-0.75 rounded-xs font-semibold border bg-error/12 text-error border-error/30">
                 <AlertCircle size={10} /> Blocked
               </span>
             ) : stage.status === 'current' ? (
-              <span className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider px-2 py-[3px] rounded-xs font-semibold border bg-service-dev/12 text-service-dev border-service-dev/30">
+              <span className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider px-2 py-0.75 rounded-xs font-semibold border bg-service-dev/12 text-service-dev border-service-dev/30">
                 <Clock size={10} /> Active
               </span>
             ) : (
-              <span className="font-mono text-[10px] uppercase tracking-wider px-2 py-[3px] rounded-xs font-semibold border bg-surface-2 text-text-3 border-border-default">
+              <span className="font-mono text-[10px] uppercase tracking-wider px-2 py-0.75 rounded-xs font-semibold border bg-surface-2 text-text-3 border-border-default">
                 Upcoming
               </span>
             )}
@@ -420,7 +420,7 @@ function MilestonesView({ projects }: { projects: typeof PROJECTS }) {
           <div className="px-4 py-3.5 flex items-center">
             {stage.requiresApproval ? (
               <span className={cn(
-                'font-mono text-[10px] uppercase tracking-wider px-2 py-[3px] rounded-xs font-semibold border',
+                'font-mono text-[10px] uppercase tracking-wider px-2 py-0.75 rounded-xs font-semibold border',
                 stage.approvalStatus === 'approved' ? 'bg-success/12 text-success border-success/30' :
                 stage.approvalStatus === 'pending' ? 'bg-warning/12 text-warning border-warning/30' :
                 stage.approvalStatus === 'rejected' ? 'bg-error/12 text-error border-error/30' :
@@ -550,7 +550,7 @@ export default function ProjectsPage() {
         {/* ── Filter bar ── */}
         <div className="bg-surface-1 border border-border-default rounded-md p-3.5 flex items-center gap-2.5 flex-wrap">
           {/* Search */}
-          <div className="flex items-center gap-2 h-9 min-w-[240px] flex-1 bg-surface-inset border border-border-default rounded-sm px-3 transition-colors focus-within:border-border-focus">
+          <div className="flex items-center gap-2 h-9 min-w-60 flex-1 bg-surface-inset border border-border-default rounded-sm px-3 transition-colors focus-within:border-border-focus">
             <Search size={14} className="text-text-3 shrink-0" />
             <input
               value={search}
@@ -625,7 +625,7 @@ export default function ProjectsPage() {
               {view === 'list' ? listFiltered.length : kanbanFiltered.length} shown
             </span>
             <div className="h-5 w-px bg-border-subtle" />
-            <div className="flex items-center bg-surface-2 border border-border-default rounded-sm p-[3px] gap-[2px]">
+            <div className="flex items-center bg-surface-2 border border-border-default rounded-sm p-0.75 gap-0.5">
               {([
                 { mode: 'list' as const, Icon: List, title: 'List view' },
                 { mode: 'kanban' as const, Icon: Columns, title: 'Kanban view' },
@@ -637,7 +637,7 @@ export default function ProjectsPage() {
                   onClick={() => setView(mode)}
                   title={title}
                   className={cn(
-                    'w-[30px] h-[28px] rounded-xs flex items-center justify-center transition-colors',
+                    'w-7.5 h-7 rounded-xs flex items-center justify-center transition-colors',
                     view === mode ? 'bg-surface-3 text-text-1 shadow-sm' : 'text-text-3 hover:text-text-2',
                   )}
                 >
@@ -652,17 +652,17 @@ export default function ProjectsPage() {
         {view === 'list' && (
           <div className="bg-surface-1 border border-border-default rounded-md overflow-hidden">
             {/* Toolbar */}
-            <div className="flex items-center gap-3 px-[18px] py-[14px] border-b border-border-subtle">
+            <div className="flex items-center gap-3 px-4.5 py-3.5 border-b border-border-subtle">
               <span className="font-display font-semibold text-[14px] text-text-1">All Projects</span>
-              <span className="font-mono text-[10.5px] text-text-3 bg-surface-2 rounded-full px-2 py-[2px] uppercase tracking-wider">
+              <span className="font-mono text-[10.5px] text-text-3 bg-surface-2 rounded-full px-2 py-0.5 uppercase tracking-wider">
                 {listFiltered.length} results
               </span>
               <div className="ml-auto flex items-center gap-2">
                 <span className="font-mono text-[11px] text-text-3 tracking-wider hidden md:block">Last sync · 2 min ago</span>
-                <button className="size-[30px] rounded-sm border border-border-default bg-surface-2 text-text-2 hover:bg-surface-3 hover:text-text-1 flex items-center justify-center transition-colors" title="Refresh">
+                <button className="size-7.5 rounded-sm border border-border-default bg-surface-2 text-text-2 hover:bg-surface-3 hover:text-text-1 flex items-center justify-center transition-colors" title="Refresh">
                   <RefreshCw size={12} />
                 </button>
-                <button className="size-[30px] rounded-sm border border-border-default bg-surface-2 text-text-2 hover:bg-surface-3 hover:text-text-1 flex items-center justify-center transition-colors" title="Column settings">
+                <button className="size-7.5 rounded-sm border border-border-default bg-surface-2 text-text-2 hover:bg-surface-3 hover:text-text-1 flex items-center justify-center transition-colors" title="Column settings">
                   <ArrowUpDown size={12} />
                 </button>
               </div>
@@ -680,7 +680,7 @@ export default function ProjectsPage() {
                   className={cn(
                     'p-3 bg-surface-2 border-b border-border-default font-ui font-semibold text-[10.5px] text-text-3 uppercase tracking-wider flex items-center gap-1 select-none',
                     i === 0 && 'pl-5',
-                    i === 9 && 'pr-[18px] justify-end',
+                    i === 9 && 'pr-4.5 justify-end',
                     (label === 'Project' || label === 'Progress' || label === 'Deadline') && 'cursor-pointer hover:text-text-2 transition-colors',
                   )}
                 >
@@ -703,7 +703,7 @@ export default function ProjectsPage() {
                       onClick={() => navigate(`/admin/projects/${project.id}`)}
                     >
                       <div
-                        className="size-[34px] rounded-[8px] flex items-center justify-center font-display font-bold text-[12px] shrink-0"
+                        className="size-8.5 rounded-[8px] flex items-center justify-center font-display font-bold text-[12px] shrink-0"
                         style={{ background: TILE_GRADIENT[project.serviceType], color: TILE_TEXT[project.serviceType] }}
                       >
                         {initials(project.name)}
@@ -735,7 +735,7 @@ export default function ProjectsPage() {
 
                     {/* Stage */}
                     <div className="px-3 py-3.5 border-b border-border-subtle flex items-center gap-2 group-hover:bg-white/[0.018] transition-colors">
-                      <span className="size-[18px] rounded-xs bg-surface-3 border border-border-default flex items-center justify-center font-mono text-[9px] text-text-3 shrink-0">
+                      <span className="size-4.5 rounded-xs bg-surface-3 border border-border-default flex items-center justify-center font-mono text-[9px] text-text-3 shrink-0">
                         {stageIdx + 1 || 1}
                       </span>
                       <span className="text-[12px] font-ui font-medium text-text-2 truncate">{project.currentStage}</span>
@@ -748,10 +748,10 @@ export default function ProjectsPage() {
 
                     {/* Progress */}
                     <div className="px-3 py-3.5 border-b border-border-subtle flex items-center gap-2.5 group-hover:bg-white/[0.018] transition-colors">
-                      <div className="flex-1 h-1.5 bg-surface-inset rounded-full overflow-hidden min-w-[56px]">
+                      <div className="flex-1 h-1.5 bg-surface-inset rounded-full overflow-hidden min-w-14">
                         <div className="h-full rounded-full" style={{ width: `${project.progress}%`, background: PROGRESS_COLOR(project.progress) }} />
                       </div>
-                      <span className="font-mono text-[11.5px] text-text-2 font-medium tabular-nums min-w-[32px] text-right">{project.progress}%</span>
+                      <span className="font-mono text-[11.5px] text-text-2 font-medium tabular-nums min-w-8 text-right">{project.progress}%</span>
                     </div>
 
                     {/* Deadline */}
@@ -779,7 +779,7 @@ export default function ProjectsPage() {
                     </div>
 
                     {/* Open arrow */}
-                    <div className="pr-[18px] px-3 py-3.5 border-b border-border-subtle flex items-center justify-end group-hover:bg-white/[0.018] transition-colors">
+                    <div className="pr-4.5 px-3 py-3.5 border-b border-border-subtle flex items-center justify-end group-hover:bg-white/[0.018] transition-colors">
                       <button
                         onClick={() => navigate(`/admin/projects/${project.id}`)}
                         className="size-7 rounded-sm border border-border-default text-text-2 bg-transparent hover:bg-surface-3 hover:text-text-1 flex items-center justify-center transition-colors"
@@ -804,7 +804,7 @@ export default function ProjectsPage() {
             )}
 
             {/* Pagination */}
-            <div className="px-[18px] py-[14px] bg-surface-1 flex items-center justify-between gap-4 border-t border-border-subtle">
+            <div className="px-4.5 py-3.5 bg-surface-1 flex items-center justify-between gap-4 border-t border-border-subtle">
               <p className="text-[12.5px] text-text-3 font-ui">
                 Showing{' '}
                 <strong className="text-text-1 font-semibold">
@@ -863,7 +863,7 @@ export default function ProjectsPage() {
                 <div
                   key={col.status}
                   className={cn(
-                    'relative flex flex-col min-h-[480px] bg-surface-1 border rounded-md overflow-hidden transition-all',
+                    'relative flex flex-col min-h-120 bg-surface-1 border rounded-md overflow-hidden transition-all',
                     isOver ? 'border-brand-red/40 shadow-[0_0_0_2px_rgba(238,39,55,0.12)] bg-surface-2/20' : 'border-border-default',
                     col.status === 'blocked' && !isOver && 'bg-[linear-gradient(to_bottom,rgba(244,54,76,0.025),transparent_80px)]',
                   )}
@@ -872,16 +872,16 @@ export default function ProjectsPage() {
                   onDrop={(e) => handleDrop(e, col.status)}
                 >
                   {/* Top color bar */}
-                  <div className="absolute top-0 inset-x-0 h-[3px] rounded-t-md" style={{ background: col.topColor }} />
+                  <div className="absolute top-0 inset-x-0 h-0.75 rounded-t-md" style={{ background: col.topColor }} />
 
                   {/* Column header */}
-                  <div className="mt-[3px] flex items-center gap-2 px-4 py-3.5 border-b border-border-subtle">
+                  <div className="mt-0.75 flex items-center gap-2 px-4 py-3.5 border-b border-border-subtle">
                     <span
                       className={cn('size-2 rounded-full shrink-0', col.status === 'blocked' && 'shadow-[0_0_0_3px_rgba(244,54,76,0.15)]')}
                       style={{ background: col.dotColor }}
                     />
                     <span className="font-display font-semibold text-[13.5px] text-text-1 flex-1 tracking-tight">{col.label}</span>
-                    <span className={cn('font-mono text-[10.5px] font-medium px-2 py-[2px] rounded-full', col.countCls)}>
+                    <span className={cn('font-mono text-[10.5px] font-medium px-2 py-0.5 rounded-full', col.countCls)}>
                       {colProjects.length}
                     </span>
                     <div className="relative">
@@ -894,7 +894,7 @@ export default function ProjectsPage() {
                       </button>
                       {openMenu === `col-${col.status}` && (
                         <div
-                          className="absolute right-0 top-full mt-1 z-50 bg-surface-2 border border-border-strong rounded-md shadow-xl min-w-[160px] overflow-hidden"
+                          className="absolute right-0 top-full mt-1 z-50 bg-surface-2 border border-border-strong rounded-md shadow-xl min-w-40 overflow-hidden"
                           onMouseDown={(e) => e.stopPropagation()}
                         >
                           <button className="w-full flex items-center gap-2.5 px-3 py-2 text-[12.5px] font-ui text-text-1 hover:bg-surface-3 transition-colors text-left">
@@ -934,7 +934,7 @@ export default function ProjectsPage() {
                           <p className="font-display font-semibold text-[13px] text-text-2">
                             {col.status === 'completed' ? 'Nothing shipped yet' : 'No projects'}
                           </p>
-                          <p className="text-[11.5px] text-text-3 mt-1 max-w-[160px] mx-auto leading-snug">
+                          <p className="text-[11.5px] text-text-3 mt-1 max-w-40 mx-auto leading-snug">
                             {col.status === 'completed'
                               ? 'Drag a card here to mark it complete'
                               : `No projects in ${col.label.toLowerCase()} right now`}
@@ -961,7 +961,7 @@ export default function ProjectsPage() {
 
                     {/* Drop indicator */}
                     {isOver && draggedId && colProjects.length > 0 && (
-                      <div className="h-[3px] rounded-full bg-brand-red/50 mx-1 mt-1" />
+                      <div className="h-0.75 rounded-full bg-brand-red/50 mx-1 mt-1" />
                     )}
                   </div>
                 </div>
