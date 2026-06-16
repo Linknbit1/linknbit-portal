@@ -79,10 +79,26 @@ export async function updatePersonDetails(
   if (error) throw error
 }
 
+export async function uploadPersonAvatar(profileId: string, file: File): Promise<string> {
+  const body = new FormData()
+  body.set('profile_id', profileId)
+  body.set('avatar', file)
+
+  const { data, error } = await supabase.functions.invoke<{ avatar_url: string }>('admin-upload-avatar', { body })
+  if (error) throw new Error(await functionErrorMessage(error, 'Avatar upload failed'))
+  if (!data?.avatar_url) throw new Error('Avatar upload failed')
+  return data.avatar_url
+}
+
 export async function setPersonActive(profileId: string, active: boolean): Promise<void> {
   const { error } = await supabase.rpc('admin_set_profile_active', {
     p_profile_id: profileId,
     p_active: active,
   })
   if (error) throw error
+}
+
+export async function deletePerson(profileId: string): Promise<void> {
+  const { error } = await supabase.functions.invoke('delete-user', { body: { profile_id: profileId } })
+  if (error) throw new Error(await functionErrorMessage(error, 'Delete user failed'))
 }

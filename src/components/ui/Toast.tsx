@@ -38,17 +38,17 @@ function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: (id: string) =
     <div
       className={cn(
         'flex items-center gap-3 px-4 py-3 rounded-lg border shadow-xl backdrop-blur-sm',
-        'font-ui text-[13px] font-medium min-w-[280px] max-w-[380px]',
+        'font-ui text-[13px] font-medium min-w-70 max-w-95',
         'animate-in slide-in-from-right-4 fade-in duration-200',
         STYLES[toast.type],
       )}
       style={{ background: 'rgba(15,22,32,0.95)' }}
     >
-      <Icon size={16} className="flex-shrink-0" />
+      <Icon size={16} className="shrink-0" />
       <span className="flex-1 text-text-1">{toast.message}</span>
       <button
         onClick={() => onRemove(toast.id)}
-        className="flex-shrink-0 text-text-4 hover:text-text-2 transition-colors"
+        className="shrink-0 text-text-4 hover:text-text-2 transition-colors"
       >
         <X size={13} />
       </button>
@@ -71,7 +71,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={{ toast }}>
       {children}
-      <div className="fixed left-4 right-4 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] sm:left-auto sm:right-6 sm:bottom-6 flex flex-col gap-2 z-[9999] pointer-events-none">
+      <div className="fixed inset-x-4 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] sm:left-auto sm:right-6 sm:bottom-6 flex flex-col gap-2 z-9999 pointer-events-none">
         {toasts.map((t) => (
           <div key={t.id} className="pointer-events-auto">
             <ToastItem toast={t} onRemove={remove} />

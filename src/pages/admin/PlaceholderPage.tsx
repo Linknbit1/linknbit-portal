@@ -10,7 +10,7 @@ export default function PlaceholderPage({ title }: PlaceholderPageProps) {
     <div className="flex flex-col flex-1">
       <Topbar title={title} />
       <div className="flex flex-col items-center justify-center flex-1 gap-4 text-center p-8">
-        <div className="w-14 h-14 rounded-xl bg-surface-2 border border-border-default flex items-center justify-center">
+        <div className="size-14 rounded-xl bg-surface-2 border border-border-default flex items-center justify-center">
           <Construction size={24} className="text-text-3" />
         </div>
         <h2 className="font-display font-semibold text-h3 text-text-1 tracking-tight">{title}</h2>

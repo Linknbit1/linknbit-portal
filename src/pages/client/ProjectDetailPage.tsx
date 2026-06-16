@@ -84,7 +84,7 @@ function FileTypeIcon({ type }: { type: string }) {
   const s = styles[type] ?? styles.default
   return (
     <div
-      className="w-9 h-9 rounded-lg flex items-center justify-center text-[9px] font-mono font-bold flex-shrink-0"
+      className="size-9 rounded-lg flex items-center justify-center text-[9px] font-mono font-bold shrink-0"
       style={{ background: s.bg, color: s.color }}
     >
       {s.label}
@@ -161,7 +161,7 @@ export default function ClientProjectDetailPage() {
               )}
             </div>
             <h1
-              className="font-display font-bold text-[28px] leading-tight tracking-tight"
+              className="font-display font-bold text-h2/tight tracking-tight"
               style={{ color: '#1A1612' }}
             >
               {project.name}
@@ -170,7 +170,7 @@ export default function ClientProjectDetailPage() {
               {project.clientName} · PM: {project.pm.name}
             </p>
           </div>
-          <div className="text-right flex-shrink-0">
+          <div className="text-right shrink-0">
             <div
               className="font-display font-bold text-[36px] leading-none"
               style={{ color: '#1A1612' }}
@@ -222,7 +222,7 @@ export default function ClientProjectDetailPage() {
               'px-4 py-2.5 text-[14px] font-medium border-b-2 transition-all flex items-center gap-1.5 -mb-px',
               tab === t.key
                 ? 'border-[#EE2737] font-semibold'
-                : 'border-transparent hover:border-[#EAE3D6]',
+                : 'border-transparent hover:border-client-border',
             )}
             style={{ color: tab === t.key ? '#1A1612' : '#877F71' }}
           >
@@ -251,7 +251,7 @@ export default function ClientProjectDetailPage() {
               >
                 About this Project
               </h3>
-              <p className="text-[14px] leading-relaxed" style={{ color: '#4F4940' }}>
+              <p className="text-body/relaxed" style={{ color: '#4F4940' }}>
                 {PROJECT_DESCRIPTIONS[project.id] ?? 'A professional project managed by Linknbit.'}
               </p>
             </div>
@@ -309,7 +309,7 @@ export default function ClientProjectDetailPage() {
                     >
                       <div
                         className={cn(
-                          'w-2 h-2 rounded-full flex-shrink-0',
+                          'size-2 rounded-full shrink-0',
                           task.status === 'completed'
                             ? 'bg-green-500'
                             : task.status === 'in_progress'
@@ -345,7 +345,7 @@ export default function ClientProjectDetailPage() {
               </p>
               <div className="flex items-center gap-3 mb-3">
                 <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center text-[13px] font-bold text-white flex-shrink-0"
+                  className="size-10 rounded-full flex items-center justify-center text-[13px] font-bold text-white shrink-0"
                   style={{ background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)' }}
                 >
                   {project.pm.name
@@ -383,7 +383,7 @@ export default function ClientProjectDetailPage() {
                 {['AK', 'SQ', 'BA', 'UT'].slice(0, project.teamIds.length).map((initials, i) => (
                   <div
                     key={i}
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold text-white border-2 border-white -ml-1 first:ml-0"
+                    className="size-8 rounded-full flex items-center justify-center text-[10px] font-bold text-white border-2 border-white -ml-1 first:ml-0"
                     style={{
                       background: `hsl(${i * 60 + 200}, 60%, 45%)`,
                       zIndex: 4 - i,
@@ -437,7 +437,7 @@ export default function ClientProjectDetailPage() {
             <div className="relative">
               {/* Vertical line */}
               <div
-                className="absolute left-4 top-4 bottom-4 w-0.5"
+                className="absolute left-4 inset-y-4 w-0.5"
                 style={{ background: '#EAE3D6' }}
               />
 
@@ -458,12 +458,12 @@ export default function ClientProjectDetailPage() {
                     }
                     return (
                       <div key={stage.id} className="flex gap-6 pb-6">
-                        <div className="flex flex-col items-center flex-shrink-0 z-10">
+                        <div className="flex flex-col items-center shrink-0 z-10">
                           <div
-                            className="w-8 h-8 rounded-full border-2 flex items-center justify-center"
+                            className="size-8 rounded-full border-2 flex items-center justify-center"
                             style={{ background: '#FAF7F2', borderColor: '#EAE3D6' }}
                           >
-                            <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#EAE3D6' }} />
+                            <div className="size-1.5 rounded-full" style={{ background: '#EAE3D6' }} />
                           </div>
                         </div>
                         <div
@@ -480,23 +480,23 @@ export default function ClientProjectDetailPage() {
 
                   return (
                     <div key={stage.id} className="flex gap-6 pb-6">
-                      <div className="flex flex-col items-center flex-shrink-0 z-10">
+                      <div className="flex flex-col items-center shrink-0 z-10">
                         <div
                           className={cn(
-                            'w-8 h-8 rounded-full border-2 flex items-center justify-center',
+                            'size-8 rounded-full border-2 flex items-center justify-center',
                             isCompleted
                               ? 'bg-green-500 border-green-500'
                               : isCurrent || isBlocked
                                 ? 'bg-white border-[#EE2737]'
-                                : 'bg-white border-[#EAE3D6]',
+                                : 'bg-white border-client-border',
                           )}
                         >
                           {isCompleted ? (
                             <CheckCircle2 size={14} className="text-white" />
                           ) : isCurrent || isBlocked ? (
-                            <div className="w-2.5 h-2.5 rounded-full bg-[#EE2737] animate-pulse" />
+                            <div className="size-2.5 rounded-full bg-[#EE2737] animate-pulse" />
                           ) : (
-                            <div className="w-2 h-2 rounded-full" style={{ background: '#EAE3D6' }} />
+                            <div className="size-2 rounded-full" style={{ background: '#EAE3D6' }} />
                           )}
                         </div>
                       </div>
@@ -507,8 +507,8 @@ export default function ClientProjectDetailPage() {
                           isCompleted
                             ? 'bg-green-50/40 border-green-100'
                             : isCurrent || isBlocked
-                              ? 'bg-white border-[#EAE3D6] shadow-sm'
-                              : 'bg-white border-[#EAE3D6]',
+                              ? 'bg-white border-client-border shadow-sm'
+                              : 'bg-white border-client-border',
                         )}
                       >
                         <div className="flex items-start justify-between gap-2 mb-1">
@@ -694,7 +694,7 @@ export default function ClientProjectDetailPage() {
                         className="rounded-lg p-3.5 mb-4"
                         style={{ background: '#F2EDE4', border: '1px solid #EAE3D6' }}
                       >
-                        <p className="text-[14px] leading-relaxed" style={{ color: '#4F4940' }}>
+                        <p className="text-body/relaxed" style={{ color: '#4F4940' }}>
                           {approval.message}
                         </p>
                       </div>
@@ -786,7 +786,7 @@ export default function ClientProjectDetailPage() {
         <div className="max-w-2xl">
           <div className="relative">
             <div
-              className="absolute left-3.5 top-0 bottom-0 w-0.5"
+              className="absolute left-3.5 inset-y-0 w-0.5"
               style={{ background: '#EAE3D6' }}
             />
             <div className="space-y-0">
@@ -814,9 +814,9 @@ export default function ClientProjectDetailPage() {
 
                 return (
                   <div key={item.id} className="flex gap-4 pb-5">
-                    <div className="flex flex-col items-center flex-shrink-0 z-10">
+                    <div className="flex flex-col items-center shrink-0 z-10">
                       <div
-                        className="w-7 h-7 rounded-full flex items-center justify-center border-2 border-white"
+                        className="size-7 rounded-full flex items-center justify-center border-2 border-white"
                         style={{ background: `${dotColor}18` }}
                       >
                         <Icon size={12} style={{ color: dotColor }} />

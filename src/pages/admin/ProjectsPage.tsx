@@ -87,10 +87,10 @@ function KanbanCard({ project, colStatus, isDragging, isMenuOpen, onMenuToggle, 
         'relative bg-surface-2 border rounded-[8px] flex flex-col cursor-grab active:cursor-grabbing transition-all select-none group/card',
         'hover:bg-surface-3 hover:border-border-strong hover:shadow-sm',
         isDragging ? 'opacity-40' : '',
-        isUrgent ? 'bg-gradient-to-b from-error/8 to-error/2 border-error/30' : 'border-border-default',
+        isUrgent ? 'bg-linear-to-b from-error/8 to-error/2 border-error/30' : 'border-border-default',
       )}
     >
-      {isUrgent && <span className="absolute left-0 top-3 bottom-3 w-[2px] rounded-full bg-error" />}
+      {isUrgent && <span className="absolute left-0 inset-y-3 w-0.5 rounded-full bg-error" />}
 
       <div className="p-[12px_14px] flex flex-col gap-2.5">
         {/* Header */}
@@ -100,18 +100,18 @@ function KanbanCard({ project, colStatus, isDragging, isMenuOpen, onMenuToggle, 
             <p className="font-mono text-[10.5px] text-text-3 uppercase tracking-wider mt-0.5">{project.clientName}</p>
           </div>
           <div
-            className="relative flex-shrink-0"
+            className="relative shrink-0"
             onMouseDown={(e) => e.stopPropagation()}
             onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={onMenuToggle}
-              className="w-[22px] h-[22px] rounded-[4px] text-text-4 hover:bg-white/5 hover:text-text-2 flex items-center justify-center transition-colors"
+              className="size-5.5 rounded-xs text-text-4 hover:bg-white/5 hover:text-text-2 flex items-center justify-center transition-colors"
             >
               <MoreHorizontal size={12} />
             </button>
             {isMenuOpen && (
-              <div className="absolute right-0 top-full mt-1 z-50 bg-surface-2 border border-border-strong rounded-md shadow-xl overflow-hidden min-w-[164px]">
+              <div className="absolute right-0 top-full mt-1 z-50 bg-surface-2 border border-border-strong rounded-md shadow-xl overflow-hidden min-w-41">
                 <button
                   className="w-full flex items-center gap-2.5 px-3 py-2 text-[12.5px] font-ui text-text-1 hover:bg-surface-3 transition-colors text-left"
                   onClick={(e) => { e.stopPropagation(); navigate(`/admin/projects/${project.id}`) }}
@@ -135,10 +135,10 @@ function KanbanCard({ project, colStatus, isDragging, isMenuOpen, onMenuToggle, 
         {/* Blocked / Awaiting banner */}
         {(isBlocked || isAwaiting) && (
           <div className={cn(
-            'flex items-start gap-1.5 rounded-[6px] px-2.5 py-2 text-[11px] font-ui leading-snug border',
+            'flex items-start gap-1.5 rounded-sm px-2.5 py-2 text-label/snug font-ui border',
             isBlocked ? 'bg-error/10 border-error/20 text-error' : 'bg-warning/10 border-warning/20 text-warning',
           )}>
-            <AlertCircle size={11} className="flex-shrink-0 mt-0.5" />
+            <AlertCircle size={11} className="shrink-0 mt-0.5" />
             <span>
               <strong className="font-semibold">{isBlocked ? 'Blocker' : 'Waiting'}</strong>
               {' · '}{project.currentStage}
@@ -147,10 +147,10 @@ function KanbanCard({ project, colStatus, isDragging, isMenuOpen, onMenuToggle, 
         )}
 
         {/* Stage row */}
-        <div className="flex items-center gap-1.5 px-2 py-1.5 bg-surface-inset border border-border-subtle rounded-[6px]">
-          <span className="font-mono text-[9px] text-text-4 uppercase tracking-wider flex-shrink-0">Stage</span>
+        <div className="flex items-center gap-1.5 px-2 py-1.5 bg-surface-inset border border-border-subtle rounded-sm">
+          <span className="font-mono text-[9px] text-text-4 uppercase tracking-wider shrink-0">Stage</span>
           <span className="font-ui text-[11.5px] text-text-1 font-medium flex-1 truncate">{project.currentStage}</span>
-          <span className="font-mono text-[10px] text-text-4 flex-shrink-0">{stageNum}/{project.stages.length}</span>
+          <span className="font-mono text-[10px] text-text-4 shrink-0">{stageNum}/{project.stages.length}</span>
         </div>
 
         {/* Progress */}
@@ -195,7 +195,7 @@ function TimelineView({ projects }: { projects: typeof PROJECTS }) {
   }))
 
   if (parsed.length === 0) return (
-    <div className="bg-surface-1 border border-border-default rounded-[10px] flex flex-col items-center justify-center py-16 gap-3">
+    <div className="bg-surface-1 border border-border-default rounded-md flex flex-col items-center justify-center py-16 gap-3">
       <span className="font-display font-semibold text-[14px] text-text-2">No projects to display</span>
     </div>
   )
@@ -220,12 +220,12 @@ function TimelineView({ projects }: { projects: typeof PROJECTS }) {
   const todayPct = pct(TODAY)
 
   return (
-    <div className="bg-surface-1 border border-border-default rounded-[10px] overflow-hidden">
+    <div className="bg-surface-1 border border-border-default rounded-md overflow-hidden">
       <div className="flex items-center gap-3 px-5 py-3.5 border-b border-border-subtle">
         <span className="font-display font-semibold text-[14px] text-text-1">Timeline</span>
-        <span className="font-mono text-[10.5px] text-text-3 bg-surface-2 rounded-full px-2 py-[2px] uppercase tracking-wider">{parsed.length} projects</span>
+        <span className="font-mono text-[10.5px] text-text-3 bg-surface-2 rounded-full px-2 py-0.5 uppercase tracking-wider">{parsed.length} projects</span>
         <div className="ml-auto flex items-center gap-1.5 font-mono text-[10.5px] text-text-3">
-          <span className="w-2 h-2 rounded-full bg-brand-red inline-block" />
+          <span className="size-2 rounded-full bg-brand-red inline-block" />
           Today · May 16 '26
         </div>
       </div>
@@ -234,14 +234,14 @@ function TimelineView({ projects }: { projects: typeof PROJECTS }) {
         <div style={{ minWidth: 900 }}>
           {/* Month header */}
           <div className="flex border-b border-border-subtle bg-surface-2">
-            <div className="w-[220px] flex-shrink-0 px-5 py-2.5 font-ui font-semibold text-[10px] text-text-3 uppercase tracking-wider border-r border-border-subtle">
+            <div className="w-55 shrink-0 px-5 py-2.5 font-ui font-semibold text-[10px] text-text-3 uppercase tracking-wider border-r border-border-subtle">
               Project
             </div>
             <div className="flex-1 relative h-9">
               {months.map((month, i) => (
                 <div
                   key={i}
-                  className="absolute top-0 bottom-0 flex items-center justify-center border-r border-border-subtle last:border-r-0"
+                  className="absolute inset-y-0 flex items-center justify-center border-r border-border-subtle last:border-r-0"
                   style={{ left: `${month.left}%`, width: `${month.width}%` }}
                 >
                   <span className="font-mono text-[9.5px] text-text-3 uppercase tracking-wider">
@@ -249,7 +249,7 @@ function TimelineView({ projects }: { projects: typeof PROJECTS }) {
                   </span>
                 </div>
               ))}
-              <div className="absolute top-0 bottom-0 w-px bg-brand-red/50 z-10" style={{ left: `${todayPct}%` }} />
+              <div className="absolute inset-y-0 w-px bg-brand-red/50 z-10" style={{ left: `${todayPct}%` }} />
             </div>
           </div>
 
@@ -260,10 +260,10 @@ function TimelineView({ projects }: { projects: typeof PROJECTS }) {
             const barWidth = endPct - startPct
             const isOverdue = project.end < TODAY
             return (
-              <div key={project.id} className="flex items-center border-b border-border-subtle last:border-b-0 hover:bg-white/[0.015] transition-colors">
-                <div className="w-[220px] flex-shrink-0 px-4 py-3 border-r border-border-subtle flex items-center gap-2.5 min-w-0">
+              <div key={project.id} className="flex items-center border-b border-border-subtle last:border-b-0 hover:bg-white/1.5 transition-colors">
+                <div className="w-55 shrink-0 px-4 py-3 border-r border-border-subtle flex items-center gap-2.5 min-w-0">
                   <div
-                    className="w-7 h-7 rounded-[6px] flex items-center justify-center font-display font-bold text-[11px] flex-shrink-0"
+                    className="size-7 rounded-sm flex items-center justify-center font-display font-bold text-[11px] shrink-0"
                     style={{ background: TILE_GRADIENT[project.serviceType], color: TILE_TEXT[project.serviceType] }}
                   >
                     {project.name.charAt(0)}
@@ -273,13 +273,13 @@ function TimelineView({ projects }: { projects: typeof PROJECTS }) {
                     <p className="font-mono text-[9.5px] text-text-3 uppercase tracking-wider">{project.progress}% done</p>
                   </div>
                 </div>
-                <div className="flex-1 relative h-[52px]">
+                <div className="flex-1 relative h-13">
                   {/* Month gridlines */}
                   {months.map((month, i) => (
-                    <div key={i} className="absolute top-0 bottom-0 border-r border-border-subtle/50" style={{ left: `${month.left + month.width}%` }} />
+                    <div key={i} className="absolute inset-y-0 border-r border-border-subtle/50" style={{ left: `${month.left + month.width}%` }} />
                   ))}
                   {/* Today line */}
-                  <div className="absolute top-0 bottom-0 w-px bg-brand-red/30 z-10" style={{ left: `${todayPct}%` }} />
+                  <div className="absolute inset-y-0 w-px bg-brand-red/30 z-10" style={{ left: `${todayPct}%` }} />
                   {/* Bar track */}
                   <div
                     className="absolute top-1/2 -translate-y-1/2 h-7 rounded-[5px] overflow-hidden"
@@ -303,7 +303,7 @@ function TimelineView({ projects }: { projects: typeof PROJECTS }) {
                   </div>
                   {/* Deadline dot */}
                   <div
-                    className={cn('absolute top-1/2 -translate-y-1/2 w-[7px] h-[7px] rounded-full -ml-[3px] z-20', isOverdue ? 'bg-error' : 'bg-text-3')}
+                    className={cn('absolute top-1/2 -translate-y-1/2 size-1.75 rounded-full ml-[-3px] z-20', isOverdue ? 'bg-error' : 'bg-text-3')}
                     style={{ left: `${endPct}%` }}
                   />
                 </div>
@@ -331,8 +331,8 @@ function MilestonesView({ projects }: { projects: typeof PROJECTS }) {
   })
 
   if (rows.length === 0) return (
-    <div className="bg-surface-1 border border-border-default rounded-[10px] flex flex-col items-center justify-center py-16 gap-3 text-center">
-      <span className="w-12 h-12 rounded-xl bg-surface-2 border border-dashed border-border-strong text-text-3 flex items-center justify-center">
+    <div className="bg-surface-1 border border-border-default rounded-md flex flex-col items-center justify-center py-16 gap-3 text-center">
+      <span className="size-12 rounded-xl bg-surface-2 border border-dashed border-border-strong text-text-3 flex items-center justify-center">
         <Flag size={18} />
       </span>
       <p className="font-display font-semibold text-[14px] text-text-2">No milestones found</p>
@@ -344,15 +344,15 @@ function MilestonesView({ projects }: { projects: typeof PROJECTS }) {
   const pendingCount = rows.filter(r => r.stage.approvalStatus === 'pending').length
 
   return (
-    <div className="bg-surface-1 border border-border-default rounded-[10px] overflow-hidden">
+    <div className="bg-surface-1 border border-border-default rounded-md overflow-hidden">
       <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-border-subtle">
         <span className="font-display font-semibold text-[14px] text-text-1">Milestones</span>
-        <span className="font-mono text-[10.5px] text-text-3 bg-surface-2 rounded-full px-2 py-[2px] uppercase tracking-wider">{rows.length} total</span>
+        <span className="font-mono text-[10.5px] text-text-3 bg-surface-2 rounded-full px-2 py-0.5 uppercase tracking-wider">{rows.length} total</span>
         {blockedCount > 0 && (
-          <span className="font-mono text-[10.5px] text-error bg-error/12 border border-error/30 rounded-full px-2 py-[2px] uppercase tracking-wider">{blockedCount} blocked</span>
+          <span className="font-mono text-[10.5px] text-error bg-error/12 border border-error/30 rounded-full px-2 py-0.5 uppercase tracking-wider">{blockedCount} blocked</span>
         )}
         {pendingCount > 0 && (
-          <span className="font-mono text-[10.5px] text-warning bg-warning/12 border border-warning/30 rounded-full px-2 py-[2px] uppercase tracking-wider">{pendingCount} awaiting approval</span>
+          <span className="font-mono text-[10.5px] text-warning bg-warning/12 border border-warning/30 rounded-full px-2 py-0.5 uppercase tracking-wider">{pendingCount} awaiting approval</span>
         )}
       </div>
 
@@ -373,7 +373,7 @@ function MilestonesView({ projects }: { projects: typeof PROJECTS }) {
         >
           <div className="pl-5 pr-4 py-3.5 flex items-center gap-3 min-w-0">
             <span className={cn(
-              'w-2 h-2 rounded-full flex-shrink-0',
+              'size-2 rounded-full shrink-0',
               stage.status === 'completed' ? 'bg-success' :
               stage.status === 'blocked' ? 'bg-error shadow-[0_0_0_3px_rgba(244,54,76,0.18)]' :
               stage.status === 'current' ? 'bg-service-dev' : 'bg-border-strong',
@@ -399,19 +399,19 @@ function MilestonesView({ projects }: { projects: typeof PROJECTS }) {
 
           <div className="px-4 py-3.5 flex items-center">
             {stage.status === 'completed' ? (
-              <span className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider px-2 py-[3px] rounded-[4px] font-semibold border bg-success/12 text-success border-success/30">
+              <span className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider px-2 py-0.75 rounded-xs font-semibold border bg-success/12 text-success border-success/30">
                 <CheckCircle2 size={10} /> Done
               </span>
             ) : stage.status === 'blocked' ? (
-              <span className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider px-2 py-[3px] rounded-[4px] font-semibold border bg-error/12 text-error border-error/30">
+              <span className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider px-2 py-0.75 rounded-xs font-semibold border bg-error/12 text-error border-error/30">
                 <AlertCircle size={10} /> Blocked
               </span>
             ) : stage.status === 'current' ? (
-              <span className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider px-2 py-[3px] rounded-[4px] font-semibold border bg-service-dev/12 text-service-dev border-service-dev/30">
+              <span className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider px-2 py-0.75 rounded-xs font-semibold border bg-service-dev/12 text-service-dev border-service-dev/30">
                 <Clock size={10} /> Active
               </span>
             ) : (
-              <span className="font-mono text-[10px] uppercase tracking-wider px-2 py-[3px] rounded-[4px] font-semibold border bg-surface-2 text-text-3 border-border-default">
+              <span className="font-mono text-[10px] uppercase tracking-wider px-2 py-0.75 rounded-xs font-semibold border bg-surface-2 text-text-3 border-border-default">
                 Upcoming
               </span>
             )}
@@ -420,7 +420,7 @@ function MilestonesView({ projects }: { projects: typeof PROJECTS }) {
           <div className="px-4 py-3.5 flex items-center">
             {stage.requiresApproval ? (
               <span className={cn(
-                'font-mono text-[10px] uppercase tracking-wider px-2 py-[3px] rounded-[4px] font-semibold border',
+                'font-mono text-[10px] uppercase tracking-wider px-2 py-0.75 rounded-xs font-semibold border',
                 stage.approvalStatus === 'approved' ? 'bg-success/12 text-success border-success/30' :
                 stage.approvalStatus === 'pending' ? 'bg-warning/12 text-warning border-warning/30' :
                 stage.approvalStatus === 'rejected' ? 'bg-error/12 text-error border-error/30' :
@@ -548,10 +548,10 @@ export default function ProjectsPage() {
         </div>
 
         {/* ── Filter bar ── */}
-        <div className="bg-surface-1 border border-border-default rounded-[10px] p-3.5 flex items-center gap-2.5 flex-wrap">
+        <div className="bg-surface-1 border border-border-default rounded-md p-3.5 flex items-center gap-2.5 flex-wrap">
           {/* Search */}
-          <div className="flex items-center gap-2 h-9 min-w-[240px] flex-1 bg-surface-inset border border-border-default rounded-sm px-3 transition-colors focus-within:border-border-focus">
-            <Search size={14} className="text-text-3 flex-shrink-0" />
+          <div className="flex items-center gap-2 h-9 min-w-60 flex-1 bg-surface-inset border border-border-default rounded-sm px-3 transition-colors focus-within:border-border-focus">
+            <Search size={14} className="text-text-3 shrink-0" />
             <input
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1) }}
@@ -559,13 +559,13 @@ export default function ProjectsPage() {
               className="bg-transparent border-0 outline-none text-[13px] font-ui text-text-1 placeholder:text-text-3 flex-1 min-w-0"
             />
             {search && (
-              <button onClick={() => { setSearch(''); setPage(1) }} className="text-text-3 hover:text-text-2 flex-shrink-0">
-                <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              <button onClick={() => { setSearch(''); setPage(1) }} className="text-text-3 hover:text-text-2 shrink-0">
+                <svg viewBox="0 0 24 24" className="size-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             )}
           </div>
 
-          <div className="h-5 w-px bg-border-subtle flex-shrink-0" />
+          <div className="h-5 w-px bg-border-subtle shrink-0" />
 
           <Select
             value={serviceFilter}
@@ -625,7 +625,7 @@ export default function ProjectsPage() {
               {view === 'list' ? listFiltered.length : kanbanFiltered.length} shown
             </span>
             <div className="h-5 w-px bg-border-subtle" />
-            <div className="flex items-center bg-surface-2 border border-border-default rounded-sm p-[3px] gap-[2px]">
+            <div className="flex items-center bg-surface-2 border border-border-default rounded-sm p-0.75 gap-0.5">
               {([
                 { mode: 'list' as const, Icon: List, title: 'List view' },
                 { mode: 'kanban' as const, Icon: Columns, title: 'Kanban view' },
@@ -637,7 +637,7 @@ export default function ProjectsPage() {
                   onClick={() => setView(mode)}
                   title={title}
                   className={cn(
-                    'w-[30px] h-[28px] rounded-[4px] flex items-center justify-center transition-colors',
+                    'w-7.5 h-7 rounded-xs flex items-center justify-center transition-colors',
                     view === mode ? 'bg-surface-3 text-text-1 shadow-sm' : 'text-text-3 hover:text-text-2',
                   )}
                 >
@@ -650,19 +650,19 @@ export default function ProjectsPage() {
 
         {/* ── LIST VIEW ── */}
         {view === 'list' && (
-          <div className="bg-surface-1 border border-border-default rounded-[10px] overflow-hidden">
+          <div className="bg-surface-1 border border-border-default rounded-md overflow-hidden">
             {/* Toolbar */}
-            <div className="flex items-center gap-3 px-[18px] py-[14px] border-b border-border-subtle">
+            <div className="flex items-center gap-3 px-4.5 py-3.5 border-b border-border-subtle">
               <span className="font-display font-semibold text-[14px] text-text-1">All Projects</span>
-              <span className="font-mono text-[10.5px] text-text-3 bg-surface-2 rounded-full px-2 py-[2px] uppercase tracking-wider">
+              <span className="font-mono text-[10.5px] text-text-3 bg-surface-2 rounded-full px-2 py-0.5 uppercase tracking-wider">
                 {listFiltered.length} results
               </span>
               <div className="ml-auto flex items-center gap-2">
                 <span className="font-mono text-[11px] text-text-3 tracking-wider hidden md:block">Last sync · 2 min ago</span>
-                <button className="w-[30px] h-[30px] rounded-[6px] border border-border-default bg-surface-2 text-text-2 hover:bg-surface-3 hover:text-text-1 flex items-center justify-center transition-colors" title="Refresh">
+                <button className="size-7.5 rounded-sm border border-border-default bg-surface-2 text-text-2 hover:bg-surface-3 hover:text-text-1 flex items-center justify-center transition-colors" title="Refresh">
                   <RefreshCw size={12} />
                 </button>
-                <button className="w-[30px] h-[30px] rounded-[6px] border border-border-default bg-surface-2 text-text-2 hover:bg-surface-3 hover:text-text-1 flex items-center justify-center transition-colors" title="Column settings">
+                <button className="size-7.5 rounded-sm border border-border-default bg-surface-2 text-text-2 hover:bg-surface-3 hover:text-text-1 flex items-center justify-center transition-colors" title="Column settings">
                   <ArrowUpDown size={12} />
                 </button>
               </div>
@@ -678,15 +678,15 @@ export default function ProjectsPage() {
                 <div
                   key={i}
                   className={cn(
-                    'px-3 py-3 bg-surface-2 border-b border-border-default font-ui font-semibold text-[10.5px] text-text-3 uppercase tracking-wider flex items-center gap-1 select-none',
+                    'p-3 bg-surface-2 border-b border-border-default font-ui font-semibold text-[10.5px] text-text-3 uppercase tracking-wider flex items-center gap-1 select-none',
                     i === 0 && 'pl-5',
-                    i === 9 && 'pr-[18px] justify-end',
+                    i === 9 && 'pr-4.5 justify-end',
                     (label === 'Project' || label === 'Progress' || label === 'Deadline') && 'cursor-pointer hover:text-text-2 transition-colors',
                   )}
                 >
                   {label}
                   {(label === 'Project' || label === 'Progress' || label === 'Deadline') && (
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-2.5 h-2.5 opacity-50"><polyline points="6 9 12 15 18 9"/></svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="size-2.5 opacity-50"><polyline points="6 9 12 15 18 9"/></svg>
                   )}
                 </div>
               ))}
@@ -703,7 +703,7 @@ export default function ProjectsPage() {
                       onClick={() => navigate(`/admin/projects/${project.id}`)}
                     >
                       <div
-                        className="w-[34px] h-[34px] rounded-[8px] flex items-center justify-center font-display font-bold text-[12px] flex-shrink-0"
+                        className="size-8.5 rounded-[8px] flex items-center justify-center font-display font-bold text-[12px] shrink-0"
                         style={{ background: TILE_GRADIENT[project.serviceType], color: TILE_TEXT[project.serviceType] }}
                       >
                         {initials(project.name)}
@@ -735,7 +735,7 @@ export default function ProjectsPage() {
 
                     {/* Stage */}
                     <div className="px-3 py-3.5 border-b border-border-subtle flex items-center gap-2 group-hover:bg-white/[0.018] transition-colors">
-                      <span className="w-[18px] h-[18px] rounded-[4px] bg-surface-3 border border-border-default flex items-center justify-center font-mono text-[9px] text-text-3 flex-shrink-0">
+                      <span className="size-4.5 rounded-xs bg-surface-3 border border-border-default flex items-center justify-center font-mono text-[9px] text-text-3 shrink-0">
                         {stageIdx + 1 || 1}
                       </span>
                       <span className="text-[12px] font-ui font-medium text-text-2 truncate">{project.currentStage}</span>
@@ -748,10 +748,10 @@ export default function ProjectsPage() {
 
                     {/* Progress */}
                     <div className="px-3 py-3.5 border-b border-border-subtle flex items-center gap-2.5 group-hover:bg-white/[0.018] transition-colors">
-                      <div className="flex-1 h-1.5 bg-surface-inset rounded-full overflow-hidden min-w-[56px]">
+                      <div className="flex-1 h-1.5 bg-surface-inset rounded-full overflow-hidden min-w-14">
                         <div className="h-full rounded-full" style={{ width: `${project.progress}%`, background: PROGRESS_COLOR(project.progress) }} />
                       </div>
-                      <span className="font-mono text-[11.5px] text-text-2 font-medium tabular-nums min-w-[32px] text-right">{project.progress}%</span>
+                      <span className="font-mono text-[11.5px] text-text-2 font-medium tabular-nums min-w-8 text-right">{project.progress}%</span>
                     </div>
 
                     {/* Deadline */}
@@ -779,12 +779,12 @@ export default function ProjectsPage() {
                     </div>
 
                     {/* Open arrow */}
-                    <div className="pr-[18px] px-3 py-3.5 border-b border-border-subtle flex items-center justify-end group-hover:bg-white/[0.018] transition-colors">
+                    <div className="pr-4.5 px-3 py-3.5 border-b border-border-subtle flex items-center justify-end group-hover:bg-white/[0.018] transition-colors">
                       <button
                         onClick={() => navigate(`/admin/projects/${project.id}`)}
-                        className="w-7 h-7 rounded-[6px] border border-border-default text-text-2 bg-transparent hover:bg-surface-3 hover:text-text-1 flex items-center justify-center transition-colors"
+                        className="size-7 rounded-sm border border-border-default text-text-2 bg-transparent hover:bg-surface-3 hover:text-text-1 flex items-center justify-center transition-colors"
                       >
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="size-3.5">
                           <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
                         </svg>
                       </button>
@@ -797,14 +797,14 @@ export default function ProjectsPage() {
             {/* Empty */}
             {paginated.length === 0 && (
               <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
-                <span className="w-12 h-12 rounded-xl bg-surface-2 border border-dashed border-border-strong text-text-3 flex items-center justify-center text-xl">📂</span>
+                <span className="size-12 rounded-xl bg-surface-2 border border-dashed border-border-strong text-text-3 flex items-center justify-center text-xl">📂</span>
                 <p className="font-display font-semibold text-[14px] text-text-2">No projects found</p>
                 <p className="text-[12.5px] text-text-3 max-w-xs">Try adjusting your filters or search</p>
               </div>
             )}
 
             {/* Pagination */}
-            <div className="px-[18px] py-[14px] bg-surface-1 flex items-center justify-between gap-4 border-t border-border-subtle">
+            <div className="px-4.5 py-3.5 bg-surface-1 flex items-center justify-between gap-4 border-t border-border-subtle">
               <p className="text-[12.5px] text-text-3 font-ui">
                 Showing{' '}
                 <strong className="text-text-1 font-semibold">
@@ -817,7 +817,7 @@ export default function ProjectsPage() {
                 <button
                   onClick={() => setPage(p => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="w-8 h-8 rounded-[6px] border border-border-default bg-surface-2 text-text-2 flex items-center justify-center hover:bg-surface-3 hover:text-text-1 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  className="size-8 rounded-sm border border-border-default bg-surface-2 text-text-2 flex items-center justify-center hover:bg-surface-3 hover:text-text-1 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 >
                   <ChevronLeft size={12} />
                 </button>
@@ -826,7 +826,7 @@ export default function ProjectsPage() {
                     key={i}
                     onClick={() => setPage(i + 1)}
                     className={cn(
-                      'w-8 h-8 rounded-[6px] border font-semibold text-[12.5px] flex items-center justify-center transition-colors',
+                      'size-8 rounded-sm border font-semibold text-[12.5px] flex items-center justify-center transition-colors',
                       page === i + 1 ? 'bg-brand-red border-brand-red text-white' : 'border-border-default bg-surface-2 text-text-2 hover:bg-surface-3 hover:text-text-1',
                     )}
                   >
@@ -836,7 +836,7 @@ export default function ProjectsPage() {
                 <button
                   onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
-                  className="w-8 h-8 rounded-[6px] border border-border-default bg-surface-2 text-text-2 flex items-center justify-center hover:bg-surface-3 hover:text-text-1 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  className="size-8 rounded-sm border border-border-default bg-surface-2 text-text-2 flex items-center justify-center hover:bg-surface-3 hover:text-text-1 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 >
                   <ChevronRight size={12} />
                 </button>
@@ -863,7 +863,7 @@ export default function ProjectsPage() {
                 <div
                   key={col.status}
                   className={cn(
-                    'relative flex flex-col min-h-[480px] bg-surface-1 border rounded-[10px] overflow-hidden transition-all',
+                    'relative flex flex-col min-h-120 bg-surface-1 border rounded-md overflow-hidden transition-all',
                     isOver ? 'border-brand-red/40 shadow-[0_0_0_2px_rgba(238,39,55,0.12)] bg-surface-2/20' : 'border-border-default',
                     col.status === 'blocked' && !isOver && 'bg-[linear-gradient(to_bottom,rgba(244,54,76,0.025),transparent_80px)]',
                   )}
@@ -872,29 +872,29 @@ export default function ProjectsPage() {
                   onDrop={(e) => handleDrop(e, col.status)}
                 >
                   {/* Top color bar */}
-                  <div className="absolute top-0 left-0 right-0 h-[3px] rounded-t-[10px]" style={{ background: col.topColor }} />
+                  <div className="absolute top-0 inset-x-0 h-0.75 rounded-t-md" style={{ background: col.topColor }} />
 
                   {/* Column header */}
-                  <div className="mt-[3px] flex items-center gap-2 px-4 py-3.5 border-b border-border-subtle">
+                  <div className="mt-0.75 flex items-center gap-2 px-4 py-3.5 border-b border-border-subtle">
                     <span
-                      className={cn('w-2 h-2 rounded-full flex-shrink-0', col.status === 'blocked' && 'shadow-[0_0_0_3px_rgba(244,54,76,0.15)]')}
+                      className={cn('size-2 rounded-full shrink-0', col.status === 'blocked' && 'shadow-[0_0_0_3px_rgba(244,54,76,0.15)]')}
                       style={{ background: col.dotColor }}
                     />
                     <span className="font-display font-semibold text-[13.5px] text-text-1 flex-1 tracking-tight">{col.label}</span>
-                    <span className={cn('font-mono text-[10.5px] font-medium px-2 py-[2px] rounded-full', col.countCls)}>
+                    <span className={cn('font-mono text-[10.5px] font-medium px-2 py-0.5 rounded-full', col.countCls)}>
                       {colProjects.length}
                     </span>
                     <div className="relative">
                       <button
                         title="Column options"
                         onClick={(e) => { e.stopPropagation(); setOpenMenu(openMenu === `col-${col.status}` ? null : `col-${col.status}`) }}
-                        className="w-6 h-6 rounded-[4px] text-text-3 hover:text-text-2 hover:bg-white/5 flex items-center justify-center transition-colors"
+                        className="size-6 rounded-xs text-text-3 hover:text-text-2 hover:bg-white/5 flex items-center justify-center transition-colors"
                       >
                         <MoreHorizontal size={13} />
                       </button>
                       {openMenu === `col-${col.status}` && (
                         <div
-                          className="absolute right-0 top-full mt-1 z-50 bg-surface-2 border border-border-strong rounded-md shadow-xl min-w-[160px] overflow-hidden"
+                          className="absolute right-0 top-full mt-1 z-50 bg-surface-2 border border-border-strong rounded-md shadow-xl min-w-40 overflow-hidden"
                           onMouseDown={(e) => e.stopPropagation()}
                         >
                           <button className="w-full flex items-center gap-2.5 px-3 py-2 text-[12.5px] font-ui text-text-1 hover:bg-surface-3 transition-colors text-left">
@@ -913,7 +913,7 @@ export default function ProjectsPage() {
                     <button
                       title={`Add to ${col.label}`}
                       onClick={() => setShowNewModal(true)}
-                      className="w-6 h-6 rounded-[5px] border border-dashed border-border-strong text-text-3 hover:text-text-1 hover:border-solid hover:bg-surface-2 flex items-center justify-center flex-shrink-0 transition-all"
+                      className="size-6 rounded-[5px] border border-dashed border-border-strong text-text-3 hover:text-text-1 hover:border-solid hover:bg-surface-2 flex items-center justify-center shrink-0 transition-all"
                     >
                       <Plus size={11} />
                     </button>
@@ -923,18 +923,18 @@ export default function ProjectsPage() {
                   <div className="p-3 flex flex-col gap-2.5 flex-1">
                     {colProjects.length === 0 ? (
                       <div className="flex flex-col items-center justify-center flex-1 gap-2.5 py-8 text-center">
-                        <span className="w-11 h-11 rounded-xl bg-surface-2 border border-dashed border-border-strong text-text-3 flex items-center justify-center">
+                        <span className="size-11 rounded-xl bg-surface-2 border border-dashed border-border-strong text-text-3 flex items-center justify-center">
                           {col.status === 'completed' ? (
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className="size-5"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg>
                           ) : (
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className="size-5"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
                           )}
                         </span>
                         <div>
                           <p className="font-display font-semibold text-[13px] text-text-2">
                             {col.status === 'completed' ? 'Nothing shipped yet' : 'No projects'}
                           </p>
-                          <p className="text-[11.5px] text-text-3 mt-1 max-w-[160px] mx-auto leading-snug">
+                          <p className="text-[11.5px] text-text-3 mt-1 max-w-40 mx-auto leading-snug">
                             {col.status === 'completed'
                               ? 'Drag a card here to mark it complete'
                               : `No projects in ${col.label.toLowerCase()} right now`}
@@ -961,7 +961,7 @@ export default function ProjectsPage() {
 
                     {/* Drop indicator */}
                     {isOver && draggedId && colProjects.length > 0 && (
-                      <div className="h-[3px] rounded-full bg-brand-red/50 mx-1 mt-1" />
+                      <div className="h-0.75 rounded-full bg-brand-red/50 mx-1 mt-1" />
                     )}
                   </div>
                 </div>

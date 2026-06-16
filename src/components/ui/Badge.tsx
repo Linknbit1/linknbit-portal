@@ -29,7 +29,7 @@ export function Badge({ children, variant = 'default', size = 'sm', className, d
         className,
       )}
     >
-      {dot && <span className="w-1.5 h-1.5 rounded-full bg-current" />}
+      {dot && <span className="size-1.5 rounded-full bg-current" />}
       {children}
     </span>
   )

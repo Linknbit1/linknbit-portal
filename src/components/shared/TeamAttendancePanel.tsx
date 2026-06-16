@@ -60,7 +60,7 @@ function Row({ name, avatar, children, status }: {
         <Avatar name={name} src={avatar ?? undefined} size="sm" />
         <span className="font-ui font-medium text-[13px] text-text-1 truncate">{name}</span>
       </div>
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[12px] text-text-2 pl-[42px] sm:pl-0">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[12px] text-text-2 pl-10.5 sm:pl-0">
         {children}
       </div>
       {status}
@@ -102,11 +102,11 @@ export function TeamAttendancePanel() {
   return (
     <section className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
       <div className="flex flex-wrap items-center gap-3 px-4 py-3.5 border-b border-border-subtle">
-        <Users size={15} className="text-brand-red flex-shrink-0" />
+        <Users size={15} className="text-brand-red shrink-0" />
         <h2 className="font-display font-bold text-[15px] text-text-1">My Team</h2>
         <span className="font-mono text-[10.5px] text-text-4 uppercase tracking-wider">Read-only</span>
         {section === 'attendance' && (
-          <div className="ml-auto"><DatePicker value={date} onChange={setDate} className="w-[150px]" /></div>
+          <div className="ml-auto"><DatePicker value={date} onChange={setDate} className="w-37.5" /></div>
         )}
       </div>
 
@@ -138,7 +138,7 @@ export function TeamAttendancePanel() {
             <Row key={r.id} name={r.profiles?.name ?? '—'} avatar={r.profiles?.avatar_url ?? null}
               status={<Pill status={r.status} map={REQUEST_STATUS} />}>
               <span className="text-text-1">{r.date}</span>
-              <span className="text-text-3 normal-case font-ui truncate max-w-[200px]">{r.reason}</span>
+              <span className="text-text-3 normal-case font-ui truncate max-w-50">{r.reason}</span>
             </Row>
           ))}
         </div>

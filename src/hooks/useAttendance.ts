@@ -15,8 +15,8 @@ import {
   fetchAllAttendanceExceptions,
   requestException,
   reviewException,
-  logOooDeparture,
-  logOooReturn,
+  oooDepart,
+  oooReturn,
   fetchHolidays,
   createHoliday,
   createHolidayRange,
@@ -26,6 +26,7 @@ import {
   removeWorkingSaturday,
   fetchMyOvertimeRequests,
   fetchAllOvertimeRequests,
+  fetchMonthlyOvertime,
   submitOvertimeRequest,
   reviewOvertimeRequest,
   submitWfhRequest,
@@ -69,6 +70,7 @@ export const ATTENDANCE_KEYS = {
   workingSaturdays: (year?: number) => ['attendance', 'working-saturdays', year] as const,
   myOvertime: ['attendance', 'overtime', 'my'] as const,
   allOvertime: (status?: string) => ['attendance', 'overtime', 'all', status] as const,
+  monthlyOvertime: (year: number, month: number) => ['attendance', 'overtime', 'monthly', year, month] as const,
   myWfh: ['attendance', 'wfh', 'my'] as const,
   allWfh: (status?: string) => ['attendance', 'wfh', 'all', status] as const,
   leaveTypes: (activeOnly?: boolean) => ['attendance', 'leave-types', activeOnly] as const,
@@ -218,22 +220,24 @@ export function useReviewException() {
   })
 }
 
-export function useLogOooDeparture() {
+export function useOooDepart() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => logOooDeparture(id),
+    mutationFn: () => oooDepart(),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['attendance', 'exceptions'] })
+      qc.invalidateQueries({ queryKey: ATTENDANCE_KEYS.myToday })
     },
   })
 }
 
-export function useLogOooReturn() {
+export function useOooReturn() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => logOooReturn(id),
+    mutationFn: () => oooReturn(),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['attendance', 'exceptions'] })
+      qc.invalidateQueries({ queryKey: ATTENDANCE_KEYS.myToday })
     },
   })
 }
@@ -340,6 +344,14 @@ export function useAllOvertimeRequests(status?: string) {
   return useQuery({
     queryKey: ATTENDANCE_KEYS.allOvertime(status),
     queryFn: () => fetchAllOvertimeRequests(status),
+  })
+}
+
+export function useMonthlyOvertime(year: number, month: number) {
+  return useQuery({
+    queryKey: ATTENDANCE_KEYS.monthlyOvertime(year, month),
+    queryFn: () => fetchMonthlyOvertime(year, month),
+    staleTime: 1000 * 60 * 5,
   })
 }
 

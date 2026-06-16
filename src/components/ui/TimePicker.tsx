@@ -132,22 +132,22 @@ export function TimePicker({
           open ? 'border-border-focus' : 'border-border-default hover:border-border-strong',
         )}
       >
-        <Clock size={13} className="text-text-4 flex-shrink-0" />
+        <Clock size={13} className="text-text-4 shrink-0" />
         <span className={cn('flex-1 font-mono text-[13px]', triggerLabel ? 'text-text-1' : 'text-text-4')}>
           {triggerLabel ?? placeholder}
         </span>
-        <ChevronDown size={13} className={cn('text-text-4 flex-shrink-0 transition-transform', open && 'rotate-180')} />
+        <ChevronDown size={13} className={cn('text-text-4 shrink-0 transition-transform', open && 'rotate-180')} />
       </button>
 
       {open && (
-        <div className="absolute z-50 top-full left-0 mt-1 bg-surface-1 border border-border-default rounded-xl shadow-2xl overflow-hidden w-[180px] max-w-[calc(100vw-2rem)]">
+        <div className="absolute z-50 top-full left-0 mt-1 bg-surface-1 border border-border-default rounded-xl shadow-2xl overflow-hidden w-45 max-w-[calc(100vw-2rem)]">
           <div className="flex divide-x divide-border-subtle">
             {/* Hours column */}
             <div className="flex-1 flex flex-col">
               <div className="text-center font-mono text-[10px] text-text-4 uppercase tracking-wider py-1.5 border-b border-border-subtle bg-surface-2/40">
                 Hour
               </div>
-              <ul ref={hourListRef} className="h-[160px] overflow-y-auto py-1">
+              <ul ref={hourListRef} className="h-40 overflow-y-auto py-1">
                 {HOURS.map((h) => {
                   const disabled = isHourDisabled(h)
                   const active = h === pendingH
@@ -176,7 +176,7 @@ export function TimePicker({
               <div className="text-center font-mono text-[10px] text-text-4 uppercase tracking-wider py-1.5 border-b border-border-subtle bg-surface-2/40">
                 Min
               </div>
-              <ul ref={minListRef} className="h-[160px] overflow-y-auto py-1">
+              <ul ref={minListRef} className="h-40 overflow-y-auto py-1">
                 {MINUTES.map((m) => {
                   const disabled = isMinDisabled(pendingH, m)
                   const active = m === pendingM

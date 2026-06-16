@@ -17,7 +17,7 @@ export function Toggle({ checked, onChange, label, disabled, size = 'md' }: Togg
       disabled={disabled}
       onClick={() => onChange(!checked)}
       className={cn(
-        'relative inline-flex items-center rounded-full transition-colors duration-200 focus:outline-none focus:shadow-ring-focus disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0',
+        'relative inline-flex items-center rounded-full transition-colors duration-200 focus:outline-none focus:shadow-ring-focus disabled:opacity-50 disabled:cursor-not-allowed shrink-0',
         size === 'sm' ? 'w-8 h-4' : 'w-10 h-5',
         checked ? 'bg-brand-red' : 'bg-surface-3',
       )}
@@ -25,7 +25,7 @@ export function Toggle({ checked, onChange, label, disabled, size = 'md' }: Togg
       <span
         className={cn(
           'rounded-full bg-white shadow-sm transition-transform duration-200',
-          size === 'sm' ? 'w-3 h-3' : 'w-4 h-4',
+          size === 'sm' ? 'size-3' : 'size-4',
           checked
             ? size === 'sm' ? 'translate-x-4.5' : 'translate-x-5.5'
             : 'translate-x-0.5',

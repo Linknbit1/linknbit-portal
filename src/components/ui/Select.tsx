@@ -39,18 +39,18 @@ export function Select({ value, onChange, options, placeholder, label, className
         onClick={() => setOpen((v) => !v)}
         className={cn(
           'w-full flex items-center gap-2 bg-surface-inset border border-border-default rounded-sm text-text-1 cursor-pointer whitespace-nowrap hover:bg-surface-2 transition-colors',
-          size === 'sm' ? 'h-[30px] px-2.5 text-[11.5px]' : 'h-9 px-3 text-[12.5px]',
+          size === 'sm' ? 'h-7.5 px-2.5 text-[11.5px]' : 'h-9 px-3 text-[12.5px]',
           open && 'border-border-focus',
         )}
       >
         {label && <span className="text-text-3 font-ui font-medium">{label}</span>}
         {selected?.dot && (
-          <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: selected.dot }} />
+          <span className="size-2 rounded-full shrink-0" style={{ background: selected.dot }} />
         )}
         <span className={cn('font-ui font-semibold flex-1 min-w-0 text-left', !selected && 'text-text-3 font-medium')}>
           {selected?.label ?? placeholder ?? 'Select'}
         </span>
-        <ChevronDown size={12} className="text-text-3 flex-shrink-0" />
+        <ChevronDown size={12} className="text-text-3 shrink-0" />
       </button>
 
       {open && (
@@ -66,7 +66,7 @@ export function Select({ value, onChange, options, placeholder, label, className
               )}
             >
               {opt.dot && (
-                <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: opt.dot }} />
+                <span className="size-2 rounded-full shrink-0" style={{ background: opt.dot }} />
               )}
               {opt.label}
             </button>

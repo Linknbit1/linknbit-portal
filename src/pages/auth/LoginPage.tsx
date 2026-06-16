@@ -29,115 +29,6 @@ interface SplashUser {
   path: string
 }
 
-interface DemoAccount extends SplashUser {
-  email: string
-  password: string
-  label: string
-  labelClass: string
-}
-
-const DEMO_ACCOUNTS: DemoAccount[] = [
-  {
-    email: 'ghayasleo99@gmail.com',
-    password: '@@0Ghayas!!!',
-    label: 'Admin',
-    labelClass: 'text-brand-red',
-    initials: 'GU',
-    name: 'Ghayas Ud Din',
-    role: 'Operations Admin',
-    pod: 'Admin',
-    path: '/dashboard',
-  },
-  {
-    email: 'super.admin@linknbit.com',
-    password: 'Linknbit@123',
-    label: 'Super Admin',
-    labelClass: 'text-brand-red',
-    initials: 'AR',
-    name: 'Ahmad Raza',
-    role: 'Super Admin',
-    pod: 'Admin',
-    path: '/dashboard',
-  },
-  {
-    email: 'project.manager@linknbit.com',
-    password: 'Linknbit@123',
-    label: 'Proj. Manager',
-    labelClass: 'text-service-dev',
-    initials: 'ZM',
-    name: 'Zain Malik',
-    role: 'Project Manager',
-    pod: 'Dev pod',
-    path: '/dashboard',
-  },
-  {
-    email: 'team.lead@linknbit.com',
-    password: 'Linknbit@123',
-    label: 'Team Lead',
-    labelClass: 'text-service-dev',
-    initials: 'SQ',
-    name: 'Sara Qureshi',
-    role: 'Team Lead',
-    pod: 'Dev pod',
-    path: '/dashboard',
-  },
-  {
-    email: 'employee@linknbit.com',
-    password: 'Linknbit@123',
-    label: 'Employee',
-    labelClass: 'text-service-dev',
-    initials: 'BA',
-    name: 'Bilal Ahmed',
-    role: 'Employee',
-    pod: 'Dev pod',
-    path: '/dashboard',
-  },
-  {
-    email: 'hr@linknbit.com',
-    password: 'Linknbit@123',
-    label: 'HR',
-    labelClass: 'text-service-design',
-    initials: 'HR',
-    name: 'Hina Rizvi',
-    role: 'HR Manager',
-    pod: 'People',
-    path: '/dashboard',
-  },
-  {
-    email: 'finance@linknbit.com',
-    password: 'Linknbit@123',
-    label: 'Finance',
-    labelClass: 'text-service-mkt',
-    initials: 'UT',
-    name: 'Usman Tariq',
-    role: 'Finance',
-    pod: 'Finance',
-    path: '/dashboard',
-  },
-  {
-    email: 'client.owner@cricketsansar.com',
-    password: 'Linknbit@123',
-    label: 'Client Owner',
-    labelClass: 'text-service-mkt',
-    initials: 'RG',
-    name: 'Rahim Gul',
-    role: 'Client Owner',
-    pod: 'Cricket Sansar',
-    path: '/client/dashboard',
-  },
-  {
-    email: 'client.member@cricketsansar.com',
-    password: 'Linknbit@123',
-    label: 'Client Member',
-    labelClass: 'text-service-mkt',
-    initials: 'IT',
-    name: 'Irene Teo',
-    role: 'Client Member',
-    pod: 'Cricket Sansar',
-    path: '/client/dashboard',
-  },
-]
-
 const serviceLegend = [
   { label: 'Design', dotClass: 'bg-service-design' },
   { label: 'Development', dotClass: 'bg-service-dev' },
@@ -183,8 +74,8 @@ function BrandPanel() {
 
   return (
     <div className="relative flex min-h-screen flex-col overflow-hidden bg-[linear-gradient(180deg,#0D131D_0%,#0A0F17_100%)] px-16 py-14">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,rgba(122,133,151,0.10)_1px,transparent_1px)] bg-[length:32px_32px] bg-[-1px_-1px] opacity-60 [mask-image:radial-gradient(ellipse_80%_65%_at_50%_50%,#000_40%,transparent_100%)]" />
-      <div className="pointer-events-none absolute inset-6 rounded-sm border border-white/[0.04]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,rgba(122,133,151,0.10)_1px,transparent_1px)] bg-size-[32px_32px] bg-position-[-1px_-1px] opacity-60 mask-[radial-gradient(ellipse_80%_65%_at_50%_50%,#000_40%,transparent_100%)]" />
+      <div className="pointer-events-none absolute inset-6 rounded-sm border border-white/4" />
 
       <div className="relative z-10 flex shrink-0 items-center justify-between">
         <div className="flex items-center gap-3">
@@ -201,7 +92,7 @@ function BrandPanel() {
           <span className="auth-cross absolute left-0 top-1" />
           <span className="auth-cross absolute bottom-1 right-0" />
 
-          <div className="grid h-full w-full grid-cols-[repeat(40,1fr)] grid-rows-[repeat(37,1fr)] pl-7.5">
+          <div className="grid size-full grid-cols-[repeat(40,1fr)] grid-rows-[repeat(37,1fr)] pl-7.5">
             <div className="[grid-area:1/1/24/24] aspect-square rounded-full bg-[radial-gradient(circle_at_35%_35%,#C4B5FD_0%,#8B5CF6_45%,transparent_75%)] opacity-[0.78] mix-blend-screen blur-[2px]" />
             <div className="z-1 aspect-square rounded-full border border-service-design-strong/55 [grid-area:1/1/24/24]">
               <span className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.16em] text-service-design">
@@ -228,21 +119,21 @@ function BrandPanel() {
           </div>
         </div>
 
-        <h2 className="m-0 font-display text-[clamp(40px,4.5vw,64px)] font-bold leading-[0.92] tracking-[-0.025em] text-text-1">
+        <h2 className="m-0 font-display text-[clamp(40px,4.5vw,64px)] font-bold leading-[0.92] tracking-tight text-text-1">
           Unified
           <br />
           operations<span className="text-brand-red">.</span>
         </h2>
-        <p className="mt-5 max-w-[400px] font-ui text-[14.5px] leading-[1.6] text-text-2">
+        <p className="mt-5 max-w-100 font-ui text-[14.5px] leading-[1.6] text-text-2">
           One workspace for the three sides of Linknbit - design, engineering, and growth. Sign in to
           pick up where your team left off.
         </p>
       </div>
 
       <div className="relative z-10 flex shrink-0 items-center justify-between font-mono text-[11px] uppercase tracking-[0.08em] text-text-4">
-        <div className="flex gap-[18px]">
+        <div className="flex gap-4.5">
           {serviceLegend.map((service) => (
-            <span key={service.label} className="flex items-center gap-[7px]">
+            <span key={service.label} className="flex items-center gap-1.75">
               <span className={cn('size-1.5 shrink-0 rounded-[2px]', service.dotClass)} />
               {service.label}
             </span>
@@ -279,14 +170,14 @@ function AuthInput({
 }) {
   const [focused, setFocused] = useState(false)
   return (
-    <div className="mb-4 flex flex-col gap-[7px]">
+    <div className="mb-4 flex flex-col gap-1.75">
       <div className="flex items-baseline justify-between font-ui text-label font-semibold uppercase tracking-[0.08em] text-text-2">
         <span>{label}</span>
         {labelRight}
       </div>
       <div
         className={cn(
-          'flex h-[46px] items-center gap-2.5 rounded-sm border bg-surface-inset px-3.5 transition-[border-color,box-shadow]',
+          'flex h-11.5 items-center gap-2.5 rounded-sm border bg-surface-inset px-3.5 transition-[border-color,box-shadow]',
           invalid ? 'border-error' : focused ? 'border-brand-red shadow-ring-focus' : 'border-border-default',
         )}
       >
@@ -325,7 +216,7 @@ function AuthBtn({
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        'inline-flex h-[46px] w-full items-center justify-center gap-2.5 rounded-sm border font-ui text-body font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50',
+        'inline-flex h-11.5 w-full items-center justify-center gap-2.5 rounded-sm border font-ui text-body font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50',
         variant === 'primary' && 'border-transparent bg-brand-red shadow-[0_4px_14px_rgba(238,39,55,0.22)] hover:bg-brand-red-hover',
         variant === 'ghost' && 'border-border-default bg-surface-1 hover:bg-surface-2',
       )}
@@ -415,16 +306,13 @@ function LoginForm({
       { email: email.trim(), password },
       {
         onSuccess: () => {
-          const demo = DEMO_ACCOUNTS.find((a) => a.email === email.trim())
-          onSuccess(
-            demo ?? {
-              initials: email.slice(0, 2).toUpperCase(),
-              name: email.split('@')[0],
-              role: 'Team Member',
-              pod: 'Linknbit',
-              path: '/dashboard',
-            },
-          )
+          onSuccess({
+            initials: email.slice(0, 2).toUpperCase(),
+            name: email.split('@')[0],
+            role: 'Team Member',
+            pod: 'Linknbit',
+            path: '/dashboard',
+          })
         },
         onError: () => setAttempts((n) => n + 1),
       },
@@ -443,9 +331,9 @@ function LoginForm({
       </p>
 
       {hasError && (
-        <div className="mb-[18px] flex items-start gap-2.5 rounded-sm border border-error-border bg-error-soft px-3.5 py-3">
+        <div className="mb-4.5 flex items-start gap-2.5 rounded-sm border border-error-border bg-error-soft px-3.5 py-3">
           <AlertCircle size={16} className="mt-px shrink-0 text-error" />
-          <div className="font-ui text-[12.5px] leading-[1.5] text-text-1">
+          <div className="font-ui text-[12.5px] leading-normal text-text-1">
             <strong className="font-semibold text-error">That email and password don't match.</strong>{' '}
             Double-check your credentials or reset your password.
             <span className="mt-1 block font-mono text-[10.5px] tracking-[0.04em] text-text-3">
@@ -496,36 +384,13 @@ function LoginForm({
         </AuthBtn>
       </div>
 
-      <div className="mt-6 flex items-center gap-2.5 rounded-sm border border-border-subtle bg-surface-1 px-3.5 py-3 font-ui text-caption leading-[1.5] text-text-3">
+      <div className="mt-6 flex items-center gap-2.5 rounded-sm border border-border-subtle bg-surface-1 px-3.5 py-3 font-ui text-caption/normal text-text-3">
         <Info size={14} className="shrink-0 text-text-3" />
         <span>
           <strong className="font-semibold text-text-2">Access is invite-only.</strong> Contact your admin if you need an account.
         </span>
       </div>
 
-      <div className="mt-6 border-t border-surface-2 pt-[18px]">
-        <p className="mb-2.5 font-mono text-[9.5px] uppercase tracking-[0.14em] text-text-4">
-          Prototype — demo accounts
-        </p>
-        <div className="grid grid-cols-3 gap-2">
-          {DEMO_ACCOUNTS.map((account) => (
-            <button
-              key={account.email}
-              type="button"
-              onClick={() => {
-                setEmail(account.email)
-                setPassword(account.password)
-              }}
-              className="rounded-sm border border-border-default bg-bg-canvas px-2.5 py-2 text-left hover:border-border-strong"
-            >
-              <p className={cn('mb-0.5 font-display text-label font-bold', account.labelClass)}>
-                {account.label}
-              </p>
-              <p className="font-mono text-[9px] text-text-4">{account.email.split('@')[0]}</p>
-            </button>
-          ))}
-        </div>
-      </div>
     </form>
   )
 }
@@ -557,9 +422,9 @@ function ForgotForm({
       </p>
 
       {sendOtp.isError && (
-        <div className="mb-[18px] flex items-start gap-2.5 rounded-sm border border-error-border bg-error-soft px-3.5 py-3">
+        <div className="mb-4.5 flex items-start gap-2.5 rounded-sm border border-error-border bg-error-soft px-3.5 py-3">
           <AlertCircle size={16} className="mt-px shrink-0 text-error" />
-          <p className="font-ui text-[12.5px] leading-[1.5] text-text-1">
+          <p className="font-ui text-[12.5px] leading-normal text-text-1">
             {(sendOtp.error as Error).message ?? 'Could not send code. Try again.'}
           </p>
         </div>
@@ -581,11 +446,11 @@ function ForgotForm({
       <button
         type="button"
         onClick={onBack}
-        className="mt-[22px] inline-flex items-center gap-[7px] rounded-sm bg-transparent py-1.5 pl-1.5 pr-2.5 font-ui text-body-sm text-text-2 hover:text-text-1"
+        className="mt-5.5 inline-flex items-center gap-1.75 rounded-sm bg-transparent py-1.5 pl-1.5 pr-2.5 font-ui text-body-sm text-text-2 hover:text-text-1"
       >
         <ChevronLeft size={14} /> Back to sign in
       </button>
-      <div className="mt-7 flex items-center gap-2.5 rounded-sm border border-border-subtle bg-surface-1 px-3.5 py-3 font-ui text-caption leading-[1.5] text-text-3">
+      <div className="mt-7 flex items-center gap-2.5 rounded-sm border border-border-subtle bg-surface-1 px-3.5 py-3 font-ui text-caption/normal text-text-3">
         <Info size={14} className="shrink-0 text-text-3" />
         <span>
           Codes expire after <strong className="font-semibold text-text-2">10 minutes</strong> for security.
@@ -651,14 +516,14 @@ function OtpView({
         We sent a 6-digit code to
       </p>
       <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border-default bg-surface-1 px-3 py-1.5 font-mono text-mono text-text-1">
-        <span className="size-[5px] shrink-0 rounded-full bg-success" />
+        <span className="size-1.25 shrink-0 rounded-full bg-success" />
         {maskEmail(email)}
       </div>
 
       {hasError && (
         <div className="mb-4 flex items-start gap-2.5 rounded-sm border border-error-border bg-error-soft px-3.5 py-3">
           <AlertCircle size={16} className="mt-px shrink-0 text-error" />
-          <p className="font-ui text-[12.5px] leading-[1.5] text-text-1">
+          <p className="font-ui text-[12.5px] leading-normal text-text-1">
             Invalid or expired code. Check your email and try again.
           </p>
         </div>
@@ -685,13 +550,13 @@ function OtpView({
         <button
           type="button"
           onClick={onChangeEmail}
-          className="mt-1 inline-flex items-center justify-center gap-[7px] bg-transparent px-2.5 py-1.5 font-ui text-body-sm text-text-2 hover:text-text-1"
+          className="mt-1 inline-flex items-center justify-center gap-1.75 bg-transparent px-2.5 py-1.5 font-ui text-body-sm text-text-2 hover:text-text-1"
         >
           <ChevronLeft size={14} /> Change email
         </button>
       </div>
 
-      <div className="mt-6 flex items-center gap-2.5 rounded-sm border border-border-subtle bg-surface-1 px-3.5 py-3 font-ui text-caption leading-[1.5] text-text-3">
+      <div className="mt-6 flex items-center gap-2.5 rounded-sm border border-border-subtle bg-surface-1 px-3.5 py-3 font-ui text-caption/normal text-text-3">
         <Info size={14} className="shrink-0 text-text-3" />
         <span>
           Didn't get it? Check spam, or contact{' '}
@@ -736,7 +601,7 @@ function NewPasswordView({ onDone }: { onDone: () => void }) {
       {updatePassword.isError && (
         <div className="mb-4 flex items-start gap-2.5 rounded-sm border border-error-border bg-error-soft px-3.5 py-3">
           <AlertCircle size={16} className="mt-px shrink-0 text-error" />
-          <p className="font-ui text-[12.5px] leading-[1.5] text-text-1">
+          <p className="font-ui text-[12.5px] leading-normal text-text-1">
             {(updatePassword.error as Error).message ?? 'Could not update password. Try again.'}
           </p>
         </div>
@@ -787,7 +652,7 @@ function NewPasswordView({ onDone }: { onDone: () => void }) {
         </AuthBtn>
       </div>
 
-      <div className="mt-6 flex items-center gap-2.5 rounded-sm border border-border-subtle bg-surface-1 px-3.5 py-3 font-ui text-caption leading-[1.5] text-text-3">
+      <div className="mt-6 flex items-center gap-2.5 rounded-sm border border-border-subtle bg-surface-1 px-3.5 py-3 font-ui text-caption/normal text-text-3">
         <Info size={14} className="shrink-0 text-text-3" />
         <span>
           Use at least <strong className="font-semibold text-text-2">8 characters</strong> with a capital letter and a number.
@@ -835,8 +700,8 @@ function SplashScreen({ user, onDone }: { user: SplashUser; onDone: () => void }
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_50%_50%,#0F1620_0%,#06080C_70%)] px-[clamp(16px,5vw,64px)] py-[clamp(20px,4vh,56px)]">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,rgba(122,133,151,0.07)_1px,transparent_1px)] bg-[length:40px_40px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_30%,transparent_100%)]" />
-      <div className="absolute left-[clamp(16px,5vw,32px)] right-[clamp(16px,5vw,32px)] top-[clamp(16px,3vh,32px)] flex items-center justify-between gap-3 font-mono text-[10.5px] uppercase tracking-[0.12em] text-text-4">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,rgba(122,133,151,0.07)_1px,transparent_1px)] bg-size-[40px_40px] mask-[radial-gradient(ellipse_60%_60%_at_50%_50%,#000_30%,transparent_100%)]" />
+      <div className="absolute inset-x-[clamp(16px,5vw,32px)] top-[clamp(16px,3vh,32px)] flex items-center justify-between gap-3 font-mono text-[10.5px] uppercase tracking-[0.12em] text-text-4">
         <div className="flex items-center gap-3">
           <LogoMark />
           <span className="font-display text-[16px] font-bold text-text-1">Linknbit</span>
@@ -868,7 +733,7 @@ function SplashScreen({ user, onDone }: { user: SplashUser; onDone: () => void }
             <span className="text-brand-red">.</span>
           </h1>
           <div className="mt-[clamp(10px,2vh,14px)]">
-            <span className="inline-flex items-center gap-2 rounded-full border border-border-default bg-surface-2 py-[5px] pl-[5px] pr-3 font-ui text-[12.5px] font-semibold text-text-1">
+            <span className="inline-flex items-center gap-2 rounded-full border border-border-default bg-surface-2 py-1.25 pl-1.25 pr-3 font-ui text-[12.5px] font-semibold text-text-1">
               <span className="inline-flex size-6 items-center justify-center rounded-full bg-[linear-gradient(135deg,#A78BFA,#8B5CF6)] text-white">
                 <LayoutGrid size={13} />
               </span>
@@ -877,14 +742,14 @@ function SplashScreen({ user, onDone }: { user: SplashUser; onDone: () => void }
           </div>
         </div>
 
-        <div className="flex w-[480px] max-w-[90vw] flex-col gap-1 rounded-md border border-border-subtle bg-surface-1/50 px-[clamp(16px,4vw,22px)] py-[clamp(14px,2.5vh,18px)] text-left backdrop-blur-sm">
+        <div className="flex w-120 max-w-[90vw] flex-col gap-1 rounded-md border border-border-subtle bg-surface-1/50 px-[clamp(16px,4vw,22px)] py-[clamp(14px,2.5vh,18px)] text-left backdrop-blur-sm">
           <BootItem status="done" label="Verifying credentials" ms="142ms" />
           <BootItem status="done" label="Loading role permissions" ms="87ms" />
           <BootItem status={step3} label="Syncing your projects from ClickUp" ms={step3 === 'now' ? '...' : '203ms'} />
           <BootItem status={step4} label="Preparing your dashboard" ms={step4 === 'pending' ? 'queued' : step4 === 'now' ? '...' : 'ready'} />
         </div>
 
-        <div className="relative h-1 w-[480px] max-w-[90vw] overflow-hidden rounded-full bg-surface-inset">
+        <div className="relative h-1 w-120 max-w-[90vw] overflow-hidden rounded-full bg-surface-inset">
           <div className="splash-progress-fill" />
         </div>
 
@@ -930,7 +795,7 @@ export default function LoginPage() {
               <LogoMark compact />
               <span className="font-display text-body font-semibold text-text-2">Operations Portal</span>
             </div>
-            <span className="hidden font-mono text-[10.5px] uppercase tracking-[0.1em] text-text-4 sm:block">
+            <span className="hidden font-mono text-[10.5px] uppercase tracking-widest text-text-4 sm:block">
               Need help? help@linknbit.com
             </span>
           </div>
@@ -940,7 +805,7 @@ export default function LoginPage() {
               <div className="relative size-14 shrink-0">
                 <span className="absolute left-0 top-0 size-9 rounded-full bg-[radial-gradient(circle_at_35%_35%,#C4B5FD_0%,#8B5CF6_45%,transparent_75%)] opacity-80 mix-blend-screen blur-[1px]" />
                 <span className="absolute left-3 top-2.5 size-9 rounded-full bg-[radial-gradient(circle_at_65%_40%,#67E8F9_0%,#06B6D4_45%,transparent_75%)] opacity-80 mix-blend-screen blur-[1px]" />
-                <span className="absolute left-1.5 top-[18px] size-9 rounded-full bg-[radial-gradient(circle_at_50%_60%,#FCD34D_0%,#F59E0B_45%,transparent_75%)] opacity-80 mix-blend-screen blur-[1px]" />
+                <span className="absolute left-1.5 top-4.5 size-9 rounded-full bg-[radial-gradient(circle_at_50%_60%,#FCD34D_0%,#F59E0B_45%,transparent_75%)] opacity-80 mix-blend-screen blur-[1px]" />
               </div>
               <div>
                 <p className="m-0 font-display text-[16px] font-bold tracking-[-0.015em] text-text-1">
@@ -952,7 +817,7 @@ export default function LoginPage() {
           </div>
 
           <div className="flex flex-1 items-center justify-center px-6 py-8 sm:px-10 lg:px-20">
-            <div className="w-full max-w-[400px]">
+            <div className="w-full max-w-100">
               {view === 'login' && (
                 <LoginForm onSuccess={triggerSplash} onForgot={() => setView('forgot')} />
               )}
@@ -975,7 +840,7 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <div className="flex shrink-0 items-center justify-between px-6 pb-8 font-mono text-[10.5px] uppercase tracking-[0.1em] text-text-4 sm:px-10 sm:pb-10 lg:px-20 lg:pb-14">
+          <div className="flex shrink-0 items-center justify-between px-6 pb-8 font-mono text-[10.5px] uppercase tracking-widest text-text-4 sm:px-10 sm:pb-10 lg:px-20 lg:pb-14">
             <span>Linknbit - Operations Portal</span>
             <span className="hidden sm:block">EN - ISLAMABAD - PKT</span>
           </div>

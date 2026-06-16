@@ -10,8 +10,7 @@ import { useAuthContext } from '../context/AuthContext'
 import { useSaveProfile, useUpdatePassword } from '../hooks/useProfile'
 import { toUserRole } from '../lib/peopleAccess'
 import { cn } from '../lib/cn'
-
-const MAX_AVATAR_BYTES = 2 * 1024 * 1024 // 2 MB
+import { validateAvatarFile } from '../lib/avatar'
 
 // ── Chip (tag) input for skills / tech stacks ──────────────────────────────────────
 function ChipInput({ label, values, onChange, placeholder }: {
@@ -50,7 +49,7 @@ function ChipInput({ label, values, onChange, placeholder }: {
           onKeyDown={onKeyDown}
           onBlur={add}
           placeholder={values.length ? '' : placeholder}
-          className="flex-1 min-w-[80px] bg-transparent outline-none text-[13px] font-ui text-text-1 placeholder:text-text-4 py-0.5"
+          className="flex-1 min-w-20 bg-transparent outline-none text-[13px] font-ui text-text-1 placeholder:text-text-4 py-0.5"
         />
       </div>
     </div>
@@ -85,8 +84,8 @@ export default function ProfilePage() {
   const onPickFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    if (!file.type.startsWith('image/')) { toast('Please choose an image file', 'error'); return }
-    if (file.size > MAX_AVATAR_BYTES) { toast('Image must be under 2 MB', 'error'); return }
+    const error = validateAvatarFile(file)
+    if (error) { toast(error, 'error'); return }
     if (preview) URL.revokeObjectURL(preview)
     setAvatarFile(file)
     setPreview(URL.createObjectURL(file))
@@ -142,7 +141,7 @@ export default function ProfilePage() {
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="relative group rounded-full flex-shrink-0"
+            className="relative group rounded-full shrink-0"
             aria-label="Change avatar"
           >
             <Avatar name={name || profile.name} src={preview ?? profile.avatar_url ?? undefined} size="xl" />

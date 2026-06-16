@@ -102,7 +102,7 @@ export default function ReportsPage() {
           ].map(({ label, value, icon: Icon, color, change, good }) => (
             <div key={label} className="bg-surface-1 border border-border-default rounded-xl p-5">
               <div className="flex items-center justify-between mb-3">
-                <div className="w-9 h-9 rounded-lg bg-surface-2 border border-border-default flex items-center justify-center">
+                <div className="size-9 rounded-lg bg-surface-2 border border-border-default flex items-center justify-center">
                   <Icon size={16} className={color} />
                 </div>
                 <div className={cn('flex items-center gap-1 text-[11px] font-mono font-semibold', good ? 'text-success' : 'text-error')}>
@@ -169,7 +169,7 @@ export default function ReportsPage() {
               {SERVICE_DIST.map(({ name, value, color }) => (
                 <div key={name} className="flex items-center justify-between text-[11.5px]">
                   <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full" style={{ background: color }} />
+                    <span className="size-2 rounded-full" style={{ background: color }} />
                     <span className="font-ui text-text-2">{name}</span>
                   </div>
                   <span className="font-mono text-text-1 font-semibold">{value}</span>
@@ -195,7 +195,7 @@ export default function ReportsPage() {
               {STATUS_DIST.map(({ name, value, color }) => (
                 <div key={name} className="flex items-center justify-between text-[11.5px]">
                   <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full" style={{ background: color }} />
+                    <span className="size-2 rounded-full" style={{ background: color }} />
                     <span className="font-ui text-text-2">{name}</span>
                   </div>
                   <span className="font-mono text-text-1 font-semibold">{value}</span>
@@ -210,7 +210,7 @@ export default function ReportsPage() {
             <div className="space-y-3">
               {TEAM_PERFORMANCE.map((member) => (
                 <div key={member.id} className="flex items-center gap-3">
-                  <div className="w-7 h-7 rounded-full bg-surface-2 border border-border-default flex items-center justify-center flex-shrink-0">
+                  <div className="size-7 rounded-full bg-surface-2 border border-border-default flex items-center justify-center shrink-0">
                     <span className="font-mono text-[9px] font-bold text-text-2">
                       {member.name.split(' ').map((w) => w[0]).join('').slice(0, 2)}
                     </span>
