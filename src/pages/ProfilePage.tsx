@@ -10,8 +10,7 @@ import { useAuthContext } from '../context/AuthContext'
 import { useSaveProfile, useUpdatePassword } from '../hooks/useProfile'
 import { toUserRole } from '../lib/peopleAccess'
 import { cn } from '../lib/cn'
-
-const MAX_AVATAR_BYTES = 2 * 1024 * 1024 // 2 MB
+import { validateAvatarFile } from '../lib/avatar'
 
 // ── Chip (tag) input for skills / tech stacks ──────────────────────────────────────
 function ChipInput({ label, values, onChange, placeholder }: {
@@ -85,8 +84,8 @@ export default function ProfilePage() {
   const onPickFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    if (!file.type.startsWith('image/')) { toast('Please choose an image file', 'error'); return }
-    if (file.size > MAX_AVATAR_BYTES) { toast('Image must be under 2 MB', 'error'); return }
+    const error = validateAvatarFile(file)
+    if (error) { toast(error, 'error'); return }
     if (preview) URL.revokeObjectURL(preview)
     setAvatarFile(file)
     setPreview(URL.createObjectURL(file))

@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import {
   Plus, Search, Loader2, X, Mail, Copy, Check, UserCheck, UserX, ShieldAlert,
-  Pencil, MoreVertical, Users,
+  Pencil, Users, Table2, LayoutGrid, BriefcaseBusiness, Layers, Upload, Trash2,
 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Avatar } from '../../components/ui/Avatar'
@@ -16,7 +16,7 @@ import { useAuthContext } from '../../context/AuthContext'
 import { useTeams } from '../../hooks/useTeams'
 import { useServices } from '../../hooks/useServices'
 import {
-  usePeople, useInviteUser, useUpdatePersonRole, useUpdatePersonDetails, useSetPersonActive,
+  usePeople, useInviteUser, useUpdatePersonRole, useUpdatePersonDetails, useSetPersonActive, useDeletePerson,
 } from '../../hooks/usePeople'
 import type { Person, InviteResult } from '../../api/people'
 import {
@@ -25,6 +25,7 @@ import {
 import { ROLE_LABELS } from '../../lib/utils'
 import { cn } from '../../lib/cn'
 import { ModalShell } from '../../components/ui/ModalShell'
+import { validateAvatarFile } from '../../lib/avatar'
 
 type Option = { value: string; label: string }
 
@@ -138,8 +139,10 @@ function EditDrawer({ person, actorRole, teams, serviceOptions, onClose }: {
   const mayManage = canManageTarget(actorRole, person.role)
   const mayDetails = canEditDetails(actorRole) && !(actorRole === 'admin' && person.role === 'super_admin')
 
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [name, setName] = useState(person.name)
-  const [avatarUrl, setAvatarUrl] = useState(person.avatar_url ?? '')
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [preview, setPreview] = useState<string | null>(null)
   const [role, setRole] = useState(person.role)
   const [teamId, setTeamId] = useState(person.team_id ?? '')
   const [service, setService] = useState(person.service_type ?? '')
@@ -147,17 +150,28 @@ function EditDrawer({ person, actorRole, teams, serviceOptions, onClose }: {
   const roleOptions = assignableRoles(actorRole).map((r) => ({ value: r, label: ROLE_LABELS[toUserRole(r)] }))
   const isPending = savingRole || savingDetails
 
-  const detailsChanged = name !== person.name || (avatarUrl || null) !== person.avatar_url
+  const detailsChanged = name !== person.name || avatarFile !== null
   const roleChanged = role !== person.role || (teamId || null) !== person.team_id || (service || null) !== person.service_type
+
+  const onPickAvatar = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const error = validateAvatarFile(file)
+    if (error) { toast(error, 'error'); return }
+    if (preview) URL.revokeObjectURL(preview)
+    setAvatarFile(file)
+    setPreview(URL.createObjectURL(file))
+  }
 
   const save = async () => {
     try {
       if (mayDetails && detailsChanged) {
-        await saveDetails({ profileId: person.id, name: name.trim(), avatarUrl: avatarUrl.trim() || null })
+        await saveDetails({ profileId: person.id, name: name.trim(), avatarUrl: person.avatar_url, avatarFile })
       }
       if (mayManage && roleChanged) {
         await saveRole({ profileId: person.id, role, teamId: teamId || null, serviceType: service || null })
       }
+      if (preview) URL.revokeObjectURL(preview)
       toast('Changes saved', 'success')
       onClose()
     } catch (e) {
@@ -169,7 +183,7 @@ function EditDrawer({ person, actorRole, teams, serviceOptions, onClose }: {
     <Drawer
       open
       onClose={onClose}
-      title={<div className="flex items-center gap-3"><Avatar name={person.name} size="md" /><div><p className="font-display font-bold text-[15px] text-text-1">{person.name}</p><p className="font-mono text-[11px] text-text-3">{person.email}</p></div></div>}
+      title={<div className="flex items-center gap-3"><Avatar name={person.name} src={preview ?? person.avatar_url ?? undefined} size="md" /><div><p className="font-display font-bold text-[15px] text-text-1">{person.name}</p><p className="font-mono text-[11px] text-text-3">{person.email}</p></div></div>}
       footer={
         <div className="flex gap-2.5">
           <Button variant="ghost" size="sm" className="flex-1" onClick={onClose}>Cancel</Button>
@@ -184,7 +198,22 @@ function EditDrawer({ person, actorRole, teams, serviceOptions, onClose }: {
           <section className="space-y-3.5">
             <h4 className="font-mono text-[10px] text-text-4 uppercase tracking-wider">Personal details</h4>
             <Input label="Name" value={name} onChange={(e) => setName(e.target.value)} />
-            <Input label="Avatar URL" value={avatarUrl} onChange={(e) => setAvatarUrl(e.target.value)} placeholder="https://…" />
+            <div>
+              <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Avatar image</label>
+              <div className="flex items-center gap-3 rounded-lg border border-border-default bg-surface-inset p-3">
+                <Avatar name={name || person.name} src={preview ?? person.avatar_url ?? undefined} size="lg" />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-ui text-[12.5px] font-semibold text-text-1">
+                    {avatarFile ? avatarFile.name : 'Upload a new profile image'}
+                  </p>
+                  <p className="mt-0.5 font-mono text-[10.5px] text-text-4">Image files only · max 10 MB</p>
+                </div>
+                <Button size="sm" variant="secondary" onClick={() => fileInputRef.current?.click()}>
+                  <Upload size={13} /> Choose
+                </Button>
+                <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={onPickAvatar} />
+              </div>
+            </div>
           </section>
         )}
 
@@ -219,9 +248,42 @@ function humanizeError(msg: string): string {
   return msg
 }
 
-// ── Person row (responsive: desktop table row + mobile card) ───────────────────────
+// ── People list views ─────────────────────────────────────────────────────────────
 
-const GRID_COLS = 'grid-cols-[1fr_130px_140px_120px_90px_120px]'
+type ViewMode = 'table' | 'cards'
+
+const GRID_COLS = 'grid-cols-[minmax(260px,1.5fr)_150px_minmax(150px,1fr)_140px_90px_124px]'
+
+function PeopleViewToggle({ value, onChange }: { value: ViewMode; onChange: (value: ViewMode) => void }) {
+  const options: Array<{ value: ViewMode; label: string; icon: typeof Table2 }> = [
+    { value: 'table', label: 'Table', icon: Table2 },
+    { value: 'cards', label: 'Cards', icon: LayoutGrid },
+  ]
+
+  return (
+    <div className="hidden lg:flex items-center rounded-md border border-border-default bg-surface-inset p-1">
+      {options.map((opt) => {
+        const Icon = opt.icon
+        const active = value === opt.value
+        return (
+          <button
+            key={opt.value}
+            type="button"
+            onClick={() => onChange(opt.value)}
+            className={cn(
+              'inline-flex h-8 items-center gap-2 rounded-sm px-3 font-ui text-[12px] font-semibold transition-colors',
+              active ? 'bg-surface-2 text-text-1 shadow-sm' : 'text-text-3 hover:text-text-1',
+            )}
+            aria-pressed={active}
+          >
+            <Icon size={14} />
+            {opt.label}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
 
 function TeamCell({ label }: { label: string | null }) {
   if (!label) {
@@ -242,143 +304,254 @@ function ServiceCell({ service }: { service: string | null }) {
   return <ServiceChip service={service} />
 }
 
-function PersonRow({ person, myRole, teamLabel, onEdit, onToggleActive }: {
+function PersonActionsMenu({ person, myRole, onEdit, onToggleActive, onDelete }: {
+  person: Person
+  myRole: string
+  onEdit: () => void
+  onToggleActive: () => void
+  onDelete: () => void
+}) {
+  const mayManage = canManageTarget(myRole, person.role)
+  const mayEdit = mayManage || canEditDetails(myRole)
+  const mayDelete = (myRole === 'super_admin' || myRole === 'admin') && mayManage
+  const showAnyAction = canManagePeople(myRole) && (mayEdit || mayManage)
+
+  const [confirming, setConfirming] = useState<'active' | 'delete' | null>(null)
+
+  const confirm = () => {
+    if (confirming === 'active') onToggleActive()
+    if (confirming === 'delete') onDelete()
+    setConfirming(null)
+  }
+
+  if (!showAnyAction) return <span className="block h-8 w-8" aria-hidden />
+
+  if (confirming) {
+    return (
+      <div className="flex items-center justify-end gap-1.5 rounded-md border border-border-subtle bg-surface-inset px-2 py-1">
+        <button onClick={confirm} className="font-mono text-[10.5px] font-bold text-error">Confirm</button>
+        <span className="text-[10px] text-text-4">/</span>
+        <button onClick={() => setConfirming(null)} className="font-mono text-[10.5px] text-text-3 hover:text-text-1">No</button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex items-center justify-end gap-1">
+      {mayEdit && (
+        <button
+          onClick={onEdit}
+          className="flex h-8 w-8 items-center justify-center rounded-md text-text-3 transition-colors hover:bg-surface-2 hover:text-text-1"
+          aria-label={`Edit ${person.name}`}
+          title="Edit"
+        >
+          <Pencil size={14} />
+        </button>
+      )}
+      {mayManage && (
+        <>
+          <button
+            onClick={() => setConfirming('active')}
+            className={cn(
+              'flex h-8 w-8 items-center justify-center rounded-md transition-colors hover:bg-surface-2',
+              person.is_active ? 'text-text-3 hover:text-error' : 'text-text-3 hover:text-success',
+            )}
+            aria-label={person.is_active ? `Deactivate ${person.name}` : `Reactivate ${person.name}`}
+            title={person.is_active ? 'Deactivate' : 'Reactivate'}
+          >
+            {person.is_active ? <UserX size={14} /> : <UserCheck size={14} />}
+          </button>
+          {mayDelete && (
+            <button
+              onClick={() => setConfirming('delete')}
+              className="flex h-8 w-8 items-center justify-center rounded-md text-text-3 transition-colors hover:bg-error/10 hover:text-error"
+              aria-label={`Delete ${person.name}`}
+              title="Delete user"
+            >
+              <Trash2 size={14} />
+            </button>
+          )}
+        </>
+      )}
+    </div>
+  )
+}
+
+function PersonTableRow({ person, myRole, teamLabel, onEdit, onToggleActive, onDelete }: {
   person: Person
   myRole: string
   teamLabel: string | null
   onEdit: () => void
   onToggleActive: () => void
+  onDelete: () => void
 }) {
-  const mayManage = canManageTarget(myRole, person.role)
-  const mayEdit = mayManage || canEditDetails(myRole)
-  const showAnyAction = canManagePeople(myRole) && (mayEdit || mayManage)
-
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [confirming, setConfirming] = useState(false)
-  const menuRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!menuOpen) return
-    const onClick = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false)
-    }
-    document.addEventListener('mousedown', onClick)
-    return () => document.removeEventListener('mousedown', onClick)
-  }, [menuOpen])
-
-  const confirmDeactivate = () => { onToggleActive(); setConfirming(false) }
-
   const inactiveBadge = !person.is_active && (
-    <span className="font-mono text-[9px] text-error bg-error/10 px-1 py-0.5 rounded-xs">INACTIVE</span>
+    <span className="rounded-full bg-error/10 px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-error">Inactive</span>
   )
   const levelLabel = <>Lv {person.level}</>
 
   return (
-    <>
-      {/* Desktop table row */}
-      <div className={cn('hidden lg:grid items-center gap-3 px-5 py-3 border-b border-border-subtle last:border-0', GRID_COLS, !person.is_active && 'opacity-55')}>
-        <div className="flex items-center gap-2.5 min-w-0">
-          <Avatar name={person.name} size="sm" />
-          <div className="min-w-0">
-            <p className="font-ui font-semibold text-[13px] text-text-1 truncate flex items-center gap-1.5">{person.name}{inactiveBadge}</p>
-            <p className="font-mono text-[11px] text-text-3 truncate">{person.email}</p>
-          </div>
-        </div>
-        <RoleBadge role={toUserRole(person.role)} />
-        <span className="font-ui text-[12px] text-text-2 truncate">{teamLabel ?? <span className="text-text-4">—</span>}</span>
-        <span>{person.service_type ? <ServiceChip service={person.service_type} /> : <span className="font-mono text-[11px] text-text-4">—</span>}</span>
-        <span className="font-display font-bold text-[12px] text-text-1">{levelLabel}</span>
-        <div className="flex justify-end items-center gap-1.5">
-          {showAnyAction && (
-            <button
-              onClick={onEdit}
-              disabled={!mayEdit}
-              className="p-1.5 rounded-sm text-text-4 hover:text-text-1 hover:bg-surface-2 transition-colors disabled:opacity-40 disabled:hover:bg-transparent"
-              title="Edit"
-            >
-              <Pencil size={14} />
-            </button>
-          )}
-          {canManagePeople(myRole) && mayManage && (
-            confirming ? (
-              <div className="flex items-center gap-1">
-                <button onClick={confirmDeactivate} className="font-mono text-[10.5px] text-error font-bold">Confirm</button>
-                <span className="text-text-4 text-[10px]">/</span>
-                <button onClick={() => setConfirming(false)} className="font-mono text-[10.5px] text-text-3">No</button>
-              </div>
-            ) : (
-              <button onClick={() => setConfirming(true)} className={cn('p-1.5 rounded-sm hover:bg-surface-2 transition-colors', person.is_active ? 'text-text-4 hover:text-error' : 'text-text-4 hover:text-success')} title={person.is_active ? 'Deactivate' : 'Reactivate'}>
-                {person.is_active ? <UserX size={14} /> : <UserCheck size={14} />}
-              </button>
-            )
-          )}
+    <div className={cn('grid items-center gap-4 px-5 py-3.5 transition-colors hover:bg-surface-2/45', GRID_COLS, !person.is_active && 'opacity-60')}>
+      <div className="flex min-w-0 items-center gap-3">
+        <Avatar name={person.name} size="sm" />
+        <div className="min-w-0">
+          <p className="flex items-center gap-2 truncate font-ui text-[13px] font-semibold text-text-1">{person.name}{inactiveBadge}</p>
+          <p className="mt-0.5 truncate font-mono text-[11px] text-text-3">{person.email}</p>
         </div>
       </div>
+      <RoleBadge role={toUserRole(person.role)} />
+      <TeamCell label={teamLabel} />
+      <ServiceCell service={person.service_type} />
+      <span className="font-display text-[12px] font-bold text-text-1">{levelLabel}</span>
+      <PersonActionsMenu person={person} myRole={myRole} onEdit={onEdit} onToggleActive={onToggleActive} onDelete={onDelete} />
+    </div>
+  )
+}
 
-      {/* Mobile / tablet card */}
-      <div className={cn('lg:hidden relative px-4 py-4 border-b border-border-subtle last:border-0', !person.is_active && 'opacity-60')}>
+function PersonCard({ person, myRole, teamLabel, onEdit, onToggleActive, onDelete }: {
+  person: Person
+  myRole: string
+  teamLabel: string | null
+  onEdit: () => void
+  onToggleActive: () => void
+  onDelete: () => void
+}) {
+  const inactiveBadge = !person.is_active && (
+    <span className="rounded-full bg-error/10 px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-error">Inactive</span>
+  )
+
+  return (
+    <article className={cn('overflow-visible rounded-lg border border-border-default bg-surface-1 shadow-[0_14px_40px_rgba(0,0,0,0.14)] transition-colors hover:border-border-strong', !person.is_active && 'opacity-65')}>
+      <div className="border-b border-border-subtle bg-[linear-gradient(135deg,rgba(238,39,55,0.055),rgba(34,211,238,0.045)_58%,rgba(20,29,42,0)_100%)] p-4">
         <div className="flex items-start gap-3">
-          <Avatar name={person.name} size="md" />
-          <div className="flex-1 min-w-0">
-            <p className="font-ui font-semibold text-[14px] text-text-1 truncate flex items-center gap-1.5">{person.name}{inactiveBadge}</p>
-            <p className="font-mono text-[11.5px] text-text-3 truncate mt-0.5">{person.email}</p>
-          </div>
-          {showAnyAction && (
-            <div ref={menuRef} className="relative flex-shrink-0 -mr-1 -mt-1">
-              <button
-                onClick={() => setMenuOpen((o) => !o)}
-                className="w-8 h-8 rounded-md flex items-center justify-center text-text-3 hover:text-text-1 hover:bg-surface-2 transition-colors"
-                aria-haspopup="menu"
-                aria-expanded={menuOpen}
-                aria-label="Actions"
-              >
-                <MoreVertical size={17} />
-              </button>
-              {menuOpen && (
-                <div role="menu" className="absolute right-0 top-[calc(100%+4px)] z-20 w-44 bg-surface-1 border border-border-default rounded-lg shadow-2xl overflow-hidden py-1">
-                  <button
-                    role="menuitem"
-                    disabled={!mayEdit}
-                    onClick={() => { setMenuOpen(false); onEdit() }}
-                    className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] font-ui font-medium text-text-2 hover:bg-surface-2 hover:text-text-1 transition-colors disabled:opacity-40"
-                  >
-                    <Pencil size={14} className="text-text-3" /> Edit
-                  </button>
-                  {mayManage && (
-                    <button
-                      role="menuitem"
-                      onClick={() => { setMenuOpen(false); setConfirming(true) }}
-                      className={cn('w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] font-ui font-medium transition-colors', person.is_active ? 'text-error hover:bg-error/10' : 'text-success hover:bg-success/10')}
-                    >
-                      {person.is_active ? <><UserX size={14} /> Deactivate</> : <><UserCheck size={14} /> Reactivate</>}
-                    </button>
-                  )}
-                </div>
-              )}
+          <Avatar name={person.name} size="lg" />
+          <div className="min-w-0 flex-1">
+            <div className="flex min-w-0 items-center gap-2">
+              <h2 className="truncate font-display text-[15px] font-bold leading-tight text-text-1">{person.name}</h2>
+              {inactiveBadge}
             </div>
-          )}
+            <p className="mt-1 truncate font-mono text-[11.5px] text-text-3">{person.email}</p>
+          </div>
+          <PersonActionsMenu person={person} myRole={myRole} onEdit={onEdit} onToggleActive={onToggleActive} onDelete={onDelete} />
         </div>
-
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <RoleBadge role={toUserRole(person.role)} />
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-surface-2 font-display font-bold text-[11px] text-text-1">{levelLabel}</span>
-          <TeamCell label={teamLabel} />
-          <ServiceCell service={person.service_type} />
+          <span className="inline-flex items-center rounded-full bg-surface-2 px-2.5 py-1 font-display text-[11px] font-bold text-text-1">Lv {person.level}</span>
         </div>
+      </div>
 
-        {confirming && (
-          <div className="mt-3 flex items-center justify-between gap-3 rounded-md bg-surface-inset border border-border-default px-3 py-2.5">
-            <span className="font-ui text-[12px] text-text-2">
-              {person.is_active ? 'Deactivate' : 'Reactivate'} {person.name}?
-            </span>
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <button onClick={() => setConfirming(false)} className="font-ui text-[12px] font-medium text-text-3 px-2 py-1">Cancel</button>
-              <button onClick={confirmDeactivate} className={cn('font-ui text-[12px] font-bold px-3 py-1 rounded-sm text-white', person.is_active ? 'bg-error' : 'bg-success')}>Confirm</button>
+      <div className="grid gap-3 p-4">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <div className="flex items-center gap-2.5 rounded-md border border-border-subtle bg-surface-2/35 px-3 py-2.5">
+            <BriefcaseBusiness size={14} className="flex-shrink-0 text-text-4" />
+            <div className="min-w-0">
+              <p className="font-mono text-[9.5px] font-semibold uppercase tracking-wider text-text-4">Team</p>
+              <p className="truncate font-ui text-[12.5px] font-semibold text-text-1">{teamLabel ?? 'No team'}</p>
             </div>
           </div>
+          <div className="flex items-center gap-2.5 rounded-md border border-border-subtle bg-surface-2/35 px-3 py-2.5">
+            <Layers size={14} className="flex-shrink-0 text-text-4" />
+            <div className="min-w-0">
+              <p className="font-mono text-[9.5px] font-semibold uppercase tracking-wider text-text-4">Service</p>
+              {person.service_type ? (
+                <div className="mt-1"><ServiceChip service={person.service_type} className="py-0.5 px-2 text-[9.5px]" /></div>
+              ) : (
+                <p className="font-ui text-[12.5px] font-semibold text-text-4">No service</p>
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center justify-between rounded-md border border-border-subtle bg-surface-inset px-3 py-2">
+          <span className="font-mono text-[10.5px] uppercase tracking-wider text-text-4">Account status</span>
+          <span className={cn('rounded-full px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-wider', person.is_active ? 'bg-success/10 text-success' : 'bg-error/10 text-error')}>
+            {person.is_active ? 'Active' : 'Inactive'}
+          </span>
+        </div>
+      </div>
+    </article>
+  )
+}
+
+function EmptyPeopleState() {
+  return (
+    <div className="px-5 py-12 text-center">
+      <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg border border-border-subtle bg-surface-2 text-text-3">
+        <Users size={18} />
+      </div>
+      <p className="mt-3 font-ui text-[13px] font-semibold text-text-2">No people match</p>
+      <p className="mt-1 font-ui text-[12px] text-text-4">Try changing the search or role filter.</p>
+    </div>
+  )
+}
+
+function PeopleTable({ people, myRole, teamName, onEdit, onToggleActive, onDelete }: {
+  people: Person[]
+  myRole: string
+  teamName: Map<string, string>
+  onEdit: (person: Person) => void
+  onToggleActive: (person: Person) => void
+  onDelete: (person: Person) => void
+}) {
+  return (
+    <div className="hidden overflow-visible rounded-lg border border-border-default bg-surface-1 shadow-[0_18px_50px_rgba(0,0,0,0.12)] lg:block">
+      <div className={cn('grid gap-4 rounded-t-lg border-b border-border-subtle bg-surface-2 px-5 py-3', GRID_COLS)}>
+        {['Member', 'Role', 'Team', 'Service', 'Level', 'Actions'].map((h) => (
+          <span key={h} className={cn('font-mono text-[10px] uppercase tracking-wider text-text-4', h === 'Actions' && 'text-right')}>
+            {h}
+          </span>
+        ))}
+      </div>
+      <div className="divide-y divide-border-subtle">
+        {people.length === 0 ? (
+          <EmptyPeopleState />
+        ) : (
+          people.map((p) => (
+            <PersonTableRow
+              key={p.id}
+              person={p}
+              myRole={myRole}
+              teamLabel={p.team_id ? teamName.get(p.team_id) ?? null : null}
+              onEdit={() => onEdit(p)}
+              onToggleActive={() => onToggleActive(p)}
+              onDelete={() => onDelete(p)}
+            />
+          ))
         )}
       </div>
-    </>
+    </div>
+  )
+}
+
+function PeopleCards({ people, myRole, teamName, onEdit, onToggleActive, onDelete }: {
+  people: Person[]
+  myRole: string
+  teamName: Map<string, string>
+  onEdit: (person: Person) => void
+  onToggleActive: (person: Person) => void
+  onDelete: (person: Person) => void
+}) {
+  if (people.length === 0) {
+    return (
+      <div className="rounded-lg border border-border-default bg-surface-1">
+        <EmptyPeopleState />
+      </div>
+    )
+  }
+
+  return (
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 2xl:grid-cols-3">
+      {people.map((p) => (
+        <PersonCard
+          key={p.id}
+          person={p}
+          myRole={myRole}
+          teamLabel={p.team_id ? teamName.get(p.team_id) ?? null : null}
+          onEdit={() => onEdit(p)}
+          onToggleActive={() => onToggleActive(p)}
+          onDelete={() => onDelete(p)}
+        />
+      ))}
+    </div>
   )
 }
 
@@ -393,6 +566,7 @@ export default function PeoplePage() {
   const { data: teams = [] } = useTeams()
   const { data: services = [] } = useServices()
   const { mutate: setActive } = useSetPersonActive()
+  const { mutate: deleteUser } = useDeletePerson()
 
   const serviceOptions = useMemo(
     () => [{ value: '', label: 'None' }, ...services.filter((s) => s.is_active).map((s) => ({ value: s.slug, label: s.name }))],
@@ -401,6 +575,7 @@ export default function PeoplePage() {
 
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState('')
+  const [viewMode, setViewMode] = useState<ViewMode>('table')
   const [inviteOpen, setInviteOpen] = useState(false)
   const [editing, setEditing] = useState<Person | null>(null)
 
@@ -420,6 +595,13 @@ export default function PeoplePage() {
     })
   }
 
+  const removePerson = (p: Person) => {
+    deleteUser({ profileId: p.id }, {
+      onSuccess: () => toast(`${p.name} deleted`, 'success'),
+      onError: (e) => toast(humanizeError(e.message), 'error'),
+    })
+  }
+
   const roleFilterOptions = [
     { value: '', label: 'All roles' },
     ...Array.from(new Set(people.map((p) => p.role))).map((r) => ({ value: r, label: ROLE_LABELS[toUserRole(r)] })),
@@ -429,7 +611,7 @@ export default function PeoplePage() {
     <div className="flex flex-col flex-1">
       <Topbar title="People" />
       <div className="px-4 py-6 lg:p-6 flex flex-col gap-5 max-w-content mx-auto w-full">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
           <div className="relative flex-1 sm:max-w-sm">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-4" />
             <input
@@ -439,8 +621,9 @@ export default function PeoplePage() {
               className="w-full bg-surface-inset border border-border-default rounded-md pl-9 pr-3 py-2 text-[13px] font-ui text-text-1 placeholder:text-text-4 outline-none focus:border-border-focus"
             />
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <div className="flex-1 sm:flex-none sm:w-44"><Select value={roleFilter} onChange={setRoleFilter} options={roleFilterOptions} /></div>
+            <PeopleViewToggle value={viewMode} onChange={setViewMode} />
             {canInvite(myRole) && <Button size="sm" className="flex-shrink-0" onClick={() => setInviteOpen(true)}><Plus size={13} /> Invite</Button>}
           </div>
         </div>
@@ -448,22 +631,18 @@ export default function PeoplePage() {
         {isLoading ? (
           <div className="flex justify-center py-16 text-text-4"><Loader2 size={20} className="animate-spin" /></div>
         ) : (
-          <div className="bg-surface-1 border border-border-default rounded-xl overflow-visible">
-            <div className={cn('hidden lg:grid gap-3 px-5 py-2.5 border-b border-border-subtle bg-surface-2 rounded-t-xl', GRID_COLS)}>
-              {['Member', 'Role', 'Team', 'Service', 'Level', ''].map((h) => <span key={h} className="font-mono text-[10px] text-text-4 uppercase tracking-wider">{h}</span>)}
+          <>
+            <div className="lg:hidden">
+              <PeopleCards people={filtered} myRole={myRole} teamName={teamName} onEdit={setEditing} onToggleActive={toggleActive} onDelete={removePerson} />
             </div>
-            {filtered.length === 0 && <div className="px-5 py-10 text-center text-text-4 font-ui text-[13px]">No people match.</div>}
-            {filtered.map((p) => (
-              <PersonRow
-                key={p.id}
-                person={p}
-                myRole={myRole}
-                teamLabel={p.team_id ? teamName.get(p.team_id) ?? null : null}
-                onEdit={() => setEditing(p)}
-                onToggleActive={() => toggleActive(p)}
-              />
-            ))}
-          </div>
+            {viewMode === 'table' ? (
+              <PeopleTable people={filtered} myRole={myRole} teamName={teamName} onEdit={setEditing} onToggleActive={toggleActive} onDelete={removePerson} />
+            ) : (
+              <div className="hidden lg:block">
+                <PeopleCards people={filtered} myRole={myRole} teamName={teamName} onEdit={setEditing} onToggleActive={toggleActive} onDelete={removePerson} />
+              </div>
+            )}
+          </>
         )}
       </div>
 
