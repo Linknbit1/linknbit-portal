@@ -90,7 +90,7 @@ function StatPill({
       transition={{ duration: 0.2, ease: 'easeOut' }}
     >
       <span
-        className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+        className="size-8 rounded-lg flex items-center justify-center shrink-0"
         style={{ background: accent + '18' }}
       >
         <Icon size={15} style={{ color: accent }} />
@@ -167,7 +167,7 @@ function ProjectCard({ project }: { project: (typeof CLIENT_PROJECTS)[0] }) {
         <div className="flex flex-col gap-1.5">
           <ServiceBadge service={project.serviceType} />
           <h3
-            className="font-display font-bold text-[18px] leading-tight"
+            className="font-display font-bold text-h4/tight"
             style={{ color: '#1A1612' }}
           >
             {project.name}
@@ -206,7 +206,7 @@ function ProjectCard({ project }: { project: (typeof CLIENT_PROJECTS)[0] }) {
           className="rounded-xl p-3.5"
           style={{ background: '#FAF7F2', border: '1px solid #EAE3D6' }}
         >
-          <p className="text-[13px] leading-relaxed mb-1.5" style={{ color: '#4F4940' }}>
+          <p className="text-body-sm/relaxed mb-1.5" style={{ color: '#4F4940' }}>
             {stageInfo.desc}
           </p>
           <p
@@ -223,7 +223,7 @@ function ProjectCard({ project }: { project: (typeof CLIENT_PROJECTS)[0] }) {
       <div className="flex items-center justify-between pt-1 mt-auto">
         <div className="flex items-center gap-2">
           <div
-            className="w-7 h-7 rounded-full flex items-center justify-center text-[9px] font-bold text-white shrink-0"
+            className="size-7 rounded-full flex items-center justify-center text-[9px] font-bold text-white shrink-0"
             style={{ background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)' }}
           >
             {project.pm.name
@@ -335,7 +335,7 @@ function ApprovalCard({ approval }: { approval: (typeof APPROVALS)[0] }) {
             className="rounded-xl p-3.5 mb-4"
             style={{ background: '#FAF7F2', border: '1px solid #EAE3D6' }}
           >
-            <p className="text-[14px] leading-relaxed" style={{ color: '#4F4940' }}>
+            <p className="text-body/relaxed" style={{ color: '#4F4940' }}>
               {approval.message}
             </p>
           </div>
@@ -351,7 +351,7 @@ function ApprovalCard({ approval }: { approval: (typeof APPROVALS)[0] }) {
             transition={{ duration: 0.15 }}
           >
             <div
-              className="w-9 h-9 rounded-lg flex items-center justify-center text-[10px] font-mono font-bold shrink-0"
+              className="size-9 rounded-lg flex items-center justify-center text-[10px] font-mono font-bold shrink-0"
               style={{ background: '#EAE3D6', color: '#877F71' }}
             >
               {file.name.split('.').pop()?.toUpperCase()}
@@ -557,7 +557,7 @@ export default function ClientDashboardPage() {
                 >
                   <div className="flex flex-col items-center shrink-0">
                     <div
-                      className="w-2.5 h-2.5 rounded-full mt-1 shrink-0"
+                      className="size-2.5 rounded-full mt-1 shrink-0"
                       style={{ background: dotColor }}
                     />
                     {i < RECENT_UPDATES.length - 1 && (
@@ -568,7 +568,7 @@ export default function ClientDashboardPage() {
                     )}
                   </div>
                   <div className="pb-1">
-                    <p className="text-[13px] leading-snug" style={{ color: '#4F4940' }}>
+                    <p className="text-body-sm/snug" style={{ color: '#4F4940' }}>
                       {update.text}
                     </p>
                     <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
@@ -622,7 +622,7 @@ export default function ClientDashboardPage() {
                 }}
               >
                 <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center text-[10px] font-mono font-bold shrink-0"
+                  className="size-9 rounded-xl flex items-center justify-center text-[10px] font-mono font-bold shrink-0"
                   style={{
                     background:
                       file.type === 'figma' ? 'rgba(122,63,217,0.1)' : 'rgba(14,139,154,0.08)',

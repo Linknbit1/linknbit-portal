@@ -81,13 +81,13 @@ function TodayAttendanceCard() {
 
   return (
     <Card className={cn('flex items-center gap-4', statusCfg.bg)}>
-      <div className={cn('w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0', isCheckedIn ? statusCfg.bg : 'bg-surface-2')}>
+      <div className={cn('size-9 rounded-lg flex items-center justify-center shrink-0', isCheckedIn ? statusCfg.bg : 'bg-surface-2')}>
         <CalendarCheck size={17} className={statusCfg.text} />
       </div>
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', statusCfg.dot)} />
+          <span className={cn('size-1.5 rounded-full shrink-0', statusCfg.dot)} />
           <p className={cn('font-ui font-semibold text-body-sm', statusCfg.text)}>{statusCfg.label}</p>
         </div>
         <div className="flex items-center gap-3 mt-0.5">
@@ -109,7 +109,7 @@ function TodayAttendanceCard() {
         </div>
       </div>
 
-      <div className="flex items-center gap-2 flex-shrink-0">
+      <div className="flex items-center gap-2 shrink-0">
         {!isCheckedIn ? (
           deviceReady && !canCheckIn ? (
             <Link
@@ -186,7 +186,7 @@ function WFHRequestModal({
     <ModalShell onClose={onClose} size="md" contentClassName="p-5 sm:p-6">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-service-dev/15 flex items-center justify-center">
+            <div className="size-8 rounded-lg bg-service-dev/15 flex items-center justify-center">
               <Home size={15} className="text-service-dev" />
             </div>
             <h3 className="font-display font-bold text-[16px] text-text-1">Request Work From Home</h3>
@@ -275,13 +275,13 @@ export default function EmployeeDashboardPage() {
         {/* Hero card */}
         <div className="bg-surface-1 border border-border-default rounded-xl p-6 relative overflow-hidden">
           {/* Ambient glow */}
-          <div className="absolute -top-16 -right-16 w-64 h-64 bg-xp-gradient opacity-5 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -top-16 -right-16 size-64 bg-xp-gradient opacity-5 rounded-full blur-3xl pointer-events-none" />
           <div className="relative flex items-center gap-6">
             {/* Avatar + level */}
-            <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
+            <div className="flex flex-col items-center gap-1.5 shrink-0">
               <div className="relative">
                 <Avatar name={ME.name} size="xl" />
-                <span className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-surface-2 border-2 border-bg-base flex items-center justify-center font-display font-bold text-[10px] text-coin-gold shadow-badge-glow">
+                <span className="absolute -bottom-1 -right-1 size-6 rounded-full bg-surface-2 border-2 border-bg-base flex items-center justify-center font-display font-bold text-[10px] text-coin-gold shadow-badge-glow">
                   {ME.level}
                 </span>
               </div>
@@ -296,7 +296,7 @@ export default function EmployeeDashboardPage() {
               <XPBar current={ME.xp} max={ME.xpToNext} level={ME.level} size="lg" />
             </div>
             {/* Stats */}
-            <div className="hidden lg:flex items-center gap-5 border-l border-border-default pl-6 flex-shrink-0">
+            <div className="hidden lg:flex items-center gap-5 border-l border-border-default pl-6 shrink-0">
               {[
                 { label: 'XP This Week', value: `+${ME.weekXP}`, icon: <Zap size={14} className="text-coin-gold" />, highlight: true },
                 { label: 'Tasks Done', value: ME.weekTasks, icon: <Target size={14} className="text-success" />, highlight: false },
@@ -361,10 +361,10 @@ export default function EmployeeDashboardPage() {
                       </div>
                       <StatusChip status={task.status} />
                       <PriorityChip priority={task.priority} />
-                      <span className={cn('text-caption font-mono flex-shrink-0', isOverdue ? 'text-error font-bold' : 'text-text-3')}>
+                      <span className={cn('text-caption font-mono shrink-0', isOverdue ? 'text-error font-bold' : 'text-text-3')}>
                         {isOverdue ? 'OVERDUE' : formatDate(task.dueDate)}
                       </span>
-                      <span className="text-caption font-mono text-coin-gold flex-shrink-0">{task.xpReward} XP</span>
+                      <span className="text-caption font-mono text-coin-gold shrink-0">{task.xpReward} XP</span>
                       <Button size="sm" variant="ghost">Open</Button>
                     </div>
                   )
@@ -392,7 +392,7 @@ export default function EmployeeDashboardPage() {
                         </div>
                       )}
                       <p className="font-display font-bold text-body-sm text-text-1 mb-1">{quest.title}</p>
-                      <p className="text-caption text-text-3 mb-3 leading-snug">{quest.description}</p>
+                      <p className="text-caption/snug text-text-3 mb-3">{quest.description}</p>
                       <ProgressBar
                         value={quest.progress}
                         max={quest.total}
@@ -419,7 +419,7 @@ export default function EmployeeDashboardPage() {
             {/* WFH Request Card */}
             <Card>
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-7 h-7 rounded-md bg-service-dev/15 flex items-center justify-center">
+                <div className="size-7 rounded-md bg-service-dev/15 flex items-center justify-center">
                   <Home size={14} className="text-service-dev" />
                 </div>
                 <h3 className="font-display font-semibold text-h4 text-text-1 tracking-tight">Work From Home</h3>
@@ -448,7 +448,7 @@ export default function EmployeeDashboardPage() {
                   </div>
                 )
               })() : (
-                <p className="text-[12px] font-ui text-text-4 mb-3 leading-snug">
+                <p className="text-caption/snug font-ui text-text-4 mb-3">
                   No active WFH request. Since office WiFi is required for check-in, request WFH in advance.
                 </p>
               )}
@@ -482,21 +482,21 @@ export default function EmployeeDashboardPage() {
                   <div
                     key={entry.user.id}
                     className={cn(
-                      'flex items-center gap-2.5 rounded-sm px-1 py-1 transition-colors',
+                      'flex items-center gap-2.5 rounded-sm p-1 transition-colors',
                       entry.isCurrentUser && 'bg-service-dev/10 -mx-1 px-2 rounded-md',
                     )}
                   >
-                    <span className={cn('font-mono text-caption w-5 text-center flex-shrink-0', entry.rank <= 3 ? 'font-bold' : 'text-text-4')}>
+                    <span className={cn('font-mono text-caption w-5 text-center shrink-0', entry.rank <= 3 ? 'font-bold' : 'text-text-4')}>
                       {entry.rank === 1 ? '🥇' : entry.rank === 2 ? '🥈' : entry.rank === 3 ? '🥉' : entry.rank}
                     </span>
                     <Avatar name={entry.user.name} size="xs" />
                     <div className="flex-1 min-w-0">
-                      <p className={cn('font-ui text-body-sm leading-tight truncate', entry.isCurrentUser ? 'font-bold text-service-dev' : 'text-text-2')}>
+                      <p className={cn('font-ui text-body-sm/tight truncate', entry.isCurrentUser ? 'font-bold text-service-dev' : 'text-text-2')}>
                         {entry.user.name}
                       </p>
                     </div>
-                    <span className="font-mono text-caption text-text-3 flex-shrink-0">{entry.xpThisPeriod}</span>
-                    <span className={cn('flex-shrink-0', entry.rankChange > 0 ? 'text-success' : entry.rankChange < 0 ? 'text-error' : 'text-text-4')}>
+                    <span className="font-mono text-caption text-text-3 shrink-0">{entry.xpThisPeriod}</span>
+                    <span className={cn('shrink-0', entry.rankChange > 0 ? 'text-success' : entry.rankChange < 0 ? 'text-error' : 'text-text-4')}>
                       {entry.rankChange > 0 ? <ArrowUp size={11} /> : entry.rankChange < 0 ? <ArrowDown size={11} /> : <Minus size={11} />}
                     </span>
                   </div>
@@ -515,7 +515,7 @@ export default function EmployeeDashboardPage() {
               <div className="space-y-2.5">
                 {BADGES_EARNED.map((badge) => (
                   <div key={badge.id} className="flex items-center gap-2.5">
-                    <span className="text-xl flex-shrink-0">{badge.icon}</span>
+                    <span className="text-xl shrink-0">{badge.icon}</span>
                     <div className="flex-1 min-w-0">
                       <p className="text-body-sm font-semibold text-text-1 truncate">{badge.name}</p>
                       <p className="text-caption text-text-4 font-mono">{badge.earnedAt && formatRelativeTime(badge.earnedAt)}</p>
@@ -529,7 +529,7 @@ export default function EmployeeDashboardPage() {
             </Card>
 
             {/* Coins balance */}
-            <Card className="bg-gradient-to-br from-surface-2 to-surface-1 border-border-strong">
+            <Card className="bg-linear-to-br from-surface-2 to-surface-1 border-border-strong">
               <div className="flex items-center gap-3">
                 <span className="text-2xl">🪙</span>
                 <div>

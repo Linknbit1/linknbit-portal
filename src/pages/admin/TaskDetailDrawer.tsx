@@ -128,7 +128,7 @@ export function TaskDetailDrawer({ task, open, onClose }: TaskDetailDrawerProps)
         {task.description && (
           <div>
             <p className="font-ui font-semibold text-[10px] text-text-4 uppercase tracking-wider mb-1.5">Description</p>
-            <p className="text-[13px] font-ui text-text-2 leading-relaxed bg-surface-inset rounded-lg p-3 border border-border-subtle">
+            <p className="text-body-sm/relaxed font-ui text-text-2 bg-surface-inset rounded-lg p-3 border border-border-subtle">
               {task.description}
             </p>
           </div>
@@ -149,7 +149,7 @@ export function TaskDetailDrawer({ task, open, onClose }: TaskDetailDrawerProps)
                 >
                   <span
                     className={cn(
-                      'w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center transition-colors',
+                      'size-4 rounded border shrink-0 flex items-center justify-center transition-colors',
                       sub.completed ? 'bg-success border-success' : 'border-border-strong bg-surface-inset hover:border-success',
                     )}
                   >
@@ -180,7 +180,7 @@ export function TaskDetailDrawer({ task, open, onClose }: TaskDetailDrawerProps)
             <div className="space-y-1.5">
               {task.files.map((file) => (
                 <div key={file.id} className="flex items-center gap-2.5 p-2.5 bg-surface-inset rounded-lg border border-border-subtle">
-                  <div className="w-8 h-8 rounded bg-surface-2 border border-border-default flex items-center justify-center flex-shrink-0">
+                  <div className="size-8 rounded bg-surface-2 border border-border-default flex items-center justify-center shrink-0">
                     <span className="text-[9px] font-mono text-text-3 uppercase">{file.name.split('.').pop()}</span>
                   </div>
                   <div className="flex-1 min-w-0">
@@ -209,7 +209,7 @@ export function TaskDetailDrawer({ task, open, onClose }: TaskDetailDrawerProps)
             <div className="space-y-3 max-h-40 overflow-y-auto">
               {task.comments.map((comment) => (
                 <div key={comment.id} className="flex gap-2.5">
-                  <Avatar name={comment.authorName} size="xs" className="flex-shrink-0 mt-0.5" />
+                  <Avatar name={comment.authorName} size="xs" className="shrink-0 mt-0.5" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
                       <span className="text-[12px] font-semibold text-text-1">{comment.authorName}</span>

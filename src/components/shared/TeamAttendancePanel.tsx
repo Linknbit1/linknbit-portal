@@ -102,7 +102,7 @@ export function TeamAttendancePanel() {
   return (
     <section className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
       <div className="flex flex-wrap items-center gap-3 px-4 py-3.5 border-b border-border-subtle">
-        <Users size={15} className="text-brand-red flex-shrink-0" />
+        <Users size={15} className="text-brand-red shrink-0" />
         <h2 className="font-display font-bold text-[15px] text-text-1">My Team</h2>
         <span className="font-mono text-[10.5px] text-text-4 uppercase tracking-wider">Read-only</span>
         {section === 'attendance' && (

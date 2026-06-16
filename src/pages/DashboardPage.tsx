@@ -53,7 +53,7 @@ const ProductionDashboard = ({ name, authoritative }: { name: string; authoritat
                 'hover:border-border-strong hover:bg-surface-2 transition-colors',
               )}
             >
-              <span className="w-9 h-9 rounded-md bg-surface-2 border border-border-subtle flex items-center justify-center text-brand-red">
+              <span className="size-9 rounded-md bg-surface-2 border border-border-subtle flex items-center justify-center text-brand-red">
                 <Icon size={18} />
               </span>
               <div>

@@ -45,7 +45,7 @@ export function StatusChip({ status, type = 'task', className }: StatusChipProps
         className,
       )}
     >
-      <span className="w-[5px] h-[5px] rounded-full bg-current flex-shrink-0" />
+      <span className="size-[5px] rounded-full bg-current shrink-0" />
       {config.label}
     </span>
   )

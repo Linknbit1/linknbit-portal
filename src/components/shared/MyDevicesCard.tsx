@@ -67,7 +67,7 @@ export function MyDevicesCard() {
             const isCurrent = ready && d.device_fingerprint === fingerprint
             return (
               <div key={d.id} className="flex items-center gap-3 py-2.5">
-                <Smartphone size={14} className="text-text-4 flex-shrink-0" />
+                <Smartphone size={14} className="text-text-4 shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-ui text-[13px] text-text-1 truncate">{d.device_name}</span>

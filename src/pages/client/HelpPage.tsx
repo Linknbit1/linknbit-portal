@@ -54,7 +54,7 @@ function FaqItem({ faq }: { faq: { q: string; a: string } }) {
     <div className="border-b last:border-b-0" style={{ borderColor: '#EAE3D6' }}>
       <button
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left transition-colors hover:bg-[#FAF7F2]"
+        className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left transition-colors hover:bg-client-bg"
       >
         <span className="text-[14px] font-semibold" style={{ color: '#1A1612' }}>
           {faq.q}
@@ -76,7 +76,7 @@ function FaqItem({ faq }: { faq: { q: string; a: string } }) {
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
             className="overflow-hidden"
           >
-            <p className="px-5 pb-4 text-[14px] leading-relaxed" style={{ color: '#4F4940' }}>
+            <p className="px-5 pb-4 text-body/relaxed" style={{ color: '#4F4940' }}>
               {faq.a}
             </p>
           </motion.div>
@@ -108,7 +108,7 @@ function ResourceCard({
       transition={{ duration: 0.18, ease: 'easeOut' }}
     >
       <div
-        className="w-10 h-10 rounded-xl flex items-center justify-center"
+        className="size-10 rounded-xl flex items-center justify-center"
         style={{ background: `${color}15` }}
       >
         <Icon size={18} style={{ color }} />
@@ -117,7 +117,7 @@ function ResourceCard({
         <p className="font-display font-bold text-[15px] mb-1" style={{ color: '#1A1612' }}>
           {title}
         </p>
-        <p className="text-[13px] leading-relaxed" style={{ color: '#877F71' }}>
+        <p className="text-body-sm/relaxed" style={{ color: '#877F71' }}>
           {description}
         </p>
       </div>

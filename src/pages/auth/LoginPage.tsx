@@ -183,8 +183,8 @@ function BrandPanel() {
 
   return (
     <div className="relative flex min-h-screen flex-col overflow-hidden bg-[linear-gradient(180deg,#0D131D_0%,#0A0F17_100%)] px-16 py-14">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,rgba(122,133,151,0.10)_1px,transparent_1px)] bg-[length:32px_32px] bg-[-1px_-1px] opacity-60 [mask-image:radial-gradient(ellipse_80%_65%_at_50%_50%,#000_40%,transparent_100%)]" />
-      <div className="pointer-events-none absolute inset-6 rounded-sm border border-white/[0.04]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,rgba(122,133,151,0.10)_1px,transparent_1px)] bg-size-[32px_32px] bg-position-[-1px_-1px] opacity-60 mask-[radial-gradient(ellipse_80%_65%_at_50%_50%,#000_40%,transparent_100%)]" />
+      <div className="pointer-events-none absolute inset-6 rounded-sm border border-white/4" />
 
       <div className="relative z-10 flex shrink-0 items-center justify-between">
         <div className="flex items-center gap-3">
@@ -201,7 +201,7 @@ function BrandPanel() {
           <span className="auth-cross absolute left-0 top-1" />
           <span className="auth-cross absolute bottom-1 right-0" />
 
-          <div className="grid h-full w-full grid-cols-[repeat(40,1fr)] grid-rows-[repeat(37,1fr)] pl-7.5">
+          <div className="grid size-full grid-cols-[repeat(40,1fr)] grid-rows-[repeat(37,1fr)] pl-7.5">
             <div className="[grid-area:1/1/24/24] aspect-square rounded-full bg-[radial-gradient(circle_at_35%_35%,#C4B5FD_0%,#8B5CF6_45%,transparent_75%)] opacity-[0.78] mix-blend-screen blur-[2px]" />
             <div className="z-1 aspect-square rounded-full border border-service-design-strong/55 [grid-area:1/1/24/24]">
               <span className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.16em] text-service-design">
@@ -228,7 +228,7 @@ function BrandPanel() {
           </div>
         </div>
 
-        <h2 className="m-0 font-display text-[clamp(40px,4.5vw,64px)] font-bold leading-[0.92] tracking-[-0.025em] text-text-1">
+        <h2 className="m-0 font-display text-[clamp(40px,4.5vw,64px)] font-bold leading-[0.92] tracking-tight text-text-1">
           Unified
           <br />
           operations<span className="text-brand-red">.</span>
@@ -445,7 +445,7 @@ function LoginForm({
       {hasError && (
         <div className="mb-[18px] flex items-start gap-2.5 rounded-sm border border-error-border bg-error-soft px-3.5 py-3">
           <AlertCircle size={16} className="mt-px shrink-0 text-error" />
-          <div className="font-ui text-[12.5px] leading-[1.5] text-text-1">
+          <div className="font-ui text-[12.5px] leading-normal text-text-1">
             <strong className="font-semibold text-error">That email and password don't match.</strong>{' '}
             Double-check your credentials or reset your password.
             <span className="mt-1 block font-mono text-[10.5px] tracking-[0.04em] text-text-3">
@@ -496,7 +496,7 @@ function LoginForm({
         </AuthBtn>
       </div>
 
-      <div className="mt-6 flex items-center gap-2.5 rounded-sm border border-border-subtle bg-surface-1 px-3.5 py-3 font-ui text-caption leading-[1.5] text-text-3">
+      <div className="mt-6 flex items-center gap-2.5 rounded-sm border border-border-subtle bg-surface-1 px-3.5 py-3 font-ui text-caption/normal text-text-3">
         <Info size={14} className="shrink-0 text-text-3" />
         <span>
           <strong className="font-semibold text-text-2">Access is invite-only.</strong> Contact your admin if you need an account.
@@ -559,7 +559,7 @@ function ForgotForm({
       {sendOtp.isError && (
         <div className="mb-[18px] flex items-start gap-2.5 rounded-sm border border-error-border bg-error-soft px-3.5 py-3">
           <AlertCircle size={16} className="mt-px shrink-0 text-error" />
-          <p className="font-ui text-[12.5px] leading-[1.5] text-text-1">
+          <p className="font-ui text-[12.5px] leading-normal text-text-1">
             {(sendOtp.error as Error).message ?? 'Could not send code. Try again.'}
           </p>
         </div>
@@ -585,7 +585,7 @@ function ForgotForm({
       >
         <ChevronLeft size={14} /> Back to sign in
       </button>
-      <div className="mt-7 flex items-center gap-2.5 rounded-sm border border-border-subtle bg-surface-1 px-3.5 py-3 font-ui text-caption leading-[1.5] text-text-3">
+      <div className="mt-7 flex items-center gap-2.5 rounded-sm border border-border-subtle bg-surface-1 px-3.5 py-3 font-ui text-caption/normal text-text-3">
         <Info size={14} className="shrink-0 text-text-3" />
         <span>
           Codes expire after <strong className="font-semibold text-text-2">10 minutes</strong> for security.
@@ -658,7 +658,7 @@ function OtpView({
       {hasError && (
         <div className="mb-4 flex items-start gap-2.5 rounded-sm border border-error-border bg-error-soft px-3.5 py-3">
           <AlertCircle size={16} className="mt-px shrink-0 text-error" />
-          <p className="font-ui text-[12.5px] leading-[1.5] text-text-1">
+          <p className="font-ui text-[12.5px] leading-normal text-text-1">
             Invalid or expired code. Check your email and try again.
           </p>
         </div>
@@ -691,7 +691,7 @@ function OtpView({
         </button>
       </div>
 
-      <div className="mt-6 flex items-center gap-2.5 rounded-sm border border-border-subtle bg-surface-1 px-3.5 py-3 font-ui text-caption leading-[1.5] text-text-3">
+      <div className="mt-6 flex items-center gap-2.5 rounded-sm border border-border-subtle bg-surface-1 px-3.5 py-3 font-ui text-caption/normal text-text-3">
         <Info size={14} className="shrink-0 text-text-3" />
         <span>
           Didn't get it? Check spam, or contact{' '}
@@ -736,7 +736,7 @@ function NewPasswordView({ onDone }: { onDone: () => void }) {
       {updatePassword.isError && (
         <div className="mb-4 flex items-start gap-2.5 rounded-sm border border-error-border bg-error-soft px-3.5 py-3">
           <AlertCircle size={16} className="mt-px shrink-0 text-error" />
-          <p className="font-ui text-[12.5px] leading-[1.5] text-text-1">
+          <p className="font-ui text-[12.5px] leading-normal text-text-1">
             {(updatePassword.error as Error).message ?? 'Could not update password. Try again.'}
           </p>
         </div>
@@ -787,7 +787,7 @@ function NewPasswordView({ onDone }: { onDone: () => void }) {
         </AuthBtn>
       </div>
 
-      <div className="mt-6 flex items-center gap-2.5 rounded-sm border border-border-subtle bg-surface-1 px-3.5 py-3 font-ui text-caption leading-[1.5] text-text-3">
+      <div className="mt-6 flex items-center gap-2.5 rounded-sm border border-border-subtle bg-surface-1 px-3.5 py-3 font-ui text-caption/normal text-text-3">
         <Info size={14} className="shrink-0 text-text-3" />
         <span>
           Use at least <strong className="font-semibold text-text-2">8 characters</strong> with a capital letter and a number.
@@ -835,8 +835,8 @@ function SplashScreen({ user, onDone }: { user: SplashUser; onDone: () => void }
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_50%_50%,#0F1620_0%,#06080C_70%)] px-[clamp(16px,5vw,64px)] py-[clamp(20px,4vh,56px)]">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,rgba(122,133,151,0.07)_1px,transparent_1px)] bg-[length:40px_40px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_30%,transparent_100%)]" />
-      <div className="absolute left-[clamp(16px,5vw,32px)] right-[clamp(16px,5vw,32px)] top-[clamp(16px,3vh,32px)] flex items-center justify-between gap-3 font-mono text-[10.5px] uppercase tracking-[0.12em] text-text-4">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,rgba(122,133,151,0.07)_1px,transparent_1px)] bg-size-[40px_40px] mask-[radial-gradient(ellipse_60%_60%_at_50%_50%,#000_30%,transparent_100%)]" />
+      <div className="absolute inset-x-[clamp(16px,5vw,32px)] top-[clamp(16px,3vh,32px)] flex items-center justify-between gap-3 font-mono text-[10.5px] uppercase tracking-[0.12em] text-text-4">
         <div className="flex items-center gap-3">
           <LogoMark />
           <span className="font-display text-[16px] font-bold text-text-1">Linknbit</span>
@@ -930,7 +930,7 @@ export default function LoginPage() {
               <LogoMark compact />
               <span className="font-display text-body font-semibold text-text-2">Operations Portal</span>
             </div>
-            <span className="hidden font-mono text-[10.5px] uppercase tracking-[0.1em] text-text-4 sm:block">
+            <span className="hidden font-mono text-[10.5px] uppercase tracking-widest text-text-4 sm:block">
               Need help? help@linknbit.com
             </span>
           </div>
@@ -975,7 +975,7 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <div className="flex shrink-0 items-center justify-between px-6 pb-8 font-mono text-[10.5px] uppercase tracking-[0.1em] text-text-4 sm:px-10 sm:pb-10 lg:px-20 lg:pb-14">
+          <div className="flex shrink-0 items-center justify-between px-6 pb-8 font-mono text-[10.5px] uppercase tracking-widest text-text-4 sm:px-10 sm:pb-10 lg:px-20 lg:pb-14">
             <span>Linknbit - Operations Portal</span>
             <span className="hidden sm:block">EN - ISLAMABAD - PKT</span>
           </div>

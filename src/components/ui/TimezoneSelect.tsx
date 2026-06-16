@@ -94,22 +94,22 @@ export function TimezoneSelect({ value, onChange, className }: TimezoneSelectPro
           open ? 'border-border-focus' : 'border-border-default hover:border-border-strong',
         )}
       >
-        <Globe size={13} className="text-text-4 flex-shrink-0" />
+        <Globe size={13} className="text-text-4 shrink-0" />
         <span className="flex-1 font-mono text-[13px] text-text-1 truncate min-w-0">
           {value || 'Select timezone…'}
         </span>
         <ChevronDown
           size={13}
-          className={cn('text-text-4 flex-shrink-0 transition-transform', open && 'rotate-180')}
+          className={cn('text-text-4 shrink-0 transition-transform', open && 'rotate-180')}
         />
       </button>
 
       {/* Dropdown */}
       {open && (
-        <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-surface-1 border border-border-default rounded-md shadow-2xl overflow-hidden">
+        <div className="absolute z-50 top-full inset-x-0 mt-1 bg-surface-1 border border-border-default rounded-md shadow-2xl overflow-hidden">
           {/* Search */}
           <div className="flex items-center gap-2 px-3 py-2 border-b border-border-subtle">
-            <Search size={12} className="text-text-4 flex-shrink-0" />
+            <Search size={12} className="text-text-4 shrink-0" />
             <input
               ref={searchRef}
               type="text"
@@ -151,7 +151,7 @@ export function TimezoneSelect({ value, onChange, className }: TimezoneSelectPro
                   )}
                 >
                   <span className="truncate">{tz}</span>
-                  {tz === value && <span className="text-brand-red ml-2 flex-shrink-0">✓</span>}
+                  {tz === value && <span className="text-brand-red ml-2 shrink-0">✓</span>}
                 </li>
               ))
             )}

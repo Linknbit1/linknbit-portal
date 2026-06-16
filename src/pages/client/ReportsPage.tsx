@@ -173,7 +173,7 @@ export default function ClientReportsPage() {
           </p>
         </div>
         <button
-          className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-[13px] font-semibold transition-opacity hover:opacity-80 flex-shrink-0"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-[13px] font-semibold transition-opacity hover:opacity-80 shrink-0"
           style={{ border: '1px solid #EAE3D6', color: '#4F4940', background: '#FFFFFF' }}
         >
           <Download size={14} />
@@ -253,7 +253,7 @@ export default function ClientReportsPage() {
                 {kpi.label}
               </p>
               <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center"
+                className="size-8 rounded-lg flex items-center justify-center"
                 style={{ background: `${kpi.color}18` }}
               >
                 <kpi.icon size={15} style={{ color: kpi.color }} />
@@ -353,7 +353,7 @@ export default function ClientReportsPage() {
                     {project.name.length > 22 ? project.name.slice(0, 22) + '…' : project.name}
                   </p>
                   <span
-                    className="text-[11px] font-mono font-bold flex-shrink-0"
+                    className="text-[11px] font-mono font-bold shrink-0"
                     style={{ color: '#1A1612' }}
                   >
                     {project.progress}%
@@ -388,15 +388,15 @@ export default function ClientReportsPage() {
           </div>
           <div className="flex items-center gap-4 text-[12px]" style={{ color: '#877F71' }}>
             <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-green-500" />
+              <span className="size-2 rounded-full bg-green-500" />
               Completed
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-red-400" />
+              <span className="size-2 rounded-full bg-red-400" />
               Pending
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full" style={{ background: '#EAE3D6' }} />
+              <span className="size-2 rounded-full" style={{ background: '#EAE3D6' }} />
               Upcoming
             </span>
           </div>
@@ -422,7 +422,7 @@ export default function ClientReportsPage() {
                       : '#FAF7F2',
               }}
             >
-              <div className="flex-shrink-0 mt-0.5">
+              <div className="shrink-0 mt-0.5">
                 {m.status === 'completed' ? (
                   <CheckCircle2 size={16} style={{ color: '#1F9D55' }} />
                 ) : m.status === 'pending' ? (

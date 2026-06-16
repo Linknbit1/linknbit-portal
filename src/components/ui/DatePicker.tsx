@@ -111,11 +111,11 @@ export function DatePicker({ value, onChange, minDate, maxDate, allowedDow, plac
           open ? 'border-border-focus' : 'border-border-default hover:border-border-strong',
         )}
       >
-        <Calendar size={13} className="text-text-4 flex-shrink-0" />
+        <Calendar size={13} className="text-text-4 shrink-0" />
         <span className={cn('flex-1 font-mono text-[13px]', triggerLabel ? 'text-text-1' : 'text-text-4')}>
           {triggerLabel ?? placeholder}
         </span>
-        <ChevronDown size={13} className={cn('text-text-4 flex-shrink-0 transition-transform', open && 'rotate-180')} />
+        <ChevronDown size={13} className={cn('text-text-4 shrink-0 transition-transform', open && 'rotate-180')} />
       </button>
 
       {open && (
@@ -125,7 +125,7 @@ export function DatePicker({ value, onChange, minDate, maxDate, allowedDow, plac
             <button
               type="button"
               onClick={prevMonth}
-              className="w-7 h-7 flex items-center justify-center rounded hover:bg-surface-2 text-text-3 hover:text-text-1 transition-colors"
+              className="size-7 flex items-center justify-center rounded hover:bg-surface-2 text-text-3 hover:text-text-1 transition-colors"
             >
               <ChevronLeft size={14} />
             </button>
@@ -135,7 +135,7 @@ export function DatePicker({ value, onChange, minDate, maxDate, allowedDow, plac
             <button
               type="button"
               onClick={nextMonth}
-              className="w-7 h-7 flex items-center justify-center rounded hover:bg-surface-2 text-text-3 hover:text-text-1 transition-colors"
+              className="size-7 flex items-center justify-center rounded hover:bg-surface-2 text-text-3 hover:text-text-1 transition-colors"
             >
               <ChevronRight size={14} />
             </button>
@@ -162,7 +162,7 @@ export function DatePicker({ value, onChange, minDate, maxDate, allowedDow, plac
                   onClick={() => select(day)}
                   disabled={isDisabled(day)}
                   className={cn(
-                    'w-8 h-8 mx-auto flex items-center justify-center rounded-sm font-mono text-[12px] transition-colors',
+                    'size-8 mx-auto flex items-center justify-center rounded-sm font-mono text-[12px] transition-colors',
                     isSelected(day)
                       ? 'bg-brand-red text-white font-semibold'
                       : isToday(day)

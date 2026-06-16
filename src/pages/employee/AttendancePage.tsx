@@ -85,7 +85,7 @@ function StatusPill({ status }: { status: string }) {
   const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.absent
   return (
     <span className={cn('inline-flex items-center gap-1.5 text-[11px] font-mono font-semibold px-2 py-0.5 rounded-xs border', cfg.cls)}>
-      <span className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', cfg.dot)} />
+      <span className={cn('size-1.5 rounded-full shrink-0', cfg.dot)} />
       {cfg.label}
     </span>
   )
@@ -129,7 +129,7 @@ function UpcomingScheduleSection() {
           return (
             <div key={item.date + item.type} className="flex items-center gap-3 px-5 py-3">
               <div className={cn(
-                'w-7 h-7 rounded-sm flex items-center justify-center flex-shrink-0',
+                'size-7 rounded-sm flex items-center justify-center shrink-0',
                 isHoliday ? 'bg-text-4/10' : 'bg-service-mkt/10',
               )}>
                 {isHoliday
@@ -138,9 +138,9 @@ function UpcomingScheduleSection() {
                 }
               </div>
               <p className="flex-1 font-ui font-medium text-[13px] text-text-1 truncate">{item.label}</p>
-              <span className="font-mono text-[11.5px] text-text-3 flex-shrink-0">{dateLabel}</span>
+              <span className="font-mono text-[11.5px] text-text-3 shrink-0">{dateLabel}</span>
               <span className={cn(
-                'text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full border flex-shrink-0',
+                'text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full border shrink-0',
                 isHoliday
                   ? 'bg-text-4/10 text-text-3 border-border-default'
                   : 'bg-service-mkt/10 text-service-mkt border-service-mkt/25',
@@ -201,7 +201,7 @@ function SummaryStats({ records }: { records: AttendanceRow[] }) {
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       {stats.map(({ label, value, icon: Icon, color, bg }) => (
         <div key={label} className="bg-surface-1 border border-border-default rounded-xl p-4 flex flex-col gap-2">
-          <div className={cn('w-9 h-9 rounded-lg border flex items-center justify-center', bg)}>
+          <div className={cn('size-9 rounded-lg border flex items-center justify-center', bg)}>
             <Icon size={16} className={color} />
           </div>
           <div>
@@ -324,7 +324,7 @@ function OooSection() {
   return (
     <Card className="border-service-dev/30">
       <div className="flex items-center gap-4">
-        <div className="w-10 h-10 rounded-lg bg-service-dev/10 border border-service-dev/20 flex items-center justify-center flex-shrink-0">
+        <div className="size-10 rounded-lg bg-service-dev/10 border border-service-dev/20 flex items-center justify-center shrink-0">
           <MapPin size={18} className="text-service-dev" />
         </div>
         <div className="flex-1 min-w-0">
@@ -546,7 +546,7 @@ function MyExceptionsSection() {
                   )}
                 </div>
                 <span className={cn(
-                  'inline-flex items-center px-2 py-0.5 rounded-xs border text-[11px] font-mono font-semibold flex-shrink-0 mt-0.5',
+                  'inline-flex items-center px-2 py-0.5 rounded-xs border text-[11px] font-mono font-semibold shrink-0 mt-0.5',
                   EXC_STATUS_CLS[exc.status] ?? EXC_STATUS_CLS['pending'],
                 )}>
                   {exc.status}
@@ -658,7 +658,7 @@ function OvertimeSection() {
                   )}
                 </div>
                 <span className={cn(
-                  'inline-flex items-center px-2 py-0.5 rounded-xs border text-[11px] font-mono font-semibold flex-shrink-0 mt-0.5',
+                  'inline-flex items-center px-2 py-0.5 rounded-xs border text-[11px] font-mono font-semibold shrink-0 mt-0.5',
                   OT_STATUS_CLS[req.status] ?? OT_STATUS_CLS['pending'],
                 )}>
                   {req.status}
@@ -797,7 +797,7 @@ function WfhSection() {
                   {req.review_note && <p className="font-ui text-[11px] text-error mt-0.5 italic">"{req.review_note}"</p>}
                 </div>
                 <span className={cn(
-                  'inline-flex items-center px-2 py-0.5 rounded-xs border text-[11px] font-mono font-semibold flex-shrink-0 mt-0.5',
+                  'inline-flex items-center px-2 py-0.5 rounded-xs border text-[11px] font-mono font-semibold shrink-0 mt-0.5',
                   OT_STATUS_CLS[req.status] ?? OT_STATUS_CLS['pending'],
                 )}>
                   {req.status}
@@ -925,7 +925,7 @@ function LeaveSection() {
                   {req.review_note && <p className="font-ui text-[11px] text-error mt-0.5 italic">"{req.review_note}"</p>}
                 </div>
                 <span className={cn(
-                  'inline-flex items-center px-2 py-0.5 rounded-xs border text-[11px] font-mono font-semibold flex-shrink-0 mt-0.5',
+                  'inline-flex items-center px-2 py-0.5 rounded-xs border text-[11px] font-mono font-semibold shrink-0 mt-0.5',
                   OT_STATUS_CLS[req.status] ?? OT_STATUS_CLS['pending'],
                 )}>
                   {req.status}
@@ -1010,7 +1010,7 @@ export default function EmployeeAttendancePage() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="bg-surface-1 border border-border-default rounded-xl p-4 flex flex-col gap-2 animate-pulse">
-                <div className="w-9 h-9 rounded-lg bg-surface-2" />
+                <div className="size-9 rounded-lg bg-surface-2" />
                 <div>
                   <div className="h-7 w-10 bg-surface-2 rounded mb-1" />
                   <div className="h-3 w-14 bg-surface-2 rounded" />

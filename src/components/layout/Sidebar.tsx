@@ -12,22 +12,22 @@ export function Sidebar() {
   const navItems = visibleNavItems(profile?.role)
 
   return (
-    <aside className="w-sidebar-expanded bg-surface-1 border-r border-border-default hidden lg:flex flex-col sticky top-0 h-screen overflow-y-auto flex-shrink-0">
+    <aside className="w-sidebar-expanded bg-surface-1 border-r border-border-default hidden lg:flex flex-col sticky top-0 h-screen overflow-y-auto shrink-0">
       {/* Brand */}
       <div className="flex items-center gap-3 px-4 pt-5 pb-4 border-b border-border-subtle">
-        <LinknbitMark surface="dark" className="h-8 w-7 flex-shrink-0" />
+        <LinknbitMark surface="dark" className="h-8 w-7 shrink-0" />
         <div className="flex-1 min-w-0">
-          <p className="font-display font-bold text-body-sm text-text-1 leading-tight">Linknbit</p>
+          <p className="font-display font-bold text-body-sm/tight text-text-1">Linknbit</p>
           <p className="font-mono text-[9px] text-text-4 uppercase tracking-wider mt-0.5">Operations Portal</p>
         </div>
-        <button className="w-5 h-5 rounded flex items-center justify-center text-text-4 hover:text-text-2 hover:bg-surface-2 transition-colors">
+        <button className="size-5 rounded flex items-center justify-center text-text-4 hover:text-text-2 hover:bg-surface-2 transition-colors">
           <ChevronRight size={12} />
         </button>
       </div>
 
       {/* Nav */}
       <nav className="flex-1 px-3 pt-3 pb-2 flex flex-col gap-px">
-        <p className="text-[10px] font-ui font-semibold text-text-4 uppercase tracking-widest px-2 py-2">
+        <p className="text-[10px] font-ui font-semibold text-text-4 uppercase tracking-widest p-2">
           Main Menu
         </p>
         {navItems.map((item) => {
@@ -39,13 +39,13 @@ export function Sidebar() {
               className={cn(
                 'flex items-center gap-2.5 px-2.5 py-2 rounded-sm font-ui font-medium text-body-sm transition-colors relative',
                 isActive
-                  ? 'bg-brand-red/[0.13] text-white nav-active-indicator'
+                  ? 'bg-brand-red/13 text-white nav-active-indicator'
                   : 'text-text-2 hover:bg-surface-2 hover:text-text-1',
               )}
             >
               <item.icon
                 size={16}
-                className={cn('flex-shrink-0', isActive ? 'text-brand-red' : 'text-text-3')}
+                className={cn('shrink-0', isActive ? 'text-brand-red' : 'text-text-3')}
               />
               <span>{item.label}</span>
               {item.badge && item.badge > 0 && (

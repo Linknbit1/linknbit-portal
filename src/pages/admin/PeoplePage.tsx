@@ -86,7 +86,7 @@ function InviteModal({ actorRole, teams, serviceOptions, onClose }: {
             {result.invite_link && (
               <div className="flex items-center gap-2 bg-surface-inset border border-border-default rounded-md px-3 py-2">
                 <span className="font-mono text-[11px] text-text-3 truncate flex-1">{result.invite_link}</span>
-                <button onClick={copyLink} className="text-text-3 hover:text-text-1 flex-shrink-0">{copied ? <Check size={14} className="text-success" /> : <Copy size={14} />}</button>
+                <button onClick={copyLink} className="text-text-3 hover:text-text-1 shrink-0">{copied ? <Check size={14} className="text-success" /> : <Copy size={14} />}</button>
               </div>
             )}
             <Button size="sm" className="w-full" onClick={onClose}>Done</Button>
@@ -291,7 +291,7 @@ function TeamCell({ label }: { label: string | null }) {
   }
   return (
     <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-surface-2 border border-border-subtle font-ui text-[11.5px] text-text-2 max-w-full">
-      <Users size={11} className="text-text-4 flex-shrink-0" />
+      <Users size={11} className="text-text-4 shrink-0" />
       <span className="truncate">{label}</span>
     </span>
   )
@@ -324,7 +324,7 @@ function PersonActionsMenu({ person, myRole, onEdit, onToggleActive, onDelete }:
     setConfirming(null)
   }
 
-  if (!showAnyAction) return <span className="block h-8 w-8" aria-hidden />
+  if (!showAnyAction) return <span className="block size-8" aria-hidden />
 
   if (confirming) {
     return (
@@ -341,7 +341,7 @@ function PersonActionsMenu({ person, myRole, onEdit, onToggleActive, onDelete }:
       {mayEdit && (
         <button
           onClick={onEdit}
-          className="flex h-8 w-8 items-center justify-center rounded-md text-text-3 transition-colors hover:bg-surface-2 hover:text-text-1"
+          className="flex size-8 items-center justify-center rounded-md text-text-3 transition-colors hover:bg-surface-2 hover:text-text-1"
           aria-label={`Edit ${person.name}`}
           title="Edit"
         >
@@ -353,7 +353,7 @@ function PersonActionsMenu({ person, myRole, onEdit, onToggleActive, onDelete }:
           <button
             onClick={() => setConfirming('active')}
             className={cn(
-              'flex h-8 w-8 items-center justify-center rounded-md transition-colors hover:bg-surface-2',
+              'flex size-8 items-center justify-center rounded-md transition-colors hover:bg-surface-2',
               person.is_active ? 'text-text-3 hover:text-error' : 'text-text-3 hover:text-success',
             )}
             aria-label={person.is_active ? `Deactivate ${person.name}` : `Reactivate ${person.name}`}
@@ -364,7 +364,7 @@ function PersonActionsMenu({ person, myRole, onEdit, onToggleActive, onDelete }:
           {mayDelete && (
             <button
               onClick={() => setConfirming('delete')}
-              className="flex h-8 w-8 items-center justify-center rounded-md text-text-3 transition-colors hover:bg-error/10 hover:text-error"
+              className="flex size-8 items-center justify-center rounded-md text-text-3 transition-colors hover:bg-error/10 hover:text-error"
               aria-label={`Delete ${person.name}`}
               title="Delete user"
             >
@@ -443,14 +443,14 @@ function PersonCard({ person, myRole, teamLabel, onEdit, onToggleActive, onDelet
       <div className="grid gap-3 p-4">
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <div className="flex items-center gap-2.5 rounded-md border border-border-subtle bg-surface-2/35 px-3 py-2.5">
-            <BriefcaseBusiness size={14} className="flex-shrink-0 text-text-4" />
+            <BriefcaseBusiness size={14} className="shrink-0 text-text-4" />
             <div className="min-w-0">
               <p className="font-mono text-[9.5px] font-semibold uppercase tracking-wider text-text-4">Team</p>
               <p className="truncate font-ui text-[12.5px] font-semibold text-text-1">{teamLabel ?? 'No team'}</p>
             </div>
           </div>
           <div className="flex items-center gap-2.5 rounded-md border border-border-subtle bg-surface-2/35 px-3 py-2.5">
-            <Layers size={14} className="flex-shrink-0 text-text-4" />
+            <Layers size={14} className="shrink-0 text-text-4" />
             <div className="min-w-0">
               <p className="font-mono text-[9.5px] font-semibold uppercase tracking-wider text-text-4">Service</p>
               {person.service_type ? (
@@ -475,7 +475,7 @@ function PersonCard({ person, myRole, teamLabel, onEdit, onToggleActive, onDelet
 function EmptyPeopleState() {
   return (
     <div className="px-5 py-12 text-center">
-      <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg border border-border-subtle bg-surface-2 text-text-3">
+      <div className="mx-auto flex size-10 items-center justify-center rounded-lg border border-border-subtle bg-surface-2 text-text-3">
         <Users size={18} />
       </div>
       <p className="mt-3 font-ui text-[13px] font-semibold text-text-2">No people match</p>
@@ -624,7 +624,7 @@ export default function PeoplePage() {
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex-1 sm:flex-none sm:w-44"><Select value={roleFilter} onChange={setRoleFilter} options={roleFilterOptions} /></div>
             <PeopleViewToggle value={viewMode} onChange={setViewMode} />
-            {canInvite(myRole) && <Button size="sm" className="flex-shrink-0" onClick={() => setInviteOpen(true)}><Plus size={13} /> Invite</Button>}
+            {canInvite(myRole) && <Button size="sm" className="shrink-0" onClick={() => setInviteOpen(true)}><Plus size={13} /> Invite</Button>}
           </div>
         </div>
 

@@ -16,7 +16,7 @@ function IosInstallGuide({ onClose }: { onClose: () => void }) {
     <ModalShell onClose={onClose} size="sm" contentClassName="p-5 sm:p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-display font-bold text-[16px] text-text-1 flex items-center gap-2">
-          <span className="w-6 h-6 rounded-sm bg-brand-red flex items-center justify-center flex-shrink-0">
+          <span className="size-6 rounded-sm bg-brand-red flex items-center justify-center shrink-0">
             <Download size={13} className="text-white" />
           </span>
           Install on iPhone
@@ -31,14 +31,14 @@ function IosInstallGuide({ onClose }: { onClose: () => void }) {
       <ol className="flex flex-col gap-3">
         {IOS_STEPS.map((step, i) => (
           <li key={step.title} className="flex items-start gap-3">
-            <span className="relative flex-shrink-0 w-8 h-8 rounded-md bg-surface-2 border border-border-default flex items-center justify-center text-text-2">
+            <span className="relative shrink-0 size-8 rounded-md bg-surface-2 border border-border-default flex items-center justify-center text-text-2">
               <step.icon size={15} />
-              <span className="absolute -top-1.5 -left-1.5 w-4 h-4 rounded-full bg-brand-red text-white font-mono text-[9px] font-bold flex items-center justify-center">
+              <span className="absolute -top-1.5 -left-1.5 size-4 rounded-full bg-brand-red text-white font-mono text-[9px] font-bold flex items-center justify-center">
                 {i + 1}
               </span>
             </span>
             <div className="min-w-0 pt-0.5">
-              <p className="font-ui font-semibold text-[13px] text-text-1 leading-tight">{step.title}</p>
+              <p className="font-ui font-semibold text-body-sm/tight text-text-1">{step.title}</p>
               <p className="font-ui text-[11.5px] text-text-3 leading-snug mt-0.5">{step.body}</p>
             </div>
           </li>
@@ -47,7 +47,7 @@ function IosInstallGuide({ onClose }: { onClose: () => void }) {
 
       <button
         onClick={onClose}
-        className="mt-5 w-full py-2.5 rounded-sm bg-brand-red/[0.13] text-text-1 font-ui font-semibold text-[13px] hover:bg-brand-red/20 transition-colors"
+        className="mt-5 w-full py-2.5 rounded-sm bg-brand-red/13 text-text-1 font-ui font-semibold text-[13px] hover:bg-brand-red/20 transition-colors"
       >
         Got it
       </button>
@@ -75,11 +75,11 @@ export function InstallAppButton({ className }: { className?: string }) {
         onClick={showNative ? install : () => setGuideOpen(true)}
         className={cn(
           'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-sm font-ui font-medium text-body-sm',
-          'bg-brand-red/[0.13] text-text-1 hover:bg-brand-red/20 transition-colors',
+          'bg-brand-red/13 text-text-1 hover:bg-brand-red/20 transition-colors',
           className,
         )}
       >
-        <span className="w-6 h-6 rounded-sm bg-brand-red flex items-center justify-center flex-shrink-0">
+        <span className="size-6 rounded-sm bg-brand-red flex items-center justify-center shrink-0">
           <Download size={13} className="text-white" />
         </span>
         <span className="flex flex-col items-start leading-tight min-w-0">

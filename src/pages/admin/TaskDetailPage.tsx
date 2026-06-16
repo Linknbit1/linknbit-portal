@@ -105,17 +105,17 @@ export default function TaskDetailPage() {
     <div className="min-h-screen bg-bg-base">
       {/* Topbar */}
       <header className="h-16 border-b border-border-default flex items-center px-6 gap-3 sticky top-0 z-40" style={{ background: 'rgba(11,16,24,0.92)', backdropFilter: 'blur(10px)' }}>
-        <button onClick={() => navigate(-1)} className="w-8 h-8 rounded-lg border border-border-default text-text-3 hover:text-text-1 hover:bg-surface-2 flex items-center justify-center transition-colors flex-shrink-0">
+        <button onClick={() => navigate(-1)} className="size-8 rounded-lg border border-border-default text-text-3 hover:text-text-1 hover:bg-surface-2 flex items-center justify-center transition-colors shrink-0">
           <ArrowLeft size={14} />
         </button>
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <Link to="/admin/projects" className="text-[13px] text-text-3 font-ui hover:text-text-1 transition-colors whitespace-nowrap">Projects</Link>
-          <ChevronRight size={13} className="text-text-4 flex-shrink-0" />
+          <ChevronRight size={13} className="text-text-4 shrink-0" />
           <Link to={`/admin/projects/${task.projectId}`} className="text-[13px] text-text-2 font-ui hover:text-text-1 transition-colors whitespace-nowrap">{task.projectName}</Link>
-          <ChevronRight size={13} className="text-text-4 flex-shrink-0" />
+          <ChevronRight size={13} className="text-text-4 shrink-0" />
           <h1 className="font-display font-bold text-[16px] text-text-1 tracking-tight truncate">{task.title}</h1>
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           {task.clickUpSync === 'error' && (
             <button onClick={() => toast('Retrying ClickUp sync...', 'info')} className="h-8 flex items-center gap-1.5 px-3 rounded-lg border border-error/40 bg-error/8 text-error text-[12px] font-ui font-semibold">
               <AlertTriangle size={12} /> Sync Error
@@ -128,27 +128,27 @@ export default function TaskDetailPage() {
         </div>
       </header>
 
-      <div className="px-6 py-6 pb-14" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 360px', gap: '24px', maxWidth: '1440px' }}>
+      <div className="p-6 pb-14" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 360px', gap: '24px', maxWidth: '1440px' }}>
 
         {/* LEFT COLUMN */}
         <div className="flex flex-col gap-5">
 
           {/* Header card */}
           <section className="bg-surface-1 border border-border-default rounded-xl p-5 relative overflow-hidden" style={{ borderLeft: `3px solid ${accent.border}` }}>
-            <div className="absolute top-0 right-0 w-[280px] h-[280px] pointer-events-none" style={{ background: `radial-gradient(circle at top right, ${accent.glow}, transparent 65%)` }} />
+            <div className="absolute top-0 right-0 size-[280px] pointer-events-none" style={{ background: `radial-gradient(circle at top right, ${accent.glow}, transparent 65%)` }} />
             <div className="relative">
               <div className="flex items-start gap-2 flex-wrap mb-2">
                 <span className={cn('inline-flex items-center gap-1 py-0.5 px-2.5 rounded-full border font-ui font-semibold text-[11px] uppercase tracking-wide', STATUS_COLORS[status])}>
-                  <span className="w-[5px] h-[5px] rounded-full bg-current" />{STATUS_LABELS[status]}
+                  <span className="size-[5px] rounded-full bg-current" />{STATUS_LABELS[status]}
                 </span>
                 <span className={cn('inline-flex items-center gap-1 py-0.5 px-2.5 rounded-full border font-ui font-semibold text-[11px] uppercase tracking-wide', PRIORITY_COLORS[priority])}>
-                  <span className="w-[5px] h-[5px] rounded-full bg-current" />{PRIORITY_LABELS[priority]}
+                  <span className="size-[5px] rounded-full bg-current" />{PRIORITY_LABELS[priority]}
                 </span>
                 <span className="inline-flex items-center gap-1 py-0.5 px-2.5 rounded-full border border-coin-gold/30 bg-coin-gold/12 text-coin-gold font-ui font-semibold text-[11px] uppercase tracking-wide">
                   <Zap size={10} />{task.xpReward} XP
                 </span>
               </div>
-              <h2 className="font-display font-bold text-[22px] text-text-1 tracking-tight leading-snug mb-1">{task.title}</h2>
+              <h2 className="font-display font-bold text-h3/snug text-text-1 tracking-tight mb-1">{task.title}</h2>
               <p className="font-mono text-[11px] text-text-3">{task.projectName} · {task.stageName} · {task.serviceType}</p>
             </div>
           </section>
@@ -161,7 +161,7 @@ export default function TaskDetailPage() {
             </div>
             <div className="px-5 py-4">
               {task.description ? (
-                <p className="text-[13px] font-ui text-text-2 leading-relaxed">{task.description}</p>
+                <p className="text-body-sm/relaxed font-ui text-text-2">{task.description}</p>
               ) : (
                 <button onClick={() => toast('Click to add description', 'info')} className="text-[13px] font-ui text-text-4 italic hover:text-text-3 transition-colors">
                   Add a description...
@@ -186,9 +186,9 @@ export default function TaskDetailPage() {
                 <div
                   key={st.id}
                   onClick={() => toggleSubtask(st.id)}
-                  className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-surface-2 transition-colors cursor-pointer"
+                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-surface-2 transition-colors cursor-pointer"
                 >
-                  <span className={cn('w-[18px] h-[18px] rounded-[5px] border-[1.5px] flex items-center justify-center flex-shrink-0 transition-colors',
+                  <span className={cn('size-[18px] rounded-[5px] border-[1.5px] flex items-center justify-center shrink-0 transition-colors',
                     st.completed ? 'bg-success border-success text-[#062013]' : 'border-border-strong bg-surface-inset',
                   )}>
                     <Check size={11} strokeWidth={3.5} className={cn(!st.completed && 'opacity-0')} />
@@ -197,14 +197,14 @@ export default function TaskDetailPage() {
                     {st.title}
                   </span>
                   {st.assigneeId && (
-                    <span className="w-5 h-5 rounded-full bg-surface-2 border border-border-default font-mono text-[8px] font-bold text-text-2 flex items-center justify-center flex-shrink-0">
+                    <span className="size-5 rounded-full bg-surface-2 border border-border-default font-mono text-[8px] font-bold text-text-2 flex items-center justify-center shrink-0">
                       {getInitials(st.assigneeName ?? '')}
                     </span>
                   )}
                 </div>
               ))}
-              <div className="flex items-center gap-2.5 px-2 py-2 mt-1 bg-surface-inset border border-dashed border-border-default rounded-lg">
-                <Plus size={13} className="text-text-3 flex-shrink-0" />
+              <div className="flex items-center gap-2.5 p-2 mt-1 bg-surface-inset border border-dashed border-border-default rounded-lg">
+                <Plus size={13} className="text-text-3 shrink-0" />
                 <input
                   type="text"
                   value={newSubtask}
@@ -232,7 +232,7 @@ export default function TaskDetailPage() {
               <div className="px-5 py-4 space-y-2">
                 {(task.files ?? []).map((file) => (
                   <div key={file.id} className="flex items-center gap-3 px-3 py-2.5 bg-surface-inset border border-border-subtle rounded-lg">
-                    <div className="w-10 h-10 rounded-lg bg-surface-2 border border-border-default flex items-center justify-center flex-shrink-0">
+                    <div className="size-10 rounded-lg bg-surface-2 border border-border-default flex items-center justify-center shrink-0">
                       <span className="font-mono text-[9px] font-bold text-text-3 uppercase">{file.name.split('.').pop()}</span>
                     </div>
                     <div className="flex-1 min-w-0">
@@ -242,7 +242,7 @@ export default function TaskDetailPage() {
                         {!file.clientVisible && <span className="ml-2 text-text-4"><Lock size={9} className="inline mb-0.5" /> Internal</span>}
                       </p>
                     </div>
-                    <button onClick={() => toast(`Downloading ${file.name}`, 'info')} className="w-7 h-7 rounded-lg bg-surface-2 border border-border-default text-text-2 hover:bg-surface-3 hover:text-text-1 flex items-center justify-center transition-colors">
+                    <button onClick={() => toast(`Downloading ${file.name}`, 'info')} className="size-7 rounded-lg bg-surface-2 border border-border-default text-text-2 hover:bg-surface-3 hover:text-text-1 flex items-center justify-center transition-colors">
                       <Download size={13} />
                     </button>
                   </div>
@@ -269,7 +269,7 @@ export default function TaskDetailPage() {
               <div className="space-y-4 mb-4">
                 {allComments.map((comment) => (
                   <div key={comment.id} className="flex gap-3">
-                    <Avatar name={comment.authorName} size="xs" className="flex-shrink-0 mt-0.5" />
+                    <Avatar name={comment.authorName} size="xs" className="shrink-0 mt-0.5" />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="font-ui font-semibold text-[12.5px] text-text-1">{comment.authorName}</span>
@@ -280,7 +280,7 @@ export default function TaskDetailPage() {
                           </span>
                         )}
                       </div>
-                      <p className="font-ui text-[13px] text-text-2 leading-relaxed">{comment.content}</p>
+                      <p className="font-ui text-body-sm/relaxed text-text-2">{comment.content}</p>
                     </div>
                   </div>
                 ))}
@@ -310,7 +310,7 @@ export default function TaskDetailPage() {
                   >
                     <span className={cn(!commentIsClient ? 'text-warning font-semibold' : 'text-text-4')}>Internal</span>
                     <span className={cn('relative inline-block w-9 h-5 rounded-full border transition-colors', commentIsClient ? 'bg-success/15 border-success/40' : 'bg-surface-3 border-border-default')}>
-                      <span className={cn('absolute top-[3px] w-3.5 h-3.5 rounded-full transition-all', commentIsClient ? 'left-[18px] bg-success' : 'left-[3px] bg-text-3')} />
+                      <span className={cn('absolute top-[3px] size-3.5 rounded-full transition-all', commentIsClient ? 'left-[18px] bg-success' : 'left-[3px] bg-text-3')} />
                     </span>
                     <span className={cn(commentIsClient ? 'text-success font-semibold' : 'text-text-4')}>Client</span>
                   </button>
@@ -359,9 +359,9 @@ export default function TaskDetailPage() {
                     type="date"
                     value={dueDate}
                     onChange={(e) => setDueDate(e.target.value)}
-                    className="flex-1 bg-transparent outline-none font-mono text-[12.5px] text-text-1 [color-scheme:dark]"
+                    className="flex-1 bg-transparent outline-none font-mono text-[12.5px] text-text-1 scheme-dark"
                   />
-                  {isOverdue && <AlertTriangle size={13} className="text-error flex-shrink-0" />}
+                  {isOverdue && <AlertTriangle size={13} className="text-error shrink-0" />}
                 </div>
               </div>
 
@@ -383,7 +383,7 @@ export default function TaskDetailPage() {
                   onClick={() => setClientVisible((v) => !v)}
                   className={cn('relative w-9 h-5 rounded-full border transition-colors', clientVisible ? 'bg-success/15 border-success/40' : 'bg-surface-3 border-border-default')}
                 >
-                  <span className={cn('absolute top-[3px] w-3.5 h-3.5 rounded-full transition-all', clientVisible ? 'left-[18px] bg-success' : 'left-[3px] bg-text-3')} />
+                  <span className={cn('absolute top-[3px] size-3.5 rounded-full transition-all', clientVisible ? 'left-[18px] bg-success' : 'left-[3px] bg-text-3')} />
                 </button>
               </div>
 
@@ -392,7 +392,7 @@ export default function TaskDetailPage() {
                 <span className="font-ui font-semibold text-[9.5px] text-text-4 uppercase tracking-widest">ClickUp</span>
                 {task.clickUpSync === 'error' ? (
                   <div className="flex items-center gap-2.5 px-3 py-2.5 bg-error/5 border border-error/25 rounded-lg">
-                    <span className="w-7 h-7 rounded-lg bg-error/15 text-error font-display font-bold text-[10px] flex items-center justify-center flex-shrink-0">CU</span>
+                    <span className="size-7 rounded-lg bg-error/15 text-error font-display font-bold text-[10px] flex items-center justify-center shrink-0">CU</span>
                     <div className="flex-1 min-w-0">
                       <p className="font-mono text-[12px] text-text-1">{task.clickUpId}</p>
                       <p className="font-mono text-[10px] text-error mt-0.5">Sync failed</p>
@@ -403,7 +403,7 @@ export default function TaskDetailPage() {
                   </div>
                 ) : (
                   <div className="flex items-center gap-2.5 px-3 py-2.5 bg-surface-inset border border-border-subtle rounded-lg">
-                    <span className="w-7 h-7 rounded-lg bg-surface-2 text-text-2 font-display font-bold text-[10px] flex items-center justify-center flex-shrink-0">CU</span>
+                    <span className="size-7 rounded-lg bg-surface-2 text-text-2 font-display font-bold text-[10px] flex items-center justify-center shrink-0">CU</span>
                     <div className="flex-1 min-w-0">
                       <p className="font-mono text-[12px] text-text-1">{task.clickUpId ?? 'Not linked'}</p>
                       {task.clickUpSync === 'synced' && <p className="font-mono text-[10px] text-success mt-0.5 flex items-center gap-1"><Check size={9} /> Synced</p>}

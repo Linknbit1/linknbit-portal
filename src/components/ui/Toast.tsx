@@ -44,11 +44,11 @@ function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: (id: string) =
       )}
       style={{ background: 'rgba(15,22,32,0.95)' }}
     >
-      <Icon size={16} className="flex-shrink-0" />
+      <Icon size={16} className="shrink-0" />
       <span className="flex-1 text-text-1">{toast.message}</span>
       <button
         onClick={() => onRemove(toast.id)}
-        className="flex-shrink-0 text-text-4 hover:text-text-2 transition-colors"
+        className="shrink-0 text-text-4 hover:text-text-2 transition-colors"
       >
         <X size={13} />
       </button>
@@ -71,7 +71,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={{ toast }}>
       {children}
-      <div className="fixed left-4 right-4 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] sm:left-auto sm:right-6 sm:bottom-6 flex flex-col gap-2 z-[9999] pointer-events-none">
+      <div className="fixed inset-x-4 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] sm:left-auto sm:right-6 sm:bottom-6 flex flex-col gap-2 z-9999 pointer-events-none">
         {toasts.map((t) => (
           <div key={t.id} className="pointer-events-auto">
             <ToastItem toast={t} onRemove={remove} />

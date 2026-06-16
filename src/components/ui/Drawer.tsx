@@ -59,16 +59,16 @@ export function Drawer({ open, onClose, title, children, footer, width = 520, si
               'relative flex flex-col bg-surface-1 shadow-pop overflow-hidden',
               asBottom
                 ? 'w-full max-h-[90vh] rounded-t-2xl border-t border-border-default'
-                : 'h-full w-full lg:w-auto border-l border-border-default',
+                : 'size-full lg:w-auto border-l border-border-default',
             )}
             style={!asBottom && isDesktop ? { width } : undefined}
           >
             {/* Header */}
-            <div className="flex items-start justify-between gap-4 p-5 border-b border-border-default flex-shrink-0">
+            <div className="flex items-start justify-between gap-4 p-5 border-b border-border-default shrink-0">
               <div className="flex-1 min-w-0">{title}</div>
               <button
                 onClick={onClose}
-                className="w-8 h-8 rounded-sm bg-surface-2 border border-border-default text-text-3 hover:text-text-1 flex items-center justify-center flex-shrink-0 transition-colors"
+                className="size-8 rounded-sm bg-surface-2 border border-border-default text-text-3 hover:text-text-1 flex items-center justify-center shrink-0 transition-colors"
                 aria-label="Close"
               >
                 <X size={14} />
@@ -78,7 +78,7 @@ export function Drawer({ open, onClose, title, children, footer, width = 520, si
             <div className="flex-1 overflow-y-auto">{children}</div>
             {/* Footer */}
             {footer && (
-              <div className="flex-shrink-0 border-t border-border-default p-4 bg-surface-1">
+              <div className="shrink-0 border-t border-border-default p-4 bg-surface-1">
                 {footer}
               </div>
             )}

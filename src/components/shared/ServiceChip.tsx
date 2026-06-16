@@ -33,7 +33,7 @@ export function ServiceChip({ service, showDot = true, className }: ServiceChipP
       // Dynamic per-service colour — the sanctioned inline-style case (value can't be a token).
       style={{ color, backgroundColor: `${color}1F` }}
     >
-      {showDot && <span className="w-[5px] h-[5px] rounded-full bg-current flex-shrink-0" />}
+      {showDot && <span className="size-[5px] rounded-full bg-current shrink-0" />}
       {name}
     </span>
   )
