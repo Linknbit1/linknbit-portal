@@ -29,115 +29,6 @@ interface SplashUser {
   path: string
 }
 
-interface DemoAccount extends SplashUser {
-  email: string
-  password: string
-  label: string
-  labelClass: string
-}
-
-const DEMO_ACCOUNTS: DemoAccount[] = [
-  {
-    email: 'ghayasleo99@gmail.com',
-    password: '@@0Ghayas!!!',
-    label: 'Admin',
-    labelClass: 'text-brand-red',
-    initials: 'GU',
-    name: 'Ghayas Ud Din',
-    role: 'Operations Admin',
-    pod: 'Admin',
-    path: '/dashboard',
-  },
-  {
-    email: 'super.admin@linknbit.com',
-    password: 'Linknbit@123',
-    label: 'Super Admin',
-    labelClass: 'text-brand-red',
-    initials: 'AR',
-    name: 'Ahmad Raza',
-    role: 'Super Admin',
-    pod: 'Admin',
-    path: '/dashboard',
-  },
-  {
-    email: 'project.manager@linknbit.com',
-    password: 'Linknbit@123',
-    label: 'Proj. Manager',
-    labelClass: 'text-service-dev',
-    initials: 'ZM',
-    name: 'Zain Malik',
-    role: 'Project Manager',
-    pod: 'Dev pod',
-    path: '/dashboard',
-  },
-  {
-    email: 'team.lead@linknbit.com',
-    password: 'Linknbit@123',
-    label: 'Team Lead',
-    labelClass: 'text-service-dev',
-    initials: 'SQ',
-    name: 'Sara Qureshi',
-    role: 'Team Lead',
-    pod: 'Dev pod',
-    path: '/dashboard',
-  },
-  {
-    email: 'employee@linknbit.com',
-    password: 'Linknbit@123',
-    label: 'Employee',
-    labelClass: 'text-service-dev',
-    initials: 'BA',
-    name: 'Bilal Ahmed',
-    role: 'Employee',
-    pod: 'Dev pod',
-    path: '/dashboard',
-  },
-  {
-    email: 'hr@linknbit.com',
-    password: 'Linknbit@123',
-    label: 'HR',
-    labelClass: 'text-service-design',
-    initials: 'HR',
-    name: 'Hina Rizvi',
-    role: 'HR Manager',
-    pod: 'People',
-    path: '/dashboard',
-  },
-  {
-    email: 'finance@linknbit.com',
-    password: 'Linknbit@123',
-    label: 'Finance',
-    labelClass: 'text-service-mkt',
-    initials: 'UT',
-    name: 'Usman Tariq',
-    role: 'Finance',
-    pod: 'Finance',
-    path: '/dashboard',
-  },
-  {
-    email: 'client.owner@cricketsansar.com',
-    password: 'Linknbit@123',
-    label: 'Client Owner',
-    labelClass: 'text-service-mkt',
-    initials: 'RG',
-    name: 'Rahim Gul',
-    role: 'Client Owner',
-    pod: 'Cricket Sansar',
-    path: '/client/dashboard',
-  },
-  {
-    email: 'client.member@cricketsansar.com',
-    password: 'Linknbit@123',
-    label: 'Client Member',
-    labelClass: 'text-service-mkt',
-    initials: 'IT',
-    name: 'Irene Teo',
-    role: 'Client Member',
-    pod: 'Cricket Sansar',
-    path: '/client/dashboard',
-  },
-]
-
 const serviceLegend = [
   { label: 'Design', dotClass: 'bg-service-design' },
   { label: 'Development', dotClass: 'bg-service-dev' },
@@ -415,16 +306,13 @@ function LoginForm({
       { email: email.trim(), password },
       {
         onSuccess: () => {
-          const demo = DEMO_ACCOUNTS.find((a) => a.email === email.trim())
-          onSuccess(
-            demo ?? {
-              initials: email.slice(0, 2).toUpperCase(),
-              name: email.split('@')[0],
-              role: 'Team Member',
-              pod: 'Linknbit',
-              path: '/dashboard',
-            },
-          )
+          onSuccess({
+            initials: email.slice(0, 2).toUpperCase(),
+            name: email.split('@')[0],
+            role: 'Team Member',
+            pod: 'Linknbit',
+            path: '/dashboard',
+          })
         },
         onError: () => setAttempts((n) => n + 1),
       },
@@ -503,29 +391,6 @@ function LoginForm({
         </span>
       </div>
 
-      <div className="mt-6 border-t border-surface-2 pt-4.5">
-        <p className="mb-2.5 font-mono text-[9.5px] uppercase tracking-[0.14em] text-text-4">
-          Prototype — demo accounts
-        </p>
-        <div className="grid grid-cols-3 gap-2">
-          {DEMO_ACCOUNTS.map((account) => (
-            <button
-              key={account.email}
-              type="button"
-              onClick={() => {
-                setEmail(account.email)
-                setPassword(account.password)
-              }}
-              className="rounded-sm border border-border-default bg-bg-canvas px-2.5 py-2 text-left hover:border-border-strong"
-            >
-              <p className={cn('mb-0.5 font-display text-label font-bold', account.labelClass)}>
-                {account.label}
-              </p>
-              <p className="font-mono text-[9px] text-text-4">{account.email.split('@')[0]}</p>
-            </button>
-          ))}
-        </div>
-      </div>
     </form>
   )
 }
