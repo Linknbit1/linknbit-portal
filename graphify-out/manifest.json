@@ -1,7 +1,7 @@
 {
   "D:\\Projects\\react\\linknbit-portal\\eslint.config.js": {
-    "mtime": 1779132438.2242026,
-    "hash": "655b46344e9d852e73e2efb1c49c4d1e"
+    "mtime": 1781637487.4094937,
+    "hash": "9b2eba6b61578a79a93ebc7b24518667"
   },
   "D:\\Projects\\react\\linknbit-portal\\vite.config.ts": {
     "mtime": 1779216769.1289012,
@@ -40,8 +40,8 @@
     "hash": "6d9d86121423b002b59095d01c5e99bb"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\api\\attendance.ts": {
-    "mtime": 1780600312.925259,
-    "hash": "ac3528356b11f5e2aadc65c99ed576f0"
+    "mtime": 1781637487.4787872,
+    "hash": "7f94e88ef784d10d1ecb487dcab66832"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\api\\auth.ts": {
     "mtime": 1779567381.3429265,
@@ -60,8 +60,8 @@
     "hash": "d00ee700f3d8c41322e257b4236de48f"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\api\\people.ts": {
-    "mtime": 1780582036.3509705,
-    "hash": "a9ecaa97e4761ef3796c7211ec1a27fe"
+    "mtime": 1781639460.327605,
+    "hash": "60d652e1a7a82ff00106469c9d960e58"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\api\\profile.ts": {
     "mtime": 1781531066.6471193,
@@ -80,8 +80,8 @@
     "hash": "165d93095541a97f88adedcdf9358a6f"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\brand\\LinknbitLogo.tsx": {
-    "mtime": 1781531066.6471193,
-    "hash": "c6c912a978141a353c05edc400eac72a"
+    "mtime": 1781637487.4797864,
+    "hash": "db3692d54ff03415c565dba977c3a716"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\AppShell.tsx": {
     "mtime": 1781533206.4763293,
@@ -92,16 +92,16 @@
     "hash": "6e3f2e4bf818a3b42393eff4a64ceb62"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\ClientShell.tsx": {
-    "mtime": 1781531066.64912,
-    "hash": "e1f12ae5f6fba1a7ee4273166c5ffaf7"
+    "mtime": 1781637487.4807868,
+    "hash": "8cb95ae00f9160403a04fdc89f4c9b85"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\MobileNavContext.tsx": {
     "mtime": 1781531066.64912,
     "hash": "a1e853cbb66d5cb02272544b77638bb5"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\MobileNavDrawer.tsx": {
-    "mtime": 1781544422.4540918,
-    "hash": "632634da41888557a66e144e6673d6ff"
+    "mtime": 1781637487.481785,
+    "hash": "03d2f77147dd15b5ffc19f36eea6b26c"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\navItems.ts": {
     "mtime": 1781531066.65212,
@@ -116,20 +116,20 @@
     "hash": "e4ecf96743151bd6d8b310bca8f831a9"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\Sidebar.tsx": {
-    "mtime": 1781531066.6511197,
-    "hash": "126bf0c9a58b1f6b2786d5a5797466ee"
+    "mtime": 1781637487.4827862,
+    "hash": "11e5c18ef67d909fc1071ab7339ca213"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\Topbar.tsx": {
-    "mtime": 1781576502.2320764,
-    "hash": "678764619eaa78c282b75a00108d2336"
+    "mtime": 1781637487.4827862,
+    "hash": "6a90d357d667ad15a89b1e66fb5d0866"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\pwa\\InstallAppButton.tsx": {
-    "mtime": 1781533151.0697124,
-    "hash": "4dd9bd3ce6e3050fcd97e4b9816ad04c"
+    "mtime": 1781637487.4842925,
+    "hash": "00cb0f6c56816d43bf1d68a415b39616"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\shared\\AttendanceCheckInCard.tsx": {
-    "mtime": 1781534537.309663,
-    "hash": "c27dba78bccaaab951227b569172558e"
+    "mtime": 1781637487.4853003,
+    "hash": "0ce3a4d8cde8ad3bb0feafade00eea2b"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\shared\\ClickUpStatus.tsx": {
     "mtime": 1778596599.7816026,
@@ -139,65 +139,73 @@
     "mtime": 1778596599.7826118,
     "hash": "a3724101dc10f9e8a5411c9e1b011d0e"
   },
+  "D:\\Projects\\react\\linknbit-portal\\src\\components\\shared\\MyDevicesCard.tsx": {
+    "mtime": 1781637487.4863017,
+    "hash": "6a941c08055c462cb3ba7cf72b9cc22a"
+  },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\shared\\PriorityChip.tsx": {
-    "mtime": 1778694808.7596452,
-    "hash": "ec7ba73a658d0a29ed76303ac47c626c"
+    "mtime": 1781637487.4863017,
+    "hash": "0cb9a9465c678699e65e55618f90ff84"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\shared\\RoleBadge.tsx": {
     "mtime": 1780583147.1956122,
     "hash": "994afbbe22f04245734ed057f0487a52"
   },
+  "D:\\Projects\\react\\linknbit-portal\\src\\components\\shared\\SalaryCard.tsx": {
+    "mtime": 1781660416.3533976,
+    "hash": "4d450fbcebea72cad49556042ef48b3b"
+  },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\shared\\ServiceChip.tsx": {
-    "mtime": 1780583506.4409406,
-    "hash": "c186fb8676fc043ae4557b4fd43fa1cb"
+    "mtime": 1781637487.4872987,
+    "hash": "f4c0b82cc4addd33d4d4916e1813efcd"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\shared\\StatusChip.tsx": {
-    "mtime": 1778694803.0644016,
-    "hash": "b5672ed793ebc7e7e9593a61132992b0"
+    "mtime": 1781637487.4882996,
+    "hash": "8b5773d944484bc3271a3761f764aeeb"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\shared\\TeamAttendancePanel.tsx": {
-    "mtime": 1781531066.6531181,
-    "hash": "2f7d25718f33eee60904d538e390ff68"
+    "mtime": 1781637487.4882996,
+    "hash": "a399dd9657459cf0a09a3e9b280f7da4"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\shared\\XPBar.tsx": {
     "mtime": 1778596599.783612,
     "hash": "de19b1e64236293c8c97e966f0870c39"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\Avatar.tsx": {
-    "mtime": 1778596599.7846117,
-    "hash": "b9a9c0c7211b356fe90cc593e97aa0da"
+    "mtime": 1781639265.1487393,
+    "hash": "ec63d763e1d549471de3ea4ab12db8d9"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\Badge.tsx": {
-    "mtime": 1778596599.7846117,
-    "hash": "baffe57abebba1fef6b86a6867360d8c"
+    "mtime": 1781637487.489298,
+    "hash": "1f42a5bd85c5267a0ee24a414e1d5c5b"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\Button.tsx": {
-    "mtime": 1778596599.7846117,
-    "hash": "820735fc1cfd9e781b46d19cc18d8dc3"
+    "mtime": 1781637487.4902992,
+    "hash": "0def0b90ee731bbb6b6f3b0243568a2e"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\Card.tsx": {
     "mtime": 1778596599.7856133,
     "hash": "6954adf29bf2998167cc210bed3f8acd"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\DatePicker.tsx": {
-    "mtime": 1781531066.6541173,
-    "hash": "87015e8cc663d2d54b0966619db0d955"
+    "mtime": 1781637487.4902992,
+    "hash": "25b103ed2f37b03ad927509e2dea8476"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\Drawer.tsx": {
-    "mtime": 1781531066.6541173,
-    "hash": "f3ca95f0cedb6795e419dc65c9a4e4ea"
+    "mtime": 1781637487.4913,
+    "hash": "ae4e67424dcad5ad3d0dc45c60c44a6a"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\Input.tsx": {
     "mtime": 1778596599.7856133,
     "hash": "b92402cff3abfc28113f6cdad1527c6a"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\Modal.tsx": {
-    "mtime": 1781531066.6541173,
-    "hash": "5fc19bed6372d53dada6d20e75c4ba42"
+    "mtime": 1781637487.4913,
+    "hash": "ae4bbafc91a0564d93700fd7b45b3afd"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\ModalShell.tsx": {
-    "mtime": 1781533709.5286775,
-    "hash": "9f2151dc425c7b987efb54f95227f641"
+    "mtime": 1781637487.492301,
+    "hash": "cdab929929107880fc359450e31c94ff"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\ProgressBar.tsx": {
     "mtime": 1778596599.7856133,
@@ -208,52 +216,52 @@
     "hash": "eaa9c9fb8633db37977c802b8414091a"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\Select.tsx": {
-    "mtime": 1781531066.6561186,
-    "hash": "0506ec2c22300fb6c67ddea6de302d3c"
+    "mtime": 1781637487.4932995,
+    "hash": "53f8a4c8d0fcdd440f5f65c3182eca53"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\Skeleton.tsx": {
-    "mtime": 1778596599.7866092,
-    "hash": "7ffa7629241993a7f35d3f206a148706"
+    "mtime": 1781637487.4932995,
+    "hash": "a3bb8f3e1d8d45a57fe9474c1b1198ac"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\Tabs.tsx": {
-    "mtime": 1781533266.2847013,
-    "hash": "5a93253f15bba321ac4c38513cf69a6a"
+    "mtime": 1781639291.6312802,
+    "hash": "2503577493d615e2f45eab298564e279"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\TimePicker.tsx": {
-    "mtime": 1781531066.6571178,
-    "hash": "e65473ec6336b34bfca4a69f4d438221"
+    "mtime": 1781637487.494303,
+    "hash": "598fdf2ec6c2c0effcf15f988469aa89"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\TimezoneSelect.tsx": {
-    "mtime": 1780306405.6313047,
-    "hash": "7533ed8567b453fe74e31437e551c836"
+    "mtime": 1781637487.494303,
+    "hash": "4e937302d707673e8335932142c9139e"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\toast-context.ts": {
     "mtime": 1779132438.2552013,
     "hash": "3a1c98ef2e5d5f8717502beb83642617"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\Toast.tsx": {
-    "mtime": 1781531066.658118,
-    "hash": "48ad4e2c788e9e6db94b8cd5255394e8"
+    "mtime": 1781637487.4954498,
+    "hash": "d60cdce02f5a0137133f191bf6aa7549"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\Toggle.tsx": {
-    "mtime": 1778596599.7866092,
-    "hash": "975af2cea79d974559ad991315b7d16c"
+    "mtime": 1781637487.496446,
+    "hash": "ff9eb3f3bbce3b35f99d3ee0e0aa77e4"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\constants\\roles.ts": {
     "mtime": 1780548521.557233,
     "hash": "f2f72d3038c61f24873895c86e967755"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\context\\AuthContext.tsx": {
-    "mtime": 1781534950.3967934,
-    "hash": "2a40b296cdc34dd7c3a055620a6100fe"
+    "mtime": 1781639366.4909482,
+    "hash": "4e7351226e157d4c76727e72a9cf29a8"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\data\\mock.ts": {
     "mtime": 1779132438.256202,
     "hash": "8aacb390e65a3096c8f517a3a4425339"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useAttendance.ts": {
-    "mtime": 1780549963.3953662,
-    "hash": "9f2613fff8a44d72f97c1946e75e072b"
+    "mtime": 1781637487.496446,
+    "hash": "d59687e58d4e617f5ca5dcb47556c3b7"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useAuth.ts": {
     "mtime": 1779567390.115311,
@@ -263,9 +271,13 @@
     "mtime": 1781531066.6591184,
     "hash": "1b16beef22cc99f0762d9a284de89f58"
   },
+  "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useCurrentDevice.ts": {
+    "mtime": 1781637487.4974468,
+    "hash": "ebf7b62862f5a1456742883dd7552a10"
+  },
   "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useEnrolledDevices.ts": {
-    "mtime": 1779462541.845543,
-    "hash": "8baf7250cc3e9445f924a095155104db"
+    "mtime": 1781637487.498445,
+    "hash": "c5cf3d356a50bde3de8f26eadb44ebb3"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useGamification.ts": {
     "mtime": 1781531066.6591184,
@@ -280,8 +292,8 @@
     "hash": "d7d32b93b91c40601977cbe23e9cef90"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\usePeople.ts": {
-    "mtime": 1780582047.6945758,
-    "hash": "f16075263606f8890c63abb88b8b3b00"
+    "mtime": 1781639480.2071414,
+    "hash": "f55d84def30f717f47d4e4377968e50b"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useProfile.ts": {
     "mtime": 1781531066.6601176,
@@ -302,6 +314,14 @@
   "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useTeams.ts": {
     "mtime": 1779462541.8465452,
     "hash": "ebe30855db0a7e0082f98b406ff3b695"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\lib\\attendanceHours.ts": {
+    "mtime": 1781636520.5013382,
+    "hash": "dbf47e03a3307725d86515609d05f957"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\lib\\avatar.ts": {
+    "mtime": 1781637487.499447,
+    "hash": "079c644aa90f2a08aac2864d12c38e73"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\lib\\cn.ts": {
     "mtime": 1778596599.7878091,
@@ -335,6 +355,10 @@
     "mtime": 1779216780.9574878,
     "hash": "5bd526445bee0bea72af0a22837a24b5"
   },
+  "D:\\Projects\\react\\linknbit-portal\\src\\lib\\timezone.ts": {
+    "mtime": 1781636494.7975283,
+    "hash": "bbd8b5efcf486750897827fa8030a356"
+  },
   "D:\\Projects\\react\\linknbit-portal\\src\\lib\\utils.ts": {
     "mtime": 1779210894.3650258,
     "hash": "2c1961a62e7951938068de01ab7bccf0"
@@ -344,136 +368,136 @@
     "hash": "286a290b99f3ce4835c540818def8062"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\DashboardPage.tsx": {
-    "mtime": 1781531066.662119,
-    "hash": "3db52940d7edea7f9bc9729088a442a0"
+    "mtime": 1781637487.500449,
+    "hash": "0e8b46af6e777edd996bfca2296f3ebc"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\ProfilePage.tsx": {
-    "mtime": 1781531066.6631172,
-    "hash": "2c4bf9136c2f788aff5825932cddfa61"
+    "mtime": 1781660258.6821182,
+    "hash": "3c9117dfe7242ec13a80a89de9985871"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\AttendancePage.tsx": {
-    "mtime": 1781576437.3255439,
-    "hash": "1accbee42160eb2da6823fddb763c961"
+    "mtime": 1781639282.0229802,
+    "hash": "ed6da29c6cbfbb273157c02112ef5dbd"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\ClickUpPage.tsx": {
-    "mtime": 1779132438.2582042,
-    "hash": "e575f036590301f6347ffe6971dd9683"
+    "mtime": 1781637487.5034475,
+    "hash": "0cd898fd373cc7b24fc83cc93407c678"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\ClientsPage.tsx": {
-    "mtime": 1779132438.2592013,
-    "hash": "e1d161b25654d26f5718b3047ff520e2"
+    "mtime": 1781637487.5044467,
+    "hash": "c1e9a99b9bf2ddc17b415dce38935d95"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\DashboardPage.tsx": {
-    "mtime": 1781531066.6651206,
-    "hash": "c1e71e6ce4a506c8f8eb23f01c791317"
+    "mtime": 1781637487.5049524,
+    "hash": "28237a70bec32ecfb97dac17dda65519"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\GamificationPage.tsx": {
-    "mtime": 1781531066.666118,
-    "hash": "c5159e1c0ee91d146284d17d048029ae"
+    "mtime": 1781637487.50596,
+    "hash": "c54f36880acc5c7583b997c3afb08c98"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\NewProjectModal.tsx": {
-    "mtime": 1778692792.8158236,
-    "hash": "68e80d0770b10aa814be67e3d8eefe10"
+    "mtime": 1781637487.50596,
+    "hash": "58c288dd66e9861db3a438aa51b5b47e"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\PeoplePage.tsx": {
-    "mtime": 1781533531.7757895,
-    "hash": "51e885997e7bbfca227caae3488aad0d"
+    "mtime": 1781660231.4084778,
+    "hash": "e71d94c222adbe0ad696221d9dc6dda5"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\PlaceholderPage.tsx": {
-    "mtime": 1778596599.7898102,
-    "hash": "afa5de5fe297c1484499cd629056d912"
+    "mtime": 1781637487.5084794,
+    "hash": "505d7fc1c77adccd6afc7e5d66ece55f"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\ProjectDetailPage.tsx": {
-    "mtime": 1779132438.2602017,
-    "hash": "3143594339c2cef0b7752e60d1e0cfa9"
+    "mtime": 1781637487.5094788,
+    "hash": "ade0a71b55c0807cab66038c5269cb59"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\ProjectsPage.tsx": {
-    "mtime": 1778920282.584779,
-    "hash": "4f5046fbcd45fb632bed39b509a3c088"
+    "mtime": 1781637487.5104795,
+    "hash": "1f987b4e999e37948276dd6d457a5455"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\ReportsPage.tsx": {
-    "mtime": 1779132438.2602017,
-    "hash": "68f8b4480ec46ff05f96c884d6c721b9"
+    "mtime": 1781637487.5104795,
+    "hash": "4ae14cdba8cb6eba80e7f85211103fe1"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\SettingsPage.tsx": {
-    "mtime": 1781531066.6671183,
-    "hash": "7096c8226f3c4058112d8215ec3c5e19"
+    "mtime": 1781637487.5114787,
+    "hash": "5691a2f2fec5ac1e7b3eec59c15c0b60"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\TaskDetailDrawer.tsx": {
-    "mtime": 1779132438.2612047,
-    "hash": "7484b4ae351fcad12b3c8068302f8f5a"
+    "mtime": 1781637487.5124779,
+    "hash": "a27c141a3a3864ee09570adbc6a2d76e"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\TaskDetailPage.tsx": {
-    "mtime": 1779132438.2622044,
-    "hash": "ca06075d9b3243a3cbb402bca5b187e9"
+    "mtime": 1781637487.5124779,
+    "hash": "475a7561d04c4c7d155de3f4602085bd"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\TasksPage.tsx": {
-    "mtime": 1779132438.2632017,
-    "hash": "9ee81b39928db21a1b7fd7ba9f0bc5bf"
+    "mtime": 1781637487.5134807,
+    "hash": "5ea4484bbf06dfe900029916cb4c48f9"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\TeamsPage.tsx": {
-    "mtime": 1781533330.4737332,
-    "hash": "745d9b92c12a487b505711ca54262ef1"
+    "mtime": 1781639269.4858274,
+    "hash": "3aac92ba9135479007639c7aacf6409e"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\auth\\LoginPage.tsx": {
-    "mtime": 1781533248.3539371,
-    "hash": "423419f185ddc438f639d11be0d98789"
+    "mtime": 1781637487.5144787,
+    "hash": "a263322915f73675e8822ee3c7cade85"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\auth\\RegisterPage.tsx": {
-    "mtime": 1781531066.669119,
-    "hash": "9039df36e2f99b90afef78478da5b6ab"
+    "mtime": 1781637487.5156076,
+    "hash": "34105e607bbcc3493fd4e11045fed0e8"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\auth\\ResetPasswordPage.tsx": {
-    "mtime": 1781553511.3066175,
-    "hash": "f931b3611dd8b6f2a7e4ec6af000b514"
+    "mtime": 1781637487.5166082,
+    "hash": "6f2d6ee44d96b06323263ee7e2c783ec"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\client\\AccountPage.tsx": {
-    "mtime": 1779132438.264201,
-    "hash": "8ee68dada00adaa63029c9871853df7d"
+    "mtime": 1781637487.5176077,
+    "hash": "fb900dc7184219111126678339a095e1"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\client\\ApprovalsPage.tsx": {
-    "mtime": 1781531066.6701188,
-    "hash": "57a87a0b210dd4f13564e2081e45d060"
+    "mtime": 1781637487.5186155,
+    "hash": "27eeb5b35d319f59a2926f2bf732126b"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\client\\DashboardPage.tsx": {
-    "mtime": 1779132438.2652023,
-    "hash": "b7d6092b9b5c134720cc09c8af5ff43a"
+    "mtime": 1781637487.519615,
+    "hash": "f2066ea762d55c7ad8eda3f48122ea14"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\client\\FilesPage.tsx": {
-    "mtime": 1778640150.1168368,
-    "hash": "e849dd2b6eee8c8944f65acf4f1da42e"
+    "mtime": 1781637487.520615,
+    "hash": "460a22ff5236b8caf783818e64a5c8c2"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\client\\HelpPage.tsx": {
-    "mtime": 1779132438.2662013,
-    "hash": "fd8008ecd745587366c84e64492b8c2e"
+    "mtime": 1781637487.520615,
+    "hash": "c4b093a051b37960df5593d3b268b44c"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\client\\ProjectDetailPage.tsx": {
-    "mtime": 1779132438.2672005,
-    "hash": "2e3c9fb2fe771963867ff1434bc039ec"
+    "mtime": 1781637487.5216146,
+    "hash": "42446f928fbb10669f3369c98c375b70"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\client\\ProjectsPage.tsx": {
-    "mtime": 1781531066.6701188,
-    "hash": "46d1e0da1eea670d6c6f4e7769a3643c"
+    "mtime": 1781637487.5226147,
+    "hash": "2cd4bd7ee36d6de9bfce62df82816842"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\client\\ReportsPage.tsx": {
-    "mtime": 1778640164.1117146,
-    "hash": "1dc95a162b79d83ad2ea651b5cde38ef"
+    "mtime": 1781637487.5236144,
+    "hash": "36f8ff0dbfc18cab0f43ab82f47797f8"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\client\\SettingsPage.tsx": {
-    "mtime": 1779132438.2672005,
-    "hash": "9902b7236bc778850bdbc8495fd8b8c6"
+    "mtime": 1781637487.5236144,
+    "hash": "08bbccf4da7b71775bb42bfce103959e"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\employee\\AttendancePage.tsx": {
-    "mtime": 1781531066.6721206,
-    "hash": "571fb392051cbce4d30747a546ea338b"
+    "mtime": 1781637487.5251167,
+    "hash": "58cf6bad129bed44b08548f4198d8776"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\employee\\DashboardPage.tsx": {
-    "mtime": 1781531066.6721206,
-    "hash": "f914f17d092f7c210555b943affa3feb"
+    "mtime": 1781637487.5261238,
+    "hash": "2e7647f5f83f035ae0c3840f2936955a"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\types\\database.ts": {
-    "mtime": 1781576589.1651945,
-    "hash": "b4cc1f6bb17be71b167db0537af103e0"
+    "mtime": 1781639437.0229561,
+    "hash": "fdc7bc8c23345b1b64bccfa863fd242a"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\types\\index.ts": {
     "mtime": 1779210728.043267,
@@ -483,13 +507,21 @@
     "mtime": 1779139008.7085917,
     "hash": "092304828f778f6670a9e0ccda288826"
   },
+  "D:\\Projects\\react\\linknbit-portal\\supabase\\functions\\admin-upload-avatar\\index.ts": {
+    "mtime": 1781637487.5276327,
+    "hash": "d48208b51bd61a320056293a30dc5708"
+  },
   "D:\\Projects\\react\\linknbit-portal\\supabase\\functions\\attendance-checkin\\index.ts": {
-    "mtime": 1781576420.01415,
-    "hash": "ac5ddf53af7e18bd75968e907a525594"
+    "mtime": 1781637487.5286448,
+    "hash": "dcee98a90b81a3e524b577f74ce1e943"
   },
   "D:\\Projects\\react\\linknbit-portal\\supabase\\functions\\attendance-checkout\\index.ts": {
-    "mtime": 1779462541.8505425,
-    "hash": "dbdd680bd9b65a75778684f58ad2e856"
+    "mtime": 1781637487.5286448,
+    "hash": "8628bd57cc4a69da752f1c85e014d689"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\supabase\\functions\\attendance-ooo\\index.ts": {
+    "mtime": 1781637487.5286448,
+    "hash": "0e1bdb9511abe3763853f89a022190fa"
   },
   "D:\\Projects\\react\\linknbit-portal\\supabase\\functions\\auth-refresh\\index.ts": {
     "mtime": 1781544933.1393566,
@@ -503,6 +535,10 @@
     "mtime": 1781544943.1740885,
     "hash": "335d2c15b9c3e3b11458428915cae229"
   },
+  "D:\\Projects\\react\\linknbit-portal\\supabase\\functions\\delete-user\\index.ts": {
+    "mtime": 1781637487.5296433,
+    "hash": "5a5459be523c9a5185806ccf558a6c4d"
+  },
   "D:\\Projects\\react\\linknbit-portal\\supabase\\functions\\invite-user\\index.ts": {
     "mtime": 1781550248.8042214,
     "hash": "a0d967b37965ed13efd5a059ea489aff"
@@ -510,6 +546,10 @@
   "D:\\Projects\\react\\linknbit-portal\\supabase\\functions\\quest-evaluator\\index.ts": {
     "mtime": 1779462541.8515425,
     "hash": "e2da58a0a20e2ec1f60237e7d6b3b765"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\supabase\\functions\\register-device\\index.ts": {
+    "mtime": 1781637487.5296433,
+    "hash": "3a7754381b169ad99dc1a44eebaa0ed1"
   },
   "D:\\Projects\\react\\linknbit-portal\\supabase\\functions\\_shared\\cookie.ts": {
     "mtime": 1781544810.7973423,
@@ -687,6 +727,14 @@
     "mtime": 1781534055.4047165,
     "hash": "ccce7cafdeefab14f0c2c3a23bf2bfe8"
   },
+  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260616053938_set_avatar_upload_limits.sql": {
+    "mtime": 1781637487.5306432,
+    "hash": "40841d34b84cb59e0bf692f1438180a9"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260616063218_restrict_device_approval_to_admin.sql": {
+    "mtime": 1781637487.5306432,
+    "hash": "dc130dcf2bde98bf9d29adb4a5d12268"
+  },
   "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260616100000_remove_attendance_self_write_rls.sql": {
     "mtime": 1781575910.9829824,
     "hash": "7eb59c65db6fccd308a038bc979bb2ae"
@@ -695,17 +743,49 @@
     "mtime": 1781576398.1212914,
     "hash": "486522b44c61841c63e54b1215e70e79"
   },
+  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260616110000_add_attendance_excluded_minutes.sql": {
+    "mtime": 1781637487.5306432,
+    "hash": "5dec14ba980a84ac7ed89044e71a940e"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260616111000_set_lp_on_time_checkin_amount.sql": {
+    "mtime": 1781637487.5316432,
+    "hash": "c6fe777f712450323d0ace09e21aded4"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260616112000_auto_checkout_toggle_and_ooo_tail.sql": {
+    "mtime": 1781637487.5316432,
+    "hash": "1fcf9b769ad0b8716cfc79c5fd94eee2"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260616120000_allow_hr_approve_non_own_devices.sql": {
+    "mtime": 1781637487.5326426,
+    "hash": "09b0bb5c6a3b9e33e3036dfcc00ef3f7"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260617090000_add_checkout_buffer.sql": {
+    "mtime": 1781635954.637076,
+    "hash": "a85db6cef6ae0623349e48232604d525"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260617090100_leave_day_part.sql": {
+    "mtime": 1781635969.6378205,
+    "hash": "bc8e4071e47763e7b6fb0cd8a55f07be"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260617090200_half_day_leave_sync_and_status_guard.sql": {
+    "mtime": 1781635991.3039966,
+    "hash": "ff7c854e70d88604fe7e412d9d96ae43"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260617120000_add_employee_salaries.sql": {
+    "mtime": 1781639399.0211306,
+    "hash": "82f5edf54dcac6ae681c1cfd8d4af5de"
+  },
   "D:\\Projects\\react\\linknbit-portal\\AGENTS.md": {
     "mtime": 1778637729.709293,
     "hash": "747e73a5e1af4b72c0d65c9169c23199"
   },
   "D:\\Projects\\react\\linknbit-portal\\CLAUDE.md": {
-    "mtime": 1780577694.446591,
-    "hash": "ed2a7066cf34fc8f81316e1a8be77cac"
+    "mtime": 1781637487.4094937,
+    "hash": "ad136b970bb9b18ea60664fa33f9f469"
   },
   "D:\\Projects\\react\\linknbit-portal\\index.html": {
-    "mtime": 1781539508.865635,
-    "hash": "f3567352c6ec79f18b2544c7a0bfddfd"
+    "mtime": 1781639296.6551013,
+    "hash": "273a4abadf41eacdd81fa68bba1cf993"
   },
   "D:\\Projects\\react\\linknbit-portal\\pnpm-workspace.yaml": {
     "mtime": 1780306272.8490438,

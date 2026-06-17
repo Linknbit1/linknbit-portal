@@ -42,6 +42,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Stable ref so the scheduled refresh timer always closes over the latest token
   const accessTokenRef = useRef<string | null>(null)
   const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Dedupes concurrent refreshes (scheduled timer + foreground/online wake-ups).
+  // Refresh tokens are single-use, so two parallel calls would 401 the second.
+  const refreshInFlight = useRef<Promise<void> | null>(null)
   // React 18 StrictMode double-invokes effects in dev. Refresh tokens are single-use,
   // so the second concurrent call gets a 401 and its setLoading(false) races ahead of
   // the successful applySession(), causing a spurious logout. This guard ensures init
@@ -94,14 +97,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const expiry = getTokenExpiry(bffSession.access_token)
     const delay = Math.max(expiry - Date.now() - 5 * 60 * 1000, 30_000)
 
-    refreshTimerRef.current = setTimeout(async () => {
-      try {
-        const next = await bffRefreshSession()
-        await applySession(next)
-      } catch {
+    refreshTimerRef.current = setTimeout(() => { void refreshWithRetry() }, delay)
+  }
+
+  // Single-flight refresh: a second caller while one is in progress awaits the
+  // same promise instead of burning the single-use refresh token.
+  async function runRefresh(): Promise<void> {
+    if (refreshInFlight.current) return refreshInFlight.current
+    const p = (async () => {
+      const next = await bffRefreshSession()
+      await applySession(next)
+    })()
+    refreshInFlight.current = p
+    try {
+      await p
+    } finally {
+      refreshInFlight.current = null
+    }
+  }
+
+  // Refresh, retrying transient failures (offline, network blip, mobile sleep)
+  // before giving up and signing the user out. A successful refresh reschedules
+  // the timer via applySession, so this only clears on genuine token expiry.
+  async function refreshWithRetry(attempt = 0): Promise<void> {
+    try {
+      await runRefresh()
+    } catch {
+      const backoffs = [5_000, 15_000, 30_000]
+      if (attempt < backoffs.length) {
+        if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current)
+        refreshTimerRef.current = setTimeout(() => { void refreshWithRetry(attempt + 1) }, backoffs[attempt])
+      } else {
         clearAll()
       }
-    }, delay)
+    }
   }
 
   async function refreshProfile(): Promise<void> {
@@ -135,6 +164,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => {
       if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Mobile browsers throttle/suspend background timers, so the scheduled refresh
+  // can fire late (or not at all) while the app is backgrounded. When the app
+  // returns to the foreground or regains connectivity, proactively refresh if the
+  // token is expired or close to it — this is the main fix for the "logged out
+  // after the phone slept" symptom.
+  useEffect(() => {
+    function maybeRefresh() {
+      const token = accessTokenRef.current
+      if (!token) return
+      if (getTokenExpiry(token) - Date.now() < 2 * 60 * 1000) {
+        void refreshWithRetry()
+      }
+    }
+    function onVisible() {
+      if (document.visibilityState === 'visible') maybeRefresh()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    window.addEventListener('focus', maybeRefresh)
+    window.addEventListener('online', maybeRefresh)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible)
+      window.removeEventListener('focus', maybeRefresh)
+      window.removeEventListener('online', maybeRefresh)
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 

@@ -244,7 +244,7 @@ export default function TeamsPage() {
                       {members.length > 0 && (
                         <div className="flex items-center justify-between gap-3 rounded-md border border-border-subtle bg-bg-base/35 px-3 py-2.5 sm:justify-end">
                           <span className="font-mono text-[10px] uppercase tracking-wider text-text-4">Roster</span>
-                          <AvatarGroup users={members.map((m) => ({ id: m.id, name: m.name }))} max={4} size="sm" />
+                          <AvatarGroup users={members.map((m) => ({ id: m.id, name: m.name, avatarUrl: m.avatar_url }))} max={4} size="sm" />
                         </div>
                       )}
                     </div>
@@ -275,7 +275,7 @@ export default function TeamsPage() {
                         key={m.id}
                         className="flex items-center gap-3 rounded-md border border-transparent bg-surface-2/35 px-3 py-2.5 transition-colors hover:border-border-subtle hover:bg-surface-2"
                       >
-                        <Avatar name={m.name} size="sm" />
+                        <Avatar name={m.name} src={m.avatar_url ?? undefined} size="sm" />
                         <div className="min-w-0 flex-1">
                           <div className="flex min-w-0 items-center gap-2">
                             <span className="truncate font-ui text-[13px] font-semibold text-text-1">{m.name}</span>
