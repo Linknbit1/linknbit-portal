@@ -745,11 +745,14 @@ export type Database = {
           clickup_user_id: string | null
           created_at: string
           email: string
+          email_confirmed_at: string | null
           id: string
+          invited_at: string | null
           is_active: boolean
           is_restricted: boolean
           job_title: string | null
           last_seen_at: string | null
+          last_sign_in_at: string | null
           level: number
           location: string | null
           lp_balance: number
@@ -773,11 +776,14 @@ export type Database = {
           clickup_user_id?: string | null
           created_at?: string
           email: string
+          email_confirmed_at?: string | null
           id: string
+          invited_at?: string | null
           is_active?: boolean
           is_restricted?: boolean
           job_title?: string | null
           last_seen_at?: string | null
+          last_sign_in_at?: string | null
           level?: number
           location?: string | null
           lp_balance?: number
@@ -801,11 +807,14 @@ export type Database = {
           clickup_user_id?: string | null
           created_at?: string
           email?: string
+          email_confirmed_at?: string | null
           id?: string
+          invited_at?: string | null
           is_active?: boolean
           is_restricted?: boolean
           job_title?: string | null
           last_seen_at?: string | null
+          last_sign_in_at?: string | null
           level?: number
           location?: string | null
           lp_balance?: number

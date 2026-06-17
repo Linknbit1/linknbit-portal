@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   fetchPeople, inviteUser, updatePersonRole, updatePersonDetails, uploadPersonAvatar, setPersonActive, deletePerson,
-  fetchSalary, upsertSalary,
+  resendInvite, setUserPassword, fetchSalary, upsertSalary,
   type InvitePayload,
 } from '../api/people'
 
@@ -62,6 +62,21 @@ export function useDeletePerson() {
       qc.invalidateQueries({ queryKey: PEOPLE_KEYS.all })
       qc.invalidateQueries({ queryKey: ['teams'] })
     },
+  })
+}
+
+export function useResendInvite() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ profileId }: { profileId: string }) => resendInvite(profileId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: PEOPLE_KEYS.all }),
+  })
+}
+
+export function useSetUserPassword() {
+  return useMutation({
+    mutationFn: ({ profileId, password }: { profileId: string; password: string }) =>
+      setUserPassword(profileId, password),
   })
 }
 
