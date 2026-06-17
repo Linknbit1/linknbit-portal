@@ -39,7 +39,7 @@ export function Select({ value, onChange, options, placeholder, label, className
         onClick={() => setOpen((v) => !v)}
         className={cn(
           'w-full flex items-center gap-2 bg-surface-inset border border-border-default rounded-sm text-text-1 cursor-pointer whitespace-nowrap hover:bg-surface-2 transition-colors',
-          size === 'sm' ? 'h-7.5 px-2.5 text-[11.5px]' : 'h-9 px-3 text-[12.5px]',
+          size === 'sm' ? 'h-7.5 px-2.5 text-[11.5px]' : 'h-9 px-3 text-[13px]',
           open && 'border-border-focus',
         )}
       >
@@ -61,7 +61,7 @@ export function Select({ value, onChange, options, placeholder, label, className
               type="button"
               onClick={() => { onChange(opt.value); setOpen(false) }}
               className={cn(
-                'w-full flex items-center gap-2.5 px-3 py-2 text-left text-[12.5px] font-ui font-medium text-text-1 hover:bg-surface-3 transition-colors',
+                'w-full flex items-center gap-2.5 px-3 py-2 text-left text-[13px] font-ui font-medium text-text-1 hover:bg-surface-3 transition-colors',
                 opt.value === value && 'bg-surface-3',
               )}
             >

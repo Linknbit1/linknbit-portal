@@ -614,7 +614,7 @@ export default function PeoplePage() {
 
   return (
     <div className="flex flex-col flex-1">
-      <Topbar title="People" />
+      <Topbar title="People" back="/more" />
       <div className="px-4 py-6 lg:p-6 flex flex-col gap-5 max-w-content mx-auto w-full">
         <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
           <div className="relative flex-1 sm:max-w-sm">

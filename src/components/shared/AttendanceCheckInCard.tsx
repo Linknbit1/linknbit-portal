@@ -14,6 +14,8 @@ import {
 } from '../../hooks/useAttendance'
 import { useCurrentDevice } from '../../hooks/useCurrentDevice'
 import { useRegisterDevice } from '../../hooks/useEnrolledDevices'
+import { useAuthContext } from '../../context/AuthContext'
+import { MGMT_ROLES } from '../../constants/roles'
 import { useToast } from '../ui/toast-context'
 import { Button } from '../ui/Button'
 import { cn } from '../../lib/cn'
@@ -121,6 +123,9 @@ export function AttendanceCheckInCard() {
 
   const { fingerprint, deviceName: deviceNameVal, ready: deviceReady, status: deviceStatus, canCheckIn } =
     useCurrentDevice()
+  const { profile } = useAuthContext()
+  // Raw fingerprint hash is HR/admin-only; everyone still sees the device name.
+  const canSeeFingerprint = MGMT_ROLES.includes(profile?.role ?? '')
 
   const [errorMsg, setErrorMsg]           = useState<string | null>(null)
   const [clock, setClock]                 = useState('')
@@ -399,7 +404,7 @@ export function AttendanceCheckInCard() {
               {deviceReady && (
                 <div className="flex items-center gap-1.5 font-mono text-[10.5px] text-text-4">
                   <Fingerprint size={11} />
-                  <span>{deviceNameVal} · {fingerprint.slice(0, 12)}…</span>
+                  <span>{deviceNameVal}{canSeeFingerprint && ` · ${fingerprint.slice(0, 12)}…`}</span>
                 </div>
               )}
 

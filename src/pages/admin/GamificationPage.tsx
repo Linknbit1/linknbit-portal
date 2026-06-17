@@ -85,7 +85,7 @@ const recentMonthOptions = (d = new Date()): { value: string; label: string }[] 
 // ── Leaderboard podium (top 3 by monthly LP) ───────────────────────────────────────
 
 function PodiumSlot({ entry, place }: {
-  entry: { name: string; lp_balance: number; isMe: boolean } | null
+  entry: { name: string; lp_balance: number; isMe: boolean; avatarUrl?: string | null } | null
   place: 1 | 2 | 3
 }) {
   const heights = { 1: 'h-24', 2: 'h-16', 3: 'h-12' } as const
@@ -97,7 +97,7 @@ function PodiumSlot({ entry, place }: {
   return (
     <div className="flex flex-col items-center gap-2 w-24">
       {entry ? (
-        <Avatar name={entry.name} size={place === 1 ? 'xl' : 'lg'} />
+        <Avatar name={entry.name} src={entry.avatarUrl ?? undefined} size={place === 1 ? 'xl' : 'lg'} />
       ) : (
         <div className="size-10 rounded-full bg-surface-2 border border-border-subtle flex items-center justify-center">
           <span className="font-mono text-[12px] text-text-4">?</span>
@@ -695,9 +695,9 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
         {/* ── LEADERBOARD ── */}
         {!showHub && activeTab === 'leaderboard' && (
           <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3">
               <p className="font-mono text-[11.5px] text-text-3">Ranked by Link Points earned this month · cash rewards go to top performers (≥500 LP)</p>
-              {isRecognizer && <Button size="sm" onClick={() => setShoutoutOpen(true)}><Star size={13} /> Give Shoutout</Button>}
+              {isRecognizer && <Button size="sm" className="shrink-0" onClick={() => setShoutoutOpen(true)}><Star size={13} /> Give Shoutout</Button>}
             </div>
 
             {/* Employee of the Month — last month's winner, visible to everyone */}
@@ -732,7 +732,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
                     <PodiumSlot
                       key={place}
                       place={place}
-                      entry={e ? { name: e.name, lp_balance: e.lp_balance, isMe: e.isMe } : null}
+                      entry={e ? { name: e.name, lp_balance: e.lp_balance, isMe: e.isMe, avatarUrl: directory[e.profile_id]?.avatar_url } : null}
                     />
                   )
                 })}
@@ -748,7 +748,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
                   <div key={e.profile_id} className={cn('grid grid-cols-[40px_1fr] gap-3 items-center lg:grid-cols-[40px_1fr_110px_110px_70px] px-4 lg:px-5 py-3 border-b border-border-subtle last:border-0', e.isMe && 'bg-service-dev/8')}>
                     <span className={cn('font-display font-bold text-[14px]', e.rank <= 3 ? 'text-coin-gold' : 'text-text-4')}>{e.rank}</span>
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <Avatar name={e.name} size="sm" />
+                      <Avatar name={e.name} src={directory[e.profile_id]?.avatar_url ?? undefined} size="sm" />
                       <div className="min-w-0">
                         <p className={cn('font-ui font-semibold text-[13px] truncate', e.isMe ? 'text-service-dev' : 'text-text-1')}>
                           {e.name}{e.isMe && <span className="ml-2 text-[10px] font-mono text-service-dev">(you)</span>}
@@ -772,9 +772,9 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
         {/* ── QUEST BOARD ── */}
         {!showHub && activeTab === 'board' && (
           <div className="flex flex-col gap-5">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3">
               <p className="font-mono text-[11.5px] text-text-3">Claim a task, complete it, then submit proof for approval to earn LP.</p>
-              {isRecognizer && <Button size="sm" onClick={() => setTaskModal('new')}><Plus size={13} /> Post Task</Button>}
+              {isRecognizer && <Button size="sm" className="shrink-0" onClick={() => setTaskModal('new')}><Plus size={13} /> Post Task</Button>}
             </div>
             {tasksLoading && <div className="flex justify-center py-16 text-text-4"><Loader2 size={20} className="animate-spin" /></div>}
 
@@ -834,9 +834,9 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
         {/* ── SHOUTOUTS ── */}
         {!showHub && activeTab === 'shoutouts' && (
           <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3">
               <p className="font-mono text-[11.5px] text-text-3">Recognition issued by managers & HR. Each is HR-reviewed before LP is awarded.</p>
-              {isRecognizer && <Button size="sm" onClick={() => setShoutoutOpen(true)}><Plus size={13} /> Give Shoutout</Button>}
+              {isRecognizer && <Button size="sm" className="shrink-0" onClick={() => setShoutoutOpen(true)}><Plus size={13} /> Give Shoutout</Button>}
             </div>
             <div className="space-y-3">
               {shoutFeed.length === 0 && <div className="py-12 text-center text-text-4 font-ui text-[13px]">No shoutouts yet.</div>}
@@ -1000,7 +1000,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
               <section>
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="font-display font-bold text-[16px] text-text-1 flex items-center gap-2"><Trophy size={16} className="text-text-3" /> Quest Tasks</h2>
-                  <Button size="sm" onClick={() => setTaskModal('new')}><Plus size={13} /> Post Task</Button>
+                  {/* Create from the Quest Board's "Post Task"; this section manages existing tasks. */}
                 </div>
                 <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
                   {tasks.length === 0 && <div className="px-5 py-8 text-center text-text-4 font-ui text-[13px]">No tasks yet.</div>}

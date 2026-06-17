@@ -13,6 +13,14 @@
   "background_color": "#1A222D",
   "theme_color": "#1A222D",
   "categories": ["business", "productivity"],
+  "screenshots": [
+    {
+      "src": "/install-banner.png",
+      "sizes": "1440x1024",
+      "type": "image/png",
+      "label": "Linknbit Operations Portal"
+    }
+  ],
   "icons": [
     {
       "src": "/icons/favicon-48x48.png",

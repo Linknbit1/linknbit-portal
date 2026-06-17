@@ -16,7 +16,19 @@ import {
 } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { useSignIn, useSendOtp, useVerifyOtp, useUpdatePassword } from '../../hooks/useAuth'
+import { useAuthContext } from '../../context/AuthContext'
+import { ROLE_LABELS } from '../../lib/utils'
+import { toUserRole } from '../../lib/peopleAccess'
 import { LinknbitMark } from '../../components/brand/LinknbitLogo'
+
+/** Two-letter initials from a display name (first + last word), for the splash avatar. */
+function initialsFromName(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return '?'
+  const first = parts[0][0]
+  const second = parts.length > 1 ? parts[parts.length - 1][0] : (parts[0][1] ?? '')
+  return (first + second).toUpperCase()
+}
 
 type AuthView = 'login' | 'forgot' | 'otp' | 'new-password' | 'splash'
 type BootStep = 'done' | 'now' | 'pending'
@@ -27,6 +39,7 @@ interface SplashUser {
   role: string
   pod: string
   path: string
+  avatarUrl?: string | null
 }
 
 const serviceLegend = [
@@ -722,8 +735,12 @@ function SplashScreen({ user, onDone }: { user: SplashUser; onDone: () => void }
           <div className="splash-orbit splash-orbit-mkt" />
           <div className="splash-orbit splash-orbit-design" />
           <div className="splash-orbit splash-orbit-dev" />
-          <div className="relative z-3 flex size-[clamp(68px,16vw,88px)] items-center justify-center rounded-full border-2 border-surface-2 bg-[linear-gradient(135deg,#A78BFA,#8B5CF6)] font-display text-[clamp(24px,6vw,32px)] font-bold text-white shadow-[0_0_60px_rgba(167,139,250,0.25)]">
-            {user.initials}
+          <div className="relative z-3 flex size-[clamp(68px,16vw,88px)] items-center justify-center overflow-hidden rounded-full border-2 border-surface-2 bg-[linear-gradient(135deg,#A78BFA,#8B5CF6)] font-display text-[clamp(24px,6vw,32px)] font-bold text-white shadow-[0_0_60px_rgba(167,139,250,0.25)]">
+            {user.avatarUrl ? (
+              <img src={user.avatarUrl} alt={user.name} className="size-full object-cover" />
+            ) : (
+              user.initials
+            )}
           </div>
         </div>
 
@@ -769,6 +786,7 @@ function SplashScreen({ user, onDone }: { user: SplashUser; onDone: () => void }
 
 export default function LoginPage() {
   const navigate = useNavigate()
+  const { profile } = useAuthContext()
   const [view, setView] = useState<AuthView>('login')
   const [forgotEmail, setForgotEmail] = useState('')
   const [splashUser, setSplashUser] = useState<SplashUser | null>(null)
@@ -778,10 +796,20 @@ export default function LoginPage() {
     setView('splash')
   }
 
+  // By the time the splash shows, AuthContext.signIn has awaited the profile fetch,
+  // so greet the user by their real name + avatar + role rather than their email.
+  const splashDisplay: SplashUser | null = splashUser && {
+    ...splashUser,
+    name: profile?.name?.trim() || splashUser.name,
+    initials: profile?.name?.trim() ? initialsFromName(profile.name) : splashUser.initials,
+    role: profile?.role ? (ROLE_LABELS[toUserRole(profile.role)] ?? splashUser.role) : splashUser.role,
+    avatarUrl: profile?.avatar_url ?? null,
+  }
+
   return (
     <>
-      {view === 'splash' && splashUser && (
-        <SplashScreen user={splashUser} onDone={() => navigate(splashUser.path)} />
+      {view === 'splash' && splashDisplay && (
+        <SplashScreen user={splashDisplay} onDone={() => navigate(splashDisplay.path)} />
       )}
 
       <div className="flex min-h-screen bg-bg-base">

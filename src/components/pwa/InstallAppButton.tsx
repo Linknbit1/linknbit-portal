@@ -11,6 +11,8 @@ const IOS_STEPS = [
   { icon: PencilLine, title: 'Name it and confirm', body: 'Rename it to whatever you prefer, then tap “Add” in the top-right corner.' },
 ] as const
 
+const INSTALL_BANNER_SRC = '/brand/linknbit-portal-banner-black.svg'
+
 function IosInstallGuide({ onClose }: { onClose: () => void }) {
   return (
     <ModalShell onClose={onClose} size="sm" contentClassName="p-5 sm:p-6">
@@ -27,6 +29,12 @@ function IosInstallGuide({ onClose }: { onClose: () => void }) {
       <p className="font-ui text-[12.5px] text-text-3 leading-relaxed mb-4">
         iOS installs apps straight from Safari. Follow these steps to add Linknbit to your home screen.
       </p>
+
+      <img
+        src={INSTALL_BANNER_SRC}
+        alt="Linknbit Operations Portal"
+        className="mb-4 aspect-[45/32] w-full rounded-sm border border-border-default bg-[#1A222D] object-cover"
+      />
 
       <ol className="flex flex-col gap-3">
         {IOS_STEPS.map((step, i) => (

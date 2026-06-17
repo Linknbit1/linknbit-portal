@@ -8,6 +8,7 @@ import { AppShell } from './components/layout/AppShell'
 import { ClientShell } from './components/layout/ClientShell'
 import { showWipFeatures } from './lib/featureFlags'
 import { AUTHORITATIVE_ROLES } from './lib/roles'
+import { SETTINGS_ROLES } from './constants/roles'
 
 import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
@@ -15,7 +16,7 @@ import ResetPasswordPage from './pages/auth/ResetPasswordPage'
 import DashboardPage from './pages/DashboardPage'
 import ProfilePage from './pages/ProfilePage'
 import MorePage from './pages/MorePage'
-import { AttendanceSectionScreen } from './pages/AttendanceMobile'
+import { AttendanceSectionScreen, TeamAttendanceSectionScreen } from './pages/AttendanceMobile'
 import { GamificationSectionScreen } from './pages/admin/GamificationPage'
 import AdminProjectsPage from './pages/admin/ProjectsPage'
 import AdminProjectDetailPage from './pages/admin/ProjectDetailPage'
@@ -27,7 +28,7 @@ import PeoplePage from './pages/admin/PeoplePage'
 import TasksPage from './pages/admin/TasksPage'
 import ReportsPage from './pages/admin/ReportsPage'
 import ClickUpPage from './pages/admin/ClickUpPage'
-import SettingsPage from './pages/admin/SettingsPage'
+import SettingsPage, { SettingsSectionScreen } from './pages/admin/SettingsPage'
 import AttendancePage from './pages/AttendancePage'
 
 import ClientDashboardPage from './pages/client/DashboardPage'
@@ -64,10 +65,18 @@ export default function App() {
                 <Route path="/profile" element={<ProfilePage />} />
                 <Route path="/more" element={<MorePage />} />
                 <Route path="/attendance" element={<AttendancePage />} />
+                <Route path="/attendance/team/:sub" element={<TeamAttendanceSectionScreen />} />
                 <Route path="/attendance/:section" element={<AttendanceSectionScreen />} />
                 <Route path="/gamification" element={<GamificationPage />} />
                 <Route path="/gamification/:section" element={<GamificationSectionScreen />} />
-                <Route path="/settings" element={<SettingsPage />} />
+                <Route
+                  path="/settings"
+                  element={<RoleGuard allowedRoles={SETTINGS_ROLES}><SettingsPage /></RoleGuard>}
+                />
+                <Route
+                  path="/settings/:section"
+                  element={<RoleGuard allowedRoles={SETTINGS_ROLES}><SettingsSectionScreen /></RoleGuard>}
+                />
                 <Route path="/employee/leaderboard" element={<GamificationPage />} />
                 <Route path="/employee/rewards" element={<GamificationPage />} />
 
