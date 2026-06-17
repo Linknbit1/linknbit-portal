@@ -105,6 +105,22 @@ export async function deletePerson(profileId: string): Promise<void> {
   if (error) throw new Error(await functionErrorMessage(error, 'Delete user failed'))
 }
 
+export async function resendInvite(profileId: string): Promise<{ emailed: boolean; invite_link: string | null }> {
+  const { data, error } = await supabase.functions.invoke<{ ok: boolean; emailed: boolean; invite_link: string | null }>(
+    'resend-invite', { body: { profile_id: profileId } },
+  )
+  if (error) throw new Error(await functionErrorMessage(error, 'Resend invite failed'))
+  if (!data) throw new Error('No response from resend-invite')
+  return { emailed: data.emailed, invite_link: data.invite_link }
+}
+
+export async function setUserPassword(profileId: string, password: string): Promise<void> {
+  const { error } = await supabase.functions.invoke('admin-set-password', {
+    body: { profile_id: profileId, password },
+  })
+  if (error) throw new Error(await functionErrorMessage(error, 'Password change failed'))
+}
+
 // ── Salary (RLS: owner + HR/admin only) ───────────────────────────────────────
 
 // Returns null when the caller isn't allowed to see this salary (RLS filters the

@@ -37,6 +37,29 @@ export function assignableRoles(actor: string | null | undefined): InternalRole[
   return []
 }
 
+// ── Account lifecycle status ──────────────────────────────────────────────────
+// Derived from the auth timestamps synced onto the profile (see migration
+// 20260617130000). Tells whether an invite reached the user and whether they've
+// ever signed in — so a failed invite can be re-sent.
+export type AccountStatus = 'invited' | 'verified' | 'onboarded'
+
+export function accountStatus(p: {
+  last_sign_in_at: string | null
+  email_confirmed_at: string | null
+}): AccountStatus {
+  if (p.last_sign_in_at) return 'onboarded'
+  if (p.email_confirmed_at) return 'verified'
+  return 'invited'
+}
+
+/** Can the actor set another user's password? (Excludes self — handled in the UI.) */
+export const canSetPassword = (actor: string | null | undefined, targetRole: string): boolean =>
+  canManagePeople(actor) && canManageTarget(actor, targetRole)
+
+/** Can the actor re-send an invite to a user who hasn't onboarded yet? */
+export const canResendInvite = (actor: string | null | undefined, targetRole: string): boolean =>
+  canManagePeople(actor) && canManageTarget(actor, targetRole)
+
 /** Narrow a free-form role string to the UserRole union (for RoleBadge etc.). */
 export function toUserRole(r: string): UserRole {
   switch (r) {
