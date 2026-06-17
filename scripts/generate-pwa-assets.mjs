@@ -53,6 +53,27 @@ async function png(svg, w, h, name) {
   console.log('  ✓', name, `${w}x${h ?? w}`)
 }
 
+function androidSplashIconSvg(size) {
+  const markScale = (size * 0.34) / GLYPH_W
+  const mw = GLYPH_W * markScale
+  const mh = GLYPH_H * markScale
+  const markX = (size - mw) / 2
+  const markY = size * 0.26 - mh / 2
+  const titleSize = Math.round(size * 0.064)
+  const subSize = Math.round(size * 0.026)
+  const bottomMargin = size * 0.14
+  const subY = size - bottomMargin
+  const titleY = subY - subSize * 2.55
+
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title">
+  <title id="title">Linknbit Operations Portal</title>
+  <rect width="${size}" height="${size}" fill="${BRAND_BG}"/>
+  <g transform="translate(${markX} ${markY}) scale(${markScale})">${glyph('white')}</g>
+  <text x="${size / 2}" y="${titleY}" text-anchor="middle" fill="#F2F5F9" font-family="Arial, Helvetica, sans-serif" font-size="${titleSize}" font-weight="800">Linknbit</text>
+  <text x="${size / 2}" y="${subY}" text-anchor="middle" fill="#B5C0CF" font-family="Arial, Helvetica, sans-serif" font-size="${subSize}" font-weight="800" letter-spacing="${Math.round(subSize * 0.24)}">OPERATIONS PORTAL</text>
+</svg>`
+}
+
 // ── Splash builder: centred mark + wordmark on the brand bg, uniform scale ─────
 function splashSvg(W, H) {
   const scale = (W * 0.34) / GLYPH_W          // mark = 34% of the width
@@ -86,16 +107,15 @@ async function main() {
     ['icons/favicon-48x48.png', 48],
     ['icons/pwa-192x192.png', 192],
     ['icons/pwa-512x512.png', 512],
-    ['icons/android-chrome-192x192.png', 192],
-    ['icons/android-chrome-512x512.png', 512],
     ['icons/apple-touch-icon.png', 180],
     ['icons/mstile-150x150.png', 150],
-    ['icons/icon-1024x1024.png', 1024],
   ]
   for (const [name, size] of squareTargets) await png(DARK_ICON, size, size, name)
 
-  // Maskable (mark sits inside the 80% safe zone of the full-bleed square).
-  for (const size of [192, 512]) await png(DARK_ICON, size, size, `icons/maskable-${size}x${size}.png`)
+  for (const size of [512, 1024]) {
+    await png(androidSplashIconSvg(size), size, size, `splash/android-splash-${size}x${size}.png`)
+    await png(androidSplashIconSvg(size), size, size, `splash/android-splash-maskable-${size}x${size}.png`)
+  }
 
   // favicon.ico (16 / 32 / 48)
   const icoBufs = await Promise.all(
