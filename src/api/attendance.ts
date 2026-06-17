@@ -19,7 +19,7 @@ export interface AttendanceWithProfile extends AttendanceRow {
 }
 
 export interface EnrolledDeviceWithProfile extends EnrolledDevice {
-  profiles: { name: string } | null
+  profiles: { name: string; avatar_url: string | null } | null
 }
 
 export interface MarkAttendancePayload {
@@ -254,7 +254,7 @@ export async function registerDevice(payload: {
 export async function fetchEnrolledDevices(): Promise<EnrolledDeviceWithProfile[]> {
   const { data, error } = await supabase
     .from('enrolled_devices')
-    .select('*, profiles!enrolled_devices_profile_id_fkey(name)')
+    .select('*, profiles!enrolled_devices_profile_id_fkey(name, avatar_url)')
     .order('first_seen_at', { ascending: false })
   if (error) throw error
   // as unknown: Supabase cannot infer the joined shape when multiple FKs exist on profiles

@@ -33,7 +33,7 @@ function IosInstallGuide({ onClose }: { onClose: () => void }) {
       <img
         src={INSTALL_BANNER_SRC}
         alt="Linknbit Operations Portal"
-        className="mb-4 aspect-[45/32] w-full rounded-sm border border-border-default bg-[#1A222D] object-cover"
+        className="mb-4 aspect-45/32 w-full rounded-sm border border-border-default bg-brand-navy object-cover"
       />
 
       <ol className="flex flex-col gap-3">

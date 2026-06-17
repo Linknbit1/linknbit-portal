@@ -98,7 +98,7 @@ export default function RegisterPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-bg-base">
+      <div className="flex min-h-dvh items-center justify-center bg-bg-base">
         <div className="size-8 animate-spin rounded-full border-2 border-surface-2 border-t-brand-red" />
       </div>
     )
@@ -107,7 +107,7 @@ export default function RegisterPage() {
   // No session means the invite link was invalid or already used
   if (!session) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-bg-base px-6">
+      <div className="flex min-h-dvh items-center justify-center bg-bg-base px-[max(env(safe-area-inset-left),1.5rem)] py-[max(env(safe-area-inset-top),2rem)]">
         <div className="w-full max-w-100 text-center">
           <div className="mb-6 flex size-14 items-center justify-center rounded-lg border border-error-border bg-error-soft mx-auto">
             <AlertCircle size={26} className="text-error" />
@@ -132,7 +132,7 @@ export default function RegisterPage() {
 
   if (done) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-bg-base px-6">
+      <div className="flex min-h-dvh items-center justify-center bg-bg-base px-[max(env(safe-area-inset-left),1.5rem)] py-[max(env(safe-area-inset-top),2rem)]">
         <div className="w-full max-w-100 text-center">
           <div className="mb-6 flex size-14 items-center justify-center rounded-lg border border-border-default bg-[linear-gradient(160deg,#1A2433_0%,#131C28_100%)] text-success shadow-[0_0_0_6px_rgba(34,197,94,0.06)] mx-auto">
             <ShieldCheck size={26} strokeWidth={1.75} />

@@ -77,7 +77,7 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-bg-base px-6 py-10">
+    <div className="flex min-h-dvh items-center justify-center bg-bg-base px-[max(env(safe-area-inset-left),1.5rem)] py-[max(env(safe-area-inset-top),2.5rem)]">
       <div className="w-full max-w-100">
         <div className="mb-8 flex items-center gap-2.5">
           <LinknbitMark surface="dark" className="h-8 w-7" />

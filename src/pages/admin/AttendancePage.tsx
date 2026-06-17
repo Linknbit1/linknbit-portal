@@ -4,7 +4,7 @@ import {
   AlertTriangle, Wifi, Monitor, Search, Download, Plus, X, Check,
   Home, ChevronDown, ClipboardList, ThumbsUp, ThumbsDown, ShieldCheck,
   Smartphone, Settings as SettingsIcon, Shield, AlertCircle, Save,
-  BarChart2, ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Minus,
+  BarChart2, TrendingUp, TrendingDown, Minus,
   Palmtree, Hourglass, Star, Plane, Trash2, Pencil,
 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
@@ -14,6 +14,8 @@ import { Select } from '../../components/ui/Select'
 import { TimezoneSelect } from '../../components/ui/TimezoneSelect'
 import { DatePicker } from '../../components/ui/DatePicker'
 import { TimePicker } from '../../components/ui/TimePicker'
+import { SectionToolbar } from '../../components/ui/SectionToolbar'
+import { PeriodStepper } from '../../components/ui/PeriodStepper'
 import { useToast } from '../../components/ui/toast-context'
 import { useAuthContext } from '../../context/AuthContext'
 import {
@@ -376,7 +378,7 @@ export function DailyRecordsTab() {
                 <tr key={rec.id} className="border-b border-border-subtle hover:bg-white/1.5 transition-colors">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2.5">
-                      <Avatar name={rec.profiles?.name ?? '?'} size="sm" />
+                      <Avatar name={rec.profiles?.name ?? '?'} src={rec.profiles?.avatar_url ?? undefined} size="sm" />
                       <span className="font-ui font-medium text-[13px] text-text-1">
                         {rec.profiles?.name ?? rec.profile_id.slice(0, 8)}
                       </span>
@@ -444,7 +446,7 @@ export function DailyRecordsTab() {
               <div key={rec.id} className="px-4 py-3.5 border-b border-border-subtle last:border-0 flex flex-col gap-2.5">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <Avatar name={rec.profiles?.name ?? '?'} size="sm" />
+                    <Avatar name={rec.profiles?.name ?? '?'} src={rec.profiles?.avatar_url ?? undefined} size="sm" />
                     <span className="font-ui font-medium text-[13px] text-text-1 truncate">
                       {rec.profiles?.name ?? rec.profile_id.slice(0, 8)}
                     </span>
@@ -606,26 +608,22 @@ export function WFHRequestsTab() {
       </div>
 
       <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
-        <div className="flex items-center gap-3 px-5 py-3.5 border-b border-border-subtle">
-          <ClipboardList size={14} className="text-text-3" />
-          <span className="font-ui font-semibold text-[13px] text-text-1">WFH Requests</span>
-          <div className="ml-auto flex items-center gap-2">
-            <Select
-              size="sm"
-              value={statusFilter}
-              onChange={setStatusFilter}
-              options={[
-                { value: 'all', label: 'All Status' },
-                { value: 'pending', label: 'Pending' },
-                { value: 'approved', label: 'Approved' },
-                { value: 'rejected', label: 'Rejected' },
-              ]}
-            />
-            <Button size="sm" onClick={() => setGrantOpen(true)}>
-              <ShieldCheck size={13} /> Grant WFH
-            </Button>
-          </div>
-        </div>
+        <SectionToolbar icon={ClipboardList} title="WFH Requests">
+          <Select
+            size="sm"
+            value={statusFilter}
+            onChange={setStatusFilter}
+            options={[
+              { value: 'all', label: 'All Status' },
+              { value: 'pending', label: 'Pending' },
+              { value: 'approved', label: 'Approved' },
+              { value: 'rejected', label: 'Rejected' },
+            ]}
+          />
+          <Button size="sm" onClick={() => setGrantOpen(true)}>
+            <ShieldCheck size={13} /> Grant WFH
+          </Button>
+        </SectionToolbar>
 
         {filtered.length === 0 ? (
           <div className="py-16 text-center font-ui text-[13px] text-text-4">No WFH requests match this filter.</div>
@@ -636,7 +634,7 @@ export function WFHRequestsTab() {
               return (
                 <div key={req.id} className="hover:bg-white/1.5 transition-colors">
                   <div className="flex items-center gap-3 px-5 py-3.5">
-                    <Avatar name={req.profiles?.name ?? '?'} size="sm" />
+                    <Avatar name={req.profiles?.name ?? '?'} src={req.profiles?.avatar_url ?? undefined} size="sm" />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
                         <span className="font-ui font-medium text-[13px] text-text-1">{req.profiles?.name ?? '?'}</span>
@@ -893,14 +891,11 @@ export function LeaveTab() {
     <div className="flex flex-col gap-6">
       {/* Leave types management */}
       <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
-        <div className="flex items-center gap-3 px-5 py-3.5 border-b border-border-subtle">
-          <Plane size={14} className="text-text-3" />
-          <span className="font-ui font-semibold text-[13px] text-text-1">Leave Types</span>
-          <span className="font-mono text-[11px] text-text-4">Set the yearly allowance per type</span>
-          <Button size="sm" className="ml-auto" onClick={openNewType}>
+        <SectionToolbar icon={Plane} title="Leave Types" description="Set the yearly allowance per type">
+          <Button size="sm" onClick={openNewType}>
             <Plus size={13} /> Add Type
           </Button>
-        </div>
+        </SectionToolbar>
         {types.length === 0 ? (
           <div className="py-10 text-center font-ui text-[13px] text-text-4">No leave types yet — add one to get started.</div>
         ) : (
@@ -925,14 +920,11 @@ export function LeaveTab() {
 
       {/* Leave requests review */}
       <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
-        <div className="flex items-center gap-3 px-5 py-3.5 border-b border-border-subtle">
-          <ClipboardList size={14} className="text-text-3" />
-          <span className="font-ui font-semibold text-[13px] text-text-1">Leave Requests</span>
+        <SectionToolbar icon={ClipboardList} title="Leave Requests">
           <Select
             size="sm"
             value={statusFilter}
             onChange={setStatusFilter}
-            className="ml-auto"
             options={[
               { value: 'all', label: 'All Status' },
               { value: 'pending', label: 'Pending' },
@@ -940,14 +932,14 @@ export function LeaveTab() {
               { value: 'rejected', label: 'Rejected' },
             ]}
           />
-        </div>
+        </SectionToolbar>
         {filtered.length === 0 ? (
           <div className="py-12 text-center font-ui text-[13px] text-text-4">No leave requests match this filter.</div>
         ) : (
           <div className="divide-y divide-border-subtle">
             {filtered.map((req) => (
               <div key={req.id} className="flex items-start gap-3 px-5 py-3.5">
-                <Avatar name={req.profiles?.name ?? '?'} size="sm" />
+                <Avatar name={req.profiles?.name ?? '?'} src={req.profiles?.avatar_url ?? undefined} size="sm" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap mb-0.5">
                     <span className="font-ui font-medium text-[13px] text-text-1">{req.profiles?.name ?? '?'}</span>
@@ -1095,26 +1087,30 @@ export function EnrolledDevicesTab() {
     )}>
       <td className="px-4 py-3">
         <div className="flex items-center gap-2.5">
-          <Avatar name={d.profiles?.name ?? '?'} size="sm" />
+          <Avatar name={d.profiles?.name ?? '?'} src={d.profiles?.avatar_url ?? undefined} size="sm" />
           <span className="font-ui font-medium text-[13px] text-text-1">{d.profiles?.name ?? d.profile_id.slice(0, 8)}</span>
         </div>
       </td>
       <td className="px-4 py-3">
-        <div className="flex items-center gap-2 flex-wrap">
-          <Smartphone size={13} className="text-text-4 shrink-0" />
-          <span className="font-ui text-[12.5px] text-text-1">{d.device_name}</span>
-          {isShared && (
-            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-xs bg-warning/15 border border-warning/30 text-warning text-[10px] font-mono font-semibold uppercase tracking-wide">
-              <AlertTriangle size={9} /> Shared
-            </span>
-          )}
+        <div className="flex items-start gap-2 min-w-0">
+          <Smartphone size={13} className="text-text-4 shrink-0 mt-0.5" />
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="font-ui text-[12.5px] text-text-1 truncate">{d.device_name}</span>
+              {isShared && (
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-xs bg-warning/15 border border-warning/30 text-warning text-[10px] font-mono font-semibold uppercase tracking-wide shrink-0">
+                  <AlertTriangle size={9} /> Shared
+                </span>
+              )}
+            </div>
+            <p className="font-mono text-[10px] text-text-4 mt-0.5">{d.device_fingerprint.slice(0, 16)}…</p>
+            {isShared && sharedWith.length > 0 && (
+              <p className="font-ui text-[10.5px] text-warning/70 mt-0.5">
+                Also used by: {sharedWith.join(', ')}
+              </p>
+            )}
+          </div>
         </div>
-        <p className="font-mono text-[10px] text-text-4 mt-0.5 pl-5">{d.device_fingerprint.slice(0, 16)}…</p>
-        {isShared && sharedWith.length > 0 && (
-          <p className="font-ui text-[10.5px] text-warning/70 mt-0.5 pl-5">
-            Also used by: {sharedWith.join(', ')}
-          </p>
-        )}
       </td>
       <td className="px-4 py-3 font-mono text-[12px] text-text-3">{fmt(d.first_seen_at)}</td>
       <td className="px-4 py-3 font-mono text-[12px] text-text-3">{fmt(d.last_seen_at)}</td>
@@ -1196,20 +1192,15 @@ export function EnrolledDevicesTab() {
       </div>
 
       <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
-        <div className="flex items-center gap-3 px-5 py-3.5 border-b border-border-subtle">
-          <Smartphone size={14} className="text-text-3" />
-          <span className="font-ui font-semibold text-[13px] text-text-1">Enrolled Devices</span>
-          {pending.length > 0 && (
-            <span className="ml-1 min-w-4.5 h-4.5 px-1 rounded-full bg-warning text-[10px] font-bold text-amber-900 flex items-center justify-center">
-              {pending.length}
-            </span>
-          )}
-          <p className="ml-auto text-[12px] font-ui text-text-4">
-            Approve devices employees used to check in from
-          </p>
-        </div>
+        <SectionToolbar
+          icon={Smartphone}
+          title="Enrolled Devices"
+          badge={pending.length}
+          description="Approve devices employees used to check in from"
+        />
 
-        <table className="w-full overflow-x-auto whitespace-nowrap lg:whitespace-normal">
+        <div className="overflow-x-auto">
+        <table className="w-full whitespace-nowrap lg:whitespace-normal">
           <thead>
             <tr className="border-b border-border-subtle bg-surface-2">
               {['Employee', 'Device', 'First Seen', 'Last Seen', 'Status', 'Actions'].map((h) => (
@@ -1229,6 +1220,7 @@ export function EnrolledDevicesTab() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   )
@@ -1327,36 +1319,33 @@ export function ExceptionsTab() {
 
       {/* Table */}
       <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
-        <div className="flex items-center gap-3 px-5 py-3.5 border-b border-border-subtle">
-          <AlertCircle size={14} className="text-text-3" />
-          <span className="font-ui font-semibold text-[13px] text-text-1">Exception Requests</span>
-          <div className="ml-auto flex items-center gap-2">
-            <Select
-              size="sm"
-              value={typeFilter}
-              onChange={setTypeFilter}
-              options={[
-                { value: 'all',              label: 'All Types' },
-                { value: 'late_arrival',     label: 'Late Arrival' },
-                { value: 'early_departure',  label: 'Early Departure' },
-                { value: 'out_of_office',    label: 'Out of Office' },
-              ]}
-            />
-            <Select
-              size="sm"
-              value={statusFilter}
-              onChange={setStatusFilter}
-              options={[
-                { value: 'all',      label: 'All Status' },
-                { value: 'pending',  label: 'Pending' },
-                { value: 'approved', label: 'Approved' },
-                { value: 'rejected', label: 'Rejected' },
-              ]}
-            />
-          </div>
-        </div>
+        <SectionToolbar icon={AlertCircle} title="Exception Requests">
+          <Select
+            size="sm"
+            value={typeFilter}
+            onChange={setTypeFilter}
+            options={[
+              { value: 'all',              label: 'All Types' },
+              { value: 'late_arrival',     label: 'Late Arrival' },
+              { value: 'early_departure',  label: 'Early Departure' },
+              { value: 'out_of_office',    label: 'Out of Office' },
+            ]}
+          />
+          <Select
+            size="sm"
+            value={statusFilter}
+            onChange={setStatusFilter}
+            options={[
+              { value: 'all',      label: 'All Status' },
+              { value: 'pending',  label: 'Pending' },
+              { value: 'approved', label: 'Approved' },
+              { value: 'rejected', label: 'Rejected' },
+            ]}
+          />
+        </SectionToolbar>
 
-        <table className="w-full overflow-x-auto whitespace-nowrap lg:whitespace-normal">
+        <div className="overflow-x-auto">
+        <table className="w-full whitespace-nowrap lg:whitespace-normal">
           <thead>
             <tr className="border-b border-border-subtle bg-surface-2">
               {['Employee', 'Date', 'Type', 'Requested Time', 'Reason', 'Status', 'OOO Tracking', 'Actions'].map((h) => (
@@ -1379,7 +1368,7 @@ export function ExceptionsTab() {
                   <tr key={exc.id} className="border-b border-border-subtle hover:bg-white/1.5 transition-colors">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2.5">
-                        <Avatar name={excWp.profiles?.name ?? '?'} size="sm" />
+                        <Avatar name={excWp.profiles?.name ?? '?'} src={excWp.profiles?.avatar_url ?? undefined} size="sm" />
                         <span className="font-ui font-medium text-[13px] text-text-1">
                           {excWp.profiles?.name ?? exc.profile_id.slice(0, 8)}
                         </span>
@@ -1443,6 +1432,7 @@ export function ExceptionsTab() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Reject modal */}
@@ -1594,24 +1584,22 @@ export function HolidaysTab() {
     <div className="flex flex-col gap-5">
 
       {/* Header row */}
-      <div className="flex items-center gap-3">
-        <button onClick={() => setYear((y) => y - 1)} className="size-8 rounded-sm bg-surface-1 border border-border-default flex items-center justify-center text-text-3 hover:text-text-1 hover:border-border-strong transition-colors">
-          <ChevronLeft size={15} />
-        </button>
-        <div className="bg-surface-1 border border-border-default rounded-lg px-5 py-2 flex items-center gap-2">
-          <Palmtree size={14} className="text-brand-red" />
-          <span className="font-display font-semibold text-[15px] text-text-1">{year} Holidays</span>
+      <div className="flex flex-wrap items-center gap-3">
+        <PeriodStepper
+          icon={Palmtree}
+          label={`${year} Holidays`}
+          onPrev={() => setYear((y) => y - 1)}
+          onNext={() => setYear((y) => y + 1)}
+        >
           <span className="ml-1 font-mono text-[11px] text-text-4">{holidays.length} day{holidays.length !== 1 ? 's' : ''}</span>
-        </div>
-        <button onClick={() => setYear((y) => y + 1)} className="size-8 rounded-sm bg-surface-1 border border-border-default flex items-center justify-center text-text-3 hover:text-text-1 hover:border-border-strong transition-colors">
-          <ChevronRight size={15} />
-        </button>
-        <button
+        </PeriodStepper>
+        <Button
+          size="sm"
+          className="ml-auto"
           onClick={() => { setAddOpen(true); setAddMode('single'); setForm({ date: '', dateTo: '', name: '', type: 'public_holiday' }) }}
-          className="ml-auto flex items-center gap-1.5 px-4 py-2 rounded-sm bg-brand-red text-white text-[13px] font-ui font-semibold hover:bg-brand-red/90 transition-colors"
         >
           <Plus size={14} /> Add Holiday
-        </button>
+        </Button>
       </div>
 
       {/* Type legend */}
@@ -1800,17 +1788,19 @@ export function HolidaysTab() {
 
       {/* ── Working Saturdays ─────────────────────────────────────────────── */}
       <div className="mt-2">
-        <div className="flex items-center justify-between mb-3">
-          <div>
+        <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
+          <div className="min-w-0">
             <h3 className="font-display font-semibold text-[14px] text-text-1">Working Saturdays</h3>
             <p className="font-ui text-[12px] text-text-4 mt-0.5">Specific Saturdays that require check-in regardless of the global setting</p>
           </div>
-          <button
+          <Button
+            size="sm"
+            variant="secondary"
+            className="shrink-0"
             onClick={() => { setSatPickerOpen(true); setSatDate(''); setSatNote('') }}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-sm bg-surface-2 border border-border-default text-text-2 text-[12px] font-ui font-semibold hover:border-border-strong hover:text-text-1 transition-colors"
           >
             <Plus size={13} /> Mark Saturday
-          </button>
+          </Button>
         </div>
 
         {workingSaturdays.length === 0 ? (
@@ -1987,28 +1977,19 @@ export function OvertimeTab() {
 
       {/* Table */}
       <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
-        <div className="flex items-center gap-3 px-5 py-3.5 border-b border-border-subtle">
-          <Hourglass size={14} className="text-text-3" />
-          <span className="font-ui font-semibold text-[13px] text-text-1">Overtime Requests</span>
-          {pending > 0 && (
-            <span className="ml-1 min-w-4.5 h-4.5 px-1 rounded-full bg-warning text-[10px] font-bold text-amber-900 flex items-center justify-center">
-              {pending}
-            </span>
-          )}
-          <div className="ml-auto">
-            <Select
-              size="sm"
-              value={statusFilter}
-              onChange={setStatusFilter}
-              options={[
-                { value: 'all',      label: 'All Status' },
-                { value: 'pending',  label: 'Pending' },
-                { value: 'approved', label: 'Approved' },
-                { value: 'rejected', label: 'Rejected' },
-              ]}
-            />
-          </div>
-        </div>
+        <SectionToolbar icon={Hourglass} title="Overtime Requests" badge={pending}>
+          <Select
+            size="sm"
+            value={statusFilter}
+            onChange={setStatusFilter}
+            options={[
+              { value: 'all',      label: 'All Status' },
+              { value: 'pending',  label: 'Pending' },
+              { value: 'approved', label: 'Approved' },
+              { value: 'rejected', label: 'Rejected' },
+            ]}
+          />
+        </SectionToolbar>
 
         {isLoading ? (
           <div className="py-16 flex items-center justify-center gap-2 font-mono text-[12px] text-text-4">
@@ -2017,7 +1998,8 @@ export function OvertimeTab() {
         ) : requests.length === 0 ? (
           <div className="py-16 text-center font-ui text-[13px] text-text-4">No overtime requests match this filter.</div>
         ) : (
-          <table className="w-full overflow-x-auto whitespace-nowrap lg:whitespace-normal">
+          <div className="overflow-x-auto">
+          <table className="w-full whitespace-nowrap lg:whitespace-normal">
             <thead>
               <tr className="border-b border-border-subtle bg-surface-2">
                 {['Employee', 'Date', 'Time', 'Hours', 'Reason', 'Status', 'Actions'].map((h) => (
@@ -2035,7 +2017,7 @@ export function OvertimeTab() {
                   <tr key={req.id} className="border-b border-border-subtle hover:bg-white/1.5 transition-colors">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2.5">
-                        <Avatar name={r.profiles?.name ?? '?'} size="sm" />
+                        <Avatar name={r.profiles?.name ?? '?'} src={r.profiles?.avatar_url ?? undefined} size="sm" />
                         <span className="font-ui font-medium text-[13px] text-text-1">{r.profiles?.name ?? req.profile_id.slice(0, 8)}</span>
                       </div>
                     </td>
@@ -2089,6 +2071,7 @@ export function OvertimeTab() {
               })}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 
@@ -2125,6 +2108,7 @@ export function OvertimeTab() {
 interface EmployeeStat {
   profileId: string
   name: string
+  avatar: string | null
   present: number
   late: number
   absent: number
@@ -2290,7 +2274,7 @@ export function ReportsTab() {
   const statsMap = new Map<string, EmployeeStat>()
   for (const p of activeProfiles) {
     statsMap.set(p.id, {
-      profileId: p.id, name: p.name,
+      profileId: p.id, name: p.name, avatar: p.avatar_url ?? null,
       present: 0, late: 0, absent: 0, halfDay: 0, leave: 0, holiday: 0,
       totalCheckins: 0, totalMinutes: 0, overtimeMinutes: 0, earlyCount: 0, onTimeCount: 0, avgCheckinMin: 0,
       expectedMin: 0, workedMin: 0, overtimeMin: 0, netMin: 0,
@@ -2307,7 +2291,7 @@ export function ReportsTab() {
     // Ensure HR-marked employees that aren't in activeProfiles still show up
     if (!statsMap.has(id)) {
       statsMap.set(id, {
-        profileId: id, name,
+        profileId: id, name, avatar: rec.profiles?.avatar_url ?? null,
         present: 0, late: 0, absent: 0, halfDay: 0, leave: 0, holiday: 0,
         totalCheckins: 0, totalMinutes: 0, overtimeMinutes: 0, earlyCount: 0, onTimeCount: 0, avgCheckinMin: 0,
         expectedMin: 0, workedMin: 0, overtimeMin: 0, netMin: 0,
@@ -2430,35 +2414,27 @@ export function ReportsTab() {
     <div className="flex flex-col gap-5">
 
       {/* Month navigator */}
-      <div className="flex items-center gap-3">
-        <button
-          onClick={prevMonth}
-          className="size-8 rounded-sm bg-surface-1 border border-border-default flex items-center justify-center text-text-3 hover:text-text-1 hover:border-border-strong transition-colors"
+      <div className="flex flex-wrap items-center gap-3">
+        <PeriodStepper
+          icon={Calendar}
+          label={`${MONTH_NAMES[month - 1]} ${year}`}
+          onPrev={prevMonth}
+          onNext={nextMonth}
+          disableNext={isCurrentMonth}
         >
-          <ChevronLeft size={15} />
-        </button>
-        <div className="bg-surface-1 border border-border-default rounded-lg px-5 py-2 flex items-center gap-2">
-          <Calendar size={14} className="text-brand-red" />
-          <span className="font-display font-semibold text-[15px] text-text-1">
-            {MONTH_NAMES[month - 1]} {year}
-          </span>
           {isCurrentMonth && (
             <span className="ml-1 px-1.5 py-0.5 rounded-xs bg-brand-red/10 border border-brand-red/20 text-brand-red text-[10px] font-mono font-semibold uppercase tracking-wide">
               Current
             </span>
           )}
-        </div>
-        <button
-          onClick={nextMonth}
-          disabled={isCurrentMonth}
-          className="size-8 rounded-sm bg-surface-1 border border-border-default flex items-center justify-center text-text-3 hover:text-text-1 hover:border-border-strong transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          <ChevronRight size={15} />
-        </button>
-        <span className="ml-1 font-ui text-[12px] text-text-4">
+        </PeriodStepper>
+        <span className="font-ui text-[12px] text-text-4">
           {workingDays} working days · {employeeStats.length} employees
         </span>
-        <button
+        <Button
+          size="sm"
+          variant="secondary"
+          className="ml-auto"
           onClick={() => downloadCsv(
             `attendance-${year}-${String(month).padStart(2, '0')}`,
             ['Employee', 'Present', 'Late', 'Absent', 'Half Day', 'Leave', 'Avg Check-in', 'Avg Office Hours', 'Total Office Hours', 'Approved OT (h)', 'Expected', 'Worked', 'Overtime', 'Net', 'On-Time %'],
@@ -2476,10 +2452,9 @@ export function ReportsTab() {
               s.present + s.late > 0 ? Math.round(((s.present - s.late + s.earlyCount + s.onTimeCount) / (s.present + s.late)) * 100) : 0,
             ]),
           )}
-          className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-sm bg-surface-1 border border-border-default text-[12px] font-ui font-medium text-text-2 hover:text-text-1 hover:border-border-strong transition-colors"
         >
           <Download size={13} /> Export CSV
-        </button>
+        </Button>
       </div>
 
       {/* Summary stat cards */}
@@ -2520,7 +2495,8 @@ export function ReportsTab() {
             No attendance records for {MONTH_NAMES[month - 1]} {year}.
           </div>
         ) : (
-          <table className="w-full overflow-x-auto whitespace-nowrap lg:whitespace-normal">
+          <div className="overflow-x-auto">
+          <table className="w-full whitespace-nowrap lg:whitespace-normal">
             <thead>
               <tr className="border-b border-border-subtle bg-surface-2">
                 <SortTh label="Employee"     col="name"         sortKey={sortKey} sortAsc={sortAsc} onSort={handleSort} />
@@ -2561,7 +2537,7 @@ export function ReportsTab() {
                     >
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2.5">
-                          <Avatar name={s.name} size="sm" />
+                          <Avatar name={s.name} src={s.avatar ?? undefined} size="sm" />
                           <span className="font-ui font-medium text-[13px] text-text-1">{s.name}</span>
                         </div>
                       </td>
@@ -2689,6 +2665,7 @@ export function ReportsTab() {
               })}
             </tbody>
           </table>
+          </div>
         )}
       </div>
     </div>

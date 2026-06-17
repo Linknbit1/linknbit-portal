@@ -1,6 +1,7 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { ChevronLeft, ChevronRight, Calendar, ChevronDown } from 'lucide-react'
 import { cn } from '../../lib/cn'
+import { Popover } from './Popover'
 
 interface DatePickerProps {
   value: string            // YYYY-MM-DD or ''
@@ -39,15 +40,7 @@ export function DatePicker({ value, onChange, minDate, maxDate, allowedDow, plac
   const [displayYear, setDisplayYear] = useState(() => (selected ?? new Date()).getFullYear())
   const [displayMonth, setDisplayMonth] = useState(() => (selected ?? new Date()).getMonth())
 
-  const containerRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(false)
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [])
+  const triggerRef = useRef<HTMLButtonElement>(null)
 
   const toggleOpen = () => {
     const nextOpen = !open
@@ -102,8 +95,9 @@ export function DatePicker({ value, onChange, minDate, maxDate, allowedDow, plac
   })()
 
   return (
-    <div ref={containerRef} className={cn('relative', className)}>
+    <div className={cn('relative', className)}>
       <button
+        ref={triggerRef}
         type="button"
         onClick={toggleOpen}
         className={cn(
@@ -118,8 +112,12 @@ export function DatePicker({ value, onChange, minDate, maxDate, allowedDow, plac
         <ChevronDown size={13} className={cn('text-text-4 shrink-0 transition-transform', open && 'rotate-180')} />
       </button>
 
-      {open && (
-        <div className="absolute z-50 top-full left-0 mt-1 bg-surface-1 border border-border-default rounded-xl shadow-2xl overflow-hidden w-68 max-w-[calc(100vw-2rem)]">
+      <Popover
+        anchorRef={triggerRef}
+        open={open}
+        onClose={() => setOpen(false)}
+        className="bg-surface-1 border border-border-default rounded-xl shadow-2xl overflow-hidden w-68 max-w-[calc(100vw-2rem)]"
+      >
           {/* Month navigation */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-border-subtle">
             <button
@@ -198,8 +196,7 @@ export function DatePicker({ value, onChange, minDate, maxDate, allowedDow, plac
               </button>
             )}
           </div>
-        </div>
-      )}
+      </Popover>
     </div>
   )
 }

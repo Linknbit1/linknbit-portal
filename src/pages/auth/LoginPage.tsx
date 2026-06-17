@@ -712,9 +712,9 @@ function SplashScreen({ user, onDone }: { user: SplashUser; onDone: () => void }
   }, [onDone])
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_50%_50%,#0F1620_0%,#06080C_70%)] px-[clamp(16px,5vw,64px)] py-[clamp(20px,4vh,56px)]">
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_50%_50%,#0F1620_0%,#06080C_70%)] px-[clamp(16px,5vw,64px)] pt-[max(env(safe-area-inset-top),clamp(20px,4vh,56px))] pb-[max(env(safe-area-inset-bottom),clamp(20px,4vh,56px))]">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,rgba(122,133,151,0.07)_1px,transparent_1px)] bg-size-[40px_40px] mask-[radial-gradient(ellipse_60%_60%_at_50%_50%,#000_30%,transparent_100%)]" />
-      <div className="absolute inset-x-[clamp(16px,5vw,32px)] top-[clamp(16px,3vh,32px)] flex items-center justify-between gap-3 font-mono text-[10.5px] uppercase tracking-[0.12em] text-text-4">
+      <div className="absolute inset-x-[clamp(16px,5vw,32px)] top-[max(env(safe-area-inset-top),clamp(16px,3vh,32px))] flex items-center justify-between gap-3 font-mono text-[10.5px] uppercase tracking-[0.12em] text-text-4">
         <div className="flex items-center gap-3">
           <LogoMark />
           <span className="font-display text-[16px] font-bold text-text-1">Linknbit</span>
@@ -812,13 +812,13 @@ export default function LoginPage() {
         <SplashScreen user={splashDisplay} onDone={() => navigate(splashDisplay.path)} />
       )}
 
-      <div className="flex min-h-screen bg-bg-base">
+      <div className="flex min-h-dvh bg-bg-base">
         <div className="hidden shrink-0 lg:block lg:w-1/2">
           <BrandPanel />
         </div>
 
-        <div className="flex min-h-screen flex-1 flex-col bg-bg-base">
-          <div className="flex shrink-0 items-center justify-between px-6 pt-8 sm:px-10 sm:pt-10 lg:px-20 lg:pt-14">
+        <div className="flex min-h-dvh flex-1 flex-col bg-bg-base pt-safe pb-safe px-safe">
+          <div className="flex shrink-0 items-center justify-between px-6 pt-5 sm:px-10 sm:pt-8 lg:px-20 lg:pt-14">
             <div className="flex items-center gap-2.5">
               <LogoMark compact />
               <span className="font-display text-body font-semibold text-text-2">Operations Portal</span>
@@ -828,8 +828,8 @@ export default function LoginPage() {
             </span>
           </div>
 
-          <div className="px-6 pb-4 pt-8 sm:px-10 lg:hidden">
-            <div className="flex items-center gap-4 rounded-md border border-border-subtle bg-[linear-gradient(135deg,#0D131D_0%,#0A0F17_100%)] px-5 py-4">
+          <div className="px-6 pb-3 pt-4 sm:px-10 lg:hidden">
+            <div className="flex items-center gap-4 rounded-md border border-border-subtle bg-[linear-gradient(135deg,#0D131D_0%,#0A0F17_100%)] px-4 py-3">
               <div className="relative size-14 shrink-0">
                 <span className="absolute left-0 top-0 size-9 rounded-full bg-[radial-gradient(circle_at_35%_35%,#C4B5FD_0%,#8B5CF6_45%,transparent_75%)] opacity-80 mix-blend-screen blur-[1px]" />
                 <span className="absolute left-3 top-2.5 size-9 rounded-full bg-[radial-gradient(circle_at_65%_40%,#67E8F9_0%,#06B6D4_45%,transparent_75%)] opacity-80 mix-blend-screen blur-[1px]" />
@@ -844,7 +844,7 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <div className="flex flex-1 items-center justify-center px-6 py-8 sm:px-10 lg:px-20">
+          <div className="flex flex-1 items-center justify-center px-6 py-5 sm:px-10 sm:py-8 lg:px-20">
             <div className="w-full max-w-100">
               {view === 'login' && (
                 <LoginForm onSuccess={triggerSplash} onForgot={() => setView('forgot')} />
@@ -868,7 +868,7 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <div className="flex shrink-0 items-center justify-between px-6 pb-8 font-mono text-[10.5px] uppercase tracking-widest text-text-4 sm:px-10 sm:pb-10 lg:px-20 lg:pb-14">
+          <div className="flex shrink-0 items-center justify-between px-6 pb-5 font-mono text-[10.5px] uppercase tracking-widest text-text-4 sm:px-10 sm:pb-8 lg:px-20 lg:pb-14">
             <span>Linknbit - Operations Portal</span>
             <span className="hidden sm:block">EN - ISLAMABAD - PKT</span>
           </div>
