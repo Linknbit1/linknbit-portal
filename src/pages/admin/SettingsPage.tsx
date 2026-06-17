@@ -1,11 +1,14 @@
 import React, { useState } from 'react'
-import { Check, Bell, Layers, Link2, Palette, Shield, ChevronRight, Loader2, Shapes, Plus, Trash2 } from 'lucide-react'
+import { Navigate, useParams } from 'react-router-dom'
+import { Shield, ChevronRight, Loader2, Shapes, Plus, Trash2, type LucideIcon } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
+import { StackScreen } from '../../components/layout/StackScreen'
+import { HubRow } from '../../components/layout/MobileHub'
 import { Button } from '../../components/ui/Button'
 import { Toggle } from '../../components/ui/Toggle'
 import { useToast } from '../../components/ui/toast-context'
 import { useAuthContext } from '../../context/AuthContext'
-import { isAuthoritative } from '../../lib/roles'
+import { useIsDesktop } from '../../hooks/useMediaQuery'
 import { useRoleFlags, useUpdateRoleFlag } from '../../hooks/useRoleFlags'
 import {
   useServices, useCreateService, useUpdateService, useDeleteService, useServiceUsage,
@@ -13,17 +16,13 @@ import {
 import type { Service } from '../../api/services'
 import { cn } from '../../lib/cn'
 
-type Tab = 'general' | 'services' | 'stages' | 'notifications' | 'integrations' | 'permissions'
+type Tab = 'services' | 'permissions'
 
-// `personal` tabs are available to every internal user; the rest are company
-// settings, shown only to authoritative (management) roles.
-const TABS: { key: Tab; label: string; icon: typeof Check; personal?: boolean }[] = [
-  { key: 'general',       label: 'General',       icon: Palette },
-  { key: 'services',     label: 'Services',        icon: Shapes },
-  { key: 'stages',       label: 'Stages',          icon: Layers },
-  { key: 'notifications', label: 'Notifications', icon: Bell, personal: true },
-  { key: 'integrations', label: 'Integrations',    icon: Link2 },
-  { key: 'permissions',  label: 'Permissions',     icon: Shield },
+// Mobile section metadata: drives the hub rows + stack-screen titles. Only the two
+// fully-wired company-settings areas remain in production (super_admin / admin only).
+const SETTINGS_SECTIONS: { key: Tab; label: string; icon: LucideIcon }[] = [
+  { key: 'services',    label: 'Services',    icon: Shapes },
+  { key: 'permissions', label: 'Permissions', icon: Shield },
 ]
 
 // ── Services management ──────────────────────────────────────────────────────────
@@ -129,29 +128,7 @@ function ServicesPanel({ canManage }: { canManage: boolean }) {
   )
 }
 
-function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
-  return (
-    <div className="flex items-center justify-between py-4 border-b border-border-subtle last:border-0">
-      <div>
-        <p className="font-ui font-medium text-[13.5px] text-text-1">{label}</p>
-        {hint && <p className="font-ui text-[12px] text-text-3 mt-0.5">{hint}</p>}
-      </div>
-      <div className="shrink-0 ml-6">{children}</div>
-    </div>
-  )
-}
-
-function TextInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
-  return (
-    <input
-      type="text"
-      value={value}
-      placeholder={placeholder}
-      onChange={(e) => onChange(e.target.value)}
-      className="w-48 bg-surface-inset border border-border-default rounded-md px-3 py-1.5 text-[13px] font-ui text-text-1 placeholder:text-text-4 outline-none focus:border-border-focus"
-    />
-  )
-}
+// ── Permissions (role × feature flag matrix) ─────────────────────────────────────
 
 const INTERNAL_ROLES = ['super_admin', 'admin', 'project_manager', 'team_lead', 'employee', 'hr', 'finance'] as const
 const ROLE_LABELS: Record<string, string> = {
@@ -178,274 +155,168 @@ const FEATURE_SECTIONS: { label: string; features: string[] }[] = [
   { label: 'Integrations', features: ['can_manage_integrations'] },
 ]
 
-export default function SettingsPage() {
+function PermissionsPanel({ canEdit }: { canEdit: boolean }) {
   const toast = useToast()
+  const { data: flags = [], isLoading } = useRoleFlags()
+  const { mutate: updateFlag, isPending: updating } = useUpdateRoleFlag()
+
+  return (
+    <div>
+      <h2 className="font-display font-bold text-[16px] text-text-1 mb-1">Permissions</h2>
+      <p className="font-ui text-[13px] text-text-3 mb-1">Role-based feature access. Toggle to enable or disable per role.</p>
+      {!canEdit
+        ? <p className="font-mono text-[11px] text-text-4 mb-4">View only — only Super Admins and Admins can change permissions.</p>
+        : <p className="font-mono text-[11px] text-text-4 mb-4">Changes take effect immediately for all sessions.</p>}
+
+      {isLoading ? (
+        <div className="flex items-center justify-center py-16 text-text-4">
+          <Loader2 size={18} className="animate-spin" />
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-[12px] min-w-175">
+            <thead>
+              <tr className="border-b border-border-subtle">
+                <th className="text-left py-2 font-mono text-text-4 uppercase text-[10px] tracking-wider pr-6 min-w-45">Feature</th>
+                {INTERNAL_ROLES.map((role) => (
+                  <th key={role} className="text-center p-2 font-ui font-semibold text-text-3 min-w-17.5">
+                    {ROLE_LABELS[role]}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {FEATURE_SECTIONS.map((section) => (
+                <React.Fragment key={section.label}>
+                  <tr className="border-b border-border-subtle">
+                    <td colSpan={INTERNAL_ROLES.length + 1} className="py-2 px-3 bg-surface-2">
+                      <span className="font-mono text-[10px] font-semibold text-text-4 uppercase tracking-widest">
+                        {section.label}
+                      </span>
+                    </td>
+                  </tr>
+                  {section.features.map((featureKey, i) => {
+                    const label = FEATURE_LABELS[featureKey] ?? featureKey
+                    const isLast = i === section.features.length - 1
+                    return (
+                      <tr key={featureKey} className={cn('border-b border-border-subtle', isLast && 'border-border-default')}>
+                        <td className="py-3 pl-3 font-ui text-[13px] text-text-2 pr-6 whitespace-nowrap">{label}</td>
+                        {INTERNAL_ROLES.map((role) => {
+                          const flag = flags.find((f) => f.role === role && f.feature_key === featureKey)
+                          const enabled = flag?.enabled ?? false
+                          return (
+                            <td key={role} className="text-center py-3 px-2">
+                              <div className="flex justify-center">
+                                <Toggle
+                                  checked={enabled}
+                                  onChange={(val) => {
+                                    if (!canEdit || updating) return
+                                    updateFlag(
+                                      { role, featureKey, enabled: val },
+                                      { onError: () => toast('Failed to update permission', 'error') },
+                                    )
+                                  }}
+                                />
+                              </div>
+                            </td>
+                          )
+                        })}
+                      </tr>
+                    )
+                  })}
+                </React.Fragment>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Page ─────────────────────────────────────────────────────────────────────────
+
+// Route guarded to super_admin / admin (see App.tsx + SETTINGS_ROLES). Desktop keeps
+// the sidebar-tab layout; mobile uses the hub → stack-screen pattern.
+export default function SettingsPage({ mobileSection }: { mobileSection?: string } = {}) {
   const { profile } = useAuthContext()
-  const { data: flags = [], isLoading: flagsLoading } = useRoleFlags()
-  const { mutate: updateFlag, isPending: updatingFlag } = useUpdateRoleFlag()
+  const isDesktop = useIsDesktop()
   const canEditFlags = profile?.role === 'super_admin' || profile?.role === 'admin'
 
-  const authoritative = isAuthoritative(profile?.role)
-  const visibleTabs = authoritative ? TABS : TABS.filter((t) => t.personal)
+  const [activeTab, setActiveTab] = useState<Tab>('services')
+  const showHub = !isDesktop && !mobileSection
 
-  const [activeTab, setActiveTab] = useState<Tab>('general')
-  // Clamp to a visible tab (e.g. a non-authoritative user only has personal tabs).
-  const effectiveTab: Tab = visibleTabs.some((t) => t.key === activeTab)
-    ? activeTab
-    : visibleTabs[0].key
+  const renderPanel = (tab: Tab) =>
+    tab === 'services'
+      ? <ServicesPanel canManage={canEditFlags} />
+      : <PermissionsPanel canEdit={canEditFlags} />
 
-  // General
-  const [agencyName, setAgencyName] = useState('Linknbit')
-  const [timezone, setTimezone] = useState('Asia/Karachi')
-
-  // Notifications
-  const [notifTaskComplete, setNotifTaskComplete] = useState(true)
-  const [notifApprovals, setNotifApprovals] = useState(true)
-  const [notifDeadlines, setNotifDeadlines] = useState(true)
-  const [notifXP, setNotifXP] = useState(true)
-  const [emailNotif, setEmailNotif] = useState(false)
-
-  // Integrations
-  const [clickupKey, setClickupKey] = useState('cu_xxxxxxxxxxxxxxxx')
-  const [discordWebhook, setDiscordWebhook] = useState('')
-  const [autoSync, setAutoSync] = useState(true)
-
-  const handleSave = () => {
-    toast('Settings saved successfully', 'success')
+  // Mobile drill-in: one section rendered as a stack screen with its own back chrome.
+  if (mobileSection) {
+    const entry = SETTINGS_SECTIONS.find((s) => s.key === mobileSection)
+    if (!entry) return <Navigate to="/settings" replace />
+    return (
+      <StackScreen title={entry.label}>
+        <div className="bg-surface-1 border border-border-default rounded-xl p-5">
+          {renderPanel(entry.key)}
+        </div>
+      </StackScreen>
+    )
   }
 
   return (
     <div className="flex flex-col flex-1">
-      <Topbar title="Settings" />
+      <Topbar title="Settings" back="/more" />
 
       <div className="px-4 py-6 lg:p-6 max-w-content mx-auto w-full">
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Section nav — horizontal scroll on mobile, sidebar on desktop */}
-          <div className="w-full lg:w-48 shrink-0">
-            <nav className="flex lg:flex-col bg-surface-1 border border-border-default rounded-xl overflow-x-auto">
-              {visibleTabs.map(({ key, label, icon: Icon }) => (
-                <button
-                  key={key}
-                  onClick={() => setActiveTab(key)}
-                  className={cn(
-                    'shrink-0 lg:w-full flex items-center gap-2.5 px-4 py-3 text-[13px] font-ui font-medium whitespace-nowrap transition-colors border-r lg:border-r-0 lg:border-b border-border-subtle last:border-0',
-                    effectiveTab === key
-                      ? 'bg-brand-red/10 text-brand-red'
-                      : 'text-text-2 hover:bg-surface-2 hover:text-text-1',
-                  )}
-                >
-                  <Icon size={14} />
-                  {label}
-                  {effectiveTab === key && <ChevronRight size={12} className="ml-auto hidden lg:block" />}
-                </button>
-              ))}
-            </nav>
+        {showHub ? (
+          <div className="flex flex-col gap-2.5">
+            {SETTINGS_SECTIONS.map((s) => (
+              <HubRow key={s.key} to={`/settings/${s.key}`} label={s.label} icon={s.icon} />
+            ))}
           </div>
+        ) : (
+          <div className="flex flex-col lg:flex-row gap-6">
+            {/* Section nav — sidebar on desktop */}
+            <div className="w-full lg:w-48 shrink-0">
+              <nav className="flex lg:flex-col bg-surface-1 border border-border-default rounded-xl overflow-x-auto">
+                {SETTINGS_SECTIONS.map(({ key, label, icon: Icon }) => (
+                  <button
+                    key={key}
+                    onClick={() => setActiveTab(key)}
+                    className={cn(
+                      'shrink-0 lg:w-full flex items-center gap-2.5 px-4 py-3 text-[13px] font-ui font-medium whitespace-nowrap transition-colors border-r lg:border-r-0 lg:border-b border-border-subtle last:border-0',
+                      activeTab === key
+                        ? 'bg-brand-red/10 text-brand-red'
+                        : 'text-text-2 hover:bg-surface-2 hover:text-text-1',
+                    )}
+                  >
+                    <Icon size={14} />
+                    {label}
+                    {activeTab === key && <ChevronRight size={12} className="ml-auto hidden lg:block" />}
+                  </button>
+                ))}
+              </nav>
+            </div>
 
-          {/* Content */}
-          <div className="flex-1 min-w-0">
-            <div className="bg-surface-1 border border-border-default rounded-xl p-6">
-
-              {effectiveTab === 'general' && (
-                <div>
-                  <h2 className="font-display font-bold text-[16px] text-text-1 mb-1">General Settings</h2>
-                  <p className="font-ui text-[13px] text-text-3 mb-5">Agency identity and regional settings.</p>
-                  <Field label="Agency Name" hint="Displayed in the portal header and reports">
-                    <TextInput value={agencyName} onChange={setAgencyName} placeholder="Your Agency" />
-                  </Field>
-                  <Field label="Timezone" hint="Used for attendance and deadline calculations">
-                    <TextInput value={timezone} onChange={setTimezone} placeholder="Asia/Karachi" />
-                  </Field>
-                  <Field label="Default Currency" hint="For budget and reward display">
-                    <select className="bg-surface-inset border border-border-default rounded-md px-3 py-1.5 text-[13px] font-ui text-text-1 outline-none focus:border-border-focus">
-                      <option>PKR — Pakistani Rupee</option>
-                      <option>USD — US Dollar</option>
-                    </select>
-                  </Field>
-                </div>
-              )}
-
-              {effectiveTab === 'services' && <ServicesPanel canManage={canEditFlags} />}
-
-              {effectiveTab === 'stages' && (
-                <div>
-                  <h2 className="font-display font-bold text-[16px] text-text-1 mb-1">Stage Templates</h2>
-                  <p className="font-ui text-[13px] text-text-3 mb-5">Manage service-based workflow stages.</p>
-                  {[
-                    { service: 'Design', color: '#A78BFA', stages: ['Discovery & Brief', 'Research & Strategy', 'Wireframing', 'UI Design', 'Internal Review', 'Client Review', 'Revisions', 'Final Approval', 'Handover'] },
-                    { service: 'Development', color: '#22D3EE', stages: ['Requirement Finalization', 'Technical Planning', 'Setup & Architecture', 'Development', 'Internal QA', 'Client Testing (UAT)', 'Bug Fixing', 'Deployment', 'Support'] },
-                    { service: 'Marketing', color: '#FBBF24', stages: ['Onboarding', 'Audit & Research', 'Strategy', 'Creative Production', 'Campaign Setup', 'Launch', 'Optimization', 'Reporting', 'Scaling'] },
-                  ].map(({ service, color, stages }) => (
-                    <div key={service} className="mb-5 last:mb-0">
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="size-2.5 rounded-full" style={{ background: color }} />
-                        <span className="font-display font-semibold text-[13.5px] text-text-1">{service}</span>
-                        <span className="font-mono text-[10px] text-text-4 bg-surface-2 px-1.5 py-0.5 rounded">{stages.length} stages</span>
-                        <button
-                          onClick={() => toast(`Edit ${service} stages`, 'info')}
-                          className="ml-auto text-[11.5px] font-ui font-semibold text-text-3 hover:text-text-1 transition-colors"
-                        >
-                          Edit
-                        </button>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {stages.map((stage, i) => (
-                          <span
-                            key={stage}
-                            className="flex items-center gap-1.5 px-2.5 py-1 bg-surface-2 border border-border-subtle rounded-md text-[11.5px] font-ui text-text-2"
-                          >
-                            <span className="font-mono text-[9.5px] text-text-4">{i + 1}.</span>
-                            {stage}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {effectiveTab === 'notifications' && (
-                <div>
-                  <h2 className="font-display font-bold text-[16px] text-text-1 mb-1">Notifications</h2>
-                  <p className="font-ui text-[13px] text-text-3 mb-5">Control which events trigger notifications.</p>
-                  <Field label="Task Completed" hint="Notify when a task is marked complete">
-                    <Toggle checked={notifTaskComplete} onChange={setNotifTaskComplete} />
-                  </Field>
-                  <Field label="Stage Approvals" hint="Notify on approval requests and responses">
-                    <Toggle checked={notifApprovals} onChange={setNotifApprovals} />
-                  </Field>
-                  <Field label="Deadline Alerts" hint="Warn 3 days before due dates">
-                    <Toggle checked={notifDeadlines} onChange={setNotifDeadlines} />
-                  </Field>
-                  <Field label="XP & Rewards" hint="Notify when XP is earned or rewards redeemed">
-                    <Toggle checked={notifXP} onChange={setNotifXP} />
-                  </Field>
-                  <Field label="Email Notifications" hint="Send emails in addition to in-app alerts">
-                    <Toggle checked={emailNotif} onChange={setEmailNotif} />
-                  </Field>
-                </div>
-              )}
-
-              {effectiveTab === 'integrations' && (
-                <div>
-                  <h2 className="font-display font-bold text-[16px] text-text-1 mb-1">Integrations</h2>
-                  <p className="font-ui text-[13px] text-text-3 mb-5">Connect external services.</p>
-                  <Field label="ClickUp API Key" hint="Used to sync projects and tasks">
-                    <input
-                      value={clickupKey}
-                      onChange={(e) => setClickupKey(e.target.value)}
-                      type="password"
-                      className="w-52 bg-surface-inset border border-border-default rounded-md px-3 py-1.5 text-[13px] font-mono text-text-1 outline-none focus:border-border-focus"
-                    />
-                  </Field>
-                  <Field label="Discord Webhook" hint="Post notifications to a Discord channel">
-                    <input
-                      value={discordWebhook}
-                      onChange={(e) => setDiscordWebhook(e.target.value)}
-                      placeholder="https://discord.com/api/webhooks/..."
-                      className="w-52 bg-surface-inset border border-border-default rounded-md px-3 py-1.5 text-[13px] font-mono text-text-1 placeholder:text-text-4 outline-none focus:border-border-focus"
-                    />
-                  </Field>
-                  <Field label="Auto Sync ClickUp" hint="Sync automatically every 15 minutes">
-                    <Toggle checked={autoSync} onChange={setAutoSync} />
-                  </Field>
-                  <div className="mt-4">
-                    <Button variant="secondary" size="sm" onClick={() => toast('Testing ClickUp connection...', 'info')}>
-                      Test Connection
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {effectiveTab === 'permissions' && (
-                <div>
-                  <h2 className="font-display font-bold text-[16px] text-text-1 mb-1">Permissions</h2>
-                  <p className="font-ui text-[13px] text-text-3 mb-1">Role-based feature access. Toggle to enable or disable per role.</p>
-                  {!canEditFlags && (
-                    <p className="font-mono text-[11px] text-text-4 mb-4">View only — only Super Admins and Admins can change permissions.</p>
-                  )}
-                  {canEditFlags && <p className="font-mono text-[11px] text-text-4 mb-4">Changes take effect immediately for all sessions.</p>}
-
-                  {flagsLoading ? (
-                    <div className="flex items-center justify-center py-16 text-text-4">
-                      <Loader2 size={18} className="animate-spin" />
-                    </div>
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-[12px] min-w-175">
-                        <thead>
-                          <tr className="border-b border-border-subtle">
-                            <th className="text-left py-2 font-mono text-text-4 uppercase text-[10px] tracking-wider pr-6 min-w-45">Feature</th>
-                            {INTERNAL_ROLES.map((role) => (
-                              <th key={role} className="text-center p-2 font-ui font-semibold text-text-3 min-w-17.5">
-                                {ROLE_LABELS[role]}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {FEATURE_SECTIONS.map((section) => (
-                            <React.Fragment key={section.label}>
-                              <tr className="border-b border-border-subtle">
-                                <td
-                                  colSpan={INTERNAL_ROLES.length + 1}
-                                  className="py-2 px-3 bg-surface-2"
-                                >
-                                  <span className="font-mono text-[10px] font-semibold text-text-4 uppercase tracking-widest">
-                                    {section.label}
-                                  </span>
-                                </td>
-                              </tr>
-                              {section.features.map((featureKey, i) => {
-                                const label = FEATURE_LABELS[featureKey] ?? featureKey
-                                const isLast = i === section.features.length - 1
-                                return (
-                                  <tr key={featureKey} className={cn('border-b border-border-subtle', isLast && 'border-border-default')}>
-                                    <td className="py-3 pl-3 font-ui text-[13px] text-text-2 pr-6 whitespace-nowrap">{label}</td>
-                                    {INTERNAL_ROLES.map((role) => {
-                                      const flag = flags.find((f) => f.role === role && f.feature_key === featureKey)
-                                      const enabled = flag?.enabled ?? false
-                                      return (
-                                        <td key={role} className="text-center py-3 px-2">
-                                          <div className="flex justify-center">
-                                            <Toggle
-                                              checked={enabled}
-                                              onChange={(val) => {
-                                                if (!canEditFlags || updatingFlag) return
-                                                updateFlag(
-                                                  { role, featureKey, enabled: val },
-                                                  { onError: () => toast('Failed to update permission', 'error') },
-                                                )
-                                              }}
-                                            />
-                                          </div>
-                                        </td>
-                                      )
-                                    })}
-                                  </tr>
-                                )
-                              })}
-                            </React.Fragment>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Save button */}
-              {effectiveTab !== 'permissions' && effectiveTab !== 'stages' && (
-                <div className="mt-6 pt-5 border-t border-border-subtle flex justify-end">
-                  <Button onClick={handleSave}>
-                    <Check size={14} /> Save Changes
-                  </Button>
-                </div>
-              )}
+            {/* Content */}
+            <div className="flex-1 min-w-0">
+              <div className="bg-surface-1 border border-border-default rounded-xl p-6">
+                {renderPanel(activeTab)}
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   )
+}
+
+/** Mobile-only /settings/:section stack screen; redirects on desktop. */
+export function SettingsSectionScreen() {
+  const isDesktop = useIsDesktop()
+  const { section } = useParams()
+  const valid = SETTINGS_SECTIONS.some((s) => s.key === section)
+  if (isDesktop || !section || !valid) return <Navigate to="/settings" replace />
+  return <SettingsPage mobileSection={section} />
 }

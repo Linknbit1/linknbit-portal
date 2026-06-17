@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { showWipFeatures } from '../../lib/featureFlags'
 import { isAuthoritative } from '../../lib/roles'
+import { SETTINGS_ROLES } from '../../constants/roles'
 
 export interface NavItem {
   label: string
@@ -24,6 +25,8 @@ export interface NavItem {
   devOnly?: boolean
   // Only rendered for authoritative (management) roles.
   authoritativeOnly?: boolean
+  // If set, only rendered for these roles (e.g. Settings → super_admin/admin).
+  roles?: readonly string[]
   // Surfaced directly in the mobile bottom tab bar (the rest live behind "More").
   primaryMobile?: boolean
 }
@@ -39,7 +42,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Gamification', icon: Trophy, to: '/gamification', primaryMobile: true },
   { label: 'Reports', icon: BarChart2, to: '/admin/reports', devOnly: true },
   { label: 'ClickUp', icon: Link2, to: '/admin/clickup', devOnly: true },
-  { label: 'Settings', icon: Settings, to: '/settings' },
+  { label: 'Settings', icon: Settings, to: '/settings', roles: SETTINGS_ROLES },
 ]
 
 /** Nav items visible to the given role in the current build (WIP + authoritative filtering). */
@@ -48,7 +51,8 @@ export function visibleNavItems(role: string | null | undefined): NavItem[] {
   return NAV_ITEMS.filter(
     (item) =>
       (showWipFeatures || !item.devOnly) &&
-      (authoritative || !item.authoritativeOnly),
+      (authoritative || !item.authoritativeOnly) &&
+      (!item.roles || item.roles.includes(role ?? '')),
   )
 }
 

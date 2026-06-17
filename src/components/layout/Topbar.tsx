@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Bell, Search, Check, CheckCheck, ChevronDown, UserCircle, LogOut, ChevronLeft } from 'lucide-react'
 import { cn } from '../../lib/cn'
@@ -6,6 +6,7 @@ import { showWipFeatures } from '../../lib/featureFlags'
 import { Avatar } from '../ui/Avatar'
 import { RoleBadge } from '../shared/RoleBadge'
 import { useAuthContext } from '../../context/AuthContext'
+import { useNavChrome } from './MobileNavContext'
 import { useNotifications, useMarkRead, useMarkAllRead } from '../../hooks/useNotifications'
 import { formatRelativeTime } from '../../lib/utils'
 import type { UserRole } from '../../types'
@@ -32,6 +33,16 @@ export function Topbar({ title, breadcrumb, className, back }: TopbarProps) {
   const navigate = useNavigate()
   const { profile, signOut } = useAuthContext()
   const profileId = profile?.id ?? ''
+
+  // Report this screen's back affordance to the shell so the mobile bottom tab
+  // bar can hide itself on pushed/drill-in screens. useLayoutEffect (pre-paint)
+  // avoids a one-frame flash of the bar across back-screen → back-screen routes.
+  const navChrome = useNavChrome()
+  const setHasBack = navChrome?.setHasBack
+  useLayoutEffect(() => {
+    setHasBack?.(!!back)
+    return () => setHasBack?.(false)
+  }, [back, setHasBack])
 
   const { data: notifications = [] } = useNotifications(profileId)
   const { mutate: markRead } = useMarkRead(profileId)

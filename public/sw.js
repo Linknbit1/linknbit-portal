@@ -1,4 +1,4 @@
-const CACHE_NAME = 'linknbit-portal-v1'
+const CACHE_NAME = 'linknbit-portal-v2'
 const PRECACHE_URLS = [
   '/',
   '/index.html',
@@ -9,8 +9,12 @@ const PRECACHE_URLS = [
   '/brand/linknbit-icon-maskable.svg',
   '/brand/linknbit-mark-dark.svg',
   '/brand/linknbit-mark-light.svg',
+  '/brand/linknbit-portal-banner-black.svg',
+  '/brand/linknbit-portal-banner-white.svg',
   '/brand/linknbit-wordmark-dark.svg',
   '/brand/linknbit-wordmark-light.svg',
+  '/install-banner.png',
+  '/og-image.png',
   '/icons/favicon-16x16.png',
   '/icons/favicon-32x32.png',
   '/icons/favicon-48x48.png',

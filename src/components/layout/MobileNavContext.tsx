@@ -1,12 +1,16 @@
 import { createContext, useContext } from 'react'
 
-interface MobileNavValue {
-  openNav: () => void
+interface NavChromeValue {
+  // True while the current screen shows a back affordance (a pushed/stack screen).
+  // The mobile bottom tab bar hides itself in this state so users don't lose their
+  // place by tapping a tab mid-drill-down (iOS hidesBottomBarWhenPushed).
+  hasBack: boolean
+  setHasBack: (value: boolean) => void
 }
 
-export const MobileNavContext = createContext<MobileNavValue | null>(null)
+export const NavChromeContext = createContext<NavChromeValue | null>(null)
 
-/** Opener for the mobile nav drawer; null when rendered outside AppShell. */
-export function useMobileNav(): MobileNavValue | null {
-  return useContext(MobileNavContext)
+/** Mobile nav chrome state (back affordance ↔ bottom-bar visibility). Null outside AppShell. */
+export function useNavChrome(): NavChromeValue | null {
+  return useContext(NavChromeContext)
 }

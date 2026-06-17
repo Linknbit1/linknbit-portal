@@ -37,7 +37,7 @@ export function Input({
         <input
           id={inputId}
           className={cn(
-            'w-full bg-surface-inset border rounded-md font-ui text-body text-text-1 placeholder:text-text-3 transition-colors duration-150',
+            'w-full bg-surface-inset border rounded-md font-ui text-body-sm text-text-1 placeholder:text-text-3 transition-colors duration-150',
             'focus:outline-none focus:border-border-focus focus:shadow-ring-focus',
             error ? 'border-error/60' : 'border-border-default',
             iconLeft ? 'pl-9' : 'pl-3',

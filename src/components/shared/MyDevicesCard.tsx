@@ -3,6 +3,8 @@ import { Card } from '../ui/Card'
 import { Button } from '../ui/Button'
 import { useCurrentDevice } from '../../hooks/useCurrentDevice'
 import { useRegisterDevice } from '../../hooks/useEnrolledDevices'
+import { useAuthContext } from '../../context/AuthContext'
+import { MGMT_ROLES } from '../../constants/roles'
 import { useToast } from '../ui/toast-context'
 import { cn } from '../../lib/cn'
 import type { EnrolledDevice } from '../../api/attendance'
@@ -18,8 +20,12 @@ const fmtDate = (iso: string | null) =>
 
 export function MyDevicesCard() {
   const toast = useToast()
+  const { profile } = useAuthContext()
   const { fingerprint, deviceName, ready, status, devices, privileged } = useCurrentDevice()
   const registerMut = useRegisterDevice()
+  // The raw fingerprint hash is only meaningful to HR/admin (device governance);
+  // employees and team leads see device name + status only.
+  const canSeeFingerprint = MGMT_ROLES.includes(profile?.role ?? '')
 
   const handleRegister = async () => {
     try {
@@ -78,7 +84,7 @@ export function MyDevicesCard() {
                     )}
                   </div>
                   <p className="font-mono text-[10px] text-text-4 mt-0.5">
-                    {d.device_fingerprint.slice(0, 16)}… · added {fmtDate(d.first_seen_at)}
+                    {canSeeFingerprint && `${d.device_fingerprint.slice(0, 16)}… · `}added {fmtDate(d.first_seen_at)}
                   </p>
                 </div>
                 <span className={cn('inline-flex items-center gap-1 px-2 py-1 rounded-xs text-[11px] font-ui font-semibold border', meta.cls)}>

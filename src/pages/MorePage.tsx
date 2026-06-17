@@ -2,6 +2,7 @@ import { Navigate, useNavigate } from 'react-router-dom'
 import { UserCircle, LogOut } from 'lucide-react'
 import { Topbar } from '../components/layout/Topbar'
 import { HubRow } from '../components/layout/MobileHub'
+import { InstallAppButton } from '../components/pwa/InstallAppButton'
 import { Avatar } from '../components/ui/Avatar'
 import { RoleBadge } from '../components/shared/RoleBadge'
 import { moreNavItems } from '../components/layout/navItems'
@@ -27,7 +28,7 @@ export default function MorePage() {
 
   return (
     <div className="flex flex-col flex-1">
-      <Topbar title="More" />
+      <Topbar title="Menu" />
       <div className="px-4 py-5 flex flex-col gap-5 w-full max-w-content mx-auto">
         {/* Profile summary → My Profile */}
         {profile && (
@@ -49,6 +50,9 @@ export default function MorePage() {
             <HubRow key={item.to} to={item.to} label={item.label} icon={item.icon} badge={item.badge} />
           ))}
         </div>
+
+        {/* PWA install — self-gates to null when not installable / already installed. */}
+        <InstallAppButton />
 
         <button
           onClick={handleLogout}

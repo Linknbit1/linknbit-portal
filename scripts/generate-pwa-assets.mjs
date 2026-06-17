@@ -15,6 +15,7 @@ import { dirname, join } from 'node:path'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const PUBLIC = join(__dirname, '..', 'public')
 const BRAND_BG = '#1A222D'
+const BANNER_SOURCE = join(__dirname, 'banner-source.svg')
 
 // ── The mark, in two coordinate spaces ────────────────────────────────────────
 // Full square (1024) art — mark centred with the logo's intended padding.
@@ -54,16 +55,18 @@ async function png(svg, w, h, name) {
 
 // ── Splash builder: centred mark + wordmark on the brand bg, uniform scale ─────
 function splashSvg(W, H) {
-  const scale = (W * 0.42) / GLYPH_W          // mark = 42% of the width
+  const scale = (W * 0.34) / GLYPH_W          // mark = 34% of the width
   const mw = GLYPH_W * scale
   const mh = GLYPH_H * scale
   const markX = (W - mw) / 2
-  const markY = H * 0.40 - mh / 2
-  const titleSize = Math.round(W * 0.052)
-  const subSize = Math.round(W * 0.020)
-  const titleY = markY + mh + titleSize * 1.6
-  const subY = titleY + subSize * 2.2
-  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+  const markY = H * 0.32 - mh / 2
+  const titleSize = Math.round(W * 0.064)
+  const subSize = Math.round(W * 0.026)
+  const bottomMargin = Math.max(H * 0.105, W * 0.28)
+  const subY = H - bottomMargin
+  const titleY = subY - subSize * 2.55
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title">
+  <title id="title">Linknbit splash screen</title>
   <rect width="${W}" height="${H}" fill="${BRAND_BG}"/>
   <g transform="translate(${markX} ${markY}) scale(${scale})">${glyph('white')}</g>
   <text x="${W / 2}" y="${titleY}" text-anchor="middle" fill="#F2F5F9" font-family="Arial, Helvetica, sans-serif" font-size="${titleSize}" font-weight="700">Linknbit</text>
@@ -109,19 +112,33 @@ async function main() {
   for (const [w, h] of splashSizes) {
     await png(splashSvg(w, h), w, h, `splash/apple-splash-${w}x${h}.png`)
   }
-  await png(splashSvg(2048, 2048), 2048, 2048, 'splash/linknbit-splash-2048.png')
+  const squareSplash = splashSvg(2048, 2048)
+  await png(squareSplash, 2048, 2048, 'splash/linknbit-splash-2048.png')
+  await writeFile(out('splash/linknbit-splash.svg'), squareSplash)
+  console.log('  ✓ splash/linknbit-splash.svg 2048x2048')
 
-  // ── Social / OG thumbnail from the wide banner (contain, never cropped) ──────
-  console.log('Thumbnail:')
-  const banner = join(__dirname, 'banner-source.png')
+  // ── Social / install artwork from the supplied wide banner ──────────────────
+  console.log('Banner artwork:')
   try {
-    await sharp(banner)
+    await sharp(BANNER_SOURCE)
+      .resize(1440, 1024, { fit: 'fill' })
+      .png()
+      .toFile(join(__dirname, 'banner-source.png'))
+    console.log('  ✓ scripts/banner-source.png 1440x1024')
+
+    await sharp(BANNER_SOURCE)
       .resize(1200, 630, { fit: 'contain', background: BRAND_BG })
       .png()
       .toFile(out('og-image.png'))
     console.log('  ✓ og-image.png 1200x630')
+
+    await sharp(BANNER_SOURCE)
+      .resize(1440, 1024, { fit: 'fill' })
+      .png()
+      .toFile(out('install-banner.png'))
+    console.log('  ✓ install-banner.png 1440x1024')
   } catch {
-    console.log('  – og-image.png skipped (no scripts/banner-source.png)')
+    console.log('  – banner artwork skipped (no scripts/banner-source.svg)')
   }
 
   console.log('\nDone.')

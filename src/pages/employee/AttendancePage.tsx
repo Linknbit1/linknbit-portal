@@ -107,8 +107,6 @@ export function UpcomingScheduleSection() {
   const upcomingHolidays = holidays.filter((h) => h.date > todayStr && h.date <= cutoffStr)
   const upcomingSats     = workingSats.filter((s) => s.date > todayStr && s.date <= cutoffStr)
 
-  if (upcomingHolidays.length === 0 && upcomingSats.length === 0) return null
-
   const items = [
     ...upcomingHolidays.map((h) => ({ type: 'holiday'     as const, date: h.date, label: h.name })),
     ...upcomingSats.map((s)     => ({ type: 'working_sat' as const, date: s.date, label: s.note ?? 'Working Saturday' })),
@@ -121,6 +119,17 @@ export function UpcomingScheduleSection() {
         <span className="font-ui font-semibold text-[13px] text-text-1">Upcoming Schedule</span>
         <span className="font-mono text-[11px] text-text-4 ml-1">Next 30 days</span>
       </div>
+      {items.length === 0 ? (
+        <div className="flex flex-col items-center gap-2 px-5 py-10 text-center">
+          <div className="size-11 rounded-full bg-surface-2 flex items-center justify-center">
+            <Palmtree size={18} className="text-text-3" />
+          </div>
+          <p className="font-ui font-semibold text-[13px] text-text-1">No upcoming holidays</p>
+          <p className="font-ui text-[12px] text-text-3 max-w-60">
+            There are no holidays or schedule changes in the next 30 days.
+          </p>
+        </div>
+      ) : (
       <div className="divide-y divide-border-subtle">
         {items.map((item) => {
           const d = new Date(item.date + 'T00:00:00')
@@ -151,6 +160,7 @@ export function UpcomingScheduleSection() {
           )
         })}
       </div>
+      )}
     </Card>
   )
 }

@@ -170,7 +170,7 @@ export default function TeamsPage() {
 
   return (
     <div className="flex flex-col flex-1">
-      <Topbar title="Teams" />
+      <Topbar title="Teams" back="/more" />
       <div className="px-4 py-6 lg:p-6 flex flex-col gap-5 max-w-content mx-auto w-full">
         <div className="flex items-center justify-between">
           <p className="font-mono text-[11.5px] text-text-3">{teams.length} team{teams.length === 1 ? '' : 's'} · {people.length} internal members</p>
