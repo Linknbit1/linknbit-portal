@@ -137,7 +137,8 @@ export function ClientShell() {
   return (
     <div className="client-portal min-h-screen bg-client-bg font-ui" style={{ color: '#1A1612' }}>
       {/* ── Top navigation ── */}
-      <header className="h-client-topbar bg-client-surface border-b border-client-border sticky top-0 z-30 flex items-center px-4 lg:px-10 gap-4 lg:gap-8">
+      <header className="bg-client-surface border-b border-client-border sticky top-0 z-40 pt-safe">
+       <div className="h-client-topbar flex items-center px-4 lg:px-10 gap-4 lg:gap-8">
         {/* Brand */}
         <div className="flex items-center gap-3 shrink-0">
           <LinknbitMark surface="light" className="h-9 w-8" />
@@ -416,6 +417,7 @@ export function ClientShell() {
             </AnimatePresence>
           </div>
         </div>
+       </div>
       </header>
 
       {/* Content */}
@@ -425,7 +427,7 @@ export function ClientShell() {
 
       {/* Bottom tab bar (mobile) */}
       <nav
-        className="fixed bottom-0 inset-x-0 z-30 lg:hidden bg-client-surface border-t border-client-border flex items-stretch pb-[env(safe-area-inset-bottom)]"
+        className="fixed bottom-0 inset-x-0 z-30 lg:hidden bg-client-surface border-t border-client-border flex items-stretch pb-safe"
         aria-label="Primary"
       >
         {CLIENT_NAV.map((item) => (

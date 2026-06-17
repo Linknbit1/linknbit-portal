@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bell, Search, Check, CheckCheck, ChevronDown, UserCircle, LogOut, Menu } from 'lucide-react'
+import { Bell, Search, Check, CheckCheck, ChevronDown, UserCircle, LogOut, ChevronLeft } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { showWipFeatures } from '../../lib/featureFlags'
 import { Avatar } from '../ui/Avatar'
 import { RoleBadge } from '../shared/RoleBadge'
-import { useMobileNav } from './MobileNavContext'
 import { useAuthContext } from '../../context/AuthContext'
 import { useNotifications, useMarkRead, useMarkAllRead } from '../../hooks/useNotifications'
 import { formatRelativeTime } from '../../lib/utils'
@@ -24,11 +23,13 @@ interface TopbarProps {
   title?: string
   breadcrumb?: string
   className?: string
+  // Mobile stack screens pass this to show a ‹ back affordance. `true` = history
+  // back; a string = navigate to that path. Ignored on desktop (sidebar nav).
+  back?: boolean | string
 }
 
-export function Topbar({ title, breadcrumb, className }: TopbarProps) {
+export function Topbar({ title, breadcrumb, className, back }: TopbarProps) {
   const navigate = useNavigate()
-  const mobileNav = useMobileNav()
   const { profile, signOut } = useAuthContext()
   const profileId = profile?.id ?? ''
 
@@ -65,18 +66,19 @@ export function Topbar({ title, breadcrumb, className }: TopbarProps) {
   return (
     <header
       className={cn(
-        'h-topbar topbar-glass border-b border-border-default sticky top-0 z-40 flex items-center px-4 lg:px-8 gap-3 lg:gap-6',
+        'topbar-glass border-b border-border-default sticky top-0 z-40 pt-safe',
         className,
       )}
     >
-      {/* Mobile hamburger */}
-      {mobileNav && (
+     <div className="h-topbar flex items-center px-4 lg:px-8 gap-3 lg:gap-6">
+      {/* Mobile back button (stack screens only) */}
+      {back && (
         <button
-          onClick={mobileNav.openNav}
+          onClick={() => (typeof back === 'string' ? navigate(back) : navigate(-1))}
           className="lg:hidden size-9 -ml-1 rounded-sm flex items-center justify-center text-text-2 hover:bg-surface-2 hover:text-text-1 transition-colors shrink-0"
-          aria-label="Open navigation"
+          aria-label="Go back"
         >
-          <Menu size={18} />
+          <ChevronLeft size={20} />
         </button>
       )}
 
@@ -107,8 +109,8 @@ export function Topbar({ title, breadcrumb, className }: TopbarProps) {
         </div>
       )}
 
-      {/* Actions */}
-      <div className="ml-auto flex items-center gap-3.5">
+      {/* Actions — desktop only; mobile uses bottom tabs + the More/Profile tab */}
+      <div className="ml-auto hidden lg:flex items-center gap-3.5">
         {/* Notification bell — hidden in production until wired to real notifications */}
         {showWipFeatures && (
         <div ref={bellRef} className="relative">
@@ -230,6 +232,7 @@ export function Topbar({ title, breadcrumb, className }: TopbarProps) {
           </div>
         )}
       </div>
+     </div>
     </header>
   )
 }
