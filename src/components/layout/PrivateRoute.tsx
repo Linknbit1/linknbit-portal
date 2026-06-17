@@ -16,3 +16,14 @@ export function PrivateRoute({ children }: { children: ReactNode }) {
   if (!accessToken) return <Navigate to="/login" replace />
   return <>{children}</>
 }
+
+// Landing route ("/" and unknown paths). Waits for the session to restore on a
+// cold launch (e.g. the installed PWA's start_url) before deciding where to go,
+// so a still-valid session resumes instead of dropping the user on /login.
+export function HomeRedirect() {
+  const { accessToken, profile, loading } = useAuthContext()
+  if (loading) return <FullPageSpinner />
+  if (!accessToken) return <Navigate to="/login" replace />
+  const isClient = profile?.role === 'client_owner' || profile?.role === 'client_member'
+  return <Navigate to={isClient ? '/client/dashboard' : '/dashboard'} replace />
+}
