@@ -1,9 +1,12 @@
 import { useMemo, useState } from 'react'
+import { Navigate, useParams } from 'react-router-dom'
 import {
   Trophy, Zap, Star, Plus, X, Gift, Loader2, AlertCircle, ShieldAlert,
   Check, Pencil, Trash2, ClipboardCheck, Send, Award, Coins, Lock, Ban,
 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
+import { HubRow } from '../../components/layout/MobileHub'
+import { useIsDesktop } from '../../hooks/useMediaQuery'
 import { Avatar } from '../../components/ui/Avatar'
 import { Button } from '../../components/ui/Button'
 import { Tabs } from '../../components/ui/Tabs'
@@ -487,8 +490,19 @@ function RedeemModal({ reward, myLP, onClose, onConfirm, isPending }: {
 
 // ── Main page ────────────────────────────────────────────────────────────────────
 
-export default function GamificationPage() {
+// Mobile section metadata: drives the hub rows + stack-screen titles.
+const GAMIFICATION_SECTIONS = [
+  { key: 'leaderboard', label: 'Leaderboard',  icon: Trophy },
+  { key: 'board',       label: 'Quest Board',  icon: ClipboardCheck },
+  { key: 'shoutouts',   label: 'Shoutouts',    icon: Star },
+  { key: 'badges',      label: 'Badges',       icon: Award },
+  { key: 'rewards',     label: 'Rewards Shop', icon: Gift },
+  { key: 'admin',       label: 'Settings',     icon: ShieldAlert },
+] as const
+
+export default function GamificationPage({ mobileSection }: { mobileSection?: string } = {}) {
   const toast = useToast()
+  const isDesktop = useIsDesktop()
   const { profile } = useAuthContext()
   const profileId = profile?.id ?? ''
   const role = profile?.role
@@ -632,13 +646,19 @@ export default function GamificationPage() {
     ...(showAdmin ? [{ key: 'admin', label: `Settings${reviewCount > 0 ? ` (${reviewCount})` : ''}` }] : []),
   ]
 
+  // Mobile: /gamification is a hub of rows; /gamification/:section is one stack screen.
+  const showHub = !isDesktop && !mobileSection
+  const activeTab = mobileSection ?? mainTab
+  const sectionLabel = GAMIFICATION_SECTIONS.find((s) => s.key === mobileSection)?.label ?? 'Gamification'
+
   const reviewPending = reviewingTask || reviewingShout || reviewingRedeem
 
   return (
     <div className="flex flex-col flex-1">
-      <Topbar title="Gamification" />
+      <Topbar title={mobileSection ? sectionLabel : 'Gamification'} back={mobileSection ? true : undefined} />
       <div className="px-4 py-6 lg:p-6 flex flex-col gap-5 max-w-content mx-auto w-full">
-        {/* My LP / reputation summary */}
+        {/* My LP / reputation summary — hidden on focused section screens */}
+        {!mobileSection && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="bg-surface-1 border border-border-default rounded-xl px-5 py-4 flex items-center gap-3">
             <div className="size-11 rounded-xl bg-coin-gold/15 border border-coin-gold/30 flex items-center justify-center"><Coins size={19} className="text-coin-gold" /></div>
@@ -653,11 +673,27 @@ export default function GamificationPage() {
             <div><p className="font-display font-bold text-[24px] text-text-1 leading-none">{earnedBadgeIds.size}</p><p className="font-ui text-[11.5px] text-text-3 mt-0.5">Badges earned</p></div>
           </div>
         </div>
+        )}
 
-        <Tabs tabs={tabs} activeKey={mainTab} onChange={setMainTab} />
+        {/* Mobile hub list (root) vs desktop tab strip */}
+        {showHub ? (
+          <div className="flex flex-col gap-2.5">
+            {GAMIFICATION_SECTIONS.filter((s) => s.key !== 'admin' || showAdmin).map((s) => (
+              <HubRow
+                key={s.key}
+                to={`/gamification/${s.key}`}
+                label={s.label}
+                icon={s.icon}
+                badge={s.key === 'admin' ? reviewCount : undefined}
+              />
+            ))}
+          </div>
+        ) : (
+          isDesktop && <Tabs tabs={tabs} activeKey={mainTab} onChange={setMainTab} />
+        )}
 
         {/* ── LEADERBOARD ── */}
-        {mainTab === 'leaderboard' && (
+        {!showHub && activeTab === 'leaderboard' && (
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <p className="font-mono text-[11.5px] text-text-3">Ranked by Link Points earned this month · cash rewards go to top performers (≥500 LP)</p>
@@ -734,7 +770,7 @@ export default function GamificationPage() {
         )}
 
         {/* ── QUEST BOARD ── */}
-        {mainTab === 'board' && (
+        {!showHub && activeTab === 'board' && (
           <div className="flex flex-col gap-5">
             <div className="flex items-center justify-between">
               <p className="font-mono text-[11.5px] text-text-3">Claim a task, complete it, then submit proof for approval to earn LP.</p>
@@ -796,7 +832,7 @@ export default function GamificationPage() {
         )}
 
         {/* ── SHOUTOUTS ── */}
-        {mainTab === 'shoutouts' && (
+        {!showHub && activeTab === 'shoutouts' && (
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <p className="font-mono text-[11.5px] text-text-3">Recognition issued by managers & HR. Each is HR-reviewed before LP is awarded.</p>
@@ -823,7 +859,7 @@ export default function GamificationPage() {
         )}
 
         {/* ── BADGES ── */}
-        {mainTab === 'badges' && (
+        {!showHub && activeTab === 'badges' && (
           <div className="flex flex-col gap-3">
             <p className="font-mono text-[11.5px] text-text-3">Badges are earned automatically by hitting milestones — or awarded by HR.</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
@@ -845,7 +881,7 @@ export default function GamificationPage() {
         )}
 
         {/* ── REWARDS SHOP ── */}
-        {mainTab === 'rewards' && (
+        {!showHub && activeTab === 'rewards' && (
           <div className="flex flex-col gap-5">
             <div className="flex items-center gap-4 bg-surface-1 border border-border-default rounded-xl px-6 py-4">
               <div className="size-12 rounded-xl bg-coin-gold/15 border border-coin-gold/30 flex items-center justify-center"><Coins size={20} className="text-coin-gold" /></div>
@@ -883,7 +919,7 @@ export default function GamificationPage() {
         )}
 
         {/* ── MANAGE (governance) ── */}
-        {mainTab === 'admin' && showAdmin && (
+        {!showHub && activeTab === 'admin' && showAdmin && (
           <div className="flex flex-col gap-8">
 
             {/* Task submissions to review */}
@@ -1118,4 +1154,13 @@ export default function GamificationPage() {
       <NoteDialog open={review !== null} title={review?.label ?? ''} confirmLabel={review?.label ?? 'Confirm'} danger={review?.danger} onClose={() => setReview(null)} onConfirm={runReview} isPending={reviewPending} />
     </div>
   )
+}
+
+/** Mobile-only /gamification/:section stack screen; redirects on desktop. */
+export function GamificationSectionScreen() {
+  const isDesktop = useIsDesktop()
+  const { section } = useParams()
+  const valid = GAMIFICATION_SECTIONS.some((s) => s.key === section)
+  if (isDesktop || !section || !valid) return <Navigate to="/gamification" replace />
+  return <GamificationPage mobileSection={section} />
 }

@@ -221,7 +221,7 @@ function MarkModal({ onClose, dateFilter }: MarkModalProps) {
 }
 
 /* ── Daily Records tab ───────────────────────────────────────────────────── */
-function DailyRecordsTab() {
+export function DailyRecordsTab() {
   const toast = useToast()
   const [dateFilter, setDateFilter] = useState(localToday)
   const [statusFilter, setStatusFilter] = useState('all')
@@ -547,7 +547,7 @@ function GrantWfhModal({ open, onClose }: { open: boolean; onClose: () => void }
 }
 
 /* ── WFH Requests tab ─────────────────────────────────────────────────────── */
-function WFHRequestsTab() {
+export function WFHRequestsTab() {
   const toast = useToast()
   const { profile } = useAuthContext()
   const { data: requests = [] } = useAllWfhRequests()
@@ -833,7 +833,7 @@ const LEAVE_COLOR_CLS: Record<string, { dot: string; chip: string }> = {
 }
 const leaveColor = (c: string | null | undefined) => LEAVE_COLOR_CLS[c ?? 'service-dev'] ?? LEAVE_COLOR_CLS['service-dev']
 
-function LeaveTab() {
+export function LeaveTab() {
   const toast = useToast()
   const { profile } = useAuthContext()
   const { data: types = [] } = useLeaveTypes()
@@ -1020,7 +1020,7 @@ function LeaveTab() {
 }
 
 /* ── Enrolled Devices tab ─────────────────────────────────────────────────── */
-function EnrolledDevicesTab() {
+export function EnrolledDevicesTab() {
   const toast = useToast()
   const { profile } = useAuthContext()
   // Approving/reactivating a device authorises check-in. Admins/super_admins approve any
@@ -1252,7 +1252,7 @@ function ExcStatusChip({ status }: { status: string }) {
 }
 
 /* ── Exceptions tab ───────────────────────────────────────────────────────── */
-function ExceptionsTab() {
+export function ExceptionsTab() {
   const toast = useToast()
   const [typeFilter, setTypeFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -1487,7 +1487,7 @@ const HOLIDAY_TYPE_META: Record<string, { label: string; cls: string; dot: strin
   optional:       { label: 'Optional',        cls: 'bg-service-dev/10 text-service-dev border-service-dev/25',   dot: '#22D3EE' },
 }
 
-function HolidaysTab() {
+export function HolidaysTab() {
   const toast = useToast()
   const { profile } = useAuthContext()
   const now = new Date()
@@ -1911,7 +1911,7 @@ const OT_STATUS_META: Record<string, { label: string; cls: string; dot: string }
   rejected: { label: 'Rejected', cls: 'bg-error/10 text-error border-error/30',         dot: '#F4364C' },
 }
 
-function OvertimeTab() {
+export function OvertimeTab() {
   const toast = useToast()
   const { profile } = useAuthContext()
   const [statusFilter, setStatusFilter] = useState('all')
@@ -2198,7 +2198,7 @@ function SortTh({ label, col, sortKey, sortAsc, onSort }: SortThProps) {
   )
 }
 
-function ReportsTab() {
+export function ReportsTab() {
   const now = new Date()
   const [year, setYear]   = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth() + 1) // 1-indexed
@@ -2696,7 +2696,7 @@ function ReportsTab() {
 }
 
 /* ── Settings tab ─────────────────────────────────────────────────────────── */
-function SettingsTab() {
+export function SettingsTab() {
   const { data: settings, isLoading } = useAttendanceSettings()
 
   if (isLoading || !settings) {

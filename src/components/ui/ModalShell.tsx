@@ -71,7 +71,7 @@ export function ModalShell({ onClose, size = 'md', busy = false, contentClassNam
         )}
       >
         {scroll
-          ? <div className={cn('flex-1 overflow-y-auto pb-[env(safe-area-inset-bottom)] sm:pb-0', contentClassName)}>{children}</div>
+          ? <div className={cn('flex-1 overflow-y-auto pb-safe sm:pb-0', contentClassName)}>{children}</div>
           : children}
       </motion.div>
     </div>

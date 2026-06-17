@@ -93,7 +93,7 @@ function StatusPill({ status }: { status: string }) {
 
 // ── Upcoming schedule section ─────────────────────────────────────────────────
 
-function UpcomingScheduleSection() {
+export function UpcomingScheduleSection() {
   const now = new Date()
   const year = now.getFullYear()
   const todayStr = `${year}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
@@ -157,7 +157,7 @@ function UpcomingScheduleSection() {
 
 // ── Summary stats ─────────────────────────────────────────────────────────────
 
-function SummaryStats({ records }: { records: AttendanceRow[] }) {
+export function SummaryStats({ records }: { records: AttendanceRow[] }) {
   const now  = new Date()
   const year = now.getFullYear()
 
@@ -216,7 +216,7 @@ function SummaryStats({ records }: { records: AttendanceRow[] }) {
 
 // ── History table ─────────────────────────────────────────────────────────────
 
-function HistoryTable({ records }: { records: AttendanceRow[] }) {
+export function HistoryTable({ records }: { records: AttendanceRow[] }) {
   if (records.length === 0) {
     return (
       <Card className="py-12 text-center">
@@ -290,7 +290,7 @@ function HistoryTable({ records }: { records: AttendanceRow[] }) {
 
 // ── OOO active section ────────────────────────────────────────────────────────
 
-function OooSection() {
+export function OooSection() {
   const toast = useToast()
   const { data: myExceptions = [] } = useMyExceptions()
   const departMut = useOooDepart()
@@ -497,7 +497,7 @@ const EXC_STATUS_CLS: Record<string, string> = {
   rejected: 'bg-error/10 text-error border-error/25',
 }
 
-function MyExceptionsSection() {
+export function MyExceptionsSection() {
   const [modalOpen, setModalOpen] = useState(false)
   const { data: exceptions = [], isLoading } = useMyExceptions()
 
@@ -570,7 +570,7 @@ const OT_STATUS_CLS: Record<string, string> = {
   rejected: 'bg-error/10 text-error border-error/25',
 }
 
-function OvertimeSection() {
+export function OvertimeSection() {
   const toast = useToast()
   const [modalOpen, setModalOpen] = useState(false)
   const [form, setForm] = useState({
@@ -740,7 +740,7 @@ function OvertimeSection() {
 
 // ── WFH section ───────────────────────────────────────────────────────────────
 
-function WfhSection() {
+export function WfhSection() {
   const toast = useToast()
   const [modalOpen, setModalOpen] = useState(false)
   const [date, setDate] = useState(localToday)
@@ -844,7 +844,7 @@ function WfhSection() {
 
 // ── Leave section ─────────────────────────────────────────────────────────────
 
-function LeaveSection() {
+export function LeaveSection() {
   const toast = useToast()
   const [modalOpen, setModalOpen] = useState(false)
   const [typeId, setTypeId] = useState('')

@@ -34,7 +34,7 @@ export function Modal({ open, onClose, title, children, footer, size = 'md', bus
           </button>
         </div>
       )}
-      <div className="flex-1 overflow-y-auto pb-[env(safe-area-inset-bottom)] sm:pb-0">{children}</div>
+      <div className="flex-1 overflow-y-auto pb-safe sm:pb-0">{children}</div>
       {footer && (
         <div className="shrink-0 border-t border-border-subtle px-5 py-4">{footer}</div>
       )}

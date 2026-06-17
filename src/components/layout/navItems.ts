@@ -51,3 +51,8 @@ export function visibleNavItems(role: string | null | undefined): NavItem[] {
       (authoritative || !item.authoritativeOnly),
   )
 }
+
+/** Secondary destinations for the mobile "More" tab (everything not in the bottom bar). */
+export function moreNavItems(role: string | null | undefined): NavItem[] {
+  return visibleNavItems(role).filter((item) => !item.primaryMobile)
+}

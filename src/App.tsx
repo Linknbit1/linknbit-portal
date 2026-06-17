@@ -14,6 +14,9 @@ import RegisterPage from './pages/auth/RegisterPage'
 import ResetPasswordPage from './pages/auth/ResetPasswordPage'
 import DashboardPage from './pages/DashboardPage'
 import ProfilePage from './pages/ProfilePage'
+import MorePage from './pages/MorePage'
+import { AttendanceSectionScreen } from './pages/AttendanceMobile'
+import { GamificationSectionScreen } from './pages/admin/GamificationPage'
 import AdminProjectsPage from './pages/admin/ProjectsPage'
 import AdminProjectDetailPage from './pages/admin/ProjectDetailPage'
 import AdminTaskDetailPage from './pages/admin/TaskDetailPage'
@@ -59,8 +62,11 @@ export default function App() {
               <Route element={<PrivateRoute><AppShell /></PrivateRoute>}>
                 <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/more" element={<MorePage />} />
                 <Route path="/attendance" element={<AttendancePage />} />
+                <Route path="/attendance/:section" element={<AttendanceSectionScreen />} />
                 <Route path="/gamification" element={<GamificationPage />} />
+                <Route path="/gamification/:section" element={<GamificationSectionScreen />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/employee/leaderboard" element={<GamificationPage />} />
                 <Route path="/employee/rewards" element={<GamificationPage />} />

@@ -52,7 +52,7 @@ export function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps) {
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ type: 'spring', damping: 32, stiffness: 340 }}
-            className="relative flex flex-col w-full bg-surface-1 shadow-pop pb-[env(safe-area-inset-bottom)]"
+            className="relative flex flex-col w-full bg-surface-1 shadow-pop pb-safe"
           >
             {/* Brand + close */}
             <div className="flex items-center gap-3 px-4 pt-5 pb-4 border-b border-border-subtle">
