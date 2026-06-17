@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
-import { Users, Loader2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Users, Loader2 } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { Avatar } from '../ui/Avatar'
 import { Tabs } from '../ui/Tabs'
 import { DatePicker } from '../ui/DatePicker'
+import { PeriodStepper } from '../ui/PeriodStepper'
 import {
   useAllAttendance,
   useMonthlyAttendance,
@@ -161,15 +162,11 @@ export function TeamRoster() {
           {mode === 'day' ? (
             <DatePicker value={date} onChange={setDate} className="w-37.5" />
           ) : (
-            <div className="flex items-center gap-1">
-              <button onClick={() => stepMonth(-1)} className="size-7 rounded-sm flex items-center justify-center text-text-3 hover:bg-surface-2 hover:text-text-1" aria-label="Previous month">
-                <ChevronLeft size={15} />
-              </button>
-              <span className="font-ui font-semibold text-[12.5px] text-text-1 w-32 text-center">{monthLabel(ym.year, ym.month)}</span>
-              <button onClick={() => stepMonth(1)} className="size-7 rounded-sm flex items-center justify-center text-text-3 hover:bg-surface-2 hover:text-text-1" aria-label="Next month">
-                <ChevronRight size={15} />
-              </button>
-            </div>
+            <PeriodStepper
+              label={monthLabel(ym.year, ym.month)}
+              onPrev={() => stepMonth(-1)}
+              onNext={() => stepMonth(1)}
+            />
           )}
         </div>
       </div>

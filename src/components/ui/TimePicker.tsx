@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Clock, ChevronDown } from 'lucide-react'
 import { cn } from '../../lib/cn'
+import { Popover } from './Popover'
 
 interface TimePickerProps {
   value: string          // HH:MM (24h) or ''
@@ -52,7 +53,7 @@ export function TimePicker({
     return Math.round(raw / step) * step >= 60 ? 0 : Math.round(raw / step) * step
   })
 
-  const containerRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
   const hourListRef = useRef<HTMLUListElement>(null)
   const minListRef = useRef<HTMLUListElement>(null)
 
@@ -86,14 +87,6 @@ export function TimePicker({
     return () => clearTimeout(id)
   }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(false)
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [])
-
   const isHourDisabled = (h: number) => {
     if (!minParsed) return false
     return h < minParsed[0]
@@ -123,8 +116,9 @@ export function TimePicker({
   const triggerLabel = parsed ? toAmPm(parsed[0], parsed[1]) : null
 
   return (
-    <div ref={containerRef} className={cn('relative', className)}>
+    <div className={cn('relative', className)}>
       <button
+        ref={triggerRef}
         type="button"
         onClick={toggleOpen}
         className={cn(
@@ -139,8 +133,12 @@ export function TimePicker({
         <ChevronDown size={13} className={cn('text-text-4 shrink-0 transition-transform', open && 'rotate-180')} />
       </button>
 
-      {open && (
-        <div className="absolute z-50 top-full left-0 mt-1 bg-surface-1 border border-border-default rounded-xl shadow-2xl overflow-hidden w-45 max-w-[calc(100vw-2rem)]">
+      <Popover
+        anchorRef={triggerRef}
+        open={open}
+        onClose={() => setOpen(false)}
+        className="bg-surface-1 border border-border-default rounded-xl shadow-2xl overflow-hidden w-45 max-w-[calc(100vw-2rem)]"
+      >
           <div className="flex divide-x divide-border-subtle">
             {/* Hours column */}
             <div className="flex-1 flex flex-col">
@@ -214,8 +212,7 @@ export function TimePicker({
               Done
             </button>
           </div>
-        </div>
-      )}
+      </Popover>
     </div>
   )
 }
