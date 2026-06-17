@@ -1,7 +1,9 @@
 import { supabase } from '../lib/supabase'
+import type { Tables } from '../types/database'
 import type { ProfileRow } from './auth'
 
 export type Person = ProfileRow
+export type EmployeeSalary = Tables<'employee_salaries'>
 
 export interface InvitePayload {
   name: string
@@ -101,4 +103,33 @@ export async function setPersonActive(profileId: string, active: boolean): Promi
 export async function deletePerson(profileId: string): Promise<void> {
   const { error } = await supabase.functions.invoke('delete-user', { body: { profile_id: profileId } })
   if (error) throw new Error(await functionErrorMessage(error, 'Delete user failed'))
+}
+
+// ── Salary (RLS: owner + HR/admin only) ───────────────────────────────────────
+
+// Returns null when the caller isn't allowed to see this salary (RLS filters the
+// row out) or none has been set yet.
+export async function fetchSalary(profileId: string): Promise<EmployeeSalary | null> {
+  const { data, error } = await supabase
+    .from('employee_salaries')
+    .select('*')
+    .eq('profile_id', profileId)
+    .maybeSingle()
+  if (error) throw error
+  return data
+}
+
+export async function upsertSalary(
+  profileId: string,
+  amount: number,
+  currency: string,
+): Promise<EmployeeSalary> {
+  // updated_by / updated_at are stamped by the trg_salary_audit trigger.
+  const { data, error } = await supabase
+    .from('employee_salaries')
+    .upsert({ profile_id: profileId, amount, currency }, { onConflict: 'profile_id' })
+    .select()
+    .single()
+  if (error) throw error
+  return data
 }

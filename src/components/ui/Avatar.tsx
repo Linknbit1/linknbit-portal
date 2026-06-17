@@ -66,7 +66,7 @@ export function Avatar({ name, size = 'md', online, className, src }: AvatarProp
 }
 
 interface AvatarGroupProps {
-  users: Array<{ id: string; name: string }>
+  users: Array<{ id: string; name: string; avatarUrl?: string | null }>
   max?: number
   size?: keyof typeof SIZE_CLASSES
 }
@@ -79,7 +79,7 @@ export function AvatarGroup({ users, max = 3, size = 'sm' }: AvatarGroupProps) {
     <div className="flex items-center">
       {shown.map((user, i) => (
         <span key={user.id} className={cn('ring-2 ring-bg-base rounded-full', i > 0 && '-ml-2')}>
-          <Avatar name={user.name} size={size} />
+          <Avatar name={user.name} src={user.avatarUrl ?? undefined} size={size} />
         </span>
       ))}
       {rest > 0 && (

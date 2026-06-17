@@ -35,7 +35,7 @@ export function Tabs({ tabs, activeKey, onChange, variant = 'underline', classNa
     <div
       ref={listRef}
       className={cn(
-        'flex items-center overflow-x-auto no-scrollbar scroll-smooth',
+        'flex items-center overflow-x-auto overflow-y-hidden touch-pan-x no-scrollbar scroll-smooth',
         variant === 'underline' ? 'border-b border-border-default gap-1' : 'gap-1 bg-surface-inset rounded-md p-1',
         className,
       )}

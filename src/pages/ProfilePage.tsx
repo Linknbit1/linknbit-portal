@@ -5,6 +5,7 @@ import { Avatar } from '../components/ui/Avatar'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { RoleBadge } from '../components/shared/RoleBadge'
+import { SalaryCard } from '../components/shared/SalaryCard'
 import { useToast } from '../components/ui/toast-context'
 import { useAuthContext } from '../context/AuthContext'
 import { useSaveProfile, useUpdatePassword } from '../hooks/useProfile'
@@ -187,6 +188,11 @@ export default function ProfilePage() {
               {saving ? <><Loader2 size={13} className="animate-spin" /> Saving</> : <><Check size={14} /> Save changes</>}
             </Button>
           </div>
+        </section>
+
+        {/* Compensation (private — self + HR/Admin only) */}
+        <section className="bg-surface-1 border border-border-default rounded-xl p-5">
+          <SalaryCard profileId={profile.id} context="self" />
         </section>
 
         {/* Password */}

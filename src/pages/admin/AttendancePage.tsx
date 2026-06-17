@@ -2975,7 +2975,7 @@ export default function AttendancePage() {
         <AttendanceCheckInCard />
 
         {/* Tab switcher */}
-        <div ref={tabStripRef} className="flex items-center gap-1 bg-surface-1 border border-border-default rounded-lg p-1 overflow-x-auto no-scrollbar max-w-full scroll-smooth">
+        <div ref={tabStripRef} className="flex items-center gap-1 bg-surface-1 border border-border-default rounded-lg p-1 overflow-x-auto overflow-y-hidden touch-pan-x no-scrollbar max-w-full scroll-smooth">
           {tabs.map(({ id, label, icon: Icon, badge }) => (
             <button
               key={id}

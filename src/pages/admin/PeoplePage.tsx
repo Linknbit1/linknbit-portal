@@ -11,6 +11,7 @@ import { Select } from '../../components/ui/Select'
 import { Drawer } from '../../components/ui/Drawer'
 import { RoleBadge } from '../../components/shared/RoleBadge'
 import { ServiceChip } from '../../components/shared/ServiceChip'
+import { SalaryCard } from '../../components/shared/SalaryCard'
 import { useToast } from '../../components/ui/toast-context'
 import { useAuthContext } from '../../context/AuthContext'
 import { useTeams } from '../../hooks/useTeams'
@@ -237,6 +238,10 @@ function EditDrawer({ person, actorRole, teams, serviceOptions, onClose }: {
         ) : (
           <p className="font-ui text-[12.5px] text-text-3 flex items-center gap-2"><ShieldAlert size={14} className="text-text-4" /> You don't have permission to change this user's role.</p>
         )}
+
+        {['super_admin', 'admin', 'hr'].includes(actorRole) && (
+          <SalaryCard profileId={person.id} context="admin" />
+        )}
       </div>
     </Drawer>
   )
@@ -393,7 +398,7 @@ function PersonTableRow({ person, myRole, teamLabel, onEdit, onToggleActive, onD
   return (
     <div className={cn('grid items-center gap-4 px-5 py-3.5 transition-colors hover:bg-surface-2/45', GRID_COLS, !person.is_active && 'opacity-60')}>
       <div className="flex min-w-0 items-center gap-3">
-        <Avatar name={person.name} size="sm" />
+        <Avatar name={person.name} src={person.avatar_url ?? undefined} size="sm" />
         <div className="min-w-0">
           <p className="flex items-center gap-2 truncate font-ui text-[13px] font-semibold text-text-1">{person.name}{inactiveBadge}</p>
           <p className="mt-0.5 truncate font-mono text-[11px] text-text-3">{person.email}</p>
@@ -424,7 +429,7 @@ function PersonCard({ person, myRole, teamLabel, onEdit, onToggleActive, onDelet
     <article className={cn('overflow-visible rounded-lg border border-border-default bg-surface-1 shadow-[0_14px_40px_rgba(0,0,0,0.14)] transition-colors hover:border-border-strong', !person.is_active && 'opacity-65')}>
       <div className="border-b border-border-subtle bg-[linear-gradient(135deg,rgba(238,39,55,0.055),rgba(34,211,238,0.045)_58%,rgba(20,29,42,0)_100%)] p-4">
         <div className="flex items-start gap-3">
-          <Avatar name={person.name} size="lg" />
+          <Avatar name={person.name} src={person.avatar_url ?? undefined} size="lg" />
           <div className="min-w-0 flex-1">
             <div className="flex min-w-0 items-center gap-2">
               <h2 className="truncate font-display text-[15px] font-bold leading-tight text-text-1">{person.name}</h2>

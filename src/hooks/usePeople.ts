@@ -1,11 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   fetchPeople, inviteUser, updatePersonRole, updatePersonDetails, uploadPersonAvatar, setPersonActive, deletePerson,
+  fetchSalary, upsertSalary,
   type InvitePayload,
 } from '../api/people'
 
 export const PEOPLE_KEYS = {
   all: ['people'] as const,
+  salary: (profileId: string) => ['salary', profileId] as const,
 }
 
 export function usePeople() {
@@ -60,5 +62,23 @@ export function useDeletePerson() {
       qc.invalidateQueries({ queryKey: PEOPLE_KEYS.all })
       qc.invalidateQueries({ queryKey: ['teams'] })
     },
+  })
+}
+
+export function useSalary(profileId: string | undefined) {
+  return useQuery({
+    queryKey: PEOPLE_KEYS.salary(profileId ?? ''),
+    queryFn: () => fetchSalary(profileId!),
+    enabled: !!profileId,
+    staleTime: 30_000,
+  })
+}
+
+export function useUpsertSalary() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ profileId, amount, currency }: { profileId: string; amount: number; currency: string }) =>
+      upsertSalary(profileId, amount, currency),
+    onSuccess: (_, v) => qc.invalidateQueries({ queryKey: PEOPLE_KEYS.salary(v.profileId) }),
   })
 }
