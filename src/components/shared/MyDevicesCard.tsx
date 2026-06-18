@@ -21,7 +21,7 @@ const fmtDate = (iso: string | null) =>
 export function MyDevicesCard() {
   const toast = useToast()
   const { profile } = useAuthContext()
-  const { fingerprint, deviceName, ready, status, devices, privileged } = useCurrentDevice()
+  const { fingerprint, fingerprintHint, deviceName, ready, status, devices, privileged } = useCurrentDevice()
   const registerMut = useRegisterDevice()
   // The raw fingerprint hash is only meaningful to HR/admin (device governance);
   // employees and team leads see device name + status only.
@@ -29,7 +29,7 @@ export function MyDevicesCard() {
 
   const handleRegister = async () => {
     try {
-      const res = await registerMut.mutateAsync({ deviceFingerprint: fingerprint, deviceName })
+      const res = await registerMut.mutateAsync({ deviceFingerprint: fingerprint, deviceName, fingerprintHint })
       toast(
         res.status === 'approved'
           ? 'Device registered and approved.'
