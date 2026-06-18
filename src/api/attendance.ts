@@ -362,6 +362,13 @@ export async function reviewException(
   return data
 }
 
+// Admin-only hard delete (RLS: admin/super_admin). Note: an OOO exception that already
+// recorded excluded_minutes on attendance is NOT auto-reversed — the request row is removed.
+export async function deleteException(id: string): Promise<void> {
+  const { error } = await supabase.from('attendance_exceptions').delete().eq('id', id)
+  if (error) throw error
+}
+
 // Out-of-office two-session tracking (calls Edge Function so the 10-minute grace and
 // the worked-hours exclusion are enforced server-side). The function derives the
 // employee's approved OOO for today from the auth context — no id needed.
@@ -630,6 +637,13 @@ export async function reviewOvertimeRequest(
   return data
 }
 
+// Admin-only hard delete (RLS: admin/super_admin). Overtime aggregates at read time,
+// so removing the row fully removes its effect.
+export async function deleteOvertimeRequest(id: string): Promise<void> {
+  const { error } = await supabase.from('overtime_requests').delete().eq('id', id)
+  if (error) throw error
+}
+
 // ── WFH requests ──────────────────────────────────────────────────────────────
 
 export type WfhRequest = Tables<'wfh_requests'>
@@ -694,6 +708,13 @@ export async function reviewWfhRequest(
     .single()
   if (error) throw error
   return data
+}
+
+// Admin-only hard delete (RLS: admin/super_admin). The trg_wfh_sync trigger now fires on
+// DELETE too, so an approved WFH's synced attendance row is removed automatically.
+export async function deleteWfhRequest(id: string): Promise<void> {
+  const { error } = await supabase.from('wfh_requests').delete().eq('id', id)
+  if (error) throw error
 }
 
 export async function grantWfh(
@@ -847,6 +868,13 @@ export async function reviewLeaveRequest(
     .single()
   if (error) throw error
   return data
+}
+
+// Admin-only hard delete (RLS: admin/super_admin). The trg_leave_sync trigger now fires on
+// DELETE too, so an approved leave's synced attendance rows are removed automatically.
+export async function deleteLeaveRequest(id: string): Promise<void> {
+  const { error } = await supabase.from('leave_requests').delete().eq('id', id)
+  if (error) throw error
 }
 
 export interface LeaveBalance {

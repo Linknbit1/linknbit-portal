@@ -26,6 +26,7 @@ import {
   useUpdateAttendanceSettings,
   useAllAttendanceExceptions,
   useReviewException,
+  useDeleteException,
   useMonthlyAttendance,
   useMonthlyHalfDayLeaves,
   useMonthlyOvertime,
@@ -38,8 +39,10 @@ import {
   useRemoveWorkingSaturday,
   useAllOvertimeRequests,
   useReviewOvertime,
+  useDeleteOvertime,
   useAllWfhRequests,
   useReviewWfh,
+  useDeleteWfh,
   useGrantWfh,
   useLeaveTypes,
   useCreateLeaveType,
@@ -47,6 +50,7 @@ import {
   useDeleteLeaveType,
   useAllLeaveRequests,
   useReviewLeave,
+  useDeleteLeave,
 } from '../../hooks/useAttendance'
 import type {
   AttendanceExceptionWithProfile,
@@ -64,6 +68,7 @@ import { cn } from '../../lib/cn'
 import { zonedWallTimeToIso, isoToZonedMinutes } from '../../lib/timezone'
 import { computeEmployeeHours } from '../../lib/attendanceHours'
 import { ModalShell } from '../../components/ui/ModalShell'
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 
 function localToday(): string {
   return new Intl.DateTimeFormat('en-CA').format(new Date())
@@ -554,8 +559,11 @@ export function WFHRequestsTab() {
   const { profile } = useAuthContext()
   const { data: requests = [] } = useAllWfhRequests()
   const reviewMut = useReviewWfh()
+  const deleteMut = useDeleteWfh()
+  const isAdmin = profile?.role === 'admin' || profile?.role === 'super_admin'
   const [grantOpen, setGrantOpen] = useState(false)
   const [rejectTarget, setRejectTarget] = useState<WfhRequestWithProfile | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<WfhRequestWithProfile | null>(null)
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
@@ -580,6 +588,17 @@ export function WFHRequestsTab() {
       toast('WFH request rejected', 'error')
     } catch {
       toast('Failed to reject request', 'error')
+    }
+  }
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return
+    try {
+      await deleteMut.mutateAsync(deleteTarget.id)
+      toast('WFH request deleted', 'success')
+      setDeleteTarget(null)
+    } catch {
+      toast('Failed to delete request', 'error')
     }
   }
 
@@ -670,6 +689,11 @@ export function WFHRequestsTab() {
                         <ChevronDown size={15} className={cn('transition-transform', isExpanded && 'rotate-180')} />
                       </button>
                     )}
+                    {isAdmin && (
+                      <button onClick={() => setDeleteTarget(req)} className="ml-0.5 text-text-4 hover:text-error transition-colors" aria-label="Delete request">
+                        <Trash2 size={14} />
+                      </button>
+                    )}
                   </div>
                   {isExpanded && req.status !== 'pending' && (
                     <div className="px-5 pb-3.5 pt-0">
@@ -688,6 +712,21 @@ export function WFHRequestsTab() {
 
       {/* Grant WFH modal */}
       <GrantWfhModal open={grantOpen} onClose={() => setGrantOpen(false)} />
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Delete WFH request?"
+        message={
+          <>
+            This permanently deletes the WFH request for{' '}
+            <span className="font-semibold text-text-1">{deleteTarget?.profiles?.name ?? 'this employee'}</span>
+            {deleteTarget?.status === 'approved' && ' and removes the work-from-home day from their attendance'}. This cannot be undone.
+          </>
+        }
+        isPending={deleteMut.isPending}
+        onConfirm={confirmDelete}
+        onClose={() => setDeleteTarget(null)}
+      />
 
       {rejectTarget && (
         <ModalShell onClose={() => setRejectTarget(null)} size="sm" contentClassName="p-5 sm:p-6">
@@ -838,12 +877,15 @@ export function LeaveTab() {
   const { data: requests = [] } = useAllLeaveRequests()
   const deleteTypeMut = useDeleteLeaveType()
   const reviewMut = useReviewLeave()
+  const deleteMut = useDeleteLeave()
+  const isAdmin = profile?.role === 'admin' || profile?.role === 'super_admin'
 
   const [typeModalOpen, setTypeModalOpen] = useState(false)
   const [editingType, setEditingType] = useState<LeaveType | null>(null)
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [rejectTarget, setRejectTarget] = useState<LeaveRequestWithProfile | null>(null)
   const [rejectNote, setRejectNote] = useState('')
+  const [deleteTarget, setDeleteTarget] = useState<LeaveRequestWithProfile | null>(null)
 
   const filtered = requests.filter((r) => statusFilter === 'all' || r.status === statusFilter)
 
@@ -884,6 +926,17 @@ export function LeaveTab() {
       setRejectTarget(null); setRejectNote('')
     } catch {
       toast('Failed to reject leave', 'error')
+    }
+  }
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return
+    try {
+      await deleteMut.mutateAsync(deleteTarget.id)
+      toast('Leave request deleted', 'success')
+      setDeleteTarget(null)
+    } catch {
+      toast('Failed to delete leave request', 'error')
     }
   }
 
@@ -974,6 +1027,11 @@ export function LeaveTab() {
                     {req.status}
                   </span>
                 )}
+                {isAdmin && (
+                  <button onClick={() => setDeleteTarget(req)} className="shrink-0 mt-0.5 text-text-4 hover:text-error transition-colors" aria-label="Delete request">
+                    <Trash2 size={14} />
+                  </button>
+                )}
               </div>
             ))}
           </div>
@@ -981,6 +1039,21 @@ export function LeaveTab() {
       </div>
 
       <LeaveTypeModal open={typeModalOpen} onClose={() => setTypeModalOpen(false)} editing={editingType} />
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Delete leave request?"
+        message={
+          <>
+            This permanently deletes the leave request for{' '}
+            <span className="font-semibold text-text-1">{deleteTarget?.profiles?.name ?? 'this employee'}</span>
+            {deleteTarget?.status === 'approved' && ' and removes the leave days from their attendance'}. This cannot be undone.
+          </>
+        }
+        isPending={deleteMut.isPending}
+        onConfirm={confirmDelete}
+        onClose={() => setDeleteTarget(null)}
+      />
 
       {rejectTarget && (
         <ModalShell onClose={() => setRejectTarget(null)} size="sm" contentClassName="p-5 sm:p-6">
@@ -1246,10 +1319,13 @@ function ExcStatusChip({ status }: { status: string }) {
 /* ── Exceptions tab ───────────────────────────────────────────────────────── */
 export function ExceptionsTab() {
   const toast = useToast()
+  const { profile } = useAuthContext()
+  const isAdmin = profile?.role === 'admin' || profile?.role === 'super_admin'
   const [typeFilter, setTypeFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
   const [rejectTarget, setRejectTarget] = useState<string | null>(null)
   const [rejectNote, setRejectNote] = useState('')
+  const [deleteTarget, setDeleteTarget] = useState<AttendanceExceptionWithProfile | null>(null)
 
   const filters = {
     type:   typeFilter   !== 'all' ? typeFilter   : undefined,
@@ -1258,6 +1334,7 @@ export function ExceptionsTab() {
 
   const { data: exceptions = [], isLoading } = useAllAttendanceExceptions(filters)
   const reviewMutation = useReviewException()
+  const deleteMut = useDeleteException()
 
   const pendingCount  = exceptions.filter((e) => e.status === 'pending').length
   const approvedCount = exceptions.filter((e) => e.status === 'approved').length
@@ -1281,6 +1358,17 @@ export function ExceptionsTab() {
       setRejectNote('')
     } catch {
       toast('Failed to reject exception', 'error')
+    }
+  }
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return
+    try {
+      await deleteMut.mutateAsync(deleteTarget.id)
+      toast('Exception deleted', 'success')
+      setDeleteTarget(null)
+    } catch {
+      toast('Failed to delete exception', 'error')
     }
   }
 
@@ -1401,30 +1489,37 @@ export function ExceptionsTab() {
                       )}
                     </td>
                     <td className="px-4 py-3">
-                      {exc.status === 'pending' ? (
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            onClick={() => handleApprove(exc.id)}
-                            disabled={reviewMutation.isPending}
-                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-sm bg-success/10 border border-success/30 text-success text-[11.5px] font-ui font-semibold hover:bg-success/20 transition-colors"
-                          >
-                            <ThumbsUp size={12} /> Approve
+                      <div className="flex items-center gap-1.5">
+                        {exc.status === 'pending' ? (
+                          <>
+                            <button
+                              onClick={() => handleApprove(exc.id)}
+                              disabled={reviewMutation.isPending}
+                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-sm bg-success/10 border border-success/30 text-success text-[11.5px] font-ui font-semibold hover:bg-success/20 transition-colors"
+                            >
+                              <ThumbsUp size={12} /> Approve
+                            </button>
+                            <button
+                              onClick={() => setRejectTarget(exc.id)}
+                              disabled={reviewMutation.isPending}
+                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-sm bg-error/10 border border-error/30 text-error text-[11.5px] font-ui font-semibold hover:bg-error/20 transition-colors"
+                            >
+                              <ThumbsDown size={12} /> Reject
+                            </button>
+                          </>
+                        ) : (
+                          <span className="font-mono text-[11px] text-text-4">
+                            {exc.reviewed_at
+                              ? new Date(exc.reviewed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                              : '—'}
+                          </span>
+                        )}
+                        {isAdmin && (
+                          <button onClick={() => setDeleteTarget(excWp)} className="ml-0.5 text-text-4 hover:text-error transition-colors" aria-label="Delete exception">
+                            <Trash2 size={14} />
                           </button>
-                          <button
-                            onClick={() => setRejectTarget(exc.id)}
-                            disabled={reviewMutation.isPending}
-                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-sm bg-error/10 border border-error/30 text-error text-[11.5px] font-ui font-semibold hover:bg-error/20 transition-colors"
-                          >
-                            <ThumbsDown size={12} /> Reject
-                          </button>
-                        </div>
-                      ) : (
-                        <span className="font-mono text-[11px] text-text-4">
-                          {exc.reviewed_at
-                            ? new Date(exc.reviewed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-                            : '—'}
-                        </span>
-                      )}
+                        )}
+                      </div>
                     </td>
                   </tr>
                 )
@@ -1465,6 +1560,25 @@ export function ExceptionsTab() {
             </div>
         </ModalShell>
       )}
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Delete exception request?"
+        message={
+          <>
+            This permanently deletes the {(TYPE_META[deleteTarget?.exception_type ?? '']?.label ?? 'exception').toLowerCase()} request for{' '}
+            <span className="font-semibold text-text-1">{deleteTarget?.profiles?.name ?? 'this employee'}</span>. This cannot be undone.
+            {deleteTarget?.exception_type === 'out_of_office' && deleteTarget?.status === 'approved' && (
+              <span className="block mt-2 text-[12px] text-warning">
+                Note: any out-of-office minutes already excluded from their worked hours are not automatically restored.
+              </span>
+            )}
+          </>
+        }
+        isPending={deleteMut.isPending}
+        onConfirm={confirmDelete}
+        onClose={() => setDeleteTarget(null)}
+      />
     </div>
   )
 }
@@ -1904,14 +2018,17 @@ const OT_STATUS_META: Record<string, { label: string; cls: string; dot: string }
 export function OvertimeTab() {
   const toast = useToast()
   const { profile } = useAuthContext()
+  const isAdmin = profile?.role === 'admin' || profile?.role === 'super_admin'
   const [statusFilter, setStatusFilter] = useState('all')
   const [rejectTarget, setRejectTarget] = useState<string | null>(null)
   const [rejectNote, setRejectNote] = useState('')
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null)
 
   const { data: requests = [], isLoading } = useAllOvertimeRequests(
     statusFilter !== 'all' ? statusFilter : undefined,
   )
   const reviewMutation = useReviewOvertime()
+  const deleteMut = useDeleteOvertime()
 
   const pending  = requests.filter((r) => r.status === 'pending').length
   const approved = requests.filter((r) => r.status === 'approved').length
@@ -1940,6 +2057,17 @@ export function OvertimeTab() {
       setRejectNote('')
     } catch {
       toast('Failed to reject overtime', 'error')
+    }
+  }
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return
+    try {
+      await deleteMut.mutateAsync(deleteTarget.id)
+      toast('Overtime request deleted', 'success')
+      setDeleteTarget(null)
+    } catch {
+      toast('Failed to delete overtime request', 'error')
     }
   }
 
@@ -2041,30 +2169,37 @@ export function OvertimeTab() {
                       )}
                     </td>
                     <td className="px-4 py-3">
-                      {req.status === 'pending' ? (
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            onClick={() => handleApprove(req.id)}
-                            disabled={reviewMutation.isPending}
-                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-sm bg-success/10 border border-success/30 text-success text-[11.5px] font-ui font-semibold hover:bg-success/20 transition-colors"
-                          >
-                            <ThumbsUp size={12} /> Approve
+                      <div className="flex items-center gap-1.5">
+                        {req.status === 'pending' ? (
+                          <>
+                            <button
+                              onClick={() => handleApprove(req.id)}
+                              disabled={reviewMutation.isPending}
+                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-sm bg-success/10 border border-success/30 text-success text-[11.5px] font-ui font-semibold hover:bg-success/20 transition-colors"
+                            >
+                              <ThumbsUp size={12} /> Approve
+                            </button>
+                            <button
+                              onClick={() => setRejectTarget(req.id)}
+                              disabled={reviewMutation.isPending}
+                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-sm bg-error/10 border border-error/30 text-error text-[11.5px] font-ui font-semibold hover:bg-error/20 transition-colors"
+                            >
+                              <ThumbsDown size={12} /> Reject
+                            </button>
+                          </>
+                        ) : (
+                          <span className="font-mono text-[11px] text-text-4">
+                            {req.reviewed_at
+                              ? new Date(req.reviewed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                              : '—'}
+                          </span>
+                        )}
+                        {isAdmin && (
+                          <button onClick={() => setDeleteTarget({ id: req.id, name: r.profiles?.name ?? 'this employee' })} className="ml-0.5 text-text-4 hover:text-error transition-colors" aria-label="Delete overtime request">
+                            <Trash2 size={14} />
                           </button>
-                          <button
-                            onClick={() => setRejectTarget(req.id)}
-                            disabled={reviewMutation.isPending}
-                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-sm bg-error/10 border border-error/30 text-error text-[11.5px] font-ui font-semibold hover:bg-error/20 transition-colors"
-                          >
-                            <ThumbsDown size={12} /> Reject
-                          </button>
-                        </div>
-                      ) : (
-                        <span className="font-mono text-[11px] text-text-4">
-                          {req.reviewed_at
-                            ? new Date(req.reviewed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-                            : '—'}
-                        </span>
-                      )}
+                        )}
+                      </div>
                     </td>
                   </tr>
                 )
@@ -2099,6 +2234,20 @@ export function OvertimeTab() {
             </div>
         </ModalShell>
       )}
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Delete overtime request?"
+        message={
+          <>
+            This permanently deletes the overtime request for{' '}
+            <span className="font-semibold text-text-1">{deleteTarget?.name}</span>. This cannot be undone.
+          </>
+        }
+        isPending={deleteMut.isPending}
+        onConfirm={confirmDelete}
+        onClose={() => setDeleteTarget(null)}
+      />
     </div>
   )
 }
