@@ -15,6 +15,7 @@ import {
   fetchAllAttendanceExceptions,
   requestException,
   reviewException,
+  deleteException,
   oooDepart,
   oooReturn,
   fetchHolidays,
@@ -29,10 +30,12 @@ import {
   fetchMonthlyOvertime,
   submitOvertimeRequest,
   reviewOvertimeRequest,
+  deleteOvertimeRequest,
   submitWfhRequest,
   fetchMyWfhRequests,
   fetchAllWfhRequests,
   reviewWfhRequest,
+  deleteWfhRequest,
   grantWfh,
   fetchLeaveTypes,
   createLeaveType,
@@ -42,6 +45,7 @@ import {
   fetchMyLeaveRequests,
   fetchAllLeaveRequests,
   reviewLeaveRequest,
+  deleteLeaveRequest,
   fetchMyLeaveBalances,
 } from '../api/attendance'
 import type {
@@ -220,6 +224,17 @@ export function useReviewException() {
   })
 }
 
+// Admin-only delete. Excluded-minutes from a recorded OOO are not auto-reversed.
+export function useDeleteException() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => deleteException(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['attendance', 'exceptions'] })
+    },
+  })
+}
+
 export function useOooDepart() {
   const qc = useQueryClient()
   return useMutation({
@@ -386,6 +401,18 @@ export function useReviewOvertime() {
   })
 }
 
+// Admin-only delete. Overtime aggregates at read time, so removal is clean.
+export function useDeleteOvertime() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => deleteOvertimeRequest(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['attendance', 'overtime'] })
+      qc.invalidateQueries({ queryKey: ['attendance', 'monthly'] })
+    },
+  })
+}
+
 // ── WFH requests ──────────────────────────────────────────────────────────────
 
 export function useMyWfhRequests() {
@@ -421,6 +448,20 @@ export function useReviewWfh() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['attendance', 'wfh'] })
       qc.invalidateQueries({ queryKey: ['attendance', 'all'] })
+    },
+  })
+}
+
+// Admin-only delete. Deleting an approved WFH also removes its synced attendance row
+// (trg_wfh_sync now fires on DELETE), so invalidate attendance views too.
+export function useDeleteWfh() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => deleteWfhRequest(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['attendance', 'wfh'] })
+      qc.invalidateQueries({ queryKey: ['attendance', 'all'] })
+      qc.invalidateQueries({ queryKey: ['attendance', 'monthly'] })
     },
   })
 }
@@ -521,6 +562,21 @@ export function useReviewLeave() {
       qc.invalidateQueries({ queryKey: ['attendance', 'leave'] })
       qc.invalidateQueries({ queryKey: ['attendance', 'all'] })
       qc.invalidateQueries({ queryKey: ['attendance', 'monthly'] })
+    },
+  })
+}
+
+// Admin-only delete. Deleting an approved leave also removes its synced attendance rows
+// (trg_leave_sync now fires on DELETE), so invalidate attendance views too.
+export function useDeleteLeave() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => deleteLeaveRequest(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['attendance', 'leave'] })
+      qc.invalidateQueries({ queryKey: ['attendance', 'all'] })
+      qc.invalidateQueries({ queryKey: ['attendance', 'monthly'] })
+      qc.invalidateQueries({ queryKey: ATTENDANCE_KEYS.myLeaveBalances })
     },
   })
 }
