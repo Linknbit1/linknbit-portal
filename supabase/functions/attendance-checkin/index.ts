@@ -34,10 +34,12 @@ Deno.serve(async (req: Request) => {
   // 1. Parse body
   let deviceFingerprint: string
   let deviceName: string
+  let fingerprintHint: string | null = null
   try {
     const body = await req.json()
     deviceFingerprint = body.device_fingerprint
     deviceName = body.device_name
+    fingerprintHint = body.fingerprint_hint ?? null
   } catch {
     return json({ error: 'Invalid request body' }, 400)
   }
@@ -228,6 +230,7 @@ Deno.serve(async (req: Request) => {
         profile_id: profileId,
         device_fingerprint: deviceFingerprint,
         device_name: deviceName,
+        fingerprint_hint: fingerprintHint,
         is_active: true,
         approved_by: profileId,
         approved_at: new Date().toISOString(),

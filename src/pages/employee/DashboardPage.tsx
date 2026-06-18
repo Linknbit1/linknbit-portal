@@ -34,11 +34,11 @@ function TodayAttendanceCard() {
   const checkInMut = useCheckIn()
   const checkOutMut = useCheckOut()
 
-  const { fingerprint: deviceFingerprint, deviceName, ready: deviceReady, canCheckIn } = useCurrentDevice()
+  const { fingerprint: deviceFingerprint, fingerprintHint, deviceName, ready: deviceReady, canCheckIn } = useCurrentDevice()
 
   const handleCheckIn = async () => {
     try {
-      const result = await checkInMut.mutateAsync({ deviceFingerprint, deviceName })
+      const result = await checkInMut.mutateAsync({ deviceFingerprint, deviceName, fingerprintHint })
       toast(
         result.status === 'late' ? 'Checked in — marked as late' : 'Checked in successfully!',
         result.status === 'late' ? 'warning' : 'success',

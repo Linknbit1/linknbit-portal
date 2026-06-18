@@ -1,8 +1,61 @@
 // Pure functions — no React, no Supabase.
 
+// ── Device identity (random token in a cookie) ────────────────────────────────
+// The stable device identity is a random token minted once and stored in a cookie,
+// NOT the specs fingerprint below. Two identical devices get different tokens (no
+// false "shared" flag), and the token survives browser/OS updates (read, never
+// recomputed). The legit cookie has a fixed obscure name so the app can find it;
+// it is buried among decoy cookies with random names + UUID-shaped values so it
+// cannot be picked out by casually inspecting cookies.
+const DEVICE_COOKIE_NAME = 'x5ygdvrhe3rge_3dw'
+const DECOY_COOKIE_COUNT = 19
+const COOKIE_MAX_AGE_SEC = 60 * 60 * 24 * 365 * 10 // ~10 years
+
+function readCookie(name: string): string | null {
+  const target = `${name}=`
+  for (const part of document.cookie.split(';')) {
+    const c = part.trim()
+    if (c.startsWith(target)) return decodeURIComponent(c.slice(target.length))
+  }
+  return null
+}
+
+function writeCookie(name: string, value: string): void {
+  const secure = location.protocol === 'https:' ? '; Secure' : ''
+  document.cookie = `${name}=${encodeURIComponent(value)}; Max-Age=${COOKIE_MAX_AGE_SEC}; Path=/; SameSite=Lax${secure}`
+}
+
+function randomCookieName(): string {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_'
+  const len = 12 + Math.floor(Math.random() * 8)
+  const bytes = crypto.getRandomValues(new Uint8Array(len))
+  let out = ''
+  for (let i = 0; i < len; i++) out += chars[bytes[i] % chars.length]
+  return out
+}
+
 /**
- * Builds a stable browser/device fingerprint using canvas rendering + environment signals.
- * Not cryptographically unique but sufficient to detect same-device reuse across employees.
+ * Returns this device's stable identity token, minting + persisting it (with decoys)
+ * on first call. Read from the cookie thereafter — unaffected by browser/OS updates.
+ */
+export function getDeviceToken(): string {
+  const existing = readCookie(DEVICE_COOKIE_NAME)
+  if (existing) return existing
+
+  const token = crypto.randomUUID()
+  writeCookie(DEVICE_COOKIE_NAME, token)
+  for (let i = 0; i < DECOY_COOKIE_COUNT; i++) {
+    const name = randomCookieName()
+    if (name === DEVICE_COOKIE_NAME) continue // never shadow the legit cookie
+    writeCookie(name, crypto.randomUUID())
+  }
+  return token
+}
+
+/**
+ * Builds a specs-derived browser fingerprint (canvas + environment signals).
+ * SOFT SIGNAL ONLY — it collides across identical devices and changes on updates,
+ * so it is stored as a hint alongside the real identity ({@link getDeviceToken}).
  */
 export async function getDeviceFingerprint(): Promise<string> {
   const signals: string[] = [
@@ -44,50 +97,42 @@ export async function getDeviceFingerprint(): Promise<string> {
 }
 
 /**
- * Returns a human-readable device label from the User-Agent string.
- * Examples: "iPhone (iOS 17.4)", "Samsung SM-A515F (Android 12)", "Windows PC (Chrome 124)"
+ * Detects the browser family from a User-Agent string — NO version number, so the
+ * label is stable across browser updates. Brave is indistinguishable from Chrome
+ * by UA alone (it is resolved separately via navigator.brave where available).
+ */
+function detectBrowser(ua: string): string {
+  if (/Edg\//.test(ua)) return 'Edge'
+  if (/OPR\/|Opera/.test(ua)) return 'Opera'
+  if (/SamsungBrowser/.test(ua)) return 'Samsung Internet'
+  if (/Firefox\/|FxiOS/.test(ua)) return 'Firefox'
+  if (/Chrome\/|CriOS/.test(ua)) return 'Chrome'
+  if (/Safari\//.test(ua)) return 'Safari'
+  return 'Browser'
+}
+
+/** Detects the OS / device label from a User-Agent string — no version numbers. */
+function detectOs(ua: string): string {
+  if (/iPhone/.test(ua)) return 'iPhone'
+  if (/iPad/.test(ua)) return 'iPad'
+  if (/iPod/.test(ua)) return 'iPod'
+
+  const androidModel = ua.match(/Android [\d.]+.*?;\s*([^;)]+?)\s*(?:Build|\))/)
+  if (androidModel) return androidModel[1].trim()
+  if (/Android/.test(ua)) return 'Android'
+
+  if (/Macintosh/.test(ua)) return 'Mac'
+  if (/Windows NT/.test(ua)) return 'Windows'
+  if (/Linux/.test(ua)) return 'Linux'
+  return 'Unknown device'
+}
+
+/**
+ * Returns a human-readable device label — browser family + OS, with NO version
+ * (e.g. "Chrome on Mac", "Safari on iPhone", "Chrome on SM-A515F"). Versions are
+ * omitted on purpose: the identity is the cookie token, so the name is display-only
+ * and must not churn when a browser/OS updates.
  */
 export function getDeviceName(ua: string = navigator.userAgent): string {
-  // iOS devices
-  const iosMatch = ua.match(/iPhone|iPad|iPod/)
-  if (iosMatch) {
-    const versionMatch = ua.match(/OS (\d+[_\d]*)/)
-    const version = versionMatch ? versionMatch[1].replace(/_/g, '.') : ''
-    return `${iosMatch[0]}${version ? ` (iOS ${version})` : ''}`
-  }
-
-  // Android devices — try to get model
-  const androidMatch = ua.match(/Android ([\d.]+).*?;\s*([^;)]+)\s*(?:Build|\))/)
-  if (androidMatch) {
-    const version = androidMatch[1]
-    const model = androidMatch[2].trim()
-    return `${model} (Android ${version})`
-  }
-
-  // Generic Android fallback
-  const androidFallback = ua.match(/Android ([\d.]+)/)
-  if (androidFallback) {
-    return `Android ${androidFallback[1]} Device`
-  }
-
-  // Windows
-  if (/Windows NT/.test(ua)) {
-    const browserMatch = ua.match(/(Chrome|Firefox|Edge|Safari)\/([\d.]+)/)
-    const browser = browserMatch ? `${browserMatch[1]} ${browserMatch[2].split('.')[0]}` : 'Browser'
-    return `Windows PC (${browser})`
-  }
-
-  // macOS
-  if (/Macintosh/.test(ua)) {
-    const browserMatch = ua.match(/(Chrome|Firefox|Safari)\/([\d.]+)/)
-    const browser = browserMatch ? `${browserMatch[1]} ${browserMatch[2].split('.')[0]}` : 'Browser'
-    return `Mac (${browser})`
-  }
-
-  // Linux
-  if (/Linux/.test(ua)) {
-    return 'Linux Device'
-  }
-
-  return 'Unknown Device'
+  return `${detectBrowser(ua)} on ${detectOs(ua)}`
 }

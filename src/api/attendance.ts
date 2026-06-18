@@ -38,11 +38,13 @@ export interface MarkAttendancePayload {
 export async function checkIn(payload: {
   deviceFingerprint: string
   deviceName: string
+  fingerprintHint?: string
 }): Promise<CheckInResult> {
   const { data, error } = await supabase.functions.invoke<CheckInResult>('attendance-checkin', {
     body: {
       device_fingerprint: payload.deviceFingerprint,
       device_name: payload.deviceName,
+      fingerprint_hint: payload.fingerprintHint,
     },
   })
   if (error) {
@@ -227,11 +229,13 @@ export interface RegisterDeviceResult {
 export async function registerDevice(payload: {
   deviceFingerprint: string
   deviceName: string
+  fingerprintHint?: string
 }): Promise<RegisterDeviceResult> {
   const { data, error } = await supabase.functions.invoke<RegisterDeviceResult>('register-device', {
     body: {
       device_fingerprint: payload.deviceFingerprint,
       device_name: payload.deviceName,
+      fingerprint_hint: payload.fingerprintHint,
     },
   })
   if (error) {

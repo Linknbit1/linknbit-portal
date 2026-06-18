@@ -32,7 +32,8 @@ export function useMyEnrolledDevices() {
 export function useRegisterDevice() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (payload: { deviceFingerprint: string; deviceName: string }) => registerDevice(payload),
+    mutationFn: (payload: { deviceFingerprint: string; deviceName: string; fingerprintHint?: string }) =>
+      registerDevice(payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: DEVICE_KEYS.mine })
       qc.invalidateQueries({ queryKey: DEVICE_KEYS.all })

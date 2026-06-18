@@ -121,7 +121,7 @@ export function AttendanceCheckInCard() {
   const checkOutMut = useCheckOut()
   const registerMut = useRegisterDevice()
 
-  const { fingerprint, deviceName: deviceNameVal, ready: deviceReady, status: deviceStatus, canCheckIn } =
+  const { fingerprint, fingerprintHint, deviceName: deviceNameVal, ready: deviceReady, status: deviceStatus, canCheckIn } =
     useCurrentDevice()
   const { profile } = useAuthContext()
   // Raw fingerprint hash is HR/admin-only; everyone still sees the device name.
@@ -157,7 +157,7 @@ export function AttendanceCheckInCard() {
   const handleCheckIn = async () => {
     setErrorMsg(null)
     try {
-      const result = await checkInMut.mutateAsync({ deviceFingerprint: fingerprint, deviceName: deviceNameVal })
+      const result = await checkInMut.mutateAsync({ deviceFingerprint: fingerprint, deviceName: deviceNameVal, fingerprintHint })
       toast(
         result.status === 'late' ? 'Checked in — marked as late' : 'Checked in successfully!',
         result.status === 'late' ? 'warning' : 'success',
@@ -180,7 +180,7 @@ export function AttendanceCheckInCard() {
   const handleRegister = async () => {
     setErrorMsg(null)
     try {
-      const res = await registerMut.mutateAsync({ deviceFingerprint: fingerprint, deviceName: deviceNameVal })
+      const res = await registerMut.mutateAsync({ deviceFingerprint: fingerprint, deviceName: deviceNameVal, fingerprintHint })
       toast(
         res.status === 'approved'
           ? 'Device registered and approved — you can check in now.'

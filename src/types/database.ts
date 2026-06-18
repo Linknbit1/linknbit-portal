@@ -386,6 +386,7 @@ export type Database = {
           approved_by: string | null
           device_fingerprint: string
           device_name: string
+          fingerprint_hint: string | null
           first_seen_at: string
           id: string
           is_active: boolean
@@ -397,6 +398,7 @@ export type Database = {
           approved_by?: string | null
           device_fingerprint: string
           device_name: string
+          fingerprint_hint?: string | null
           first_seen_at?: string
           id?: string
           is_active?: boolean
@@ -408,6 +410,7 @@ export type Database = {
           approved_by?: string | null
           device_fingerprint?: string
           device_name?: string
+          fingerprint_hint?: string | null
           first_seen_at?: string
           id?: string
           is_active?: boolean
