@@ -374,6 +374,21 @@ export async function fetchXpTransactions(profileId: string): Promise<XpTransact
   return data
 }
 
+// Full points ledger for one person (drives the Points History view). The `reason`
+// column is self-describing ("Task approved: …", "On-time check-in: …", "Shoutout: …",
+// "Redemption: …", or a governor's grant note), so no joins are needed. Admin/HR can
+// read any person's ledger via the can_govern_gamification() RLS policy.
+export async function fetchPointsLedger(profileId: string): Promise<XpTransactionRow[]> {
+  const { data, error } = await supabase
+    .from('xp_transactions')
+    .select('*')
+    .eq('profile_id', profileId)
+    .order('created_at', { ascending: false })
+    .limit(1000)
+  if (error) throw error
+  return data
+}
+
 // Direct positive LP grant by a governor (HR/Admin). Mirrors into reputation via DB trigger.
 export async function grantLp(
   profileId: string,

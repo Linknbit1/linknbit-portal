@@ -31,6 +31,7 @@ import {
   fetchEmployeeOfMonth,
   setEmployeeOfMonth,
   fetchXpTransactions,
+  fetchPointsLedger,
   grantLp,
   setParticipationRestriction,
   fetchMyLpHistory,
@@ -54,6 +55,7 @@ export const GAMIFICATION_KEYS = {
   badges:           () => ['badges'] as const,
   myBadges:         (profileId: string) => ['badge_awards', profileId] as const,
   xpTransactions:   (profileId: string) => ['xp_transactions', profileId] as const,
+  pointsLedger:     (profileId: string) => ['points_ledger', profileId] as const,
   lpHistory:        (profileId: string) => ['lp_history', profileId] as const,
   employeeOfMonth:  (year: number, month: number) => ['employee_of_month', year, month] as const,
 }
@@ -324,6 +326,14 @@ export function useXpTransactions(profileId: string) {
   return useQuery({
     queryKey: GAMIFICATION_KEYS.xpTransactions(profileId),
     queryFn: () => fetchXpTransactions(profileId),
+    enabled: !!profileId,
+  })
+}
+
+export function usePointsLedger(profileId: string) {
+  return useQuery({
+    queryKey: GAMIFICATION_KEYS.pointsLedger(profileId),
+    queryFn: () => fetchPointsLedger(profileId),
     enabled: !!profileId,
   })
 }

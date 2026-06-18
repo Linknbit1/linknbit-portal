@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
 import {
   Trophy, Zap, Star, Plus, X, Gift, Loader2, AlertCircle, ShieldAlert,
-  Check, Pencil, Trash2, ClipboardCheck, Send, Award, Coins, Lock, Ban,
+  Check, Pencil, Trash2, ClipboardCheck, Send, Award, Coins, Lock, Ban, History,
 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { HubRow } from '../../components/layout/MobileHub'
@@ -37,6 +37,7 @@ import type {
   RewardRow, QuestTaskRow, ShoutoutRow, QuestTaskClaimRow,
 } from '../../api/gamification'
 import { ModalShell } from '../../components/ui/ModalShell'
+import { PointsHistory } from '../../components/shared/PointsHistory'
 
 // ── Constants ────────────────────────────────────────────────────────────────────
 
@@ -492,12 +493,13 @@ function RedeemModal({ reward, myLP, onClose, onConfirm, isPending }: {
 
 // Mobile section metadata: drives the hub rows + stack-screen titles.
 const GAMIFICATION_SECTIONS = [
-  { key: 'leaderboard', label: 'Leaderboard',  icon: Trophy },
-  { key: 'board',       label: 'Quest Board',  icon: ClipboardCheck },
-  { key: 'shoutouts',   label: 'Shoutouts',    icon: Star },
-  { key: 'badges',      label: 'Badges',       icon: Award },
-  { key: 'rewards',     label: 'Rewards Shop', icon: Gift },
-  { key: 'admin',       label: 'Settings',     icon: ShieldAlert },
+  { key: 'leaderboard', label: 'Leaderboard',   icon: Trophy },
+  { key: 'board',       label: 'Quest Board',   icon: ClipboardCheck },
+  { key: 'shoutouts',   label: 'Shoutouts',     icon: Star },
+  { key: 'badges',      label: 'Badges',        icon: Award },
+  { key: 'rewards',     label: 'Rewards Shop',  icon: Gift },
+  { key: 'history',     label: 'Points History', icon: History },
+  { key: 'admin',       label: 'Settings',      icon: ShieldAlert },
 ] as const
 
 export default function GamificationPage({ mobileSection }: { mobileSection?: string } = {}) {
@@ -643,6 +645,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
     { key: 'shoutouts',   label: 'Shoutouts' },
     { key: 'badges',      label: 'Badges' },
     { key: 'rewards',     label: 'Rewards Shop' },
+    { key: 'history',     label: 'Points History' },
     ...(showAdmin ? [{ key: 'admin', label: `Settings${reviewCount > 0 ? ` (${reviewCount})` : ''}` }] : []),
   ]
 
@@ -690,6 +693,21 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
           </div>
         ) : (
           isDesktop && <Tabs tabs={tabs} activeKey={mainTab} onChange={setMainTab} />
+        )}
+
+        {/* ── POINTS HISTORY ── */}
+        {!showHub && activeTab === 'history' && (
+          <PointsHistory
+            myProfileId={profileId}
+            isGovernor={isGovernor}
+            people={leaderboard}
+            selfSummary={{
+              name: profile?.name ?? 'You',
+              reputation_total: myReputation,
+              lp_balance: myLP,
+              level: me?.level ?? profile?.level ?? 1,
+            }}
+          />
         )}
 
         {/* ── LEADERBOARD ── */}
