@@ -9,7 +9,7 @@ interface TimePickerProps {
   minTime?: string       // HH:MM (24h) — times before this are disabled
   placeholder?: string
   className?: string
-  step?: number          // minute increment, default 5
+  step?: number          // minute increment, default 1 (every minute selectable)
 }
 
 function parseTime(s: string): [number, number] | null {
@@ -35,7 +35,7 @@ export function TimePicker({
   minTime,
   placeholder = 'Select time…',
   className,
-  step = 5,
+  step = 1,
 }: TimePickerProps) {
   const parsed = parseTime(value)
   const minParsed = parseTime(minTime ?? '')

@@ -10,6 +10,7 @@ import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Select } from '../../components/ui/Select'
 import { Toggle } from '../../components/ui/Toggle'
+import { TimePicker } from '../../components/ui/TimePicker'
 import { Drawer } from '../../components/ui/Drawer'
 import { Popover } from '../../components/ui/Popover'
 import { RoleBadge } from '../../components/shared/RoleBadge'
@@ -189,13 +190,17 @@ function EditDrawer({ person, actorRole, teams, designationOptions, currentTeamI
   const [teamIds, setTeamIds] = useState<string[]>(currentTeamIds)
   const [designation, setDesignation] = useState(person.designation_id ?? '')
   const [jobType, setJobType] = useState(person.job_type ?? 'on_site')
+  // Stored as a postgres `time` (HH:MM:SS); the picker works in HH:MM.
+  const origAllowedCheckIn = person.allowed_check_in?.slice(0, 5) ?? ''
+  const [allowedCheckIn, setAllowedCheckIn] = useState(origAllowedCheckIn)
 
   const roleOptions = assignableRoles(actorRole).map((r) => ({ value: r, label: ROLE_LABELS[toUserRole(r)] }))
   const isPending = savingRole || savingDetails || savingTeams
 
   const sameTeams = (a: string[], b: string[]) => a.length === b.length && [...a].sort().join() === [...b].sort().join()
   const detailsChanged = name !== person.name || avatarFile !== null
-  const roleChanged = role !== person.role || (designation || null) !== person.designation_id || jobType !== person.job_type
+  const roleChanged = role !== person.role || (designation || null) !== person.designation_id
+    || jobType !== person.job_type || allowedCheckIn !== origAllowedCheckIn
   const teamsChanged = !sameTeams(teamIds, currentTeamIds)
 
   const onPickAvatar = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -214,7 +219,7 @@ function EditDrawer({ person, actorRole, teams, designationOptions, currentTeamI
         await saveDetails({ profileId: person.id, name: name.trim(), avatarUrl: person.avatar_url, avatarFile })
       }
       if (mayManage && roleChanged) {
-        await saveRole({ profileId: person.id, role, designationId: designation || null, jobType })
+        await saveRole({ profileId: person.id, role, designationId: designation || null, jobType, allowedCheckIn })
       }
       if (mayManage && teamsChanged) {
         await saveTeams({ profileId: person.id, teamIds })
@@ -285,6 +290,20 @@ function EditDrawer({ person, actorRole, teams, designationOptions, currentTeamI
             <div>
               <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Teams</label>
               <TeamPicker teams={teams} value={teamIds} onChange={setTeamIds} />
+            </div>
+            <div>
+              <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Allowed check-in</label>
+              <div className="flex items-center gap-2">
+                <div className="flex-1">
+                  <TimePicker value={allowedCheckIn} onChange={setAllowedCheckIn} placeholder="Use office rule…" />
+                </div>
+                {allowedCheckIn && (
+                  <button type="button" onClick={() => setAllowedCheckIn('')} className="shrink-0 rounded-md border border-border-default px-2.5 py-2 text-text-4 transition-colors hover:text-error" title="Clear (use normal office rule)">
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+              <p className="font-mono text-[10px] text-text-4 mt-1">If set, checking in at or before this time is on-time (grace period ignored). Empty = standard office rule.</p>
             </div>
           </section>
         ) : (

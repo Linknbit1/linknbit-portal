@@ -70,7 +70,7 @@ Deno.serve(async (req: Request) => {
 
   const { data: callerProfile } = await supabase
     .from('profiles')
-    .select('role, job_type')
+    .select('role, job_type, allowed_check_in')
     .eq('id', profileId)
     .maybeSingle()
   const privileged = callerProfile?.role === 'admin' || callerProfile?.role === 'super_admin'
@@ -159,6 +159,13 @@ Deno.serve(async (req: Request) => {
   const openMinutes  = startMinutes - earlyMin
   const endMinutes   = endH * 60 + endM
   let   lateCutoff   = startMinutes + graceMin
+
+  // Per-employee allowed check-in overrides the start+grace cutoff entirely: arriving
+  // at or before this time is on-time, and the grace period does NOT apply on top.
+  if (callerProfile?.allowed_check_in) {
+    const [ah, am] = callerProfile.allowed_check_in.split(':').map(Number)
+    lateCutoff = ah * 60 + am
+  }
 
   const fmtHHMM = (m: number) =>
     `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`

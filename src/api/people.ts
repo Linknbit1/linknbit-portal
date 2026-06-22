@@ -59,12 +59,15 @@ export async function updatePersonRole(
   role: string,
   designationId: string | null,
   jobType: string,
+  /** HH:MM to set the allowed check-in override, or '' to clear it (normal rule). */
+  allowedCheckIn: string,
 ): Promise<void> {
   const { error } = await supabase.rpc('admin_update_profile_role', {
     p_profile_id: profileId,
     p_role: role,
     p_designation_id: designationId ?? undefined,
     p_job_type: jobType,
+    p_allowed_check_in: allowedCheckIn,
   })
   if (error) throw error
 }
