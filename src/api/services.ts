@@ -43,12 +43,11 @@ export async function deleteService(id: string): Promise<void> {
 }
 
 // Count records still pointing at a service slug — used to block deletion gracefully.
+// Employees no longer carry a service (they have a designation), so only teams are
+// counted; `people` stays 0 to preserve the ServiceUsage shape used by the UI.
 export async function fetchServiceUsage(slug: string): Promise<ServiceUsage> {
-  const [people, teams] = await Promise.all([
-    supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('service_type', slug),
-    supabase.from('teams').select('id', { count: 'exact', head: true }).eq('service_type', slug),
-  ])
-  if (people.error) throw people.error
-  if (teams.error) throw teams.error
-  return { people: people.count ?? 0, teams: teams.count ?? 0 }
+  const { count, error } = await supabase
+    .from('teams').select('id', { count: 'exact', head: true }).eq('service_type', slug)
+  if (error) throw error
+  return { people: 0, teams: count ?? 0 }
 }

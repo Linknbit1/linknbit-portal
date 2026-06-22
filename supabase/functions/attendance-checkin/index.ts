@@ -70,10 +70,24 @@ Deno.serve(async (req: Request) => {
 
   const { data: callerProfile } = await supabase
     .from('profiles')
-    .select('role')
+    .select('role, job_type')
     .eq('id', profileId)
     .maybeSingle()
   const privileged = callerProfile?.role === 'admin' || callerProfile?.role === 'super_admin'
+
+  // Per-job-type attendance policy (network gate + schedule-window enforcement).
+  // Fall back to the strict on-site defaults if the row is missing.
+  const jobType = callerProfile?.job_type ?? 'on_site'
+  const { data: policyRow } = await supabase
+    .from('job_type_policies')
+    .select('require_office_network, auto_detect_network, enforce_schedule_window')
+    .eq('job_type', jobType)
+    .maybeSingle()
+  const policy = policyRow ?? {
+    require_office_network: true,
+    auto_detect_network: false,
+    enforce_schedule_window: true,
+  }
 
   // 3. Load settings
   const { data: settings, error: settingsError } = await supabase
@@ -166,17 +180,23 @@ Deno.serve(async (req: Request) => {
     lowerBoundActive = false
   }
 
-  if (lowerBoundActive && localMinutes < openMinutes) {
-    return json({
-      error: `Check-in is not allowed before ${fmtHHMM(openMinutes)} (${tz})`,
-      code: 'outside_window',
-    }, 422)
-  }
-  if (localMinutes > endMinutes) {
-    return json({
-      error: `Check-in is not allowed after ${settings.work_end_time} (${tz})`,
-      code: 'outside_window',
-    }, 422)
+  // Schedule-window enforcement is per-job-type. When disabled (e.g. flexible
+  // remote/hybrid hours) the early/late bounds are skipped and the arrival is
+  // never marked late (see status computation below). Weekend/holiday gates
+  // above still apply to everyone.
+  if (policy.enforce_schedule_window) {
+    if (lowerBoundActive && localMinutes < openMinutes) {
+      return json({
+        error: `Check-in is not allowed before ${fmtHHMM(openMinutes)} (${tz})`,
+        code: 'outside_window',
+      }, 422)
+    }
+    if (localMinutes > endMinutes) {
+      return json({
+        error: `Check-in is not allowed after ${settings.work_end_time} (${tz})`,
+        code: 'outside_window',
+      }, 422)
+    }
   }
 
   // 5. Existing-row handling.
@@ -204,18 +224,30 @@ Deno.serve(async (req: Request) => {
     }
   }
 
-  // 6. WiFi / IP check — waived for WFH (the employee is off-site).
+  // 6. WiFi / IP check — driven by the job-type policy:
+  //    • require_office_network (on-site): hard gate, block when off-network.
+  //    • auto_detect_network (hybrid): never block; just record office vs remote.
+  //    • otherwise (remote): no gate at all.
+  //    An approved-WFH override always waives the gate (the employee is off-site).
   let wifiValidated = false
   if (!wfhOverride && settings.office_ip_cidr) {
     const forwarded = req.headers.get('X-Forwarded-For')
     const clientIp = forwarded ? forwarded.split(',')[0].trim() : ''
-    if (!clientIp || !ipInCidr(clientIp, settings.office_ip_cidr)) {
-      return json({
-        error: 'Check-in is only allowed from the office network.',
-        code: 'wrong_network',
-      }, 403)
+    const inOffice = !!clientIp && ipInCidr(clientIp, settings.office_ip_cidr)
+
+    if (policy.require_office_network) {
+      if (!inOffice) {
+        return json({
+          error: 'Check-in is only allowed from the office network.',
+          code: 'wrong_network',
+        }, 403)
+      }
+      wifiValidated = true
+    } else if (policy.auto_detect_network) {
+      // Hybrid: record whether they're physically on the office network, but
+      // accept the check-in regardless of location.
+      wifiValidated = inOffice
     }
-    wifiValidated = true
   }
 
   // 7. Device gating (register-first model)
@@ -298,7 +330,10 @@ Deno.serve(async (req: Request) => {
     }, 200)
   }
 
-  const attendanceStatus = localMinutes <= lateCutoff ? 'present' : 'late'
+  // With schedule enforcement off, there is no late penalty — always 'present'.
+  const attendanceStatus = !policy.enforce_schedule_window || localMinutes <= lateCutoff
+    ? 'present'
+    : 'late'
 
   // 8b. Override a non-blocking system row (e.g. 'absent') with a real self check-in.
   if (existing) {

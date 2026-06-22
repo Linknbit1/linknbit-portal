@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
-import { Shield, ChevronRight, Loader2, Shapes, Plus, Trash2, type LucideIcon } from 'lucide-react'
+import { Shield, ChevronRight, Loader2, Shapes, IdCard, Plus, Trash2, type LucideIcon } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { StackScreen } from '../../components/layout/StackScreen'
 import { HubRow } from '../../components/layout/MobileHub'
@@ -13,17 +13,33 @@ import { useRoleFlags, useUpdateRoleFlag } from '../../hooks/useRoleFlags'
 import {
   useServices, useCreateService, useUpdateService, useDeleteService, useServiceUsage,
 } from '../../hooks/useServices'
+import {
+  useDesignations, useCreateDesignation, useUpdateDesignation, useDeleteDesignation, useDesignationUsage,
+} from '../../hooks/useDesignations'
 import type { Service } from '../../api/services'
+import type { Designation } from '../../api/designations'
+import { showWipFeatures } from '../../lib/featureFlags'
 import { cn } from '../../lib/cn'
 
-type Tab = 'services' | 'permissions'
+type Tab = 'services' | 'designations' | 'permissions'
 
-// Mobile section metadata: drives the hub rows + stack-screen titles. Only the two
-// fully-wired company-settings areas remain in production (super_admin / admin only).
+// Mobile section metadata: drives the hub rows + stack-screen titles. Visibility is
+// role-gated (see visibleSectionsFor): Services → super_admin/admin; Designations →
+// super_admin/admin/hr; Permissions → super_admin/admin and only when WIP is enabled.
 const SETTINGS_SECTIONS: { key: Tab; label: string; icon: LucideIcon }[] = [
-  { key: 'services',    label: 'Services',    icon: Shapes },
-  { key: 'permissions', label: 'Permissions', icon: Shield },
+  { key: 'services',     label: 'Services',     icon: Shapes },
+  { key: 'designations', label: 'Designations', icon: IdCard },
+  { key: 'permissions',  label: 'Permissions',  icon: Shield },
 ]
+
+function visibleSectionsFor(role: string | undefined): typeof SETTINGS_SECTIONS {
+  return SETTINGS_SECTIONS.filter(({ key }) => {
+    if (key === 'services')     return role === 'super_admin' || role === 'admin'
+    if (key === 'designations') return role === 'super_admin' || role === 'admin' || role === 'hr'
+    if (key === 'permissions')  return (role === 'super_admin' || role === 'admin') && showWipFeatures
+    return false
+  })
+}
 
 // ── Services management ──────────────────────────────────────────────────────────
 
@@ -124,6 +140,102 @@ function ServicesPanel({ canManage }: { canManage: boolean }) {
         )}
       </div>
       {!canManage && <p className="font-mono text-[11px] text-text-4 mt-3">Only Super Admins and Admins can manage services.</p>}
+    </div>
+  )
+}
+
+// ── Designations management ──────────────────────────────────────────────────────
+
+function DesignationRow({ designation, canManage }: { designation: Designation; canManage: boolean }) {
+  const toast = useToast()
+  const { mutate: update, isPending: saving } = useUpdateDesignation()
+  const { mutate: del, isPending: deleting } = useDeleteDesignation()
+  const [name, setName] = useState(designation.name)
+  const [confirming, setConfirming] = useState(false)
+  const usage = useDesignationUsage(designation.id, confirming)
+  const dirty = name !== designation.name
+  const inUse = (usage.data?.people ?? 0) > 0
+
+  const save = () => update(
+    { id: designation.id, updates: { name: name.trim() } },
+    { onSuccess: () => toast('Designation updated', 'success'), onError: (e) => toast(e.message.includes('unique') ? 'That name already exists' : 'Update failed', 'error') },
+  )
+  const remove = () => del(designation.id, {
+    onSuccess: () => { toast('Designation deleted', 'success'); setConfirming(false) },
+    onError: () => toast('Could not delete designation', 'error'),
+  })
+
+  return (
+    <div className="grid grid-cols-[1fr_auto_auto] gap-3 items-center px-4 py-2.5 border-b border-border-subtle last:border-0">
+      <div className="flex items-center gap-2 min-w-0">
+        <input value={name} disabled={!canManage} onChange={(e) => setName(e.target.value)}
+          className="bg-surface-inset border border-border-default rounded-md px-3 py-1.5 text-[13px] font-ui text-text-1 outline-none focus:border-border-focus w-52 disabled:opacity-70" />
+        <span className="font-mono text-[10px] text-text-4 truncate">{designation.slug}</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <Toggle checked={designation.is_active} onChange={(v) => canManage && update({ id: designation.id, updates: { is_active: v } }, { onSuccess: () => toast(v ? 'Activated' : 'Deactivated', 'success') })} />
+        <span className="font-mono text-[10px] text-text-4 w-7">{designation.is_active ? 'On' : 'Off'}</span>
+      </div>
+      {canManage && (
+        confirming ? (
+          <div className="flex items-center gap-2">
+            {usage.isLoading ? <Loader2 size={12} className="animate-spin text-text-4" />
+              : <button onClick={remove} disabled={deleting} className="font-mono text-[10.5px] text-error font-bold">{inUse ? `Delete (unsets ${usage.data?.people})` : 'Delete'}</button>}
+            <button onClick={() => setConfirming(false)} className="font-mono text-[10.5px] text-text-3">Cancel</button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1.5">
+            {dirty && <Button size="sm" variant="secondary" disabled={saving} onClick={save}>Save</Button>}
+            <button onClick={() => setConfirming(true)} className="p-1.5 text-text-4 hover:text-error" title="Delete designation"><Trash2 size={13} /></button>
+          </div>
+        )
+      )}
+    </div>
+  )
+}
+
+function DesignationsPanel({ canManage }: { canManage: boolean }) {
+  const toast = useToast()
+  const { data: designations = [], isLoading } = useDesignations()
+  const { mutate: create, isPending: creating } = useCreateDesignation()
+  const [newName, setNewName] = useState('')
+
+  const add = () => {
+    if (!newName.trim()) return
+    create({ name: newName.trim() }, {
+      onSuccess: () => { toast('Designation created', 'success'); setNewName('') },
+      onError: (e) => toast(/unique|duplicate/i.test(e.message) ? 'That name already exists' : 'Could not create designation', 'error'),
+    })
+  }
+
+  return (
+    <div>
+      <h2 className="font-display font-bold text-[16px] text-text-1 mb-1">Designations</h2>
+      <p className="font-ui text-[13px] text-text-3 mb-5">
+        Create, rename, or retire the job designations assigned to employees (e.g. Software Engineer, SEO Specialist).
+        Deactivating one hides it from new assignments; deleting it unsets it on anyone who has it.
+      </p>
+
+      <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
+        <div className="grid grid-cols-[1fr_auto_auto] gap-3 px-4 py-2 border-b border-border-subtle bg-surface-2">
+          {['Name', 'Active', ''].map((h, i) => <span key={i} className="font-mono text-[10px] text-text-4 uppercase tracking-wider">{h}</span>)}
+        </div>
+        {isLoading ? (
+          <div className="flex justify-center py-10 text-text-4"><Loader2 size={18} className="animate-spin" /></div>
+        ) : (
+          designations.map((d) => <DesignationRow key={d.id} designation={d} canManage={canManage} />)
+        )}
+        {canManage && (
+          <div className="grid grid-cols-[1fr_auto] gap-3 items-center px-4 py-3 bg-surface-2/40">
+            <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="New designation (e.g. SEO Specialist)"
+              className="bg-surface-inset border border-border-default rounded-md px-3 py-1.5 text-[13px] font-ui text-text-1 placeholder:text-text-4 outline-none focus:border-border-focus w-64" />
+            <Button size="sm" disabled={!newName.trim() || creating} onClick={add}>
+              {creating ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />} Add
+            </Button>
+          </div>
+        )}
+      </div>
+      {!canManage && <p className="font-mono text-[11px] text-text-4 mt-3">Only Super Admins, Admins, and HR can manage designations.</p>}
     </div>
   )
 }
@@ -236,24 +348,28 @@ function PermissionsPanel({ canEdit }: { canEdit: boolean }) {
 
 // ── Page ─────────────────────────────────────────────────────────────────────────
 
-// Route guarded to super_admin / admin (see App.tsx + SETTINGS_ROLES). Desktop keeps
-// the sidebar-tab layout; mobile uses the hub → stack-screen pattern.
+// Route guarded to super_admin / admin / hr (see App.tsx + SETTINGS_ROLES). Sections
+// are further role-filtered: HR only ever sees Designations. Desktop keeps the
+// sidebar-tab layout; mobile uses the hub → stack-screen pattern.
 export default function SettingsPage({ mobileSection }: { mobileSection?: string } = {}) {
   const { profile } = useAuthContext()
   const isDesktop = useIsDesktop()
   const canEditFlags = profile?.role === 'super_admin' || profile?.role === 'admin'
+  const canManageDesignations = canEditFlags || profile?.role === 'hr'
 
-  const [activeTab, setActiveTab] = useState<Tab>('services')
+  const sections = useMemo(() => visibleSectionsFor(profile?.role), [profile?.role])
+  const [activeTab, setActiveTab] = useState<Tab>(sections[0]?.key ?? 'designations')
   const showHub = !isDesktop && !mobileSection
 
   const renderPanel = (tab: Tab) =>
-    tab === 'services'
-      ? <ServicesPanel canManage={canEditFlags} />
-      : <PermissionsPanel canEdit={canEditFlags} />
+    tab === 'services'     ? <ServicesPanel canManage={canEditFlags} />
+    : tab === 'designations' ? <DesignationsPanel canManage={canManageDesignations} />
+    : <PermissionsPanel canEdit={canEditFlags} />
 
   // Mobile drill-in: one section rendered as a stack screen with its own back chrome.
+  // Guard by role, not just key validity, so HR can't deep-link into Services.
   if (mobileSection) {
-    const entry = SETTINGS_SECTIONS.find((s) => s.key === mobileSection)
+    const entry = sections.find((s) => s.key === mobileSection)
     if (!entry) return <Navigate to="/settings" replace />
     return (
       <StackScreen title={entry.label}>
@@ -271,7 +387,7 @@ export default function SettingsPage({ mobileSection }: { mobileSection?: string
       <div className="px-4 py-6 lg:p-6 max-w-content mx-auto w-full">
         {showHub ? (
           <div className="flex flex-col gap-2.5">
-            {SETTINGS_SECTIONS.map((s) => (
+            {sections.map((s) => (
               <HubRow key={s.key} to={`/settings/${s.key}`} label={s.label} icon={s.icon} />
             ))}
           </div>
@@ -280,7 +396,7 @@ export default function SettingsPage({ mobileSection }: { mobileSection?: string
             {/* Section nav — sidebar on desktop */}
             <div className="w-full lg:w-48 shrink-0">
               <nav className="flex lg:flex-col bg-surface-1 border border-border-default rounded-xl overflow-x-auto">
-                {SETTINGS_SECTIONS.map(({ key, label, icon: Icon }) => (
+                {sections.map(({ key, label, icon: Icon }) => (
                   <button
                     key={key}
                     onClick={() => setActiveTab(key)}

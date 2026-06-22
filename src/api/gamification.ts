@@ -16,7 +16,6 @@ export interface LeaderboardEntry {
   name: string
   avatar_url: string | null
   role: string
-  service_type: string | null
   lp_balance: number
   reputation_total: number
   level: number
@@ -31,7 +30,7 @@ export type ProfileDirectory = Record<string, { name: string; avatar_url: string
 export async function fetchLeaderboard(): Promise<LeaderboardEntry[]> {
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, name, avatar_url, role, service_type, lp_balance, reputation_total, level, is_restricted')
+    .select('id, name, avatar_url, role, lp_balance, reputation_total, level, is_restricted')
     .eq('is_active', true)
     .not('role', 'in', '("client_owner","client_member")')
     .order('lp_balance', { ascending: false })
@@ -42,7 +41,6 @@ export async function fetchLeaderboard(): Promise<LeaderboardEntry[]> {
     name: p.name,
     avatar_url: p.avatar_url,
     role: p.role,
-    service_type: p.service_type,
     lp_balance: p.lp_balance,
     reputation_total: p.reputation_total,
     level: p.level,

@@ -2,8 +2,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { sendInviteEmail } from '../_shared/mail.ts'
 
 // Invites a new internal user: verifies the caller may invite the requested role,
-// creates the auth user + an invite link (service role), sets role/team/service on
-// the auto-created profile, and emails the link via Resend.
+// creates the auth user + an invite link (service role), sets role/designation/job_type
+// and team memberships on the auto-created profile, and emails the link via Resend.
 //
 // Required secrets: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ANON_KEY (auto),
 //                   RESEND_API_KEY, RESEND_FROM (optional), PUBLIC_SITE_URL (optional).
@@ -38,19 +38,22 @@ Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS_HEADERS })
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405)
 
-  let name: string, email: string, role: string, teamId: string | null, serviceType: string | null
+  let name: string, email: string, role: string
+  let designationId: string | null, jobType: string, teamIds: string[]
   try {
     const body = await req.json()
     name = (body.name ?? '').trim()
     email = (body.email ?? '').trim().toLowerCase()
     role = body.role
-    teamId = body.team_id ?? null
-    serviceType = body.service_type ?? null
+    designationId = body.designation_id ?? null
+    jobType = body.job_type ?? 'on_site'
+    teamIds = Array.isArray(body.team_ids) ? body.team_ids.filter(Boolean) : []
   } catch {
     return json({ error: 'Invalid request body' }, 400)
   }
   if (!name || !email || !role) return json({ error: 'name, email and role are required' }, 400)
   if (!INTERNAL_ROLES.includes(role)) return json({ error: 'Invalid role' }, 400)
+  if (!['on_site', 'hybrid', 'remote'].includes(jobType)) return json({ error: 'Invalid job type' }, 400)
 
   const authHeader = req.headers.get('Authorization')
   if (!authHeader) return json({ error: 'Missing Authorization header' }, 401)
@@ -97,12 +100,20 @@ Deno.serve(async (req: Request) => {
   const newUserId = linkData.user.id
   const inviteLink = linkData.properties?.action_link ?? null
 
-  // 3. Apply role / team / service to the auto-created profile (service role bypasses RLS)
+  // 3. Apply role / designation / job_type to the auto-created profile (service role bypasses RLS)
   const { error: updErr } = await service
     .from('profiles')
-    .update({ role, team_id: teamId, service_type: serviceType })
+    .update({ role, designation_id: designationId, job_type: jobType })
     .eq('id', newUserId)
   if (updErr) return json({ error: updErr.message }, 500)
+
+  // 3b. Team memberships via the many-to-many junction.
+  if (teamIds.length > 0) {
+    const { error: tmErr } = await service
+      .from('team_members')
+      .upsert(teamIds.map((t) => ({ team_id: t, profile_id: newUserId })), { onConflict: 'team_id,profile_id' })
+    if (tmErr) return json({ error: tmErr.message }, 500)
+  }
 
   // 4. Email the invite via Resend (best-effort; link is always returned as fallback)
   const emailed = inviteLink ? await sendInviteEmail(email, name, inviteLink) : false
