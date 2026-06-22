@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import {
   CheckCircle2, Clock, LogOut, Users, Calendar,
   AlertTriangle, Wifi, Monitor, Search, Download, Plus, X, Check,
@@ -21,6 +21,7 @@ import { useAuthContext } from '../../context/AuthContext'
 import {
   useAllAttendance,
   useMarkAttendance,
+  useUpdateAttendanceRecord,
   useAdminCheckOut,
   useAttendanceSettings,
   useUpdateAttendanceSettings,
@@ -111,10 +112,12 @@ function WFHStatusChip({ status }: { status: string }) {
   )
 }
 
-/* ── Mark Attendance modal ────────────────────────────────────────────────── */
+/* ── Mark / Edit Attendance modal ─────────────────────────────────────────── */
 interface MarkModalProps {
   onClose: () => void
   dateFilter: string
+  /** When provided, the modal edits this existing record instead of creating one. */
+  editRecord?: AttendanceWithProfile | null
 }
 
 // Current wall-clock time (HH:MM, 24h) in the given office timezone.
@@ -124,69 +127,123 @@ function officeNowHHMM(timeZone: string): string {
   }).format(new Date())
 }
 
+const pad2 = (n: number) => String(n).padStart(2, '0')
+const minutesToHHMM = (mins: number) => `${pad2(Math.floor(mins / 60))}:${pad2(mins % 60)}`
+const hhmmToMinutes = (hhmm: string): number | null => {
+  const [h, m] = hhmm.split(':').map(Number)
+  return Number.isFinite(h) && Number.isFinite(m) ? h * 60 + m : null
+}
+
 // Statuses that carry a clocked check-in/out time.
 const CLOCKED_STATUSES = new Set(['present', 'late', 'half_day'])
 
-function MarkModal({ onClose, dateFilter }: MarkModalProps) {
+function MarkModal({ onClose, dateFilter, editRecord = null }: MarkModalProps) {
   const toast = useToast()
   const markMutation = useMarkAttendance()
+  const updateMutation = useUpdateAttendanceRecord()
   const { data: people = [] } = useActiveProfiles()
   const { data: settings } = useAttendanceSettings()
   const tz = settings?.timezone ?? 'Asia/Karachi'
+  const isEdit = editRecord !== null
 
-  const [profileId, setProfileId] = useState('')
-  const [status, setStatus] = useState('present')
-  // Defaults to the selected date and the current office time (mounts fresh on open).
-  const [date, setDate] = useState(dateFilter)
-  const [checkInTime, setCheckInTime] = useState(() => officeNowHHMM(tz))
-  const [checkOutTime, setCheckOutTime] = useState('')
-  const [note, setNote] = useState('')
+  const [profileId, setProfileId] = useState(editRecord?.profile_id ?? '')
+  // null = follow the auto-computed (present/late) value; a string = admin override.
+  const [statusOverride, setStatusOverride] = useState<string | null>(editRecord?.status ?? null)
+  const [date, setDate] = useState(editRecord?.date ?? dateFilter)
+  const [checkInTime, setCheckInTime] = useState(() =>
+    editRecord?.check_in ? minutesToHHMM(isoToZonedMinutes(editRecord.check_in, tz)) : officeNowHHMM(tz),
+  )
+  const [checkOutTime, setCheckOutTime] = useState(() =>
+    editRecord?.check_out ? minutesToHHMM(isoToZonedMinutes(editRecord.check_out, tz)) : '',
+  )
+  const [note, setNote] = useState(editRecord?.note ?? '')
 
+  const isSaving = markMutation.isPending || updateMutation.isPending
+
+  // Effective on-time cutoff for the selected employee: their allowed check-in if set,
+  // otherwise the office work-start + grace period.
+  const cutoffMinutes = useMemo(() => {
+    const person = people.find((p) => p.id === profileId)
+    if (person?.allowed_check_in) return hhmmToMinutes(person.allowed_check_in.slice(0, 5))
+    if (settings?.work_start_time) {
+      const base = hhmmToMinutes(settings.work_start_time.slice(0, 5))
+      return base === null ? null : base + (settings.grace_period_min ?? 0)
+    }
+    return null
+  }, [people, profileId, settings])
+
+  const computedStatus = useMemo(() => {
+    const inMin = hhmmToMinutes(checkInTime)
+    if (cutoffMinutes === null || inMin === null) return null
+    return inMin > cutoffMinutes ? 'late' : 'present'
+  }, [checkInTime, cutoffMinutes])
+
+  // Effective status: an explicit admin override wins; otherwise it auto-follows the
+  // present/late computed from the check-in time vs the employee's cutoff. This fixes
+  // "marked at 08:30 but not flagged late" without an effect (no cascading renders).
+  const status = statusOverride ?? computedStatus ?? 'present'
   const showTimes = CLOCKED_STATUSES.has(status)
 
   const handleSave = async () => {
     if (!profileId) return
     const clocked = showTimes
+    const checkInIso = clocked && checkInTime ? zonedWallTimeToIso(date, checkInTime, tz) : null
+    const checkOutIso = clocked && checkOutTime ? zonedWallTimeToIso(date, checkOutTime, tz) : null
     try {
-      await markMutation.mutateAsync({
-        profileId,
-        date,
-        status,
-        note: note.trim() || undefined,
-        checkIn: clocked && checkInTime ? zonedWallTimeToIso(date, checkInTime, tz) : undefined,
-        checkOut: clocked && checkOutTime ? zonedWallTimeToIso(date, checkOutTime, tz) : undefined,
-      })
-      toast('Attendance marked', 'success')
+      if (isEdit && editRecord) {
+        await updateMutation.mutateAsync({
+          id: editRecord.id,
+          status,
+          note: note.trim() || null,
+          checkIn: checkInIso,
+          checkOut: checkOutIso,
+        })
+        toast('Attendance updated', 'success')
+      } else {
+        await markMutation.mutateAsync({
+          profileId,
+          date,
+          status,
+          note: note.trim() || undefined,
+          checkIn: checkInIso ?? undefined,
+          checkOut: checkOutIso ?? undefined,
+        })
+        toast('Attendance marked', 'success')
+      }
       onClose()
-      setProfileId('')
-      setNote('')
-      setStatus('present')
     } catch {
-      toast('Failed to mark attendance', 'error')
+      toast(isEdit ? 'Failed to update attendance' : 'Failed to mark attendance', 'error')
     }
   }
 
   return (
     <ModalShell onClose={onClose} size="md" contentClassName="p-5 sm:p-6">
         <div className="flex items-center justify-between mb-5">
-          <h3 className="font-display font-bold text-[16px] text-text-1">Mark Attendance</h3>
+          <h3 className="font-display font-bold text-[16px] text-text-1">{isEdit ? 'Edit Attendance' : 'Mark Attendance'}</h3>
           <button onClick={onClose} className="text-text-4 hover:text-text-1 transition-colors"><X size={18} /></button>
         </div>
         <div className="space-y-4">
           <div>
             <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Employee</label>
-            <Select
-              value={profileId}
-              onChange={setProfileId}
-              placeholder="Select employee…"
-              options={people.map((p) => ({ value: p.id, label: p.name }))}
-            />
+            {isEdit ? (
+              <div className="flex items-center gap-2.5 rounded-md border border-border-default bg-surface-inset px-3 py-2">
+                <Avatar name={editRecord?.profiles?.name ?? '?'} src={editRecord?.profiles?.avatar_url ?? undefined} size="sm" />
+                <span className="font-ui text-[13px] text-text-1">{editRecord?.profiles?.name ?? '—'}</span>
+              </div>
+            ) : (
+              <Select
+                value={profileId}
+                onChange={setProfileId}
+                placeholder="Select employee…"
+                options={people.map((p) => ({ value: p.id, label: p.name }))}
+              />
+            )}
           </div>
           <div>
             <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Status</label>
             <Select
               value={status}
-              onChange={(v) => setStatus(v)}
+              onChange={(v) => setStatusOverride(v)}
               options={Object.entries(STATUS_META).map(([k, v]) => ({ value: k, label: v.label }))}
             />
           </div>
@@ -195,16 +252,26 @@ function MarkModal({ onClose, dateFilter }: MarkModalProps) {
             <DatePicker value={date} onChange={setDate} placeholder="Select date…" />
           </div>
           {showTimes && (
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Check in</label>
-                <TimePicker value={checkInTime} onChange={setCheckInTime} placeholder="Time…" />
+            <>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Check in</label>
+                  <TimePicker value={checkInTime} onChange={setCheckInTime} placeholder="Time…" />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Check out (optional)</label>
+                  <TimePicker value={checkOutTime} onChange={setCheckOutTime} placeholder="Time…" />
+                </div>
               </div>
-              <div>
-                <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Check out (optional)</label>
-                <TimePicker value={checkOutTime} onChange={setCheckOutTime} placeholder="Time…" />
-              </div>
-            </div>
+              {computedStatus && cutoffMinutes !== null && (
+                <p className={cn('font-mono text-[10.5px]', computedStatus === 'late' ? 'text-warning' : 'text-success')}>
+                  {computedStatus === 'late'
+                    ? `Late — checks in after ${minutesToHHMM(cutoffMinutes)} cutoff`
+                    : `On time — at or before ${minutesToHHMM(cutoffMinutes)} cutoff`}
+                  {status !== computedStatus && ' (status overridden manually)'}
+                </p>
+              )}
+            </>
           )}
           <div>
             <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Note (optional)</label>
@@ -219,7 +286,7 @@ function MarkModal({ onClose, dateFilter }: MarkModalProps) {
         </div>
         <div className="flex gap-2.5 mt-5">
           <Button variant="ghost" size="sm" className="flex-1" onClick={onClose}>Cancel</Button>
-          <Button size="sm" className="flex-1" onClick={handleSave} disabled={!profileId || markMutation.isPending}>
+          <Button size="sm" className="flex-1" onClick={handleSave} disabled={!profileId || isSaving}>
             <Check size={14} /> Save
           </Button>
         </div>
@@ -234,6 +301,7 @@ export function DailyRecordsTab() {
   const [statusFilter, setStatusFilter] = useState('all')
   const [search, setSearch] = useState('')
   const [markOpen, setMarkOpen] = useState(false)
+  const [editRec, setEditRec] = useState<AttendanceWithProfile | null>(null)
 
   const { data: records = [], isLoading } = useAllAttendance(dateFilter)
   const adminCheckOutMutation = useAdminCheckOut()
@@ -430,9 +498,19 @@ export function DailyRecordsTab() {
                     {rec.note ?? ''}
                   </td>
                   <td className="px-4 py-3">
-                    {rec.wifi_validated && (
-                      <Wifi size={13} className="text-success" aria-label="WiFi validated" />
-                    )}
+                    <div className="flex items-center gap-2">
+                      {rec.wifi_validated && (
+                        <Wifi size={13} className="text-success" aria-label="WiFi validated" />
+                      )}
+                      <button
+                        onClick={() => setEditRec(rec)}
+                        className="text-text-4 hover:text-text-1 transition-colors"
+                        aria-label={`Edit ${rec.profiles?.name ?? 'record'}`}
+                        title="Edit record"
+                      >
+                        <Pencil size={13} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
@@ -457,7 +535,12 @@ export function DailyRecordsTab() {
                     </span>
                     {rec.wifi_validated && <Wifi size={12} className="text-success shrink-0" aria-label="WiFi validated" />}
                   </div>
-                  <StatusChip status={rec.status} />
+                  <div className="flex items-center gap-2 shrink-0">
+                    <StatusChip status={rec.status} />
+                    <button onClick={() => setEditRec(rec)} className="text-text-4 hover:text-text-1 transition-colors" aria-label="Edit record">
+                      <Pencil size={13} />
+                    </button>
+                  </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[12px] text-text-2 pl-10.5">
                   <span>In: <span className="text-text-1">{fmtTime(rec.check_in)}</span></span>
@@ -484,6 +567,7 @@ export function DailyRecordsTab() {
       </div>
 
       {markOpen && <MarkModal onClose={() => setMarkOpen(false)} dateFilter={dateFilter} />}
+      {editRec && <MarkModal editRecord={editRec} onClose={() => setEditRec(null)} dateFilter={dateFilter} />}
     </>
   )
 }

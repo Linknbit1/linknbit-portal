@@ -166,6 +166,37 @@ export async function markAttendance(payload: MarkAttendancePayload): Promise<At
   return data
 }
 
+// ── Admin edit an existing attendance record (by id) ─────────────────────────
+
+export interface EditAttendancePayload {
+  id: string
+  status: string
+  note?: string | null
+  /** ISO timestamp or null to clear. Omit a field to leave it unchanged. */
+  checkIn?: string | null
+  checkOut?: string | null
+}
+
+// Updates status/times/note in place without changing `source` (preserves whether
+// the row was a self check-in vs system/admin). RLS: admin/super_admin/hr only.
+export async function updateAttendanceRecord(payload: EditAttendancePayload): Promise<AttendanceRow> {
+  const update: TablesUpdate<'attendance'> = {
+    status: payload.status,
+    updated_at: new Date().toISOString(),
+  }
+  if (payload.note !== undefined)     update.note      = payload.note
+  if (payload.checkIn !== undefined)  update.check_in  = payload.checkIn
+  if (payload.checkOut !== undefined) update.check_out = payload.checkOut
+  const { data, error } = await supabase
+    .from('attendance')
+    .update(update)
+    .eq('id', payload.id)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
 // ── Admin checkout on behalf of employee ─────────────────────────────────────
 
 export async function adminCheckOut(attendanceId: string, checkOutTime?: string): Promise<AttendanceRow> {

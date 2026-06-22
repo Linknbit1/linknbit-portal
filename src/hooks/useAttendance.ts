@@ -8,6 +8,7 @@ import {
   checkIn,
   checkOut,
   markAttendance,
+  updateAttendanceRecord,
   adminCheckOut,
   fetchAttendanceSettings,
   updateAttendanceSettings,
@@ -50,6 +51,7 @@ import {
 } from '../api/attendance'
 import type {
   MarkAttendancePayload,
+  EditAttendancePayload,
   RequestExceptionPayload,
   FetchExceptionsFilters,
   CreateHolidayPayload,
@@ -157,6 +159,16 @@ export function useAdminCheckOut() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: ({ id }: { id: string; date: string }) => adminCheckOut(id),
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ATTENDANCE_KEYS.allByDate(data.date) })
+    },
+  })
+}
+
+export function useUpdateAttendanceRecord() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: EditAttendancePayload) => updateAttendanceRecord(payload),
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ATTENDANCE_KEYS.allByDate(data.date) })
     },
