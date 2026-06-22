@@ -9,8 +9,9 @@ export interface InvitePayload {
   name: string
   email: string
   role: string
-  team_id?: string | null
-  service_type?: string | null
+  designation_id?: string | null
+  job_type?: string
+  team_ids?: string[]
 }
 
 export interface InviteResult {
@@ -56,14 +57,14 @@ export async function inviteUser(payload: InvitePayload): Promise<InviteResult> 
 export async function updatePersonRole(
   profileId: string,
   role: string,
-  teamId: string | null,
-  serviceType: string | null,
+  designationId: string | null,
+  jobType: string,
 ): Promise<void> {
   const { error } = await supabase.rpc('admin_update_profile_role', {
     p_profile_id: profileId,
     p_role: role,
-    p_team_id: teamId ?? undefined,
-    p_service_type: serviceType ?? undefined,
+    p_designation_id: designationId ?? undefined,
+    p_job_type: jobType,
   })
   if (error) throw error
 }

@@ -293,6 +293,41 @@ export type Database = {
         }
         Relationships: []
       }
+      designations: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          name: string
+          slug: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          slug: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          slug?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "designations_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employee_of_the_month: {
         Row: {
           awarded_by: string | null
@@ -463,6 +498,41 @@ export type Database = {
           {
             foreignKeyName: "holidays_created_by_fkey"
             columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      job_type_policies: {
+        Row: {
+          auto_detect_network: boolean
+          enforce_schedule_window: boolean
+          job_type: string
+          require_office_network: boolean
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          auto_detect_network?: boolean
+          enforce_schedule_window?: boolean
+          job_type: string
+          require_office_network?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          auto_detect_network?: boolean
+          enforce_schedule_window?: boolean
+          job_type?: string
+          require_office_network?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_type_policies_updated_by_fkey"
+            columns: ["updated_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -747,6 +817,7 @@ export type Database = {
           bio: string | null
           clickup_user_id: string | null
           created_at: string
+          designation_id: string | null
           email: string
           email_confirmed_at: string | null
           id: string
@@ -754,6 +825,7 @@ export type Database = {
           is_active: boolean
           is_restricted: boolean
           job_title: string | null
+          job_type: string
           last_seen_at: string | null
           last_sign_in_at: string | null
           level: number
@@ -766,9 +838,7 @@ export type Database = {
           restricted_by: string | null
           restricted_reason: string | null
           role: string
-          service_type: string | null
           skills: string[]
-          team_id: string | null
           tech_stacks: string[]
           updated_at: string
         }
@@ -778,6 +848,7 @@ export type Database = {
           bio?: string | null
           clickup_user_id?: string | null
           created_at?: string
+          designation_id?: string | null
           email: string
           email_confirmed_at?: string | null
           id: string
@@ -785,6 +856,7 @@ export type Database = {
           is_active?: boolean
           is_restricted?: boolean
           job_title?: string | null
+          job_type?: string
           last_seen_at?: string | null
           last_sign_in_at?: string | null
           level?: number
@@ -797,9 +869,7 @@ export type Database = {
           restricted_by?: string | null
           restricted_reason?: string | null
           role?: string
-          service_type?: string | null
           skills?: string[]
-          team_id?: string | null
           tech_stacks?: string[]
           updated_at?: string
         }
@@ -809,6 +879,7 @@ export type Database = {
           bio?: string | null
           clickup_user_id?: string | null
           created_at?: string
+          designation_id?: string | null
           email?: string
           email_confirmed_at?: string | null
           id?: string
@@ -816,6 +887,7 @@ export type Database = {
           is_active?: boolean
           is_restricted?: boolean
           job_title?: string | null
+          job_type?: string
           last_seen_at?: string | null
           last_sign_in_at?: string | null
           level?: number
@@ -828,18 +900,16 @@ export type Database = {
           restricted_by?: string | null
           restricted_reason?: string | null
           role?: string
-          service_type?: string | null
           skills?: string[]
-          team_id?: string | null
           tech_stacks?: string[]
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "fk_profiles_team"
-            columns: ["team_id"]
+            foreignKeyName: "profiles_designation_id_fkey"
+            columns: ["designation_id"]
             isOneToOne: false
-            referencedRelation: "teams"
+            referencedRelation: "designations"
             referencedColumns: ["id"]
           },
           {
@@ -855,13 +925,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "profiles_service_type_fkey"
-            columns: ["service_type"]
-            isOneToOne: false
-            referencedRelation: "services"
-            referencedColumns: ["slug"]
           },
         ]
       }
@@ -1230,6 +1293,39 @@ export type Database = {
           },
         ]
       }
+      team_members: {
+        Row: {
+          created_at: string
+          profile_id: string
+          team_id: string
+        }
+        Insert: {
+          created_at?: string
+          profile_id: string
+          team_id: string
+        }
+        Update: {
+          created_at?: string
+          profile_id?: string
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_members_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_members_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       teams: {
         Row: {
           created_at: string
@@ -1419,10 +1515,10 @@ export type Database = {
       }
       admin_update_profile_role: {
         Args: {
+          p_designation_id?: string
+          p_job_type?: string
           p_profile_id: string
           p_role: string
-          p_service_type?: string
-          p_team_id?: string
         }
         Returns: undefined
       }
@@ -1482,6 +1578,11 @@ export type Database = {
         Args: { p_profile_id: string; p_reason?: string; p_restricted: boolean }
         Returns: undefined
       }
+      set_profile_teams: {
+        Args: { p_profile_id: string; p_team_ids: string[] }
+        Returns: undefined
+      }
+      shares_team_with: { Args: { p_other: string }; Returns: boolean }
       submit_quest_task: {
         Args: {
           p_claim_id: string

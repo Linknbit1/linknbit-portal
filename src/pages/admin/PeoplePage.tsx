@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react'
 import {
   Plus, Search, Loader2, X, Mail, Copy, Check, UserCheck, UserX, ShieldAlert,
-  Pencil, Users, Table2, LayoutGrid, BriefcaseBusiness, Layers, Upload, Trash2,
+  Pencil, Users, Table2, LayoutGrid, BriefcaseBusiness, IdCard, MapPin, Upload, Trash2,
   MoreVertical, KeyRound, MailPlus,
 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
@@ -9,15 +9,16 @@ import { Avatar } from '../../components/ui/Avatar'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Select } from '../../components/ui/Select'
+import { Toggle } from '../../components/ui/Toggle'
 import { Drawer } from '../../components/ui/Drawer'
 import { Popover } from '../../components/ui/Popover'
 import { RoleBadge } from '../../components/shared/RoleBadge'
-import { ServiceChip } from '../../components/shared/ServiceChip'
 import { SalaryCard } from '../../components/shared/SalaryCard'
 import { useToast } from '../../components/ui/toast-context'
 import { useAuthContext } from '../../context/AuthContext'
 import { useTeams } from '../../hooks/useTeams'
-import { useServices } from '../../hooks/useServices'
+import { useDesignations } from '../../hooks/useDesignations'
+import { useTeamMembers, useSetProfileTeams } from '../../hooks/useTeamMembers'
 import {
   usePeople, useInviteUser, useUpdatePersonRole, useUpdatePersonDetails, useSetPersonActive, useDeletePerson,
   useResendInvite, useSetUserPassword,
@@ -34,12 +35,41 @@ import { validateAvatarFile } from '../../lib/avatar'
 
 type Option = { value: string; label: string }
 
+const JOB_TYPE_LABELS: Record<string, string> = {
+  on_site: 'On-site', hybrid: 'Hybrid', remote: 'Remote',
+}
+const JOB_TYPE_OPTIONS: Option[] = [
+  { value: 'on_site', label: 'On-site' },
+  { value: 'hybrid', label: 'Hybrid' },
+  { value: 'remote', label: 'Remote' },
+]
+
+// Multi-select team picker built from the shared Toggle primitive (no native multiselect).
+function TeamPicker({ teams, value, onChange }: { teams: { id: string; name: string }[]; value: string[]; onChange: (ids: string[]) => void }) {
+  if (teams.length === 0) {
+    return <p className="rounded-md border border-dashed border-border-default bg-surface-inset px-3 py-2 font-mono text-[11px] text-text-4">No teams yet</p>
+  }
+  return (
+    <div className="flex max-h-44 flex-col gap-0.5 overflow-y-auto rounded-md border border-border-default bg-surface-inset p-1.5">
+      {teams.map((t) => {
+        const checked = value.includes(t.id)
+        return (
+          <label key={t.id} className="flex cursor-pointer items-center justify-between gap-2 rounded-sm px-2 py-1.5 hover:bg-surface-2">
+            <span className="truncate font-ui text-[12.5px] text-text-2">{t.name}</span>
+            <Toggle checked={checked} onChange={(v) => onChange(v ? [...value, t.id] : value.filter((x) => x !== t.id))} />
+          </label>
+        )
+      })}
+    </div>
+  )
+}
+
 // ── Invite modal ─────────────────────────────────────────────────────────────────
 
-function InviteModal({ actorRole, teams, serviceOptions, onClose }: {
+function InviteModal({ actorRole, teams, designationOptions, onClose }: {
   actorRole: string
   teams: { id: string; name: string }[]
-  serviceOptions: Option[]
+  designationOptions: Option[]
   onClose: () => void
 }) {
   const toast = useToast()
@@ -47,8 +77,9 @@ function InviteModal({ actorRole, teams, serviceOptions, onClose }: {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [role, setRole] = useState('employee')
-  const [teamId, setTeamId] = useState('')
-  const [service, setService] = useState('')
+  const [teamIds, setTeamIds] = useState<string[]>([])
+  const [designation, setDesignation] = useState('')
+  const [jobType, setJobType] = useState('on_site')
   const [result, setResult] = useState<InviteResult | null>(null)
   const [copied, setCopied] = useState(false)
 
@@ -56,7 +87,7 @@ function InviteModal({ actorRole, teams, serviceOptions, onClose }: {
 
   const submit = () => {
     invite(
-      { name: name.trim(), email: email.trim(), role, team_id: teamId || null, service_type: service || null },
+      { name: name.trim(), email: email.trim(), role, designation_id: designation || null, job_type: jobType, team_ids: teamIds },
       {
         onSuccess: (res) => {
           setResult(res)
@@ -107,13 +138,17 @@ function InviteModal({ actorRole, teams, serviceOptions, onClose }: {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Team</label>
-                  <Select value={teamId} onChange={setTeamId} options={[{ value: '', label: 'No team' }, ...teams.map((t) => ({ value: t.id, label: t.name }))]} />
+                  <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Designation</label>
+                  <Select value={designation} onChange={setDesignation} options={designationOptions} />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Service</label>
-                  <Select value={service} onChange={setService} options={serviceOptions} />
+                  <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Job type</label>
+                  <Select value={jobType} onChange={setJobType} options={JOB_TYPE_OPTIONS} />
                 </div>
+              </div>
+              <div>
+                <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Teams</label>
+                <TeamPicker teams={teams} value={teamIds} onChange={setTeamIds} />
               </div>
             </div>
             <div className="flex gap-2.5 mt-5">
@@ -130,16 +165,18 @@ function InviteModal({ actorRole, teams, serviceOptions, onClose }: {
 
 // ── Edit drawer ──────────────────────────────────────────────────────────────────
 
-function EditDrawer({ person, actorRole, teams, serviceOptions, onClose }: {
+function EditDrawer({ person, actorRole, teams, designationOptions, currentTeamIds, onClose }: {
   person: Person
   actorRole: string
   teams: { id: string; name: string }[]
-  serviceOptions: Option[]
+  designationOptions: Option[]
+  currentTeamIds: string[]
   onClose: () => void
 }) {
   const toast = useToast()
   const { mutateAsync: saveRole, isPending: savingRole } = useUpdatePersonRole()
   const { mutateAsync: saveDetails, isPending: savingDetails } = useUpdatePersonDetails()
+  const { mutateAsync: saveTeams, isPending: savingTeams } = useSetProfileTeams()
 
   const mayManage = canManageTarget(actorRole, person.role)
   const mayDetails = canEditDetails(actorRole) && !(actorRole === 'admin' && person.role === 'super_admin')
@@ -149,14 +186,17 @@ function EditDrawer({ person, actorRole, teams, serviceOptions, onClose }: {
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
   const [role, setRole] = useState(person.role)
-  const [teamId, setTeamId] = useState(person.team_id ?? '')
-  const [service, setService] = useState(person.service_type ?? '')
+  const [teamIds, setTeamIds] = useState<string[]>(currentTeamIds)
+  const [designation, setDesignation] = useState(person.designation_id ?? '')
+  const [jobType, setJobType] = useState(person.job_type ?? 'on_site')
 
   const roleOptions = assignableRoles(actorRole).map((r) => ({ value: r, label: ROLE_LABELS[toUserRole(r)] }))
-  const isPending = savingRole || savingDetails
+  const isPending = savingRole || savingDetails || savingTeams
 
+  const sameTeams = (a: string[], b: string[]) => a.length === b.length && [...a].sort().join() === [...b].sort().join()
   const detailsChanged = name !== person.name || avatarFile !== null
-  const roleChanged = role !== person.role || (teamId || null) !== person.team_id || (service || null) !== person.service_type
+  const roleChanged = role !== person.role || (designation || null) !== person.designation_id || jobType !== person.job_type
+  const teamsChanged = !sameTeams(teamIds, currentTeamIds)
 
   const onPickAvatar = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -174,7 +214,10 @@ function EditDrawer({ person, actorRole, teams, serviceOptions, onClose }: {
         await saveDetails({ profileId: person.id, name: name.trim(), avatarUrl: person.avatar_url, avatarFile })
       }
       if (mayManage && roleChanged) {
-        await saveRole({ profileId: person.id, role, teamId: teamId || null, serviceType: service || null })
+        await saveRole({ profileId: person.id, role, designationId: designation || null, jobType })
+      }
+      if (mayManage && teamsChanged) {
+        await saveTeams({ profileId: person.id, teamIds })
       }
       if (preview) URL.revokeObjectURL(preview)
       toast('Changes saved', 'success')
@@ -192,7 +235,7 @@ function EditDrawer({ person, actorRole, teams, serviceOptions, onClose }: {
       footer={
         <div className="flex gap-2.5">
           <Button variant="ghost" size="sm" className="flex-1" onClick={onClose}>Cancel</Button>
-          <Button size="sm" className="flex-1" disabled={isPending || (!detailsChanged && !roleChanged)} onClick={save}>
+          <Button size="sm" className="flex-1" disabled={isPending || (!detailsChanged && !roleChanged && !teamsChanged)} onClick={save}>
             {isPending ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />} Save Changes
           </Button>
         </div>
@@ -229,14 +272,19 @@ function EditDrawer({ person, actorRole, teams, serviceOptions, onClose }: {
               <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Role</label>
               <Select value={role} onChange={setRole} options={roleOptions} />
             </div>
-            <div>
-              <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Team</label>
-              <Select value={teamId} onChange={setTeamId} options={[{ value: '', label: 'No team' }, ...teams.map((t) => ({ value: t.id, label: t.name }))]} />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Designation</label>
+                <Select value={designation} onChange={setDesignation} options={designationOptions} />
+              </div>
+              <div>
+                <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Job type</label>
+                <Select value={jobType} onChange={setJobType} options={JOB_TYPE_OPTIONS} />
+              </div>
             </div>
             <div>
-              <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Service</label>
-              <Select value={service} onChange={setService} options={serviceOptions} />
-              <p className="font-mono text-[10px] text-text-4 mt-1">A team assignment overrides this with the team's service.</p>
+              <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Teams</label>
+              <TeamPicker teams={teams} value={teamIds} onChange={setTeamIds} />
             </div>
           </section>
         ) : (
@@ -334,23 +382,38 @@ function PeopleViewToggle({ value, onChange }: { value: ViewMode; onChange: (val
   )
 }
 
-function TeamCell({ label }: { label: string | null }) {
-  if (!label) {
+function TeamsCell({ labels }: { labels: string[] }) {
+  if (labels.length === 0) {
     return <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-surface-inset border border-dashed border-border-default font-mono text-[10.5px] text-text-4">No team</span>
   }
+  const [first, ...rest] = labels
   return (
-    <span className="inline-flex max-w-[120px] items-center gap-1.5 px-2 py-0.5 rounded-full bg-surface-2 border border-border-subtle font-ui text-[11.5px] text-text-2">
+    <span className="inline-flex max-w-[140px] items-center gap-1.5 px-2 py-0.5 rounded-full bg-surface-2 border border-border-subtle font-ui text-[11.5px] text-text-2" title={labels.join(', ')}>
       <Users size={11} className="text-text-4 shrink-0" />
-      <span className="truncate">{label}</span>
+      <span className="truncate">{first}</span>
+      {rest.length > 0 && <span className="shrink-0 font-mono text-[10px] text-text-4">+{rest.length}</span>}
     </span>
   )
 }
 
-function ServiceCell({ service }: { service: string | null }) {
-  if (!service) {
-    return <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-surface-inset border border-dashed border-border-default font-mono text-[10.5px] text-text-4">No service</span>
-  }
-  return <ServiceChip service={service} />
+function JobTypeBadge({ jobType }: { jobType: string }) {
+  return (
+    <span className="inline-flex w-fit items-center gap-1 rounded-full bg-surface-inset border border-border-subtle px-1.5 py-0.5 font-mono text-[9.5px] uppercase tracking-wider text-text-3">
+      <MapPin size={9} className="text-text-4" />
+      {JOB_TYPE_LABELS[jobType] ?? jobType}
+    </span>
+  )
+}
+
+function DesignationCell({ name, jobType }: { name: string | null; jobType: string }) {
+  return (
+    <div className="flex min-w-0 flex-col gap-1">
+      {name
+        ? <span className="truncate font-ui text-[12px] font-medium text-text-1">{name}</span>
+        : <span className="font-mono text-[10.5px] text-text-4">No designation</span>}
+      <JobTypeBadge jobType={jobType} />
+    </div>
+  )
 }
 
 const STATUS_META: Record<AccountStatus, { label: string; cls: string }> = {
@@ -478,11 +541,12 @@ type RowActions = {
   onResend: () => void
 }
 
-function PersonTableRow({ person, myRole, myId, teamLabel, ...actions }: {
+function PersonTableRow({ person, myRole, myId, teamLabels, designationName, ...actions }: {
   person: Person
   myRole: string
   myId: string
-  teamLabel: string | null
+  teamLabels: string[]
+  designationName: string | null
 } & RowActions) {
   const inactiveBadge = !person.is_active && (
     <span className="rounded-full bg-error/10 px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-error">Inactive</span>
@@ -502,19 +566,20 @@ function PersonTableRow({ person, myRole, myId, teamLabel, ...actions }: {
         </div>
       </div>
       <RoleBadge role={toUserRole(person.role)} />
-      <TeamCell label={teamLabel} />
-      <ServiceCell service={person.service_type} />
+      <TeamsCell labels={teamLabels} />
+      <DesignationCell name={designationName} jobType={person.job_type} />
       <AccountStatusChip person={person} />
       <PersonActionsMenu person={person} myRole={myRole} myId={myId} {...actions} />
     </div>
   )
 }
 
-function PersonCard({ person, myRole, myId, teamLabel, ...actions }: {
+function PersonCard({ person, myRole, myId, teamLabels, designationName, ...actions }: {
   person: Person
   myRole: string
   myId: string
-  teamLabel: string | null
+  teamLabels: string[]
+  designationName: string | null
 } & RowActions) {
   const inactiveBadge = !person.is_active && (
     <span className="rounded-full bg-error/10 px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-error">Inactive</span>
@@ -545,19 +610,16 @@ function PersonCard({ person, myRole, myId, teamLabel, ...actions }: {
           <div className="flex items-center gap-2.5 rounded-md border border-border-subtle bg-surface-2/35 px-3 py-2.5">
             <BriefcaseBusiness size={14} className="shrink-0 text-text-4" />
             <div className="min-w-0">
-              <p className="font-mono text-[9.5px] font-semibold uppercase tracking-wider text-text-4">Team</p>
-              <p className="truncate font-ui text-[12.5px] font-semibold text-text-1">{teamLabel ?? 'No team'}</p>
+              <p className="font-mono text-[9.5px] font-semibold uppercase tracking-wider text-text-4">Teams</p>
+              <p className="truncate font-ui text-[12.5px] font-semibold text-text-1" title={teamLabels.join(', ')}>{teamLabels.length ? teamLabels.join(', ') : 'No team'}</p>
             </div>
           </div>
           <div className="flex items-center gap-2.5 rounded-md border border-border-subtle bg-surface-2/35 px-3 py-2.5">
-            <Layers size={14} className="shrink-0 text-text-4" />
+            <IdCard size={14} className="shrink-0 text-text-4" />
             <div className="min-w-0">
-              <p className="font-mono text-[9.5px] font-semibold uppercase tracking-wider text-text-4">Service</p>
-              {person.service_type ? (
-                <div className="mt-1"><ServiceChip service={person.service_type} className="py-0.5 px-2 text-[9.5px]" /></div>
-              ) : (
-                <p className="font-ui text-[12.5px] font-semibold text-text-4">No service</p>
-              )}
+              <p className="font-mono text-[9.5px] font-semibold uppercase tracking-wider text-text-4">Designation</p>
+              <p className="truncate font-ui text-[12.5px] font-semibold text-text-1">{designationName ?? 'None'}</p>
+              <div className="mt-1"><JobTypeBadge jobType={person.job_type} /></div>
             </div>
           </div>
         </div>
@@ -591,7 +653,8 @@ type ListProps = {
   people: Person[]
   myRole: string
   myId: string
-  teamName: Map<string, string>
+  teamsByProfile: Map<string, string[]>
+  designationName: Map<string, string>
   onEdit: (person: Person) => void
   onToggleActive: (person: Person) => void
   onDelete: (person: Person) => void
@@ -611,11 +674,11 @@ function rowActions(p: Person, l: ListProps): RowActions {
 }
 
 function PeopleTable(props: ListProps) {
-  const { people, myRole, myId, teamName } = props
+  const { people, myRole, myId, teamsByProfile, designationName } = props
   return (
     <div className="hidden overflow-visible rounded-lg border border-border-default bg-surface-1 shadow-[0_18px_50px_rgba(0,0,0,0.12)] lg:block">
       <div className={cn('grid gap-4 rounded-t-lg border-b border-border-subtle bg-surface-2 px-5 py-3', GRID_COLS)}>
-        {['Member', 'Role', 'Team', 'Service', 'Status', 'Actions'].map((h) => (
+        {['Member', 'Role', 'Teams', 'Designation', 'Status', 'Actions'].map((h) => (
           <span key={h} className={cn('font-mono text-[10px] uppercase tracking-wider text-text-4', h === 'Actions' && 'text-right')}>
             {h}
           </span>
@@ -631,7 +694,8 @@ function PeopleTable(props: ListProps) {
               person={p}
               myRole={myRole}
               myId={myId}
-              teamLabel={p.team_id ? teamName.get(p.team_id) ?? null : null}
+              teamLabels={teamsByProfile.get(p.id) ?? []}
+              designationName={p.designation_id ? designationName.get(p.designation_id) ?? null : null}
               {...rowActions(p, props)}
             />
           ))
@@ -642,7 +706,7 @@ function PeopleTable(props: ListProps) {
 }
 
 function PeopleCards(props: ListProps) {
-  const { people, myRole, myId, teamName } = props
+  const { people, myRole, myId, teamsByProfile, designationName } = props
   if (people.length === 0) {
     return (
       <div className="rounded-lg border border-border-default bg-surface-1">
@@ -659,7 +723,8 @@ function PeopleCards(props: ListProps) {
           person={p}
           myRole={myRole}
           myId={myId}
-          teamLabel={p.team_id ? teamName.get(p.team_id) ?? null : null}
+          teamLabels={teamsByProfile.get(p.id) ?? []}
+          designationName={p.designation_id ? designationName.get(p.designation_id) ?? null : null}
           {...rowActions(p, props)}
         />
       ))}
@@ -677,14 +742,15 @@ export default function PeoplePage() {
 
   const { data: people = [], isLoading } = usePeople()
   const { data: teams = [] } = useTeams()
-  const { data: services = [] } = useServices()
+  const { data: designations = [] } = useDesignations()
+  const { data: teamMembers = [] } = useTeamMembers()
   const { mutate: setActive } = useSetPersonActive()
   const { mutate: deleteUser } = useDeletePerson()
   const { mutate: resend } = useResendInvite()
 
-  const serviceOptions = useMemo(
-    () => [{ value: '', label: 'None' }, ...services.filter((s) => s.is_active).map((s) => ({ value: s.slug, label: s.name }))],
-    [services],
+  const designationOptions = useMemo(
+    () => [{ value: '', label: 'None' }, ...designations.filter((d) => d.is_active).map((d) => ({ value: d.id, label: d.name }))],
+    [designations],
   )
 
   const [search, setSearch] = useState('')
@@ -695,6 +761,25 @@ export default function PeoplePage() {
   const [passwordFor, setPasswordFor] = useState<Person | null>(null)
 
   const teamName = useMemo(() => new Map(teams.map((t) => [t.id, t.name])), [teams])
+  const designationName = useMemo(() => new Map(designations.map((d) => [d.id, d.name])), [designations])
+
+  // profileId → team ids, and the same resolved to team names for display.
+  const teamIdsByProfile = useMemo(() => {
+    const m = new Map<string, string[]>()
+    for (const tm of teamMembers) {
+      const list = m.get(tm.profile_id) ?? []
+      list.push(tm.team_id)
+      m.set(tm.profile_id, list)
+    }
+    return m
+  }, [teamMembers])
+  const teamsByProfile = useMemo(() => {
+    const m = new Map<string, string[]>()
+    for (const [pid, ids] of teamIdsByProfile) {
+      m.set(pid, ids.map((id) => teamName.get(id)).filter((n): n is string => !!n))
+    }
+    return m
+  }, [teamIdsByProfile, teamName])
 
   const filtered = people.filter((p) => {
     const q = search.toLowerCase()
@@ -755,21 +840,21 @@ export default function PeoplePage() {
         ) : (
           <>
             <div className="lg:hidden">
-              <PeopleCards people={filtered} myRole={myRole} myId={myId} teamName={teamName} onEdit={setEditing} onToggleActive={toggleActive} onDelete={removePerson} onChangePassword={setPasswordFor} onResend={resendInviteFor} />
+              <PeopleCards people={filtered} myRole={myRole} myId={myId} teamsByProfile={teamsByProfile} designationName={designationName} onEdit={setEditing} onToggleActive={toggleActive} onDelete={removePerson} onChangePassword={setPasswordFor} onResend={resendInviteFor} />
             </div>
             {viewMode === 'table' ? (
-              <PeopleTable people={filtered} myRole={myRole} myId={myId} teamName={teamName} onEdit={setEditing} onToggleActive={toggleActive} onDelete={removePerson} onChangePassword={setPasswordFor} onResend={resendInviteFor} />
+              <PeopleTable people={filtered} myRole={myRole} myId={myId} teamsByProfile={teamsByProfile} designationName={designationName} onEdit={setEditing} onToggleActive={toggleActive} onDelete={removePerson} onChangePassword={setPasswordFor} onResend={resendInviteFor} />
             ) : (
               <div className="hidden lg:block">
-                <PeopleCards people={filtered} myRole={myRole} myId={myId} teamName={teamName} onEdit={setEditing} onToggleActive={toggleActive} onDelete={removePerson} onChangePassword={setPasswordFor} onResend={resendInviteFor} />
+                <PeopleCards people={filtered} myRole={myRole} myId={myId} teamsByProfile={teamsByProfile} designationName={designationName} onEdit={setEditing} onToggleActive={toggleActive} onDelete={removePerson} onChangePassword={setPasswordFor} onResend={resendInviteFor} />
               </div>
             )}
           </>
         )}
       </div>
 
-      {inviteOpen && <InviteModal actorRole={myRole} teams={teams.map((t) => ({ id: t.id, name: t.name }))} serviceOptions={serviceOptions} onClose={() => setInviteOpen(false)} />}
-      {editing && <EditDrawer person={editing} actorRole={myRole} teams={teams.map((t) => ({ id: t.id, name: t.name }))} serviceOptions={serviceOptions} onClose={() => setEditing(null)} />}
+      {inviteOpen && <InviteModal actorRole={myRole} teams={teams.map((t) => ({ id: t.id, name: t.name }))} designationOptions={designationOptions} onClose={() => setInviteOpen(false)} />}
+      {editing && <EditDrawer person={editing} actorRole={myRole} teams={teams.map((t) => ({ id: t.id, name: t.name }))} designationOptions={designationOptions} currentTeamIds={teamIdsByProfile.get(editing.id) ?? []} onClose={() => setEditing(null)} />}
       {passwordFor && <ChangePasswordModal person={passwordFor} onClose={() => setPasswordFor(null)} />}
     </div>
   )

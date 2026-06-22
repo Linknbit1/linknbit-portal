@@ -63,6 +63,20 @@ Deno.serve(async (req: Request) => {
   if (record.profile_id !== profileId) return json({ error: 'Forbidden' }, 403)
   if (record.check_out) return json({ error: 'Already checked out', code: 'duplicate_checkout' }, 409)
 
+  // Per-job-type policy: when schedule enforcement is off, checkout is allowed at
+  // any time. Fall back to enforcing if the policy row is missing.
+  const { data: callerProfile } = await supabase
+    .from('profiles')
+    .select('job_type')
+    .eq('id', profileId)
+    .maybeSingle()
+  const { data: policyRow } = await supabase
+    .from('job_type_policies')
+    .select('enforce_schedule_window')
+    .eq('job_type', callerProfile?.job_type ?? 'on_site')
+    .maybeSingle()
+  const enforceSchedule = policyRow?.enforce_schedule_window ?? true
+
   // ── 5. Time validation ─────────────────────────────────────────────────────
   const tz = settings.timezone ?? 'Asia/Karachi'
   const now = new Date()
@@ -74,7 +88,7 @@ Deno.serve(async (req: Request) => {
   const [endH, endM] = settings.work_end_time.split(':').map(Number)
   const endMinutes   = endH * 60 + endM
 
-  const canCheckOut = localMinutes >= endMinutes
+  const canCheckOut = !enforceSchedule || localMinutes >= endMinutes
 
   // ── 6. Early departure exception check ────────────────────────────────────
   if (!canCheckOut) {

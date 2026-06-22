@@ -10,8 +10,10 @@ import { RoleBadge } from '../../components/shared/RoleBadge'
 import { useToast } from '../../components/ui/toast-context'
 import { useAuthContext } from '../../context/AuthContext'
 import { useTeams, useCreateTeam, useUpdateTeam } from '../../hooks/useTeams'
-import { usePeople, useUpdatePersonRole } from '../../hooks/usePeople'
+import { usePeople } from '../../hooks/usePeople'
 import { useServices } from '../../hooks/useServices'
+import { useDesignations } from '../../hooks/useDesignations'
+import { useTeamMembers, useAddTeamMember, useRemoveTeamMember } from '../../hooks/useTeamMembers'
 import type { Team } from '../../api/teams'
 import type { Person } from '../../api/people'
 import type { UserRole } from '../../types'
@@ -101,13 +103,13 @@ function AddMemberModal({ team, candidates, onClose }: {
   onClose: () => void
 }) {
   const toast = useToast()
-  const { mutate: assign, isPending } = useUpdatePersonRole()
+  const { mutate: addMember, isPending } = useAddTeamMember()
   const [selected, setSelected] = useState('')
 
   const add = () => {
     const person = candidates.find((p) => p.id === selected)
     if (!person) return
-    assign({ profileId: person.id, role: person.role, teamId: team.id, serviceType: null }, {
+    addMember({ teamId: team.id, profileId: person.id }, {
       onSuccess: () => { toast(`${person.name} added to ${team.name}`, 'success'); onClose() },
       onError: () => toast('Failed to add member', 'error'),
     })
@@ -140,29 +142,47 @@ export default function TeamsPage() {
   const { data: teams = [], isLoading } = useTeams()
   const { data: people = [] } = usePeople()
   const { data: services = [] } = useServices()
-  const { mutate: assign } = useUpdatePersonRole()
+  const { data: designations = [] } = useDesignations()
+  const { data: teamMembers = [] } = useTeamMembers()
+  const { mutate: removeFromTeam } = useRemoveTeamMember()
 
   const serviceOptions = useMemo(
     () => services.filter((s) => s.is_active).map((s) => ({ value: s.slug, label: s.name })),
     [services],
   )
+  const designationName = useMemo(() => new Map(designations.map((d) => [d.id, d.name])), [designations])
 
   const [teamModal, setTeamModal] = useState<Team | null | 'new'>(null)
   const [addTo, setAddTo] = useState<Team | null>(null)
 
+  const peopleById = useMemo(() => new Map(people.map((p) => [p.id, p])), [people])
+
+  // Many-to-many membership: resolve team_members rows to Person records per team.
   const membersByTeam = useMemo(() => {
     const map = new Map<string, Person[]>()
-    for (const p of people) {
-      if (!p.team_id) continue
-      const list = map.get(p.team_id) ?? []
-      list.push(p)
-      map.set(p.team_id, list)
+    for (const tm of teamMembers) {
+      const person = peopleById.get(tm.profile_id)
+      if (!person) continue
+      const list = map.get(tm.team_id) ?? []
+      list.push(person)
+      map.set(tm.team_id, list)
     }
     return map
-  }, [people])
+  }, [teamMembers, peopleById])
+
+  // Profile ids already in a given team — drives the "candidates" filter below.
+  const memberIdsByTeam = useMemo(() => {
+    const map = new Map<string, Set<string>>()
+    for (const tm of teamMembers) {
+      const set = map.get(tm.team_id) ?? new Set<string>()
+      set.add(tm.profile_id)
+      map.set(tm.team_id, set)
+    }
+    return map
+  }, [teamMembers])
 
   const removeMember = (team: Team, person: Person) => {
-    assign({ profileId: person.id, role: person.role, teamId: null, serviceType: person.service_type }, {
+    removeFromTeam({ teamId: team.id, profileId: person.id }, {
       onSuccess: () => toast(`${person.name} removed from ${team.name}`, 'success'),
       onError: () => toast('Failed to remove member', 'error'),
     })
@@ -185,8 +205,9 @@ export default function TeamsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
             {teams.map((team) => {
               const members = membersByTeam.get(team.id) ?? []
+              const memberIds = memberIdsByTeam.get(team.id) ?? new Set<string>()
               const lead = people.find((p) => p.id === team.lead_id)
-              const candidates = people.filter((p) => p.team_id !== team.id && p.is_active)
+              const candidates = people.filter((p) => !memberIds.has(p.id) && p.is_active)
               return (
                 <section
                   key={team.id}
@@ -283,7 +304,9 @@ export default function TeamsPage() {
                           </div>
                           <div className="mt-1 flex flex-wrap items-center gap-1.5">
                             <RoleBadge role={m.role as UserRole} />
-                            {m.service_type && <ServiceChip service={m.service_type} className="py-0.5 px-2 text-[9.5px]" />}
+                            {m.designation_id && designationName.get(m.designation_id) && (
+                              <span className="rounded-full bg-surface-inset border border-border-subtle px-2 py-0.5 font-ui text-[10px] text-text-2">{designationName.get(m.designation_id)}</span>
+                            )}
                           </div>
                         </div>
                         {canManage && (
@@ -313,7 +336,7 @@ export default function TeamsPage() {
       </div>
 
       {teamModal !== null && <TeamModal team={teamModal === 'new' ? null : teamModal} people={people} serviceOptions={serviceOptions} onClose={() => setTeamModal(null)} />}
-      {addTo && <AddMemberModal team={addTo} candidates={people.filter((p) => p.team_id !== addTo.id && p.is_active)} onClose={() => setAddTo(null)} />}
+      {addTo && <AddMemberModal team={addTo} candidates={people.filter((p) => !(memberIdsByTeam.get(addTo.id)?.has(p.id)) && p.is_active)} onClose={() => setAddTo(null)} />}
     </div>
   )
 }
