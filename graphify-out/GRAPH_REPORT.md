@@ -1,12 +1,12 @@
 # Graph Report - linknbit-portal  (2026-06-23)
 
 ## Corpus Check
-- 153 files · ~293,849 words
+- 153 files · ~294,105 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1444 nodes · 2058 edges · 37 communities detected
-- Extraction: 90% EXTRACTED · 10% INFERRED · 0% AMBIGUOUS · INFERRED: 197 edges (avg confidence: 0.8)
+- 1446 nodes · 2061 edges · 37 communities detected
+- Extraction: 90% EXTRACTED · 10% INFERRED · 0% AMBIGUOUS · INFERRED: 198 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Community Hubs (Navigation)
@@ -18,7 +18,7 @@
 - [[_COMMUNITY_Community 5|Community 5]]
 - [[_COMMUNITY_Community 6|Community 6]]
 - [[_COMMUNITY_Community 8|Community 8]]
-- [[_COMMUNITY_Community 9|Community 9]]
+- [[_COMMUNITY_Community 10|Community 10]]
 - [[_COMMUNITY_Community 11|Community 11]]
 - [[_COMMUNITY_Community 12|Community 12]]
 - [[_COMMUNITY_Community 13|Community 13]]
@@ -49,7 +49,7 @@
 - [[_COMMUNITY_Community 86|Community 86]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `select()` - 86 edges
+1. `select()` - 87 edges
 2. `$()` - 85 edges
 3. `toast()` - 77 edges
 4. `switchPanel()` - 42 edges
@@ -80,7 +80,7 @@ Nodes (197): $(), addCommentLink(), addImage(), addLink(), addReaction(), adminG
 
 ### Community 1 - "Community 1"
 Cohesion: 0.02
-Nodes (94): addWorkingSaturday(), adminCheckOut(), approveDevice(), checkOut(), createHoliday(), createHolidayRange(), createLeaveType(), deactivateDevice() (+86 more)
+Nodes (95): addWorkingSaturday(), adminCheckOut(), approveDevice(), checkOut(), createHoliday(), createHolidayRange(), createLeaveType(), deactivateDevice() (+87 more)
 
 ### Community 2 - "Community 2"
 Cohesion: 0.02
@@ -88,11 +88,11 @@ Nodes (104): Always-active conventions (every phase), code:block1 (Phase 0: Proj
 
 ### Community 3 - "Community 3"
 Cohesion: 0.02
-Nodes (83): **10\. Final Notes**, **1\. Overview**, **2\. Core Objectives**, **3\. Core Architecture Philosophy**, **4\. Service-Based System (Core Backbone)**, **5.1 Super Admin**, **5.2 Admin / Operations Manager**, **5.3 Project Manager** (+75 more)
+Nodes (97): 10. Row Level Security Policies, 11. SaaS Scalability, 1. Architecture Overview, 2. Role-Based Access Control, 3. Database Schema, 5. Discord Integration, 6. Real-time Strategy, 7. Audit Logging (+89 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.03
-Nodes (68): 11. SaaS Scalability, 1. Architecture Overview, 2. Role-Based Access Control, 3. Database Schema, 4. ClickUp Integration, 5. Discord Integration, 6. Real-time Strategy, 7. Audit Logging (+60 more)
+Cohesion: 0.02
+Nodes (83): **10\. Final Notes**, **1\. Overview**, **2\. Core Objectives**, **3\. Core Architecture Philosophy**, **4\. Service-Based System (Core Backbone)**, **5.1 Super Admin**, **5.2 Admin / Operations Manager**, **5.3 Project Manager** (+75 more)
 
 ### Community 5 - "Community 5"
 Cohesion: 0.05
@@ -106,49 +106,49 @@ Nodes (30): approve(), cn(), confirmDelete(), confirmReject(), deleteType(), exp
 Cohesion: 0.05
 Nodes (23): checkIn(), registerDevice(), bffFetch(), bffRefreshSession(), bffSignIn(), bffSignOut(), fetchActiveProfiles(), fetchProfile() (+15 more)
 
-### Community 9 - "Community 9"
-Cohesion: 0.05
-Nodes (42): 10. Row Level Security Policies, Attachments, Attendance, Audit Logs, Checklists & Checklist Items, ClickUp Status Mappings, Clients, code:sql (CREATE OR REPLACE FUNCTION current_user_role() RETURNS text ) (+34 more)
-
-### Community 11 - "Community 11"
+### Community 10 - "Community 10"
 Cohesion: 0.07
 Nodes (14): AttendancePage(), useAuthContext(), HomeRedirect(), PrivateRoute(), RoleGuard(), useSignIn(), useSignOut(), useCurrentDevice() (+6 more)
 
-### Community 12 - "Community 12"
+### Community 11 - "Community 11"
 Cohesion: 0.08
 Nodes (12): validateAvatarFile(), dcExport(), dcFlatten(), DCSection(), DesignCanvas(), onPickAvatar(), save(), add() (+4 more)
 
-### Community 13 - "Community 13"
+### Community 12 - "Community 12"
 Cohesion: 0.08
 Nodes (10): SalaryCard(), SalaryForm(), AddMemberModal(), TeamModal(), useToast(), useSalary(), useUpsertSalary(), useAddTeamMember() (+2 more)
 
-### Community 14 - "Community 14"
+### Community 13 - "Community 13"
 Cohesion: 0.07
 Nodes (27): Claude Design Prompt, code:md (Design a comprehensive UI design system for a product called), code:md (Using the Linknbit Unified Operations Portal design system, ), code:md (Using the Linknbit Unified Operations Portal design system, ), code:md (Using the Linknbit Unified Operations Portal design system, ), code:md (Using the Linknbit Unified Operations Portal design system, ), code:md (Design a comprehensive UI design system for a product called), code:md (Using the Linknbit Unified Operations Portal design system e) (+19 more)
 
-### Community 15 - "Community 15"
+### Community 14 - "Community 14"
 Cohesion: 0.13
 Nodes (22): **1.10 Special Shoutouts (Examples)**, **1.11 System Discipline & Participation Restrictions**, **1.12 System Rules Summary**, **1.13 Simple Understanding of System**, **1.14 Final Note**, **1.1 Purpose of the System**, **1.2 System Overview**, **1.3 Currency System (Link Points \- LP)** (+14 more)
 
-### Community 16 - "Community 16"
+### Community 15 - "Community 15"
 Cohesion: 0.09
 Nodes (10): formatRelativeTime(), grantLp(), asDifficulty(), difficultyMeta(), handleClaim(), handleGrant(), handleRedeem(), nameOf() (+2 more)
 
-### Community 17 - "Community 17"
+### Community 16 - "Community 16"
 Cohesion: 0.14
 Nodes (14): addColumn(), deleteColumn(), ensureProjectColumns(), refreshKanban(), renameColumn(), setColColor(), centerActiveTab(), confirm() (+6 more)
 
-### Community 18 - "Community 18"
+### Community 17 - "Community 17"
 Cohesion: 0.16
 Nodes (8): calcStreak(), canEditDetails(), canManagePeople(), canManageTarget(), canResendInvite(), canSetPassword(), has(), isUserRole()
 
-### Community 19 - "Community 19"
+### Community 18 - "Community 18"
 Cohesion: 0.12
 Nodes (13): Attendance, code:php (wp_insert_user([), code:php ([), code:php (current_user_can('manage_options')), code:php (current_user_can('linknbit_war_room_manage')), code:js (const apiRoot = window.linknbitWarRoomSettings.restUrl;), code:php (wp_localize_script('linknbit-war-room', 'linknbitWarRoomSett), Database (+5 more)
 
-### Community 20 - "Community 20"
+### Community 19 - "Community 19"
 Cohesion: 0.27
 Nodes (12): androidSplashIconSvg(), glyph(), main(), out(), png(), render(), splashSvg(), squareIcon() (+4 more)
+
+### Community 20 - "Community 20"
+Cohesion: 0.15
+Nodes (13): 4. ClickUp Integration, Bidirectional Sync Flow, Bootstrap Sync (Initial ClickUp Import), ClickUp Status Mapping, code:block6 (Portal action                           ClickUp action), code:typescript (// Inside clickup-webhook Edge Function), code:sql (-- Recursively mark all dependents as failed), code:block9 (POST https://api.clickup.com/api/v2/team/{team_id}/webhook) (+5 more)
 
 ### Community 21 - "Community 21"
 Cohesion: 0.24
@@ -245,14 +245,14 @@ Nodes (1): graphify
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `toast()` connect `Community 0` to `Community 1`, `Community 6`, `Community 42`, `Community 12`, `Community 45`, `Community 16`, `Community 17`, `Community 53`, `Community 23`, `Community 30`?**
+- **Why does `toast()` connect `Community 0` to `Community 1`, `Community 6`, `Community 42`, `Community 11`, `Community 45`, `Community 15`, `Community 16`, `Community 53`, `Community 23`, `Community 30`?**
   _High betweenness centrality (0.106) - this node is a cross-community bridge._
-- **Why does `update()` connect `Community 1` to `Community 8`, `Community 16`?**
-  _High betweenness centrality (0.076) - this node is a cross-community bridge._
+- **Why does `update()` connect `Community 1` to `Community 8`, `Community 15`?**
+  _High betweenness centrality (0.075) - this node is a cross-community bridge._
 - **Why does `handleAdd()` connect `Community 1` to `Community 0`?**
-  _High betweenness centrality (0.068) - this node is a cross-community bridge._
-- **Are the 84 inferred relationships involving `select()` (e.g. with `fetchLeaderboard()` and `fetchProfileDirectory()`) actually correct?**
-  _`select()` has 84 INFERRED edges - model-reasoned connections that need verification._
+  _High betweenness centrality (0.069) - this node is a cross-community bridge._
+- **Are the 85 inferred relationships involving `select()` (e.g. with `fetchLeaderboard()` and `fetchProfileDirectory()`) actually correct?**
+  _`select()` has 85 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 34 inferred relationships involving `toast()` (e.g. with `add()` and `handleRegister()`) actually correct?**
   _`toast()` has 34 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `graphify`, `Color Naming Convention`, `Typography` to the rest of the system?**

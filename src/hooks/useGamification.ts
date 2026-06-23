@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   fetchLeaderboard,
+  fetchGamificationParticipants,
   fetchProfileDirectory,
   fetchOpenQuestTasks,
   fetchAllQuestTasks,
@@ -59,6 +60,7 @@ export const GAMIFICATION_KEYS = {
   pointsLedger:     (profileId: string) => ['points_ledger', profileId] as const,
   lpHistory:        (profileId: string) => ['lp_history', profileId] as const,
   employeeOfMonth:  (year: number, month: number) => ['employee_of_month', year, month] as const,
+  participants:     () => ['gamification_participants'] as const,
 }
 
 // ── Leaderboard & directory ──────────────────────────────────────────────────────
@@ -69,6 +71,10 @@ export function useLeaderboard() {
 
 export function useProfileDirectory() {
   return useQuery({ queryKey: GAMIFICATION_KEYS.directory(), queryFn: fetchProfileDirectory, staleTime: 5 * 60_000 })
+}
+
+export function useGamificationParticipants() {
+  return useQuery({ queryKey: GAMIFICATION_KEYS.participants(), queryFn: fetchGamificationParticipants, staleTime: 30_000 })
 }
 
 // ── Quest board ──────────────────────────────────────────────────────────────────
@@ -366,7 +372,10 @@ export function useSetRestriction() {
   return useMutation({
     mutationFn: ({ profileId, restricted, reason }: { profileId: string; restricted: boolean; reason: string | null }) =>
       setParticipationRestriction(profileId, restricted, reason),
-    onSuccess: () => qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.leaderboard() }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.leaderboard() })
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.participants() })
+    },
   })
 }
 

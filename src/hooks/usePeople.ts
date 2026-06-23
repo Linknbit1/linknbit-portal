@@ -25,8 +25,8 @@ export function useInviteUser() {
 export function useUpdatePersonRole() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ profileId, role, designationId, jobType, allowedCheckIn }: { profileId: string; role: string; designationId: string | null; jobType: string; allowedCheckIn: string }) =>
-      updatePersonRole(profileId, role, designationId, jobType, allowedCheckIn),
+    mutationFn: ({ profileId, role, designationId, jobType, allowedCheckIn, attendanceExcluded }: { profileId: string; role: string; designationId: string | null; jobType: string; allowedCheckIn: string; attendanceExcluded: boolean }) =>
+      updatePersonRole(profileId, role, designationId, jobType, allowedCheckIn, attendanceExcluded),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: PEOPLE_KEYS.all })
       qc.invalidateQueries({ queryKey: ['teams'] })

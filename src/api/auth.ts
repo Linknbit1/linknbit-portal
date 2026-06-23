@@ -107,10 +107,10 @@ export async function fetchProfile(userId: string): Promise<ProfileRow | null> {
   return data
 }
 
-export async function fetchActiveProfiles(): Promise<Pick<ProfileRow, 'id' | 'name' | 'avatar_url' | 'allowed_check_in'>[]> {
+export async function fetchActiveProfiles(): Promise<Pick<ProfileRow, 'id' | 'name' | 'avatar_url' | 'allowed_check_in' | 'attendance_excluded'>[]> {
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, name, avatar_url, allowed_check_in')
+    .select('id, name, avatar_url, allowed_check_in, attendance_excluded')
     .eq('is_active', true)
     .not('role', 'in', '(client_owner,client_member)')
     .order('name', { ascending: true })

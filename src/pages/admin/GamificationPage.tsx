@@ -20,7 +20,7 @@ import {
   canGovernGamification, canRecognize, canFulfillPayouts, canParticipate,
 } from '../../lib/gamificationAccess'
 import {
-  useLeaderboard, useProfileDirectory,
+  useLeaderboard, useProfileDirectory, useGamificationParticipants,
   useAllQuestTasks, useMyClaims, useClaimsToReview,
   useClaimQuestTask, useSubmitQuestTask, useReviewQuestTask,
   useCreateQuestTask, useUpdateQuestTask, useDeleteQuestTask,
@@ -533,6 +533,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
 
   // Queries
   const { data: leaderboard = [], isLoading: lbLoading, error: lbError } = useLeaderboard()
+  const { data: participants = [] } = useGamificationParticipants()
   const { data: directory = {} } = useProfileDirectory()
   const { data: tasks = [], isLoading: tasksLoading } = useAllQuestTasks()
   const { data: myClaims = [] } = useMyClaims(profileId)
@@ -571,8 +572,10 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
   const { data: eotmSelected } = useEmployeeOfMonth(eotmSelYear, eotmSelMonth)
 
   // Derived
+  // Fall back to the auth profile so a restricted user (hidden from the leaderboard)
+  // still sees their own LP / reputation on their page.
   const me = leaderboard.find((e) => e.profile_id === profileId)
-  const myLP = me?.lp_balance ?? 0
+  const myLP = me?.lp_balance ?? profile?.lp_balance ?? 0
   const myReputation = me?.reputation_total ?? profile?.reputation_total ?? 0
   const taskMap = useMemo(() => new Map(tasks.map((t) => [t.id, t])), [tasks])
   const openTasks = useMemo(() => tasks.filter((t) => t.status === 'open'), [tasks])
@@ -1106,15 +1109,19 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
                 </div>
                 <div>
                   <h2 className="font-display font-bold text-[16px] text-text-1 flex items-center gap-2 mb-3"><ShieldAlert size={16} className="text-error" /> Participation</h2>
+                  <p className="font-mono text-[10.5px] text-text-4 mb-3">Excluded members are hidden from the leaderboard entirely. You can exclude yourself too.</p>
                   <div className="bg-surface-1 border border-border-default rounded-xl p-5 space-y-2 max-h-65 overflow-y-auto">
-                    {leaderboard.filter((e) => e.profile_id !== profileId).map((e) => (
+                    {participants.map((e) => (
                       <div key={e.profile_id} className="flex items-center justify-between gap-2">
-                        <span className="font-ui text-[12.5px] text-text-2 truncate">{e.name}</span>
+                        <span className="flex items-center gap-2 min-w-0">
+                          <Avatar name={e.name} src={e.avatar_url ?? undefined} size="xs" />
+                          <span className="font-ui text-[12.5px] text-text-2 truncate">{e.name}{e.profile_id === profileId && ' (you)'}</span>
+                        </span>
                         <button
-                          onClick={() => setRestriction({ profileId: e.profile_id, restricted: !e.is_restricted, reason: e.is_restricted ? null : 'Disciplinary' }, { onSuccess: () => toast(e.is_restricted ? 'Restriction lifted' : 'Participation restricted', 'success') })}
-                          className={cn('font-mono text-[10.5px] px-2 py-1 rounded-xs flex items-center gap-1', e.is_restricted ? 'text-error bg-error/10' : 'text-text-3 hover:text-error')}
+                          onClick={() => setRestriction({ profileId: e.profile_id, restricted: !e.is_restricted, reason: e.is_restricted ? null : 'Disciplinary' }, { onSuccess: () => toast(e.is_restricted ? 'Participation restored' : 'Excluded from gamification', 'success') })}
+                          className={cn('font-mono text-[10.5px] px-2 py-1 rounded-xs flex items-center gap-1 shrink-0', e.is_restricted ? 'text-error bg-error/10' : 'text-text-3 hover:text-error')}
                         >
-                          <Ban size={11} /> {e.is_restricted ? 'Restricted' : 'Restrict'}
+                          <Ban size={11} /> {e.is_restricted ? 'Excluded' : 'Exclude'}
                         </button>
                       </div>
                     ))}

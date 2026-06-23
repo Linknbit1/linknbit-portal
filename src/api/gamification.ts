@@ -32,6 +32,8 @@ export async function fetchLeaderboard(): Promise<LeaderboardEntry[]> {
     .from('profiles')
     .select('id, name, avatar_url, role, lp_balance, reputation_total, level, is_restricted')
     .eq('is_active', true)
+    // Employees excluded from gamification participation are hidden from the board entirely.
+    .eq('is_restricted', false)
     .not('role', 'in', '("client_owner","client_member")')
     .order('lp_balance', { ascending: false })
     .limit(50)
@@ -58,6 +60,28 @@ export async function fetchProfileDirectory(): Promise<ProfileDirectory> {
   const dir: ProfileDirectory = {}
   for (const p of data ?? []) dir[p.id] = { name: p.name, avatar_url: p.avatar_url }
   return dir
+}
+
+// All internal participants incl. restricted + the caller — drives the governor
+// Participation panel (the public leaderboard hides restricted, so it can't be used here).
+export interface GamificationParticipant {
+  profile_id: string
+  name: string
+  avatar_url: string | null
+  is_restricted: boolean
+}
+
+export async function fetchGamificationParticipants(): Promise<GamificationParticipant[]> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, name, avatar_url, is_restricted')
+    .eq('is_active', true)
+    .not('role', 'in', '("client_owner","client_member")')
+    .order('name', { ascending: true })
+  if (error) throw error
+  return (data ?? []).map((p) => ({
+    profile_id: p.id, name: p.name, avatar_url: p.avatar_url, is_restricted: p.is_restricted,
+  }))
 }
 
 // ── Quest Board ────────────────────────────────────────────────────────────────

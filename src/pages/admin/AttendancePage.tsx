@@ -235,7 +235,7 @@ function MarkModal({ onClose, dateFilter, editRecord = null }: MarkModalProps) {
                 value={profileId}
                 onChange={setProfileId}
                 placeholder="Select employee…"
-                options={people.map((p) => ({ value: p.id, label: p.name, avatar: { name: p.name, url: p.avatar_url } }))}
+                options={people.filter((p) => !p.attendance_excluded).map((p) => ({ value: p.id, label: p.name, avatar: { name: p.name, url: p.avatar_url } }))}
               />
             )}
           </div>
@@ -609,7 +609,7 @@ function GrantWfhModal({ open, onClose }: { open: boolean; onClose: () => void }
               value={profileId}
               onChange={setProfileId}
               placeholder="Select employee…"
-              options={people.map((p) => ({ value: p.id, label: p.name, avatar: { name: p.name, url: p.avatar_url } }))}
+              options={people.filter((p) => !p.attendance_excluded).map((p) => ({ value: p.id, label: p.name, avatar: { name: p.name, url: p.avatar_url } }))}
             />
           </div>
           <div>

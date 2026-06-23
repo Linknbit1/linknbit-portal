@@ -70,10 +70,15 @@ Deno.serve(async (req: Request) => {
 
   const { data: callerProfile } = await supabase
     .from('profiles')
-    .select('role, job_type, allowed_check_in')
+    .select('role, job_type, allowed_check_in, attendance_excluded')
     .eq('id', profileId)
     .maybeSingle()
   const privileged = callerProfile?.role === 'admin' || callerProfile?.role === 'super_admin'
+
+  // Employees exempt from attendance (e.g. CEO/COO) never check in.
+  if (callerProfile?.attendance_excluded) {
+    return json({ error: 'You are exempt from attendance and do not need to check in.', code: 'attendance_exempt' }, 403)
+  }
 
   // Per-job-type attendance policy (network gate + schedule-window enforcement).
   // Fall back to the strict on-site defaults if the row is missing.
