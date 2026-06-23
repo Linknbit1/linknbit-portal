@@ -27,7 +27,7 @@ import {
   useApprovedShoutouts, usePendingShoutouts, useGiveShoutout, useReviewShoutout,
   useRewards, useAllRewards, useCreateReward, useUpdateReward, useDeleteReward,
   useRedeemReward, useRedemptionQueue, useReviewRedemption,
-  useBadges, useMyBadgeAwards, useAwardBadge,
+  useBadges, useMyBadgeAwards,
   useEmployeeOfMonth, useSetEmployeeOfMonth, useDeleteEmployeeOfMonth,
   useGrantLp, useSetRestriction,
 } from '../../hooks/useGamification'
@@ -558,7 +558,6 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
   const { mutate: deleteTask } = useDeleteQuestTask()
   const { mutate: grantLp, isPending: granting } = useGrantLp(profileId)
   const { mutate: setRestriction } = useSetRestriction()
-  const { mutate: awardBadge } = useAwardBadge()
 
   // Employee of the Month
   const eotmPrev = previousMonth()
@@ -1120,23 +1119,6 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
                       </div>
                     ))}
                   </div>
-                </div>
-              </section>
-            )}
-
-            {/* Award badge (governors) */}
-            {isGovernor && (
-              <section>
-                <h2 className="font-display font-bold text-[16px] text-text-1 flex items-center gap-2 mb-3"><Award size={16} className="text-service-dev" /> Award a Badge</h2>
-                <div className="bg-surface-1 border border-border-default rounded-xl p-5 flex flex-wrap gap-2">
-                  {badges.filter((b) => b.criteria_type === 'manual').map((b) => (
-                    <div key={b.id} className="flex items-center gap-2 bg-surface-inset border border-border-default rounded-md px-3 py-2">
-                      <span className="text-[18px]">{b.icon}</span>
-                      <span className="font-ui text-[12.5px] text-text-2">{b.name}</span>
-                      <Select value="" onChange={(pid) => pid && awardBadge({ badgeId: b.id, profileId: pid }, { onSuccess: () => toast(`Awarded "${b.name}"`, 'success') })}
-                        options={[{ value: '', label: 'Award to…' }, ...leaderboard.map((e) => ({ value: e.profile_id, label: e.name, avatar: { name: e.name, url: e.avatar_url } }))]} />
-                    </div>
-                  ))}
                 </div>
               </section>
             )}
