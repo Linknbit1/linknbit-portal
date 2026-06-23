@@ -2,11 +2,14 @@ import { useState, useRef } from 'react'
 import { ChevronDown } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { Popover } from './Popover'
+import { Avatar } from './Avatar'
 
 export interface SelectOption {
   value: string
   label: string
   dot?: string
+  /** Optional avatar shown before the label (employee pickers). Falls back to initials. */
+  avatar?: { name: string; url?: string | null }
 }
 
 interface SelectProps {
@@ -38,6 +41,9 @@ export function Select({ value, onChange, options, placeholder, label, className
         )}
       >
         {label && <span className="text-text-3 font-ui font-medium">{label}</span>}
+        {selected?.avatar && (
+          <Avatar name={selected.avatar.name} src={selected.avatar.url ?? undefined} size="xs" />
+        )}
         {selected?.dot && (
           <span className="size-2 rounded-full shrink-0" style={{ background: selected.dot }} />
         )}
@@ -64,6 +70,9 @@ export function Select({ value, onChange, options, placeholder, label, className
               opt.value === value && 'bg-surface-3',
             )}
           >
+            {opt.avatar && (
+              <Avatar name={opt.avatar.name} src={opt.avatar.url ?? undefined} size="xs" />
+            )}
             {opt.dot && (
               <span className="size-2 rounded-full shrink-0" style={{ background: opt.dot }} />
             )}

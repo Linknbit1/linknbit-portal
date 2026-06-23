@@ -30,6 +30,7 @@ import {
   awardBadge,
   fetchEmployeeOfMonth,
   setEmployeeOfMonth,
+  deleteEmployeeOfMonth,
   fetchXpTransactions,
   fetchPointsLedger,
   grantLp,
@@ -315,7 +316,17 @@ export function useSetEmployeeOfMonth() {
       setEmployeeOfMonth(year, month, profileId, note),
     onSuccess: (_d, vars) => {
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.employeeOfMonth(vars.year, vars.month) })
-      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.myBadges(vars.profileId) })
+    },
+  })
+}
+
+export function useDeleteEmployeeOfMonth() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ year, month }: { year: number; month: number }) =>
+      deleteEmployeeOfMonth(year, month),
+    onSuccess: (_d, vars) => {
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.employeeOfMonth(vars.year, vars.month) })
     },
   })
 }
