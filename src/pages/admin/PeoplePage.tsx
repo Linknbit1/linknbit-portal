@@ -166,9 +166,10 @@ function InviteModal({ actorRole, teams, designationOptions, onClose }: {
 
 // ── Edit drawer ──────────────────────────────────────────────────────────────────
 
-function EditDrawer({ person, actorRole, teams, designationOptions, currentTeamIds, onClose }: {
+function EditDrawer({ person, actorRole, isSelf, teams, designationOptions, currentTeamIds, onClose }: {
   person: Person
   actorRole: string
+  isSelf: boolean
   teams: { id: string; name: string }[]
   designationOptions: Option[]
   currentTeamIds: string[]
@@ -277,7 +278,16 @@ function EditDrawer({ person, actorRole, teams, designationOptions, currentTeamI
             <h4 className="font-mono text-[10px] text-text-4 uppercase tracking-wider">Role & assignment</h4>
             <div>
               <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Role</label>
-              <Select value={role} onChange={setRole} options={roleOptions} />
+              {isSelf ? (
+                <>
+                  <div className="flex items-center gap-2 rounded-md border border-border-default bg-surface-inset px-3 py-2">
+                    <RoleBadge role={toUserRole(role)} />
+                  </div>
+                  <p className="font-mono text-[10px] text-text-4 mt-1">You can't change your own role.</p>
+                </>
+              ) : (
+                <Select value={role} onChange={setRole} options={roleOptions} />
+              )}
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -329,7 +339,7 @@ function EditDrawer({ person, actorRole, teams, designationOptions, currentTeamI
 
 function humanizeError(msg: string): string {
   if (msg.includes('forbidden_target') || msg.includes('forbidden_role') || msg.includes('forbidden')) return 'Not allowed for your role'
-  if (msg.includes('cannot_manage_self')) return "You can't change your own role"
+  if (msg.includes('cannot_manage_self') || msg.includes('cannot_change_own_role')) return "You can't change your own role"
   if (msg.includes('already_active')) return 'This user has already signed in'
   return msg
 }
@@ -882,7 +892,7 @@ export default function PeoplePage() {
       </div>
 
       {inviteOpen && <InviteModal actorRole={myRole} teams={teams.map((t) => ({ id: t.id, name: t.name }))} designationOptions={designationOptions} onClose={() => setInviteOpen(false)} />}
-      {editing && <EditDrawer person={editing} actorRole={myRole} teams={teams.map((t) => ({ id: t.id, name: t.name }))} designationOptions={designationOptions} currentTeamIds={teamIdsByProfile.get(editing.id) ?? []} onClose={() => setEditing(null)} />}
+      {editing && <EditDrawer person={editing} actorRole={myRole} isSelf={editing.id === myId} teams={teams.map((t) => ({ id: t.id, name: t.name }))} designationOptions={designationOptions} currentTeamIds={teamIdsByProfile.get(editing.id) ?? []} onClose={() => setEditing(null)} />}
       {passwordFor && <ChangePasswordModal person={passwordFor} onClose={() => setPasswordFor(null)} />}
     </div>
   )
