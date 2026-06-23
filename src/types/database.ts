@@ -814,6 +814,7 @@ export type Database = {
         Row: {
           age: number | null
           allowed_check_in: string | null
+          attendance_excluded: boolean
           avatar_url: string | null
           bio: string | null
           clickup_user_id: string | null
@@ -846,6 +847,7 @@ export type Database = {
         Insert: {
           age?: number | null
           allowed_check_in?: string | null
+          attendance_excluded?: boolean
           avatar_url?: string | null
           bio?: string | null
           clickup_user_id?: string | null
@@ -878,6 +880,7 @@ export type Database = {
         Update: {
           age?: number | null
           allowed_check_in?: string | null
+          attendance_excluded?: boolean
           avatar_url?: string | null
           bio?: string | null
           clickup_user_id?: string | null
@@ -1519,6 +1522,7 @@ export type Database = {
       admin_update_profile_role: {
         Args: {
           p_allowed_check_in?: string
+          p_attendance_excluded?: boolean
           p_designation_id?: string
           p_job_type?: string
           p_profile_id: string

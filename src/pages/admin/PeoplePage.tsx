@@ -193,6 +193,7 @@ function EditDrawer({ person, actorRole, teams, designationOptions, currentTeamI
   // Stored as a postgres `time` (HH:MM:SS); the picker works in HH:MM.
   const origAllowedCheckIn = person.allowed_check_in?.slice(0, 5) ?? ''
   const [allowedCheckIn, setAllowedCheckIn] = useState(origAllowedCheckIn)
+  const [attendanceExcluded, setAttendanceExcluded] = useState(person.attendance_excluded)
 
   const roleOptions = assignableRoles(actorRole).map((r) => ({ value: r, label: ROLE_LABELS[toUserRole(r)] }))
   const isPending = savingRole || savingDetails || savingTeams
@@ -201,6 +202,7 @@ function EditDrawer({ person, actorRole, teams, designationOptions, currentTeamI
   const detailsChanged = name !== person.name || avatarFile !== null
   const roleChanged = role !== person.role || (designation || null) !== person.designation_id
     || jobType !== person.job_type || allowedCheckIn !== origAllowedCheckIn
+    || attendanceExcluded !== person.attendance_excluded
   const teamsChanged = !sameTeams(teamIds, currentTeamIds)
 
   const onPickAvatar = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -219,7 +221,7 @@ function EditDrawer({ person, actorRole, teams, designationOptions, currentTeamI
         await saveDetails({ profileId: person.id, name: name.trim(), avatarUrl: person.avatar_url, avatarFile })
       }
       if (mayManage && roleChanged) {
-        await saveRole({ profileId: person.id, role, designationId: designation || null, jobType, allowedCheckIn })
+        await saveRole({ profileId: person.id, role, designationId: designation || null, jobType, allowedCheckIn, attendanceExcluded })
       }
       if (mayManage && teamsChanged) {
         await saveTeams({ profileId: person.id, teamIds })
@@ -304,6 +306,13 @@ function EditDrawer({ person, actorRole, teams, designationOptions, currentTeamI
                 )}
               </div>
               <p className="font-mono text-[10px] text-text-4 mt-1">If set, checking in at or before this time is on-time (grace period ignored). Empty = standard office rule.</p>
+            </div>
+            <div className="flex items-center justify-between gap-3 rounded-md border border-border-default bg-surface-inset px-3 py-2.5">
+              <div className="min-w-0">
+                <p className="font-ui text-[12.5px] font-semibold text-text-1">Exclude from attendance</p>
+                <p className="font-mono text-[10px] text-text-4 mt-0.5">Exempt (e.g. CEO/COO) — no check-in, hidden from attendance lists & reports.</p>
+              </div>
+              <Toggle checked={attendanceExcluded} onChange={setAttendanceExcluded} />
             </div>
           </section>
         ) : (
