@@ -1536,6 +1536,10 @@ export type Database = {
       can_recognize: { Args: never; Returns: boolean }
       claim_quest_task: { Args: { p_task_id: string }; Returns: string }
       current_user_role: { Args: never; Returns: string }
+      delete_employee_of_the_month: {
+        Args: { p_month: number; p_year: number }
+        Returns: undefined
+      }
       fn_auto_checkout_missing: { Args: never; Returns: undefined }
       fn_award_badges: { Args: { p_profile_id: string }; Returns: undefined }
       fn_is_working_day: { Args: { d: string }; Returns: boolean }

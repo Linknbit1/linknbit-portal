@@ -28,7 +28,7 @@ import {
   useRewards, useAllRewards, useCreateReward, useUpdateReward, useDeleteReward,
   useRedeemReward, useRedemptionQueue, useReviewRedemption,
   useBadges, useMyBadgeAwards, useAwardBadge,
-  useEmployeeOfMonth, useSetEmployeeOfMonth,
+  useEmployeeOfMonth, useSetEmployeeOfMonth, useDeleteEmployeeOfMonth,
   useGrantLp, useSetRestriction,
 } from '../../hooks/useGamification'
 import { formatRelativeTime } from '../../lib/utils'
@@ -161,7 +161,7 @@ function NoteDialog({ open, title, confirmLabel, danger, onClose, onConfirm, isP
 function ShoutoutModal({ open, onClose, recipients, profileId }: {
   open: boolean
   onClose: () => void
-  recipients: { id: string; name: string }[]
+  recipients: { id: string; name: string; avatarUrl?: string | null }[]
   profileId: string
 }) {
   const toast = useToast()
@@ -194,7 +194,7 @@ function ShoutoutModal({ open, onClose, recipients, profileId }: {
           <div>
             <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">To member</label>
             <Select value={toId} onChange={setToId}
-              options={[{ value: '', label: 'Select…' }, ...recipients.filter((r) => r.id !== profileId).map((r) => ({ value: r.id, label: r.name }))]} />
+              options={[{ value: '', label: 'Select…' }, ...recipients.filter((r) => r.id !== profileId).map((r) => ({ value: r.id, label: r.name, avatar: { name: r.name, url: r.avatarUrl } }))]} />
           </div>
           <div>
             <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Category</label>
@@ -564,6 +564,8 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
   const eotmPrev = previousMonth()
   const { data: eotmWinner } = useEmployeeOfMonth(eotmPrev.year, eotmPrev.month)
   const { mutate: setEotm, isPending: settingEotm } = useSetEmployeeOfMonth()
+  const { mutate: deleteEotm, isPending: deletingEotm } = useDeleteEmployeeOfMonth()
+  const [eotmDeleteOpen, setEotmDeleteOpen] = useState(false)
   const monthOptions = useMemo(() => recentMonthOptions(), [])
   const [eotmForm, setEotmForm] = useState({ period: monthOptions[0].value, profileId: '', note: '' })
   const [eotmSelYear, eotmSelMonth] = eotmForm.period.split('-').map(Number)
@@ -592,6 +594,16 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
       {
         onSuccess: () => { toast('Employee of the Month announced 🏆', 'success'); setEotmForm((f) => ({ ...f, profileId: '', note: '' })) },
         onError: () => toast('Could not set Employee of the Month', 'error'),
+      },
+    )
+  }
+
+  const handleDeleteEotm = () => {
+    deleteEotm(
+      { year: eotmSelYear, month: eotmSelMonth },
+      {
+        onSuccess: () => { toast('Employee of the Month removed', 'success'); setEotmDeleteOpen(false) },
+        onError: () => toast('Could not remove Employee of the Month', 'error'),
       },
     )
   }
@@ -1083,7 +1095,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
                 <div>
                   <h2 className="font-display font-bold text-[16px] text-text-1 flex items-center gap-2 mb-3"><Zap size={16} className="text-coin-gold" /> Grant LP</h2>
                   <div className="bg-surface-1 border border-border-default rounded-xl p-5 space-y-3.5">
-                    <Select value={grantId} onChange={setGrantId} options={[{ value: '', label: 'Select employee…' }, ...leaderboard.filter((e) => e.profile_id !== profileId).map((e) => ({ value: e.profile_id, label: e.name }))]} />
+                    <Select value={grantId} onChange={setGrantId} options={[{ value: '', label: 'Select employee…' }, ...leaderboard.filter((e) => e.profile_id !== profileId).map((e) => ({ value: e.profile_id, label: e.name, avatar: { name: e.name, url: e.avatar_url } }))]} />
                     <input type="number" min={1} value={grantAmount} onChange={(e) => setGrantAmount(e.target.value)} placeholder="LP amount"
                       className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-ui text-text-1 outline-none focus:border-border-focus" />
                     <textarea value={grantReason} onChange={(e) => setGrantReason(e.target.value)} rows={2} placeholder="Reason *"
@@ -1122,7 +1134,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
                       <span className="text-[18px]">{b.icon}</span>
                       <span className="font-ui text-[12.5px] text-text-2">{b.name}</span>
                       <Select value="" onChange={(pid) => pid && awardBadge({ badgeId: b.id, profileId: pid }, { onSuccess: () => toast(`Awarded "${b.name}"`, 'success') })}
-                        options={[{ value: '', label: 'Award to…' }, ...leaderboard.map((e) => ({ value: e.profile_id, label: e.name }))]} />
+                        options={[{ value: '', label: 'Award to…' }, ...leaderboard.map((e) => ({ value: e.profile_id, label: e.name, avatar: { name: e.name, url: e.avatar_url } }))]} />
                     </div>
                   ))}
                 </div>
@@ -1142,18 +1154,47 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
                     <div className="flex flex-col gap-1.5">
                       <label className="text-label font-ui font-semibold text-text-2 uppercase tracking-wider">Employee</label>
                       <Select value={eotmForm.profileId} onChange={(v) => setEotmForm((f) => ({ ...f, profileId: v }))}
-                        options={[{ value: '', label: 'Select employee…' }, ...leaderboard.map((e) => ({ value: e.profile_id, label: e.name }))]} />
+                        options={[{ value: '', label: 'Select employee…' }, ...leaderboard.map((e) => ({ value: e.profile_id, label: e.name, avatar: { name: e.name, url: e.avatar_url } }))]} />
                     </div>
                   </div>
                   <Input label="Citation (optional)" value={eotmForm.note} onChange={(e) => setEotmForm((f) => ({ ...f, note: e.target.value }))} placeholder="Why they earned it…" />
+
+                  {/* Current winner for the selected month — edit (prefill) or remove a mistake. */}
                   {eotmSelected && (
-                    <p className="font-mono text-[11px] text-text-4">
-                      Current winner for {monthLabel(eotmSelYear, eotmSelMonth)}: <span className="text-text-2">{nameOf(eotmSelected.profile_id)}</span>. Saving replaces it.
-                    </p>
+                    eotmDeleteOpen ? (
+                      <div className="flex items-center justify-between gap-3 rounded-md border border-error/30 bg-error/5 px-3 py-2.5">
+                        <span className="font-ui text-[12px] text-text-2">Remove {nameOf(eotmSelected.profile_id)} as winner for {monthLabel(eotmSelYear, eotmSelMonth)}?</span>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button onClick={() => setEotmDeleteOpen(false)} className="font-mono text-[10.5px] text-text-3">Cancel</button>
+                          <button onClick={handleDeleteEotm} disabled={deletingEotm} className="font-mono text-[10.5px] font-bold text-error">Remove</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between gap-3 rounded-md border border-border-default bg-surface-inset px-3 py-2.5">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <Avatar name={nameOf(eotmSelected.profile_id)} src={directory[eotmSelected.profile_id]?.avatar_url ?? undefined} size="sm" />
+                          <div className="min-w-0">
+                            <p className="font-mono text-[10px] text-coin-gold uppercase tracking-wider">Winner · {monthLabel(eotmSelYear, eotmSelMonth)}</p>
+                            <p className="font-ui text-[12.5px] font-semibold text-text-1 truncate">{nameOf(eotmSelected.profile_id)}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <button onClick={() => setEotmForm((f) => ({ ...f, profileId: eotmSelected.profile_id, note: eotmSelected.note ?? '' }))}
+                            className="flex items-center gap-1 rounded-sm px-2 py-1 font-mono text-[10.5px] text-text-3 hover:text-text-1" title="Edit">
+                            <Pencil size={12} /> Edit
+                          </button>
+                          <button onClick={() => setEotmDeleteOpen(true)}
+                            className="flex items-center gap-1 rounded-sm px-2 py-1 font-mono text-[10.5px] text-text-4 hover:text-error" title="Remove">
+                            <Trash2 size={12} /> Remove
+                          </button>
+                        </div>
+                      </div>
+                    )
                   )}
+
                   <div className="flex justify-end">
                     <Button size="sm" disabled={!eotmForm.profileId || settingEotm} onClick={handleSetEotm}>
-                      {settingEotm ? <Loader2 size={13} className="animate-spin" /> : <Trophy size={13} />} Announce winner
+                      {settingEotm ? <Loader2 size={13} className="animate-spin" /> : <Trophy size={13} />} {eotmSelected ? 'Save winner' : 'Announce winner'}
                     </Button>
                   </div>
                 </div>
@@ -1164,7 +1205,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
       </div>
 
       {/* Modals */}
-      <ShoutoutModal open={shoutoutOpen} onClose={() => setShoutoutOpen(false)} recipients={leaderboard.map((e) => ({ id: e.profile_id, name: e.name }))} profileId={profileId} />
+      <ShoutoutModal open={shoutoutOpen} onClose={() => setShoutoutOpen(false)} recipients={leaderboard.map((e) => ({ id: e.profile_id, name: e.name, avatarUrl: e.avatar_url }))} profileId={profileId} />
       {taskModal !== null && <QuestTaskModal task={taskModal === 'new' ? null : taskModal} actorId={profileId} onClose={() => setTaskModal(null)} />}
       {rewardModalOpen && <RewardModal actorId={profileId} onClose={() => setRewardModalOpen(false)} />}
       {submitTarget && <SubmitProofModal claim={submitTarget} taskTitle={taskMap.get(submitTarget.task_id)?.title ?? 'Task'} profileId={profileId} onClose={() => setSubmitTarget(null)} />}

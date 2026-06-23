@@ -359,6 +359,15 @@ export async function setEmployeeOfMonth(
   if (error) throw error
 }
 
+/** Governors only (RLS-enforced): remove a month's winner (chosen by mistake). */
+export async function deleteEmployeeOfMonth(year: number, month: number): Promise<void> {
+  const { error } = await supabase.rpc('delete_employee_of_the_month', {
+    p_year: year,
+    p_month: month,
+  })
+  if (error) throw error
+}
+
 // ── LP ledger, grants, restriction, monthly history ─────────────────────────────
 
 export async function fetchXpTransactions(profileId: string): Promise<XpTransactionRow[]> {

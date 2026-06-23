@@ -121,7 +121,7 @@ export function PointsHistory({ myProfileId, isGovernor, people, selfSummary }: 
   const level = person?.level ?? (isSelf ? selfSummary.level : null)
 
   const peopleOptions = useMemo(
-    () => people.map((p) => ({ value: p.profile_id, label: p.profile_id === myProfileId ? `${p.name} (you)` : p.name })),
+    () => people.map((p) => ({ value: p.profile_id, label: p.profile_id === myProfileId ? `${p.name} (you)` : p.name, avatar: { name: p.name, url: p.avatar_url } })),
     [people, myProfileId],
   )
 

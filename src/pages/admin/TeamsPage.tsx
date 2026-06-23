@@ -43,7 +43,7 @@ function TeamModal({ team, people, serviceOptions, onClose }: {
   // lead selectable even if their role later changed, so editing doesn't drop it.
   const leadOptions = useMemo(() => {
     const eligible = people.filter((p) => p.role === 'team_lead')
-    const opts = [{ value: '', label: 'No lead' }, ...eligible.map((p) => ({ value: p.id, label: p.name }))]
+    const opts = [{ value: '', label: 'No lead' }, ...eligible.map((p) => ({ value: p.id, label: p.name, avatar: { name: p.name, url: p.avatar_url } }))]
     if (team?.lead_id && !eligible.some((p) => p.id === team.lead_id)) {
       const cur = people.find((p) => p.id === team.lead_id)
       if (cur) opts.splice(1, 0, { value: cur.id, label: `${cur.name} (current)` })
@@ -121,7 +121,7 @@ function AddMemberModal({ team, candidates, onClose }: {
           <h3 className="font-display font-bold text-[16px] text-text-1">Add to {team.name}</h3>
           <button onClick={onClose} className="text-text-4 hover:text-text-1"><X size={18} /></button>
         </div>
-        <Select value={selected} onChange={setSelected} options={[{ value: '', label: 'Select member…' }, ...candidates.map((p) => ({ value: p.id, label: p.name }))]} />
+        <Select value={selected} onChange={setSelected} options={[{ value: '', label: 'Select member…' }, ...candidates.map((p) => ({ value: p.id, label: p.name, avatar: { name: p.name, url: p.avatar_url } }))]} />
         <div className="flex gap-2.5 mt-4">
           <Button variant="ghost" size="sm" className="flex-1" onClick={onClose}>Cancel</Button>
           <Button size="sm" className="flex-1" disabled={!selected || isPending} onClick={add}>
