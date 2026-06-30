@@ -61,6 +61,15 @@ const difficultyMeta = (d: string) => DIFFICULTY_META[asDifficulty(d)]
 
 const lp = (n: number) => `${n.toLocaleString()} LP`
 
+// Visual treatment for a claimant's progress on the quest board.
+const CLAIM_STATUS_META: Record<string, { label: string; dot: string; text: string }> = {
+  claimed:   { label: 'In progress', dot: 'bg-service-dev',  text: 'text-service-dev' },
+  submitted: { label: 'In review',   dot: 'bg-warning',      text: 'text-warning' },
+  approved:  { label: 'Completed',   dot: 'bg-success',      text: 'text-success' },
+}
+const claimStatusMeta = (s: string) =>
+  CLAIM_STATUS_META[s] ?? { label: s, dot: 'bg-text-4', text: 'text-text-3' }
+
 // ── Employee of the Month helpers ──────────────────────────────────────────────────
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -867,13 +876,37 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
                           : <Button size="sm" disabled={!isParticipant || claiming} onClick={() => handleClaim(t.id)}>{claiming ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />} Claim</Button>}
                       </div>
                       {t.deadline && <p className="font-mono text-[10px] text-text-4 mt-2">Due {new Date(t.deadline).toLocaleDateString()}</p>}
-                      <div className="mt-3 pt-3 border-t border-border-subtle flex items-center justify-between gap-2">
-                        {claimed.length > 0 ? (
-                          <AvatarGroup users={claimed.map((c) => ({ id: c.claim_id, name: c.name, avatarUrl: c.avatar_url }))} max={4} size="xs" />
+                      <div className="mt-3 pt-3 border-t border-border-subtle">
+                        <div className="flex items-center justify-between gap-2 mb-2">
+                          <span className="font-mono text-[10px] uppercase tracking-wider text-text-4">Claimed by</span>
+                          <span className={cn('font-mono text-[10px] shrink-0', claimed.length >= t.max_claims ? 'text-warning' : 'text-text-3')}>
+                            {claimed.length} / {t.max_claims} {claimed.length >= t.max_claims ? '· full' : 'slots'}
+                          </span>
+                        </div>
+                        {/* Capacity meter — filled slots vs total */}
+                        <div className="flex gap-1 mb-2.5">
+                          {Array.from({ length: t.max_claims }).map((_, i) => (
+                            <span key={i} className={cn('h-1 flex-1 rounded-full', i < claimed.length ? 'bg-coin-gold' : 'bg-surface-3')} />
+                          ))}
+                        </div>
+                        {claimed.length === 0 ? (
+                          <p className="font-ui text-[11px] text-text-4 italic">No one has claimed this yet.</p>
                         ) : (
-                          <span className="font-mono text-[10px] text-text-4">No claims yet</span>
+                          <ul className="space-y-1.5">
+                            {claimed.map((c) => {
+                              const cs = claimStatusMeta(c.status)
+                              return (
+                                <li key={c.claim_id} className="flex items-center gap-2">
+                                  <Avatar name={c.name} src={c.avatar_url ?? undefined} size="xs" />
+                                  <span className="font-ui text-[12px] text-text-2 truncate flex-1">{c.name}</span>
+                                  <span className={cn('flex items-center gap-1 font-mono text-[9.5px] uppercase tracking-wide shrink-0', cs.text)}>
+                                    <span className={cn('size-1.5 rounded-full', cs.dot)} />{cs.label}
+                                  </span>
+                                </li>
+                              )
+                            })}
+                          </ul>
                         )}
-                        <span className="font-mono text-[10px] text-text-3 shrink-0">{claimed.length} / {t.max_claims} claimed</span>
                       </div>
                     </div>
                   )
