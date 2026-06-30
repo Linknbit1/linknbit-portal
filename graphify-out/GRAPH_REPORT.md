@@ -1,11 +1,11 @@
 # Graph Report - linknbit-portal  (2026-06-30)
 
 ## Corpus Check
-- 153 files · ~294,434 words
+- 153 files · ~294,603 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1448 nodes · 2063 edges · 37 communities detected
+- 1449 nodes · 2064 edges · 36 communities detected
 - Extraction: 90% EXTRACTED · 10% INFERRED · 0% AMBIGUOUS · INFERRED: 198 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
@@ -17,8 +17,8 @@
 - [[_COMMUNITY_Community 4|Community 4]]
 - [[_COMMUNITY_Community 5|Community 5]]
 - [[_COMMUNITY_Community 6|Community 6]]
-- [[_COMMUNITY_Community 8|Community 8]]
-- [[_COMMUNITY_Community 10|Community 10]]
+- [[_COMMUNITY_Community 7|Community 7]]
+- [[_COMMUNITY_Community 9|Community 9]]
 - [[_COMMUNITY_Community 11|Community 11]]
 - [[_COMMUNITY_Community 12|Community 12]]
 - [[_COMMUNITY_Community 13|Community 13]]
@@ -37,16 +37,15 @@
 - [[_COMMUNITY_Community 28|Community 28]]
 - [[_COMMUNITY_Community 30|Community 30]]
 - [[_COMMUNITY_Community 31|Community 31]]
-- [[_COMMUNITY_Community 34|Community 34]]
+- [[_COMMUNITY_Community 32|Community 32]]
 - [[_COMMUNITY_Community 35|Community 35]]
 - [[_COMMUNITY_Community 37|Community 37]]
 - [[_COMMUNITY_Community 39|Community 39]]
 - [[_COMMUNITY_Community 40|Community 40]]
 - [[_COMMUNITY_Community 42|Community 42]]
 - [[_COMMUNITY_Community 45|Community 45]]
-- [[_COMMUNITY_Community 46|Community 46]]
-- [[_COMMUNITY_Community 53|Community 53]]
-- [[_COMMUNITY_Community 86|Community 86]]
+- [[_COMMUNITY_Community 52|Community 52]]
+- [[_COMMUNITY_Community 85|Community 85]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `select()` - 87 edges
@@ -76,7 +75,7 @@
 
 ### Community 0 - "Community 0"
 Cohesion: 0.03
-Nodes (197): $(), addCommentLink(), addImage(), addLink(), addReaction(), adminGiveShoutout(), attendanceCheckState(), attendanceStatusMeta() (+189 more)
+Nodes (199): handleCheckIn(), handleCheckOut(), $(), addCommentLink(), addImage(), addLink(), addReaction(), adminGiveShoutout() (+191 more)
 
 ### Community 1 - "Community 1"
 Cohesion: 0.02
@@ -88,11 +87,11 @@ Nodes (104): Always-active conventions (every phase), code:block1 (Phase 0: Proj
 
 ### Community 3 - "Community 3"
 Cohesion: 0.02
-Nodes (97): 10. Row Level Security Policies, 11. SaaS Scalability, 1. Architecture Overview, 2. Role-Based Access Control, 3. Database Schema, 5. Discord Integration, 6. Real-time Strategy, 7. Audit Logging (+89 more)
+Nodes (83): **10\. Final Notes**, **1\. Overview**, **2\. Core Objectives**, **3\. Core Architecture Philosophy**, **4\. Service-Based System (Core Backbone)**, **5.1 Super Admin**, **5.2 Admin / Operations Manager**, **5.3 Project Manager** (+75 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.02
-Nodes (83): **10\. Final Notes**, **1\. Overview**, **2\. Core Objectives**, **3\. Core Architecture Philosophy**, **4\. Service-Based System (Core Backbone)**, **5.1 Super Admin**, **5.2 Admin / Operations Manager**, **5.3 Project Manager** (+75 more)
+Cohesion: 0.03
+Nodes (68): 11. SaaS Scalability, 1. Architecture Overview, 2. Role-Based Access Control, 3. Database Schema, 4. ClickUp Integration, 5. Discord Integration, 6. Real-time Strategy, 7. Audit Logging (+60 more)
 
 ### Community 5 - "Community 5"
 Cohesion: 0.05
@@ -102,41 +101,41 @@ Nodes (58): AI Collaboration Rules, API keys, Applying migrations, Approval Flow
 Cohesion: 0.04
 Nodes (30): approve(), cn(), confirmDelete(), confirmReject(), deleteType(), exportCsv(), fmtDate(), fmtRange() (+22 more)
 
-### Community 8 - "Community 8"
+### Community 7 - "Community 7"
 Cohesion: 0.05
-Nodes (23): checkIn(), registerDevice(), bffFetch(), bffRefreshSession(), bffSignIn(), bffSignOut(), fetchActiveProfiles(), fetchProfile() (+15 more)
+Nodes (22): checkIn(), registerDevice(), bffFetch(), bffRefreshSession(), bffSignIn(), bffSignOut(), fetchActiveProfiles(), fetchProfile() (+14 more)
 
-### Community 10 - "Community 10"
+### Community 9 - "Community 9"
+Cohesion: 0.05
+Nodes (42): 10. Row Level Security Policies, Attachments, Attendance, Audit Logs, Checklists & Checklist Items, ClickUp Status Mappings, Clients, code:sql (CREATE OR REPLACE FUNCTION current_user_role() RETURNS text ) (+34 more)
+
+### Community 11 - "Community 11"
 Cohesion: 0.07
 Nodes (14): AttendancePage(), useAuthContext(), HomeRedirect(), PrivateRoute(), RoleGuard(), useSignIn(), useSignOut(), useCurrentDevice() (+6 more)
 
-### Community 11 - "Community 11"
+### Community 12 - "Community 12"
 Cohesion: 0.08
 Nodes (12): validateAvatarFile(), dcExport(), dcFlatten(), DCSection(), DesignCanvas(), onPickAvatar(), save(), add() (+4 more)
 
-### Community 12 - "Community 12"
+### Community 13 - "Community 13"
 Cohesion: 0.08
 Nodes (10): SalaryCard(), SalaryForm(), AddMemberModal(), TeamModal(), useToast(), useSalary(), useUpsertSalary(), useAddTeamMember() (+2 more)
 
-### Community 13 - "Community 13"
+### Community 14 - "Community 14"
 Cohesion: 0.07
 Nodes (27): Claude Design Prompt, code:md (Design a comprehensive UI design system for a product called), code:md (Using the Linknbit Unified Operations Portal design system, ), code:md (Using the Linknbit Unified Operations Portal design system, ), code:md (Using the Linknbit Unified Operations Portal design system, ), code:md (Using the Linknbit Unified Operations Portal design system, ), code:md (Design a comprehensive UI design system for a product called), code:md (Using the Linknbit Unified Operations Portal design system e) (+19 more)
-
-### Community 14 - "Community 14"
-Cohesion: 0.13
-Nodes (22): **1.10 Special Shoutouts (Examples)**, **1.11 System Discipline & Participation Restrictions**, **1.12 System Rules Summary**, **1.13 Simple Understanding of System**, **1.14 Final Note**, **1.1 Purpose of the System**, **1.2 System Overview**, **1.3 Currency System (Link Points \- LP)** (+14 more)
 
 ### Community 15 - "Community 15"
 Cohesion: 0.09
 Nodes (10): formatRelativeTime(), grantLp(), asDifficulty(), difficultyMeta(), handleClaim(), handleGrant(), handleRedeem(), nameOf() (+2 more)
 
 ### Community 16 - "Community 16"
-Cohesion: 0.14
-Nodes (14): addColumn(), deleteColumn(), ensureProjectColumns(), refreshKanban(), renameColumn(), setColColor(), centerActiveTab(), confirm() (+6 more)
+Cohesion: 0.13
+Nodes (22): **1.10 Special Shoutouts (Examples)**, **1.11 System Discipline & Participation Restrictions**, **1.12 System Rules Summary**, **1.13 Simple Understanding of System**, **1.14 Final Note**, **1.1 Purpose of the System**, **1.2 System Overview**, **1.3 Currency System (Link Points \- LP)** (+14 more)
 
 ### Community 17 - "Community 17"
-Cohesion: 0.16
-Nodes (8): calcStreak(), canEditDetails(), canManagePeople(), canManageTarget(), canResendInvite(), canSetPassword(), has(), isUserRole()
+Cohesion: 0.14
+Nodes (14): addColumn(), deleteColumn(), ensureProjectColumns(), refreshKanban(), renameColumn(), setColColor(), centerActiveTab(), confirm() (+6 more)
 
 ### Community 18 - "Community 18"
 Cohesion: 0.12
@@ -147,8 +146,8 @@ Cohesion: 0.27
 Nodes (12): androidSplashIconSvg(), glyph(), main(), out(), png(), render(), splashSvg(), squareIcon() (+4 more)
 
 ### Community 20 - "Community 20"
-Cohesion: 0.15
-Nodes (13): 4. ClickUp Integration, Bidirectional Sync Flow, Bootstrap Sync (Initial ClickUp Import), ClickUp Status Mapping, code:block6 (Portal action                           ClickUp action), code:typescript (// Inside clickup-webhook Edge Function), code:sql (-- Recursively mark all dependents as failed), code:block9 (POST https://api.clickup.com/api/v2/team/{team_id}/webhook) (+5 more)
+Cohesion: 0.22
+Nodes (9): deletePerson(), fetchPeople(), fetchSalary(), functionErrorMessage(), inviteUser(), resendInvite(), setUserPassword(), uploadPersonAvatar() (+1 more)
 
 ### Community 21 - "Community 21"
 Cohesion: 0.24
@@ -182,13 +181,13 @@ Nodes (1): sendComment()
 Cohesion: 0.47
 Nodes (6): renderAdminTeams(), renderEmpTeams(), renderSprintCards(), renderSprintStats(), renderSprintTeamTabs(), renderTeamCards()
 
-### Community 34 - "Community 34"
-Cohesion: 0.6
-Nodes (5): canFulfillPayouts(), canGovernGamification(), canParticipate(), canRecognize(), has()
-
-### Community 35 - "Community 35"
+### Community 32 - "Community 32"
 Cohesion: 0.33
 Nodes (2): itemCls(), cn()
+
+### Community 35 - "Community 35"
+Cohesion: 0.6
+Nodes (5): canFulfillPayouts(), canGovernGamification(), canParticipate(), canRecognize(), has()
 
 ### Community 37 - "Community 37"
 Cohesion: 0.33
@@ -208,17 +207,13 @@ Nodes (1): handleRegister()
 
 ### Community 45 - "Community 45"
 Cohesion: 0.5
-Nodes (2): handleCheckIn(), handleCheckOut()
-
-### Community 46 - "Community 46"
-Cohesion: 0.5
 Nodes (3): Answer, Q: Why does cn() connect Community 0 to Community 1, Community 10, Community 3, and Community 5?, Source Nodes
 
-### Community 53 - "Community 53"
+### Community 52 - "Community 52"
 Cohesion: 0.67
 Nodes (1): handleSync()
 
-### Community 86 - "Community 86"
+### Community 85 - "Community 85"
 Cohesion: 1.0
 Nodes (1): graphify
 
@@ -229,26 +224,24 @@ Nodes (1): graphify
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 30`** (7 nodes): `TaskDetailPage.tsx`, `addSubtask()`, `formatDate()`, `formatRelTime()`, `getInitials()`, `sendComment()`, `toggleSubtask()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 35`** (6 nodes): `itemCls()`, `cn()`, `FileTypeIcon()`, `formatDate()`, `BottomTabBar.tsx`, `FilesPage.tsx`
+- **Thin community `Community 32`** (6 nodes): `itemCls()`, `cn()`, `FileTypeIcon()`, `formatDate()`, `BottomTabBar.tsx`, `FilesPage.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 40`** (5 nodes): `usePwaInstall.ts`, `emit()`, `isIos()`, `isStandalone()`, `usePwaInstall()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 42`** (4 nodes): `fmtDate()`, `handleRegister()`, `statusMeta()`, `MyDevicesCard.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 45`** (4 nodes): `formatTime()`, `handleCheckIn()`, `handleCheckOut()`, `DashboardPage.tsx`
+- **Thin community `Community 52`** (3 nodes): `cn()`, `handleSync()`, `ClickUpPage.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 53`** (3 nodes): `cn()`, `handleSync()`, `ClickUpPage.tsx`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 86`** (2 nodes): `AGENTS.md`, `graphify`
+- **Thin community `Community 85`** (2 nodes): `AGENTS.md`, `graphify`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `toast()` connect `Community 0` to `Community 1`, `Community 6`, `Community 42`, `Community 11`, `Community 45`, `Community 15`, `Community 16`, `Community 53`, `Community 23`, `Community 30`?**
-  _High betweenness centrality (0.110) - this node is a cross-community bridge._
-- **Why does `update()` connect `Community 1` to `Community 8`, `Community 15`?**
-  _High betweenness centrality (0.078) - this node is a cross-community bridge._
+- **Why does `toast()` connect `Community 0` to `Community 1`, `Community 6`, `Community 42`, `Community 12`, `Community 15`, `Community 17`, `Community 52`, `Community 23`, `Community 30`?**
+  _High betweenness centrality (0.113) - this node is a cross-community bridge._
+- **Why does `update()` connect `Community 1` to `Community 15`, `Community 7`?**
+  _High betweenness centrality (0.079) - this node is a cross-community bridge._
 - **Why does `handleAdd()` connect `Community 1` to `Community 0`?**
   _High betweenness centrality (0.068) - this node is a cross-community bridge._
 - **Are the 85 inferred relationships involving `select()` (e.g. with `fetchLeaderboard()` and `fetchProfileDirectory()`) actually correct?**
