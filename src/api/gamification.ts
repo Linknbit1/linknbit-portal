@@ -136,6 +136,12 @@ export async function fetchQuestClaimants(): Promise<QuestClaimant[]> {
   return data ?? []
 }
 
+// Recognizers remove an employee's (non-approved) claim — e.g. a wrong-quest mistake.
+export async function releaseQuestClaim(claimId: string): Promise<void> {
+  const { error } = await supabase.rpc('release_quest_claim', { p_claim_id: claimId })
+  if (error) throw error
+}
+
 export async function createQuestTask(
   task: Pick<QuestTaskRow, 'title' | 'description' | 'difficulty' | 'lp_value' | 'max_claims' | 'requires_proof' | 'deadline'>,
   createdBy: string,
