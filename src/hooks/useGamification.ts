@@ -8,6 +8,7 @@ import {
   fetchMyClaims,
   fetchClaimsToReview,
   fetchQuestClaimants,
+  releaseQuestClaim,
   createQuestTask,
   updateQuestTask,
   deleteQuestTask,
@@ -104,6 +105,19 @@ export function useClaimsToReview() {
 // Who claimed which quest — identity only, visible to all internal staff.
 export function useQuestClaimants() {
   return useQuery({ queryKey: GAMIFICATION_KEYS.questClaimants(), queryFn: fetchQuestClaimants, staleTime: 15_000 })
+}
+
+// Recognizer removes an employee's claim (frees the slot).
+export function useReleaseQuestClaim() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (claimId: string) => releaseQuestClaim(claimId),
+    onSuccess: () => {
+      // Prefix-invalidate every claim query (mine / review / claimants) + task lists.
+      qc.invalidateQueries({ queryKey: ['quest_claims'] })
+      qc.invalidateQueries({ queryKey: ['quest_tasks'] })
+    },
+  })
 }
 
 export function useCreateQuestTask(actorId: string) {

@@ -1577,6 +1577,7 @@ export type Database = {
         Args: { p_profile_id: string; p_reward_id: string }
         Returns: string
       }
+      release_quest_claim: { Args: { p_claim_id: string }; Returns: undefined }
       review_quest_task: {
         Args: { p_approve: boolean; p_claim_id: string; p_note?: string }
         Returns: undefined

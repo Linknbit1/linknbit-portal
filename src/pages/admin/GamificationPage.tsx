@@ -22,7 +22,7 @@ import {
 import {
   useLeaderboard, useProfileDirectory, useGamificationParticipants,
   useAllQuestTasks, useMyClaims, useClaimsToReview, useQuestClaimants,
-  useClaimQuestTask, useSubmitQuestTask, useReviewQuestTask,
+  useClaimQuestTask, useSubmitQuestTask, useReviewQuestTask, useReleaseQuestClaim,
   useCreateQuestTask, useUpdateQuestTask, useDeleteQuestTask,
   useApprovedShoutouts, usePendingShoutouts, useGiveShoutout, useReviewShoutout,
   useRewards, useAllRewards, useCreateReward, useUpdateReward, useDeleteReward,
@@ -534,6 +534,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
   const [submitTarget, setSubmitTarget] = useState<QuestTaskClaimRow | null>(null)
   const [review, setReview] = useState<{ kind: 'task' | 'shoutout' | 'redeem'; id: string; approve: boolean; action?: 'approve' | 'reject' | 'fulfill'; label: string; danger?: boolean } | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
+  const [confirmReleaseClaim, setConfirmReleaseClaim] = useState<string | null>(null)
 
   // Grant LP form
   const [grantId, setGrantId] = useState('')
@@ -567,6 +568,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
   const { mutate: updateReward } = useUpdateReward()
   const { mutate: deleteReward, isPending: deletingReward } = useDeleteReward()
   const { mutate: deleteTask } = useDeleteQuestTask()
+  const { mutate: releaseClaim, isPending: releasingClaim } = useReleaseQuestClaim()
   const { mutate: grantLp, isPending: granting } = useGrantLp(profileId)
   const { mutate: setRestriction } = useSetRestriction()
 
@@ -637,6 +639,14 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
         : e.message.includes('task_full') ? 'This task is full'
         : e.message.includes('task_expired') ? 'This task has expired'
         : 'Could not claim task', 'error'),
+  })
+
+  const handleReleaseClaim = (claimId: string, name: string) => releaseClaim(claimId, {
+    onSuccess: () => { toast(`Removed ${name}'s claim`, 'success'); setConfirmReleaseClaim(null) },
+    onError: (e) => toast(
+      e.message.includes('claim_already_approved') ? 'Approved claims can’t be removed'
+        : e.message.includes('forbidden') ? 'You don’t have permission to do this'
+        : 'Could not remove claim', 'error'),
   })
 
   const handleRedeem = () => {
@@ -866,7 +876,12 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
                     <div key={t.id} className="bg-surface-1 border border-border-default rounded-xl p-5 flex flex-col">
                       <div className="flex items-start justify-between mb-2 gap-2">
                         <h4 className="font-display font-bold text-body/tight text-text-1">{t.title}</h4>
-                        <span className={cn('font-mono text-[9px] px-1.5 py-0.5 rounded-xs uppercase shrink-0', meta.cls)}>{meta.label}</span>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <span className={cn('font-mono text-[9px] px-1.5 py-0.5 rounded-xs uppercase', meta.cls)}>{meta.label}</span>
+                          {isRecognizer && (
+                            <button onClick={() => setTaskModal(t)} title="Edit quest" className="p-1 -mr-1 text-text-4 hover:text-text-1 transition-colors"><Pencil size={12} /></button>
+                          )}
+                        </div>
                       </div>
                       <p className="font-ui text-[12.5px] text-text-2 mb-3 leading-snug flex-1">{t.description}</p>
                       <div className="flex items-center justify-between">
@@ -899,9 +914,22 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
                                 <li key={c.claim_id} className="flex items-center gap-2">
                                   <Avatar name={c.name} src={c.avatar_url ?? undefined} size="xs" />
                                   <span className="font-ui text-[12px] text-text-2 truncate flex-1">{c.name}</span>
-                                  <span className={cn('flex items-center gap-1 font-mono text-[9.5px] uppercase tracking-wide shrink-0', cs.text)}>
-                                    <span className={cn('size-1.5 rounded-full', cs.dot)} />{cs.label}
-                                  </span>
+                                  {confirmReleaseClaim === c.claim_id ? (
+                                    <span className="flex items-center gap-1.5 shrink-0">
+                                      <button disabled={releasingClaim} onClick={() => handleReleaseClaim(c.claim_id, c.name)} className="font-mono text-[10px] text-error font-bold">Remove</button>
+                                      <span className="text-text-4 text-[10px]">/</span>
+                                      <button onClick={() => setConfirmReleaseClaim(null)} className="font-mono text-[10px] text-text-3">Cancel</button>
+                                    </span>
+                                  ) : (
+                                    <>
+                                      <span className={cn('flex items-center gap-1 font-mono text-[9.5px] uppercase tracking-wide shrink-0', cs.text)}>
+                                        <span className={cn('size-1.5 rounded-full', cs.dot)} />{cs.label}
+                                      </span>
+                                      {isRecognizer && c.status !== 'approved' && (
+                                        <button onClick={() => setConfirmReleaseClaim(c.claim_id)} title={`Remove ${c.name}'s claim`} className="p-0.5 text-text-4 hover:text-error transition-colors shrink-0"><X size={12} /></button>
+                                      )}
+                                    </>
+                                  )}
                                 </li>
                               )
                             })}
