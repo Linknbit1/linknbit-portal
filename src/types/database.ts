@@ -1550,6 +1550,18 @@ export type Database = {
       fn_mark_absent_for_date: { Args: { d: string }; Returns: undefined }
       fn_mark_absent_today: { Args: never; Returns: undefined }
       fn_monthly_lp_reset: { Args: never; Returns: undefined }
+      get_quest_claimants: {
+        Args: never
+        Returns: {
+          avatar_url: string
+          claim_id: string
+          claimed_at: string
+          name: string
+          profile_id: string
+          status: string
+          task_id: string
+        }[]
+      }
       give_shoutout: {
         Args: {
           p_category: string

@@ -1,11 +1,13 @@
 import { supabase } from '../lib/supabase'
-import type { Tables, TablesInsert, TablesUpdate } from '../types/database'
+import type { Database, Tables, TablesInsert, TablesUpdate } from '../types/database'
 
 export type XpTransactionRow    = Tables<'xp_transactions'>
 export type RewardRow           = Tables<'rewards'>
 export type RewardRedemptionRow = Tables<'reward_redemptions'>
 export type QuestTaskRow        = Tables<'quest_tasks'>
 export type QuestTaskClaimRow   = Tables<'quest_task_claims'>
+// Identity-only claim view (no proof) visible to all internal staff.
+export type QuestClaimant       = Database['public']['Functions']['get_quest_claimants']['Returns'][number]
 export type ShoutoutRow         = Tables<'shoutouts'>
 export type BadgeRow            = Tables<'badges'>
 export type BadgeAwardRow       = Tables<'badge_awards'>
@@ -124,6 +126,14 @@ export async function fetchClaimsToReview(): Promise<QuestTaskClaimRow[]> {
     .order('submitted_at', { ascending: true })
   if (error) throw error
   return data
+}
+
+// Active claimants (claimed/submitted/approved) across all tasks — identity only,
+// visible to every internal staff member via the get_quest_claimants RPC.
+export async function fetchQuestClaimants(): Promise<QuestClaimant[]> {
+  const { data, error } = await supabase.rpc('get_quest_claimants')
+  if (error) throw error
+  return data ?? []
 }
 
 export async function createQuestTask(

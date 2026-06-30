@@ -7,6 +7,7 @@ import {
   fetchAllQuestTasks,
   fetchMyClaims,
   fetchClaimsToReview,
+  fetchQuestClaimants,
   createQuestTask,
   updateQuestTask,
   deleteQuestTask,
@@ -48,6 +49,7 @@ export const GAMIFICATION_KEYS = {
   questTasksAll:    () => ['quest_tasks', 'all'] as const,
   myClaims:         (profileId: string) => ['quest_claims', 'mine', profileId] as const,
   claimsToReview:   () => ['quest_claims', 'review'] as const,
+  questClaimants:   () => ['quest_claims', 'claimants'] as const,
   shoutoutsFeed:    () => ['shoutouts', 'approved'] as const,
   shoutoutsPending: () => ['shoutouts', 'pending'] as const,
   rewards:          () => ['rewards'] as const,
@@ -99,6 +101,11 @@ export function useClaimsToReview() {
   return useQuery({ queryKey: GAMIFICATION_KEYS.claimsToReview(), queryFn: fetchClaimsToReview, staleTime: 15_000 })
 }
 
+// Who claimed which quest — identity only, visible to all internal staff.
+export function useQuestClaimants() {
+  return useQuery({ queryKey: GAMIFICATION_KEYS.questClaimants(), queryFn: fetchQuestClaimants, staleTime: 15_000 })
+}
+
 export function useCreateQuestTask(actorId: string) {
   const qc = useQueryClient()
   return useMutation({
@@ -140,6 +147,7 @@ export function useClaimQuestTask(profileId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.myClaims(profileId) })
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.questTasksOpen() })
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.questClaimants() })
     },
   })
 }
@@ -152,6 +160,7 @@ export function useSubmitQuestTask(profileId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.myClaims(profileId) })
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.claimsToReview() })
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.questClaimants() })
     },
   })
 }
@@ -163,6 +172,7 @@ export function useReviewQuestTask() {
       reviewQuestTask(claimId, approve, note),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.claimsToReview() })
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.questClaimants() })
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.leaderboard() })
     },
   })

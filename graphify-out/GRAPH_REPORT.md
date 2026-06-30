@@ -1,11 +1,11 @@
-# Graph Report - linknbit-portal  (2026-06-23)
+# Graph Report - linknbit-portal  (2026-06-30)
 
 ## Corpus Check
-- 153 files · ~294,146 words
+- 153 files · ~294,434 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1446 nodes · 2061 edges · 37 communities detected
+- 1448 nodes · 2063 edges · 37 communities detected
 - Extraction: 90% EXTRACTED · 10% INFERRED · 0% AMBIGUOUS · INFERRED: 198 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
@@ -37,7 +37,7 @@
 - [[_COMMUNITY_Community 28|Community 28]]
 - [[_COMMUNITY_Community 30|Community 30]]
 - [[_COMMUNITY_Community 31|Community 31]]
-- [[_COMMUNITY_Community 32|Community 32]]
+- [[_COMMUNITY_Community 34|Community 34]]
 - [[_COMMUNITY_Community 35|Community 35]]
 - [[_COMMUNITY_Community 37|Community 37]]
 - [[_COMMUNITY_Community 39|Community 39]]
@@ -182,13 +182,13 @@ Nodes (1): sendComment()
 Cohesion: 0.47
 Nodes (6): renderAdminTeams(), renderEmpTeams(), renderSprintCards(), renderSprintStats(), renderSprintTeamTabs(), renderTeamCards()
 
-### Community 32 - "Community 32"
-Cohesion: 0.33
-Nodes (2): itemCls(), cn()
-
-### Community 35 - "Community 35"
+### Community 34 - "Community 34"
 Cohesion: 0.6
 Nodes (5): canFulfillPayouts(), canGovernGamification(), canParticipate(), canRecognize(), has()
+
+### Community 35 - "Community 35"
+Cohesion: 0.33
+Nodes (2): itemCls(), cn()
 
 ### Community 37 - "Community 37"
 Cohesion: 0.33
@@ -229,7 +229,7 @@ Nodes (1): graphify
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 30`** (7 nodes): `TaskDetailPage.tsx`, `addSubtask()`, `formatDate()`, `formatRelTime()`, `getInitials()`, `sendComment()`, `toggleSubtask()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 32`** (6 nodes): `itemCls()`, `cn()`, `FileTypeIcon()`, `formatDate()`, `BottomTabBar.tsx`, `FilesPage.tsx`
+- **Thin community `Community 35`** (6 nodes): `itemCls()`, `cn()`, `FileTypeIcon()`, `formatDate()`, `BottomTabBar.tsx`, `FilesPage.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 40`** (5 nodes): `usePwaInstall.ts`, `emit()`, `isIos()`, `isStandalone()`, `usePwaInstall()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
@@ -246,11 +246,11 @@ Nodes (1): graphify
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `toast()` connect `Community 0` to `Community 1`, `Community 6`, `Community 42`, `Community 11`, `Community 45`, `Community 15`, `Community 16`, `Community 53`, `Community 23`, `Community 30`?**
-  _High betweenness centrality (0.106) - this node is a cross-community bridge._
+  _High betweenness centrality (0.110) - this node is a cross-community bridge._
 - **Why does `update()` connect `Community 1` to `Community 8`, `Community 15`?**
-  _High betweenness centrality (0.075) - this node is a cross-community bridge._
+  _High betweenness centrality (0.078) - this node is a cross-community bridge._
 - **Why does `handleAdd()` connect `Community 1` to `Community 0`?**
-  _High betweenness centrality (0.069) - this node is a cross-community bridge._
+  _High betweenness centrality (0.068) - this node is a cross-community bridge._
 - **Are the 85 inferred relationships involving `select()` (e.g. with `fetchLeaderboard()` and `fetchProfileDirectory()`) actually correct?**
   _`select()` has 85 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 34 inferred relationships involving `toast()` (e.g. with `add()` and `handleRegister()`) actually correct?**

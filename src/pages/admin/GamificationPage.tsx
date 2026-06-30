@@ -7,7 +7,7 @@ import {
 import { Topbar } from '../../components/layout/Topbar'
 import { HubRow } from '../../components/layout/MobileHub'
 import { useIsDesktop } from '../../hooks/useMediaQuery'
-import { Avatar } from '../../components/ui/Avatar'
+import { Avatar, AvatarGroup } from '../../components/ui/Avatar'
 import { Button } from '../../components/ui/Button'
 import { Tabs } from '../../components/ui/Tabs'
 import { Select } from '../../components/ui/Select'
@@ -21,7 +21,7 @@ import {
 } from '../../lib/gamificationAccess'
 import {
   useLeaderboard, useProfileDirectory, useGamificationParticipants,
-  useAllQuestTasks, useMyClaims, useClaimsToReview,
+  useAllQuestTasks, useMyClaims, useClaimsToReview, useQuestClaimants,
   useClaimQuestTask, useSubmitQuestTask, useReviewQuestTask,
   useCreateQuestTask, useUpdateQuestTask, useDeleteQuestTask,
   useApprovedShoutouts, usePendingShoutouts, useGiveShoutout, useReviewShoutout,
@@ -537,6 +537,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
   const { data: directory = {} } = useProfileDirectory()
   const { data: tasks = [], isLoading: tasksLoading } = useAllQuestTasks()
   const { data: myClaims = [] } = useMyClaims(profileId)
+  const { data: claimants = [] } = useQuestClaimants()
   const { data: rewards = [], isLoading: rwLoading } = useRewards()
   const { data: badges = [] } = useBadges()
   const { data: myAwards = [] } = useMyBadgeAwards(profileId)
@@ -580,6 +581,16 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
   const taskMap = useMemo(() => new Map(tasks.map((t) => [t.id, t])), [tasks])
   const openTasks = useMemo(() => tasks.filter((t) => t.status === 'open'), [tasks])
   const myClaimByTask = useMemo(() => new Map(myClaims.map((c) => [c.task_id, c])), [myClaims])
+  // task_id → who claimed it (identity only), for the "Claimed by" rows.
+  const claimantsByTask = useMemo(() => {
+    const m = new Map<string, typeof claimants>()
+    for (const c of claimants) {
+      const list = m.get(c.task_id)
+      if (list) list.push(c)
+      else m.set(c.task_id, [c])
+    }
+    return m
+  }, [claimants])
   const earnedBadgeIds = useMemo(() => new Set(myAwards.map((a) => a.badge_id)), [myAwards])
   const nameOf = (id: string) => directory[id]?.name ?? '—'
   const rewardName = (id: string) => allRewards.find((r) => r.id === id)?.name ?? rewards.find((r) => r.id === id)?.name ?? 'Reward'
@@ -841,6 +852,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
                 {openTasks.map((t) => {
                   const mine = myClaimByTask.get(t.id)
                   const meta = difficultyMeta(t.difficulty)
+                  const claimed = claimantsByTask.get(t.id) ?? []
                   return (
                     <div key={t.id} className="bg-surface-1 border border-border-default rounded-xl p-5 flex flex-col">
                       <div className="flex items-start justify-between mb-2 gap-2">
@@ -855,6 +867,14 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
                           : <Button size="sm" disabled={!isParticipant || claiming} onClick={() => handleClaim(t.id)}>{claiming ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />} Claim</Button>}
                       </div>
                       {t.deadline && <p className="font-mono text-[10px] text-text-4 mt-2">Due {new Date(t.deadline).toLocaleDateString()}</p>}
+                      <div className="mt-3 pt-3 border-t border-border-subtle flex items-center justify-between gap-2">
+                        {claimed.length > 0 ? (
+                          <AvatarGroup users={claimed.map((c) => ({ id: c.claim_id, name: c.name, avatarUrl: c.avatar_url }))} max={4} size="xs" />
+                        ) : (
+                          <span className="font-mono text-[10px] text-text-4">No claims yet</span>
+                        )}
+                        <span className="font-mono text-[10px] text-text-3 shrink-0">{claimed.length} / {t.max_claims} claimed</span>
+                      </div>
                     </div>
                   )
                 })}
@@ -1036,11 +1056,19 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
                 </div>
                 <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
                   {tasks.length === 0 && <div className="px-5 py-8 text-center text-text-4 font-ui text-[13px]">No tasks yet.</div>}
-                  {tasks.map((t) => (
-                    <div key={t.id} className="grid grid-cols-[1fr_90px_80px_120px] gap-3 items-center px-5 py-3 border-b border-border-subtle last:border-0">
+                  {tasks.map((t) => {
+                    const claimed = claimantsByTask.get(t.id) ?? []
+                    return (
+                    <div key={t.id} className="grid grid-cols-[1fr_90px_80px_140px_120px] gap-3 items-center px-5 py-3 border-b border-border-subtle last:border-0">
                       <div className="min-w-0"><p className="font-ui font-semibold text-[13px] text-text-1 truncate">{t.title}</p><p className="font-mono text-[11px] text-text-3 capitalize">{t.difficulty}</p></div>
                       <span className="font-mono text-[12px] text-coin-gold font-bold">+{lp(t.lp_value)}</span>
                       <span className={cn('font-mono text-[10px] px-1.5 py-0.5 rounded-xs w-fit', t.status === 'open' ? 'text-success bg-success/10' : 'text-text-4 bg-surface-2')}>{t.status}</span>
+                      <div className="flex items-center gap-2 min-w-0" title={claimed.map((c) => c.name).join(', ')}>
+                        {claimed.length > 0
+                          ? <AvatarGroup users={claimed.map((c) => ({ id: c.claim_id, name: c.name, avatarUrl: c.avatar_url }))} max={3} size="xs" />
+                          : <span className="font-mono text-[10px] text-text-4">—</span>}
+                        <span className="font-mono text-[10px] text-text-3 shrink-0">{claimed.length}/{t.max_claims}</span>
+                      </div>
                       {confirmDelete === t.id ? (
                         <div className="flex items-center gap-1.5">
                           <button onClick={() => { deleteTask(t.id, { onSuccess: () => toast('Task deleted', 'success') }); setConfirmDelete(null) }} className="font-mono text-[10.5px] text-error font-bold">Confirm</button>
@@ -1054,7 +1082,8 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
                         </div>
                       )}
                     </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </section>
             )}
