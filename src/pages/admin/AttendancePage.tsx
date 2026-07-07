@@ -3173,7 +3173,7 @@ function SettingsForm({ settings }: { settings: AttendanceSettings }) {
           <h4 className="font-display font-semibold text-[13px] text-text-2">Gamification & Network</h4>
 
           <div>
-            <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">LP for Early / On-Time Check-In</label>
+            <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">XP for Early / On-Time Check-In</label>
             <input
               type="number"
               min={0}
@@ -3182,7 +3182,7 @@ function SettingsForm({ settings }: { settings: AttendanceSettings }) {
               className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-mono text-text-1 outline-none focus:border-border-focus"
             />
             <p className="text-[11px] font-ui text-text-4 mt-1">
-              Link Points awarded automatically when an employee checks in by start time + grace (status “Present”).
+              Experience Points awarded automatically when an employee checks in by start time + grace (status “Present”).
             </p>
           </div>
 

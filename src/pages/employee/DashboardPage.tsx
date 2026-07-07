@@ -534,7 +534,7 @@ export default function EmployeeDashboardPage() {
                 <span className="text-2xl">🪙</span>
                 <div>
                   <p className="font-display font-bold text-h3 text-coin-gold leading-none">{ME.coins}</p>
-                  <p className="text-caption text-text-3 font-ui mt-1">Link Points available</p>
+                  <p className="text-caption text-text-3 font-ui mt-1">XP available</p>
                 </div>
               </div>
               <Link to="/employee/rewards">

@@ -59,7 +59,7 @@ const asDifficulty = (d: string | null | undefined): 'easy' | 'medium' | 'hard' 
 
 const difficultyMeta = (d: string) => DIFFICULTY_META[asDifficulty(d)]
 
-const lp = (n: number) => `${n.toLocaleString()} LP`
+const lp = (n: number) => `${n.toLocaleString()} XP`
 
 // Visual treatment for a claimant's progress on the quest board.
 const CLAIM_STATUS_META: Record<string, { label: string; dot: string; text: string }> = {
@@ -115,7 +115,7 @@ function PodiumSlot({ entry, place }: {
       )}
       <div className="text-center">
         <p className={cn('font-display font-bold text-[13px] truncate w-24', entry?.isMe ? 'text-service-dev' : 'text-text-1')}>{entry?.name ?? '—'}</p>
-        <p className="font-mono text-[11px] text-coin-gold">{entry ? `${entry.lp_balance.toLocaleString()} LP` : '0 LP'}</p>
+        <p className="font-mono text-[11px] text-coin-gold">{entry ? `${entry.lp_balance.toLocaleString()} XP` : '0 XP'}</p>
       </div>
       <div className={cn('w-20 rounded-t-lg bg-linear-to-b flex items-end justify-center pb-2', heights[place], colors[place])}>
         <span className="font-display font-bold text-[22px] text-white">{place}</span>
@@ -199,7 +199,7 @@ function ShoutoutModal({ open, onClose, recipients, profileId, canSetCustom }: {
       },
       {
         onSuccess: () => {
-          toast('Shoutout submitted — HR will review it before LP is awarded.', 'success')
+          toast('Shoutout submitted — HR will review it before XP is awarded.', 'success')
           onClose(); setToId(''); setMessage(''); setImpact('standard'); setCustomLp('')
         },
         onError: () => toast('Failed to submit shoutout', 'error'),
@@ -234,8 +234,8 @@ function ShoutoutModal({ open, onClose, recipients, profileId, canSetCustom }: {
           <div>
             <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Impact level</label>
             <div className="flex gap-2">
-              {([['standard', 'Standard', '100 LP'], ['high', 'High Impact', '150 LP'],
-                 ...(canSetCustom ? [['custom', 'Custom', 'Set LP'] as const] : [])] as const).map(([k, label, l]) => (
+              {([['standard', 'Standard', '100 XP'], ['high', 'High Impact', '150 XP'],
+                 ...(canSetCustom ? [['custom', 'Custom', 'Set XP'] as const] : [])] as const).map(([k, label, l]) => (
                 <button key={k} onClick={() => setImpact(k)}
                   className={cn('flex-1 py-2 rounded-md border text-[12.5px] font-ui font-semibold transition-colors',
                     impact === k ? 'bg-coin-gold/15 border-coin-gold/40 text-coin-gold' : 'bg-surface-inset border-border-default text-text-3 hover:text-text-2')}>
@@ -247,10 +247,10 @@ function ShoutoutModal({ open, onClose, recipients, profileId, canSetCustom }: {
               <Input
                 type="number" min={1} max={CUSTOM_LP_MAX} value={customLp}
                 onChange={(e) => setCustomLp(e.target.value)}
-                placeholder={`Enter LP (1–${CUSTOM_LP_MAX})`}
+                placeholder={`Enter XP (1–${CUSTOM_LP_MAX})`}
                 className="mt-2"
                 error={customLp !== '' && !customLpValid ? `Enter a whole number between 1 and ${CUSTOM_LP_MAX}` : undefined}
-                helper={customLp === '' ? 'Award an exact LP amount for this recognition (HR reviews before it’s granted).' : undefined}
+                helper={customLp === '' ? 'Award an exact XP amount for this recognition (HR reviews before it’s granted).' : undefined}
               />
             )}
           </div>
@@ -334,13 +334,13 @@ function QuestTaskModal({ task, actorId, onClose }: {
             <div>
               <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Difficulty</label>
               <Select value={difficulty} onChange={onDifficulty} options={[
-                { value: 'easy', label: 'Easy (20–30 LP)' },
-                { value: 'medium', label: 'Medium (40–60 LP)' },
-                { value: 'hard', label: 'Hard (70–100 LP)' },
+                { value: 'easy', label: 'Easy (20–30 XP)' },
+                { value: 'medium', label: 'Medium (40–60 XP)' },
+                { value: 'hard', label: 'Hard (70–100 XP)' },
               ]} />
             </div>
             <div>
-              <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">LP value *</label>
+              <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">XP value *</label>
               <input type="number" min={1} value={lpValue} onChange={(e) => setLpValue(e.target.value)}
                 className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-ui text-text-1 outline-none focus:border-border-focus" />
             </div>
@@ -461,7 +461,7 @@ function RewardModal({ actorId, onClose }: { actorId: string; onClose: () => voi
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">LP cost *</label>
+              <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">XP cost *</label>
               <input type="number" min={1} value={cost} onChange={(e) => setCost(e.target.value)} placeholder="200"
                 className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-ui text-text-1 outline-none focus:border-border-focus" />
             </div>
@@ -479,7 +479,7 @@ function RewardModal({ actorId, onClose }: { actorId: string; onClose: () => voi
             </div>
             <label className="flex items-center gap-2.5 cursor-pointer mt-6">
               <Toggle checked={isCash} onChange={setIsCash} />
-              <span className="font-ui text-[12.5px] text-text-2">Cash reward (≥500 LP)</span>
+              <span className="font-ui text-[12.5px] text-text-2">Cash reward (≥500 XP)</span>
             </label>
           </div>
         </div>
@@ -513,12 +513,12 @@ function RedeemModal({ reward, myLP, onClose, onConfirm, isPending }: {
         <h3 className="font-display font-bold text-[17px] text-text-1 mb-1">{reward.name}</h3>
         <p className="font-ui text-[13px] text-text-3 mb-4">{reward.description}</p>
         <p className="font-mono text-[13px] text-coin-gold font-bold mb-1">{lp(reward.xp_cost)} · You have {lp(myLP)}</p>
-        {reward.is_cash && <p className="font-mono text-[11px] text-text-4 mb-4">Cash rewards need ≥500 LP and HR eligibility approval.</p>}
+        {reward.is_cash && <p className="font-mono text-[11px] text-text-4 mb-4">Cash rewards need ≥500 XP and HR eligibility approval.</p>}
         <div className="flex gap-2.5 mt-4">
           <Button variant="ghost" size="sm" className="flex-1" onClick={onClose} disabled={isPending}>Cancel</Button>
           <Button size="sm" className="flex-1" disabled={!canAfford || isPending} onClick={onConfirm}>
             {isPending ? <Loader2 size={13} className="animate-spin" /> : <Gift size={13} />}
-            {cashBlocked ? 'Need 500 LP' : canAfford ? 'Confirm' : 'Locked'}
+            {cashBlocked ? 'Need 500 XP' : canAfford ? 'Confirm' : 'Locked'}
           </Button>
         </div>
     </ModalShell>
@@ -682,8 +682,8 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
       onSuccess: () => { toast(`"${redeemTarget.name}" requested — pending HR approval.`, 'success'); setRedeemTarget(null) },
       onError: (e) => {
         toast(
-          e.message.includes('insufficient_lp') ? 'Not enough LP'
-            : e.message.includes('cash_threshold') ? 'Cash rewards need ≥500 LP'
+          e.message.includes('insufficient_lp') ? 'Not enough XP'
+            : e.message.includes('cash_threshold') ? 'Cash rewards need ≥500 XP'
             : e.message.includes('out_of_stock') ? 'Out of stock'
             : e.message.includes('restricted') ? 'You are restricted from redeeming'
             : 'Redemption failed', 'error')
@@ -696,8 +696,8 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
     const amt = parseInt(grantAmount, 10)
     if (!grantId || isNaN(amt) || amt <= 0 || !grantReason.trim()) return
     grantLp({ profileId: grantId, amount: amt, reason: grantReason.trim() }, {
-      onSuccess: () => { toast(`${amt} LP granted to ${nameOf(grantId)}`, 'success'); setGrantId(''); setGrantAmount(''); setGrantReason('') },
-      onError: () => toast('Failed to grant LP', 'error'),
+      onSuccess: () => { toast(`${amt} XP granted to ${nameOf(grantId)}`, 'success'); setGrantId(''); setGrantAmount(''); setGrantReason('') },
+      onError: () => toast('Failed to grant XP', 'error'),
     })
   }
 
@@ -705,8 +705,8 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
     if (!review) return
     const done = (msg: string) => { toast(msg, 'success'); setReview(null) }
     const fail = () => { toast('Action failed', 'error'); setReview(null) }
-    if (review.kind === 'task') reviewTask({ claimId: review.id, approve: review.approve, note: note || null }, { onSuccess: () => done(review.approve ? 'Task approved — LP awarded' : 'Sent back for rework'), onError: fail })
-    else if (review.kind === 'shoutout') reviewShout({ id: review.id, approve: review.approve, note: note || null }, { onSuccess: () => done(review.approve ? 'Shoutout approved — LP awarded' : 'Shoutout rejected'), onError: fail })
+    if (review.kind === 'task') reviewTask({ claimId: review.id, approve: review.approve, note: note || null }, { onSuccess: () => done(review.approve ? 'Task approved — XP awarded' : 'Sent back for rework'), onError: fail })
+    else if (review.kind === 'shoutout') reviewShout({ id: review.id, approve: review.approve, note: note || null }, { onSuccess: () => done(review.approve ? 'Shoutout approved — XP awarded' : 'Shoutout rejected'), onError: fail })
     else reviewRedeem({ id: review.id, action: review.action ?? 'approve', note: note || null }, { onSuccess: () => done('Redemption updated'), onError: fail })
   }
 
@@ -736,7 +736,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="bg-surface-1 border border-border-default rounded-xl px-5 py-4 flex items-center gap-3">
             <div className="size-11 rounded-xl bg-coin-gold/15 border border-coin-gold/30 flex items-center justify-center"><Coins size={19} className="text-coin-gold" /></div>
-            <div><p className="font-display font-bold text-[24px] text-coin-gold leading-none">{myLP.toLocaleString()}</p><p className="font-ui text-[11.5px] text-text-3 mt-0.5">Link Points · this month</p></div>
+            <div><p className="font-display font-bold text-[24px] text-coin-gold leading-none">{myLP.toLocaleString()}</p><p className="font-ui text-[11.5px] text-text-3 mt-0.5">XP · this month</p></div>
           </div>
           <div className="bg-surface-1 border border-border-default rounded-xl px-5 py-4 flex items-center gap-3">
             <div className="size-11 rounded-xl bg-service-design/15 border border-service-design/30 flex items-center justify-center"><Trophy size={19} className="text-service-design" /></div>
@@ -785,7 +785,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
         {!showHub && activeTab === 'leaderboard' && (
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between gap-3">
-              <p className="font-mono text-[11.5px] text-text-3">Ranked by Link Points earned this month · cash rewards go to top performers (≥500 LP)</p>
+              <p className="font-mono text-[11.5px] text-text-3">Ranked by Experience Points earned this month · cash rewards go to top performers (≥500 XP)</p>
               {isRecognizer && <Button size="sm" className="shrink-0" onClick={() => setShoutoutOpen(true)}><Star size={13} /> Give Shoutout</Button>}
             </div>
 
@@ -831,7 +831,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
             {!lbLoading && !lbError && (
               <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
                 <div className="hidden lg:grid grid-cols-[40px_1fr_110px_110px_70px] gap-3 px-5 py-2.5 border-b border-border-subtle bg-surface-2">
-                  {['#', 'Name', 'LP (month)', 'Reputation', 'Level'].map((h) => <span key={h} className="font-mono text-[10px] text-text-4 uppercase tracking-wider">{h}</span>)}
+                  {['#', 'Name', 'XP (month)', 'Reputation', 'Level'].map((h) => <span key={h} className="font-mono text-[10px] text-text-4 uppercase tracking-wider">{h}</span>)}
                 </div>
                 {ranked.map((e) => (
                   <div key={e.profile_id} className={cn('grid grid-cols-[40px_1fr] gap-3 items-center lg:grid-cols-[40px_1fr_110px_110px_70px] px-4 lg:px-5 py-3 border-b border-border-subtle last:border-0', e.isMe && 'bg-service-dev/8')}>
@@ -862,7 +862,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
         {!showHub && activeTab === 'board' && (
           <div className="flex flex-col gap-5">
             <div className="flex items-center justify-between gap-3">
-              <p className="font-mono text-[11.5px] text-text-3">Claim a task, complete it, then submit proof for approval to earn LP.</p>
+              <p className="font-mono text-[11.5px] text-text-3">Claim a task, complete it, then submit proof for approval to earn XP.</p>
               {isRecognizer && <Button size="sm" className="shrink-0" onClick={() => setTaskModal('new')}><Plus size={13} /> Post Task</Button>}
             </div>
             {tasksLoading && <div className="flex justify-center py-16 text-text-4"><Loader2 size={20} className="animate-spin" /></div>}
@@ -975,7 +975,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
         {!showHub && activeTab === 'shoutouts' && (
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between gap-3">
-              <p className="font-mono text-[11.5px] text-text-3">Recognition issued by managers & HR. Each is HR-reviewed before LP is awarded.</p>
+              <p className="font-mono text-[11.5px] text-text-3">Recognition issued by managers & HR. Each is HR-reviewed before XP is awarded.</p>
               {isRecognizer && <Button size="sm" className="shrink-0" onClick={() => setShoutoutOpen(true)}><Plus size={13} /> Give Shoutout</Button>}
             </div>
             <div className="space-y-3">
@@ -986,7 +986,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-display font-bold text-[14px] text-text-1">{nameOf(s.to_profile_id)}</span>
-                      <span className="font-mono text-[10px] text-coin-gold bg-coin-gold/12 border border-coin-gold/30 px-1.5 py-px rounded uppercase">+{s.lp_value} LP</span>
+                      <span className="font-mono text-[10px] text-coin-gold bg-coin-gold/12 border border-coin-gold/30 px-1.5 py-px rounded uppercase">+{s.lp_value} XP</span>
                       <span className="font-mono text-[10px] text-service-design bg-service-design/10 border border-service-design/25 px-1.5 py-px rounded">{s.category}</span>
                     </div>
                     <p className="font-ui text-body-sm/relaxed text-text-2 mt-1.5">"{s.message}"</p>
@@ -1025,8 +1025,8 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
           <div className="flex flex-col gap-5">
             <div className="flex items-center gap-4 bg-surface-1 border border-border-default rounded-xl px-6 py-4">
               <div className="size-12 rounded-xl bg-coin-gold/15 border border-coin-gold/30 flex items-center justify-center"><Coins size={20} className="text-coin-gold" /></div>
-              <div><p className="font-display font-bold text-[28px] text-coin-gold leading-none">{myLP.toLocaleString()}</p><p className="font-ui text-[12px] text-text-3 mt-0.5">LP available · resets monthly</p></div>
-              <p className="ml-auto font-mono text-[11px] text-text-4">1 LP = PKR 10</p>
+              <div><p className="font-display font-bold text-[28px] text-coin-gold leading-none">{myLP.toLocaleString()}</p><p className="font-ui text-[12px] text-text-3 mt-0.5">XP available · resets monthly</p></div>
+              <p className="ml-auto font-mono text-[11px] text-text-4">1 XP = PKR 10</p>
             </div>
             {rwLoading && <div className="flex justify-center py-16 text-text-4"><Loader2 size={20} className="animate-spin" /></div>}
             {!rwLoading && (
@@ -1047,7 +1047,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
                       <div className="flex items-center justify-between">
                         <span className={cn('font-mono font-bold text-[13px]', canAfford && !out ? 'text-coin-gold' : 'text-text-4')}>{lp(r.xp_cost)}</span>
                         <Button size="sm" variant={canAfford && !out ? 'primary' : 'ghost'} disabled={!canAfford || out || !isParticipant} onClick={() => setRedeemTarget(r)}>
-                          {out ? 'Sold Out' : cashBlocked ? <><Lock size={11} /> 500 LP</> : canAfford ? 'Redeem' : 'Locked'}
+                          {out ? 'Sold Out' : cashBlocked ? <><Lock size={11} /> 500 XP</> : canAfford ? 'Redeem' : 'Locked'}
                         </Button>
                       </div>
                     </div>
@@ -1096,7 +1096,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
                   {pendingShouts.map((s) => (
                     <div key={s.id} className="grid grid-cols-[1fr_auto] gap-3 items-center px-5 py-3 border-b border-border-subtle last:border-0">
                       <div className="min-w-0">
-                        <p className="font-ui font-semibold text-[13px] text-text-1">{nameOf(s.to_profile_id)} · <span className="text-coin-gold font-mono">+{s.lp_value} LP</span> · <span className="text-text-3">{s.category}</span></p>
+                        <p className="font-ui font-semibold text-[13px] text-text-1">{nameOf(s.to_profile_id)} · <span className="text-coin-gold font-mono">+{s.lp_value} XP</span> · <span className="text-text-3">{s.category}</span></p>
                         <p className="font-ui text-[11.5px] text-text-3 italic">"{s.message}" — {nameOf(s.from_profile_id)}</p>
                       </div>
                       <div className="flex gap-1.5">
@@ -1212,15 +1212,15 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
             {isGovernor && (
               <section className="grid grid-cols-2 gap-5">
                 <div>
-                  <h2 className="font-display font-bold text-[16px] text-text-1 flex items-center gap-2 mb-3"><Zap size={16} className="text-coin-gold" /> Grant LP</h2>
+                  <h2 className="font-display font-bold text-[16px] text-text-1 flex items-center gap-2 mb-3"><Zap size={16} className="text-coin-gold" /> Grant XP</h2>
                   <div className="bg-surface-1 border border-border-default rounded-xl p-5 space-y-3.5">
                     <Select value={grantId} onChange={setGrantId} options={[{ value: '', label: 'Select employee…' }, ...leaderboard.filter((e) => e.profile_id !== profileId).map((e) => ({ value: e.profile_id, label: e.name, avatar: { name: e.name, url: e.avatar_url } }))]} />
-                    <input type="number" min={1} value={grantAmount} onChange={(e) => setGrantAmount(e.target.value)} placeholder="LP amount"
+                    <input type="number" min={1} value={grantAmount} onChange={(e) => setGrantAmount(e.target.value)} placeholder="XP amount"
                       className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-ui text-text-1 outline-none focus:border-border-focus" />
                     <textarea value={grantReason} onChange={(e) => setGrantReason(e.target.value)} rows={2} placeholder="Reason *"
                       className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-ui text-text-1 outline-none focus:border-border-focus resize-none" />
                     <Button size="sm" disabled={!grantId || !grantAmount || !grantReason.trim() || granting} onClick={handleGrant}>
-                      {granting ? <Loader2 size={13} className="animate-spin" /> : <Zap size={13} />} Grant LP
+                      {granting ? <Loader2 size={13} className="animate-spin" /> : <Zap size={13} />} Grant XP
                     </Button>
                   </div>
                 </div>
