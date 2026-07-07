@@ -2103,6 +2103,10 @@ export function OvertimeTab() {
   const toast = useToast()
   const { profile } = useAuthContext()
   const isAdmin = profile?.role === 'admin' || profile?.role === 'super_admin'
+  const now = new Date()
+  const [year, setYear]   = useState(now.getFullYear())
+  const [month, setMonth] = useState(now.getMonth() + 1) // 1-indexed
+  const [allMonths, setAllMonths] = useState(false)
   const [statusFilter, setStatusFilter] = useState('all')
   const [rejectTarget, setRejectTarget] = useState<string | null>(null)
   const [rejectNote, setRejectNote] = useState('')
@@ -2114,11 +2118,28 @@ export function OvertimeTab() {
   const reviewMutation = useReviewOvertime()
   const deleteMut = useDeleteOvertime()
 
-  const pending  = requests.filter((r) => r.status === 'pending').length
-  const approved = requests.filter((r) => r.status === 'approved').length
-  const rejected = requests.filter((r) => r.status === 'rejected').length
+  // Overtime rows carry a `date` (YYYY-MM-DD), so scope the list to the selected
+  // month client-side — the summary cards and table then reflect that month
+  // without an extra query. "All months" falls back to the full list.
+  const monthPrefix = `${year}-${String(month).padStart(2, '0')}`
+  const scoped = allMonths ? requests : requests.filter((r) => r.date.startsWith(monthPrefix))
 
-  const totalApprovedHours = requests
+  const prevMonth = () => {
+    if (month === 1) { setYear((y) => y - 1); setMonth(12) }
+    else setMonth((m) => m - 1)
+  }
+  const nextMonth = () => {
+    if (month === 12) { setYear((y) => y + 1); setMonth(1) }
+    else setMonth((m) => m + 1)
+  }
+  const isCurrentMonth = year === now.getFullYear() && month === now.getMonth() + 1
+  const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December']
+
+  const pending  = scoped.filter((r) => r.status === 'pending').length
+  const approved = scoped.filter((r) => r.status === 'approved').length
+  const rejected = scoped.filter((r) => r.status === 'rejected').length
+
+  const totalApprovedHours = scoped
     .filter((r) => r.status === 'approved')
     .reduce((acc, r) => acc + r.hours, 0)
 
@@ -2190,6 +2211,34 @@ export function OvertimeTab() {
       {/* Table */}
       <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
         <SectionToolbar icon={Hourglass} title="Overtime Requests" badge={pending}>
+          <PeriodStepper
+            icon={Calendar}
+            label={allMonths ? 'All months' : `${MONTH_NAMES[month - 1]} ${year}`}
+            onPrev={prevMonth}
+            onNext={nextMonth}
+            disablePrev={allMonths}
+            disableNext={allMonths || isCurrentMonth}
+            className={cn(allMonths && 'opacity-50')}
+          >
+            {!allMonths && isCurrentMonth && (
+              <span className="ml-1 px-1.5 py-0.5 rounded-xs bg-brand-red/10 border border-brand-red/20 text-brand-red text-[10px] font-mono font-semibold uppercase tracking-wide">
+                Current
+              </span>
+            )}
+          </PeriodStepper>
+          <button
+            type="button"
+            onClick={() => setAllMonths((v) => !v)}
+            aria-pressed={allMonths}
+            className={cn(
+              'h-8 px-3 rounded-sm border font-ui font-semibold text-[12px] transition-colors shrink-0',
+              allMonths
+                ? 'bg-brand-red/10 border-brand-red/30 text-brand-red'
+                : 'bg-surface-1 border-border-default text-text-3 hover:text-text-1 hover:border-border-strong',
+            )}
+          >
+            All months
+          </button>
           <Select
             size="sm"
             value={statusFilter}
@@ -2207,11 +2256,15 @@ export function OvertimeTab() {
           <div className="py-16 flex items-center justify-center gap-2 font-mono text-[12px] text-text-4">
             <span className="size-4 border-2 border-text-4 border-t-brand-red rounded-full animate-spin" /> Loading…
           </div>
-        ) : requests.length === 0 ? (
-          <div className="py-16 text-center font-ui text-[13px] text-text-4">No overtime requests match this filter.</div>
+        ) : scoped.length === 0 ? (
+          <div className="py-16 text-center font-ui text-[13px] text-text-4">
+            No overtime requests {allMonths ? 'match this filter' : `for ${MONTH_NAMES[month - 1]} ${year}`}.
+          </div>
         ) : (
-          <div className="overflow-x-auto">
-          <table className="w-full whitespace-nowrap lg:whitespace-normal">
+          <>
+          {/* Desktop table */}
+          <div className="overflow-x-auto hidden lg:block">
+          <table className="w-full">
             <thead>
               <tr className="border-b border-border-subtle bg-surface-2">
                 {['Employee', 'Date', 'Time', 'Hours', 'Reason', 'Status', 'Actions'].map((h) => (
@@ -2222,7 +2275,7 @@ export function OvertimeTab() {
               </tr>
             </thead>
             <tbody>
-              {requests.map((req) => {
+              {scoped.map((req) => {
                 const meta = OT_STATUS_META[req.status] ?? OT_STATUS_META['pending']
                 const r = req as typeof req & { profiles?: { name: string; avatar_url: string | null } | null }
                 return (
@@ -2291,6 +2344,67 @@ export function OvertimeTab() {
             </tbody>
           </table>
           </div>
+
+          {/* Mobile cards */}
+          <div className="lg:hidden flex flex-col">
+            {scoped.map((req) => {
+              const meta = OT_STATUS_META[req.status] ?? OT_STATUS_META['pending']
+              const r = req as typeof req & { profiles?: { name: string; avatar_url: string | null } | null }
+              return (
+                <div key={req.id} className="px-4 py-3.5 border-b border-border-subtle last:border-0 flex flex-col gap-2.5">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <Avatar name={r.profiles?.name ?? '?'} src={r.profiles?.avatar_url ?? undefined} size="sm" />
+                      <span className="font-ui font-medium text-[13px] text-text-1 truncate">{r.profiles?.name ?? req.profile_id.slice(0, 8)}</span>
+                    </div>
+                    <span className={cn('inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-ui font-semibold border shrink-0', meta.cls)}>
+                      <span className="size-1.5 rounded-full" style={{ background: meta.dot }} />
+                      {meta.label}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[12px] text-text-2 pl-10.5">
+                    <span className="text-text-1">{fmtDate(req.date)}</span>
+                    <span>{fmtTime(req.start_time)} – {fmtTime(req.end_time)}</span>
+                    <span className="font-display font-bold text-service-mkt">{req.hours}h</span>
+                  </div>
+                  {req.reason && <p className="font-ui text-[12px] text-text-3 pl-10.5">{req.reason}</p>}
+                  {req.review_note && <p className="font-ui text-[11px] text-text-4 pl-10.5 italic">"{req.review_note}"</p>}
+                  <div className="flex items-center gap-1.5 pl-10.5">
+                    {req.status === 'pending' ? (
+                      <>
+                        <button
+                          onClick={() => handleApprove(req.id)}
+                          disabled={reviewMutation.isPending}
+                          className="flex items-center gap-1 px-2.5 py-1.5 rounded-sm bg-success/10 border border-success/30 text-success text-[11.5px] font-ui font-semibold hover:bg-success/20 transition-colors"
+                        >
+                          <ThumbsUp size={12} /> Approve
+                        </button>
+                        <button
+                          onClick={() => setRejectTarget(req.id)}
+                          disabled={reviewMutation.isPending}
+                          className="flex items-center gap-1 px-2.5 py-1.5 rounded-sm bg-error/10 border border-error/30 text-error text-[11.5px] font-ui font-semibold hover:bg-error/20 transition-colors"
+                        >
+                          <ThumbsDown size={12} /> Reject
+                        </button>
+                      </>
+                    ) : (
+                      <span className="font-mono text-[11px] text-text-4">
+                        Reviewed {req.reviewed_at
+                          ? new Date(req.reviewed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                          : '—'}
+                      </span>
+                    )}
+                    {isAdmin && (
+                      <button onClick={() => setDeleteTarget({ id: req.id, name: r.profiles?.name ?? 'this employee' })} className="ml-auto text-text-4 hover:text-error transition-colors" aria-label="Delete overtime request">
+                        <Trash2 size={14} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          </>
         )}
       </div>
 
