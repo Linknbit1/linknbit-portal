@@ -250,7 +250,7 @@ function ShoutoutModal({ open, onClose, recipients, profileId, canSetCustom }: {
                 placeholder={`Enter LP (1–${CUSTOM_LP_MAX})`}
                 className="mt-2"
                 error={customLp !== '' && !customLpValid ? `Enter a whole number between 1 and ${CUSTOM_LP_MAX}` : undefined}
-                helper={customLp === '' ? 'HR-only: award an exact LP amount for this recognition.' : undefined}
+                helper={customLp === '' ? 'Award an exact LP amount for this recognition (HR reviews before it’s granted).' : undefined}
               />
             )}
           </div>
@@ -1311,7 +1311,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
       </div>
 
       {/* Modals */}
-      <ShoutoutModal open={shoutoutOpen} onClose={() => setShoutoutOpen(false)} recipients={leaderboard.map((e) => ({ id: e.profile_id, name: e.name, avatarUrl: e.avatar_url }))} profileId={profileId} canSetCustom={isGovernor} />
+      <ShoutoutModal open={shoutoutOpen} onClose={() => setShoutoutOpen(false)} recipients={leaderboard.map((e) => ({ id: e.profile_id, name: e.name, avatarUrl: e.avatar_url }))} profileId={profileId} canSetCustom={isRecognizer} />
       {taskModal !== null && <QuestTaskModal task={taskModal === 'new' ? null : taskModal} actorId={profileId} onClose={() => setTaskModal(null)} />}
       {rewardModalOpen && <RewardModal actorId={profileId} onClose={() => setRewardModalOpen(false)} />}
       {submitTarget && <SubmitProofModal claim={submitTarget} taskTitle={taskMap.get(submitTarget.task_id)?.title ?? 'Task'} profileId={profileId} onClose={() => setSubmitTarget(null)} />}
