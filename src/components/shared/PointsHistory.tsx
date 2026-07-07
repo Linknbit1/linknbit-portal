@@ -31,7 +31,7 @@ const monthKeyLabel = (key: string): string => {
   return `${MONTH_NAMES[m - 1]} ${y}`
 }
 
-const fmtLp = (n: number): string => `${n > 0 ? '+' : ''}${n.toLocaleString()} LP`
+const fmtLp = (n: number): string => `${n > 0 ? '+' : ''}${n.toLocaleString()} XP`
 
 function SummaryCard({ icon: Icon, tint, value, label }: {
   icon: typeof Coins
@@ -153,13 +153,13 @@ export function PointsHistory({ myProfileId, isGovernor, people, selfSummary }: 
           icon={Coins}
           tint="bg-coin-gold/15 border border-coin-gold/30 text-coin-gold"
           value={earnedThisMonth.toLocaleString()}
-          label="LP earned · this month"
+          label="XP earned · this month"
         />
         <SummaryCard
           icon={Star}
           tint="bg-service-dev/15 border border-service-dev/30 text-service-dev"
           value={lifetimeEarned.toLocaleString()}
-          label="LP earned · all time"
+          label="XP earned · all time"
         />
       </div>
 
