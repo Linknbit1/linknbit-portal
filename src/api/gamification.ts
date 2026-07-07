@@ -226,12 +226,14 @@ export async function giveShoutout(
   category: string,
   message: string,
   impact: 'standard' | 'high',
+  lpValue?: number | null,
 ): Promise<string> {
   const { data, error } = await supabase.rpc('give_shoutout', {
     p_to_profile_id: toProfileId,
     p_category: category,
     p_message: message,
     p_impact: impact,
+    p_lp_value: lpValue ?? undefined,
   })
   if (error) throw error
   return data

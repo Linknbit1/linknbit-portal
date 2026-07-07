@@ -1566,6 +1566,7 @@ export type Database = {
         Args: {
           p_category: string
           p_impact?: string
+          p_lp_value?: number
           p_message: string
           p_to_profile_id: string
         }
