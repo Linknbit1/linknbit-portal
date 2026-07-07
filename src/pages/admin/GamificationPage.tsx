@@ -167,28 +167,44 @@ function NoteDialog({ open, title, confirmLabel, danger, onClose, onConfirm, isP
 
 // ── Shoutout modal ─────────────────────────────────────────────────────────────
 
-function ShoutoutModal({ open, onClose, recipients, profileId }: {
+const CUSTOM_LP_MAX = 500
+
+function ShoutoutModal({ open, onClose, recipients, profileId, canSetCustom }: {
   open: boolean
   onClose: () => void
   recipients: { id: string; name: string; avatarUrl?: string | null }[]
   profileId: string
+  canSetCustom: boolean
 }) {
   const toast = useToast()
   const { mutate: give, isPending } = useGiveShoutout()
   const [toId, setToId] = useState('')
   const [category, setCategory] = useState<string>(SHOUTOUT_CATS[0])
   const [message, setMessage] = useState('')
-  const [impact, setImpact] = useState<'standard' | 'high'>('standard')
+  const [impact, setImpact] = useState<'standard' | 'high' | 'custom'>('standard')
+  const [customLp, setCustomLp] = useState('')
   if (!open) return null
 
+  const customLpNum = Number(customLp)
+  const customLpValid = impact !== 'custom' || (Number.isInteger(customLpNum) && customLpNum >= 1 && customLpNum <= CUSTOM_LP_MAX)
+
   const submit = () => {
-    give({ toProfileId: toId, category, message: message.trim(), impact }, {
-      onSuccess: () => {
-        toast('Shoutout submitted — HR will review it before LP is awarded.', 'success')
-        onClose(); setToId(''); setMessage(''); setImpact('standard')
+    // For a custom amount the server derives impact from the LP value; send a placeholder impact.
+    const isCustom = impact === 'custom'
+    give(
+      {
+        toProfileId: toId, category, message: message.trim(),
+        impact: isCustom ? 'standard' : impact,
+        lpValue: isCustom ? customLpNum : undefined,
       },
-      onError: () => toast('Failed to submit shoutout', 'error'),
-    })
+      {
+        onSuccess: () => {
+          toast('Shoutout submitted — HR will review it before LP is awarded.', 'success')
+          onClose(); setToId(''); setMessage(''); setImpact('standard'); setCustomLp('')
+        },
+        onError: () => toast('Failed to submit shoutout', 'error'),
+      },
+    )
   }
 
   return (
@@ -218,19 +234,30 @@ function ShoutoutModal({ open, onClose, recipients, profileId }: {
           <div>
             <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Impact level</label>
             <div className="flex gap-2">
-              {([['standard', 'Standard', 100], ['high', 'High Impact', 150]] as const).map(([k, label, l]) => (
+              {([['standard', 'Standard', '100 LP'], ['high', 'High Impact', '150 LP'],
+                 ...(canSetCustom ? [['custom', 'Custom', 'Set LP'] as const] : [])] as const).map(([k, label, l]) => (
                 <button key={k} onClick={() => setImpact(k)}
                   className={cn('flex-1 py-2 rounded-md border text-[12.5px] font-ui font-semibold transition-colors',
                     impact === k ? 'bg-coin-gold/15 border-coin-gold/40 text-coin-gold' : 'bg-surface-inset border-border-default text-text-3 hover:text-text-2')}>
-                  {label} · {l} LP
+                  {label} · {l}
                 </button>
               ))}
             </div>
+            {impact === 'custom' && (
+              <Input
+                type="number" min={1} max={CUSTOM_LP_MAX} value={customLp}
+                onChange={(e) => setCustomLp(e.target.value)}
+                placeholder={`Enter LP (1–${CUSTOM_LP_MAX})`}
+                className="mt-2"
+                error={customLp !== '' && !customLpValid ? `Enter a whole number between 1 and ${CUSTOM_LP_MAX}` : undefined}
+                helper={customLp === '' ? 'HR-only: award an exact LP amount for this recognition.' : undefined}
+              />
+            )}
           </div>
         </div>
         <div className="flex gap-2.5 mt-5">
           <Button variant="ghost" size="sm" className="flex-1" onClick={onClose}>Cancel</Button>
-          <Button size="sm" className="flex-1" disabled={!toId || message.trim().length < 10 || isPending} onClick={submit}>
+          <Button size="sm" className="flex-1" disabled={!toId || message.trim().length < 10 || !customLpValid || (impact === 'custom' && customLp === '') || isPending} onClick={submit}>
             {isPending ? <Loader2 size={13} className="animate-spin" /> : <Star size={13} />} Submit
           </Button>
         </div>
@@ -1284,7 +1311,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
       </div>
 
       {/* Modals */}
-      <ShoutoutModal open={shoutoutOpen} onClose={() => setShoutoutOpen(false)} recipients={leaderboard.map((e) => ({ id: e.profile_id, name: e.name, avatarUrl: e.avatar_url }))} profileId={profileId} />
+      <ShoutoutModal open={shoutoutOpen} onClose={() => setShoutoutOpen(false)} recipients={leaderboard.map((e) => ({ id: e.profile_id, name: e.name, avatarUrl: e.avatar_url }))} profileId={profileId} canSetCustom={isGovernor} />
       {taskModal !== null && <QuestTaskModal task={taskModal === 'new' ? null : taskModal} actorId={profileId} onClose={() => setTaskModal(null)} />}
       {rewardModalOpen && <RewardModal actorId={profileId} onClose={() => setRewardModalOpen(false)} />}
       {submitTarget && <SubmitProofModal claim={submitTarget} taskTitle={taskMap.get(submitTarget.task_id)?.title ?? 'Task'} profileId={profileId} onClose={() => setSubmitTarget(null)} />}

@@ -1,7 +1,7 @@
-# Graph Report - linknbit-portal  (2026-07-06)
+# Graph Report - linknbit-portal  (2026-07-07)
 
 ## Corpus Check
-- 153 files · ~295,342 words
+- 153 files · ~295,501 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary

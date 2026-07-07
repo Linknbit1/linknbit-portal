@@ -205,8 +205,8 @@ export function usePendingShoutouts() {
 export function useGiveShoutout() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ toProfileId, category, message, impact }: { toProfileId: string; category: string; message: string; impact: 'standard' | 'high' }) =>
-      giveShoutout(toProfileId, category, message, impact),
+    mutationFn: ({ toProfileId, category, message, impact, lpValue }: { toProfileId: string; category: string; message: string; impact: 'standard' | 'high'; lpValue?: number | null }) =>
+      giveShoutout(toProfileId, category, message, impact, lpValue),
     onSuccess: () => qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.shoutoutsPending() }),
   })
 }
