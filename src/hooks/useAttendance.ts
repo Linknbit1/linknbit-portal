@@ -16,6 +16,7 @@ import {
   fetchAttendanceExceptions,
   fetchAllAttendanceExceptions,
   requestException,
+  updateException,
   reviewException,
   deleteException,
   oooDepart,
@@ -31,9 +32,11 @@ import {
   fetchAllOvertimeRequests,
   fetchMonthlyOvertime,
   submitOvertimeRequest,
+  updateOvertimeRequest,
   reviewOvertimeRequest,
   deleteOvertimeRequest,
   submitWfhRequest,
+  updateWfhRequest,
   fetchMyWfhRequests,
   fetchAllWfhRequests,
   reviewWfhRequest,
@@ -44,6 +47,7 @@ import {
   updateLeaveType,
   deleteLeaveType,
   submitLeaveRequest,
+  updateLeaveRequest,
   fetchMyLeaveRequests,
   fetchAllLeaveRequests,
   reviewLeaveRequest,
@@ -235,6 +239,17 @@ export function useRequestException() {
   })
 }
 
+export function useUpdateException() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: RequestExceptionPayload }) =>
+      updateException(id, payload),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['attendance', 'exceptions'] })
+    },
+  })
+}
+
 export function useReviewException() {
   const qc = useQueryClient()
   return useMutation({
@@ -403,6 +418,18 @@ export function useSubmitOvertime() {
   })
 }
 
+export function useUpdateOvertime() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: SubmitOvertimePayload }) =>
+      updateOvertimeRequest(id, payload),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ATTENDANCE_KEYS.myOvertime })
+      qc.invalidateQueries({ queryKey: ['attendance', 'overtime', 'all'] })
+    },
+  })
+}
+
 export function useReviewOvertime() {
   const qc = useQueryClient()
   return useMutation({
@@ -455,6 +482,17 @@ export function useSubmitWfh() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (payload: { date: string; reason: string }) => submitWfhRequest(payload),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['attendance', 'wfh'] })
+    },
+  })
+}
+
+export function useUpdateWfh() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: { date: string; reason: string } }) =>
+      updateWfhRequest(id, payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['attendance', 'wfh'] })
     },
@@ -570,6 +608,18 @@ export function useSubmitLeave() {
     mutationFn: (payload: SubmitLeavePayload) => submitLeaveRequest(payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['attendance', 'leave'] })
+    },
+  })
+}
+
+export function useUpdateLeave() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: SubmitLeavePayload }) =>
+      updateLeaveRequest(id, payload),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['attendance', 'leave'] })
+      qc.invalidateQueries({ queryKey: ATTENDANCE_KEYS.myLeaveBalances })
     },
   })
 }

@@ -16,6 +16,7 @@ import {
   Palmtree,
   Calendar,
   Plane,
+  Pencil,
 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Card } from '../../components/ui/Card'
@@ -28,17 +29,21 @@ import {
   useMyMonthlyAttendance,
   useMyExceptions,
   useRequestException,
+  useUpdateException,
   useOooDepart,
   useOooReturn,
   useMyOvertimeRequests,
   useSubmitOvertime,
+  useUpdateOvertime,
   useAttendanceSettings,
   useHolidays,
   useWorkingSaturdays,
   useMyWfhRequests,
   useSubmitWfh,
+  useUpdateWfh,
   useMyLeaveRequests,
   useSubmitLeave,
+  useUpdateLeave,
   useMyLeaveBalances,
 } from '../../hooks/useAttendance'
 import { AttendanceCheckInCard } from '../../components/shared/AttendanceCheckInCard'
@@ -47,7 +52,7 @@ import { TeamAttendancePanel } from '../../components/shared/TeamAttendancePanel
 import { useAuthContext } from '../../context/AuthContext'
 import { useToast } from '../../components/ui/toast-context'
 import { cn } from '../../lib/cn'
-import type { AttendanceRow } from '../../api/attendance'
+import type { AttendanceRow, AttendanceException } from '../../api/attendance'
 import { ModalShell } from '../../components/ui/ModalShell'
 
 function localToday(): string {
@@ -372,19 +377,28 @@ export function OooSection() {
 
 // ── Request exception modal ───────────────────────────────────────────────────
 
+type ExcType = 'late_arrival' | 'early_departure' | 'out_of_office'
+
+const asExcType = (v: string | undefined): ExcType =>
+  v === 'early_departure' || v === 'out_of_office' ? v : 'late_arrival'
+
 interface RequestExceptionModalProps {
-  open: boolean
+  editRow: AttendanceException | null
   onClose: () => void
 }
 
-function RequestExceptionModal({ open, onClose }: RequestExceptionModalProps) {
+// Mounted only while open (see MyExceptionsSection), so the initial state reads
+// straight from `editRow` when editing a pending request.
+function RequestExceptionModal({ editRow, onClose }: RequestExceptionModalProps) {
   const toast = useToast()
   const requestMut = useRequestException()
-  const [excType, setExcType] = useState<'late_arrival' | 'early_departure' | 'out_of_office'>('late_arrival')
-  const [date, setDate] = useState(localToday)
-  const [requestedTime, setRequestedTime] = useState('')
-  const [returnTime, setReturnTime] = useState('')
-  const [reason, setReason] = useState('')
+  const updateMut = useUpdateException()
+  const saving = requestMut.isPending || updateMut.isPending
+  const [excType, setExcType] = useState<ExcType>(asExcType(editRow?.exception_type))
+  const [date, setDate] = useState(editRow?.date ?? localToday())
+  const [requestedTime, setRequestedTime] = useState(editRow?.requested_time?.slice(0, 5) ?? '')
+  const [returnTime, setReturnTime] = useState(editRow?.return_time?.slice(0, 5) ?? '')
+  const [reason, setReason] = useState(editRow?.reason ?? '')
 
   const timeLabel: Record<typeof excType, string> = {
     late_arrival:    'Arrival Time',
@@ -399,31 +413,31 @@ function RequestExceptionModal({ open, onClose }: RequestExceptionModalProps) {
 
   const handleSubmit = async () => {
     if (!requestedTime || !reason.trim()) return
+    const payload = {
+      exception_type: excType,
+      date,
+      requested_time: requestedTime,
+      return_time: excType === 'out_of_office' && returnTime ? returnTime : undefined,
+      reason: reason.trim(),
+    }
     try {
-      await requestMut.mutateAsync({
-        exception_type: excType,
-        date,
-        requested_time: requestedTime,
-        return_time: excType === 'out_of_office' && returnTime ? returnTime : undefined,
-        reason: reason.trim(),
-      })
-      toast('Exception request submitted — awaiting HR approval', 'success')
+      if (editRow) {
+        await updateMut.mutateAsync({ id: editRow.id, payload })
+        toast('Exception request updated', 'success')
+      } else {
+        await requestMut.mutateAsync(payload)
+        toast('Exception request submitted — awaiting HR approval', 'success')
+      }
       onClose()
-      setRequestedTime('')
-      setReturnTime('')
-      setReason('')
-      setExcType('late_arrival')
     } catch {
-      toast('Failed to submit request', 'error')
+      toast(editRow ? 'Failed to update request' : 'Failed to submit request', 'error')
     }
   }
-
-  if (!open) return null
 
   return (
     <ModalShell onClose={onClose} size="md" contentClassName="p-5 sm:p-6">
         <div className="flex items-center justify-between mb-5">
-          <h3 className="font-display font-bold text-[16px] text-text-1">Request Attendance Exception</h3>
+          <h3 className="font-display font-bold text-[16px] text-text-1">{editRow ? 'Edit Attendance Exception' : 'Request Attendance Exception'}</h3>
           <button onClick={onClose} className="text-text-4 hover:text-text-1 transition-colors"><X size={18} /></button>
         </div>
 
@@ -495,9 +509,9 @@ function RequestExceptionModal({ open, onClose }: RequestExceptionModalProps) {
             size="sm"
             className="flex-1"
             onClick={handleSubmit}
-            disabled={!requestedTime || !reason.trim() || requestMut.isPending}
+            disabled={!requestedTime || !reason.trim() || saving}
           >
-            <Check size={14} /> Submit Request
+            <Check size={14} /> {editRow ? 'Save' : 'Submit Request'}
           </Button>
         </div>
     </ModalShell>
@@ -520,7 +534,12 @@ const EXC_STATUS_CLS: Record<string, string> = {
 
 export function MyExceptionsSection() {
   const [modalOpen, setModalOpen] = useState(false)
+  const [editRow, setEditRow] = useState<AttendanceException | null>(null)
   const { data: exceptions = [], isLoading } = useMyExceptions()
+
+  const openCreate = () => { setEditRow(null); setModalOpen(true) }
+  const openEdit = (exc: AttendanceException) => { setEditRow(exc); setModalOpen(true) }
+  const closeModal = () => { setModalOpen(false); setEditRow(null) }
 
   const fmtTimeStr = (t: string | null) => t ? t.slice(0, 5) : '—'
   const fmtDate = (d: string) =>
@@ -530,7 +549,7 @@ export function MyExceptionsSection() {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h2 className="font-display font-semibold text-h4 text-text-1">Exception Requests</h2>
-        <Button size="sm" onClick={() => setModalOpen(true)}>
+        <Button size="sm" onClick={openCreate}>
           <Plus size={13} /> Request Exception
         </Button>
       </div>
@@ -566,19 +585,26 @@ export function MyExceptionsSection() {
                     <p className="font-ui text-[11px] text-error mt-0.5 italic">"{exc.review_note}"</p>
                   )}
                 </div>
-                <span className={cn(
-                  'inline-flex items-center px-2 py-0.5 rounded-xs border text-[11px] font-mono font-semibold shrink-0 mt-0.5',
-                  EXC_STATUS_CLS[exc.status] ?? EXC_STATUS_CLS['pending'],
-                )}>
-                  {exc.status}
-                </span>
+                <div className="flex items-center gap-1.5 shrink-0 mt-0.5">
+                  {exc.status === 'pending' && (
+                    <button onClick={() => openEdit(exc)} title="Edit request" className="p-1 text-text-4 hover:text-text-1 transition-colors">
+                      <Pencil size={13} />
+                    </button>
+                  )}
+                  <span className={cn(
+                    'inline-flex items-center px-2 py-0.5 rounded-xs border text-[11px] font-mono font-semibold',
+                    EXC_STATUS_CLS[exc.status] ?? EXC_STATUS_CLS['pending'],
+                  )}>
+                    {exc.status}
+                  </span>
+                </div>
               </div>
             ))}
           </div>
         </Card>
       )}
 
-      <RequestExceptionModal open={modalOpen} onClose={() => setModalOpen(false)} />
+      {modalOpen && <RequestExceptionModal editRow={editRow} onClose={closeModal} />}
     </div>
   )
 }
@@ -594,6 +620,7 @@ const OT_STATUS_CLS: Record<string, string> = {
 export function OvertimeSection() {
   const toast = useToast()
   const [modalOpen, setModalOpen] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState({
     date: localToday(),
     startTime: '',
@@ -603,6 +630,8 @@ export function OvertimeSection() {
 
   const { data: requests = [], isLoading } = useMyOvertimeRequests()
   const submitMut = useSubmitOvertime()
+  const updateMut = useUpdateOvertime()
+  const saving = submitMut.isPending || updateMut.isPending
 
   const computedHours = (() => {
     if (!form.startTime || !form.endTime) return 0
@@ -612,21 +641,39 @@ export function OvertimeSection() {
     return diff > 0 ? parseFloat((diff / 60).toFixed(2)) : 0
   })()
 
+  const openCreate = () => {
+    setEditingId(null)
+    setForm({ date: localToday(), startTime: '', endTime: '', reason: '' })
+    setModalOpen(true)
+  }
+  const openEdit = (req: { id: string; date: string; start_time: string; end_time: string; reason: string }) => {
+    setEditingId(req.id)
+    setForm({ date: req.date, startTime: req.start_time.slice(0, 5), endTime: req.end_time.slice(0, 5), reason: req.reason })
+    setModalOpen(true)
+  }
+  const closeModal = () => { setModalOpen(false); setEditingId(null) }
+
   const handleSubmit = async () => {
     if (!form.date || !form.startTime || !form.endTime || !form.reason.trim() || computedHours <= 0) return
+    const payload = {
+      date: form.date,
+      start_time: form.startTime,
+      end_time: form.endTime,
+      hours: computedHours,
+      reason: form.reason.trim(),
+    }
     try {
-      await submitMut.mutateAsync({
-        date: form.date,
-        start_time: form.startTime,
-        end_time: form.endTime,
-        hours: computedHours,
-        reason: form.reason.trim(),
-      })
-      toast('Overtime request submitted — awaiting HR approval', 'success')
-      setModalOpen(false)
+      if (editingId) {
+        await updateMut.mutateAsync({ id: editingId, payload })
+        toast('Overtime request updated', 'success')
+      } else {
+        await submitMut.mutateAsync(payload)
+        toast('Overtime request submitted — awaiting HR approval', 'success')
+      }
+      closeModal()
       setForm({ date: localToday(), startTime: '', endTime: '', reason: '' })
     } catch {
-      toast('Failed to submit overtime request', 'error')
+      toast(editingId ? 'Failed to update overtime request' : 'Failed to submit overtime request', 'error')
     }
   }
 
@@ -643,7 +690,7 @@ export function OvertimeSection() {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h2 className="font-display font-semibold text-h4 text-text-1">Overtime Requests</h2>
-        <Button size="sm" onClick={() => setModalOpen(true)}>
+        <Button size="sm" onClick={openCreate}>
           <Plus size={13} /> Log Overtime
         </Button>
       </div>
@@ -678,24 +725,31 @@ export function OvertimeSection() {
                     <p className="font-ui text-[11px] text-error mt-0.5 italic">"{req.review_note}"</p>
                   )}
                 </div>
-                <span className={cn(
-                  'inline-flex items-center px-2 py-0.5 rounded-xs border text-[11px] font-mono font-semibold shrink-0 mt-0.5',
-                  OT_STATUS_CLS[req.status] ?? OT_STATUS_CLS['pending'],
-                )}>
-                  {req.status}
-                </span>
+                <div className="flex items-center gap-1.5 shrink-0 mt-0.5">
+                  {req.status === 'pending' && (
+                    <button onClick={() => openEdit(req)} title="Edit request" className="p-1 text-text-4 hover:text-text-1 transition-colors">
+                      <Pencil size={13} />
+                    </button>
+                  )}
+                  <span className={cn(
+                    'inline-flex items-center px-2 py-0.5 rounded-xs border text-[11px] font-mono font-semibold',
+                    OT_STATUS_CLS[req.status] ?? OT_STATUS_CLS['pending'],
+                  )}>
+                    {req.status}
+                  </span>
+                </div>
               </div>
             ))}
           </div>
         </Card>
       )}
 
-      {/* Submit modal */}
+      {/* Submit / edit modal */}
       {modalOpen && (
-        <ModalShell onClose={() => setModalOpen(false)} size="md" contentClassName="p-5 sm:p-6">
+        <ModalShell onClose={closeModal} size="md" contentClassName="p-5 sm:p-6">
             <div className="flex items-center justify-between mb-5">
-              <h3 className="font-display font-bold text-[16px] text-text-1">Log Overtime</h3>
-              <button onClick={() => setModalOpen(false)} className="text-text-4 hover:text-text-1"><X size={18} /></button>
+              <h3 className="font-display font-bold text-[16px] text-text-1">{editingId ? 'Edit Overtime' : 'Log Overtime'}</h3>
+              <button onClick={closeModal} className="text-text-4 hover:text-text-1"><X size={18} /></button>
             </div>
             <div className="space-y-4">
               <div>
@@ -743,14 +797,14 @@ export function OvertimeSection() {
               </div>
             </div>
             <div className="flex gap-2.5 mt-5">
-              <Button variant="ghost" size="sm" className="flex-1" onClick={() => setModalOpen(false)}>Cancel</Button>
+              <Button variant="ghost" size="sm" className="flex-1" onClick={closeModal}>Cancel</Button>
               <Button
                 size="sm"
                 className="flex-1"
-                disabled={!form.date || !form.startTime || !form.endTime || !form.reason.trim() || computedHours <= 0 || submitMut.isPending}
+                disabled={!form.date || !form.startTime || !form.endTime || !form.reason.trim() || computedHours <= 0 || saving}
                 onClick={handleSubmit}
               >
-                <Check size={14} /> Submit
+                <Check size={14} /> {editingId ? 'Save' : 'Submit'}
               </Button>
             </div>
         </ModalShell>
@@ -764,19 +818,33 @@ export function OvertimeSection() {
 export function WfhSection() {
   const toast = useToast()
   const [modalOpen, setModalOpen] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [date, setDate] = useState(localToday)
   const [reason, setReason] = useState('')
   const { data: requests = [], isLoading } = useMyWfhRequests()
   const submitMut = useSubmitWfh()
+  const updateMut = useUpdateWfh()
+  const saving = submitMut.isPending || updateMut.isPending
+
+  const openCreate = () => { setEditingId(null); setDate(localToday()); setReason(''); setModalOpen(true) }
+  const openEdit = (req: { id: string; date: string; reason: string }) => {
+    setEditingId(req.id); setDate(req.date); setReason(req.reason); setModalOpen(true)
+  }
+  const closeModal = () => { setModalOpen(false); setEditingId(null) }
 
   const handleSubmit = async () => {
     if (!reason.trim()) return
     try {
-      await submitMut.mutateAsync({ date, reason: reason.trim() })
-      toast('WFH request submitted — awaiting approval', 'success')
-      setModalOpen(false); setReason(''); setDate(localToday())
+      if (editingId) {
+        await updateMut.mutateAsync({ id: editingId, payload: { date, reason: reason.trim() } })
+        toast('WFH request updated', 'success')
+      } else {
+        await submitMut.mutateAsync({ date, reason: reason.trim() })
+        toast('WFH request submitted — awaiting approval', 'success')
+      }
+      closeModal(); setReason(''); setDate(localToday())
     } catch {
-      toast('Failed to submit WFH request', 'error')
+      toast(editingId ? 'Failed to update WFH request' : 'Failed to submit WFH request', 'error')
     }
   }
 
@@ -787,7 +855,7 @@ export function WfhSection() {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h2 className="font-display font-semibold text-h4 text-text-1">Work From Home</h2>
-        <Button size="sm" onClick={() => setModalOpen(true)}>
+        <Button size="sm" onClick={openCreate}>
           <Plus size={13} /> Request WFH
         </Button>
       </div>
@@ -817,12 +885,19 @@ export function WfhSection() {
                   <p className="font-ui text-[12px] text-text-3 truncate">{req.reason}</p>
                   {req.review_note && <p className="font-ui text-[11px] text-error mt-0.5 italic">"{req.review_note}"</p>}
                 </div>
-                <span className={cn(
-                  'inline-flex items-center px-2 py-0.5 rounded-xs border text-[11px] font-mono font-semibold shrink-0 mt-0.5',
-                  OT_STATUS_CLS[req.status] ?? OT_STATUS_CLS['pending'],
-                )}>
-                  {req.status}
-                </span>
+                <div className="flex items-center gap-1.5 shrink-0 mt-0.5">
+                  {req.status === 'pending' && !req.granted_directly && (
+                    <button onClick={() => openEdit(req)} title="Edit request" className="p-1 text-text-4 hover:text-text-1 transition-colors">
+                      <Pencil size={13} />
+                    </button>
+                  )}
+                  <span className={cn(
+                    'inline-flex items-center px-2 py-0.5 rounded-xs border text-[11px] font-mono font-semibold',
+                    OT_STATUS_CLS[req.status] ?? OT_STATUS_CLS['pending'],
+                  )}>
+                    {req.status}
+                  </span>
+                </div>
               </div>
             ))}
           </div>
@@ -830,10 +905,10 @@ export function WfhSection() {
       )}
 
       {modalOpen && (
-        <ModalShell onClose={() => setModalOpen(false)} size="md" contentClassName="p-5 sm:p-6">
+        <ModalShell onClose={closeModal} size="md" contentClassName="p-5 sm:p-6">
             <div className="flex items-center justify-between mb-5">
-              <h3 className="font-display font-bold text-[16px] text-text-1">Request WFH</h3>
-              <button onClick={() => setModalOpen(false)} className="text-text-4 hover:text-text-1"><X size={18} /></button>
+              <h3 className="font-display font-bold text-[16px] text-text-1">{editingId ? 'Edit WFH Request' : 'Request WFH'}</h3>
+              <button onClick={closeModal} className="text-text-4 hover:text-text-1"><X size={18} /></button>
             </div>
             <div className="space-y-4">
               <div>
@@ -852,9 +927,9 @@ export function WfhSection() {
               </div>
             </div>
             <div className="flex gap-2.5 mt-5">
-              <Button variant="ghost" size="sm" className="flex-1" onClick={() => setModalOpen(false)}>Cancel</Button>
-              <Button size="sm" className="flex-1" onClick={handleSubmit} disabled={!reason.trim() || submitMut.isPending}>
-                <Check size={14} /> Submit
+              <Button variant="ghost" size="sm" className="flex-1" onClick={closeModal}>Cancel</Button>
+              <Button size="sm" className="flex-1" onClick={handleSubmit} disabled={!reason.trim() || saving}>
+                <Check size={14} /> {editingId ? 'Save' : 'Submit'}
               </Button>
             </div>
         </ModalShell>
@@ -868,6 +943,7 @@ export function WfhSection() {
 export function LeaveSection() {
   const toast = useToast()
   const [modalOpen, setModalOpen] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [typeId, setTypeId] = useState('')
   const [dayPart, setDayPart] = useState<'full' | 'first_half' | 'second_half'>('full')
   const [startDate, setStartDate] = useState(localToday)
@@ -876,27 +952,50 @@ export function LeaveSection() {
   const { data: balances = [] } = useMyLeaveBalances()
   const { data: requests = [], isLoading } = useMyLeaveRequests()
   const submitMut = useSubmitLeave()
+  const updateMut = useUpdateLeave()
+  const saving = submitMut.isPending || updateMut.isPending
 
   const isHalf = dayPart !== 'full'
   // Half-day is always a single day.
   const effectiveEnd = isHalf ? startDate : endDate
   const invalid = !typeId || !reason.trim() || effectiveEnd < startDate
 
+  const resetForm = () => {
+    setTypeId(''); setReason(''); setDayPart('full')
+    setStartDate(localToday()); setEndDate(localToday())
+  }
+  const openCreate = () => { setEditingId(null); resetForm(); setModalOpen(true) }
+  const openEdit = (req: {
+    id: string; leave_type_id: string; day_part: string; start_date: string; end_date: string; reason: string
+  }) => {
+    setEditingId(req.id)
+    setTypeId(req.leave_type_id)
+    setDayPart(req.day_part === 'first_half' || req.day_part === 'second_half' ? req.day_part : 'full')
+    setStartDate(req.start_date); setEndDate(req.end_date); setReason(req.reason)
+    setModalOpen(true)
+  }
+  const closeModal = () => { setModalOpen(false); setEditingId(null) }
+
   const handleSubmit = async () => {
     if (invalid) return
+    const payload = {
+      leave_type_id: typeId,
+      start_date: startDate,
+      end_date: effectiveEnd,
+      reason: reason.trim(),
+      day_part: dayPart,
+    }
     try {
-      await submitMut.mutateAsync({
-        leave_type_id: typeId,
-        start_date: startDate,
-        end_date: effectiveEnd,
-        reason: reason.trim(),
-        day_part: dayPart,
-      })
-      toast('Leave request submitted — awaiting approval', 'success')
-      setModalOpen(false); setTypeId(''); setReason(''); setDayPart('full')
-      setStartDate(localToday()); setEndDate(localToday())
+      if (editingId) {
+        await updateMut.mutateAsync({ id: editingId, payload })
+        toast('Leave request updated', 'success')
+      } else {
+        await submitMut.mutateAsync(payload)
+        toast('Leave request submitted — awaiting approval', 'success')
+      }
+      closeModal(); resetForm()
     } catch {
-      toast('Failed to submit leave request', 'error')
+      toast(editingId ? 'Failed to update leave request' : 'Failed to submit leave request', 'error')
     }
   }
 
@@ -913,7 +1012,7 @@ export function LeaveSection() {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h2 className="font-display font-semibold text-h4 text-text-1">Leave</h2>
-        <Button size="sm" onClick={() => setModalOpen(true)} disabled={balances.length === 0}>
+        <Button size="sm" onClick={openCreate} disabled={balances.length === 0}>
           <Plus size={13} /> Request Leave
         </Button>
       </div>
@@ -963,12 +1062,19 @@ export function LeaveSection() {
                   <p className="font-ui text-[12px] text-text-3 truncate">{req.reason}</p>
                   {req.review_note && <p className="font-ui text-[11px] text-error mt-0.5 italic">"{req.review_note}"</p>}
                 </div>
-                <span className={cn(
-                  'inline-flex items-center px-2 py-0.5 rounded-xs border text-[11px] font-mono font-semibold shrink-0 mt-0.5',
-                  OT_STATUS_CLS[req.status] ?? OT_STATUS_CLS['pending'],
-                )}>
-                  {req.status}
-                </span>
+                <div className="flex items-center gap-1.5 shrink-0 mt-0.5">
+                  {req.status === 'pending' && (
+                    <button onClick={() => openEdit(req)} title="Edit request" className="p-1 text-text-4 hover:text-text-1 transition-colors">
+                      <Pencil size={13} />
+                    </button>
+                  )}
+                  <span className={cn(
+                    'inline-flex items-center px-2 py-0.5 rounded-xs border text-[11px] font-mono font-semibold',
+                    OT_STATUS_CLS[req.status] ?? OT_STATUS_CLS['pending'],
+                  )}>
+                    {req.status}
+                  </span>
+                </div>
               </div>
             ))}
           </div>
@@ -976,10 +1082,10 @@ export function LeaveSection() {
       )}
 
       {modalOpen && (
-        <ModalShell onClose={() => setModalOpen(false)} size="md" contentClassName="p-5 sm:p-6">
+        <ModalShell onClose={closeModal} size="md" contentClassName="p-5 sm:p-6">
             <div className="flex items-center justify-between mb-5">
-              <h3 className="font-display font-bold text-[16px] text-text-1">Request Leave</h3>
-              <button onClick={() => setModalOpen(false)} className="text-text-4 hover:text-text-1"><X size={18} /></button>
+              <h3 className="font-display font-bold text-[16px] text-text-1">{editingId ? 'Edit Leave Request' : 'Request Leave'}</h3>
+              <button onClick={closeModal} className="text-text-4 hover:text-text-1"><X size={18} /></button>
             </div>
             <div className="space-y-4">
               <div>
@@ -1035,10 +1141,10 @@ export function LeaveSection() {
               </div>
             </div>
             <div className="flex gap-2.5 mt-5">
-              <Button variant="ghost" size="sm" className="flex-1" onClick={() => setModalOpen(false)}>Cancel</Button>
+              <Button variant="ghost" size="sm" className="flex-1" onClick={closeModal}>Cancel</Button>
               <Button size="sm" className="flex-1" onClick={handleSubmit}
-                disabled={invalid || submitMut.isPending}>
-                <Check size={14} /> Submit
+                disabled={invalid || saving}>
+                <Check size={14} /> {editingId ? 'Save' : 'Submit'}
               </Button>
             </div>
         </ModalShell>
@@ -1086,40 +1192,6 @@ export default function EmployeeAttendancePage() {
         {/* Team leads / PMs: read-only visibility into their team */}
         {canSeeTeam && <TeamAttendancePanel />}
 
-        {/* Month filter — controls the summary stats and history below */}
-        <div className="flex flex-wrap items-center gap-3">
-          <PeriodStepper
-            icon={Calendar}
-            label={periodLabel}
-            onPrev={prevMonth}
-            onNext={nextMonth}
-            disableNext={isCurrentMonth}
-          >
-            {isCurrentMonth && (
-              <span className="ml-1 px-1.5 py-0.5 rounded-xs bg-brand-red/10 border border-brand-red/20 text-brand-red text-[10px] font-mono font-semibold uppercase tracking-wide">
-                Current
-              </span>
-            )}
-          </PeriodStepper>
-        </div>
-
-        {/* Stats — skeleton while history loads, then real values */}
-        {isLoading ? (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-surface-1 border border-border-default rounded-xl p-4 flex flex-col gap-2 animate-pulse">
-                <div className="size-9 rounded-lg bg-surface-2" />
-                <div>
-                  <div className="h-7 w-10 bg-surface-2 rounded mb-1" />
-                  <div className="h-3 w-14 bg-surface-2 rounded" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <SummaryStats records={history} year={year} month={month} />
-        )}
-
         <UpcomingScheduleSection />
 
         {/* OOO active state — shown only when employee has an approved OOO today */}
@@ -1136,6 +1208,39 @@ export default function EmployeeAttendancePage() {
           <WfhSection />
           <LeaveSection />
         </div>
+
+        {/* Month filter + summary cards — sit directly above the attendance table */}
+        <div className="flex flex-wrap items-center gap-3">
+          <PeriodStepper
+            icon={Calendar}
+            label={periodLabel}
+            onPrev={prevMonth}
+            onNext={nextMonth}
+            disableNext={isCurrentMonth}
+          >
+            {isCurrentMonth && (
+              <span className="ml-1 px-1.5 py-0.5 rounded-xs bg-brand-red/10 border border-brand-red/20 text-brand-red text-[10px] font-mono font-semibold uppercase tracking-wide">
+                Current
+              </span>
+            )}
+          </PeriodStepper>
+        </div>
+
+        {isLoading ? (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-surface-1 border border-border-default rounded-xl p-4 flex flex-col gap-2 animate-pulse">
+                <div className="size-9 rounded-lg bg-surface-2" />
+                <div>
+                  <div className="h-7 w-10 bg-surface-2 rounded mb-1" />
+                  <div className="h-3 w-14 bg-surface-2 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <SummaryStats records={history} year={year} month={month} />
+        )}
 
         {/* History */}
         {isLoading ? (
