@@ -3,6 +3,7 @@ import { Navigate, useParams } from 'react-router-dom'
 import {
   Trophy, Zap, Star, Plus, X, Gift, Loader2, AlertCircle, ShieldAlert,
   Check, Pencil, Trash2, ClipboardCheck, Send, Award, Coins, Lock, Ban, History,
+  Users, UserPlus, LogOut,
 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { HubRow } from '../../components/layout/MobileHub'
@@ -27,6 +28,8 @@ import {
   useApprovedShoutouts, usePendingShoutouts, useGiveShoutout, useReviewShoutout,
   useRewards, useAllRewards, useCreateReward, useUpdateReward, useDeleteReward,
   useRedeemReward, useRedemptionQueue, useReviewRedemption,
+  useRewardPools, useOpenRewardPool, useJoinRewardPool, useLeaveRewardPool,
+  useCancelRewardPool, useReviewRewardPool,
   useBadges, useMyBadgeAwards,
   useEmployeeOfMonth, useSetEmployeeOfMonth, useDeleteEmployeeOfMonth,
   useGrantLp, useSetRestriction,
@@ -34,7 +37,7 @@ import {
 import { formatRelativeTime } from '../../lib/utils'
 import { cn } from '../../lib/cn'
 import type {
-  RewardRow, QuestTaskRow, ShoutoutRow, QuestTaskClaimRow,
+  RewardRow, QuestTaskRow, ShoutoutRow, QuestTaskClaimRow, RewardPoolWithMembers,
 } from '../../api/gamification'
 import { ModalShell } from '../../components/ui/ModalShell'
 import { PointsHistory } from '../../components/shared/PointsHistory'
@@ -431,12 +434,29 @@ function RewardModal({ actorId, onClose }: { actorId: string; onClose: () => voi
   const [quantity, setQuantity] = useState('-1')
   const [tier, setTier] = useState<'standard' | 'premium'>('standard')
   const [isCash, setIsCash] = useState(false)
+  // Group reward: N employees each contribute the same per-person XP (`cost`).
+  const [isGroup, setIsGroup] = useState(false)
+  const [groupSize, setGroupSize] = useState('3')
+
+  const perPerson = parseInt(cost, 10)
+  const size = parseInt(groupSize, 10)
+  const groupSizeValid = !isGroup || (!isNaN(size) && size >= 2)
+  const total = !isNaN(perPerson) && !isNaN(size) ? perPerson * size : 0
 
   const submit = () => {
     const c = parseInt(cost, 10)
     const q = parseInt(quantity, 10)
-    if (!name || isNaN(c) || c <= 0) return
-    create({ name, description: description || null, xp_cost: c, quantity: isNaN(q) ? -1 : q, tier, is_cash: isCash }, {
+    if (!name || isNaN(c) || c <= 0 || !groupSizeValid) return
+    create({
+      name,
+      description: description || null,
+      xp_cost: c,
+      quantity: isNaN(q) ? -1 : q,
+      tier,
+      // Group rewards go through the pool flow, not the cash-eligibility gate.
+      is_cash: isGroup ? false : isCash,
+      group_size: isGroup ? size : 1,
+    }, {
       onSuccess: () => { toast(`Reward "${name}" created`, 'success'); onClose() },
       onError: () => toast('Failed to create reward', 'error'),
     })
@@ -459,33 +479,68 @@ function RewardModal({ actorId, onClose }: { actorId: string; onClose: () => voi
             <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2}
               className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-ui text-text-1 placeholder:text-text-4 outline-none focus:border-border-focus resize-none" />
           </div>
+          {/* Group reward toggle: requires N employees to pool equal shares. */}
+          <label className="flex items-center gap-2.5 cursor-pointer">
+            <Toggle checked={isGroup} onChange={setIsGroup} />
+            <span className="font-ui text-[12.5px] text-text-2 flex items-center gap-1.5">
+              <Users size={13} className="text-text-3" /> Group reward — several employees pool together
+            </span>
+          </label>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">XP cost *</label>
+              <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">
+                {isGroup ? 'Per-person XP *' : 'XP cost *'}
+              </label>
               <input type="number" min={1} value={cost} onChange={(e) => setCost(e.target.value)} placeholder="200"
                 className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-ui text-text-1 outline-none focus:border-border-focus" />
             </div>
-            <div>
-              <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Qty (-1 = ∞)</label>
-              <input type="number" min={-1} value={quantity} onChange={(e) => setQuantity(e.target.value)}
-                className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-ui text-text-1 outline-none focus:border-border-focus" />
-            </div>
+            {isGroup ? (
+              <div>
+                <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Group size (≥ 2) *</label>
+                <input type="number" min={2} value={groupSize} onChange={(e) => setGroupSize(e.target.value)} placeholder="3"
+                  className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-ui text-text-1 outline-none focus:border-border-focus" />
+              </div>
+            ) : (
+              <div>
+                <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Qty (-1 = ∞)</label>
+                <input type="number" min={-1} value={quantity} onChange={(e) => setQuantity(e.target.value)}
+                  className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-ui text-text-1 outline-none focus:border-border-focus" />
+              </div>
+            )}
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Tier</label>
-              <Select value={tier} onChange={(v) => setTier(v === 'premium' ? 'premium' : 'standard')}
-                options={[{ value: 'standard', label: 'Standard' }, { value: 'premium', label: 'Premium' }]} />
+          {isGroup ? (
+            <>
+              <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-coin-gold/8 border border-coin-gold/20">
+                <Coins size={13} className="text-coin-gold shrink-0" />
+                <span className="font-mono text-[12px] text-text-2">
+                  Everyone pays <span className="text-coin-gold font-bold">{isNaN(perPerson) ? '—' : lp(perPerson)}</span>
+                  {' · total '}<span className="text-coin-gold font-bold">{total ? lp(total) : '—'}</span>
+                  {' for '}{groupSizeValid && !isNaN(size) ? size : '—'} people
+                </span>
+              </div>
+              <div>
+                <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Qty — completed groups (-1 = ∞)</label>
+                <input type="number" min={-1} value={quantity} onChange={(e) => setQuantity(e.target.value)}
+                  className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-ui text-text-1 outline-none focus:border-border-focus" />
+              </div>
+            </>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Tier</label>
+                <Select value={tier} onChange={(v) => setTier(v === 'premium' ? 'premium' : 'standard')}
+                  options={[{ value: 'standard', label: 'Standard' }, { value: 'premium', label: 'Premium' }]} />
+              </div>
+              <label className="flex items-center gap-2.5 cursor-pointer mt-6">
+                <Toggle checked={isCash} onChange={setIsCash} />
+                <span className="font-ui text-[12.5px] text-text-2">Cash reward (≥500 XP)</span>
+              </label>
             </div>
-            <label className="flex items-center gap-2.5 cursor-pointer mt-6">
-              <Toggle checked={isCash} onChange={setIsCash} />
-              <span className="font-ui text-[12.5px] text-text-2">Cash reward (≥500 XP)</span>
-            </label>
-          </div>
+          )}
         </div>
         <div className="flex gap-2.5 mt-5">
           <Button variant="ghost" size="sm" className="flex-1" onClick={onClose}>Cancel</Button>
-          <Button size="sm" className="flex-1" disabled={!name || !cost || isPending} onClick={submit}>
+          <Button size="sm" className="flex-1" disabled={!name || !cost || !groupSizeValid || isPending} onClick={submit}>
             {isPending ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />} Create
           </Button>
         </div>
@@ -559,7 +614,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
   const [rewardModalOpen, setRewardModalOpen] = useState(false)
   const [redeemTarget, setRedeemTarget] = useState<RewardRow | null>(null)
   const [submitTarget, setSubmitTarget] = useState<QuestTaskClaimRow | null>(null)
-  const [review, setReview] = useState<{ kind: 'task' | 'shoutout' | 'redeem'; id: string; approve: boolean; action?: 'approve' | 'reject' | 'fulfill'; label: string; danger?: boolean } | null>(null)
+  const [review, setReview] = useState<{ kind: 'task' | 'shoutout' | 'redeem' | 'pool'; id: string; approve: boolean; action?: 'approve' | 'reject' | 'fulfill'; label: string; danger?: boolean } | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [confirmReleaseClaim, setConfirmReleaseClaim] = useState<string | null>(null)
 
@@ -585,6 +640,10 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
   const { data: pendingShouts = [] } = usePendingShoutouts()
   const { data: allRewards = [] } = useAllRewards()
   const { data: redemptionQueue = [] } = useRedemptionQueue()
+  // Shop: open pools (joinable) + pools I'm already in (pending/approved) so I can track them.
+  const { data: shopPools = [] } = useRewardPools(['open', 'pending', 'approved'])
+  // HR queue: filled pools awaiting approval, plus approved ones awaiting fulfilment.
+  const { data: reviewPools = [] } = useRewardPools(['pending', 'approved'])
 
   // Mutations
   const { mutate: claimTask, isPending: claiming } = useClaimQuestTask(profileId)
@@ -592,6 +651,11 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
   const { mutate: reviewShout, isPending: reviewingShout } = useReviewShoutout()
   const { mutate: reviewRedeem, isPending: reviewingRedeem } = useReviewRedemption()
   const { mutate: redeem, isPending: redeeming } = useRedeemReward(profileId)
+  const { mutate: openPool, isPending: openingPool } = useOpenRewardPool()
+  const { mutate: joinPool, isPending: joiningPool } = useJoinRewardPool()
+  const { mutate: leavePool, isPending: leavingPool } = useLeaveRewardPool()
+  const { mutate: cancelPool, isPending: cancellingPool } = useCancelRewardPool()
+  const { mutate: reviewPool, isPending: reviewingPool } = useReviewRewardPool()
   const { mutate: updateReward } = useUpdateReward()
   const { mutate: deleteReward, isPending: deletingReward } = useDeleteReward()
   const { mutate: deleteTask } = useDeleteQuestTask()
@@ -633,8 +697,25 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
   const nameOf = (id: string) => directory[id]?.name ?? '—'
   const rewardName = (id: string) => allRewards.find((r) => r.id === id)?.name ?? rewards.find((r) => r.id === id)?.name ?? 'Reward'
 
+  // Split the shop: individual rewards keep the classic redeem flow; group rewards
+  // (group_size >= 2) go through the pool section below.
+  const individualRewards = useMemo(() => rewards.filter((r) => (r.group_size ?? 1) < 2), [rewards])
+  const groupRewards      = useMemo(() => rewards.filter((r) => (r.group_size ?? 1) >= 2), [rewards])
+  // reward_id → its active pools (open first, then my pending/approved ones).
+  const poolsByReward = useMemo(() => {
+    const m = new Map<string, RewardPoolWithMembers[]>()
+    for (const p of shopPools) {
+      const list = m.get(p.reward_id)
+      if (list) list.push(p)
+      else m.set(p.reward_id, [p])
+    }
+    return m
+  }, [shopPools])
+  const isPoolMember = (p: RewardPoolWithMembers) => p.members.some((mem) => mem.profile_id === profileId)
+  const poolBusy = openingPool || joiningPool || leavingPool || cancellingPool
+
   const ranked = leaderboard.map((e, i) => ({ ...e, rank: i + 1, isMe: e.profile_id === profileId }))
-  const reviewCount = claimsReview.length + pendingShouts.length + redemptionQueue.filter((r) => r.status === 'pending').length
+  const reviewCount = claimsReview.length + pendingShouts.length + redemptionQueue.filter((r) => r.status === 'pending').length + reviewPools.filter((p) => p.status === 'pending').length
 
   // Handlers
   const handleSetEotm = () => {
@@ -692,6 +773,40 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
     })
   }
 
+  const poolErr = (e: Error): string =>
+    e.message.includes('insufficient_lp') ? 'Not enough XP for your share'
+      : e.message.includes('participation_restricted') || e.message.includes('restricted') ? 'You are restricted from redeeming'
+      : e.message.includes('already_in_pool') || e.message.includes('already_joined') ? 'You are already in a pool for this reward'
+      : e.message.includes('pool_full') ? 'This group is already full'
+      : e.message.includes('pool_expired') ? 'This pool has expired'
+      : e.message.includes('pool_not_open') ? 'This pool is no longer open'
+      : e.message.includes('out_of_stock') ? 'Out of stock'
+      : 'Action failed'
+
+  const handleStartPool = (reward: RewardRow) => openPool(reward.id, {
+    onSuccess: () => toast(`Group started for "${reward.name}" — your share is reserved.`, 'success'),
+    onError: (e) => toast(poolErr(e), 'error'),
+  })
+  const handleJoinPool = (poolId: string) => joinPool(poolId, {
+    onSuccess: () => toast('Joined — your share is reserved.', 'success'),
+    onError: (e) => toast(poolErr(e), 'error'),
+  })
+  const handleLeavePool = (pool: RewardPoolWithMembers) => {
+    // The initiator leaving collapses the whole pool (everyone refunded); a regular
+    // member just withdraws their own share.
+    if (pool.initiated_by === profileId) {
+      cancelPool({ poolId: pool.id }, {
+        onSuccess: () => toast('Group cancelled — everyone refunded.', 'success'),
+        onError: (e) => toast(poolErr(e), 'error'),
+      })
+    } else {
+      leavePool(pool.id, {
+        onSuccess: () => toast('You left the group — XP refunded.', 'success'),
+        onError: (e) => toast(poolErr(e), 'error'),
+      })
+    }
+  }
+
   const handleGrant = () => {
     const amt = parseInt(grantAmount, 10)
     if (!grantId || isNaN(amt) || amt <= 0 || !grantReason.trim()) return
@@ -707,7 +822,8 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
     const fail = () => { toast('Action failed', 'error'); setReview(null) }
     if (review.kind === 'task') reviewTask({ claimId: review.id, approve: review.approve, note: note || null }, { onSuccess: () => done(review.approve ? 'Task approved — XP awarded' : 'Sent back for rework'), onError: fail })
     else if (review.kind === 'shoutout') reviewShout({ id: review.id, approve: review.approve, note: note || null }, { onSuccess: () => done(review.approve ? 'Shoutout approved — XP awarded' : 'Shoutout rejected'), onError: fail })
-    else reviewRedeem({ id: review.id, action: review.action ?? 'approve', note: note || null }, { onSuccess: () => done('Redemption updated'), onError: fail })
+    else if (review.kind === 'redeem') reviewRedeem({ id: review.id, action: review.action ?? 'approve', note: note || null }, { onSuccess: () => done('Redemption updated'), onError: fail })
+    else reviewPool({ poolId: review.id, action: review.action ?? 'approve', note: note || null }, { onSuccess: () => done('Group redemption updated'), onError: fail })
   }
 
   const tabs = [
@@ -725,7 +841,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
   const activeTab = mobileSection ?? mainTab
   const sectionLabel = GAMIFICATION_SECTIONS.find((s) => s.key === mobileSection)?.label ?? 'Gamification'
 
-  const reviewPending = reviewingTask || reviewingShout || reviewingRedeem
+  const reviewPending = reviewingTask || reviewingShout || reviewingRedeem || reviewingPool
 
   return (
     <div className="flex flex-col flex-1">
@@ -1031,7 +1147,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
             {rwLoading && <div className="flex justify-center py-16 text-text-4"><Loader2 size={20} className="animate-spin" /></div>}
             {!rwLoading && (
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {rewards.map((r) => {
+                {individualRewards.map((r) => {
                   const cashBlocked = r.is_cash && myLP < 500
                   const canAfford = myLP >= r.xp_cost && !cashBlocked
                   const out = r.quantity === 0
@@ -1053,6 +1169,98 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
                     </div>
                   )
                 })}
+              </div>
+            )}
+
+            {/* ── Group rewards: several employees pool equal shares ── */}
+            {!rwLoading && groupRewards.length > 0 && (
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-2">
+                  <Users size={15} className="text-text-3" />
+                  <h3 className="font-display font-bold text-[15px] text-text-1">Group Rewards</h3>
+                  <span className="font-mono text-[11px] text-text-4">everyone chips in the same XP</span>
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {groupRewards.map((r) => {
+                    const perPerson = r.xp_cost
+                    const size = r.group_size
+                    const pools = poolsByReward.get(r.id) ?? []
+                    const openPools = pools.filter((p) => p.status === 'open')
+                    const myPool = pools.find((p) => isPoolMember(p))
+                    // Show joinable open pools + the viewer's own in-review pool; hide
+                    // other people's filled/approved pools from the shop card.
+                    const visiblePools = pools.filter((p) => p.status === 'open' || isPoolMember(p))
+                    const out = r.quantity === 0
+                    const canAffordShare = myLP >= perPerson
+                    const inOpenPool = openPools.some((p) => isPoolMember(p))
+                    const canStart = isParticipant && canAffordShare && !out && !inOpenPool && !myPool
+                    return (
+                      <div key={r.id} className="bg-surface-1 border border-border-default rounded-xl p-5 flex flex-col gap-3">
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="size-10 rounded-lg bg-service-design/10 border border-service-design/20 flex items-center justify-center shrink-0"><Users size={18} className="text-service-design" /></div>
+                            <div className="min-w-0">
+                              <h4 className="font-display font-bold text-body/tight text-text-1 truncate">{r.name}</h4>
+                              <p className="font-mono text-[11px] text-text-3">Group of {size} · {lp(perPerson)} each · total {lp(perPerson * size)}</p>
+                            </div>
+                          </div>
+                          {r.quantity !== -1 && r.quantity !== null && (
+                            <span className="font-mono text-[10px] text-text-4 shrink-0">{r.quantity} left</span>
+                          )}
+                        </div>
+                        {r.description && <p className="font-ui text-caption/relaxed text-text-3">{r.description}</p>}
+
+                        {/* Active pools for this reward */}
+                        {visiblePools.length > 0 && (
+                          <div className="flex flex-col gap-2">
+                            {visiblePools.map((p) => {
+                              const mine = isPoolMember(p)
+                              const full = p.members.length >= p.group_size
+                              const statusLabel = p.status === 'open'
+                                ? `${p.members.length}/${p.group_size} joined`
+                                : p.status === 'pending' ? 'Full · awaiting HR'
+                                : p.status === 'approved' ? 'Approved' : p.status
+                              return (
+                                <div key={p.id} className={cn('flex items-center gap-2.5 rounded-md border px-3 py-2', mine ? 'border-service-design/30 bg-service-design/5' : 'border-border-subtle')}>
+                                  <AvatarGroup
+                                    users={p.members.map((mem) => ({ id: mem.id, name: nameOf(mem.profile_id), avatarUrl: directory[mem.profile_id]?.avatar_url ?? null }))}
+                                    max={4}
+                                    size="xs"
+                                  />
+                                  <div className="flex flex-col min-w-0">
+                                    <span className="font-mono text-[11px] text-text-2">{statusLabel}</span>
+                                    {mine && <span className="font-mono text-[10px] text-service-design">You're in{p.initiated_by === profileId ? ' · starter' : ''}</span>}
+                                  </div>
+                                  <div className="ml-auto shrink-0">
+                                    {p.status === 'open' && mine && (
+                                      <Button size="sm" variant="ghost" disabled={poolBusy} onClick={() => handleLeavePool(p)}>
+                                        <LogOut size={12} /> {p.initiated_by === profileId ? 'Cancel' : 'Leave'}
+                                      </Button>
+                                    )}
+                                    {p.status === 'open' && !mine && (
+                                      <Button size="sm" variant={isParticipant && canAffordShare && !inOpenPool ? 'primary' : 'ghost'}
+                                        disabled={poolBusy || full || !isParticipant || !canAffordShare || inOpenPool || !!myPool}
+                                        onClick={() => handleJoinPool(p.id)}>
+                                        <UserPlus size={12} /> {canAffordShare ? 'Join' : 'Locked'}
+                                      </Button>
+                                    )}
+                                  </div>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        )}
+
+                        <div className="flex items-center justify-between mt-auto pt-1">
+                          <span className={cn('font-mono font-bold text-[13px]', canStart ? 'text-coin-gold' : 'text-text-4')}>{lp(perPerson)} <span className="text-text-4 font-normal">your share</span></span>
+                          <Button size="sm" variant={canStart ? 'primary' : 'ghost'} disabled={!canStart || openingPool} onClick={() => handleStartPool(r)}>
+                            {out ? 'Sold Out' : inOpenPool || myPool ? 'In a group' : canAffordShare ? <><Plus size={12} /> Start a group</> : 'Locked'}
+                          </Button>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
             )}
           </div>
@@ -1135,6 +1343,35 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
               </section>
             )}
 
+            {/* Group redemption pools (governors approve/reject; finance fulfills) */}
+            {canFulfill && (
+              <section>
+                <h2 className="font-display font-bold text-[16px] text-text-1 flex items-center gap-2 mb-3"><Users size={16} className="text-text-3" /> Group Redemption Pools</h2>
+                <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
+                  {reviewPools.length === 0 && <div className="px-5 py-8 text-center text-text-4 font-ui text-[13px]">No group pools awaiting action.</div>}
+                  {reviewPools.map((p) => (
+                    <div key={p.id} className="grid grid-cols-[1fr_auto] gap-3 items-center px-5 py-3 border-b border-border-subtle last:border-0">
+                      <div className="min-w-0">
+                        <p className="font-ui font-semibold text-[13px] text-text-1">
+                          {rewardName(p.reward_id)} · <span className="text-coin-gold font-mono">{lp(p.per_person_lp)} × {p.group_size} = {lp(p.per_person_lp * p.group_size)}</span>
+                        </p>
+                        <p className="font-mono text-[11px] text-text-3">
+                          {p.members.map((mem) => nameOf(mem.profile_id)).join(', ')} · <span className="capitalize">{p.status}</span> · {formatRelativeTime(p.filled_at ?? p.created_at)}
+                        </p>
+                      </div>
+                      <div className="flex gap-1.5">
+                        {p.status === 'pending' && isGovernor && <>
+                          <Button size="sm" variant="secondary" disabled={reviewPending} onClick={() => setReview({ kind: 'pool', id: p.id, approve: true, action: 'approve', label: 'Approve Group Redemption' })}>Approve</Button>
+                          <Button size="sm" variant="ghost" disabled={reviewPending} onClick={() => setReview({ kind: 'pool', id: p.id, approve: false, action: 'reject', label: 'Reject & Refund All', danger: true })}>Reject</Button>
+                        </>}
+                        {p.status === 'approved' && <Button size="sm" disabled={reviewPending} onClick={() => setReview({ kind: 'pool', id: p.id, approve: true, action: 'fulfill', label: 'Mark Group Fulfilled' })}>Fulfill</Button>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
             {/* Quest task management */}
             {isRecognizer && (
               <section>
@@ -1186,7 +1423,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
                 <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
                   {allRewards.map((r) => (
                     <div key={r.id} className="grid grid-cols-[1fr_90px_70px_90px_120px] gap-3 items-center px-5 py-3 border-b border-border-subtle last:border-0">
-                      <div className="min-w-0"><p className="font-ui font-semibold text-[13px] text-text-1 truncate">{r.name}{r.is_cash && <span className="ml-1.5 font-mono text-[9px] text-service-mkt">CASH</span>}</p></div>
+                      <div className="min-w-0"><p className="font-ui font-semibold text-[13px] text-text-1 truncate">{r.name}{r.is_cash && <span className="ml-1.5 font-mono text-[9px] text-service-mkt">CASH</span>}{(r.group_size ?? 1) >= 2 && <span className="ml-1.5 font-mono text-[9px] text-service-design">GROUP ×{r.group_size}</span>}</p></div>
                       <span className="font-mono text-[12px] text-coin-gold font-bold">{lp(r.xp_cost)}</span>
                       <span className="font-mono text-[12px] text-text-2">{r.quantity === -1 ? '∞' : r.quantity ?? '∞'}</span>
                       <span className={cn('font-mono text-[10px] px-1.5 py-0.5 rounded-xs w-fit', r.is_active ? 'text-success bg-success/10' : 'text-text-4 bg-surface-2')}>{r.is_active ? 'Active' : 'Inactive'}</span>

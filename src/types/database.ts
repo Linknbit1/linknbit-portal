@@ -1054,6 +1054,112 @@ export type Database = {
           },
         ]
       }
+      reward_pool_members: {
+        Row: {
+          id: string
+          joined_at: string
+          lp_spent: number
+          pool_id: string
+          profile_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string
+          lp_spent: number
+          pool_id: string
+          profile_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          lp_spent?: number
+          pool_id?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reward_pool_members_pool_id_fkey"
+            columns: ["pool_id"]
+            isOneToOne: false
+            referencedRelation: "reward_pools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reward_pool_members_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reward_pools: {
+        Row: {
+          created_at: string
+          expires_at: string
+          filled_at: string | null
+          group_size: number
+          id: string
+          initiated_by: string
+          note: string | null
+          per_person_lp: number
+          reviewed_at: string | null
+          reviewed_by: string | null
+          reward_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          filled_at?: string | null
+          group_size: number
+          id?: string
+          initiated_by: string
+          note?: string | null
+          per_person_lp: number
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reward_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          filled_at?: string | null
+          group_size?: number
+          id?: string
+          initiated_by?: string
+          note?: string | null
+          per_person_lp?: number
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reward_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reward_pools_initiated_by_fkey"
+            columns: ["initiated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reward_pools_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reward_pools_reward_id_fkey"
+            columns: ["reward_id"]
+            isOneToOne: false
+            referencedRelation: "rewards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reward_redemptions: {
         Row: {
           created_at: string
@@ -1117,6 +1223,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           description: string | null
+          group_size: number
           id: string
           image_url: string | null
           is_active: boolean
@@ -1130,6 +1237,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          group_size?: number
           id?: string
           image_url?: string | null
           is_active?: boolean
@@ -1143,6 +1251,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          group_size?: number
           id?: string
           image_url?: string | null
           is_active?: boolean
@@ -1538,18 +1647,30 @@ export type Database = {
       can_grant_role: { Args: { p_role: string }; Returns: boolean }
       can_manage_target: { Args: { p_target_role: string }; Returns: boolean }
       can_recognize: { Args: never; Returns: boolean }
+      cancel_reward_pool: {
+        Args: { p_note?: string; p_pool_id: string }
+        Returns: undefined
+      }
       claim_quest_task: { Args: { p_task_id: string }; Returns: string }
       current_user_role: { Args: never; Returns: string }
       delete_employee_of_the_month: {
         Args: { p_month: number; p_year: number }
         Returns: undefined
       }
+      expire_reward_pools: { Args: never; Returns: undefined }
       fn_auto_checkout_missing: { Args: never; Returns: undefined }
       fn_award_badges: { Args: { p_profile_id: string }; Returns: undefined }
       fn_is_working_day: { Args: { d: string }; Returns: boolean }
       fn_mark_absent_for_date: { Args: { d: string }; Returns: undefined }
       fn_mark_absent_today: { Args: never; Returns: undefined }
       fn_monthly_lp_reset: { Args: never; Returns: undefined }
+      fn_unwind_reward_pool: {
+        Args: {
+          p_pool: Database["public"]["Tables"]["reward_pools"]["Row"]
+          p_reward_name: string
+        }
+        Returns: undefined
+      }
       get_quest_claimants: {
         Args: never
         Returns: {
@@ -1574,6 +1695,9 @@ export type Database = {
       }
       is_internal: { Args: never; Returns: boolean }
       is_project_member: { Args: { p_project_id: string }; Returns: boolean }
+      join_reward_pool: { Args: { p_pool_id: string }; Returns: undefined }
+      leave_reward_pool: { Args: { p_pool_id: string }; Returns: undefined }
+      open_reward_pool: { Args: { p_reward_id: string }; Returns: string }
       redeem_reward: {
         Args: { p_profile_id: string; p_reward_id: string }
         Returns: string
@@ -1585,6 +1709,10 @@ export type Database = {
       }
       review_redemption: {
         Args: { p_action: string; p_id: string; p_note?: string }
+        Returns: undefined
+      }
+      review_reward_pool: {
+        Args: { p_action: string; p_note?: string; p_pool_id: string }
         Returns: undefined
       }
       review_shoutout: {

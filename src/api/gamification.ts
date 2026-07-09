@@ -274,7 +274,7 @@ export async function fetchAllRewards(): Promise<RewardRow[]> {
 }
 
 export async function createReward(
-  reward: Pick<RewardRow, 'name' | 'description' | 'xp_cost' | 'quantity' | 'tier' | 'is_cash'>,
+  reward: Pick<RewardRow, 'name' | 'description' | 'xp_cost' | 'quantity' | 'tier' | 'is_cash' | 'group_size'>,
   createdBy: string,
 ): Promise<RewardRow> {
   const payload: TablesInsert<'rewards'> = { ...reward, created_by: createdBy, is_active: true }
@@ -334,6 +334,68 @@ export async function reviewRedemption(
 ): Promise<void> {
   const { error } = await supabase.rpc('review_redemption', {
     p_id: id,
+    p_action: action,
+    p_note: note ?? undefined,
+  })
+  if (error) throw error
+}
+
+// ── Group reward pools ────────────────────────────────────────────────────────
+// A group reward (rewards.group_size >= 2) can't be redeemed alone: N employees
+// pool equal per-person shares. Points reserve on join and refund on cancel/expire.
+
+export type RewardPoolRow       = Tables<'reward_pools'>
+export type RewardPoolMemberRow = Tables<'reward_pool_members'>
+
+export interface RewardPoolWithMembers extends RewardPoolRow {
+  members: RewardPoolMemberRow[]
+}
+
+// Pools with their members, newest first. Optionally filtered by status
+// (e.g. ['open'] for the shop, ['pending','approved'] for the HR queue).
+export async function fetchRewardPools(statuses?: string[]): Promise<RewardPoolWithMembers[]> {
+  let q = supabase
+    .from('reward_pools')
+    .select('*, members:reward_pool_members(*)')
+    .order('created_at', { ascending: false })
+  if (statuses && statuses.length) q = q.in('status', statuses)
+  const { data, error } = await q
+  if (error) throw error
+  // as unknown: the nested-select shape isn't inferred into RewardPoolWithMembers.
+  return (data ?? []) as unknown as RewardPoolWithMembers[]
+}
+
+// Start a pool for a group reward — reserves the initiator's share. Returns pool id.
+export async function openRewardPool(rewardId: string): Promise<string> {
+  const { data, error } = await supabase.rpc('open_reward_pool', { p_reward_id: rewardId })
+  if (error) throw error
+  return data
+}
+
+export async function joinRewardPool(poolId: string): Promise<void> {
+  const { error } = await supabase.rpc('join_reward_pool', { p_pool_id: poolId })
+  if (error) throw error
+}
+
+export async function leaveRewardPool(poolId: string): Promise<void> {
+  const { error } = await supabase.rpc('leave_reward_pool', { p_pool_id: poolId })
+  if (error) throw error
+}
+
+// Initiator (or governor) cancels an open pool — refunds every member.
+export async function cancelRewardPool(poolId: string, note?: string | null): Promise<void> {
+  const { error } = await supabase.rpc('cancel_reward_pool', { p_pool_id: poolId, p_note: note ?? undefined })
+  if (error) throw error
+}
+
+// Governor/finance review of a filled pool. Reject refunds all members.
+export async function reviewRewardPool(
+  poolId: string,
+  action: 'approve' | 'reject' | 'fulfill',
+  note: string | null,
+): Promise<void> {
+  const { error } = await supabase.rpc('review_reward_pool', {
+    p_pool_id: poolId,
     p_action: action,
     p_note: note ?? undefined,
   })
