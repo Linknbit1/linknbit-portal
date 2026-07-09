@@ -716,6 +716,8 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
 
   const ranked = leaderboard.map((e, i) => ({ ...e, rank: i + 1, isMe: e.profile_id === profileId }))
   const reviewCount = claimsReview.length + pendingShouts.length + redemptionQueue.filter((r) => r.status === 'pending').length + reviewPools.filter((p) => p.status === 'pending').length
+  // Single render-stable "now" for deadline checks (avoids impure Date.now() in the task loop).
+  const nowMs = new Date().getTime()
 
   // Handlers
   const handleSetEotm = () => {
@@ -1015,6 +1017,10 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
                   const mine = myClaimByTask.get(t.id)
                   const meta = difficultyMeta(t.difficulty)
                   const claimed = claimantsByTask.get(t.id) ?? []
+                  const expired = !!t.deadline && new Date(t.deadline).getTime() < nowMs
+                  const full = claimed.length >= t.max_claims
+                  const iAmRestricted = profile?.is_restricted ?? false
+                  const canClaim = isParticipant && !expired && !full && !iAmRestricted
                   return (
                     <div key={t.id} className="bg-surface-1 border border-border-default rounded-xl p-5 flex flex-col">
                       <div className="flex items-start justify-between mb-2 gap-2">
@@ -1031,7 +1037,9 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
                         <span className="font-mono text-[12px] text-coin-gold font-bold">+{lp(t.lp_value)}</span>
                         {mine && (mine.status === 'claimed' || mine.status === 'submitted' || mine.status === 'approved')
                           ? <span className="font-mono text-[10px] text-text-4">{mine.status === 'approved' ? 'Done' : mine.status}</span>
-                          : <Button size="sm" disabled={!isParticipant || claiming} onClick={() => handleClaim(t.id)}>{claiming ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />} Claim</Button>}
+                          : canClaim
+                            ? <Button size="sm" disabled={claiming} onClick={() => handleClaim(t.id)}>{claiming ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />} Claim</Button>
+                            : (expired || full || iAmRestricted) && <span className="font-mono text-[10px] text-text-4">{expired ? 'Expired' : full ? 'Full' : 'Restricted'}</span>}
                       </div>
                       {t.deadline && <p className="font-mono text-[10px] text-text-4 mt-2">Due {new Date(t.deadline).toLocaleDateString()}</p>}
                       <div className="mt-3 pt-3 border-t border-border-subtle">

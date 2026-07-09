@@ -397,6 +397,27 @@ export async function requestException(payload: RequestExceptionPayload): Promis
   return data
 }
 
+// Employee edits their own exception request while it's still pending (RLS-gated).
+export async function updateException(
+  id: string,
+  payload: RequestExceptionPayload,
+): Promise<AttendanceException> {
+  const { data, error } = await supabase
+    .from('attendance_exceptions')
+    .update({
+      exception_type: payload.exception_type,
+      date: payload.date,
+      requested_time: payload.requested_time,
+      return_time: payload.return_time ?? null,
+      reason: payload.reason,
+    })
+    .eq('id', id)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
 export async function reviewException(
   id: string,
   status: 'approved' | 'rejected',
@@ -628,6 +649,21 @@ export async function submitOvertimeRequest(
   return data
 }
 
+// Employee edits their own overtime request while it's still pending (RLS-gated).
+export async function updateOvertimeRequest(
+  id: string,
+  payload: SubmitOvertimePayload,
+): Promise<OvertimeRequest> {
+  const { data, error } = await supabase
+    .from('overtime_requests')
+    .update({ ...payload, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
 export async function fetchMyOvertimeRequests(): Promise<OvertimeRequest[]> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return []
@@ -712,6 +748,21 @@ export async function submitWfhRequest(payload: { date: string; reason: string }
   const { data, error } = await supabase
     .from('wfh_requests')
     .insert({ profile_id: user.id, date: payload.date, reason: payload.reason })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+// Employee edits their own WFH request while it's still pending (RLS-gated).
+export async function updateWfhRequest(
+  id: string,
+  payload: { date: string; reason: string },
+): Promise<WfhRequest> {
+  const { data, error } = await supabase
+    .from('wfh_requests')
+    .update({ date: payload.date, reason: payload.reason, updated_at: new Date().toISOString() })
+    .eq('id', id)
     .select()
     .single()
   if (error) throw error
@@ -872,6 +923,29 @@ export async function submitLeaveRequest(payload: SubmitLeavePayload): Promise<L
   const { data, error } = await supabase
     .from('leave_requests')
     .insert({ ...payload, profile_id: user.id })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+// Employee edits their own leave request while it's still pending (RLS-gated).
+// `days` is recomputed by the trg_leave_set_days BEFORE-UPDATE trigger.
+export async function updateLeaveRequest(
+  id: string,
+  payload: SubmitLeavePayload,
+): Promise<LeaveRequest> {
+  const { data, error } = await supabase
+    .from('leave_requests')
+    .update({
+      leave_type_id: payload.leave_type_id,
+      start_date: payload.start_date,
+      end_date: payload.end_date,
+      reason: payload.reason,
+      day_part: payload.day_part ?? 'full',
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
     .select()
     .single()
   if (error) throw error
