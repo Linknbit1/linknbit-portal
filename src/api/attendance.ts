@@ -113,6 +113,29 @@ export async function fetchMyAttendance(days = 30): Promise<AttendanceRow[]> {
   return data
 }
 
+// ── My attendance for a specific month (current user) ─────────────────────────
+
+export async function fetchMyMonthlyAttendance(
+  year: number,
+  month: number, // 1-indexed
+): Promise<AttendanceRow[]> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const from = `${year}-${pad(month)}-01`
+  const last = new Date(year, month, 0).getDate()
+  const to   = `${year}-${pad(month)}-${pad(last)}`
+  const { data, error } = await supabase
+    .from('attendance')
+    .select('*')
+    .eq('profile_id', user.id)
+    .gte('date', from)
+    .lte('date', to)
+    .order('date', { ascending: false })
+  if (error) throw error
+  return data
+}
+
 // ── Today's own record ───────────────────────────────────────────────────────
 
 export async function fetchMyTodayAttendance(): Promise<AttendanceRow | null> {
