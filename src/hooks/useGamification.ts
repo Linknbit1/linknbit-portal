@@ -28,6 +28,12 @@ import {
   fetchMyRedemptions,
   fetchRedemptionQueue,
   reviewRedemption,
+  fetchRewardPools,
+  openRewardPool,
+  joinRewardPool,
+  leaveRewardPool,
+  cancelRewardPool,
+  reviewRewardPool,
   fetchBadges,
   fetchMyBadgeAwards,
   awardBadge,
@@ -57,6 +63,7 @@ export const GAMIFICATION_KEYS = {
   allRewards:       () => ['rewards', 'all'] as const,
   myRedemptions:    (profileId: string) => ['redemptions', 'mine', profileId] as const,
   redemptionQueue:  () => ['redemptions', 'queue'] as const,
+  rewardPools:      (statuses?: string[]) => ['reward_pools', statuses?.join(',') ?? 'all'] as const,
   badges:           () => ['badges'] as const,
   myBadges:         (profileId: string) => ['badge_awards', profileId] as const,
   xpTransactions:   (profileId: string) => ['xp_transactions', profileId] as const,
@@ -237,7 +244,7 @@ export function useAllRewards() {
 export function useCreateReward(actorId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (reward: Pick<RewardRow, 'name' | 'description' | 'xp_cost' | 'quantity' | 'tier' | 'is_cash'>) =>
+    mutationFn: (reward: Pick<RewardRow, 'name' | 'description' | 'xp_cost' | 'quantity' | 'tier' | 'is_cash' | 'group_size'>) =>
       createReward(reward, actorId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.rewards() })
@@ -304,6 +311,66 @@ export function useReviewRedemption() {
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.allRewards() })
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.leaderboard() })
     },
+  })
+}
+
+// ── Group reward pools ────────────────────────────────────────────────────────
+
+export function useRewardPools(statuses?: string[]) {
+  return useQuery({
+    queryKey: GAMIFICATION_KEYS.rewardPools(statuses),
+    queryFn: () => fetchRewardPools(statuses),
+    staleTime: 15_000,
+  })
+}
+
+// Any pool mutation can move LP (reserve/refund) and reward stock, so refresh
+// pools, the leaderboard (drives displayed balance), and the reward catalog.
+function invalidateAfterPoolChange(qc: ReturnType<typeof useQueryClient>) {
+  qc.invalidateQueries({ queryKey: ['reward_pools'] })
+  qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.leaderboard() })
+  qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.rewards() })
+  qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.allRewards() })
+}
+
+export function useOpenRewardPool() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (rewardId: string) => openRewardPool(rewardId),
+    onSuccess: () => invalidateAfterPoolChange(qc),
+  })
+}
+
+export function useJoinRewardPool() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (poolId: string) => joinRewardPool(poolId),
+    onSuccess: () => invalidateAfterPoolChange(qc),
+  })
+}
+
+export function useLeaveRewardPool() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (poolId: string) => leaveRewardPool(poolId),
+    onSuccess: () => invalidateAfterPoolChange(qc),
+  })
+}
+
+export function useCancelRewardPool() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ poolId, note }: { poolId: string; note?: string | null }) => cancelRewardPool(poolId, note),
+    onSuccess: () => invalidateAfterPoolChange(qc),
+  })
+}
+
+export function useReviewRewardPool() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ poolId, action, note }: { poolId: string; action: 'approve' | 'reject' | 'fulfill'; note: string | null }) =>
+      reviewRewardPool(poolId, action, note),
+    onSuccess: () => invalidateAfterPoolChange(qc),
   })
 }
 
