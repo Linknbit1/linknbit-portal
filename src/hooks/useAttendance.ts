@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   fetchMyAttendance,
+  fetchMyMonthlyAttendance,
   fetchMyTodayAttendance,
   fetchAllAttendance,
   fetchMonthlyAttendance,
@@ -63,6 +64,7 @@ import type { TablesUpdate } from '../types/database'
 
 export const ATTENDANCE_KEYS = {
   myHistory: ['attendance', 'my'] as const,
+  myMonthly: (year: number, month: number) => ['attendance', 'my', 'monthly', year, month] as const,
   myToday: ['attendance', 'my', 'today'] as const,
   allByDate: (date: string) => ['attendance', 'all', date] as const,
   monthly: (year: number, month: number) => ['attendance', 'monthly', year, month] as const,
@@ -89,6 +91,14 @@ export function useMyAttendanceHistory(days = 30) {
   return useQuery({
     queryKey: ATTENDANCE_KEYS.myHistory,
     queryFn: () => fetchMyAttendance(days),
+  })
+}
+
+export function useMyMonthlyAttendance(year: number, month: number) {
+  return useQuery({
+    queryKey: ATTENDANCE_KEYS.myMonthly(year, month),
+    queryFn: () => fetchMyMonthlyAttendance(year, month),
+    staleTime: 1000 * 60 * 5, // 5 min — historical months rarely change
   })
 }
 

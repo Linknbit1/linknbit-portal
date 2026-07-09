@@ -23,8 +23,9 @@ import { Button } from '../../components/ui/Button'
 import { Select } from '../../components/ui/Select'
 import { DatePicker } from '../../components/ui/DatePicker'
 import { TimePicker } from '../../components/ui/TimePicker'
+import { PeriodStepper } from '../../components/ui/PeriodStepper'
 import {
-  useMyAttendanceHistory,
+  useMyMonthlyAttendance,
   useMyExceptions,
   useRequestException,
   useOooDepart,
@@ -167,24 +168,34 @@ export function UpcomingScheduleSection() {
 
 // ── Summary stats ─────────────────────────────────────────────────────────────
 
-export function SummaryStats({ records }: { records: AttendanceRow[] }) {
+export function SummaryStats({ records, year, month }: { records: AttendanceRow[]; year: number; month: number }) {
   const now  = new Date()
-  const year = now.getFullYear()
 
   const { data: settings }         = useAttendanceSettings()
   const { data: holidays = [] }    = useHolidays(year)
   const { data: workingSats = [] } = useWorkingSaturdays(year)
 
   // Absent = persisted 'absent' rows (marked by the daily job) + any past working
-  // day this month that has no record yet (not covered by the job). The two are
-  // mutually exclusive: a marked day already has a record, so the gap pass skips it.
+  // day in the selected month that has no record yet (not covered by the job). The
+  // two are mutually exclusive: a marked day already has a record, so the gap pass
+  // skips it. For the current month we only count elapsed days (up to now); for a
+  // fully past month the whole month counts; a future month has no gap days.
   const absent = (() => {
     const holidaySet    = new Set(holidays.map((h) => h.date))
     const workingSatSet = new Set(workingSats.map((s) => s.date))
     const recordSet     = new Set(records.map((r) => r.date))
+    const isCurrentMonth = year === now.getFullYear() && month === now.getMonth() + 1
+    const isFuture = year > now.getFullYear() || (year === now.getFullYear() && month > now.getMonth() + 1)
+    // Exclusive upper bound: now for the current month, first day of next month for a
+    // past month (covers the whole month), and the month start itself for a future month.
+    const endExclusive = isFuture
+      ? new Date(year, month - 1, 1)
+      : isCurrentMonth
+        ? now
+        : new Date(year, month, 1)
     let gapDays = 0
-    const d = new Date(now.getFullYear(), now.getMonth(), 1)
-    while (d < now) {
+    const d = new Date(year, month - 1, 1)
+    while (d < endExclusive) {
       const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
       const dow = d.getDay()
       if (dow !== 0 && !(dow === 6 && !settings?.saturday_working && !workingSatSet.has(dateStr)) && !holidaySet.has(dateStr)) {
@@ -226,12 +237,12 @@ export function SummaryStats({ records }: { records: AttendanceRow[] }) {
 
 // ── History table ─────────────────────────────────────────────────────────────
 
-export function HistoryTable({ records }: { records: AttendanceRow[] }) {
+export function HistoryTable({ records, periodLabel }: { records: AttendanceRow[]; periodLabel: string }) {
   if (records.length === 0) {
     return (
       <Card className="py-12 text-center">
         <CalendarCheck size={32} className="mx-auto text-text-4 mb-3" />
-        <p className="font-ui font-semibold text-text-2">No attendance records yet</p>
+        <p className="font-ui font-semibold text-text-2">No attendance records for {periodLabel}</p>
         <p className="font-ui text-caption text-text-4 mt-1">Your check-in history will appear here</p>
       </Card>
     )
@@ -240,7 +251,7 @@ export function HistoryTable({ records }: { records: AttendanceRow[] }) {
   return (
     <Card padding="none">
       <div className="px-5 py-4 border-b border-border-subtle">
-        <h3 className="font-display font-semibold text-h4 text-text-1">Last 30 Days</h3>
+        <h3 className="font-display font-semibold text-h4 text-text-1">{periodLabel}</h3>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full overflow-x-auto whitespace-nowrap lg:whitespace-normal">
@@ -1038,10 +1049,30 @@ export function LeaveSection() {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+]
+
 export default function EmployeeAttendancePage() {
-  const { data: history = [], isLoading } = useMyAttendanceHistory(30)
+  const now = new Date()
+  const [year, setYear] = useState(now.getFullYear())
+  const [month, setMonth] = useState(now.getMonth() + 1) // 1-indexed
+
+  const { data: history = [], isLoading } = useMyMonthlyAttendance(year, month)
   const { profile } = useAuthContext()
   const canSeeTeam = profile?.role === 'team_lead' || profile?.role === 'project_manager'
+
+  const prevMonth = () => {
+    if (month === 1) { setYear((y) => y - 1); setMonth(12) }
+    else setMonth((m) => m - 1)
+  }
+  const nextMonth = () => {
+    if (month === 12) { setYear((y) => y + 1); setMonth(1) }
+    else setMonth((m) => m + 1)
+  }
+  const isCurrentMonth = year === now.getFullYear() && month === now.getMonth() + 1
+  const periodLabel = `${MONTH_NAMES[month - 1]} ${year}`
 
   return (
     <div className="flex flex-col flex-1">
@@ -1054,6 +1085,23 @@ export default function EmployeeAttendancePage() {
 
         {/* Team leads / PMs: read-only visibility into their team */}
         {canSeeTeam && <TeamAttendancePanel />}
+
+        {/* Month filter — controls the summary stats and history below */}
+        <div className="flex flex-wrap items-center gap-3">
+          <PeriodStepper
+            icon={Calendar}
+            label={periodLabel}
+            onPrev={prevMonth}
+            onNext={nextMonth}
+            disableNext={isCurrentMonth}
+          >
+            {isCurrentMonth && (
+              <span className="ml-1 px-1.5 py-0.5 rounded-xs bg-brand-red/10 border border-brand-red/20 text-brand-red text-[10px] font-mono font-semibold uppercase tracking-wide">
+                Current
+              </span>
+            )}
+          </PeriodStepper>
+        </div>
 
         {/* Stats — skeleton while history loads, then real values */}
         {isLoading ? (
@@ -1069,7 +1117,7 @@ export default function EmployeeAttendancePage() {
             ))}
           </div>
         ) : (
-          <SummaryStats records={history} />
+          <SummaryStats records={history} year={year} month={month} />
         )}
 
         <UpcomingScheduleSection />
@@ -1099,7 +1147,7 @@ export default function EmployeeAttendancePage() {
             </div>
           </Card>
         ) : (
-          <HistoryTable records={history} />
+          <HistoryTable records={history} periodLabel={periodLabel} />
         )}
       </div>
     </div>

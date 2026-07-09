@@ -1,16 +1,18 @@
+import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
 import {
   Users, Home, Plane, AlertCircle, Smartphone, Palmtree, Hourglass, BarChart2,
-  Settings as SettingsIcon, CalendarClock,
+  Settings as SettingsIcon, CalendarClock, Calendar,
 } from 'lucide-react'
 import { MobileHub, HubRow, type HubRowItem } from '../components/layout/MobileHub'
 import { StackScreen } from '../components/layout/StackScreen'
 import { Topbar } from '../components/layout/Topbar'
+import { PeriodStepper } from '../components/ui/PeriodStepper'
 import { useAuthContext } from '../context/AuthContext'
 import { useIsDesktop } from '../hooks/useMediaQuery'
 import { MGMT_ROLES } from '../constants/roles'
-import { useMyAttendanceHistory } from '../hooks/useAttendance'
+import { useMyMonthlyAttendance } from '../hooks/useAttendance'
 import {
   useAllWfhRequests, useAllLeaveRequests, useAllAttendanceExceptions, useAllOvertimeRequests,
 } from '../hooks/useAttendance'
@@ -49,9 +51,56 @@ const ADMIN_SECTIONS: Record<string, SectionEntry> = {
   settings:   { title: 'Settings',         render: () => <SettingsTab /> },
 }
 
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+]
+
+/** Month state + a ready-to-render prev/next stepper, shared by the mobile hub and history screen. */
+function useMonthFilter() {
+  const now = new Date()
+  const [year, setYear] = useState(now.getFullYear())
+  const [month, setMonth] = useState(now.getMonth() + 1) // 1-indexed
+
+  const prevMonth = () => {
+    if (month === 1) { setYear((y) => y - 1); setMonth(12) }
+    else setMonth((m) => m - 1)
+  }
+  const nextMonth = () => {
+    if (month === 12) { setYear((y) => y + 1); setMonth(1) }
+    else setMonth((m) => m + 1)
+  }
+  const isCurrentMonth = year === now.getFullYear() && month === now.getMonth() + 1
+  const periodLabel = `${MONTH_NAMES[month - 1]} ${year}`
+
+  const stepper = (
+    <PeriodStepper
+      icon={Calendar}
+      label={periodLabel}
+      onPrev={prevMonth}
+      onNext={nextMonth}
+      disableNext={isCurrentMonth}
+    >
+      {isCurrentMonth && (
+        <span className="ml-1 px-1.5 py-0.5 rounded-xs bg-brand-red/10 border border-brand-red/20 text-brand-red text-[10px] font-mono font-semibold uppercase tracking-wide">
+          Current
+        </span>
+      )}
+    </PeriodStepper>
+  )
+
+  return { year, month, periodLabel, stepper }
+}
+
 function EmployeeHistoryScreen() {
-  const { data: history = [] } = useMyAttendanceHistory(30)
-  return <HistoryTable records={history} />
+  const { year, month, periodLabel, stepper } = useMonthFilter()
+  const { data: history = [] } = useMyMonthlyAttendance(year, month)
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap items-center gap-3">{stepper}</div>
+      <HistoryTable records={history} periodLabel={periodLabel} />
+    </div>
+  )
 }
 
 const EMPLOYEE_SECTIONS: Record<string, SectionEntry> = {
@@ -121,7 +170,8 @@ function AdminAttendanceHub() {
 }
 
 function EmployeeAttendanceHub() {
-  const { data: history = [], isLoading } = useMyAttendanceHistory(30)
+  const { year, month, stepper } = useMonthFilter()
+  const { data: history = [], isLoading } = useMyMonthlyAttendance(year, month)
   const { profile } = useAuthContext()
   const canSeeTeam = profile?.role === 'team_lead' || profile?.role === 'project_manager'
 
@@ -140,7 +190,8 @@ function EmployeeAttendanceHub() {
     <MobileHub title="My Attendance" items={items}>
       <AttendanceCheckInCard />
       <OooSection />
-      {!isLoading && <SummaryStats records={history} />}
+      <div className="flex flex-wrap items-center gap-3">{stepper}</div>
+      {!isLoading && <SummaryStats records={history} year={year} month={month} />}
     </MobileHub>
   )
 }
