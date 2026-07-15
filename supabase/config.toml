@@ -415,3 +415,9 @@ s3_secret_key = "env(S3_SECRET_KEY)"
 # declarative_schema_path = "./database"
 # JSON string passed through to pg-delta SQL formatting.
 # format_options = "{\"keywordCase\":\"upper\",\"indent\":2,\"maxWidth\":80,\"commaStyle\":\"trailing\"}"
+
+# send-push is invoked by the trg_push_notification DB trigger via pg_net, not by
+# a signed-in user, so there is no JWT to verify. It authenticates the caller with
+# the x-push-secret header instead (see PUSH_HOOK_SECRET).
+[functions.send-push]
+verify_jwt = false
