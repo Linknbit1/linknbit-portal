@@ -8,6 +8,7 @@ import { RoleBadge } from '../shared/RoleBadge'
 import { useAuthContext } from '../../context/AuthContext'
 import { useNavChrome } from './MobileNavContext'
 import { useNotifications, useMarkRead, useMarkAllRead } from '../../hooks/useNotifications'
+import { notificationHref } from '../../constants/notifications'
 import { formatRelativeTime } from '../../lib/utils'
 import type { UserRole } from '../../types'
 
@@ -120,7 +121,24 @@ export function Topbar({ title, breadcrumb, className, back }: TopbarProps) {
         </div>
       )}
 
-      {/* Actions — desktop only; mobile uses bottom tabs + the More/Profile tab */}
+      {/* Mobile bell — the dropdown needs room, so phones get a dedicated screen.
+          Hidden on drill-in screens so it never sits beside a back button. */}
+      {!back && (
+        <button
+          onClick={() => navigate('/notifications')}
+          aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Notifications'}
+          className="ml-auto lg:hidden relative size-9 rounded-sm bg-surface-1 border border-border-default text-text-2 flex items-center justify-center shrink-0 transition-colors active:bg-surface-2"
+        >
+          <Bell size={16} />
+          {unreadCount > 0 && (
+            <span className="absolute top-1 right-1 min-w-4 h-4 bg-brand-red text-white text-[9.5px] font-ui font-bold rounded-full flex items-center justify-center px-1 leading-none border-2 border-bg-base">
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
+          )}
+        </button>
+      )}
+
+      {/* Actions — desktop only; mobile uses the bell above + bottom tabs */}
       <div className="ml-auto hidden lg:flex items-center gap-3.5">
         {/* Notification bell — live: reads the real notifications table. */}
         <div ref={bellRef} className="relative">
@@ -162,7 +180,12 @@ export function Topbar({ title, breadcrumb, className, back }: TopbarProps) {
                   notifications.map((notif) => (
                     <button
                       key={notif.id}
-                      onClick={() => { if (!notif.read) markRead(notif.id) }}
+                      onClick={() => {
+                        if (!notif.read) markRead(notif.id)
+                        // Take them to where the thing actually is, when we know.
+                        const href = notificationHref(notif.resource_type)
+                        if (href) { setBellOpen(false); navigate(href) }
+                      }}
                       className={cn(
                         'w-full text-left px-4 py-3 border-b border-border-subtle last:border-0 hover:bg-surface-2/60 transition-colors flex gap-3 items-start',
                         !notif.read && 'bg-brand-red/4',
