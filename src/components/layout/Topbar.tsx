@@ -122,8 +122,7 @@ export function Topbar({ title, breadcrumb, className, back }: TopbarProps) {
 
       {/* Actions — desktop only; mobile uses bottom tabs + the More/Profile tab */}
       <div className="ml-auto hidden lg:flex items-center gap-3.5">
-        {/* Notification bell — hidden in production until wired to real notifications */}
-        {showWipFeatures && (
+        {/* Notification bell — live: reads the real notifications table. */}
         <div ref={bellRef} className="relative">
           <button
             onClick={() => setBellOpen((o) => !o)}
@@ -194,7 +193,6 @@ export function Topbar({ title, breadcrumb, className, back }: TopbarProps) {
             </div>
           )}
         </div>
-        )}
 
         {/* User menu */}
         {profile && isUserRole(profile.role) && (

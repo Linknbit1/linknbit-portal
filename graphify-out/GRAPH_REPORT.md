@@ -1,11 +1,11 @@
 # Graph Report - linknbit-portal  (2026-07-15)
 
 ## Corpus Check
-- 153 files · ~301,407 words
+- 154 files · ~302,543 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1501 nodes · 2145 edges · 37 communities detected
+- 1506 nodes · 2152 edges · 37 communities detected
 - Extraction: 90% EXTRACTED · 10% INFERRED · 0% AMBIGUOUS · INFERRED: 220 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
@@ -44,7 +44,7 @@
 - [[_COMMUNITY_Community 40|Community 40]]
 - [[_COMMUNITY_Community 41|Community 41]]
 - [[_COMMUNITY_Community 43|Community 43]]
-- [[_COMMUNITY_Community 46|Community 46]]
+- [[_COMMUNITY_Community 45|Community 45]]
 - [[_COMMUNITY_Community 47|Community 47]]
 - [[_COMMUNITY_Community 86|Community 86]]
 
@@ -76,11 +76,11 @@
 
 ### Community 0 - "Community 0"
 Cohesion: 0.03
-Nodes (190): handleSync(), $(), addColumn(), addCommentLink(), addImage(), addLink(), addReaction(), adminGiveShoutout() (+182 more)
+Nodes (192): handleSync(), handleCheckIn(), handleCheckOut(), $(), addColumn(), addCommentLink(), addImage(), addLink() (+184 more)
 
 ### Community 1 - "Community 1"
 Cohesion: 0.02
-Nodes (103): addCompanyWfhDay(), addWorkingSaturday(), adminCheckOut(), approveDevice(), checkOut(), createHoliday(), createHolidayRange(), createLeaveType() (+95 more)
+Nodes (102): addCompanyWfhDay(), addWorkingSaturday(), adminCheckOut(), approveDevice(), checkOut(), createHoliday(), createHolidayRange(), createLeaveType() (+94 more)
 
 ### Community 2 - "Community 2"
 Cohesion: 0.02
@@ -104,7 +104,7 @@ Nodes (58): AI Collaboration Rules, API keys, Applying migrations, Approval Flow
 
 ### Community 8 - "Community 8"
 Cohesion: 0.05
-Nodes (23): checkIn(), registerDevice(), bffFetch(), bffRefreshSession(), bffSignIn(), bffSignOut(), fetchActiveProfiles(), fetchProfile() (+15 more)
+Nodes (26): checkIn(), registerDevice(), bffFetch(), bffRefreshSession(), bffSignIn(), bffSignOut(), fetchActiveProfiles(), fetchProfile() (+18 more)
 
 ### Community 10 - "Community 10"
 Cohesion: 0.05
@@ -200,19 +200,19 @@ Nodes (5): code:js (export default defineConfig([), code:js (// eslint.config.js
 
 ### Community 40 - "Community 40"
 Cohesion: 0.5
-Nodes (2): isIos(), usePwaInstall()
+Nodes (3): moreNavItems(), visibleNavItems(), isAuthoritative()
 
 ### Community 41 - "Community 41"
 Cohesion: 0.5
-Nodes (3): moreNavItems(), visibleNavItems(), isAuthoritative()
+Nodes (2): isIos(), usePwaInstall()
 
 ### Community 43 - "Community 43"
 Cohesion: 0.5
 Nodes (1): handleRegister()
 
-### Community 46 - "Community 46"
+### Community 45 - "Community 45"
 Cohesion: 0.5
-Nodes (2): handleCheckIn(), handleCheckOut()
+Nodes (1): save()
 
 ### Community 47 - "Community 47"
 Cohesion: 0.5
@@ -231,11 +231,11 @@ Nodes (1): graphify
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 36`** (6 nodes): `itemCls()`, `cn()`, `FileTypeIcon()`, `formatDate()`, `BottomTabBar.tsx`, `FilesPage.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 40`** (5 nodes): `usePwaInstall.ts`, `emit()`, `isIos()`, `isStandalone()`, `usePwaInstall()`
+- **Thin community `Community 41`** (5 nodes): `usePwaInstall.ts`, `emit()`, `isIos()`, `isStandalone()`, `usePwaInstall()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 43`** (4 nodes): `fmtDate()`, `handleRegister()`, `statusMeta()`, `MyDevicesCard.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 46`** (4 nodes): `formatTime()`, `handleCheckIn()`, `handleCheckOut()`, `DashboardPage.tsx`
+- **Thin community `Community 45`** (4 nodes): `cn()`, `save()`, `visibleSectionsFor()`, `SettingsPage.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 86`** (2 nodes): `AGENTS.md`, `graphify`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
@@ -243,12 +243,12 @@ Nodes (1): graphify
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `toast()` connect `Community 0` to `Community 1`, `Community 5`, `Community 43`, `Community 12`, `Community 13`, `Community 46`, `Community 24`, `Community 31`?**
-  _High betweenness centrality (0.120) - this node is a cross-community bridge._
-- **Why does `update()` connect `Community 1` to `Community 8`, `Community 12`?**
-  _High betweenness centrality (0.079) - this node is a cross-community bridge._
+- **Why does `toast()` connect `Community 0` to `Community 1`, `Community 5`, `Community 43`, `Community 12`, `Community 13`, `Community 24`, `Community 31`?**
+  _High betweenness centrality (0.105) - this node is a cross-community bridge._
+- **Why does `update()` connect `Community 1` to `Community 8`, `Community 12`, `Community 45`?**
+  _High betweenness centrality (0.075) - this node is a cross-community bridge._
 - **Why does `handleAdd()` connect `Community 1` to `Community 0`?**
-  _High betweenness centrality (0.071) - this node is a cross-community bridge._
+  _High betweenness centrality (0.067) - this node is a cross-community bridge._
 - **Are the 93 inferred relationships involving `select()` (e.g. with `fetchLeaderboard()` and `fetchProfileDirectory()`) actually correct?**
   _`select()` has 93 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 40 inferred relationships involving `toast()` (e.g. with `add()` and `handleRegister()`) actually correct?**
