@@ -6,6 +6,7 @@ import {
   Smartphone, Settings as SettingsIcon, Shield, AlertCircle, Save,
   BarChart2, TrendingUp, TrendingDown, Minus,
   Palmtree, Hourglass, Star, Plane, Trash2, Pencil,
+  type LucideIcon,
 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Avatar } from '../../components/ui/Avatar'
@@ -38,6 +39,9 @@ import {
   useWorkingSaturdays,
   useAddWorkingSaturday,
   useRemoveWorkingSaturday,
+  useCompanyWfhDays,
+  useAddCompanyWfhDay,
+  useRemoveCompanyWfhDay,
   useAllOvertimeRequests,
   useReviewOvertime,
   useDeleteOvertime,
@@ -1675,6 +1679,48 @@ const HOLIDAY_TYPE_META: Record<string, { label: string; cls: string; dot: strin
   optional:       { label: 'Optional',        cls: 'bg-service-dev/10 text-service-dev border-service-dev/25',   dot: '#22D3EE' },
 }
 
+/**
+ * One consistent frame for each kind of scheduled day, so Holidays / Working
+ * Saturdays / Company WFH read as three parallel concepts: what it is (icon +
+ * title), what it means for staff (description), how many, and how to add one.
+ */
+function ScheduleSection({ icon: Icon, title, description, count, unit, action, children }: {
+  icon: LucideIcon
+  title: string
+  description: string
+  count: number
+  unit: string
+  action: React.ReactNode
+  children: React.ReactNode
+}) {
+  return (
+    <section className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
+      <div className="flex flex-wrap items-start justify-between gap-3 px-5 py-4 border-b border-border-subtle bg-surface-2">
+        <div className="flex items-start gap-3 min-w-0">
+          <div className="size-9 rounded-lg bg-surface-1 border border-border-default flex items-center justify-center shrink-0">
+            <Icon size={16} className="text-text-3" />
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="font-display font-semibold text-[14px] text-text-1">{title}</h3>
+              <span className="font-mono text-[11px] text-text-4">
+                {count} {unit}{count !== 1 ? 's' : ''}
+              </span>
+            </div>
+            <p className="font-ui text-[12px] text-text-4 mt-0.5">{description}</p>
+          </div>
+        </div>
+        <div className="shrink-0">{action}</div>
+      </div>
+      {children}
+    </section>
+  )
+}
+
+function ScheduleEmpty({ children }: { children: React.ReactNode }) {
+  return <div className="px-5 py-8 text-center font-ui text-[13px] text-text-4">{children}</div>
+}
+
 export function HolidaysTab() {
   const toast = useToast()
   const { profile } = useAuthContext()
@@ -1690,13 +1736,50 @@ export function HolidaysTab() {
   const [satNote, setSatNote] = useState('')
   const [satDeleteTarget, setSatDeleteTarget] = useState<string | null>(null)
 
+  const [wfhOpen, setWfhOpen] = useState(false)
+  const [wfhDate, setWfhDate] = useState('')
+  const [wfhReason, setWfhReason] = useState('')
+  const [wfhDeleteTarget, setWfhDeleteTarget] = useState<string | null>(null)
+
   const { data: holidays = [], isLoading } = useHolidays(year)
   const { data: workingSaturdays = [] } = useWorkingSaturdays(year)
+  const { data: companyWfhDays = [] } = useCompanyWfhDays(year)
   const createMutation = useCreateHoliday()
   const createRangeMutation = useCreateHolidayRange()
   const deleteMutation = useDeleteHoliday()
   const addSatMutation = useAddWorkingSaturday()
   const removeSatMutation = useRemoveWorkingSaturday()
+  const addWfhMutation = useAddCompanyWfhDay()
+  const removeWfhMutation = useRemoveCompanyWfhDay()
+
+  const handleAddWfhDay = async () => {
+    if (!wfhDate || !wfhReason.trim() || !profile) return
+    try {
+      await addWfhMutation.mutateAsync({ date: wfhDate, reason: wfhReason.trim(), createdBy: profile.id })
+      toast(
+        `${new Date(wfhDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} set as a company WFH day — everyone's attendance marked`,
+        'success',
+      )
+      setWfhOpen(false); setWfhDate(''); setWfhReason('')
+    } catch (err) {
+      toast(
+        err instanceof Error && err.message.includes('duplicate')
+          ? 'That date is already a company WFH day'
+          : 'Failed to declare WFH day',
+        'error',
+      )
+    }
+  }
+
+  const handleRemoveWfhDay = async (id: string) => {
+    try {
+      await removeWfhMutation.mutateAsync(id)
+      toast('Company WFH day removed — attendance reverted', 'success')
+      setWfhDeleteTarget(null)
+    } catch {
+      toast('Failed to remove WFH day', 'error')
+    }
+  }
 
   const handleAddSaturday = async () => {
     if (!satDate || !profile) return
@@ -1781,83 +1864,88 @@ export function HolidaysTab() {
   return (
     <div className="flex flex-col gap-5">
 
-      {/* Header row */}
+      {/* Year navigator — scopes all three sections below */}
       <div className="flex flex-wrap items-center gap-3">
         <PeriodStepper
-          icon={Palmtree}
-          label={`${year} Holidays`}
+          icon={Calendar}
+          label={String(year)}
           onPrev={() => setYear((y) => y - 1)}
           onNext={() => setYear((y) => y + 1)}
-        >
-          <span className="ml-1 font-mono text-[11px] text-text-4">{holidays.length} day{holidays.length !== 1 ? 's' : ''}</span>
-        </PeriodStepper>
-        <Button
-          size="sm"
-          className="ml-auto"
-          onClick={() => { setAddOpen(true); setAddMode('single'); setForm({ date: '', dateTo: '', name: '', type: 'public_holiday' }) }}
-        >
-          <Plus size={14} /> Add Holiday
-        </Button>
+        />
+        <p className="font-mono text-[11.5px] text-text-4">
+          {holidays.length} holiday{holidays.length !== 1 ? 's' : ''}
+          {' · '}{workingSaturdays.length} working Saturday{workingSaturdays.length !== 1 ? 's' : ''}
+          {' · '}{companyWfhDays.length} WFH day{companyWfhDays.length !== 1 ? 's' : ''}
+        </p>
       </div>
 
-      {/* Type legend */}
-      <div className="flex items-center gap-3">
-        {Object.entries(HOLIDAY_TYPE_META).map(([k, v]) => (
-          <span key={k} className={cn('inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-ui font-semibold border', v.cls)}>
-            <span className="size-1.5 rounded-full" style={{ background: v.dot }} />
-            {v.label}
-          </span>
-        ))}
-      </div>
-
-      {/* Holiday list */}
-      {isLoading ? (
-        <div className="bg-surface-1 border border-border-default rounded-xl p-12 text-center font-mono text-[12px] text-text-4">Loading…</div>
-      ) : holidays.length === 0 ? (
-        <div className="bg-surface-1 border border-border-default rounded-xl p-16 text-center">
-          <Palmtree size={32} className="text-text-4 mx-auto mb-3" />
-          <p className="font-ui text-[14px] text-text-3">No holidays added for {year} yet.</p>
-          <p className="font-ui text-[12px] text-text-4 mt-1">Click "Add Holiday" to get started.</p>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-4">
-          {byMonth.map(({ month, items }) => (
-            <div key={month} className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
-              <div className="px-5 py-3 border-b border-border-subtle bg-surface-2 flex items-center gap-2">
-                <Calendar size={13} className="text-text-4" />
-                <span className="font-display font-semibold text-[13px] text-text-2">{month} {year}</span>
-                <span className="font-mono text-[11px] text-text-4">{items.length} holiday{items.length !== 1 ? 's' : ''}</span>
-              </div>
-              <div className="divide-y divide-border-subtle">
-                {items.map((h) => {
-                  const meta = HOLIDAY_TYPE_META[h.type] ?? HOLIDAY_TYPE_META['public_holiday']
-                  return (
-                    <div key={h.id} className="flex items-center gap-4 px-5 py-3.5 hover:bg-white/1.5 transition-colors">
-                      <div className="size-10 rounded-lg bg-surface-2 border border-border-default flex items-center justify-center shrink-0">
-                        <Palmtree size={16} className="text-text-3" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-ui font-semibold text-[13px] text-text-1">{h.name}</p>
-                        <p className="font-mono text-[11px] text-text-4 mt-0.5">{fmtDate(h.date)}</p>
-                      </div>
-                      <span className={cn('inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-ui font-semibold border', meta.cls)}>
-                        <span className="size-1.5 rounded-full" style={{ background: meta.dot }} />
-                        {meta.label}
-                      </span>
-                      <button
-                        onClick={() => setDeleteTarget(h.id)}
-                        className="text-text-4 hover:text-error transition-colors p-1.5 rounded-sm hover:bg-error/10"
-                      >
-                        <X size={14} />
-                      </button>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
+      {/* ── 1. Holidays — days off ───────────────────────────────────────────── */}
+      <ScheduleSection
+        icon={Palmtree}
+        title="Holidays"
+        description="Days off — nobody is expected to work or check in."
+        count={holidays.length}
+        unit="day"
+        action={
+          <Button
+            size="sm"
+            onClick={() => { setAddOpen(true); setAddMode('single'); setForm({ date: '', dateTo: '', name: '', type: 'public_holiday' }) }}
+          >
+            <Plus size={14} /> Add Holiday
+          </Button>
+        }
+      >
+        {/* Type legend */}
+        <div className="flex flex-wrap items-center gap-2 px-5 py-3 border-b border-border-subtle">
+          {Object.entries(HOLIDAY_TYPE_META).map(([k, v]) => (
+            <span key={k} className={cn('inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-ui font-semibold border', v.cls)}>
+              <span className="size-1.5 rounded-full" style={{ background: v.dot }} />
+              {v.label}
+            </span>
           ))}
         </div>
-      )}
+
+        {isLoading ? (
+          <ScheduleEmpty>Loading…</ScheduleEmpty>
+        ) : holidays.length === 0 ? (
+          <ScheduleEmpty>No holidays added for {year} yet.</ScheduleEmpty>
+        ) : (
+          <div>
+            {byMonth.map(({ month, items }) => (
+              <div key={month}>
+                <div className="px-5 py-2 bg-surface-2/60 border-b border-border-subtle flex items-center gap-2">
+                  <span className="font-display font-semibold text-[12px] text-text-2">{month} {year}</span>
+                  <span className="font-mono text-[10.5px] text-text-4">{items.length}</span>
+                </div>
+                <div className="divide-y divide-border-subtle">
+                  {items.map((h) => {
+                    const meta = HOLIDAY_TYPE_META[h.type] ?? HOLIDAY_TYPE_META['public_holiday']
+                    return (
+                      <div key={h.id} className="flex items-center gap-4 px-5 py-3 hover:bg-white/1.5 transition-colors">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-ui font-semibold text-[13px] text-text-1 truncate">{h.name}</p>
+                          <p className="font-mono text-[11px] text-text-4 mt-0.5">{fmtDate(h.date)}</p>
+                        </div>
+                        <span className={cn('inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-ui font-semibold border shrink-0', meta.cls)}>
+                          <span className="size-1.5 rounded-full" style={{ background: meta.dot }} />
+                          {meta.label}
+                        </span>
+                        <button
+                          onClick={() => setDeleteTarget(h.id)}
+                          title="Remove holiday"
+                          className="text-text-4 hover:text-error transition-colors p-1.5 rounded-sm hover:bg-error/10 shrink-0"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </ScheduleSection>
 
       {/* Add holiday modal */}
       {addOpen && (
@@ -1984,56 +2072,95 @@ export function HolidaysTab() {
         </ModalShell>
       )}
 
-      {/* ── Working Saturdays ─────────────────────────────────────────────── */}
-      <div className="mt-2">
-        <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
-          <div className="min-w-0">
-            <h3 className="font-display font-semibold text-[14px] text-text-1">Working Saturdays</h3>
-            <p className="font-ui text-[12px] text-text-4 mt-0.5">Specific Saturdays that require check-in regardless of the global setting</p>
-          </div>
+      {/* ── 2. Working Saturdays — extra working days ────────────────────────── */}
+      <ScheduleSection
+        icon={Calendar}
+        title="Working Saturdays"
+        description="Saturdays that count as working days and require check-in."
+        count={workingSaturdays.length}
+        unit="Saturday"
+        action={
           <Button
             size="sm"
             variant="secondary"
-            className="shrink-0"
             onClick={() => { setSatPickerOpen(true); setSatDate(''); setSatNote('') }}
           >
             <Plus size={13} /> Mark Saturday
           </Button>
-        </div>
-
+        }
+      >
         {workingSaturdays.length === 0 ? (
-          <div className="bg-surface-1 border border-border-default rounded-xl px-5 py-6 text-center">
-            <p className="font-ui text-[13px] text-text-4">No working Saturdays for {year}.</p>
-          </div>
+          <ScheduleEmpty>No working Saturdays for {year}.</ScheduleEmpty>
         ) : (
-          <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
-            <div className="divide-y divide-border-subtle">
-              {workingSaturdays.map((s) => (
-                <div key={s.id} className="flex items-center gap-4 px-5 py-3 hover:bg-white/1.5 transition-colors">
-                  <div className="size-8 rounded-md bg-surface-2 border border-border-default flex items-center justify-center shrink-0">
-                    <Calendar size={13} className="text-text-3" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-mono text-[13px] text-text-1">
-                      {new Date(s.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-                    </p>
-                    {s.note && <p className="font-ui text-[11px] text-text-4 mt-0.5">{s.note}</p>}
-                  </div>
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-success/10 text-success border border-success/25">
-                    Working Day
-                  </span>
-                  <button
-                    onClick={() => setSatDeleteTarget(s.id)}
-                    className="text-text-4 hover:text-error transition-colors p-1.5 rounded-sm hover:bg-error/10"
-                  >
-                    <X size={13} />
-                  </button>
+          <div className="divide-y divide-border-subtle">
+            {workingSaturdays.map((s) => (
+              <div key={s.id} className="flex items-center gap-4 px-5 py-3 hover:bg-white/1.5 transition-colors">
+                <div className="flex-1 min-w-0">
+                  <p className="font-ui font-semibold text-[13px] text-text-1">
+                    {new Date(s.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                  </p>
+                  {s.note && <p className="font-ui text-[11px] text-text-4 mt-0.5">{s.note}</p>}
                 </div>
-              ))}
-            </div>
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-ui font-semibold bg-success/10 text-success border border-success/25 shrink-0">
+                  Working Day
+                </span>
+                <button
+                  onClick={() => setSatDeleteTarget(s.id)}
+                  title="Remove working Saturday"
+                  className="text-text-4 hover:text-error transition-colors p-1.5 rounded-sm hover:bg-error/10 shrink-0"
+                >
+                  <X size={13} />
+                </button>
+              </div>
+            ))}
           </div>
         )}
-      </div>
+      </ScheduleSection>
+
+      {/* ── 3. Company WFH days — working, but from home ─────────────────────── */}
+      <ScheduleSection
+        icon={Home}
+        title="Company WFH Days"
+        description="Still a working day, but nobody comes in — everyone's attendance is marked WFH automatically."
+        count={companyWfhDays.length}
+        unit="day"
+        action={
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => { setWfhOpen(true); setWfhDate(''); setWfhReason('') }}
+          >
+            <Plus size={13} /> Declare WFH Day
+          </Button>
+        }
+      >
+        {companyWfhDays.length === 0 ? (
+          <ScheduleEmpty>
+            No company WFH days for {year}. Declare one when the office can't be used — a power cut, flooding, or similar.
+          </ScheduleEmpty>
+        ) : (
+          <div className="divide-y divide-border-subtle">
+            {companyWfhDays.map((d) => (
+              <div key={d.id} className="flex items-center gap-4 px-5 py-3 hover:bg-white/1.5 transition-colors">
+                <div className="flex-1 min-w-0">
+                  <p className="font-ui font-semibold text-[13px] text-text-1">{fmtDate(d.date)}</p>
+                  <p className="font-ui text-[11px] text-text-4 mt-0.5 truncate">{d.reason}</p>
+                </div>
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-ui font-semibold bg-service-dev/10 text-service-dev border border-service-dev/25 shrink-0">
+                  Work From Home
+                </span>
+                <button
+                  onClick={() => setWfhDeleteTarget(d.id)}
+                  title="Remove company WFH day"
+                  className="text-text-4 hover:text-error transition-colors p-1.5 rounded-sm hover:bg-error/10 shrink-0"
+                >
+                  <X size={13} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </ScheduleSection>
 
       {/* Add working Saturday modal */}
       {satPickerOpen && (
@@ -2082,6 +2209,61 @@ export function HolidaysTab() {
             <div className="flex gap-2.5">
               <Button variant="ghost" size="sm" className="flex-1" onClick={() => setSatDeleteTarget(null)}>Cancel</Button>
               <Button size="sm" variant="danger" className="flex-1" disabled={removeSatMutation.isPending} onClick={() => handleRemoveSaturday(satDeleteTarget)}>
+                <X size={14} /> Remove
+              </Button>
+            </div>
+        </ModalShell>
+      )}
+
+      {/* Declare company WFH day modal */}
+      {wfhOpen && (
+        <ModalShell onClose={() => setWfhOpen(false)} size="sm" contentClassName="p-5 sm:p-6">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="font-display font-bold text-[16px] text-text-1">Declare Company WFH Day</h3>
+              <button onClick={() => setWfhOpen(false)} className="text-text-4 hover:text-text-1"><X size={18} /></button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Date</label>
+                <DatePicker value={wfhDate} onChange={setWfhDate} placeholder="Pick a date…" />
+              </div>
+              <div>
+                <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Reason</label>
+                <input
+                  value={wfhReason}
+                  onChange={(e) => setWfhReason(e.target.value)}
+                  placeholder="e.g. Office power outage…"
+                  className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-ui text-text-1 placeholder:text-text-4 outline-none focus:border-border-focus"
+                />
+              </div>
+              <div className="flex items-start gap-2 px-3 py-2 bg-service-dev/8 border border-service-dev/20 rounded-md">
+                <Home size={13} className="text-service-dev shrink-0 mt-0.5" />
+                <p className="font-ui text-[11.5px] text-text-3">
+                  Everyone's attendance for this date is marked <span className="text-service-dev font-semibold">WFH</span>, so no office check-in is needed.
+                  Anyone already checked in, or on approved leave, is left as-is.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2.5 mt-5">
+              <Button variant="ghost" size="sm" className="flex-1" onClick={() => setWfhOpen(false)}>Cancel</Button>
+              <Button size="sm" className="flex-1" disabled={!wfhDate || !wfhReason.trim() || addWfhMutation.isPending} onClick={handleAddWfhDay}>
+                <Check size={14} /> Declare
+              </Button>
+            </div>
+        </ModalShell>
+      )}
+
+      {/* Remove company WFH day confirm */}
+      {wfhDeleteTarget && (
+        <ModalShell onClose={() => setWfhDeleteTarget(null)} size="sm" contentClassName="p-5 sm:p-6">
+            <h3 className="font-display font-bold text-[16px] text-text-1 mb-2">Remove Company WFH Day?</h3>
+            <p className="font-ui text-[13px] text-text-3 mb-5">
+              The day goes back to a normal in-office working day and the WFH marks added by it are removed.
+              Individually approved WFH for that date is kept.
+            </p>
+            <div className="flex gap-2.5">
+              <Button variant="ghost" size="sm" className="flex-1" onClick={() => setWfhDeleteTarget(null)}>Cancel</Button>
+              <Button size="sm" variant="danger" className="flex-1" disabled={removeWfhMutation.isPending} onClick={() => handleRemoveWfhDay(wfhDeleteTarget)}>
                 <X size={14} /> Remove
               </Button>
             </div>
