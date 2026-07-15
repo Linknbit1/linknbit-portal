@@ -200,13 +200,16 @@ export async function reviewQuestTask(
 
 // ── Shoutouts ────────────────────────────────────────────────────────────────
 
+// The feed backs the month + recipient filters, which scope client-side — so the
+// window has to be wide enough that "All months" for one person shows their real
+// history rather than whatever fell inside the newest N rows overall.
 export async function fetchApprovedShoutouts(): Promise<ShoutoutRow[]> {
   const { data, error } = await supabase
     .from('shoutouts')
     .select('*')
     .eq('status', 'approved')
     .order('created_at', { ascending: false })
-    .limit(50)
+    .limit(500)
   if (error) throw error
   return data
 }
