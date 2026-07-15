@@ -423,20 +423,33 @@ function SubmitProofModal({ claim, taskTitle, profileId, onClose }: {
   )
 }
 
-// ── Reward create modal ────────────────────────────────────────────────────────
+// ── Reward create / edit modal ─────────────────────────────────────────────────
 
-function RewardModal({ actorId, onClose }: { actorId: string; onClose: () => void }) {
+interface RewardModalProps {
+  actorId: string
+  /** Existing reward to edit; null creates a new one. */
+  editRow: RewardRow | null
+  onClose: () => void
+}
+
+// Mounted only while open, so the initial state reads straight from `editRow`.
+// Governors (HR/Admin/Super Admin) only — matches the p_rewards_write RLS policy.
+function RewardModal({ actorId, editRow, onClose }: RewardModalProps) {
   const toast = useToast()
-  const { mutate: create, isPending } = useCreateReward(actorId)
-  const [name, setName] = useState('')
-  const [description, setDescription] = useState('')
-  const [cost, setCost] = useState('')
-  const [quantity, setQuantity] = useState('-1')
-  const [tier, setTier] = useState<'standard' | 'premium'>('standard')
-  const [isCash, setIsCash] = useState(false)
+  const { mutate: create, isPending: creating } = useCreateReward(actorId)
+  const { mutate: update, isPending: updating } = useUpdateReward()
+  const isPending = creating || updating
+  const [name, setName] = useState(editRow?.name ?? '')
+  const [description, setDescription] = useState(editRow?.description ?? '')
+  const [cost, setCost] = useState(editRow ? String(editRow.xp_cost) : '')
+  const [quantity, setQuantity] = useState(String(editRow?.quantity ?? -1))
+  const [tier, setTier] = useState<'standard' | 'premium'>(editRow?.tier === 'premium' ? 'premium' : 'standard')
+  const [isCash, setIsCash] = useState(editRow?.is_cash ?? false)
   // Group reward: N employees each contribute the same per-person XP (`cost`).
-  const [isGroup, setIsGroup] = useState(false)
-  const [groupSize, setGroupSize] = useState('3')
+  const [isGroup, setIsGroup] = useState((editRow?.group_size ?? 1) >= 2)
+  const [groupSize, setGroupSize] = useState(
+    editRow && editRow.group_size >= 2 ? String(editRow.group_size) : '3',
+  )
 
   const perPerson = parseInt(cost, 10)
   const size = parseInt(groupSize, 10)
@@ -447,7 +460,7 @@ function RewardModal({ actorId, onClose }: { actorId: string; onClose: () => voi
     const c = parseInt(cost, 10)
     const q = parseInt(quantity, 10)
     if (!name || isNaN(c) || c <= 0 || !groupSizeValid) return
-    create({
+    const fields = {
       name,
       description: description || null,
       xp_cost: c,
@@ -456,16 +469,25 @@ function RewardModal({ actorId, onClose }: { actorId: string; onClose: () => voi
       // Group rewards go through the pool flow, not the cash-eligibility gate.
       is_cash: isGroup ? false : isCash,
       group_size: isGroup ? size : 1,
-    }, {
-      onSuccess: () => { toast(`Reward "${name}" created`, 'success'); onClose() },
-      onError: () => toast('Failed to create reward', 'error'),
-    })
+    }
+    if (editRow) {
+      // is_active is owned by the Enable/Disable action, so it's left untouched here.
+      update({ id: editRow.id, updates: fields }, {
+        onSuccess: () => { toast(`Reward "${name}" updated`, 'success'); onClose() },
+        onError: () => toast('Failed to update reward', 'error'),
+      })
+    } else {
+      create(fields, {
+        onSuccess: () => { toast(`Reward "${name}" created`, 'success'); onClose() },
+        onError: () => toast('Failed to create reward', 'error'),
+      })
+    }
   }
 
   return (
     <ModalShell onClose={onClose} size="md" contentClassName="p-5 sm:p-6">
         <div className="flex items-center justify-between mb-5">
-          <h3 className="font-display font-bold text-[16px] text-text-1">Create Reward</h3>
+          <h3 className="font-display font-bold text-[16px] text-text-1">{editRow ? 'Edit Reward' : 'Create Reward'}</h3>
           <button onClick={onClose} className="text-text-4 hover:text-text-1"><X size={18} /></button>
         </div>
         <div className="space-y-3.5">
@@ -541,7 +563,8 @@ function RewardModal({ actorId, onClose }: { actorId: string; onClose: () => voi
         <div className="flex gap-2.5 mt-5">
           <Button variant="ghost" size="sm" className="flex-1" onClick={onClose}>Cancel</Button>
           <Button size="sm" className="flex-1" disabled={!name || !cost || !groupSizeValid || isPending} onClick={submit}>
-            {isPending ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />} Create
+            {isPending ? <Loader2 size={13} className="animate-spin" /> : editRow ? <Check size={13} /> : <Plus size={13} />}
+            {editRow ? 'Save' : 'Create'}
           </Button>
         </div>
     </ModalShell>
@@ -611,7 +634,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
   // Modals / dialogs
   const [shoutoutOpen, setShoutoutOpen] = useState(false)
   const [taskModal, setTaskModal] = useState<QuestTaskRow | null | 'new'>(null)
-  const [rewardModalOpen, setRewardModalOpen] = useState(false)
+  const [rewardModal, setRewardModal] = useState<RewardRow | null | 'new'>(null)
   const [redeemTarget, setRedeemTarget] = useState<RewardRow | null>(null)
   const [submitTarget, setSubmitTarget] = useState<QuestTaskClaimRow | null>(null)
   const [review, setReview] = useState<{ kind: 'task' | 'shoutout' | 'redeem' | 'pool'; id: string; approve: boolean; action?: 'approve' | 'reject' | 'fulfill'; label: string; danger?: boolean } | null>(null)
@@ -1426,7 +1449,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
               <section>
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="font-display font-bold text-[16px] text-text-1 flex items-center gap-2"><Gift size={16} className="text-text-3" /> Rewards Catalog</h2>
-                  <Button size="sm" onClick={() => setRewardModalOpen(true)}><Plus size={13} /> Create Reward</Button>
+                  <Button size="sm" onClick={() => setRewardModal('new')}><Plus size={13} /> Create Reward</Button>
                 </div>
                 <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
                   {allRewards.map((r) => (
@@ -1444,6 +1467,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
                       ) : (
                         <div className="flex gap-1.5">
                           <Button size="sm" variant="ghost" onClick={() => updateReward({ id: r.id, updates: { is_active: !r.is_active } }, { onSuccess: () => toast(r.is_active ? 'Deactivated' : 'Activated', 'success') })}>{r.is_active ? 'Disable' : 'Enable'}</Button>
+                          <button onClick={() => setRewardModal(r)} className="p-1.5 text-text-4 hover:text-text-1" title="Edit reward"><Pencil size={13} /></button>
                           <button onClick={() => setConfirmDelete(r.id)} className="p-1.5 text-text-4 hover:text-error" title="Delete"><Trash2 size={13} /></button>
                         </div>
                       )}
@@ -1558,7 +1582,13 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
       {/* Modals */}
       <ShoutoutModal open={shoutoutOpen} onClose={() => setShoutoutOpen(false)} recipients={leaderboard.map((e) => ({ id: e.profile_id, name: e.name, avatarUrl: e.avatar_url }))} profileId={profileId} canSetCustom={isRecognizer} />
       {taskModal !== null && <QuestTaskModal task={taskModal === 'new' ? null : taskModal} actorId={profileId} onClose={() => setTaskModal(null)} />}
-      {rewardModalOpen && <RewardModal actorId={profileId} onClose={() => setRewardModalOpen(false)} />}
+      {rewardModal && (
+        <RewardModal
+          actorId={profileId}
+          editRow={rewardModal === 'new' ? null : rewardModal}
+          onClose={() => setRewardModal(null)}
+        />
+      )}
       {submitTarget && <SubmitProofModal claim={submitTarget} taskTitle={taskMap.get(submitTarget.task_id)?.title ?? 'Task'} profileId={profileId} onClose={() => setSubmitTarget(null)} />}
       <RedeemModal reward={redeemTarget} myLP={myLP} onClose={() => setRedeemTarget(null)} onConfirm={handleRedeem} isPending={redeeming} />
       <NoteDialog open={review !== null} title={review?.label ?? ''} confirmLabel={review?.label ?? 'Confirm'} danger={review?.danger} onClose={() => setReview(null)} onConfirm={runReview} isPending={reviewPending} />
