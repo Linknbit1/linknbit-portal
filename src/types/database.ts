@@ -293,6 +293,38 @@ export type Database = {
         }
         Relationships: []
       }
+      company_wfh_days: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          date: string
+          id: string
+          reason: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          date: string
+          id?: string
+          reason: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          date?: string
+          id?: string
+          reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_wfh_days_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       designations: {
         Row: {
           created_at: string

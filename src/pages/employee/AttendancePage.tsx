@@ -38,6 +38,7 @@ import {
   useAttendanceSettings,
   useHolidays,
   useWorkingSaturdays,
+  useCompanyWfhDays,
   useMyWfhRequests,
   useSubmitWfh,
   useUpdateWfh,
@@ -99,6 +100,13 @@ function StatusPill({ status }: { status: string }) {
 
 // ── Upcoming schedule section ─────────────────────────────────────────────────
 
+// The three kinds of scheduled day an employee needs to know about ahead of time.
+const SCHEDULE_ITEM_META = {
+  holiday:     { icon: Palmtree, label: 'Holiday', iconCls: 'text-text-3',      bg: 'bg-text-4/10',      pill: 'bg-text-4/10 text-text-3 border-border-default' },
+  working_sat: { icon: Calendar, label: 'Working', iconCls: 'text-service-mkt', bg: 'bg-service-mkt/10', pill: 'bg-service-mkt/10 text-service-mkt border-service-mkt/25' },
+  wfh:         { icon: Home,     label: 'WFH',     iconCls: 'text-service-dev', bg: 'bg-service-dev/10', pill: 'bg-service-dev/10 text-service-dev border-service-dev/25' },
+} as const
+
 export function UpcomingScheduleSection() {
   const now = new Date()
   const year = now.getFullYear()
@@ -109,13 +117,17 @@ export function UpcomingScheduleSection() {
 
   const { data: holidays = [] }    = useHolidays(year)
   const { data: workingSats = [] } = useWorkingSaturdays(year)
+  const { data: wfhDays = [] }     = useCompanyWfhDays(year)
 
-  const upcomingHolidays = holidays.filter((h) => h.date > todayStr && h.date <= cutoffStr)
-  const upcomingSats     = workingSats.filter((s) => s.date > todayStr && s.date <= cutoffStr)
+  const inWindow = (d: string) => d > todayStr && d <= cutoffStr
+  const upcomingHolidays = holidays.filter((h) => inWindow(h.date))
+  const upcomingSats     = workingSats.filter((s) => inWindow(s.date))
+  const upcomingWfh      = wfhDays.filter((w) => inWindow(w.date))
 
   const items = [
     ...upcomingHolidays.map((h) => ({ type: 'holiday'     as const, date: h.date, label: h.name })),
     ...upcomingSats.map((s)     => ({ type: 'working_sat' as const, date: s.date, label: s.note ?? 'Working Saturday' })),
+    ...upcomingWfh.map((w)      => ({ type: 'wfh'         as const, date: w.date, label: w.reason })),
   ].sort((a, b) => a.date.localeCompare(b.date))
 
   return (
@@ -140,27 +152,17 @@ export function UpcomingScheduleSection() {
         {items.map((item) => {
           const d = new Date(item.date + 'T00:00:00')
           const dateLabel = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
-          const isHoliday = item.type === 'holiday'
+          const meta = SCHEDULE_ITEM_META[item.type]
+          const Icon = meta.icon
           return (
             <div key={item.date + item.type} className="flex items-center gap-3 px-5 py-3">
-              <div className={cn(
-                'size-7 rounded-sm flex items-center justify-center shrink-0',
-                isHoliday ? 'bg-text-4/10' : 'bg-service-mkt/10',
-              )}>
-                {isHoliday
-                  ? <Palmtree size={14} className="text-text-3" />
-                  : <Calendar size={14} className="text-service-mkt" />
-                }
+              <div className={cn('size-7 rounded-sm flex items-center justify-center shrink-0', meta.bg)}>
+                <Icon size={14} className={meta.iconCls} />
               </div>
               <p className="flex-1 font-ui font-medium text-[13px] text-text-1 truncate">{item.label}</p>
               <span className="font-mono text-[11.5px] text-text-3 shrink-0">{dateLabel}</span>
-              <span className={cn(
-                'text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full border shrink-0',
-                isHoliday
-                  ? 'bg-text-4/10 text-text-3 border-border-default'
-                  : 'bg-service-mkt/10 text-service-mkt border-service-mkt/25',
-              )}>
-                {isHoliday ? 'Holiday' : 'Working'}
+              <span className={cn('text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full border shrink-0', meta.pill)}>
+                {meta.label}
               </span>
             </div>
           )

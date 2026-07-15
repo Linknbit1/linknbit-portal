@@ -621,6 +621,39 @@ export async function removeWorkingSaturday(id: string): Promise<void> {
   if (error) throw error
 }
 
+// ── Company WFH days (whole-company work-from-home) ───────────────────────────
+// Declaring a day marks every eligible employee's attendance as WFH for that
+// date via the trg_company_wfh_apply trigger; removing it reverts those rows.
+
+export type CompanyWfhDay = Tables<'company_wfh_days'>
+
+export async function fetchCompanyWfhDays(year?: number): Promise<CompanyWfhDay[]> {
+  let q = supabase.from('company_wfh_days').select('*').order('date', { ascending: true })
+  if (year) q = q.gte('date', `${year}-01-01`).lte('date', `${year}-12-31`)
+  const { data, error } = await q
+  if (error) throw error
+  return data
+}
+
+export async function addCompanyWfhDay(
+  date: string,
+  reason: string,
+  createdBy: string,
+): Promise<CompanyWfhDay> {
+  const { data, error } = await supabase
+    .from('company_wfh_days')
+    .insert({ date, reason, created_by: createdBy })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function removeCompanyWfhDay(id: string): Promise<void> {
+  const { error } = await supabase.from('company_wfh_days').delete().eq('id', id)
+  if (error) throw error
+}
+
 // ── Overtime requests ─────────────────────────────────────────────────────────
 
 export interface OvertimeRequestWithProfile extends OvertimeRequest {

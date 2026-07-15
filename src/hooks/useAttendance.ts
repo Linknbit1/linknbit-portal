@@ -28,6 +28,9 @@ import {
   fetchWorkingSaturdays,
   addWorkingSaturday,
   removeWorkingSaturday,
+  fetchCompanyWfhDays,
+  addCompanyWfhDay,
+  removeCompanyWfhDay,
   fetchMyOvertimeRequests,
   fetchAllOvertimeRequests,
   fetchMonthlyOvertime,
@@ -80,6 +83,7 @@ export const ATTENDANCE_KEYS = {
   allExceptions: (filters: FetchExceptionsFilters) => ['attendance', 'exceptions', 'all', filters] as const,
   holidays: (year?: number) => ['attendance', 'holidays', year] as const,
   workingSaturdays: (year?: number) => ['attendance', 'working-saturdays', year] as const,
+  companyWfhDays: (year?: number) => ['attendance', 'company-wfh-days', year] as const,
   myOvertime: ['attendance', 'overtime', 'my'] as const,
   allOvertime: (status?: string) => ['attendance', 'overtime', 'all', status] as const,
   monthlyOvertime: (year: number, month: number) => ['attendance', 'overtime', 'monthly', year, month] as const,
@@ -380,6 +384,42 @@ export function useRemoveWorkingSaturday() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['attendance', 'working-saturdays'] })
     },
+  })
+}
+
+// ── Company WFH days ──────────────────────────────────────────────────────────
+
+export function useCompanyWfhDays(year?: number) {
+  return useQuery({
+    queryKey: ATTENDANCE_KEYS.companyWfhDays(year),
+    queryFn: () => fetchCompanyWfhDays(year),
+    staleTime: 1000 * 60 * 10,
+  })
+}
+
+// Declaring/removing a company WFH day rewrites attendance rows for that date
+// via DB triggers, so every attendance view has to be refetched.
+function invalidateAfterCompanyWfhChange(qc: ReturnType<typeof useQueryClient>) {
+  qc.invalidateQueries({ queryKey: ['attendance', 'company-wfh-days'] })
+  qc.invalidateQueries({ queryKey: ['attendance', 'all'] })
+  qc.invalidateQueries({ queryKey: ['attendance', 'monthly'] })
+  qc.invalidateQueries({ queryKey: ['attendance', 'my'] })
+}
+
+export function useAddCompanyWfhDay() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ date, reason, createdBy }: { date: string; reason: string; createdBy: string }) =>
+      addCompanyWfhDay(date, reason, createdBy),
+    onSuccess: () => invalidateAfterCompanyWfhChange(qc),
+  })
+}
+
+export function useRemoveCompanyWfhDay() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => removeCompanyWfhDay(id),
+    onSuccess: () => invalidateAfterCompanyWfhChange(qc),
   })
 }
 
