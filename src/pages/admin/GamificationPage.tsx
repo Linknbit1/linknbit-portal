@@ -1,9 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
 import {
   Trophy, Zap, Star, Plus, X, Gift, Loader2, AlertCircle, ShieldAlert,
   Check, Pencil, Trash2, ClipboardCheck, Send, Award, Coins, Lock, Ban, History,
-  Users, UserPlus, LogOut,
+  Users, UserPlus, LogOut, Calendar,
 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { HubRow } from '../../components/layout/MobileHub'
@@ -14,6 +14,7 @@ import { Tabs } from '../../components/ui/Tabs'
 import { Select } from '../../components/ui/Select'
 import { Input } from '../../components/ui/Input'
 import { Toggle } from '../../components/ui/Toggle'
+import { PeriodStepper } from '../../components/ui/PeriodStepper'
 import { DatePicker } from '../../components/ui/DatePicker'
 import { useToast } from '../../components/ui/toast-context'
 import { useAuthContext } from '../../context/AuthContext'
@@ -94,6 +95,75 @@ const recentMonthOptions = (d = new Date()): { value: string; label: string }[] 
     const m = dt.getMonth() + 1
     return { value: `${y}-${String(m).padStart(2, '0')}`, label: monthLabel(y, m) }
   })
+
+// ── Month filter (stepper + "All months" escape hatch) ─────────────────────────
+
+interface MonthFilter {
+  /** "YYYY-MM" of the selected month — compare against an ISO date/timestamp prefix. */
+  prefix: string
+  /** When true the month is ignored entirely and everything is shown. */
+  allMonths: boolean
+  isCurrentMonth: boolean
+  label: string
+  /** Ready-to-render control row. */
+  control: ReactNode
+}
+
+// Mirrors the attendance Overtime tab's filter: a prev/next month stepper plus an
+// "All months" toggle that disables month scoping (e.g. to see one person's whole
+// shoutout history). Each call site gets its own independent state.
+function useMonthFilter(): MonthFilter {
+  const now = new Date()
+  const [year, setYear] = useState(now.getFullYear())
+  const [month, setMonth] = useState(now.getMonth() + 1) // 1-indexed
+  const [allMonths, setAllMonths] = useState(false)
+
+  const prevMonth = () => {
+    if (month === 1) { setYear((y) => y - 1); setMonth(12) }
+    else setMonth((m) => m - 1)
+  }
+  const nextMonth = () => {
+    if (month === 12) { setYear((y) => y + 1); setMonth(1) }
+    else setMonth((m) => m + 1)
+  }
+  const isCurrentMonth = year === now.getFullYear() && month === now.getMonth() + 1
+  const label = allMonths ? 'All months' : monthLabel(year, month)
+
+  const control = (
+    <div className="flex flex-wrap items-center gap-2">
+      <PeriodStepper
+        icon={Calendar}
+        label={label}
+        onPrev={prevMonth}
+        onNext={nextMonth}
+        disablePrev={allMonths}
+        disableNext={allMonths || isCurrentMonth}
+        className={cn(allMonths && 'opacity-50')}
+      >
+        {!allMonths && isCurrentMonth && (
+          <span className="ml-1 px-1.5 py-0.5 rounded-xs bg-brand-red/10 border border-brand-red/20 text-brand-red text-[10px] font-mono font-semibold uppercase tracking-wide">
+            Current
+          </span>
+        )}
+      </PeriodStepper>
+      <button
+        type="button"
+        onClick={() => setAllMonths((v) => !v)}
+        aria-pressed={allMonths}
+        className={cn(
+          'h-8 px-3 rounded-sm border font-ui font-semibold text-[12px] transition-colors shrink-0',
+          allMonths
+            ? 'bg-brand-red/10 border-brand-red/30 text-brand-red'
+            : 'bg-surface-1 border-border-default text-text-3 hover:text-text-1 hover:border-border-strong',
+        )}
+      >
+        All months
+      </button>
+    </div>
+  )
+
+  return { prefix: `${year}-${String(month).padStart(2, '0')}`, allMonths, isCurrentMonth, label, control }
+}
 
 // ── Leaderboard podium (top 3 by monthly LP) ───────────────────────────────────────
 
@@ -704,7 +774,6 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
   const myLP = me?.lp_balance ?? profile?.lp_balance ?? 0
   const myReputation = me?.reputation_total ?? profile?.reputation_total ?? 0
   const taskMap = useMemo(() => new Map(tasks.map((t) => [t.id, t])), [tasks])
-  const openTasks = useMemo(() => tasks.filter((t) => t.status === 'open'), [tasks])
   const myClaimByTask = useMemo(() => new Map(myClaims.map((c) => [c.task_id, c])), [myClaims])
   // task_id → who claimed it (identity only), for the "Claimed by" rows.
   const claimantsByTask = useMemo(() => {
@@ -719,6 +788,43 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
   const earnedBadgeIds = useMemo(() => new Set(myAwards.map((a) => a.badge_id)), [myAwards])
   const nameOf = (id: string) => directory[id]?.name ?? '—'
   const rewardName = (id: string) => allRewards.find((r) => r.id === id)?.name ?? rewards.find((r) => r.id === id)?.name ?? 'Reward'
+
+  // ── Quest board: month-scoped history (any status) ───────────────────────────
+  // A quest belongs to the month of the date it shows on its card — its deadline
+  // when it has one (a quest posted Jun 30 but due Jul 2 is a July quest), else
+  // the day it was posted. Each quest lands in exactly one month, never two.
+  const questFilter = useMonthFilter()
+  const boardTasks = useMemo(() => {
+    if (questFilter.allMonths) return tasks
+    return tasks.filter((t) => {
+      const bucket = (t.deadline ?? t.created_at).slice(0, 7) // "YYYY-MM"
+      // Undated open quests never expire, so they stay claimable on the current
+      // month rather than being stranded in the month they were posted.
+      if (!t.deadline && t.status === 'open' && questFilter.isCurrentMonth) {
+        return bucket <= questFilter.prefix
+      }
+      return bucket === questFilter.prefix
+    })
+  }, [tasks, questFilter.allMonths, questFilter.prefix, questFilter.isCurrentMonth])
+
+  // ── Shoutouts: month + recipient filters ─────────────────────────────────────
+  const shoutFilter = useMonthFilter()
+  const [shoutMember, setShoutMember] = useState('all')
+  // Recipient options come from the whole feed (not the month-scoped slice) so a
+  // person stays selectable while you step through months or switch to All months.
+  const shoutMemberOptions = useMemo(() => {
+    const ids = [...new Set(shoutFeed.map((s) => s.to_profile_id))]
+    return [
+      { value: 'all', label: 'All members' },
+      ...ids
+        .map((id) => ({ value: id, label: directory[id]?.name ?? '—' }))
+        .sort((a, b) => a.label.localeCompare(b.label)),
+    ]
+  }, [shoutFeed, directory])
+  const visibleShoutouts = useMemo(() => shoutFeed.filter((s) =>
+    (shoutFilter.allMonths || s.created_at.startsWith(shoutFilter.prefix)) &&
+    (shoutMember === 'all' || s.to_profile_id === shoutMember),
+  ), [shoutFeed, shoutFilter.allMonths, shoutFilter.prefix, shoutMember])
 
   // Split the shop: individual rewards keep the classic redeem flow; group rewards
   // (group_size >= 2) go through the pool section below.
@@ -1031,19 +1137,29 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
               </div>
             )}
 
-            {/* Open board */}
+            {/* Board — quests posted in the selected month (plus anything still open) */}
             <div>
-              <h3 className="font-display font-semibold text-[15px] text-text-1 mb-3">Available Tasks</h3>
-              {openTasks.length === 0 && !tasksLoading && <div className="py-12 text-center text-text-4 font-ui text-[13px]">No open tasks right now.</div>}
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+                <h3 className="font-display font-semibold text-[15px] text-text-1">
+                  {questFilter.allMonths ? 'All Quests' : `Quests · ${questFilter.label}`}
+                </h3>
+                {questFilter.control}
+              </div>
+              {boardTasks.length === 0 && !tasksLoading && (
+                <div className="py-12 text-center text-text-4 font-ui text-[13px]">
+                  {questFilter.allMonths ? 'No quests yet.' : `No quests posted in ${questFilter.label}.`}
+                </div>
+              )}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {openTasks.map((t) => {
+                {boardTasks.map((t) => {
                   const mine = myClaimByTask.get(t.id)
                   const meta = difficultyMeta(t.difficulty)
                   const claimed = claimantsByTask.get(t.id) ?? []
+                  const isOpen = t.status === 'open'
                   const expired = !!t.deadline && new Date(t.deadline).getTime() < nowMs
                   const full = claimed.length >= t.max_claims
                   const iAmRestricted = profile?.is_restricted ?? false
-                  const canClaim = isParticipant && !expired && !full && !iAmRestricted
+                  const canClaim = isOpen && isParticipant && !expired && !full && !iAmRestricted
                   return (
                     <div key={t.id} className="bg-surface-1 border border-border-default rounded-xl p-5 flex flex-col">
                       <div className="flex items-start justify-between mb-2 gap-2">
@@ -1062,9 +1178,17 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
                           ? <span className="font-mono text-[10px] text-text-4">{mine.status === 'approved' ? 'Done' : mine.status}</span>
                           : canClaim
                             ? <Button size="sm" disabled={claiming} onClick={() => handleClaim(t.id)}>{claiming ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />} Claim</Button>
-                            : (expired || full || iAmRestricted) && <span className="font-mono text-[10px] text-text-4">{expired ? 'Expired' : full ? 'Full' : 'Restricted'}</span>}
+                            : (!isOpen || expired || full || iAmRestricted) && (
+                              <span className="font-mono text-[10px] text-text-4 capitalize">
+                                {!isOpen ? t.status : expired ? 'Expired' : full ? 'Full' : 'Restricted'}
+                              </span>
+                            )}
                       </div>
-                      {t.deadline && <p className="font-mono text-[10px] text-text-4 mt-2">Due {new Date(t.deadline).toLocaleDateString()}</p>}
+                      {/* Both dates: the month filter buckets by Due when set, else Posted. */}
+                      <p className="font-mono text-[10px] text-text-4 mt-2">
+                        Posted {new Date(t.created_at).toLocaleDateString()}
+                        {t.deadline && <> · Due {new Date(t.deadline).toLocaleDateString()}</>}
+                      </p>
                       <div className="mt-3 pt-3 border-t border-border-subtle">
                         <div className="flex items-center justify-between gap-2 mb-2">
                           <span className="font-mono text-[10px] uppercase tracking-wider text-text-4">Claimed by</span>
@@ -1125,9 +1249,35 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
               <p className="font-mono text-[11.5px] text-text-3">Recognition issued by managers & HR. Each is HR-reviewed before XP is awarded.</p>
               {isRecognizer && <Button size="sm" className="shrink-0" onClick={() => setShoutoutOpen(true)}><Plus size={13} /> Give Shoutout</Button>}
             </div>
+
+            {/* Filters — month (with an All months escape hatch) + recipient */}
+            <div className="flex flex-wrap items-center gap-2">
+              {shoutFilter.control}
+              <Select
+                size="sm"
+                value={shoutMember}
+                onChange={setShoutMember}
+                options={shoutMemberOptions}
+                className="min-w-44"
+              />
+              {(shoutMember !== 'all' || shoutFilter.allMonths) && (
+                <span className="font-mono text-[11px] text-text-4">
+                  {visibleShoutouts.length} shoutout{visibleShoutouts.length === 1 ? '' : 's'}
+                </span>
+              )}
+            </div>
+
             <div className="space-y-3">
-              {shoutFeed.length === 0 && <div className="py-12 text-center text-text-4 font-ui text-[13px]">No shoutouts yet.</div>}
-              {shoutFeed.map((s: ShoutoutRow) => (
+              {visibleShoutouts.length === 0 && (
+                <div className="py-12 text-center text-text-4 font-ui text-[13px]">
+                  {shoutMember !== 'all' && !shoutFilter.allMonths
+                    ? <>No shoutouts for {nameOf(shoutMember)} in {shoutFilter.label}. Try <span className="text-text-3">All months</span>.</>
+                    : shoutMember !== 'all' ? `No shoutouts for ${nameOf(shoutMember)} yet.`
+                    : shoutFilter.allMonths ? 'No shoutouts yet.'
+                    : `No shoutouts in ${shoutFilter.label}.`}
+                </div>
+              )}
+              {visibleShoutouts.map((s: ShoutoutRow) => (
                 <div key={s.id} className="bg-surface-1 border border-border-default rounded-xl p-5 flex gap-4">
                   <div className="size-10 rounded-full bg-coin-gold/15 border border-coin-gold/30 flex items-center justify-center shrink-0"><Star size={16} className="text-coin-gold" /></div>
                   <div className="flex-1 min-w-0">
