@@ -1,9 +1,12 @@
 import React, { useMemo, useState } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
-import { Shield, ChevronRight, Loader2, Shapes, IdCard, Plus, Trash2, type LucideIcon } from 'lucide-react'
+import { Shield, ChevronRight, Loader2, Shapes, IdCard, Plus, Trash2, Smartphone, Bell, type LucideIcon } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { StackScreen } from '../../components/layout/StackScreen'
 import { HubRow } from '../../components/layout/MobileHub'
+import { MyDevicesCard } from '../../components/shared/MyDevicesCard'
+import { PushDevicesCard } from '../../components/shared/PushDevicesCard'
+import { NotificationPreferencesCard } from '../../components/shared/NotificationPreferencesCard'
 import { Button } from '../../components/ui/Button'
 import { Toggle } from '../../components/ui/Toggle'
 import { useToast } from '../../components/ui/toast-context'
@@ -21,12 +24,16 @@ import type { Designation } from '../../api/designations'
 import { showWipFeatures } from '../../lib/featureFlags'
 import { cn } from '../../lib/cn'
 
-type Tab = 'services' | 'designations' | 'permissions'
+type Tab = 'devices' | 'notifications' | 'services' | 'designations' | 'permissions'
 
 // Mobile section metadata: drives the hub rows + stack-screen titles. Visibility is
 // role-gated (see visibleSectionsFor): Services → super_admin/admin; Designations →
 // super_admin/admin/hr; Permissions → super_admin/admin and only when WIP is enabled.
 const SETTINGS_SECTIONS: { key: Tab; label: string; icon: LucideIcon }[] = [
+  // Personal — every signed-in staff member.
+  { key: 'devices',       label: 'My Devices',    icon: Smartphone },
+  { key: 'notifications', label: 'Notifications', icon: Bell },
+  // Administrative — role-filtered below.
   { key: 'services',     label: 'Services',     icon: Shapes },
   { key: 'designations', label: 'Designations', icon: IdCard },
   { key: 'permissions',  label: 'Permissions',  icon: Shield },
@@ -34,6 +41,7 @@ const SETTINGS_SECTIONS: { key: Tab; label: string; icon: LucideIcon }[] = [
 
 function visibleSectionsFor(role: string | undefined): typeof SETTINGS_SECTIONS {
   return SETTINGS_SECTIONS.filter(({ key }) => {
+    if (key === 'devices' || key === 'notifications') return !!role
     if (key === 'services')     return role === 'super_admin' || role === 'admin'
     if (key === 'designations') return role === 'super_admin' || role === 'admin' || role === 'hr'
     if (key === 'permissions')  return (role === 'super_admin' || role === 'admin') && showWipFeatures
@@ -361,8 +369,19 @@ export default function SettingsPage({ mobileSection }: { mobileSection?: string
   const [activeTab, setActiveTab] = useState<Tab>(sections[0]?.key ?? 'designations')
   const showHub = !isDesktop && !mobileSection
 
+  // The personal panels are already made of Cards, so they render bare — the
+  // shared panel wrapper would nest a card inside a card.
+  const isPersonalPanel = (tab: Tab) => tab === 'devices' || tab === 'notifications'
+
   const renderPanel = (tab: Tab) =>
-    tab === 'services'     ? <ServicesPanel canManage={canEditFlags} />
+    tab === 'devices' ? (
+      <div className="flex flex-col gap-4">
+        <MyDevicesCard />
+        <PushDevicesCard />
+      </div>
+    )
+    : tab === 'notifications' ? <NotificationPreferencesCard />
+    : tab === 'services'     ? <ServicesPanel canManage={canEditFlags} />
     : tab === 'designations' ? <DesignationsPanel canManage={canManageDesignations} />
     : <PermissionsPanel canEdit={canEditFlags} />
 
@@ -373,9 +392,13 @@ export default function SettingsPage({ mobileSection }: { mobileSection?: string
     if (!entry) return <Navigate to="/settings" replace />
     return (
       <StackScreen title={entry.label}>
-        <div className="bg-surface-1 border border-border-default rounded-xl p-5">
-          {renderPanel(entry.key)}
-        </div>
+        {isPersonalPanel(entry.key) ? (
+          renderPanel(entry.key)
+        ) : (
+          <div className="bg-surface-1 border border-border-default rounded-xl p-5">
+            {renderPanel(entry.key)}
+          </div>
+        )}
       </StackScreen>
     )
   }
@@ -417,9 +440,13 @@ export default function SettingsPage({ mobileSection }: { mobileSection?: string
 
             {/* Content */}
             <div className="flex-1 min-w-0">
-              <div className="bg-surface-1 border border-border-default rounded-xl p-6">
-                {renderPanel(activeTab)}
-              </div>
+              {isPersonalPanel(activeTab) ? (
+                renderPanel(activeTab)
+              ) : (
+                <div className="bg-surface-1 border border-border-default rounded-xl p-6">
+                  {renderPanel(activeTab)}
+                </div>
+              )}
             </div>
           </div>
         )}

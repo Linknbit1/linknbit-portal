@@ -3,11 +3,19 @@ import { Outlet, useLocation } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { BottomTabBar } from './BottomTabBar'
 import { NavChromeContext } from './MobileNavContext'
+import { useAuthContext } from '../../context/AuthContext'
+import { useRealtimeNotifications } from '../../hooks/realtime/useRealtimeNotifications'
 
 export function AppShell() {
   const location = useLocation()
   const [hasBack, setHasBack] = useState(false)
   const mainRef = useRef<HTMLElement>(null)
+  const { profile } = useAuthContext()
+
+  // Mounted here (not in Topbar) so the live channel survives every internal
+  // route and both breakpoints — the toast should never depend on which page
+  // or layout happens to be on screen.
+  useRealtimeNotifications(profile?.id ?? '')
 
   // Reset scroll to the top whenever the route changes, so a freshly opened
   // screen never starts mid-page (e.g. drilling into a section after scrolling

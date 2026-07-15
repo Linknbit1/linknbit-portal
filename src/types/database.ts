@@ -738,6 +738,35 @@ export type Database = {
           },
         ]
       }
+      notification_preferences: {
+        Row: {
+          enabled: boolean
+          profile_id: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          enabled?: boolean
+          profile_id: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          enabled?: boolean
+          profile_id?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_preferences_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           body: string | null
@@ -748,6 +777,7 @@ export type Database = {
           resource_id: string | null
           resource_type: string | null
           title: string
+          type: string
         }
         Insert: {
           body?: string | null
@@ -758,6 +788,7 @@ export type Database = {
           resource_id?: string | null
           resource_type?: string | null
           title: string
+          type?: string
         }
         Update: {
           body?: string | null
@@ -768,6 +799,7 @@ export type Database = {
           resource_id?: string | null
           resource_type?: string | null
           title?: string
+          type?: string
         }
         Relationships: [
           {
@@ -960,6 +992,53 @@ export type Database = {
           {
             foreignKeyName: "profiles_restricted_by_fkey"
             columns: ["restricted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          device_fingerprint: string | null
+          device_label: string | null
+          enabled: boolean
+          endpoint: string
+          id: string
+          last_seen_at: string
+          p256dh: string
+          profile_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          device_fingerprint?: string | null
+          device_label?: string | null
+          enabled?: boolean
+          endpoint: string
+          id?: string
+          last_seen_at?: string
+          p256dh: string
+          profile_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          device_fingerprint?: string | null
+          device_label?: string | null
+          enabled?: boolean
+          endpoint?: string
+          id?: string
+          last_seen_at?: string
+          p256dh?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_profile_id_fkey"
+            columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -1690,12 +1769,38 @@ export type Database = {
         Returns: undefined
       }
       expire_reward_pools: { Args: never; Returns: undefined }
+      fn_all_internal_staff: {
+        Args: never
+        Returns: {
+          profile_id: string
+        }[]
+      }
       fn_auto_checkout_missing: { Args: never; Returns: undefined }
       fn_award_badges: { Args: { p_profile_id: string }; Returns: undefined }
+      fn_exception_label: { Args: { t: string }; Returns: string }
+      fn_fmt_day: { Args: { d: string }; Returns: string }
       fn_is_working_day: { Args: { d: string }; Returns: boolean }
       fn_mark_absent_for_date: { Args: { d: string }; Returns: undefined }
       fn_mark_absent_today: { Args: never; Returns: undefined }
       fn_monthly_lp_reset: { Args: never; Returns: undefined }
+      fn_notify: {
+        Args: {
+          p_actor?: string
+          p_body: string
+          p_profile_id: string
+          p_resource_id?: string
+          p_resource_type?: string
+          p_title: string
+          p_type: string
+        }
+        Returns: undefined
+      }
+      fn_request_approvers: {
+        Args: { p_requester: string }
+        Returns: {
+          profile_id: string
+        }[]
+      }
       fn_unwind_reward_pool: {
         Args: {
           p_pool: Database["public"]["Tables"]["reward_pools"]["Row"]
