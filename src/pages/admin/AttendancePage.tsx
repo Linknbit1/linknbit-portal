@@ -1032,7 +1032,7 @@ export function LeaveTab() {
     <div className="flex flex-col gap-6">
       {/* Leave types management */}
       <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
-        <SectionToolbar icon={Plane} title="Leave Types" description="Set the yearly allowance per type">
+        <SectionToolbar icon={Plane} title="Leave Types">
           <Button size="sm" onClick={openNewType}>
             <Plus size={13} /> Add Type
           </Button>
@@ -1357,7 +1357,6 @@ export function EnrolledDevicesTab() {
           icon={Smartphone}
           title="Enrolled Devices"
           badge={pending.length}
-          description="Approve devices employees used to check in from"
         />
 
         <div className="overflow-x-auto">
@@ -1883,7 +1882,7 @@ export function HolidaysTab() {
       <ScheduleSection
         icon={Palmtree}
         title="Holidays"
-        description="Days off — nobody is expected to work or check in."
+        description=""
         count={holidays.length}
         unit="day"
         action={
@@ -2076,7 +2075,7 @@ export function HolidaysTab() {
       <ScheduleSection
         icon={Calendar}
         title="Working Saturdays"
-        description="Saturdays that count as working days and require check-in."
+        description=""
         count={workingSaturdays.length}
         unit="Saturday"
         action={
@@ -2121,7 +2120,7 @@ export function HolidaysTab() {
       <ScheduleSection
         icon={Home}
         title="Company WFH Days"
-        description="Still a working day, but nobody comes in — everyone's attendance is marked WFH automatically."
+        description=""
         count={companyWfhDays.length}
         unit="day"
         action={
@@ -3012,7 +3011,7 @@ export function ReportsTab() {
         <div className="flex items-center gap-3 px-5 py-3.5 border-b border-border-subtle">
           <Users size={14} className="text-text-3" />
           <span className="font-ui font-semibold text-[13px] text-text-1">Employee Breakdown</span>
-          <span className="font-mono text-[11px] text-text-4">Click column headers to sort · Click row to expand daily log</span>
+          {/* <span className="font-mono text-[11px] text-text-4">Click column headers to sort · Click row to expand daily log</span> */}
         </div>
 
         {isLoading ? (
