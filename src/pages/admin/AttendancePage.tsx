@@ -1695,7 +1695,7 @@ function ScheduleSection({ icon: Icon, title, description, count, unit, action, 
   return (
     <section className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
       <div className="flex flex-wrap items-start justify-between gap-3 px-5 py-4 border-b border-border-subtle bg-surface-2">
-        <div className="flex items-start gap-3 min-w-0">
+        <div className="flex items-center gap-3 min-w-0">
           <div className="size-9 rounded-lg bg-surface-1 border border-border-default flex items-center justify-center shrink-0">
             <Icon size={16} className="text-text-3" />
           </div>
@@ -3292,7 +3292,7 @@ function SettingsForm({ settings }: { settings: AttendanceSettings }) {
               className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-mono text-text-1 outline-none focus:border-border-focus"
             />
             <p className="text-[11px] font-ui text-text-4 mt-1">
-              Check-ins within {grace || '?'} min after start time are marked Late (not rejected)
+              Check-ins within {grace || '?'} min after start time are marked Late
             </p>
           </div>
 
