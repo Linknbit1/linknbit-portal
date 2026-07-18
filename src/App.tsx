@@ -28,7 +28,6 @@ import TeamsPage from './pages/admin/TeamsPage'
 import PeoplePage from './pages/admin/PeoplePage'
 import TasksPage from './pages/admin/TasksPage'
 import ReportsPage from './pages/admin/ReportsPage'
-import ClickUpPage from './pages/admin/ClickUpPage'
 import SettingsPage, { SettingsSectionScreen } from './pages/admin/SettingsPage'
 import AttendancePage from './pages/AttendancePage'
 
@@ -93,19 +92,18 @@ export default function App() {
                   element={<RoleGuard allowedRoles={AUTHORITATIVE_ROLES}><TeamsPage /></RoleGuard>}
                 />
 
-                {/* Work-in-progress modules — only routable in development builds */}
+                {/* Projects, Tasks & Clients — live for internal staff (RLS scopes data) */}
+                <Route path="/admin/projects" element={<RoleGuard allowedRoles={SETTINGS_ROLES}><AdminProjectsPage /></RoleGuard>} />
+                <Route path="/admin/projects/:id" element={<RoleGuard allowedRoles={SETTINGS_ROLES}><AdminProjectDetailPage /></RoleGuard>} />
+                <Route path="/admin/tasks" element={<RoleGuard allowedRoles={SETTINGS_ROLES}><TasksPage /></RoleGuard>} />
+                <Route path="/admin/tasks/:id" element={<RoleGuard allowedRoles={SETTINGS_ROLES}><AdminTaskDetailPage /></RoleGuard>} />
+                <Route path="/admin/clients" element={<RoleGuard allowedRoles={AUTHORITATIVE_ROLES}><ClientsPage /></RoleGuard>} />
+                <Route path="/employee/tasks" element={<RoleGuard allowedRoles={SETTINGS_ROLES}><TasksPage /></RoleGuard>} />
+                <Route path="/employee/projects" element={<RoleGuard allowedRoles={SETTINGS_ROLES}><AdminProjectsPage /></RoleGuard>} />
+
+                {/* Still work-in-progress — only routable in development builds */}
                 {showWipFeatures && (
-                  <>
-                    <Route path="/admin/projects" element={<AdminProjectsPage />} />
-                    <Route path="/admin/projects/:id" element={<AdminProjectDetailPage />} />
-                    <Route path="/admin/tasks/:id" element={<AdminTaskDetailPage />} />
-                    <Route path="/admin/tasks" element={<TasksPage />} />
-                    <Route path="/admin/clients" element={<ClientsPage />} />
-                    <Route path="/admin/reports" element={<ReportsPage />} />
-                    <Route path="/admin/clickup" element={<ClickUpPage />} />
-                    <Route path="/employee/tasks" element={<TasksPage />} />
-                    <Route path="/employee/projects" element={<AdminProjectsPage />} />
-                  </>
+                  <Route path="/admin/reports" element={<ReportsPage />} />
                 )}
 
                 {/* Legacy path redirects */}
