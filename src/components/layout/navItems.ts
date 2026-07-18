@@ -6,7 +6,6 @@ import {
   CheckSquare,
   BarChart2,
   Trophy,
-  Link2,
   Settings,
   UserCircle,
   CalendarCheck,
@@ -33,15 +32,14 @@ export interface NavItem {
 
 export const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', icon: LayoutDashboard, to: '/dashboard', primaryMobile: true },
-  { label: 'Projects', icon: FolderOpen, to: '/admin/projects', badge: 2, devOnly: true },
-  { label: 'Clients', icon: UserCircle, to: '/admin/clients', devOnly: true },
+  { label: 'Projects', icon: FolderOpen, to: '/admin/projects' },
+  { label: 'Tasks', icon: CheckSquare, to: '/admin/tasks' },
+  { label: 'Clients', icon: UserCircle, to: '/admin/clients', authoritativeOnly: true },
   { label: 'Teams', icon: Users, to: '/teams', authoritativeOnly: true },
   { label: 'People', icon: UserCog, to: '/people', authoritativeOnly: true },
-  { label: 'Tasks', icon: CheckSquare, to: '/admin/tasks', badge: 7, devOnly: true },
   { label: 'Attendance', icon: CalendarCheck, to: '/attendance', primaryMobile: true },
   { label: 'Gamification', icon: Trophy, to: '/gamification', primaryMobile: true },
   { label: 'Reports', icon: BarChart2, to: '/admin/reports', devOnly: true },
-  { label: 'ClickUp', icon: Link2, to: '/admin/clickup', devOnly: true },
   { label: 'Settings', icon: Settings, to: '/settings', roles: SETTINGS_ROLES },
 ]
 

@@ -1,496 +1,338 @@
-import React, { useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useMemo, useState } from 'react'
+import { useParams } from 'react-router-dom'
 import {
-  CheckCircle2, AlertTriangle, Clock, Plus, RefreshCw,
-  CheckCheck, RotateCcw, Eye, EyeOff, ChevronDown,
-  File, MoreHorizontal, ArrowLeft, Zap,
-  ExternalLink, Lock,
+  Plus, Users, Layers, Paperclip, Calendar, Wallet, UserCircle,
+  Pencil, Trash2, Flag, X, CheckCircle2,
 } from 'lucide-react'
-import { Avatar } from '../../components/ui/Avatar'
-import { Select } from '../../components/ui/Select'
+import { Topbar } from '../../components/layout/Topbar'
 import { Button } from '../../components/ui/Button'
+import { ProgressBar } from '../../components/ui/ProgressBar'
+import { Avatar } from '../../components/ui/Avatar'
+import { Skeleton } from '../../components/ui/Skeleton'
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { ServiceChip } from '../../components/shared/ServiceChip'
 import { StatusChip } from '../../components/shared/StatusChip'
 import { PriorityChip } from '../../components/shared/PriorityChip'
-import { ClickUpStatus } from '../../components/shared/ClickUpStatus'
-import { TaskDetailDrawer } from './TaskDetailDrawer'
-import { useToast } from '../../components/ui/toast-context'
-import { PROJECTS, TASKS, USERS } from '../../data/mock'
-import { formatDate, getDaysUntil } from '../../lib/utils'
+import { ClientVisibility } from '../../components/shared/ClientVisibility'
+import { AttachmentUploader } from '../../components/shared/AttachmentUploader'
 import { cn } from '../../lib/cn'
-import type { Task, TaskStatus, Priority } from '../../types'
+import { formatDate, formatCurrency, isOverdue } from '../../lib/utils'
+import { isAuthoritative } from '../../lib/roles'
+import { useAuthContext } from '../../context/AuthContext'
+import { useToast } from '../../components/ui/toast-context'
+import { useProject } from '../../hooks/useProjects'
+import { useStages, useDeleteStage } from '../../hooks/useStages'
+import { useTasks } from '../../hooks/useTasks'
+import { useProjectMembers, useRemoveProjectMember } from '../../hooks/useProjectMembers'
+import { useApprovals, useRequestApproval, useReviewApproval } from '../../hooks/useApprovals'
+import { useRealtimeTasks } from '../../hooks/realtime/useRealtimeTasks'
+import { StageFormModal } from './StageFormModal'
+import { TaskFormModal } from './TaskFormModal'
+import { AddProjectMemberModal } from './AddProjectMemberModal'
+import { ApprovalModal } from './ApprovalModal'
+import { TaskDetailDrawer } from './TaskDetailDrawer'
+import type { StageRow } from '../../api/stages'
+import type { TaskListItem } from '../../api/tasks'
+import type { ApprovalStatus } from '../../api/approvals'
 
-const SERVICE_ACCENT: Record<string, string> = {
-  development: '#22D3EE',
-  design: '#A78BFA',
-  marketing: '#FBBF24',
-}
+export default function ProjectDetailPage() {
+  const { id = '' } = useParams()
+  const toast = useToast()
+  const { profile } = useAuthContext()
+  const canManage = isAuthoritative(profile?.role)
 
-const PROGRESS_COLOR = (pct: number): string => {
-  if (pct < 25) return 'linear-gradient(90deg,#4A5468,#5C6A7F)'
-  if (pct < 60) return 'linear-gradient(90deg,#F59E0B,#FBBF24)'
-  if (pct < 85) return 'linear-gradient(90deg,#EE2737,#F94454)'
-  return 'linear-gradient(90deg,#22C55E,#34D399)'
-}
+  const { data: project, isLoading } = useProject(id)
+  const { data: stages = [] } = useStages(id)
+  const { data: tasks = [] } = useTasks({ projectId: id })
+  const { data: members = [] } = useProjectMembers(id)
+  const { data: approvals = [] } = useApprovals({ projectId: id })
+  useRealtimeTasks(id)
 
-function TaskRow({ task, onOpen }: { task: Task; onOpen: (t: Task) => void }) {
-  const days = getDaysUntil(task.dueDate)
-  const isBlocked = task.status === 'blocked'
-  return (
-    <div className={cn('contents group', isBlocked && 'text-error')}>
-      <div className={cn(
-        'pl-5 pr-3 py-3 border-b border-border-subtle flex items-center min-w-0 group-hover:bg-white/[0.018] transition-colors',
-        isBlocked && 'shadow-[inset_2px_0_0_#F4364C] bg-error/3',
-      )}>
-        <div className="min-w-0">
-          <button onClick={() => onOpen(task)} className="font-ui font-medium text-[13px] text-text-1 hover:text-brand-red transition-colors text-left truncate max-w-65 block">
-            {task.title}
-          </button>
-          {days < 0 && (
-            <span className="font-mono text-[10px] text-error font-semibold uppercase tracking-wide">{Math.abs(days)}d overdue</span>
-          )}
+  const deleteStage = useDeleteStage()
+  const removeMember = useRemoveProjectMember()
+  const requestApproval = useRequestApproval()
+  const reviewApproval = useReviewApproval()
+
+  const [showAddMember, setShowAddMember] = useState(false)
+  const [showStageForm, setShowStageForm] = useState(false)
+  const [editingStage, setEditingStage] = useState<StageRow | null>(null)
+  const [showTaskForm, setShowTaskForm] = useState(false)
+  const [taskFormStage, setTaskFormStage] = useState<string | undefined>(undefined)
+  const [openTaskId, setOpenTaskId] = useState<string | null>(null)
+  const [reviewStage, setReviewStage] = useState<StageRow | null>(null)
+  const [pendingStageDelete, setPendingStageDelete] = useState<StageRow | null>(null)
+
+  // Group tasks by stage; tasks without a stage fall into an "Unstaged" bucket.
+  const tasksByStage = useMemo(() => {
+    const map = new Map<string, TaskListItem[]>()
+    for (const t of tasks) {
+      const key = t.stage_id ?? '__none__'
+      const arr = map.get(key) ?? []
+      arr.push(t)
+      map.set(key, arr)
+    }
+    return map
+  }, [tasks])
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col flex-1">
+        <Topbar title="Project" back="/admin/projects" />
+        <div className="p-4 lg:p-6 max-w-content mx-auto w-full space-y-3">
+          <Skeleton className="h-28" />
+          <Skeleton className="h-64" />
         </div>
       </div>
-      <div className={cn('p-3 border-b border-border-subtle flex items-center gap-2 group-hover:bg-white/[0.018] transition-colors', isBlocked && 'bg-error/3')}>
-        <Avatar name={task.assignee.name} size="xs" />
-        <span className="text-[12px] font-ui text-text-1 truncate">{task.assignee.name}</span>
+    )
+  }
+
+  if (!project) {
+    return (
+      <div className="flex flex-col flex-1">
+        <Topbar title="Project" back="/admin/projects" />
+        <div className="p-10 text-center font-ui text-text-3">Project not found.</div>
       </div>
-      <div className={cn('p-3 border-b border-border-subtle flex items-center group-hover:bg-white/[0.018] transition-colors', isBlocked && 'bg-error/3')}>
-        <StatusChip status={task.status} />
+    )
+  }
+
+  const openAddTask = (stageId?: string) => { setTaskFormStage(stageId); setShowTaskForm(true) }
+  const openEditStage = (stage: StageRow) => { setEditingStage(stage); setShowStageForm(true) }
+
+  const handleRequestApproval = (stage: StageRow) => {
+    requestApproval.mutate(
+      { type: 'stage', project_id: id, target_id: stage.id, status: 'pending' },
+      {
+        onSuccess: () => toast('Approval requested', 'success'),
+        onError: (e) => toast(e instanceof Error ? e.message : 'Failed', 'error'),
+      },
+    )
+  }
+
+  const handleReview = (status: ApprovalStatus, message: string) => {
+    if (!reviewStage) return
+    const record = approvals.find((a) => a.target_id === reviewStage.id && a.status === 'pending')
+    const finish = () => { toast('Decision recorded', 'success'); setReviewStage(null) }
+    const onError = (e: unknown) => toast(e instanceof Error ? e.message : 'Failed', 'error')
+    if (record) {
+      reviewApproval.mutate({ id: record.id, status, message, projectId: id }, { onSuccess: finish, onError })
+    } else {
+      finish()
+    }
+  }
+
+  return (
+    <div className="flex flex-col flex-1">
+      <Topbar title={project.name} back="/admin/projects" />
+      <div className="p-4 lg:p-6 max-w-content mx-auto w-full space-y-5">
+        {/* Summary header */}
+        <div className="bg-surface-1 border border-border-default rounded-xl p-5">
+          <div className="flex flex-wrap items-start gap-3">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="font-display font-bold text-[22px] text-text-1">{project.name}</h1>
+                <ServiceChip service={project.service_type} />
+                <StatusChip status={project.status} type="project" />
+                <ClientVisibility visible={project.client_visible} showLabel />
+              </div>
+              {project.client?.name && <p className="font-ui text-[13px] text-text-3 mt-1">{project.client.name}</p>}
+              {project.description && <p className="font-ui text-[13px] text-text-2 mt-2 max-w-2xl">{project.description}</p>}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-5">
+            <Meta icon={UserCircle} label="Manager" value={project.manager?.name ?? '—'} />
+            <Meta icon={Calendar} label="Deadline" value={project.deadline ? formatDate(project.deadline) : '—'} danger={!!project.deadline && isOverdue(project.deadline) && project.status !== 'completed'} />
+            <Meta icon={Wallet} label="Budget" value={project.budget ? formatCurrency(project.budget) : '—'} />
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-wider text-text-4 mb-1.5">Progress</p>
+              <div className="flex items-center gap-2">
+                <ProgressBar value={project.progress} className="flex-1" />
+                <span className="font-mono text-[11px] text-text-3">{project.progress}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-5 items-start">
+          {/* Stages + tasks */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="font-ui font-semibold text-[15px] text-text-1 flex items-center gap-2"><Layers size={16} className="text-text-3" /> Pipeline</h2>
+              {canManage && (
+                <div className="flex items-center gap-2">
+                  <Button size="sm" variant="secondary" iconLeft={<Plus size={14} />} onClick={() => { setEditingStage(null); setShowStageForm(true) }}>Stage</Button>
+                  <Button size="sm" iconLeft={<Plus size={14} />} onClick={() => openAddTask()}>Task</Button>
+                </div>
+              )}
+            </div>
+
+            {stages.length === 0 && (tasksByStage.get('__none__')?.length ?? 0) === 0 ? (
+              <div className="bg-surface-1 border border-border-default rounded-md py-10 text-center font-ui text-[13px] text-text-4">
+                No stages or tasks yet. {canManage && 'Add a stage or task to get started.'}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {stages.map((stage) => (
+                  <StageCard
+                    key={stage.id}
+                    stage={stage}
+                    tasks={tasksByStage.get(stage.id) ?? []}
+                    canManage={canManage}
+                    onOpenTask={setOpenTaskId}
+                    onAddTask={() => openAddTask(stage.id)}
+                    onEdit={() => openEditStage(stage)}
+                    onDelete={() => setPendingStageDelete(stage)}
+                    onRequestApproval={() => handleRequestApproval(stage)}
+                    onReview={() => setReviewStage(stage)}
+                  />
+                ))}
+                {(tasksByStage.get('__none__')?.length ?? 0) > 0 && (
+                  <div className="bg-surface-1 border border-border-default rounded-md">
+                    <div className="px-4 py-2.5 border-b border-border-subtle font-ui font-semibold text-[12.5px] text-text-2">Unstaged tasks</div>
+                    <TaskList tasks={tasksByStage.get('__none__') ?? []} onOpenTask={setOpenTaskId} />
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-4">
+            {/* Team */}
+            <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-border-subtle">
+                <span className="font-ui font-semibold text-[13px] text-text-1 flex items-center gap-2"><Users size={14} className="text-text-3" /> Team ({members.length})</span>
+                {canManage && (
+                  <button onClick={() => setShowAddMember(true)} className="size-6 rounded-sm flex items-center justify-center text-text-3 hover:text-text-1 hover:bg-surface-2" aria-label="Add member"><Plus size={14} /></button>
+                )}
+              </div>
+              <div className="p-2">
+                {members.length === 0 ? (
+                  <p className="text-center text-[12px] text-text-4 py-4">No members yet</p>
+                ) : members.map((m) => (
+                  <div key={m.id} className="flex items-center gap-2.5 px-2 py-1.5 rounded-md hover:bg-surface-2 group">
+                    <Avatar name={m.name} src={m.avatar_url ?? undefined} size="sm" />
+                    <span className="flex-1 min-w-0 font-ui text-[12.5px] text-text-1 truncate">{m.name}</span>
+                    {canManage && (
+                      <button
+                        onClick={() => removeMember.mutate({ projectId: id, profileId: m.id }, { onError: (e) => toast(e instanceof Error ? e.message : 'Failed', 'error') })}
+                        className="size-6 rounded-sm flex items-center justify-center text-text-4 hover:text-error opacity-0 group-hover:opacity-100 transition-opacity"
+                        aria-label="Remove"
+                      ><X size={13} /></button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Files */}
+            <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
+              <div className="px-4 py-3 border-b border-border-subtle font-ui font-semibold text-[13px] text-text-1 flex items-center gap-2"><Paperclip size={14} className="text-text-3" /> Project files</div>
+              <div className="p-3">
+                <AttachmentUploader projectId={id} canManage={canManage} />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div className={cn('p-3 border-b border-border-subtle flex items-center group-hover:bg-white/[0.018] transition-colors', isBlocked && 'bg-error/3')}>
-        <PriorityChip priority={task.priority} />
-      </div>
-      <div className={cn('p-3 border-b border-border-subtle group-hover:bg-white/[0.018] transition-colors', isBlocked && 'bg-error/3')}>
-        <span className={cn('font-mono text-[11.5px] font-medium block', days < 0 ? 'text-error' : days <= 2 ? 'text-warning' : 'text-text-1')}>
-          {formatDate(task.dueDate)}
-        </span>
-      </div>
-      <div className={cn('p-3 border-b border-border-subtle flex items-center group-hover:bg-white/[0.018] transition-colors', isBlocked && 'bg-error/3')}>
-        <span className="inline-flex items-center gap-1 bg-coin-gold/12 border border-coin-gold/30 text-coin-gold font-bold text-[11px] rounded-full px-2 py-0.5">
-          <Zap size={9} />{task.xpReward}
-        </span>
-      </div>
-      <div className={cn('p-3 border-b border-border-subtle flex items-center gap-1.5 justify-end group-hover:bg-white/[0.018] transition-colors', isBlocked && 'bg-error/3')}>
-        <span className={cn('size-6 rounded flex items-center justify-center transition-colors', task.clientVisible ? 'text-success' : 'text-text-4 hover:text-text-2')}>
-          {task.clientVisible ? <Eye size={11} /> : <EyeOff size={11} />}
-        </span>
-        <ClickUpStatus status={task.clickUpSync} />
-        <Link to={`/admin/tasks/${task.id}`} className="size-6 rounded text-text-3 flex items-center justify-center hover:text-text-1 transition-colors">
-          <ExternalLink size={11} />
-        </Link>
-      </div>
+
+      {showAddMember && <AddProjectMemberModal projectId={id} existingIds={members.map((m) => m.id)} onClose={() => setShowAddMember(false)} />}
+      {showStageForm && <StageFormModal projectId={id} stage={editingStage ?? undefined} nextOrder={stages.length} onClose={() => setShowStageForm(false)} />}
+      {showTaskForm && <TaskFormModal projectId={id} defaultStageId={taskFormStage} onClose={() => setShowTaskForm(false)} />}
+      {reviewStage && <ApprovalModal title="Review stage" subject={reviewStage.name} pending={reviewApproval.isPending} onSubmit={handleReview} onClose={() => setReviewStage(null)} />}
+      <TaskDetailDrawer taskId={openTaskId} open={!!openTaskId} onClose={() => setOpenTaskId(null)} />
+
+      <ConfirmDialog
+        open={!!pendingStageDelete}
+        title="Delete stage?"
+        message={pendingStageDelete ? `"${pendingStageDelete.name}" will be removed. Its tasks stay but become unstaged.` : ''}
+        confirmLabel="Delete"
+        danger
+        isPending={deleteStage.isPending}
+        onConfirm={() => {
+          if (!pendingStageDelete) return
+          deleteStage.mutate({ id: pendingStageDelete.id, projectId: id }, {
+            onSuccess: () => { toast('Stage deleted', 'success'); setPendingStageDelete(null) },
+            onError: (e) => toast(e instanceof Error ? e.message : 'Failed', 'error'),
+          })
+        }}
+        onClose={() => setPendingStageDelete(null)}
+      />
     </div>
   )
 }
 
-export default function ProjectDetailPage() {
-  const { id } = useParams<{ id: string }>()
-  const toast = useToast()
-  const [statusFilter, setStatusFilter] = useState<TaskStatus | 'all'>('all')
-  const [priorityFilter, setPriorityFilter] = useState<Priority | 'all'>('all')
-  const [drawerTask, setDrawerTask] = useState<Task | null>(null)
-  const [drawerOpen, setDrawerOpen] = useState(false)
-  const [expandedStages, setExpandedStages] = useState<Set<string>>(() => new Set())
-
-  const project = PROJECTS.find((p) => p.id === id) ?? PROJECTS[0]
-  const allTasks = TASKS.filter((t) => t.projectId === project.id)
-  const teamMembers = USERS.filter((u) => project.teamIds.includes(u.id))
-  const accentColor = SERVICE_ACCENT[project.serviceType]
-  const days = getDaysUntil(project.deadline)
-  const overdueCount = allTasks.filter((t) => getDaysUntil(t.dueDate) < 0).length
-
-  const openDrawer = (task: Task) => { setDrawerTask(task); setDrawerOpen(true) }
-
-  const toggleStage = (stageId: string) =>
-    setExpandedStages((prev) => {
-      const next = new Set(prev)
-      if (next.has(stageId)) {
-        next.delete(stageId)
-      } else {
-        next.add(stageId)
-      }
-      return next
-    })
-
-  const filteredTasks = allTasks.filter((t) => {
-    if (statusFilter !== 'all' && t.status !== statusFilter) return false
-    if (priorityFilter !== 'all' && t.priority !== priorityFilter) return false
-    return true
-  })
-
-  const currentStage = project.stages.find((s) => s.status === 'current' || s.status === 'blocked')
-  const currentStageIndex = project.stages.findIndex((s) => s.status === 'current' || s.status === 'blocked')
-  const stageNeedsApproval = currentStage?.requiresApproval && currentStage?.approvalStatus === 'pending'
-
+function Meta({ icon: Icon, label, value, danger }: { icon: typeof Calendar; label: string; value: string; danger?: boolean }) {
   return (
-    <div className="flex flex-col flex-1">
-      {/* Topbar */}
-      <header className="h-16 topbar-glass border-b border-border-default sticky top-0 z-40 flex items-center px-6 gap-3">
-        <Link to="/admin/projects" className="size-8 flex items-center justify-center rounded-lg border border-border-default text-text-3 hover:text-text-1 hover:bg-surface-2 transition-colors shrink-0">
-          <ArrowLeft size={14} />
-        </Link>
-        <div className="flex items-center gap-2 min-w-0 flex-1">
-          <ServiceChip service={project.serviceType} />
-          <h1 className="font-display font-bold text-[17px] text-text-1 tracking-tight truncate">{project.name}</h1>
-          <span className="font-mono text-[11px] text-text-4 shrink-0">{project.clientName}</span>
+    <div>
+      <p className="font-mono text-[10px] uppercase tracking-wider text-text-4 mb-1.5 flex items-center gap-1"><Icon size={11} /> {label}</p>
+      <p className={cn('font-ui text-[13px] font-medium', danger ? 'text-error' : 'text-text-1')}>{value}</p>
+    </div>
+  )
+}
+
+function StageCard({
+  stage, tasks, canManage, onOpenTask, onAddTask, onEdit, onDelete, onRequestApproval, onReview,
+}: {
+  stage: StageRow
+  tasks: TaskListItem[]
+  canManage: boolean
+  onOpenTask: (id: string) => void
+  onAddTask: () => void
+  onEdit: () => void
+  onDelete: () => void
+  onRequestApproval: () => void
+  onReview: () => void
+}) {
+  const done = tasks.filter((t) => t.status === 'completed' || t.status === 'approved').length
+  return (
+    <div className="bg-surface-1 border border-border-default rounded-md overflow-hidden">
+      <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border-subtle">
+        <span className="size-6 rounded-full bg-surface-2 flex items-center justify-center text-text-3 shrink-0"><Layers size={13} /></span>
+        <div className="min-w-0">
+          <p className="font-ui font-semibold text-[13px] text-text-1 truncate">{stage.name}</p>
+          <p className="font-mono text-[10px] text-text-4">{done}/{tasks.length} done</p>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <StatusChip status={project.status} type="project" />
-          <ClickUpStatus status={project.clickUpSync} showLabel />
-          <Button size="sm" variant="secondary" onClick={() => toast('Edit project', 'info')}>Edit</Button>
-        </div>
-      </header>
-
-      {/* Content */}
-      <div className="p-6 grid gap-5 max-w-content mx-auto w-full" style={{ gridTemplateColumns: 'minmax(0,1fr) 320px' }}>
-
-        {/* LEFT COLUMN */}
-        <div className="flex flex-col gap-5 min-w-0">
-
-          {/* Project summary strip */}
-          <div
-            className="bg-surface-1 border border-border-default rounded-xl p-5 relative overflow-hidden"
-            style={{ borderLeft: `3px solid ${accentColor}` }}
-          >
-            <div className="absolute top-0 right-0 pointer-events-none" style={{ width: 260, height: 260, background: `radial-gradient(circle at top right, ${accentColor}08, transparent 65%)` }} />
-            <div className="grid grid-cols-5 divide-x divide-border-subtle relative">
-              {[
-                {
-                  label: 'Progress',
-                  value: (
-                    <div className="flex items-center gap-2">
-                      <div className="w-14 h-1.5 bg-surface-inset rounded-full overflow-hidden">
-                        <div className="h-full rounded-full" style={{ width: `${project.progress}%`, background: PROGRESS_COLOR(project.progress) }} />
-                      </div>
-                      <span className="font-mono text-[13px] font-semibold">{project.progress}%</span>
-                    </div>
-                  ),
-                },
-                { label: 'Start Date', value: <span className="font-mono text-[13px]">{project.startDate ? formatDate(project.startDate) : '—'}</span> },
-                {
-                  label: 'Deadline',
-                  value: (
-                    <span className={cn('font-mono text-[13px]', days <= 3 ? 'text-error' : days <= 7 ? 'text-warning' : 'text-text-1')}>
-                      {formatDate(project.deadline)} <span className="text-[10px] text-text-3">({days}d)</span>
-                    </span>
-                  ),
-                },
-                {
-                  label: 'Team',
-                  value: (
-                    <div className="flex -space-x-1.5">
-                      {teamMembers.slice(0, 5).map((u) => <Avatar key={u.id} name={u.name} size="xs" className="ring-2 ring-surface-1" />)}
-                      {teamMembers.length > 5 && <span className="size-6 rounded-full bg-surface-3 border-2 border-surface-1 flex items-center justify-center font-mono text-[9px] text-text-3">+{teamMembers.length - 5}</span>}
-                    </div>
-                  ),
-                },
-                {
-                  label: 'Tasks',
-                  value: (
-                    <span className="font-mono text-[13px]">
-                      {allTasks.filter((t) => t.status === 'completed').length}/{allTasks.length}
-                      {overdueCount > 0 && <span className="text-error ml-1 text-[10px]">({overdueCount} overdue)</span>}
-                    </span>
-                  ),
-                },
-              ].map((cell, i) => (
-                <div key={cell.label} className={cn('flex flex-col gap-1.5', i === 0 ? 'pr-5' : i === 4 ? 'pl-5' : 'px-5')}>
-                  <span className="font-ui font-semibold text-[9.5px] text-text-4 uppercase tracking-widest">{cell.label}</span>
-                  <div className="font-display font-semibold text-text-1">{cell.value}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Stage Pipeline */}
-          {project.stages.length > 0 && (
-            <div className="bg-surface-1 border border-border-default rounded-xl p-5">
-              <div className="flex items-center justify-between mb-4">
-                <span className="font-display font-semibold text-[14px] text-text-1">Pipeline</span>
-                <span className="font-mono text-[11px] text-text-3">
-                  {project.stages.filter((s) => s.status === 'completed').length}/{project.stages.length} stages
-                </span>
-              </div>
-              <div className="relative flex items-start gap-0" style={{ gridTemplateColumns: `repeat(${project.stages.length}, 1fr)` }}>
-                {/* Connector line */}
-                <div className="absolute top-4.25 inset-x-6 h-0.5 bg-border-subtle z-0" />
-                <div
-                  className="absolute top-4.25 left-6 h-0.5 bg-success z-0 transition-all"
-                  style={{ width: currentStageIndex > 0 ? `${(currentStageIndex / (project.stages.length - 1)) * 100}%` : '0%' }}
-                />
-
-                <div className="relative z-1 flex w-full">
-                  {project.stages.map((stage, i) => {
-                    const isDone = stage.status === 'completed'
-                    const isCurrent = stage.status === 'current'
-                    const isBlocked = stage.status === 'blocked'
-                    return (
-                      <div key={stage.id} className="flex flex-col items-center flex-1 gap-2">
-                        <div
-                          className={cn(
-                            'size-9 rounded-full flex items-center justify-center border-2 font-mono text-[11px] font-semibold transition-all',
-                            isDone && 'bg-success border-success text-[#062013]',
-                            isCurrent && 'border-service-dev bg-service-dev text-[#04212a] shadow-[0_0_0_4px_rgba(34,211,238,0.18)]',
-                            isBlocked && 'bg-error border-error text-white shadow-[0_0_0_4px_rgba(244,54,76,0.22)]',
-                            !isDone && !isCurrent && !isBlocked && 'bg-surface-1 border-border-default text-text-3',
-                          )}
-                        >
-                          {isDone ? <CheckCircle2 size={16} /> : i + 1}
-                        </div>
-                        <span className={cn(
-                          'font-ui font-semibold text-label/snug text-center max-w-20',
-                          isDone ? 'text-text-2' : isCurrent || isBlocked ? 'text-text-1' : 'text-text-3',
-                        )}>
-                          {stage.name}
-                        </span>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {project.stages.find((s) => s.status === 'blocked') && (
-                <div className="mt-4 flex items-center gap-3 p-3 bg-error/5 border border-error/25 rounded-lg">
-                  <AlertTriangle size={15} className="text-error shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-ui font-semibold text-[13px] text-text-1">{project.stages.find((s) => s.status === 'blocked')?.name} is blocked</p>
-                    <p className="font-mono text-[10.5px] text-text-3 mt-0.5">Client delayed UAT sign-off. Following up Friday.</p>
-                  </div>
-                  <Button size="sm" variant="secondary" onClick={() => toast('Escalation noted', 'info')}>Escalate</Button>
-                </div>
-              )}
-            </div>
+        {stage.requires_approval && stage.approval_status && <StatusChip status={stage.approval_status} type="approval" className="ml-1" />}
+        <div className="ml-auto flex items-center gap-1">
+          {stage.requires_approval && canManage && (
+            stage.approval_status === 'pending'
+              ? <Button size="sm" variant="secondary" iconLeft={<CheckCircle2 size={13} />} onClick={onReview}>Review</Button>
+              : <Button size="sm" variant="ghost" iconLeft={<Flag size={13} />} onClick={onRequestApproval}>Request approval</Button>
           )}
-
-          {/* Stage Approval */}
-          {stageNeedsApproval && (
-            <div className="bg-surface-1 border border-border-default rounded-xl px-5 py-4 flex items-center gap-4" style={{ borderLeft: '3px solid #F59E0B' }}>
-              <Clock size={18} className="text-warning shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="font-display font-semibold text-[14px] text-text-1">Awaiting Approval: {currentStage?.name}</p>
-                <p className="font-mono text-[11px] text-text-3 mt-0.5">Submitted 3 days ago · Waiting on Imran Shah</p>
-              </div>
-              <div className="flex gap-2">
-                <Button size="sm" onClick={() => toast('Stage approved', 'success')}>
-                  <CheckCheck size={13} /> Approve
-                </Button>
-                <Button size="sm" variant="secondary" onClick={() => toast('Revision requested', 'warning')}>
-                  <RotateCcw size={13} /> Revise
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* Tasks */}
-          <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
-            <div className="flex items-center gap-3 px-5 py-3.5 border-b border-border-subtle">
-              <span className="font-display font-semibold text-[14px] text-text-1">Tasks</span>
-              <span className="font-mono text-[10px] text-text-3 bg-surface-2 rounded-full px-2 py-0.5 uppercase tracking-wide">{allTasks.length}</span>
-              <div className="ml-auto flex items-center gap-2">
-                <Select size="sm" value={statusFilter} onChange={(v) => setStatusFilter(v as TaskStatus | 'all')}
-                  options={[
-                    { value: 'all', label: 'All Status' },
-                    { value: 'in_progress', label: 'In Progress', dot: '#22D3EE' },
-                    { value: 'review', label: 'Review', dot: '#A78BFA' },
-                    { value: 'blocked', label: 'Blocked', dot: '#F4364C' },
-                    { value: 'completed', label: 'Completed', dot: '#22C55E' },
-                    { value: 'todo', label: 'To Do', dot: '#7A8597' },
-                    { value: 'backlog', label: 'Backlog', dot: '#5C6A7F' },
-                  ]}
-                />
-                <Select size="sm" value={priorityFilter} onChange={(v) => setPriorityFilter(v as Priority | 'all')}
-                  options={[
-                    { value: 'all', label: 'All Priority' },
-                    { value: 'critical', label: 'Critical', dot: '#F4364C' },
-                    { value: 'high', label: 'High', dot: '#F59E0B' },
-                    { value: 'medium', label: 'Medium', dot: '#3B82F6' },
-                    { value: 'low', label: 'Low', dot: '#7A8597' },
-                  ]}
-                />
-                <button
-                  onClick={() => toast('Add task dialog would open', 'info')}
-                  className="h-7.5 px-2.5 bg-brand-red text-white rounded-lg font-ui font-semibold text-[11.5px] flex items-center gap-1 hover:bg-brand-red-hover transition-colors"
-                >
-                  <Plus size={12} /> Add Task
-                </button>
-              </div>
-            </div>
-
-            {/* Table */}
-            <div className="grid" style={{ gridTemplateColumns: 'minmax(260px,2.2fr) 140px 120px 110px 100px 80px 88px' }}>
-              {['Task', 'Assignee', 'Status', 'Priority', 'Due', 'XP', ''].map((h, i) => (
-                <div key={h + i} className={cn('px-3 py-2.5 bg-surface-2 border-b border-border-subtle font-ui font-semibold text-[10px] text-text-3 uppercase tracking-wider flex items-center', i === 0 && 'pl-5', i === 6 && 'justify-end pr-3')}>
-                  {h}
-                </div>
-              ))}
-
-              {project.stages.length > 0 ? (
-                project.stages.map((stage) => {
-                  const stageTasks = filteredTasks.filter((t) => t.stageId === stage.id)
-                  if (stageTasks.length === 0) return null
-                  const isExpanded = expandedStages.has(stage.id)
-                  return (
-                    <React.Fragment key={stage.id}>
-                      <div
-                        style={{ gridColumn: '1 / -1' }}
-                        onClick={() => toggleStage(stage.id)}
-                        className="flex items-center gap-2.5 px-5 py-2 bg-surface-2/60 border-b border-border-subtle cursor-pointer hover:bg-surface-3/50 transition-colors select-none"
-                      >
-                        <span className={cn('size-4 rounded flex items-center justify-center font-mono text-[9px] border font-semibold shrink-0',
-                          stage.status === 'completed' ? 'bg-success/15 border-success/30 text-success' :
-                          stage.status === 'blocked' ? 'bg-error/15 border-error/30 text-error' :
-                          stage.status === 'current' ? 'bg-service-dev/15 border-service-dev/30 text-service-dev' :
-                          'bg-surface-3 border-border-default text-text-4',
-                        )}>
-                          {stage.order}
-                        </span>
-                        <span className="font-ui font-semibold text-[12.5px] text-text-1">{stage.name}</span>
-                        <span className="font-mono text-[10px] text-text-4 ml-auto">{stageTasks.length}</span>
-                        <ChevronDown size={12} className={cn('text-text-3 transition-transform', !isExpanded && '-rotate-90')} />
-                      </div>
-                      {isExpanded && stageTasks.map((task) => <TaskRow key={task.id} task={task} onOpen={openDrawer} />)}
-                    </React.Fragment>
-                  )
-                })
-              ) : (
-                filteredTasks.map((task) => <TaskRow key={task.id} task={task} onOpen={openDrawer} />)
-              )}
-
-              {filteredTasks.length === 0 && (
-                <div style={{ gridColumn: '1 / -1' }} className="py-10 text-center text-text-4 font-mono text-[11px] uppercase tracking-wider border-b border-border-subtle">
-                  No tasks match filters
-                </div>
-              )}
-            </div>
-
-            <div className="px-5 py-3">
-              <button
-                onClick={() => toast('Add task dialog would open', 'info')}
-                className="h-8 px-3 border border-dashed border-border-strong text-text-3 font-ui text-[12px] rounded-lg flex items-center gap-1.5 hover:text-text-1 hover:bg-surface-2 transition-all"
-              >
-                <Plus size={12} /> Add Task
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* RIGHT PANEL */}
-        <div className="flex flex-col gap-4 sticky top-22" style={{ alignSelf: 'start' }}>
-
-          {/* Team */}
-          <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3.5 border-b border-border-subtle">
-              <span className="font-display font-semibold text-[13px] text-text-1">Team ({teamMembers.length})</span>
-              <button onClick={() => toast('Add member', 'info')} className="size-6 rounded bg-surface-2 border border-border-default text-text-3 hover:text-text-1 hover:bg-surface-3 flex items-center justify-center transition-colors">
-                <Plus size={11} />
-              </button>
-            </div>
-            {teamMembers.map((member) => (
-              <div key={member.id} className="flex items-center gap-3 px-4 py-2.5 border-b border-border-subtle last:border-0 hover:bg-white/1.5 transition-colors">
-                <Avatar name={member.name} size="sm" />
-                <div className="flex-1 min-w-0">
-                  <p className="font-ui font-semibold text-[12.5px] text-text-1 truncate">{member.name}</p>
-                  <p className="font-mono text-[10px] text-text-3 uppercase tracking-wider">{member.role}</p>
-                </div>
-                <button onClick={() => toast(`${member.name} options`, 'info')} className="text-text-4 hover:text-text-2 transition-colors">
-                  <MoreHorizontal size={13} />
-                </button>
-              </div>
-            ))}
-          </div>
-
-          {/* Urgent deadlines */}
-          {allTasks.some((t) => getDaysUntil(t.dueDate) <= 5) && (
-            <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-3.5 border-b border-border-subtle">
-                <span className="font-display font-semibold text-[13px] text-text-1">Urgent</span>
-                <span className="font-mono text-[10px] text-error bg-error/10 border border-error/25 rounded-full px-2 py-0.5">
-                  {allTasks.filter((t) => getDaysUntil(t.dueDate) <= 3).length} critical
-                </span>
-              </div>
-              {allTasks
-                .filter((t) => getDaysUntil(t.dueDate) <= 5)
-                .slice(0, 4)
-                .map((task) => {
-                  const taskDays = getDaysUntil(task.dueDate)
-                  const d = new Date(task.dueDate)
-                  return (
-                    <div key={task.id} className="flex items-center gap-3 px-4 py-2.5 border-b border-border-subtle last:border-0 hover:bg-white/1.5 transition-colors">
-                      <div className={cn('size-9 rounded-lg flex flex-col items-center justify-center shrink-0 border', taskDays <= 2 ? 'bg-error/10 border-error/30' : 'bg-surface-2 border-border-default')}>
-                        <span className={cn('font-mono text-[8px] font-semibold uppercase', taskDays <= 2 ? 'text-error' : 'text-text-3')}>{d.toLocaleString('en', { month: 'short' })}</span>
-                        <span className={cn('font-display font-bold text-[14px] leading-none', taskDays <= 2 ? 'text-error' : 'text-text-1')}>{d.getDate()}</span>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <button onClick={() => openDrawer(task)} className="font-ui font-medium text-[12px] text-text-1 truncate hover:text-brand-red transition-colors text-left w-full">
-                          {task.title}
-                        </button>
-                        <p className="font-mono text-[10px] text-text-3">{task.assignee.name}</p>
-                      </div>
-                    </div>
-                  )
-                })}
-            </div>
-          )}
-
-          {/* Files */}
-          {allTasks.some((t) => (t.files?.length ?? 0) > 0) && (
-            <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-3.5 border-b border-border-subtle">
-                <span className="font-display font-semibold text-[13px] text-text-1">Files</span>
-                <button onClick={() => toast('Upload dialog', 'info')} className="size-6 rounded bg-surface-2 border border-border-default text-text-3 hover:text-text-1 hover:bg-surface-3 flex items-center justify-center transition-colors">
-                  <Plus size={11} />
-                </button>
-              </div>
-              {allTasks.flatMap((t) => t.files ?? []).slice(0, 5).map((file) => (
-                <div key={file.id} className="flex items-center gap-3 px-4 py-2.5 border-b border-border-subtle last:border-0 hover:bg-white/1.5 transition-colors">
-                  <div className="size-8 rounded bg-surface-2 border border-border-default flex items-center justify-center shrink-0">
-                    <File size={13} className="text-text-3" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-ui text-[12px] text-text-1 truncate">{file.name}</p>
-                    <p className="font-mono text-[10px] text-text-3">{file.uploadedBy}</p>
-                  </div>
-                  <span className={cn('shrink-0', file.clientVisible ? 'text-success' : 'text-text-4')}>
-                    {file.clientVisible ? <Eye size={12} /> : <Lock size={12} />}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* ClickUp sync */}
-          <div className="bg-surface-1 border border-border-default rounded-xl p-4">
-            <div className="flex items-center gap-3 mb-3 pb-3 border-b border-border-subtle">
-              <span className="size-8 rounded-lg bg-surface-2 border border-border-default flex items-center justify-center font-display font-bold text-[12px] text-service-mkt shrink-0">CU</span>
-              <div className="flex-1 min-w-0">
-                <p className="font-mono text-[9.5px] text-text-4 uppercase tracking-wider">ClickUp Folder</p>
-                <p className="font-ui font-semibold text-[12.5px] text-text-1 truncate">{project.clickUpFolder ?? 'Not linked'}</p>
-              </div>
-              <ClickUpStatus status={project.clickUpSync} />
-            </div>
-            <div className="space-y-1.5 mb-3">
-              {[
-                { k: 'Last synced', v: project.lastSynced ? new Date(project.lastSynced).toLocaleDateString() : '—' },
-                { k: 'Tasks synced', v: `${allTasks.filter((t) => t.clickUpSync === 'synced').length}/${allTasks.length}` },
-              ].map((row) => (
-                <div key={row.k} className="flex items-center justify-between text-[11.5px]">
-                  <span className="font-mono text-[10px] text-text-3 uppercase tracking-wider">{row.k}</span>
-                  <span className="font-mono text-text-1">{row.v}</span>
-                </div>
-              ))}
-            </div>
-            <button
-              onClick={() => toast('Syncing with ClickUp...', 'info')}
-              className="w-full h-8 bg-surface-2 border border-border-default rounded-lg font-ui font-semibold text-[12px] text-text-1 flex items-center justify-center gap-1.5 hover:bg-surface-3 transition-colors"
-            >
-              <RefreshCw size={12} /> Sync Now
-            </button>
-          </div>
+          {canManage && <>
+            <button onClick={onAddTask} className="size-7 rounded-sm flex items-center justify-center text-text-3 hover:text-text-1 hover:bg-surface-2" aria-label="Add task"><Plus size={14} /></button>
+            <button onClick={onEdit} className="size-7 rounded-sm flex items-center justify-center text-text-3 hover:text-text-1 hover:bg-surface-2" aria-label="Edit stage"><Pencil size={13} /></button>
+            <button onClick={onDelete} className="size-7 rounded-sm flex items-center justify-center text-text-3 hover:text-error hover:bg-error/10" aria-label="Delete stage"><Trash2 size={13} /></button>
+          </>}
         </div>
       </div>
-
-      <TaskDetailDrawer task={drawerTask} open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+      {tasks.length === 0
+        ? <p className="p-4 text-center text-[12px] text-text-4">No tasks in this stage</p>
+        : <TaskList tasks={tasks} onOpenTask={onOpenTask} />}
     </div>
+  )
+}
+
+function TaskList({ tasks, onOpenTask }: { tasks: TaskListItem[]; onOpenTask: (id: string) => void }) {
+  return (
+    <ul>
+      {tasks.map((t) => (
+        <li
+          key={t.id}
+          onClick={() => onOpenTask(t.id)}
+          className="flex items-center gap-3 px-4 py-2.5 border-b border-border-subtle last:border-0 hover:bg-surface-2/50 cursor-pointer"
+        >
+          <span className="flex-1 min-w-0">
+            <span className="font-ui text-[13px] text-text-1 truncate block">{t.title}</span>
+            {t.due_date && <span className="font-mono text-[10.5px] text-text-4">{formatDate(t.due_date)}</span>}
+          </span>
+          <PriorityChip priority={t.priority} />
+          <StatusChip status={t.status} />
+          {t.assignee
+            ? <Avatar name={t.assignee.name} src={t.assignee.avatar_url ?? undefined} size="xs" />
+            : <span className="size-6 rounded-full border border-dashed border-border-strong shrink-0" />}
+        </li>
+      ))}
+    </ul>
   )
 }

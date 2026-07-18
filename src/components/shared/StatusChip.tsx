@@ -27,7 +27,8 @@ const APPROVAL_STATUS_CONFIG: Record<ApprovalStatus, { label: string; classes: s
 }
 
 interface StatusChipProps {
-  status: TaskStatus | ProjectStatus | ApprovalStatus
+  // Accepts a raw string (DB columns are `text`); unknown values render nothing.
+  status: TaskStatus | ProjectStatus | ApprovalStatus | string
   type?: 'task' | 'project' | 'approval'
   className?: string
 }

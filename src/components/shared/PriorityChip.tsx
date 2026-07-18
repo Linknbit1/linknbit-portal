@@ -9,12 +9,14 @@ const PRIORITY_CONFIG: Record<Priority, { label: string; classes: string }> = {
 }
 
 interface PriorityChipProps {
-  priority: Priority
+  // Accepts a raw string (DB columns are `text`); unknown values render nothing.
+  priority: Priority | string
   className?: string
 }
 
 export function PriorityChip({ priority, className }: PriorityChipProps) {
-  const config = PRIORITY_CONFIG[priority]
+  const config = (PRIORITY_CONFIG as Record<string, { label: string; classes: string }>)[priority]
+  if (!config) return null
 
   return (
     <span
