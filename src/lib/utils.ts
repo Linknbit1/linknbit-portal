@@ -70,6 +70,7 @@ export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
   awaiting_client: 'Awaiting Client',
   completed: 'Completed',
   on_hold: 'On Hold',
+  ongoing: 'Ongoing',
 }
 
 export const ROLE_LABELS: Record<UserRole, string> = {

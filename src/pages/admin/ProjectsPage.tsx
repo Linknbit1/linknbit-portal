@@ -18,7 +18,7 @@ import { useProjects, useUpdateProjectStatus } from '../../hooks/useProjects'
 import { useServices } from '../../hooks/useServices'
 import { useApprovals } from '../../hooks/useApprovals'
 import { useToast } from '../../components/ui/toast-context'
-import { NewProjectModal } from './NewProjectModal'
+import { ProjectFormModal } from './ProjectFormModal'
 import type { ProjectListItem, ProjectStatus } from '../../api/projects'
 import type { ProjectStatus as AppProjectStatus } from '../../types'
 
@@ -31,7 +31,7 @@ const VIEWS: { key: ViewMode; label: string; icon: typeof List }[] = [
   { key: 'milestones', label: 'Milestones', icon: Flag },
 ]
 
-const KANBAN_COLUMNS: AppProjectStatus[] = ['in_progress', 'awaiting_client', 'blocked', 'on_hold', 'completed']
+const KANBAN_COLUMNS: AppProjectStatus[] = ['in_progress', 'ongoing', 'awaiting_client', 'blocked', 'on_hold', 'completed']
 
 export default function ProjectsPage() {
   const navigate = useNavigate()
@@ -104,7 +104,7 @@ export default function ProjectsPage() {
         )}
       </div>
 
-      {showNew && <NewProjectModal onClose={() => setShowNew(false)} />}
+      {showNew && <ProjectFormModal onClose={() => setShowNew(false)} />}
     </div>
   )
 }

@@ -1,0 +1,74 @@
+/* Rich-text editor (TipTap) — internal ProseMirror styling. Uses the app's
+   Tailwind v4 theme CSS variables (--color-*) so it matches the dark portal. */
+
+.prose-editor { min-height: 2.25rem; }
+
+.rich-editor .ProseMirror,
+.rich-content .ProseMirror {
+  outline: none;
+  color: var(--color-text-1, #F2F5F9);
+  font-family: var(--font-ui, inherit);
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+.rich-editor .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--color-text-4, #4A5468);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+.ProseMirror p { margin: 0.25em 0; }
+.ProseMirror h1 { font-size: 1.35rem; font-weight: 700; margin: 0.7em 0 0.3em; font-family: var(--font-display, inherit); }
+.ProseMirror h2 { font-size: 1.15rem; font-weight: 700; margin: 0.6em 0 0.25em; font-family: var(--font-display, inherit); }
+.ProseMirror h3 { font-size: 1rem;   font-weight: 600; margin: 0.5em 0 0.2em; }
+.ProseMirror ul { list-style: disc;    padding-left: 1.4em; margin: 0.3em 0; }
+.ProseMirror ol { list-style: decimal; padding-left: 1.4em; margin: 0.3em 0; }
+.ProseMirror li { margin: 0.15em 0; }
+.ProseMirror blockquote {
+  border-left: 3px solid var(--color-border-strong, #3B4A60);
+  padding-left: 0.8em;
+  color: var(--color-text-2, #C4CCD8);
+  margin: 0.4em 0;
+}
+.ProseMirror code {
+  background: var(--color-surface-inset, #0B121C);
+  border: 1px solid var(--color-border-default, #2A3647);
+  border-radius: 4px;
+  padding: 0.05em 0.3em;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.9em;
+}
+.ProseMirror pre {
+  background: var(--color-surface-inset, #0B121C);
+  border: 1px solid var(--color-border-default, #2A3647);
+  border-radius: 8px;
+  padding: 0.7em 0.9em;
+  overflow-x: auto;
+  margin: 0.5em 0;
+}
+.ProseMirror pre code { background: none; border: none; padding: 0; }
+.ProseMirror a { color: #60A5FA; text-decoration: underline; cursor: pointer; }
+.ProseMirror hr {
+  border: none;
+  border-top: 1px solid var(--color-border-default, #2A3647);
+  margin: 0.9em 0;
+}
+.ProseMirror .mention {
+  background: rgba(238, 39, 55, 0.14);
+  color: var(--color-brand-red, #EE2737);
+  border-radius: 4px;
+  padding: 0 0.28em;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.ProseMirror .fileref {
+  background: var(--color-surface-3, #232E3F);
+  border: 1px solid var(--color-border-default, #2A3647);
+  border-radius: 4px;
+  padding: 0 0.3em;
+  cursor: pointer;
+  white-space: nowrap;
+}

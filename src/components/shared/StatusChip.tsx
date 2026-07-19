@@ -17,6 +17,7 @@ const PROJECT_STATUS_CONFIG: Record<ProjectStatus, { label: string; classes: str
   awaiting_client: { label: 'Awaiting Client', classes: 'bg-[rgba(245,158,11,0.12)] text-[#F59E0B] border-[rgba(245,158,11,0.3)]' },
   completed:       { label: 'Completed',       classes: 'bg-[rgba(122,133,151,0.15)] text-text-2 border-border-default' },
   on_hold:         { label: 'On Hold',         classes: 'bg-surface-3 text-text-3 border-border-default' },
+  ongoing:         { label: 'Ongoing',         classes: 'bg-[rgba(59,130,246,0.12)] text-[#60A5FA] border-[rgba(59,130,246,0.3)]' },
 }
 
 const APPROVAL_STATUS_CONFIG: Record<ApprovalStatus, { label: string; classes: string }> = {

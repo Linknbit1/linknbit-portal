@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { Modal } from '../../components/ui/Modal'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -68,11 +68,6 @@ export function TaskFormModal({ projectId, task, defaultStageId, onClose }: Task
   const priorityOptions = PRIORITY_ORDER.map((p) => ({ value: p, label: PRIORITY_LABELS[p], dot: PRIORITY_DOTS[p] }))
   const statusOptions = STATUS_ORDER.map((s) => ({ value: s, label: STATUS_LABELS[s] }))
 
-  const projectService = useMemo(
-    () => projects.find((p) => p.id === selectedProject)?.service_type ?? null,
-    [projects, selectedProject],
-  )
-
   const pending = createTask.isPending || updateTask.isPending
 
   const handleSubmit = () => {
@@ -89,7 +84,7 @@ export function TaskFormModal({ projectId, task, defaultStageId, onClose }: Task
       )
     } else {
       createTask.mutate(
-        { project_id: selectedProject, title: title.trim(), description: description.trim() || null, stage_id: stageId || null, assignee_id: assigneeId || null, priority, status, due_date: due, client_visible: clientVisible, service_type: projectService },
+        { project_id: selectedProject, title: title.trim(), description: description.trim() || null, stage_id: stageId || null, assignee_id: assigneeId || null, priority, status, due_date: due, client_visible: clientVisible },
         { onSuccess, onError },
       )
     }

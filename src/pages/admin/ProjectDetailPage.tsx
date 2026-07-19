@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import {
   Plus, Users, Layers, Paperclip, Calendar, Wallet, UserCircle,
-  Pencil, Trash2, Flag, X, CheckCircle2,
+  Pencil, Trash2, Flag, X, CheckCircle2, Columns, FileText, Bell,
 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Button } from '../../components/ui/Button'
@@ -14,13 +14,18 @@ import { ServiceChip } from '../../components/shared/ServiceChip'
 import { StatusChip } from '../../components/shared/StatusChip'
 import { PriorityChip } from '../../components/shared/PriorityChip'
 import { ClientVisibility } from '../../components/shared/ClientVisibility'
-import { AttachmentUploader } from '../../components/shared/AttachmentUploader'
+import { TaskBoard } from '../../components/shared/TaskBoard'
+import { DocEditor } from '../../components/editor/DocEditor'
+import { ProjectFilesTab } from './ProjectFilesTab'
+import { ProjectFormModal } from './ProjectFormModal'
+import { useCanAccess } from '../../hooks/useRoleFlags'
+import { useProjectWatch } from '../../hooks/useWatchers'
 import { cn } from '../../lib/cn'
 import { formatDate, formatCurrency, isOverdue } from '../../lib/utils'
 import { isAuthoritative } from '../../lib/roles'
 import { useAuthContext } from '../../context/AuthContext'
 import { useToast } from '../../components/ui/toast-context'
-import { useProject } from '../../hooks/useProjects'
+import { useProject, useUpdateProject } from '../../hooks/useProjects'
 import { useStages, useDeleteStage } from '../../hooks/useStages'
 import { useTasks } from '../../hooks/useTasks'
 import { useProjectMembers, useRemoveProjectMember } from '../../hooks/useProjectMembers'
@@ -35,6 +40,15 @@ import type { StageRow } from '../../api/stages'
 import type { TaskListItem } from '../../api/tasks'
 import type { ApprovalStatus } from '../../api/approvals'
 
+const TABS = [
+  { key: 'pipeline', label: 'Pipeline', icon: Layers },
+  { key: 'board', label: 'Board', icon: Columns },
+  { key: 'overview', label: 'Overview', icon: FileText },
+  { key: 'files', label: 'Files', icon: Paperclip },
+  { key: 'team', label: 'Team', icon: Users },
+] as const
+type ProjectTab = typeof TABS[number]['key']
+
 export default function ProjectDetailPage() {
   const { id = '' } = useParams()
   const toast = useToast()
@@ -48,11 +62,16 @@ export default function ProjectDetailPage() {
   const { data: approvals = [] } = useApprovals({ projectId: id })
   useRealtimeTasks(id)
 
+  const updateProject = useUpdateProject()
+  const watch = useProjectWatch(id)
   const deleteStage = useDeleteStage()
   const removeMember = useRemoveProjectMember()
   const requestApproval = useRequestApproval()
   const reviewApproval = useReviewApproval()
 
+  const canViewBudget = useCanAccess('can_view_budget')
+  const [projectView, setProjectView] = useState<ProjectTab>('pipeline')
+  const [showEdit, setShowEdit] = useState(false)
   const [showAddMember, setShowAddMember] = useState(false)
   const [showStageForm, setShowStageForm] = useState(false)
   const [editingStage, setEditingStage] = useState<StageRow | null>(null)
@@ -137,11 +156,25 @@ export default function ProjectDetailPage() {
               {project.client?.name && <p className="font-ui text-[13px] text-text-3 mt-1">{project.client.name}</p>}
               {project.description && <p className="font-ui text-[13px] text-text-2 mt-2 max-w-2xl">{project.description}</p>}
             </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <Button
+                size="sm"
+                variant={watch.isWatching ? 'primary' : 'secondary'}
+                iconLeft={<Bell size={13} />}
+                loading={watch.toggle.isPending}
+                onClick={() => watch.toggle.mutate({ watching: watch.isWatching }, { onError: (e) => toast(e instanceof Error ? e.message : 'Failed', 'error') })}
+              >
+                {watch.isWatching ? 'Watching' : 'Notify'}
+              </Button>
+              {canManage && (
+                <Button size="sm" variant="secondary" iconLeft={<Pencil size={13} />} onClick={() => setShowEdit(true)}>Edit</Button>
+              )}
+            </div>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-5">
             <Meta icon={UserCircle} label="Manager" value={project.manager?.name ?? '—'} />
             <Meta icon={Calendar} label="Deadline" value={project.deadline ? formatDate(project.deadline) : '—'} danger={!!project.deadline && isOverdue(project.deadline) && project.status !== 'completed'} />
-            <Meta icon={Wallet} label="Budget" value={project.budget ? formatCurrency(project.budget) : '—'} />
+            {canViewBudget && <Meta icon={Wallet} label="Budget" value={project.budget ? formatCurrency(project.budget) : '—'} />}
             <div>
               <p className="font-mono text-[10px] uppercase tracking-wider text-text-4 mb-1.5">Progress</p>
               <div className="flex items-center gap-2">
@@ -152,89 +185,107 @@ export default function ProjectDetailPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-5 items-start">
-          {/* Stages + tasks */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="font-ui font-semibold text-[15px] text-text-1 flex items-center gap-2"><Layers size={16} className="text-text-3" /> Pipeline</h2>
-              {canManage && (
-                <div className="flex items-center gap-2">
-                  <Button size="sm" variant="secondary" iconLeft={<Plus size={14} />} onClick={() => { setEditingStage(null); setShowStageForm(true) }}>Stage</Button>
-                  <Button size="sm" iconLeft={<Plus size={14} />} onClick={() => openAddTask()}>Task</Button>
+        {/* Tabs */}
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-1 bg-surface-1 border border-border-default rounded-lg p-1 overflow-x-auto no-scrollbar">
+            {TABS.map((t) => (
+              <button
+                key={t.key}
+                onClick={() => setProjectView(t.key)}
+                className={cn(
+                  'flex items-center gap-1.5 px-3 h-8 rounded-md font-ui font-medium text-[12.5px] whitespace-nowrap transition-colors',
+                  projectView === t.key ? 'bg-surface-3 text-text-1 shadow-sm' : 'text-text-3 hover:text-text-1',
+                )}
+              >
+                <t.icon size={13} /> {t.label}{t.key === 'team' ? ` (${members.length})` : ''}
+              </button>
+            ))}
+          </div>
+          {canManage && (projectView === 'pipeline' || projectView === 'board') && (
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="secondary" iconLeft={<Plus size={14} />} onClick={() => { setEditingStage(null); setShowStageForm(true) }}>Stage</Button>
+              <Button size="sm" iconLeft={<Plus size={14} />} onClick={() => openAddTask()}>Task</Button>
+            </div>
+          )}
+          {canManage && projectView === 'team' && (
+            <Button size="sm" iconLeft={<Plus size={14} />} onClick={() => setShowAddMember(true)}>Add member</Button>
+          )}
+        </div>
+
+        {projectView === 'pipeline' && (
+          stages.length === 0 && (tasksByStage.get('__none__')?.length ?? 0) === 0 ? (
+            <div className="bg-surface-1 border border-border-default rounded-md py-10 text-center font-ui text-[13px] text-text-4">
+              No stages or tasks yet. {canManage && 'Add a stage or task to get started.'}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {stages.map((stage) => (
+                <StageCard
+                  key={stage.id}
+                  stage={stage}
+                  tasks={tasksByStage.get(stage.id) ?? []}
+                  canManage={canManage}
+                  onOpenTask={setOpenTaskId}
+                  onAddTask={() => openAddTask(stage.id)}
+                  onEdit={() => openEditStage(stage)}
+                  onDelete={() => setPendingStageDelete(stage)}
+                  onRequestApproval={() => handleRequestApproval(stage)}
+                  onReview={() => setReviewStage(stage)}
+                />
+              ))}
+              {(tasksByStage.get('__none__')?.length ?? 0) > 0 && (
+                <div className="bg-surface-1 border border-border-default rounded-md">
+                  <div className="px-4 py-2.5 border-b border-border-subtle font-ui font-semibold text-[12.5px] text-text-2">Unstaged tasks</div>
+                  <TaskList tasks={tasksByStage.get('__none__') ?? []} onOpenTask={setOpenTaskId} />
                 </div>
               )}
             </div>
+          )
+        )}
 
-            {stages.length === 0 && (tasksByStage.get('__none__')?.length ?? 0) === 0 ? (
-              <div className="bg-surface-1 border border-border-default rounded-md py-10 text-center font-ui text-[13px] text-text-4">
-                No stages or tasks yet. {canManage && 'Add a stage or task to get started.'}
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {stages.map((stage) => (
-                  <StageCard
-                    key={stage.id}
-                    stage={stage}
-                    tasks={tasksByStage.get(stage.id) ?? []}
-                    canManage={canManage}
-                    onOpenTask={setOpenTaskId}
-                    onAddTask={() => openAddTask(stage.id)}
-                    onEdit={() => openEditStage(stage)}
-                    onDelete={() => setPendingStageDelete(stage)}
-                    onRequestApproval={() => handleRequestApproval(stage)}
-                    onReview={() => setReviewStage(stage)}
-                  />
-                ))}
-                {(tasksByStage.get('__none__')?.length ?? 0) > 0 && (
-                  <div className="bg-surface-1 border border-border-default rounded-md">
-                    <div className="px-4 py-2.5 border-b border-border-subtle font-ui font-semibold text-[12.5px] text-text-2">Unstaged tasks</div>
-                    <TaskList tasks={tasksByStage.get('__none__') ?? []} onOpenTask={setOpenTaskId} />
-                  </div>
-                )}
-              </div>
-            )}
+        {projectView === 'board' && (
+          tasks.length === 0
+            ? <div className="bg-surface-1 border border-border-default rounded-md py-10 text-center font-ui text-[13px] text-text-4">No tasks yet.</div>
+            : <TaskBoard tasks={tasks} onOpenTask={setOpenTaskId} />
+        )}
+
+        {projectView === 'overview' && (
+          <div className="bg-surface-1 border border-border-default rounded-xl p-5 max-w-3xl">
+            <DocEditor
+              key={id}
+              value={project.doc}
+              onSave={(doc) => updateProject.mutate({ id, updates: { doc } })}
+              mentionItems={members}
+              source={{ type: 'project', id, projectId: id }}
+              placeholder="Project docs, credentials, resources… type / for commands, @ to mention"
+            />
           </div>
+        )}
 
-          {/* Sidebar */}
-          <div className="space-y-4">
-            {/* Team */}
-            <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-border-subtle">
-                <span className="font-ui font-semibold text-[13px] text-text-1 flex items-center gap-2"><Users size={14} className="text-text-3" /> Team ({members.length})</span>
+        {projectView === 'files' && (
+          <div className="bg-surface-1 border border-border-default rounded-xl p-4 max-w-3xl">
+            <ProjectFilesTab projectId={id} canManage={canManage} onOpenTask={setOpenTaskId} />
+          </div>
+        )}
+
+        {projectView === 'team' && (
+          <div className="bg-surface-1 border border-border-default rounded-xl p-2 max-w-2xl">
+            {members.length === 0 ? (
+              <p className="text-center text-[12px] text-text-4 py-6">No members yet</p>
+            ) : members.map((m) => (
+              <div key={m.id} className="flex items-center gap-2.5 px-3 py-2 rounded-md hover:bg-surface-2 group">
+                <Avatar name={m.name} src={m.avatar_url ?? undefined} size="sm" />
+                <span className="flex-1 min-w-0 font-ui text-[13px] text-text-1 truncate">{m.name}</span>
                 {canManage && (
-                  <button onClick={() => setShowAddMember(true)} className="size-6 rounded-sm flex items-center justify-center text-text-3 hover:text-text-1 hover:bg-surface-2" aria-label="Add member"><Plus size={14} /></button>
+                  <button onClick={() => removeMember.mutate({ projectId: id, profileId: m.id }, { onError: (e) => toast(e instanceof Error ? e.message : 'Failed', 'error') })} className="size-7 rounded-sm flex items-center justify-center text-text-4 hover:text-error opacity-0 group-hover:opacity-100 transition-opacity" aria-label="Remove"><X size={13} /></button>
                 )}
               </div>
-              <div className="p-2">
-                {members.length === 0 ? (
-                  <p className="text-center text-[12px] text-text-4 py-4">No members yet</p>
-                ) : members.map((m) => (
-                  <div key={m.id} className="flex items-center gap-2.5 px-2 py-1.5 rounded-md hover:bg-surface-2 group">
-                    <Avatar name={m.name} src={m.avatar_url ?? undefined} size="sm" />
-                    <span className="flex-1 min-w-0 font-ui text-[12.5px] text-text-1 truncate">{m.name}</span>
-                    {canManage && (
-                      <button
-                        onClick={() => removeMember.mutate({ projectId: id, profileId: m.id }, { onError: (e) => toast(e instanceof Error ? e.message : 'Failed', 'error') })}
-                        className="size-6 rounded-sm flex items-center justify-center text-text-4 hover:text-error opacity-0 group-hover:opacity-100 transition-opacity"
-                        aria-label="Remove"
-                      ><X size={13} /></button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Files */}
-            <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
-              <div className="px-4 py-3 border-b border-border-subtle font-ui font-semibold text-[13px] text-text-1 flex items-center gap-2"><Paperclip size={14} className="text-text-3" /> Project files</div>
-              <div className="p-3">
-                <AttachmentUploader projectId={id} canManage={canManage} />
-              </div>
-            </div>
+            ))}
           </div>
-        </div>
+        )}
       </div>
 
+      {showEdit && <ProjectFormModal project={project} onClose={() => setShowEdit(false)} />}
       {showAddMember && <AddProjectMemberModal projectId={id} existingIds={members.map((m) => m.id)} onClose={() => setShowAddMember(false)} />}
       {showStageForm && <StageFormModal projectId={id} stage={editingStage ?? undefined} nextOrder={stages.length} onClose={() => setShowStageForm(false)} />}
       {showTaskForm && <TaskFormModal projectId={id} defaultStageId={taskFormStage} onClose={() => setShowTaskForm(false)} />}

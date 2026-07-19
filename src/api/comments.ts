@@ -1,10 +1,16 @@
 import { supabase } from '../lib/supabase'
-import type { Tables } from '../types/database'
+import type { Tables, Json } from '../types/database'
 
 export type CommentRow = Tables<'comments'>
 
 export interface CommentWithAuthor extends CommentRow {
   author: { id: string; name: string; avatar_url: string | null; role: string } | null
+}
+
+export interface CreateCommentArgs {
+  content: string
+  doc: Json | null
+  isInternal: boolean
 }
 
 export async function fetchComments(taskId: string): Promise<CommentWithAuthor[]> {
@@ -17,15 +23,11 @@ export async function fetchComments(taskId: string): Promise<CommentWithAuthor[]
   return data
 }
 
-export async function createComment(
-  taskId: string,
-  content: string,
-  isInternal: boolean,
-): Promise<CommentRow> {
+export async function createComment(taskId: string, args: CreateCommentArgs): Promise<CommentRow> {
   const { data: auth } = await supabase.auth.getUser()
   const { data, error } = await supabase
     .from('comments')
-    .insert({ task_id: taskId, content, is_internal: isInternal, author_id: auth.user?.id ?? null })
+    .insert({ task_id: taskId, content: args.content, doc: args.doc, is_internal: args.isInternal, author_id: auth.user?.id ?? null })
     .select()
     .single()
   if (error) throw error

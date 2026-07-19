@@ -529,6 +529,7 @@ export type Database = {
           author_id: string | null
           content: string
           created_at: string
+          doc: Json | null
           id: string
           is_internal: boolean
           task_id: string
@@ -538,6 +539,7 @@ export type Database = {
           author_id?: string | null
           content: string
           created_at?: string
+          doc?: Json | null
           id?: string
           is_internal?: boolean
           task_id: string
@@ -547,6 +549,7 @@ export type Database = {
           author_id?: string | null
           content?: string
           created_at?: string
+          doc?: Json | null
           id?: string
           is_internal?: boolean
           task_id?: string
@@ -979,6 +982,58 @@ export type Database = {
         }
         Relationships: []
       }
+      mentions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          profile_id: string
+          project_id: string
+          source_id: string
+          source_type: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          profile_id: string
+          project_id: string
+          source_id: string
+          source_type: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          profile_id?: string
+          project_id?: string
+          source_id?: string
+          source_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mentions_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mentions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       monthly_lp_history: {
         Row: {
           created_at: string
@@ -1310,6 +1365,39 @@ export type Database = {
           },
         ]
       }
+      project_watchers: {
+        Row: {
+          created_at: string
+          profile_id: string
+          project_id: string
+        }
+        Insert: {
+          created_at?: string
+          profile_id: string
+          project_id: string
+        }
+        Update: {
+          created_at?: string
+          profile_id?: string
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_watchers_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_watchers_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           budget: number | null
@@ -1321,6 +1409,7 @@ export type Database = {
           deleted_at: string | null
           deleted_by: string | null
           description: string | null
+          doc: Json | null
           id: string
           internal_note: string | null
           manager_id: string | null
@@ -1342,6 +1431,7 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           description?: string | null
+          doc?: Json | null
           id?: string
           internal_note?: string | null
           manager_id?: string | null
@@ -1363,6 +1453,7 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           description?: string | null
+          doc?: Json | null
           id?: string
           internal_note?: string | null
           manager_id?: string | null
@@ -2055,6 +2146,7 @@ export type Database = {
           deleted_at: string | null
           deleted_by: string | null
           description: string | null
+          doc: Json | null
           due_date: string | null
           estimated_minutes: number | null
           id: string
@@ -2077,6 +2169,7 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           description?: string | null
+          doc?: Json | null
           due_date?: string | null
           estimated_minutes?: number | null
           id?: string
@@ -2099,6 +2192,7 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           description?: string | null
+          doc?: Json | null
           due_date?: string | null
           estimated_minutes?: number | null
           id?: string

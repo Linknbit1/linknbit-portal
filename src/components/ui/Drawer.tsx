@@ -10,8 +10,8 @@ interface DrawerProps {
   title?: ReactNode
   children: ReactNode
   footer?: ReactNode
-  /** Desktop width in px for a right-side drawer (ignored on mobile / bottom). */
-  width?: number
+  /** Desktop width for a right-side drawer (px number or any CSS width; ignored on mobile / bottom). */
+  width?: number | string
   side?: 'right' | 'bottom'
 }
 

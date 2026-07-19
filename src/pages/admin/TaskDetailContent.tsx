@@ -1,5 +1,12 @@
 import { useState, type ReactNode } from 'react'
+import type { JSONContent } from '@tiptap/react'
 import { Plus, Trash2, Send, CheckCircle2, Archive, MessageSquare, ListChecks } from 'lucide-react'
+import { cn } from '../../lib/cn'
+import { DocEditor } from '../../components/editor/DocEditor'
+import { RichEditor } from '../../components/editor/RichEditor'
+import { RichRenderer } from '../../components/editor/RichRenderer'
+import { docToPlainText, extractMentionIds, toDbDoc, fromDbDoc } from '../../lib/richText'
+import { useSyncMentions } from '../../hooks/useMentions'
 import { Button } from '../../components/ui/Button'
 import { Select } from '../../components/ui/Select'
 import { DatePicker } from '../../components/ui/DatePicker'
@@ -29,9 +36,11 @@ const isPriority = (v: string): v is Priority => (PRIORITY_ORDER as string[]).in
 interface TaskDetailContentProps {
   taskId: string
   onClosed?: () => void
+  /** Two-column layout (comments + files on the right) for the expanded drawer / full page. */
+  wide?: boolean
 }
 
-export function TaskDetailContent({ taskId, onClosed }: TaskDetailContentProps) {
+export function TaskDetailContent({ taskId, onClosed, wide }: TaskDetailContentProps) {
   const toast = useToast()
   const { data: task, isLoading } = useTask(taskId)
   const updateTask = useUpdateTask()
@@ -47,9 +56,11 @@ export function TaskDetailContent({ taskId, onClosed }: TaskDetailContentProps) 
   const toggleSubtask = useToggleSubtask()
   const deleteSubtask = useDeleteSubtask()
   const createComment = useCreateComment()
+  const syncMentions = useSyncMentions()
 
   const [newSubtask, setNewSubtask] = useState('')
-  const [comment, setComment] = useState('')
+  const [commentDoc, setCommentDoc] = useState<JSONContent | null>(null)
+  const [composerKey, setComposerKey] = useState(0)
   const [commentInternal, setCommentInternal] = useState(true)
 
   if (isLoading) return <div className="p-5 space-y-3"><Skeleton className="h-6 w-2/3" /><Skeleton className="h-24" /><Skeleton className="h-32" /></div>
@@ -70,11 +81,19 @@ export function TaskDetailContent({ taskId, onClosed }: TaskDetailContentProps) 
   }
 
   const sendComment = () => {
-    if (!comment.trim()) return
-    createComment.mutate({ taskId, content: comment.trim(), isInternal: commentInternal }, {
-      onSuccess: () => setComment(''),
-      onError: (e) => toast(e instanceof Error ? e.message : 'Failed', 'error'),
-    })
+    const content = docToPlainText(commentDoc)
+    if (!content.trim()) return
+    createComment.mutate(
+      { taskId, args: { content, doc: toDbDoc(commentDoc), isInternal: commentInternal } },
+      {
+        onSuccess: (row) => {
+          syncMentions.mutate({ sourceType: 'comment', sourceId: row.id, projectId: task.project_id, profileIds: extractMentionIds(commentDoc) })
+          setCommentDoc(null)
+          setComposerKey((k) => k + 1)
+        },
+        onError: (e) => toast(e instanceof Error ? e.message : 'Failed', 'error'),
+      },
+    )
   }
 
   const markComplete = () => {
@@ -90,7 +109,8 @@ export function TaskDetailContent({ taskId, onClosed }: TaskDetailContentProps) 
   }
 
   return (
-    <div className="p-5 space-y-5">
+    <div className={cn('p-5', wide ? 'grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6 items-start' : 'flex flex-col gap-5')}>
+      <div className={wide ? 'space-y-5 min-w-0' : 'contents'}>
       {/* Header */}
       <div className="space-y-2">
         <div className="flex items-center gap-2 flex-wrap">
@@ -125,14 +145,16 @@ export function TaskDetailContent({ taskId, onClosed }: TaskDetailContentProps) 
       {/* Description */}
       <div className="space-y-1.5">
         <label className="text-label font-ui font-semibold text-text-2 uppercase tracking-wider">Description</label>
-        <textarea
-          key={task.id}
-          defaultValue={task.description ?? ''}
-          onBlur={(e) => { if (e.target.value !== (task.description ?? '')) patch({ description: e.target.value.trim() || null }) }}
-          rows={3}
-          placeholder="Add a description…"
-          className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 font-ui text-body-sm text-text-1 placeholder:text-text-3 focus:outline-none focus:border-border-focus focus:shadow-ring-focus resize-none"
-        />
+        <div className="bg-surface-inset border border-border-default rounded-md px-3 py-2 min-h-20 focus-within:border-border-focus">
+          <DocEditor
+            key={task.id}
+            value={task.doc}
+            onSave={(doc) => patch({ doc })}
+            mentionItems={members}
+            source={{ type: 'task', id: task.id, projectId: task.project_id }}
+            placeholder="Add a description… type / for commands, @ to mention"
+          />
+        </div>
       </div>
 
       {/* Subtasks */}
@@ -163,6 +185,8 @@ export function TaskDetailContent({ taskId, onClosed }: TaskDetailContentProps) 
         </div>
       </div>
 
+      </div>
+      <div className={wide ? 'space-y-5 min-w-0' : 'contents'}>
       {/* Files */}
       <div className="space-y-2">
         <label className="text-label font-ui font-semibold text-text-2 uppercase tracking-wider">Files</label>
@@ -181,30 +205,37 @@ export function TaskDetailContent({ taskId, onClosed }: TaskDetailContentProps) 
                 <span className="font-mono text-[10px] text-text-4">{formatRelativeTime(c.created_at)}</span>
                 {!c.is_internal && <span className="text-[9.5px] font-ui font-semibold uppercase text-service-mkt">Client</span>}
               </div>
-              <p className="font-ui text-[13px] text-text-2 whitespace-pre-wrap">{c.content}</p>
+              {c.doc
+                ? <RichRenderer doc={fromDbDoc(c.doc)} className="font-ui text-[13px] text-text-2" />
+                : <p className="font-ui text-[13px] text-text-2 whitespace-pre-wrap">{c.content}</p>}
             </div>
           </div>
         ))}
         <div className="space-y-2 pt-1">
-          <textarea
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            rows={2}
-            placeholder="Write a comment…"
-            className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 font-ui text-body-sm text-text-1 placeholder:text-text-3 focus:outline-none focus:border-border-focus resize-none"
-          />
+          <div className="bg-surface-inset border border-border-default rounded-md px-3 py-2 min-h-16 focus-within:border-border-focus">
+            <RichEditor
+              key={composerKey}
+              value={null}
+              onChange={setCommentDoc}
+              compact
+              onSubmit={sendComment}
+              mentionItems={members}
+              placeholder="Write a comment… @ to mention"
+            />
+          </div>
           <div className="flex items-center justify-between">
             <label className="flex items-center gap-2 cursor-pointer">
               <Toggle checked={!commentInternal} onChange={(v) => setCommentInternal(!v)} size="sm" />
               <span className="font-ui text-[12px] text-text-3">Visible to client</span>
             </label>
-            <Button size="sm" iconLeft={<Send size={13} />} onClick={sendComment} loading={createComment.isPending} disabled={!comment.trim()}>Send</Button>
+            <Button size="sm" iconLeft={<Send size={13} />} onClick={sendComment} loading={createComment.isPending}>Send</Button>
           </div>
         </div>
       </div>
 
+      </div>
       {/* Actions */}
-      <div className="flex items-center gap-2 pt-2 border-t border-border-subtle">
+      <div className={cn('flex items-center gap-2 pt-2 border-t border-border-subtle', wide && 'lg:col-span-2')}>
         <Button size="sm" iconLeft={<CheckCircle2 size={14} />} onClick={markComplete} disabled={task.status === 'completed'}>Mark complete</Button>
         <Button size="sm" variant="danger" iconLeft={<Archive size={14} />} onClick={archive} loading={deleteTask.isPending}>Archive</Button>
         <div className="ml-auto"><StatusChip status={task.status} /></div>
