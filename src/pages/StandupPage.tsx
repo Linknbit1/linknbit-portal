@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import {
-  Lock, CheckCircle2, Clock, AlertTriangle, CalendarOff, Users, ClipboardList, Coffee,
+  Lock, CheckCircle2, Clock, AlertTriangle, CalendarOff, Coffee,
 } from 'lucide-react'
 import { Topbar } from '../components/layout/Topbar'
 import { Avatar } from '../components/ui/Avatar'
@@ -36,9 +36,11 @@ function officeTime(iso: string, tz: string): string {
 
 export default function StandupPage() {
   const { profile } = useAuthContext()
-  const canSeeTeam = isAuthoritative(profile?.role)
+  // Management (admin/hr/PM/team-lead) never submit — they only review the team's
+  // updates. Employees only see their own. Either way there's a single view, so
+  // no tabs.
+  const showTeam = isAuthoritative(profile?.role)
   const { data: win, isLoading } = useStandupWindow()
-  const [tab, setTab] = useState<'mine' | 'team'>(canSeeTeam ? 'team' : 'mine')
 
   return (
     <div className="flex flex-col flex-1">
@@ -47,27 +49,15 @@ export default function StandupPage() {
         <div>
           <h2 className="font-display font-bold text-[22px] text-text-1">Daily Standup</h2>
           <p className="font-ui text-[13px] text-text-3">
-            End-of-day update — what you worked on, how long it took, and anything blocking you.
+            {showTeam
+              ? "Your team's end-of-day updates — what they worked on, time spent, and blockers."
+              : 'End-of-day update — what you worked on, how long it took, and anything blocking you.'}
           </p>
         </div>
 
-        {canSeeTeam && (
-          <div className="flex items-center gap-1 bg-surface-1 border border-border-default rounded-lg p-1 w-fit">
-            {([['mine', 'My update', ClipboardList], ['team', 'Team', Users]] as const).map(([k, label, Icon]) => (
-              <button
-                key={k}
-                onClick={() => setTab(k)}
-                className={cn('flex items-center gap-1.5 px-3 h-8 rounded-md font-ui font-medium text-[12.5px] transition-colors',
-                  tab === k ? 'bg-surface-3 text-text-1 shadow-sm' : 'text-text-3 hover:text-text-1')}
-              >
-                <Icon size={13} /> {label}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {tab === 'mine' && (isLoading ? <Skeleton className="h-40" /> : win ? <MyStandup win={win} /> : null)}
-        {tab === 'team' && canSeeTeam && <TeamStandups />}
+        {showTeam
+          ? <TeamStandups />
+          : (isLoading ? <Skeleton className="h-40" /> : win ? <MyStandup win={win} /> : null)}
       </div>
     </div>
   )
