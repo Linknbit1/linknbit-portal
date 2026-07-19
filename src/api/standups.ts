@@ -10,6 +10,8 @@ export interface StandupWindow {
   standup_date: string
   opens_at: string
   closes_at: string
+  /** On-time cutoff — submit by this to earn 5 XP; after it's late (no points). */
+  on_time_until: string
   is_open: boolean
   is_working_day: boolean
   is_required: boolean

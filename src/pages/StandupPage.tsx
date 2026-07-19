@@ -75,9 +75,10 @@ export default function StandupPage() {
 
 function MyStandup({ win }: { win: NonNullable<ReturnType<typeof useStandupWindow>['data']> }) {
   const untilOpen = useWindowCountdown(win.server_now, win.opens_at)
-  const untilClose = useWindowCountdown(win.server_now, win.closes_at)
+  const untilOnTime = useWindowCountdown(win.server_now, win.on_time_until)
   const opensLabel = officeTime(win.opens_at, win.timezone)
-  const closesLabel = officeTime(win.closes_at, win.timezone)
+  const onTimeLabel = officeTime(win.on_time_until, win.timezone)
+  const isLateNow = new Date(win.server_now) > new Date(win.on_time_until)
 
   if (!win.is_working_day) {
     return (
@@ -109,6 +110,7 @@ function MyStandup({ win }: { win: NonNullable<ReturnType<typeof useStandupWindo
       <Panel icon={Lock} tone="locked" title="Standup opens at " titleSuffix={opensLabel}>
         <p className="mb-3">
           The form unlocks 5 minutes before the end of the working day so updates reflect the full day.
+          Submit by {onTimeLabel} to earn <strong className="text-text-1">5 XP</strong>.
         </p>
         <div className="inline-flex items-baseline gap-2 bg-surface-inset border border-border-default rounded-lg px-4 py-2.5">
           <span className="font-mono text-[22px] font-bold text-text-1 tabular-nums">{hhmm(untilOpen)}</span>
@@ -118,24 +120,33 @@ function MyStandup({ win }: { win: NonNullable<ReturnType<typeof useStandupWindo
     )
   }
 
-  // After the hard close.
+  // After close (next working day's start).
   if (!win.is_open) {
     return (
       <Panel icon={AlertTriangle} tone="error" title="Window closed">
-        Today's standup window closed at {closesLabel}. Speak to your lead if you need it recorded.
+        The standup window has closed. Speak to your lead if you need today's update recorded.
       </Panel>
     )
   }
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 bg-warning/8 border border-warning/25 rounded-lg px-3.5 py-2.5">
-        <Clock size={14} className="text-warning shrink-0" />
-        <span className="font-ui text-[12.5px] text-text-2">
-          Window open until <strong className="text-text-1">{closesLabel}</strong>
-          {untilClose !== null && <> — <span className="font-mono tabular-nums">{hhmm(untilClose)}</span> left</>}
-        </span>
-      </div>
+      {isLateNow ? (
+        <div className="flex items-center gap-2 bg-error/8 border border-error/25 rounded-lg px-3.5 py-2.5">
+          <AlertTriangle size={14} className="text-error shrink-0" />
+          <span className="font-ui text-[12.5px] text-text-2">
+            The on-time window (until {onTimeLabel}) has passed — you can still submit, but it'll be marked <strong className="text-text-1">late</strong> and won't earn XP.
+          </span>
+        </div>
+      ) : (
+        <div className="flex items-center gap-2 bg-success/8 border border-success/25 rounded-lg px-3.5 py-2.5">
+          <Clock size={14} className="text-success shrink-0" />
+          <span className="font-ui text-[12.5px] text-text-2">
+            Submit by <strong className="text-text-1">{onTimeLabel}</strong> to earn 5 XP + 5 reputation
+            {untilOnTime !== null && untilOnTime > 0 && <> — <span className="font-mono tabular-nums">{hhmm(untilOnTime)}</span> left</>}
+          </span>
+        </div>
+      )}
       <StandupForm />
     </div>
   )
@@ -167,10 +178,20 @@ function TeamStandups() {
   const [date, setDate] = useState(() => new Intl.DateTimeFormat('en-CA').format(new Date()))
   const { data: standups = [], isLoading } = useStandupsByDate(date)
   const { data: roster = [] } = useStandupRoster(date)
+  const { data: win } = useStandupWindow()
 
   const submittedIds = new Set(standups.map((s) => s.profile_id))
-  const missing = roster.filter((r) => !submittedIds.has(r.profile_id) && !r.on_leave)
+  const notSubmitted = roster.filter((r) => !submittedIds.has(r.profile_id) && !r.on_leave)
   const onLeave = roster.filter((r) => r.on_leave)
+
+  // The window only counts people as "missing" once it has actually opened for
+  // the selected day. Before that (e.g. viewing today at 3am) nobody could have
+  // submitted, so they're "pending", not missing.
+  const hasOpened = win
+    ? (date < win.standup_date || (date === win.standup_date && new Date(win.server_now) >= new Date(win.opens_at)))
+    : false
+  const missing = hasOpened ? notSubmitted : []
+  const pending = hasOpened ? [] : notSubmitted
 
   return (
     <div className="space-y-4">
@@ -179,9 +200,19 @@ function TeamStandups() {
         <div className="flex items-center gap-2">
           <Badge variant="success">{standups.length} submitted</Badge>
           {missing.length > 0 && <Badge variant="error">{missing.length} missing</Badge>}
+          {pending.length > 0 && <Badge variant="warning">{pending.length} pending</Badge>}
           {onLeave.length > 0 && <Badge variant="ghost">{onLeave.length} on leave</Badge>}
         </div>
       </div>
+
+      {!hasOpened && win && date === win.standup_date && (
+        <div className="flex items-center gap-2 bg-surface-1 border border-border-default rounded-lg px-3.5 py-2.5">
+          <Clock size={14} className="text-text-3 shrink-0" />
+          <span className="font-ui text-[12.5px] text-text-3">
+            The standup window opens at {officeTime(win.opens_at, win.timezone)} — updates appear after that.
+          </span>
+        </div>
+      )}
 
       {missing.length > 0 && (
         <div className="bg-surface-1 border border-border-default rounded-xl p-4">

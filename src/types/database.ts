@@ -2655,6 +2655,7 @@ export type Database = {
       fn_mark_absent_for_date: { Args: { d: string }; Returns: undefined }
       fn_mark_absent_today: { Args: never; Returns: undefined }
       fn_monthly_lp_reset: { Args: never; Returns: undefined }
+      fn_next_working_start: { Args: { p_date: string }; Returns: string }
       fn_notify: {
         Args: {
           p_actor?: string
@@ -2681,6 +2682,7 @@ export type Database = {
           is_open: boolean
           is_required: boolean
           is_working_day: boolean
+          on_time_until: string
           opens_at: string
           server_now: string
           standup_date: string
@@ -2783,6 +2785,7 @@ export type Database = {
           is_open: boolean
           is_required: boolean
           is_working_day: boolean
+          on_time_until: string
           opens_at: string
           server_now: string
           standup_date: string
