@@ -30,6 +30,8 @@ export interface NavItem {
   roles?: readonly string[]
   // Surfaced directly in the mobile bottom tab bar (the rest live behind "More").
   primaryMobile?: boolean
+  /** Path prefix used for "is this section active" when `to` points at a child page. */
+  matchPrefix?: string
   /** Sub-pages rendered as an expandable group in the desktop sidebar. */
   children?: NavItem[]
 }
@@ -66,9 +68,9 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Clients', icon: UserCircle, to: '/admin/clients', authoritativeOnly: true },
   { label: 'Teams', icon: Users, to: '/teams', authoritativeOnly: true },
   { label: 'People', icon: UserCog, to: '/people', authoritativeOnly: true },
-  { label: 'Attendance', icon: CalendarCheck, to: '/attendance', primaryMobile: true, children: ATTENDANCE_CHILDREN },
+  { label: 'Attendance', icon: CalendarCheck, to: '/attendance/records', matchPrefix: '/attendance', primaryMobile: true, children: ATTENDANCE_CHILDREN },
   { label: 'Standup', icon: ClipboardList, to: '/standup' },
-  { label: 'Gamification', icon: Trophy, to: '/gamification', primaryMobile: true, children: GAMIFICATION_CHILDREN },
+  { label: 'Gamification', icon: Trophy, to: '/gamification/leaderboard', matchPrefix: '/gamification', primaryMobile: true, children: GAMIFICATION_CHILDREN },
   { label: 'Reports', icon: BarChart2, to: '/admin/reports', devOnly: true },
   { label: 'Settings', icon: Settings, to: '/settings', roles: SETTINGS_ROLES },
 ]
