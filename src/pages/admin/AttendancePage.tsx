@@ -17,6 +17,9 @@ import { DatePicker } from '../../components/ui/DatePicker'
 import { TimePicker } from '../../components/ui/TimePicker'
 import { SectionToolbar } from '../../components/ui/SectionToolbar'
 import { PeriodStepper } from '../../components/ui/PeriodStepper'
+import { MonthStepper, DateGroupHeading } from '../../components/shared/MonthFilter'
+import { useMonthFilter } from '../../hooks/useMonthFilter'
+import { groupByDate, datesInRange, formatRequestedAt, formatDayHeading } from '../../lib/dateGroups'
 import { useToast } from '../../components/ui/toast-context'
 import { useAuthContext } from '../../context/AuthContext'
 import {
@@ -654,12 +657,15 @@ export function WFHRequestsTab() {
   const [deleteTarget, setDeleteTarget] = useState<WfhRequestWithProfile | null>(null)
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const monthFilter = useMonthFilter()
 
   const pending = requests.filter((r) => r.status === 'pending').length
   const approved = requests.filter((r) => r.status === 'approved').length
   const rejected = requests.filter((r) => r.status === 'rejected').length
 
   const filtered = requests.filter((r) => statusFilter === 'all' || r.status === statusFilter)
+  // Grouped under the date the WFH is FOR (not when it was requested).
+  const groups = groupByDate(filtered, (r) => (monthFilter.inMonth(r.date) ? [r.date] : []))
 
   const approve = async (id: string) => {
     try {
@@ -716,6 +722,7 @@ export function WFHRequestsTab() {
 
       <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
         <SectionToolbar icon={ClipboardList} title="WFH Requests">
+          <MonthStepper filter={monthFilter} />
           <Select
             size="sm"
             value={statusFilter}
@@ -732,11 +739,15 @@ export function WFHRequestsTab() {
           </Button>
         </SectionToolbar>
 
-        {filtered.length === 0 ? (
-          <div className="py-16 text-center font-ui text-[13px] text-text-4">No WFH requests match this filter.</div>
+        {groups.length === 0 ? (
+          <div className="py-16 text-center font-ui text-[13px] text-text-4">No WFH requests for this period.</div>
         ) : (
-          <div className="divide-y divide-border-subtle">
-            {filtered.map((req) => {
+          <div>
+            {groups.map((group) => (
+              <div key={group.date}>
+                <DateGroupHeading date={group.date} count={group.items.length} />
+                <div className="divide-y divide-border-subtle">
+            {group.items.map((req) => {
               const isExpanded = expandedId === req.id
               return (
                 <div key={req.id} className="hover:bg-white/1.5 transition-colors">
@@ -753,9 +764,9 @@ export function WFHRequestsTab() {
                     </div>
                     <div className="flex items-center gap-1.5 text-[12px] font-mono text-text-2 shrink-0">
                       <Calendar size={12} className="text-text-4" />
-                      {req.date}
+                      For {req.date}
                     </div>
-                    <div className="shrink-0 text-[11.5px] font-mono text-text-4">{fmt(req.created_at)}</div>
+                    <div className="shrink-0 text-[11.5px] font-mono text-text-4">Requested {formatRequestedAt(req.created_at)}</div>
                     <WFHStatusChip status={req.status} />
                     {req.status === 'pending' ? (
                       <div className="flex items-center gap-1.5 ml-1">
@@ -794,6 +805,9 @@ export function WFHRequestsTab() {
                 </div>
               )
             })}
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
@@ -974,8 +988,14 @@ export function LeaveTab() {
   const [rejectTarget, setRejectTarget] = useState<LeaveRequestWithProfile | null>(null)
   const [rejectNote, setRejectNote] = useState('')
   const [deleteTarget, setDeleteTarget] = useState<LeaveRequestWithProfile | null>(null)
+  const monthFilter = useMonthFilter()
 
   const filtered = requests.filter((r) => statusFilter === 'all' || r.status === statusFilter)
+  // A leave spanning several days is listed under each day it covers, so "who is
+  // off on this date" is answerable at a glance; the row still shows the range.
+  const groups = groupByDate(filtered, (r) =>
+    datesInRange(r.start_date, r.end_date).filter(monthFilter.inMonth),
+  )
 
   const fmtRange = (start: string, end: string) => {
     const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' }
@@ -1062,6 +1082,7 @@ export function LeaveTab() {
       {/* Leave requests review */}
       <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
         <SectionToolbar icon={ClipboardList} title="Leave Requests">
+          <MonthStepper filter={monthFilter} />
           <Select
             size="sm"
             value={statusFilter}
@@ -1074,11 +1095,15 @@ export function LeaveTab() {
             ]}
           />
         </SectionToolbar>
-        {filtered.length === 0 ? (
-          <div className="py-12 text-center font-ui text-[13px] text-text-4">No leave requests match this filter.</div>
+        {groups.length === 0 ? (
+          <div className="py-12 text-center font-ui text-[13px] text-text-4">No leave requests for this period.</div>
         ) : (
-          <div className="divide-y divide-border-subtle">
-            {filtered.map((req) => (
+          <div>
+            {groups.map((group) => (
+              <div key={group.date}>
+                <DateGroupHeading date={group.date} count={group.items.length} />
+                <div className="divide-y divide-border-subtle">
+            {group.items.map((req) => (
               <div key={req.id} className="flex items-start gap-3 px-5 py-3.5">
                 <Avatar name={req.profiles?.name ?? '?'} src={req.profiles?.avatar_url ?? undefined} size="sm" />
                 <div className="flex-1 min-w-0">
@@ -1096,6 +1121,9 @@ export function LeaveTab() {
                     )}
                   </div>
                   <p className="font-ui text-[12px] text-text-3 truncate">{req.reason}</p>
+                  <p className="font-mono text-[10.5px] text-text-4 mt-0.5">
+                    For {fmtRange(req.start_date, req.end_date)} · Requested {formatRequestedAt(req.created_at)}
+                  </p>
                   {req.review_note && <p className="font-ui text-[11px] text-error mt-0.5 italic">"{req.review_note}"</p>}
                 </div>
                 {req.status === 'pending' ? (
@@ -1120,6 +1148,9 @@ export function LeaveTab() {
                     <Trash2 size={14} />
                   </button>
                 )}
+              </div>
+            ))}
+                </div>
               </div>
             ))}
           </div>
@@ -1413,6 +1444,7 @@ export function ExceptionsTab() {
   const [rejectTarget, setRejectTarget] = useState<string | null>(null)
   const [rejectNote, setRejectNote] = useState('')
   const [deleteTarget, setDeleteTarget] = useState<AttendanceExceptionWithProfile | null>(null)
+  const monthFilter = useMonthFilter()
 
   const filters = {
     type:   typeFilter   !== 'all' ? typeFilter   : undefined,
@@ -1426,6 +1458,9 @@ export function ExceptionsTab() {
   const pendingCount  = exceptions.filter((e) => e.status === 'pending').length
   const approvedCount = exceptions.filter((e) => e.status === 'approved').length
   const rejectedCount = exceptions.filter((e) => e.status === 'rejected').length
+
+  // Grouped under the date the exception is FOR (not when it was raised).
+  const excGroups = groupByDate(exceptions, (e) => (monthFilter.inMonth(e.date) ? [e.date] : []))
 
   const handleApprove = async (id: string) => {
     try {
@@ -1495,6 +1530,7 @@ export function ExceptionsTab() {
       {/* Table */}
       <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
         <SectionToolbar icon={AlertCircle} title="Exception Requests">
+          <MonthStepper filter={monthFilter} />
           <Select
             size="sm"
             value={typeFilter}
@@ -1533,10 +1569,22 @@ export function ExceptionsTab() {
           <tbody>
             {isLoading ? (
               <tr><td colSpan={8} className="px-4 py-12 text-center font-mono text-[12px] text-text-4">Loading…</td></tr>
-            ) : exceptions.length === 0 ? (
-              <tr><td colSpan={8} className="px-4 py-12 text-center font-mono text-[12px] text-text-4">No exception requests match this filter.</td></tr>
+            ) : excGroups.length === 0 ? (
+              <tr><td colSpan={8} className="px-4 py-12 text-center font-mono text-[12px] text-text-4">No exception requests for this period.</td></tr>
             ) : (
-              exceptions.map((exc) => {
+              excGroups.flatMap((group) => [
+                <tr key={`h-${group.date}`} className="bg-surface-2 border-y border-border-subtle">
+                  <td colSpan={8} className="px-4 py-2">
+                    <span className="font-display font-semibold text-[12.5px] text-text-1">{formatDayHeading(group.date).label}</span>
+                    {formatDayHeading(group.date).relative && (
+                      <span className="ml-2 px-1.5 py-0.5 rounded-xs bg-brand-red/10 border border-brand-red/20 text-brand-red text-[10px] font-mono font-semibold uppercase tracking-wide">
+                        {formatDayHeading(group.date).relative}
+                      </span>
+                    )}
+                    <span className="ml-2 font-mono text-[11px] text-text-4">{group.items.length}</span>
+                  </td>
+                </tr>,
+                ...group.items.map((exc) => {
                 const typeMeta = TYPE_META[exc.exception_type] ?? TYPE_META['late_arrival']
                 const excWp = exc as AttendanceExceptionWithProfile
                 return (
@@ -1549,7 +1597,10 @@ export function ExceptionsTab() {
                         </span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 font-mono text-[12px] text-text-2 whitespace-nowrap">{fmtDate(exc.date)}</td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <span className="block font-mono text-[12px] text-text-2">For {fmtDate(exc.date)}</span>
+                      <span className="block font-mono text-[10.5px] text-text-4">Requested {formatRequestedAt(exc.created_at)}</span>
+                    </td>
                     <td className="px-4 py-3">
                       <span className={cn('inline-flex items-center px-2 py-0.5 rounded-xs border text-[11px] font-mono font-semibold whitespace-nowrap', typeMeta.cls)}>
                         {typeMeta.label}
@@ -1610,7 +1661,8 @@ export function ExceptionsTab() {
                     </td>
                   </tr>
                 )
-              })
+                }),
+              ])
             )}
           </tbody>
         </table>

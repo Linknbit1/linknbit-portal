@@ -1,0 +1,57 @@
+import { Calendar } from 'lucide-react'
+import { PeriodStepper } from '../ui/PeriodStepper'
+import { cn } from '../../lib/cn'
+import { formatDayHeading } from '../../lib/dateGroups'
+import type { MonthFilter } from '../../hooks/useMonthFilter'
+
+/** Month stepper + "All months" toggle, for a SectionToolbar. */
+export function MonthStepper({ filter }: { filter: MonthFilter }) {
+  return (
+    <>
+      <PeriodStepper
+        icon={Calendar}
+        label={filter.label}
+        onPrev={filter.prevMonth}
+        onNext={filter.nextMonth}
+        disablePrev={filter.allMonths}
+        disableNext={filter.allMonths || filter.isCurrentMonth}
+        className={cn(filter.allMonths && 'opacity-50')}
+      >
+        {!filter.allMonths && filter.isCurrentMonth && (
+          <span className="ml-1 px-1.5 py-0.5 rounded-xs bg-brand-red/10 border border-brand-red/20 text-brand-red text-[10px] font-mono font-semibold uppercase tracking-wide">
+            Current
+          </span>
+        )}
+      </PeriodStepper>
+      <button
+        type="button"
+        onClick={() => filter.setAllMonths(!filter.allMonths)}
+        aria-pressed={filter.allMonths}
+        className={cn(
+          'h-8 px-3 rounded-sm border font-ui font-semibold text-[12px] transition-colors shrink-0',
+          filter.allMonths
+            ? 'bg-brand-red/10 border-brand-red/30 text-brand-red'
+            : 'bg-surface-1 border-border-default text-text-3 hover:text-text-1 hover:border-border-strong',
+        )}
+      >
+        All months
+      </button>
+    </>
+  )
+}
+
+/** Sticky day heading above a group of requests. `count` shows how many fall on it. */
+export function DateGroupHeading({ date, count }: { date: string; count: number }) {
+  const { label, relative } = formatDayHeading(date)
+  return (
+    <div className="sticky top-0 z-10 flex items-center gap-2 px-5 py-2 bg-surface-2/95 backdrop-blur-sm border-y border-border-subtle">
+      <span className="font-display font-semibold text-[12.5px] text-text-1">{label}</span>
+      {relative && (
+        <span className="px-1.5 py-0.5 rounded-xs bg-brand-red/10 border border-brand-red/20 text-brand-red text-[10px] font-mono font-semibold uppercase tracking-wide">
+          {relative}
+        </span>
+      )}
+      <span className="ml-auto font-mono text-[11px] text-text-4">{count}</span>
+    </div>
+  )
+}
