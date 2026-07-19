@@ -213,17 +213,9 @@ export function AttendanceCheckInCard() {
   if (isLoading) return <CheckInCardSkeleton />
 
   // Employees exempt from attendance (e.g. CEO/COO) have no check-in flow.
-  if (profile?.attendance_excluded) {
-    return (
-      <div className={CARD_ROOT_CLS}>
-        <div className="flex flex-col items-center gap-2 py-6 text-center">
-          <ShieldX size={22} className="text-text-4" />
-          <p className="font-ui text-[13px] font-semibold text-text-1">Exempt from attendance</p>
-          <p className="font-ui text-[12px] text-text-3 max-w-65">You're not required to check in. Attendance tracking is disabled for your account.</p>
-        </div>
-      </div>
-    )
-  }
+  // Exempt users don't check in — hide the card entirely rather than showing a
+  // placeholder, so it never takes up space on their pages.
+  if (profile?.attendance_excluded) return null
 
   return (
     <div className={CARD_ROOT_CLS}>
