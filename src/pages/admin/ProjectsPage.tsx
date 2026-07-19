@@ -1,12 +1,14 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  List, Columns, Calendar, Flag, Plus, Search, ChevronRight, AlertCircle,
+  List, Columns, Calendar, Flag, Plus, Search, ChevronRight, AlertCircle, SlidersHorizontal,
 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Select } from '../../components/ui/Select'
+import { DatePicker } from '../../components/ui/DatePicker'
+import { usePeople } from '../../hooks/usePeople'
 import { AvatarGroup } from '../../components/ui/Avatar'
 import { ProgressBar } from '../../components/ui/ProgressBar'
 import { Skeleton } from '../../components/ui/Skeleton'
@@ -32,6 +34,23 @@ const VIEWS: { key: ViewMode; label: string; icon: typeof List }[] = [
 ]
 
 const KANBAN_COLUMNS: AppProjectStatus[] = ['in_progress', 'ongoing', 'awaiting_client', 'blocked', 'on_hold', 'completed']
+const PROJECT_SORT = [
+  { value: 'recent', label: 'Newest' },
+  { value: 'deadline', label: 'Deadline' },
+  { value: 'name', label: 'Name A–Z' },
+  { value: 'progress', label: 'Progress' },
+]
+
+function sortProjects(list: ProjectListItem[], sort: string): ProjectListItem[] {
+  const arr = [...list]
+  switch (sort) {
+    case 'deadline': arr.sort((a, b) => (a.deadline ?? '9999').localeCompare(b.deadline ?? '9999')); break
+    case 'name': arr.sort((a, b) => a.name.localeCompare(b.name)); break
+    case 'progress': arr.sort((a, b) => b.progress - a.progress); break
+    default: break
+  }
+  return arr
+}
 
 export default function ProjectsPage() {
   const navigate = useNavigate()
@@ -40,20 +59,31 @@ export default function ProjectsPage() {
   const [search, setSearch] = useState('')
   const [serviceFilter, setServiceFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
+  const [managerFilter, setManagerFilter] = useState('')
+  const [deadlineFrom, setDeadlineFrom] = useState('')
+  const [deadlineTo, setDeadlineTo] = useState('')
+  const [sortBy, setSortBy] = useState('recent')
+  const [showAdv, setShowAdv] = useState(false)
   const [showNew, setShowNew] = useState(false)
 
   const { data: projects = [], isLoading } = useProjects()
+  const { data: people = [] } = usePeople()
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
-    return projects.filter((p) =>
+    const list = projects.filter((p) =>
       (!q || p.name.toLowerCase().includes(q) || (p.client?.name ?? '').toLowerCase().includes(q)) &&
       (!serviceFilter || p.service_type === serviceFilter) &&
-      (!statusFilter || p.status === statusFilter))
-  }, [projects, search, serviceFilter, statusFilter])
+      (!statusFilter || p.status === statusFilter) &&
+      (!managerFilter || p.manager_id === managerFilter) &&
+      (!deadlineFrom || (!!p.deadline && p.deadline >= deadlineFrom)) &&
+      (!deadlineTo || (!!p.deadline && p.deadline <= deadlineTo)))
+    return sortProjects(list, sortBy)
+  }, [projects, search, serviceFilter, statusFilter, managerFilter, deadlineFrom, deadlineTo, sortBy])
 
   const serviceOptions = [{ value: '', label: 'All services' }, ...services.map((s) => ({ value: s.slug, label: s.name, dot: s.color }))]
   const statusOptions = [{ value: '', label: 'All statuses' }, ...KANBAN_COLUMNS.map((s) => ({ value: s, label: PROJECT_STATUS_LABELS[s] }))]
+  const managerOptions = [{ value: '', label: 'All managers' }, ...people.filter((p) => p.is_active).map((p) => ({ value: p.id, label: p.name, avatar: { name: p.name, url: p.avatar_url } }))]
 
   return (
     <div className="flex flex-col flex-1">
@@ -88,7 +118,26 @@ export default function ProjectsPage() {
           <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search projects…" iconLeft={<Search size={14} />} className="w-56" />
           <Select value={serviceFilter} onChange={setServiceFilter} options={serviceOptions} size="sm" />
           <Select value={statusFilter} onChange={setStatusFilter} options={statusOptions} size="sm" />
+          <Select value={sortBy} onChange={setSortBy} options={PROJECT_SORT} size="sm" label="Sort" />
+          <button
+            onClick={() => setShowAdv((v) => !v)}
+            className={cn('h-8 px-2.5 rounded-sm border flex items-center gap-1.5 font-ui text-[11.5px] transition-colors', showAdv || deadlineFrom || deadlineTo || managerFilter ? 'border-border-focus text-text-1 bg-surface-2' : 'border-border-default text-text-3 hover:text-text-1')}
+          >
+            <SlidersHorizontal size={13} /> Filters
+          </button>
         </div>
+
+        {showAdv && (
+          <div className="flex flex-wrap items-center gap-2 bg-surface-1 border border-border-default rounded-lg p-2.5">
+            <span className="font-mono text-[10px] uppercase tracking-wider text-text-4 self-center">Deadline between</span>
+            <DatePicker value={deadlineFrom} onChange={setDeadlineFrom} placeholder="From" className="w-40" />
+            <DatePicker value={deadlineTo} onChange={setDeadlineTo} placeholder="To" minDate={deadlineFrom || undefined} className="w-40" />
+            <Select value={managerFilter} onChange={setManagerFilter} options={managerOptions} size="sm" />
+            {(deadlineFrom || deadlineTo || managerFilter) && (
+              <button onClick={() => { setDeadlineFrom(''); setDeadlineTo(''); setManagerFilter('') }} className="h-8 px-2.5 rounded-sm text-[11.5px] text-text-3 hover:text-error transition-colors">Clear</button>
+            )}
+          </div>
+        )}
 
         {isLoading ? (
           <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-16" />)}</div>

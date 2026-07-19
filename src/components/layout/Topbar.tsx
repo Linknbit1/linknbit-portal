@@ -183,7 +183,7 @@ export function Topbar({ title, breadcrumb, className, back }: TopbarProps) {
                       onClick={() => {
                         if (!notif.read) markRead(notif.id)
                         // Take them to where the thing actually is, when we know.
-                        const href = notificationHref(notif.resource_type)
+                        const href = notificationHref(notif.resource_type, notif.resource_id)
                         if (href) { setBellOpen(false); navigate(href) }
                       }}
                       className={cn(

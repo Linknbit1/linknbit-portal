@@ -78,8 +78,12 @@ export function notificationGroupsFor(role: string | null | undefined): Notifica
 }
 
 /** Where a notification should take you when clicked. */
-export function notificationHref(resourceType: string | null): string | null {
+export function notificationHref(resourceType: string | null, resourceId?: string | null): string | null {
   switch (resourceType) {
+    case 'task':
+      return resourceId ? `/admin/tasks/${resourceId}` : '/inbox'
+    case 'project':
+      return resourceId ? `/admin/projects/${resourceId}` : '/inbox'
     case 'leave_request':
     case 'wfh_request':
     case 'attendance_exception':

@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import type { JSONContent } from '@tiptap/react'
-import { Plus, Trash2, Send, CheckCircle2, Archive, MessageSquare, ListChecks } from 'lucide-react'
+import { Plus, Trash2, Send, CheckCircle2, Archive, MessageSquare, ListChecks, RotateCcw } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { DocEditor } from '../../components/editor/DocEditor'
 import { RichEditor } from '../../components/editor/RichEditor'
@@ -9,6 +9,8 @@ import { docToPlainText, extractMentionIds, toDbDoc, fromDbDoc } from '../../lib
 import { useSyncMentions } from '../../hooks/useMentions'
 import { Button } from '../../components/ui/Button'
 import { Select } from '../../components/ui/Select'
+import { MultiSelectPeople } from '../../components/ui/MultiSelectPeople'
+import { useSetTaskAssignees } from '../../hooks/useTaskAssignees'
 import { DatePicker } from '../../components/ui/DatePicker'
 import { Toggle } from '../../components/ui/Toggle'
 import { Avatar } from '../../components/ui/Avatar'
@@ -57,6 +59,7 @@ export function TaskDetailContent({ taskId, onClosed, wide }: TaskDetailContentP
   const deleteSubtask = useDeleteSubtask()
   const createComment = useCreateComment()
   const syncMentions = useSyncMentions()
+  const setAssignees = useSetTaskAssignees()
 
   const [newSubtask, setNewSubtask] = useState('')
   const [commentDoc, setCommentDoc] = useState<JSONContent | null>(null)
@@ -70,7 +73,6 @@ export function TaskDetailContent({ taskId, onClosed, wide }: TaskDetailContentP
     updateTask.mutate({ id: task.id, updates }, { onError: (e) => toast(e instanceof Error ? e.message : 'Update failed', 'error') })
 
   const stageOptions = [{ value: '', label: 'No stage' }, ...stages.map((s) => ({ value: s.id, label: s.name }))]
-  const memberOptions = [{ value: '', label: 'Unassigned' }, ...members.map((m) => ({ value: m.id, label: m.name, avatar: { name: m.name, url: m.avatar_url } }))]
   const statusOptions = STATUS_ORDER.map((s) => ({ value: s, label: STATUS_LABELS[s] }))
   const priorityOptions = PRIORITY_ORDER.map((p) => ({ value: p, label: PRIORITY_LABELS[p], dot: PRIORITY_DOTS[p] }))
 
@@ -96,9 +98,10 @@ export function TaskDetailContent({ taskId, onClosed, wide }: TaskDetailContentP
     )
   }
 
-  const markComplete = () => {
-    patch({ status: 'completed' })
-    toast('Task marked complete', 'success')
+  const isDone = task.status === 'completed' || task.status === 'approved'
+  const toggleComplete = () => {
+    patch({ status: isDone ? 'in_progress' : 'completed' })
+    toast(isDone ? 'Task reopened' : 'Task marked complete', 'success')
   }
 
   const archive = () => {
@@ -128,8 +131,16 @@ export function TaskDetailContent({ taskId, onClosed, wide }: TaskDetailContentP
         <Field label="Priority">
           <Select value={task.priority} onChange={(v) => { if (isPriority(v)) patch({ priority: v }) }} options={priorityOptions} size="sm" />
         </Field>
-        <Field label="Assignee">
-          <Select value={task.assignee_id ?? ''} onChange={(v) => patch({ assignee_id: v || null })} options={memberOptions} size="sm" />
+        <Field label="Assignees">
+          <MultiSelectPeople
+            value={task.assignees.map((a) => a.id)}
+            onChange={(ids) => setAssignees.mutate(
+              { taskId: task.id, profileIds: ids, projectId: task.project_id },
+              { onError: (e) => toast(e instanceof Error ? e.message : 'Failed', 'error') },
+            )}
+            options={members.map((m) => ({ id: m.id, name: m.name, avatar_url: m.avatar_url }))}
+            size="sm"
+          />
         </Field>
         <Field label="Stage">
           <Select value={task.stage_id ?? ''} onChange={(v) => patch({ stage_id: v || null })} options={stageOptions} size="sm" />
@@ -236,7 +247,7 @@ export function TaskDetailContent({ taskId, onClosed, wide }: TaskDetailContentP
       </div>
       {/* Actions */}
       <div className={cn('flex items-center gap-2 pt-2 border-t border-border-subtle', wide && 'lg:col-span-2')}>
-        <Button size="sm" iconLeft={<CheckCircle2 size={14} />} onClick={markComplete} disabled={task.status === 'completed'}>Mark complete</Button>
+        <Button size="sm" variant={isDone ? 'secondary' : 'primary'} iconLeft={isDone ? <RotateCcw size={14} /> : <CheckCircle2 size={14} />} onClick={toggleComplete}>{isDone ? 'Reopen' : 'Mark complete'}</Button>
         <Button size="sm" variant="danger" iconLeft={<Archive size={14} />} onClick={archive} loading={deleteTask.isPending}>Archive</Button>
         <div className="ml-auto"><StatusChip status={task.status} /></div>
         <PriorityChip priority={task.priority} />

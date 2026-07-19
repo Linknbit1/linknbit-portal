@@ -19,7 +19,9 @@ export function RichRenderer({ doc, className }: RichRendererProps) {
     {
       editable: false,
       extensions: [
-        StarterKit.configure({ link: { openOnClick: true, protocols: ['http', 'https', 'mailto'] } }),
+        StarterKit.configure({
+          link: { openOnClick: true, protocols: ['http', 'https', 'mailto'], HTMLAttributes: { target: '_blank', rel: 'noopener noreferrer' } },
+        }),
         Mention.configure({ HTMLAttributes: { class: 'mention' } }),
       ],
       content: doc ?? undefined,

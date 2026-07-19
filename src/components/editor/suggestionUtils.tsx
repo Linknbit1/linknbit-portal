@@ -31,7 +31,11 @@ export function renderSuggestion<P extends object>(List: ComponentType<P>) {
       el.style.zIndex = '70'
       const rect = clientRect?.()
       if (!rect) return
-      const top = Math.min(rect.bottom + 6, window.innerHeight - 12)
+      const h = el.offsetHeight || 240
+      const spaceBelow = window.innerHeight - rect.bottom
+      // Flip above the caret when there isn't room below (comment composers etc.).
+      const openUp = spaceBelow < h + 12 && rect.top > h + 12
+      const top = openUp ? Math.max(8, rect.top - h - 6) : rect.bottom + 6
       const left = Math.max(8, Math.min(rect.left, window.innerWidth - 268))
       el.style.top = `${top}px`
       el.style.left = `${left}px`
