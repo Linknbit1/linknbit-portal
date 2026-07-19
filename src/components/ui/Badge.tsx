@@ -9,27 +9,33 @@ interface BadgeProps {
   dot?: boolean
 }
 
+/**
+ * Shares StatusChip's pill treatment (uppercase micro-label, tinted fill, matching
+ * border) so status-ish UI reads as one family — but keeps softly rounded corners
+ * rather than StatusChip's fully-rounded edges.
+ */
 export function Badge({ children, variant = 'default', size = 'sm', className, dot }: BadgeProps) {
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 font-ui font-semibold rounded-xs tracking-wide',
+        'inline-flex items-center gap-1.5 rounded-sm font-ui font-semibold uppercase tracking-[0.04em] leading-[1.4] whitespace-nowrap border',
         {
-          'text-caption px-1.5 py-0.5': size === 'sm',
-          'text-body-sm px-2 py-1': size === 'md',
+          'py-0.75 px-2.25 text-[10.5px]': size === 'sm',
+          'py-1 px-2.5 text-[11.5px]': size === 'md',
         },
         {
-          'bg-surface-2 text-text-2 border border-border-default': variant === 'default',
-          'bg-success/10 text-success border border-success/30': variant === 'success',
-          'bg-warning/10 text-warning border border-warning/30': variant === 'warning',
-          'bg-error/10 text-error border border-error/30': variant === 'error',
-          'bg-info/10 text-info border border-info/30': variant === 'info',
-          'bg-transparent text-text-3': variant === 'ghost',
+          'bg-surface-3 text-text-2 border-border-default': variant === 'default',
+          'bg-success/12 text-success border-success/30': variant === 'success',
+          'bg-warning/12 text-warning border-warning/30': variant === 'warning',
+          'bg-error/12 text-error border-error/30': variant === 'error',
+          'bg-info/12 text-info border-info/30': variant === 'info',
+          // Borderless look, but keeps the same box so rows stay aligned.
+          'bg-transparent text-text-3 border-transparent': variant === 'ghost',
         },
         className,
       )}
     >
-      {dot && <span className="size-1.5 rounded-full bg-current" />}
+      {dot && <span className="size-1.25 rounded-full bg-current shrink-0" />}
       {children}
     </span>
   )
