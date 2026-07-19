@@ -99,7 +99,7 @@ export default function ProjectDetailPage() {
     return (
       <div className="flex flex-col flex-1">
         <Topbar title="Project" back="/admin/projects" />
-        <div className="p-4 lg:p-6 max-w-content mx-auto w-full space-y-3">
+        <div className="p-4 lg:px-8 lg:py-7 space-y-3">
           <Skeleton className="h-28" />
           <Skeleton className="h-64" />
         </div>
@@ -144,7 +144,7 @@ export default function ProjectDetailPage() {
   return (
     <div className="flex flex-col flex-1">
       <Topbar title={project.name} back="/admin/projects" />
-      <div className="p-4 lg:p-6 max-w-content mx-auto w-full space-y-5">
+      <div className="p-4 lg:px-8 lg:py-7 space-y-5">
         {/* Summary header */}
         <div className="bg-surface-1 border border-border-default rounded-xl p-5">
           <div className="flex flex-wrap items-start gap-3">

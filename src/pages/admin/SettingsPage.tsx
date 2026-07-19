@@ -407,7 +407,7 @@ export default function SettingsPage({ mobileSection }: { mobileSection?: string
     <div className="flex flex-col flex-1">
       <Topbar title="Settings" back="/more" />
 
-      <div className="px-4 py-6 lg:p-6 max-w-content mx-auto w-full">
+      <div className="px-4 py-6 lg:px-8 lg:py-7">
         {showHub ? (
           <div className="flex flex-col gap-2.5">
             {sections.map((s) => (

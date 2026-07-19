@@ -87,7 +87,7 @@ export default function DashboardPage() {
     <div className="flex flex-col flex-1">
       <Topbar title="Dashboard" />
 
-      <div className="px-4 py-6 lg:p-7 flex flex-col gap-6 max-w-content mx-auto w-full">
+      <div className="px-4 py-6 lg:px-8 lg:py-7 flex flex-col gap-6">
 
         {/* ── Greeting row ── */}
         <div className="flex items-center justify-between gap-4">

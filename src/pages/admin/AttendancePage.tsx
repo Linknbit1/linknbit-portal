@@ -3306,7 +3306,6 @@ function SettingsForm({ settings }: { settings: AttendanceSettings }) {
         </div>
         <div>
           <h3 className="font-display font-semibold text-[15px] text-text-1">Attendance Settings</h3>
-          <p className="font-ui text-[12px] text-text-4">Configure office hours, XP rewards, and network restrictions</p>
         </div>
       </div>
 
@@ -3526,7 +3525,7 @@ export default function AttendancePage() {
     <div className="flex flex-col flex-1">
       <Topbar title="Attendance" />
 
-      <div className="px-4 py-6 lg:p-6 flex flex-col gap-6 max-w-content mx-auto w-full">
+      <div className="px-4 py-6 lg:px-8 lg:py-7 flex flex-col gap-6">
 
         {/* Self Check-In Card */}
         <AttendanceCheckInCard />

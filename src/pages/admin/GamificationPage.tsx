@@ -982,8 +982,8 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
 
   return (
     <div className="flex flex-col flex-1">
-      <Topbar title={mobileSection ? sectionLabel : 'Gamification'} back={mobileSection ? true : undefined} />
-      <div className="px-4 py-6 lg:p-6 flex flex-col gap-5 max-w-content mx-auto w-full">
+      <Topbar title={mobileSection ? sectionLabel : 'Gamification'} back={!isDesktop && mobileSection ? true : undefined} />
+      <div className="px-4 py-6 lg:px-8 lg:py-7 flex flex-col gap-6">
         {/* My LP / reputation summary — hidden on focused section screens */}
         {!mobileSection && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -1038,7 +1038,6 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
         {!showHub && activeTab === 'leaderboard' && (
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between gap-3">
-              <p className="font-mono text-[11.5px] text-text-3">Ranked by Experience Points earned this month · cash rewards go to top performers (≥500 XP)</p>
               {isRecognizer && <Button size="sm" className="shrink-0" onClick={() => setShoutoutOpen(true)}><Star size={13} /> Give Shoutout</Button>}
             </div>
 
@@ -1115,7 +1114,6 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
         {!showHub && activeTab === 'board' && (
           <div className="flex flex-col gap-5">
             <div className="flex items-center justify-between gap-3">
-              <p className="font-mono text-[11.5px] text-text-3">Claim a task, complete it, then submit proof for approval to earn XP.</p>
               {isRecognizer && <Button size="sm" className="shrink-0" onClick={() => setTaskModal('new')}><Plus size={13} /> Post Task</Button>}
             </div>
             {tasksLoading && <div className="flex justify-center py-16 text-text-4"><Loader2 size={20} className="animate-spin" /></div>}
@@ -1252,7 +1250,6 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
         {!showHub && activeTab === 'shoutouts' && (
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between gap-3">
-              <p className="font-mono text-[11.5px] text-text-3">Recognition issued by managers & HR. Each is HR-reviewed before XP is awarded.</p>
               {isRecognizer && <Button size="sm" className="shrink-0" onClick={() => setShoutoutOpen(true)}><Plus size={13} /> Give Shoutout</Button>}
             </div>
 
@@ -1317,7 +1314,6 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
         {/* ── BADGES ── */}
         {!showHub && activeTab === 'badges' && (
           <div className="flex flex-col gap-3">
-            <p className="font-mono text-[11.5px] text-text-3">Badges are earned automatically by hitting milestones — or awarded by HR.</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
               {badges.map((b) => {
                 const earned = earnedBadgeIds.has(b.id)
@@ -1765,11 +1761,13 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
   )
 }
 
-/** Mobile-only /gamification/:section stack screen; redirects on desktop. */
+/**
+ * /gamification/:section — a stack screen on mobile, a full page on desktop
+ * (the sidebar dropdown navigates here instead of switching an in-page tab).
+ */
 export function GamificationSectionScreen() {
-  const isDesktop = useIsDesktop()
   const { section } = useParams()
   const valid = GAMIFICATION_SECTIONS.some((s) => s.key === section)
-  if (isDesktop || !section || !valid) return <Navigate to="/gamification" replace />
+  if (!section || !valid) return <Navigate to="/gamification" replace />
   return <GamificationPage mobileSection={section} />
 }

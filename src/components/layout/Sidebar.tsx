@@ -1,8 +1,9 @@
+import { useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, ChevronDown } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { useAuthContext } from '../../context/AuthContext'
-import { visibleNavItems } from './navItems'
+import { visibleNavItems, type NavItem } from './navItems'
 import { LinknbitMark } from '../brand/LinknbitLogo'
 import { InstallAppButton } from '../pwa/InstallAppButton'
 
@@ -30,32 +31,9 @@ export function Sidebar() {
         <p className="text-[10px] font-ui font-semibold text-text-4 uppercase tracking-widest p-2">
           Main Menu
         </p>
-        {navItems.map((item) => {
-          const isActive = location.pathname.startsWith(item.to)
-          return (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={cn(
-                'flex items-center gap-2.5 px-2.5 py-2 rounded-sm font-ui font-medium text-body-sm transition-colors relative',
-                isActive
-                  ? 'bg-brand-red/13 text-white nav-active-indicator'
-                  : 'text-text-2 hover:bg-surface-2 hover:text-text-1',
-              )}
-            >
-              <item.icon
-                size={16}
-                className={cn('shrink-0', isActive ? 'text-brand-red' : 'text-text-3')}
-              />
-              <span>{item.label}</span>
-              {item.badge && item.badge > 0 && (
-                <span className="ml-auto bg-brand-red text-white font-ui font-bold text-[10px] px-1.5 py-px rounded-full leading-tight">
-                  {item.badge}
-                </span>
-              )}
-            </NavLink>
-          )
-        })}
+        {navItems.map((item) => (
+          <NavRow key={item.to} item={item} pathname={location.pathname} />
+        ))}
       </nav>
 
       {/* Install app (shown only when installable) */}
@@ -63,5 +41,74 @@ export function Sidebar() {
         <InstallAppButton />
       </div>
     </aside>
+  )
+}
+
+const rowCls = (active: boolean) =>
+  cn(
+    'flex items-center gap-2.5 px-2.5 py-2 rounded-sm font-ui font-medium text-body-sm transition-colors relative',
+    active ? 'bg-brand-red/13 text-white nav-active-indicator' : 'text-text-2 hover:bg-surface-2 hover:text-text-1',
+  )
+
+/** A nav entry — a plain link, or an expandable group when it has sub-pages. */
+function NavRow({ item, pathname }: { item: NavItem; pathname: string }) {
+  const inSection = pathname.startsWith(item.to)
+  // Expanded by default while you're inside the section; an explicit toggle wins
+  // until you navigate elsewhere (derived, so no state sync needed).
+  const [toggled, setToggled] = useState<boolean | null>(null)
+  const open = toggled ?? inSection
+  const setOpen = (fn: (v: boolean) => boolean) => setToggled(fn(open))
+
+  if (!item.children?.length) {
+    return (
+      <NavLink to={item.to} className={rowCls(inSection)}>
+        <item.icon size={16} className={cn('shrink-0', inSection ? 'text-brand-red' : 'text-text-3')} />
+        <span>{item.label}</span>
+        {item.badge && item.badge > 0 && (
+          <span className="ml-auto bg-brand-red text-white font-ui font-bold text-[10px] px-1.5 py-px rounded-full leading-tight">
+            {item.badge}
+          </span>
+        )}
+      </NavLink>
+    )
+  }
+
+  return (
+    <div>
+      <div className={cn(rowCls(inSection), 'pr-1')}>
+        <NavLink to={item.to} className="flex items-center gap-2.5 flex-1 min-w-0">
+          <item.icon size={16} className={cn('shrink-0', inSection ? 'text-brand-red' : 'text-text-3')} />
+          <span className="truncate">{item.label}</span>
+        </NavLink>
+        <button
+          onClick={() => setOpen((v) => !v)}
+          aria-label={open ? `Collapse ${item.label}` : `Expand ${item.label}`}
+          aria-expanded={open}
+          className="size-6 rounded flex items-center justify-center text-text-4 hover:text-text-1 shrink-0"
+        >
+          <ChevronDown size={13} className={cn('transition-transform', open && 'rotate-180')} />
+        </button>
+      </div>
+
+      {open && (
+        <div className="mt-px mb-1 ml-[1.45rem] pl-2.5 border-l border-border-subtle flex flex-col gap-px">
+          {item.children.map((child) => {
+            const active = pathname === child.to
+            return (
+              <NavLink
+                key={child.to}
+                to={child.to}
+                className={cn(
+                  'px-2.5 py-1.5 rounded-sm font-ui text-[12.5px] transition-colors',
+                  active ? 'text-white bg-brand-red/13 font-medium' : 'text-text-3 hover:text-text-1 hover:bg-surface-2',
+                )}
+              >
+                {child.label}
+              </NavLink>
+            )
+          })}
+        </div>
+      )}
+    </div>
   )
 }

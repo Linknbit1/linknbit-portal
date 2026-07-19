@@ -855,7 +855,7 @@ export default function PeoplePage() {
   return (
     <div className="flex flex-col flex-1">
       <Topbar title="People" back="/more" />
-      <div className="px-4 py-6 lg:p-6 flex flex-col gap-5 max-w-content mx-auto w-full">
+      <div className="px-4 py-6 lg:px-8 lg:py-7 flex flex-col gap-6">
         <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
           <div className="relative flex-1 sm:max-w-sm">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-4" />

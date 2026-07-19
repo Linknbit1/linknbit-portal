@@ -1186,7 +1186,7 @@ export default function EmployeeAttendancePage() {
     <div className="flex flex-col flex-1">
       <Topbar title="My Attendance" />
 
-      <div className="px-4 py-6 lg:p-6 flex flex-col gap-6 max-w-content mx-auto w-full">
+      <div className="px-4 py-6 lg:px-8 lg:py-7 flex flex-col gap-6">
         <AttendanceCheckInCard />
 
         <MyDevicesCard />
