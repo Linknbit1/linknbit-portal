@@ -1049,37 +1049,8 @@ export function LeaveTab() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Leave types management */}
-      <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
-        <SectionToolbar icon={Plane} title="Leave Types">
-          <Button size="sm" onClick={openNewType}>
-            <Plus size={13} /> Add Type
-          </Button>
-        </SectionToolbar>
-        {types.length === 0 ? (
-          <div className="py-10 text-center font-ui text-[13px] text-text-4">No leave types yet — add one to get started.</div>
-        ) : (
-          <div className="divide-y divide-border-subtle">
-            {types.map((t) => (
-              <div key={t.id} className="flex items-center gap-3 px-5 py-3">
-                <span className={cn('size-2.5 rounded-full shrink-0', leaveColor(t.color).dot)} />
-                <span className="font-ui font-medium text-[13px] text-text-1 flex-1">{t.name}</span>
-                {!t.is_active && <span className="text-[10px] font-mono text-text-4 uppercase">inactive</span>}
-                <span className="font-mono text-[12px] text-text-3">{t.days_allowed} days / year</span>
-                <button onClick={() => openEditType(t)} className="ml-2 text-text-4 hover:text-text-1 transition-colors" aria-label="Edit">
-                  <Pencil size={14} />
-                </button>
-                <button onClick={() => deleteType(t)} className="text-text-4 hover:text-error transition-colors" aria-label="Delete">
-                  <Trash2 size={14} />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Leave requests review */}
+    <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-5 items-start">
+      {/* Leave requests review (main) */}
       <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
         <SectionToolbar icon={ClipboardList} title="Leave Requests">
           <MonthStepper filter={monthFilter} />
@@ -1151,6 +1122,41 @@ export function LeaveTab() {
               </div>
             ))}
                 </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Leave types (compact sidebar) */}
+      <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden lg:sticky lg:top-6">
+        <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-border-subtle">
+          <span className="flex items-center gap-2 font-ui font-semibold text-[13px] text-text-1">
+            <Plane size={14} className="text-text-3" /> Leave Types
+          </span>
+          <button onClick={openNewType} className="size-6 rounded-sm flex items-center justify-center text-text-3 hover:text-text-1 hover:bg-surface-2" aria-label="Add leave type">
+            <Plus size={14} />
+          </button>
+        </div>
+        {types.length === 0 ? (
+          <div className="py-8 px-4 text-center font-ui text-[12px] text-text-4">No leave types yet.</div>
+        ) : (
+          <div className="divide-y divide-border-subtle">
+            {types.map((t) => (
+              <div key={t.id} className="flex items-center gap-2 px-4 py-2.5 group">
+                <span className={cn('size-2.5 rounded-full shrink-0', leaveColor(t.color).dot)} />
+                <div className="flex-1 min-w-0">
+                  <p className="font-ui font-medium text-[12.5px] text-text-1 truncate">
+                    {t.name}{!t.is_active && <span className="ml-1.5 text-[9px] font-mono text-text-4 uppercase">inactive</span>}
+                  </p>
+                  <p className="font-mono text-[10.5px] text-text-4">{t.days_allowed} days / year</p>
+                </div>
+                <button onClick={() => openEditType(t)} className="size-6 rounded-sm flex items-center justify-center text-text-4 hover:text-text-1 opacity-0 group-hover:opacity-100 transition-opacity" aria-label="Edit">
+                  <Pencil size={13} />
+                </button>
+                <button onClick={() => deleteType(t)} className="size-6 rounded-sm flex items-center justify-center text-text-4 hover:text-error opacity-0 group-hover:opacity-100 transition-opacity" aria-label="Delete">
+                  <Trash2 size={13} />
+                </button>
               </div>
             ))}
           </div>
