@@ -2088,6 +2088,105 @@ export type Database = {
           },
         ]
       }
+      standup_entries: {
+        Row: {
+          blocker: string | null
+          created_at: string
+          id: string
+          minutes_spent: number
+          order_index: number
+          project_id: string
+          standup_id: string
+          task_id: string | null
+          work_done: string
+        }
+        Insert: {
+          blocker?: string | null
+          created_at?: string
+          id?: string
+          minutes_spent: number
+          order_index?: number
+          project_id: string
+          standup_id: string
+          task_id?: string | null
+          work_done: string
+        }
+        Update: {
+          blocker?: string | null
+          created_at?: string
+          id?: string
+          minutes_spent?: number
+          order_index?: number
+          project_id?: string
+          standup_id?: string
+          task_id?: string | null
+          work_done?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "standup_entries_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "standup_entries_standup_id_fkey"
+            columns: ["standup_id"]
+            isOneToOne: false
+            referencedRelation: "standups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "standup_entries_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      standups: {
+        Row: {
+          created_at: string
+          id: string
+          is_late: boolean
+          notes: string | null
+          profile_id: string
+          standup_date: string
+          submitted_at: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_late?: boolean
+          notes?: string | null
+          profile_id: string
+          standup_date: string
+          submitted_at?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_late?: boolean
+          notes?: string | null
+          profile_id?: string
+          standup_date?: string
+          submitted_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "standups_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subtasks: {
         Row: {
           assignee_id: string | null
@@ -2574,6 +2673,21 @@ export type Database = {
           profile_id: string
         }[]
       }
+      fn_standup_window: {
+        Args: { p_profile: string }
+        Returns: {
+          already_done: boolean
+          closes_at: string
+          is_open: boolean
+          is_required: boolean
+          is_working_day: boolean
+          opens_at: string
+          server_now: string
+          standup_date: string
+          timezone: string
+          work_end_time: string
+        }[]
+      }
       fn_unwind_reward_pool: {
         Args: {
           p_pool: Database["public"]["Tables"]["reward_pools"]["Row"]
@@ -2648,6 +2762,34 @@ export type Database = {
         Returns: undefined
       }
       shares_team_with: { Args: { p_other: string }; Returns: boolean }
+      standup_roster: {
+        Args: { p_date: string }
+        Returns: {
+          avatar_url: string
+          is_late: boolean
+          name: string
+          on_leave: boolean
+          profile_id: string
+          role: string
+          standup_id: string
+          submitted_at: string
+        }[]
+      }
+      standup_window: {
+        Args: never
+        Returns: {
+          already_done: boolean
+          closes_at: string
+          is_open: boolean
+          is_required: boolean
+          is_working_day: boolean
+          opens_at: string
+          server_now: string
+          standup_date: string
+          timezone: string
+          work_end_time: string
+        }[]
+      }
       submit_quest_task: {
         Args: {
           p_claim_id: string
@@ -2655,6 +2797,10 @@ export type Database = {
           p_proof_url?: string
         }
         Returns: undefined
+      }
+      submit_standup: {
+        Args: { p_entries: Json; p_notes?: string }
+        Returns: string
       }
     }
     Enums: {

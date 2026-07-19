@@ -28,8 +28,8 @@
     "hash": "bacdb856045a4f1e5febd55adf324854"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\App.tsx": {
-    "mtime": 1784480345.8113468,
-    "hash": "166703f911803ae9b92786f1640cee60"
+    "mtime": 1784488832.2563894,
+    "hash": "0e0e12cb08af53074e501b979cbbb47b"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\main.tsx": {
     "mtime": 1781531066.662119,
@@ -111,6 +111,10 @@
     "mtime": 1784412991.1490076,
     "hash": "46b905ea0915a85f5be1ae3936e97cc3"
   },
+  "D:\\Projects\\react\\linknbit-portal\\src\\api\\standups.ts": {
+    "mtime": 1784488665.8365154,
+    "hash": "3fb6f165d9e903b03fc7717ed103aa8c"
+  },
   "D:\\Projects\\react\\linknbit-portal\\src\\api\\subtasks.ts": {
     "mtime": 1784413023.979842,
     "hash": "41f10945a1292ecf9203089edcaa6c01"
@@ -188,8 +192,8 @@
     "hash": "381590d6959936a097ed04b6b7a18c8e"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\navItems.ts": {
-    "mtime": 1784480365.1014109,
-    "hash": "830dcc21d062a7121ed81868160ea336"
+    "mtime": 1784488843.091681,
+    "hash": "b7833f860bb20aa5d31733b2bc087d0f"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\PrivateRoute.tsx": {
     "mtime": 1781661659.0246265,
@@ -320,8 +324,8 @@
     "hash": "5a91969520c748c1b8b72b0455193280"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\MultiSelectPeople.tsx": {
-    "mtime": 1784481558.4688501,
-    "hash": "1c09f17a69f75d6b5619ed74a8347ee7"
+    "mtime": 1784487586.4014232,
+    "hash": "0d1ce40ebc4f8a6bc5a6c4de62636f9d"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\PeriodStepper.tsx": {
     "mtime": 1784370312.8455398,
@@ -479,6 +483,10 @@
     "mtime": 1784413293.4438727,
     "hash": "8f8d889f315547755ea2d29e40ae0af2"
   },
+  "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useStandups.ts": {
+    "mtime": 1784488723.0739422,
+    "hash": "3fe5e24d477193f11605d211b832fa1d"
+  },
   "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useSubtasks.ts": {
     "mtime": 1784413187.9673426,
     "hash": "409e54f02ee962fea406cbd3a8f67950"
@@ -602,6 +610,14 @@
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\ProfilePage.tsx": {
     "mtime": 1784370312.8583338,
     "hash": "2f875a5dcfa136abbbbf34342685954c"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\StandupForm.tsx": {
+    "mtime": 1784488759.639412,
+    "hash": "aec09b937e7479992548cfda9ccc5c0d"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\StandupPage.tsx": {
+    "mtime": 1784488808.0902655,
+    "hash": "e7207a259496ab5689a24f3a5cdd9f46"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\AddProjectMemberModal.tsx": {
     "mtime": 1784413507.385708,
@@ -752,8 +768,8 @@
     "hash": "b24280e4998d0785bb5c9ea74890ca64"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\types\\database.ts": {
-    "mtime": 1784481476.2107413,
-    "hash": "d50d63e0e611ab649ac54f81b8c7f87d"
+    "mtime": 1784488647.6022449,
+    "hash": "c18f63a2621f3f2547a88454da17733a"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\types\\index.ts": {
     "mtime": 1784449851.2897952,
@@ -1222,6 +1238,10 @@
   "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260719150001_task_assignees.sql": {
     "mtime": 1784480541.4473238,
     "hash": "45396554a45e8ac23723fc3c6d43b92a"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260720100001_create_standups.sql": {
+    "mtime": 1784488551.6771324,
+    "hash": "41e2e862e01a5ed1cf529b6d5cd41c6c"
   },
   "D:\\Projects\\react\\linknbit-portal\\AGENTS.md": {
     "mtime": 1778637729.709293,
