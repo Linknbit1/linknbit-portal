@@ -18,6 +18,7 @@ import ProfilePage from './pages/ProfilePage'
 import MorePage from './pages/MorePage'
 import NotificationsPage from './pages/NotificationsPage'
 import InboxPage from './pages/InboxPage'
+import StandupPage from './pages/StandupPage'
 import { AttendanceSectionScreen, TeamAttendanceSectionScreen } from './pages/AttendanceMobile'
 import { GamificationSectionScreen } from './pages/admin/GamificationPage'
 import AdminProjectsPage from './pages/admin/ProjectsPage'
@@ -68,6 +69,7 @@ export default function App() {
                 {/* Mobile-only list; redirects to /dashboard on desktop (bell dropdown). */}
                 <Route path="/notifications" element={<NotificationsPage />} />
                 <Route path="/inbox" element={<InboxPage />} />
+                <Route path="/standup" element={<StandupPage />} />
                 <Route path="/attendance" element={<AttendancePage />} />
                 <Route path="/attendance/team/:sub" element={<TeamAttendanceSectionScreen />} />
                 <Route path="/attendance/:section" element={<AttendanceSectionScreen />} />
