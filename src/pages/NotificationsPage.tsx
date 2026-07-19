@@ -61,7 +61,7 @@ export default function NotificationsPage() {
                 key={notif.id}
                 onClick={() => {
                   if (!notif.read) markRead(notif.id)
-                  const href = notificationHref(notif.resource_type)
+                  const href = notificationHref(notif.resource_type, notif.resource_id)
                   if (href) navigate(href)
                 }}
                 className={cn(

@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react'
-import { Search, Plus, CheckSquare, ListTodo, AlertOctagon, Clock, LayoutList, Columns } from 'lucide-react'
+import { Search, Plus, CheckSquare, ListTodo, AlertOctagon, Clock, LayoutList, Columns, SlidersHorizontal } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Select } from '../../components/ui/Select'
-import { Avatar } from '../../components/ui/Avatar'
+import { DatePicker } from '../../components/ui/DatePicker'
+import { usePeople } from '../../hooks/usePeople'
+import { Avatar, AvatarGroup } from '../../components/ui/Avatar'
 import { Skeleton } from '../../components/ui/Skeleton'
 import { ServiceChip } from '../../components/shared/ServiceChip'
 import { StatusChip } from '../../components/shared/StatusChip'
@@ -17,18 +19,43 @@ import { TaskBoard } from '../../components/shared/TaskBoard'
 import { TaskFormModal } from './TaskFormModal'
 import { TaskDetailDrawer } from './TaskDetailDrawer'
 import type { Priority, TaskStatus } from '../../types'
+import type { TaskListItem } from '../../api/tasks'
 
 const STATUS_ORDER: TaskStatus[] = ['backlog', 'todo', 'in_progress', 'review', 'approved', 'completed', 'blocked']
 const PRIORITY_ORDER: Priority[] = ['critical', 'high', 'medium', 'low']
+const PRIORITY_RANK: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 }
+const SORT_OPTIONS = [
+  { value: 'recent', label: 'Newest' },
+  { value: 'due_asc', label: 'Due date' },
+  { value: 'priority', label: 'Priority' },
+  { value: 'title', label: 'Title A–Z' },
+]
+
+function sortTasks(list: TaskListItem[], sort: string): TaskListItem[] {
+  const arr = [...list]
+  switch (sort) {
+    case 'due_asc': arr.sort((a, b) => (a.due_date ?? '9999').localeCompare(b.due_date ?? '9999')); break
+    case 'priority': arr.sort((a, b) => (PRIORITY_RANK[a.priority] ?? 9) - (PRIORITY_RANK[b.priority] ?? 9)); break
+    case 'title': arr.sort((a, b) => a.title.localeCompare(b.title)); break
+    default: break
+  }
+  return arr
+}
 
 export default function TasksPage() {
   const { data: services = [] } = useServices()
+  const { data: people = [] } = usePeople()
   const { data: tasks = [], isLoading } = useTasks()
 
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [priorityFilter, setPriorityFilter] = useState('')
   const [serviceFilter, setServiceFilter] = useState('')
+  const [assigneeFilter, setAssigneeFilter] = useState('')
+  const [dueFrom, setDueFrom] = useState('')
+  const [dueTo, setDueTo] = useState('')
+  const [sortBy, setSortBy] = useState('recent')
+  const [showAdv, setShowAdv] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [openTaskId, setOpenTaskId] = useState<string | null>(null)
   const [view, setView] = useState<'table' | 'board'>('table')
@@ -42,16 +69,21 @@ export default function TasksPage() {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
-    return tasks.filter((t) =>
+    const list = tasks.filter((t) =>
       (!q || t.title.toLowerCase().includes(q) || (t.project?.name ?? '').toLowerCase().includes(q)) &&
       (!statusFilter || t.status === statusFilter) &&
       (!priorityFilter || t.priority === priorityFilter) &&
-      (!serviceFilter || t.service_type === serviceFilter || t.project?.service_type === serviceFilter))
-  }, [tasks, search, statusFilter, priorityFilter, serviceFilter])
+      (!serviceFilter || t.service_type === serviceFilter || t.project?.service_type === serviceFilter) &&
+      (!assigneeFilter || t.assignees.some((a) => a.id === assigneeFilter)) &&
+      (!dueFrom || (!!t.due_date && t.due_date.slice(0, 10) >= dueFrom)) &&
+      (!dueTo || (!!t.due_date && t.due_date.slice(0, 10) <= dueTo)))
+    return sortTasks(list, sortBy)
+  }, [tasks, search, statusFilter, priorityFilter, serviceFilter, assigneeFilter, dueFrom, dueTo, sortBy])
 
   const statusOptions = [{ value: '', label: 'All statuses' }, ...STATUS_ORDER.map((s) => ({ value: s, label: STATUS_LABELS[s] }))]
   const priorityOptions = [{ value: '', label: 'All priorities' }, ...PRIORITY_ORDER.map((p) => ({ value: p, label: PRIORITY_LABELS[p] }))]
   const serviceOptions = [{ value: '', label: 'All services' }, ...services.map((s) => ({ value: s.slug, label: s.name, dot: s.color }))]
+  const assigneeOptions = [{ value: '', label: 'All assignees' }, ...people.filter((p) => p.is_active).map((p) => ({ value: p.id, label: p.name, avatar: { name: p.name, url: p.avatar_url } }))]
 
   return (
     <div className="flex flex-col flex-1">
@@ -76,6 +108,13 @@ export default function TasksPage() {
           <Select value={statusFilter} onChange={setStatusFilter} options={statusOptions} size="sm" />
           <Select value={priorityFilter} onChange={setPriorityFilter} options={priorityOptions} size="sm" />
           <Select value={serviceFilter} onChange={setServiceFilter} options={serviceOptions} size="sm" />
+          <Select value={sortBy} onChange={setSortBy} options={SORT_OPTIONS} size="sm" label="Sort" />
+          <button
+            onClick={() => setShowAdv((v) => !v)}
+            className={cn('h-8 px-2.5 rounded-sm border flex items-center gap-1.5 font-ui text-[11.5px] transition-colors', showAdv || dueFrom || dueTo || assigneeFilter ? 'border-border-focus text-text-1 bg-surface-2' : 'border-border-default text-text-3 hover:text-text-1')}
+          >
+            <SlidersHorizontal size={13} /> Filters
+          </button>
           <div className="ml-auto flex items-center gap-1 bg-surface-1 border border-border-default rounded-lg p-1">
             {(['table', 'board'] as const).map((v) => (
               <button
@@ -91,6 +130,18 @@ export default function TasksPage() {
             ))}
           </div>
         </div>
+
+        {showAdv && (
+          <div className="flex flex-wrap items-center gap-2 bg-surface-1 border border-border-default rounded-lg p-2.5">
+            <span className="font-mono text-[10px] uppercase tracking-wider text-text-4 self-center">Due between</span>
+            <DatePicker value={dueFrom} onChange={setDueFrom} placeholder="From" className="w-40" />
+            <DatePicker value={dueTo} onChange={setDueTo} placeholder="To" minDate={dueFrom || undefined} className="w-40" />
+            <Select value={assigneeFilter} onChange={setAssigneeFilter} options={assigneeOptions} size="sm" />
+            {(dueFrom || dueTo || assigneeFilter) && (
+              <button onClick={() => { setDueFrom(''); setDueTo(''); setAssigneeFilter('') }} className="h-8 px-2.5 rounded-sm text-[11.5px] text-text-3 hover:text-error transition-colors">Clear</button>
+            )}
+          </div>
+        )}
 
         {isLoading ? (
           <div className="space-y-2">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-14" />)}</div>
@@ -129,9 +180,11 @@ export default function TasksPage() {
                         : <span className="text-text-4 text-[12px]">—</span>}
                     </td>
                     <td className="px-4 py-3">
-                      {t.assignee
-                        ? <span className="flex items-center gap-2"><Avatar name={t.assignee.name} src={t.assignee.avatar_url ?? undefined} size="xs" /><span className="font-ui text-[12px] text-text-2">{t.assignee.name}</span></span>
-                        : <span className="text-text-4 text-[12px]">Unassigned</span>}
+                      {t.assignees.length === 1
+                        ? <span className="flex items-center gap-2"><Avatar name={t.assignees[0].name} src={t.assignees[0].avatar_url ?? undefined} size="xs" /><span className="font-ui text-[12px] text-text-2">{t.assignees[0].name}</span></span>
+                        : t.assignees.length > 1
+                          ? <AvatarGroup users={t.assignees.map((a) => ({ id: a.id, name: a.name, avatarUrl: a.avatar_url ?? undefined }))} max={4} size="xs" />
+                          : <span className="text-text-4 text-[12px]">Unassigned</span>}
                     </td>
                   </tr>
                 ))}

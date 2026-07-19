@@ -133,19 +133,46 @@ self.addEventListener('push', (event) => {
   })())
 })
 
-// Focus an existing window if one is open rather than spawning duplicates.
+// Map a notification's resource to an in-app path (mirrors notificationHref).
+function pathForNotification(data) {
+  const id = data.resourceId
+  switch (data.resourceType) {
+    case 'task': return id ? '/admin/tasks/' + id : '/inbox'
+    case 'project': return id ? '/admin/projects/' + id : '/inbox'
+    case 'leave_request':
+    case 'wfh_request':
+    case 'attendance_exception':
+    case 'overtime_request':
+    case 'holiday':
+    case 'company_wfh_day':
+    case 'working_saturday':
+      return '/attendance'
+    case 'quest_task':
+    case 'shoutout':
+    case 'badge':
+    case 'redemption':
+    case 'reward_pool':
+    case 'employee_of_the_month':
+      return '/gamification'
+    case 'enrolled_device': return '/settings/devices'
+    default: return '/inbox'
+  }
+}
+
+// Focus an existing window (and navigate it) or open a new one at the resource.
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()
   const data = event.notification.data || {}
+  const path = pathForNotification(data)
 
   event.waitUntil((async () => {
     const clientList = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
-    const target = new URL('/', self.location.origin)
+    const target = new URL(path, self.location.origin)
     if (data.notificationId) target.searchParams.set('n', data.notificationId)
 
     for (const client of clientList) {
       if (new URL(client.url).origin === self.location.origin && 'focus' in client) {
-        client.postMessage({ type: 'NOTIFICATION_CLICK', data })
+        client.postMessage({ type: 'NOTIFICATION_CLICK', data, href: path })
         return client.focus()
       }
     }

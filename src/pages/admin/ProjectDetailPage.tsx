@@ -7,7 +7,7 @@ import {
 import { Topbar } from '../../components/layout/Topbar'
 import { Button } from '../../components/ui/Button'
 import { ProgressBar } from '../../components/ui/ProgressBar'
-import { Avatar } from '../../components/ui/Avatar'
+import { Avatar, AvatarGroup } from '../../components/ui/Avatar'
 import { Skeleton } from '../../components/ui/Skeleton'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { ServiceChip } from '../../components/shared/ServiceChip'
@@ -20,6 +20,7 @@ import { ProjectFilesTab } from './ProjectFilesTab'
 import { ProjectFormModal } from './ProjectFormModal'
 import { useCanAccess } from '../../hooks/useRoleFlags'
 import { useProjectWatch } from '../../hooks/useWatchers'
+import { useProjectFiles } from '../../hooks/useAttachments'
 import { cn } from '../../lib/cn'
 import { formatDate, formatCurrency, isOverdue } from '../../lib/utils'
 import { isAuthoritative } from '../../lib/roles'
@@ -60,6 +61,7 @@ export default function ProjectDetailPage() {
   const { data: tasks = [] } = useTasks({ projectId: id })
   const { data: members = [] } = useProjectMembers(id)
   const { data: approvals = [] } = useApprovals({ projectId: id })
+  const { data: projectFiles = [] } = useProjectFiles(id)
   useRealtimeTasks(id)
 
   const updateProject = useUpdateProject()
@@ -197,7 +199,7 @@ export default function ProjectDetailPage() {
                   projectView === t.key ? 'bg-surface-3 text-text-1 shadow-sm' : 'text-text-3 hover:text-text-1',
                 )}
               >
-                <t.icon size={13} /> {t.label}{t.key === 'team' ? ` (${members.length})` : ''}
+                <t.icon size={13} /> {t.label}{t.key === 'team' ? ` (${members.length})` : t.key === 'files' && projectFiles.length ? ` (${projectFiles.length})` : ''}
               </button>
             ))}
           </div>
@@ -250,7 +252,7 @@ export default function ProjectDetailPage() {
         )}
 
         {projectView === 'overview' && (
-          <div className="bg-surface-1 border border-border-default rounded-xl p-5 max-w-3xl">
+          <div className="bg-surface-1 border border-border-default rounded-xl p-5">
             <DocEditor
               key={id}
               value={project.doc}
@@ -375,12 +377,14 @@ function TaskList({ tasks, onOpenTask }: { tasks: TaskListItem[]; onOpenTask: (i
         >
           <span className="flex-1 min-w-0">
             <span className="font-ui text-[13px] text-text-1 truncate block">{t.title}</span>
-            {t.due_date && <span className="font-mono text-[10.5px] text-text-4">{formatDate(t.due_date)}</span>}
+            {t.due_date && (
+              <span className={cn('font-mono text-[10.5px]', isOverdue(t.due_date) && t.status !== 'completed' && t.status !== 'approved' ? 'text-error' : 'text-text-4')}>{formatDate(t.due_date)}</span>
+            )}
           </span>
           <PriorityChip priority={t.priority} />
           <StatusChip status={t.status} />
-          {t.assignee
-            ? <Avatar name={t.assignee.name} src={t.assignee.avatar_url ?? undefined} size="xs" />
+          {t.assignees.length > 0
+            ? <AvatarGroup users={t.assignees.map((a) => ({ id: a.id, name: a.name, avatarUrl: a.avatar_url ?? undefined }))} max={3} size="xs" />
             : <span className="size-6 rounded-full border border-dashed border-border-strong shrink-0" />}
         </li>
       ))}

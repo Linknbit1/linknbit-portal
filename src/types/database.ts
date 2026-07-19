@@ -2136,6 +2136,39 @@ export type Database = {
           },
         ]
       }
+      task_assignees: {
+        Row: {
+          created_at: string
+          profile_id: string
+          task_id: string
+        }
+        Insert: {
+          created_at?: string
+          profile_id: string
+          task_id: string
+        }
+        Update: {
+          created_at?: string
+          profile_id?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_assignees_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_assignees_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           assignee_id: string | null
@@ -2572,6 +2605,7 @@ export type Database = {
       }
       is_internal: { Args: never; Returns: boolean }
       is_project_member: { Args: { p_project_id: string }; Returns: boolean }
+      is_task_assignee: { Args: { p_task_id: string }; Returns: boolean }
       join_reward_pool: { Args: { p_pool_id: string }; Returns: undefined }
       leave_reward_pool: { Args: { p_pool_id: string }; Returns: undefined }
       open_reward_pool: { Args: { p_reward_id: string }; Returns: string }

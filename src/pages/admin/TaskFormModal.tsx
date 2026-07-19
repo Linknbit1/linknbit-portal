@@ -9,6 +9,8 @@ import { useProjects } from '../../hooks/useProjects'
 import { useStages } from '../../hooks/useStages'
 import { useProjectMembers } from '../../hooks/useProjectMembers'
 import { useCreateTask, useUpdateTask } from '../../hooks/useTasks'
+import { MultiSelectPeople } from '../../components/ui/MultiSelectPeople'
+import { useSetTaskAssignees } from '../../hooks/useTaskAssignees'
 import { useToast } from '../../components/ui/toast-context'
 import { PRIORITY_LABELS, STATUS_LABELS } from '../../lib/utils'
 import type { TaskListItem } from '../../api/tasks'
@@ -44,6 +46,7 @@ export function TaskFormModal({ projectId, task, defaultStageId, onClose }: Task
   const { data: projects = [] } = useProjects()
   const createTask = useCreateTask()
   const updateTask = useUpdateTask()
+  const setAssignees = useSetTaskAssignees()
 
   const lockedProjectId = projectId ?? task?.project_id
   const [selectedProject, setSelectedProject] = useState(lockedProjectId ?? '')
@@ -53,7 +56,7 @@ export function TaskFormModal({ projectId, task, defaultStageId, onClose }: Task
   const [title, setTitle] = useState(task?.title ?? '')
   const [description, setDescription] = useState(task?.description ?? '')
   const [stageId, setStageId] = useState(task?.stage_id ?? defaultStageId ?? '')
-  const [assigneeId, setAssigneeId] = useState(task?.assignee_id ?? '')
+  const [assigneeIds, setAssigneeIds] = useState<string[]>(task?.assignees.map((a) => a.id) ?? [])
   const [priority, setPriority] = useState<Priority>(toPriority(task?.priority))
   const [status, setStatus] = useState<TaskStatus>(toStatus(task?.status))
   const [dueDate, setDueDate] = useState(toDateInput(task?.due_date ?? null))
@@ -61,10 +64,7 @@ export function TaskFormModal({ projectId, task, defaultStageId, onClose }: Task
 
   const projectOptions = projects.map((p) => ({ value: p.id, label: p.name }))
   const stageOptions = [{ value: '', label: 'No stage' }, ...stages.map((s) => ({ value: s.id, label: s.name }))]
-  const memberOptions = [
-    { value: '', label: 'Unassigned' },
-    ...members.map((m) => ({ value: m.id, label: m.name, avatar: { name: m.name, url: m.avatar_url } })),
-  ]
+  const memberPeople = members.map((m) => ({ id: m.id, name: m.name, avatar_url: m.avatar_url }))
   const priorityOptions = PRIORITY_ORDER.map((p) => ({ value: p, label: PRIORITY_LABELS[p], dot: PRIORITY_DOTS[p] }))
   const statusOptions = STATUS_ORDER.map((s) => ({ value: s, label: STATUS_LABELS[s] }))
 
@@ -79,13 +79,26 @@ export function TaskFormModal({ projectId, task, defaultStageId, onClose }: Task
 
     if (isEdit) {
       updateTask.mutate(
-        { id: task.id, updates: { title: title.trim(), description: description.trim() || null, stage_id: stageId || null, assignee_id: assigneeId || null, priority, status, due_date: due, client_visible: clientVisible } },
-        { onSuccess, onError },
+        { id: task.id, updates: { title: title.trim(), description: description.trim() || null, stage_id: stageId || null, priority, status, due_date: due, client_visible: clientVisible } },
+        {
+          onSuccess: () => setAssignees.mutate(
+            { taskId: task.id, profileIds: assigneeIds, projectId: task.project_id },
+            { onSuccess, onError },
+          ),
+          onError,
+        },
       )
     } else {
       createTask.mutate(
-        { project_id: selectedProject, title: title.trim(), description: description.trim() || null, stage_id: stageId || null, assignee_id: assigneeId || null, priority, status, due_date: due, client_visible: clientVisible },
-        { onSuccess, onError },
+        { project_id: selectedProject, title: title.trim(), description: description.trim() || null, stage_id: stageId || null, assignee_id: assigneeIds[0] ?? null, priority, status, due_date: due, client_visible: clientVisible },
+        {
+          onSuccess: (row) => {
+            if (assigneeIds.length) {
+              setAssignees.mutate({ taskId: row.id, profileIds: assigneeIds, projectId: selectedProject }, { onSuccess, onError })
+            } else onSuccess()
+          },
+          onError,
+        },
       )
     }
   }
@@ -108,7 +121,7 @@ export function TaskFormModal({ projectId, task, defaultStageId, onClose }: Task
         {!lockedProjectId && (
           <div className="space-y-1.5">
             <label className="text-label font-ui font-semibold text-text-2 uppercase tracking-wider">Project</label>
-            <Select value={selectedProject} onChange={(v) => { setSelectedProject(v); setStageId(''); setAssigneeId('') }} options={projectOptions} placeholder="Select a project…" />
+            <Select value={selectedProject} onChange={(v) => { setSelectedProject(v); setStageId(''); setAssigneeIds([]) }} options={projectOptions} placeholder="Select a project…" />
           </div>
         )}
         <Input label="Title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="What needs to be done?" autoFocus />
@@ -128,8 +141,8 @@ export function TaskFormModal({ projectId, task, defaultStageId, onClose }: Task
             <Select value={stageId} onChange={setStageId} options={stageOptions} placeholder="No stage" />
           </div>
           <div className="space-y-1.5">
-            <label className="text-label font-ui font-semibold text-text-2 uppercase tracking-wider">Assignee</label>
-            <Select value={assigneeId} onChange={setAssigneeId} options={memberOptions} placeholder="Unassigned" />
+            <label className="text-label font-ui font-semibold text-text-2 uppercase tracking-wider">Assignees</label>
+            <MultiSelectPeople value={assigneeIds} onChange={setAssigneeIds} options={memberPeople} />
           </div>
           <div className="space-y-1.5">
             <label className="text-label font-ui font-semibold text-text-2 uppercase tracking-wider">Priority</label>

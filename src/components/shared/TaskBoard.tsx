@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AlertCircle } from 'lucide-react'
 import { cn } from '../../lib/cn'
-import { Avatar } from '../ui/Avatar'
+import { Avatar, AvatarGroup } from '../ui/Avatar'
 import { PriorityChip } from './PriorityChip'
 import { ServiceChip } from './ServiceChip'
 import { useUpdateTaskStatus } from '../../hooks/useTasks'
@@ -13,9 +13,7 @@ import type { TaskStatus } from '../../types'
 interface Column {
   key: string
   label: string
-  /** Statuses that land in this column. */
   statuses: TaskStatus[]
-  /** Canonical status applied when a card is dropped here. */
   set: TaskStatus
 }
 
@@ -30,7 +28,6 @@ const COLUMNS: Column[] = [
 interface TaskBoardProps {
   tasks: TaskListItem[]
   onOpenTask: (id: string) => void
-  /** Show the project name + service on each card (for the cross-project board). */
   showProject?: boolean
 }
 
@@ -39,6 +36,24 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
   const updateStatus = useUpdateTaskStatus()
   const [dragId, setDragId] = useState<string | null>(null)
   const [dragOver, setDragOver] = useState<string | null>(null)
+  // Optimistic status overrides so a dropped card moves instantly (no refetch flicker).
+  const [optimistic, setOptimistic] = useState<Record<string, TaskStatus>>({})
+
+  // Drop each override once the server data catches up to it (reconciling optimistic
+  // drag state with refetched tasks — a legitimate prop-derived sync).
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setOptimistic((prev) => {
+      let changed = false
+      const next = { ...prev }
+      for (const t of tasks) {
+        if (next[t.id] && next[t.id] === t.status) { delete next[t.id]; changed = true }
+      }
+      return changed ? next : prev
+    })
+  }, [tasks])
+
+  const statusOf = (t: TaskListItem): TaskStatus => optimistic[t.id] ?? (t.status as TaskStatus)
 
   const handleDrop = (col: Column) => {
     setDragOver(null)
@@ -46,17 +61,18 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
     setDragId(null)
     if (!id) return
     const task = tasks.find((t) => t.id === id)
-    if (!task || task.status === col.set) return
+    if (!task || statusOf(task) === col.set) return
+    setOptimistic((o) => ({ ...o, [id]: col.set }))
     updateStatus.mutate(
       { id, status: col.set, projectId: task.project_id },
-      { onError: (e) => toast(e instanceof Error ? e.message : 'Could not move task', 'error') },
+      { onError: (e) => { setOptimistic((o) => { const n = { ...o }; delete n[id]; return n }); toast(e instanceof Error ? e.message : 'Could not move task', 'error') } },
     )
   }
 
   return (
     <div className="flex gap-3 overflow-x-auto pb-2">
       {COLUMNS.map((col) => {
-        const items = tasks.filter((t) => (col.statuses as string[]).includes(t.status))
+        const items = tasks.filter((t) => (col.statuses as string[]).includes(statusOf(t)))
         return (
           <div
             key={col.key}
@@ -64,7 +80,7 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
             onDragLeave={() => setDragOver((c) => (c === col.key ? null : c))}
             onDrop={() => handleDrop(col)}
             className={cn(
-              'w-64 shrink-0 rounded-lg border p-2.5 transition-colors',
+              'flex-1 min-w-[220px] rounded-lg border p-2.5 transition-colors',
               dragOver === col.key ? 'border-brand-red bg-brand-red/5' : 'border-border-default bg-surface-1/60',
             )}
           >
@@ -72,7 +88,7 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
               <span className="font-ui font-semibold text-[12px] text-text-2">{col.label}</span>
               <span className="font-mono text-[10.5px] text-text-4">{items.length}</span>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 min-h-2">
               {items.map((t) => (
                 <div
                   key={t.id}
@@ -81,8 +97,8 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
                   onDragEnd={() => { setDragId(null); setDragOver(null) }}
                   onClick={() => onOpenTask(t.id)}
                   className={cn(
-                    'bg-surface-1 border border-border-default rounded-md p-3 cursor-pointer hover:border-border-strong transition-colors',
-                    dragId === t.id && 'opacity-50',
+                    'bg-surface-1 border border-border-default rounded-md p-3 cursor-grab active:cursor-grabbing hover:border-border-strong transition-[transform,opacity,border-color] duration-150',
+                    dragId === t.id ? 'opacity-40 scale-[0.98]' : 'opacity-100',
                   )}
                 >
                   {showProject && t.project && (
@@ -96,14 +112,16 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
                     <PriorityChip priority={t.priority} />
                     <div className="flex items-center gap-1.5">
                       {t.due_date && (
-                        <span className={cn('flex items-center gap-1 font-mono text-[10px]', isOverdue(t.due_date) && t.status !== 'completed' ? 'text-error' : 'text-text-4')}>
-                          {isOverdue(t.due_date) && t.status !== 'completed' && <AlertCircle size={10} />}
+                        <span className={cn('flex items-center gap-1 font-mono text-[10px]', isOverdue(t.due_date) && statusOf(t) !== 'completed' ? 'text-error' : 'text-text-4')}>
+                          {isOverdue(t.due_date) && statusOf(t) !== 'completed' && <AlertCircle size={10} />}
                           {formatDate(t.due_date)}
                         </span>
                       )}
-                      {t.assignee
-                        ? <Avatar name={t.assignee.name} src={t.assignee.avatar_url ?? undefined} size="xs" />
-                        : <span className="size-6 rounded-full border border-dashed border-border-strong shrink-0" />}
+                      {t.assignees.length > 0
+                        ? <AvatarGroup users={t.assignees.map((a) => ({ id: a.id, name: a.name, avatarUrl: a.avatar_url ?? undefined }))} max={3} size="xs" />
+                        : t.assignee
+                          ? <Avatar name={t.assignee.name} src={t.assignee.avatar_url ?? undefined} size="xs" />
+                          : <span className="size-6 rounded-full border border-dashed border-border-strong shrink-0" />}
                     </div>
                   </div>
                 </div>

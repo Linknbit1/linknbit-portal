@@ -1,11 +1,11 @@
-import { useEffect, useRef, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useEditor, EditorContent, type JSONContent } from '@tiptap/react'
 import './editor.css'
 import { BubbleMenu } from '@tiptap/react/menus'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import Mention from '@tiptap/extension-mention'
-import { Bold, Italic, Strikethrough, Code as CodeIcon, Link as LinkIcon } from 'lucide-react'
+import { Bold, Italic, Strikethrough, Code as CodeIcon, Link as LinkIcon, Check, Unlink } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { SlashCommand } from './slashCommand'
 import { renderSuggestion } from './suggestionUtils'
@@ -32,11 +32,18 @@ export function RichEditor({
   useEffect(() => { mentionsRef.current = mentionItems }, [mentionItems])
   const onSubmitRef = useRef(onSubmit)
   useEffect(() => { onSubmitRef.current = onSubmit }, [onSubmit])
+  const [linkOpen, setLinkOpen] = useState(false)
+  const [linkVal, setLinkVal] = useState('')
 
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        link: { openOnClick: false, protocols: ['http', 'https', 'mailto'], autolink: true },
+        link: {
+          openOnClick: true,
+          protocols: ['http', 'https', 'mailto'],
+          autolink: true,
+          HTMLAttributes: { target: '_blank', rel: 'noopener noreferrer' },
+        },
         heading: { levels: [1, 2, 3] },
       }),
       Placeholder.configure({ placeholder: placeholder ?? 'Type / for commands…' }),
@@ -82,20 +89,48 @@ export function RichEditor({
 
   if (!editor) return null
 
+  const applyLink = () => {
+    const url = linkVal.trim()
+    const chain = editor.chain().focus().extendMarkRange('link')
+    if (url) chain.setLink({ href: url }).run()
+    else chain.unsetLink().run()
+    setLinkOpen(false)
+  }
+  const removeLink = () => { editor.chain().focus().extendMarkRange('link').unsetLink().run(); setLinkOpen(false) }
+  const openLinkInput = () => {
+    const href = editor.getAttributes('link').href
+    setLinkVal(typeof href === 'string' ? href : '')
+    setLinkOpen(true)
+  }
+
   return (
     <div className={cn('rich-editor', className)}>
       <BubbleMenu editor={editor} className="flex items-center gap-0.5 bg-surface-2 border border-border-strong rounded-md shadow-lg p-1">
-        <BubbleBtn active={editor.isActive('bold')} onClick={() => editor.chain().focus().toggleBold().run()}><Bold size={14} /></BubbleBtn>
-        <BubbleBtn active={editor.isActive('italic')} onClick={() => editor.chain().focus().toggleItalic().run()}><Italic size={14} /></BubbleBtn>
-        <BubbleBtn active={editor.isActive('strike')} onClick={() => editor.chain().focus().toggleStrike().run()}><Strikethrough size={14} /></BubbleBtn>
-        <BubbleBtn active={editor.isActive('code')} onClick={() => editor.chain().focus().toggleCode().run()}><CodeIcon size={14} /></BubbleBtn>
-        <BubbleBtn active={editor.isActive('link')} onClick={() => {
-          const prev = editor.getAttributes('link').href as string | undefined
-          const url = window.prompt('Link URL', prev ?? 'https://')
-          if (url === null) return
-          if (url === '') editor.chain().focus().unsetLink().run()
-          else editor.chain().focus().setLink({ href: url }).run()
-        }}><LinkIcon size={14} /></BubbleBtn>
+        {linkOpen ? (
+          <div className="flex items-center gap-1">
+            <input
+              autoFocus
+              value={linkVal}
+              onChange={(e) => setLinkVal(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); applyLink() } else if (e.key === 'Escape') { setLinkOpen(false) } }}
+              onBlur={() => setLinkOpen(false)}
+              placeholder="https://…"
+              className="h-7 w-48 bg-surface-inset border border-border-default rounded-sm px-2 font-ui text-[12px] text-text-1 placeholder:text-text-4 focus:outline-none focus:border-border-focus"
+            />
+            <button onMouseDown={(e) => e.preventDefault()} onClick={applyLink} className="size-7 rounded-sm flex items-center justify-center text-success hover:bg-surface-3" aria-label="Apply link"><Check size={14} /></button>
+            {editor.isActive('link') && (
+              <button onMouseDown={(e) => e.preventDefault()} onClick={removeLink} className="size-7 rounded-sm flex items-center justify-center text-error hover:bg-surface-3" aria-label="Remove link"><Unlink size={14} /></button>
+            )}
+          </div>
+        ) : (
+          <>
+            <BubbleBtn active={editor.isActive('bold')} onClick={() => editor.chain().focus().toggleBold().run()}><Bold size={14} /></BubbleBtn>
+            <BubbleBtn active={editor.isActive('italic')} onClick={() => editor.chain().focus().toggleItalic().run()}><Italic size={14} /></BubbleBtn>
+            <BubbleBtn active={editor.isActive('strike')} onClick={() => editor.chain().focus().toggleStrike().run()}><Strikethrough size={14} /></BubbleBtn>
+            <BubbleBtn active={editor.isActive('code')} onClick={() => editor.chain().focus().toggleCode().run()}><CodeIcon size={14} /></BubbleBtn>
+            <BubbleBtn active={editor.isActive('link')} onClick={openLinkInput}><LinkIcon size={14} /></BubbleBtn>
+          </>
+        )}
       </BubbleMenu>
       <EditorContent editor={editor} />
     </div>
