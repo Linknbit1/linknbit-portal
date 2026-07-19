@@ -73,7 +73,8 @@ export default function App() {
                 <Route path="/attendance" element={<AttendancePage />} />
                 <Route path="/attendance/team/:sub" element={<TeamAttendanceSectionScreen />} />
                 <Route path="/attendance/:section" element={<AttendanceSectionScreen />} />
-                <Route path="/gamification" element={<GamificationPage />} />
+                {/* No combined Gamification page — land on the first sub-page. */}
+                <Route path="/gamification" element={<Navigate to="/gamification/leaderboard" replace />} />
                 <Route path="/gamification/:section" element={<GamificationSectionScreen />} />
                 <Route
                   path="/settings"

@@ -52,7 +52,7 @@ const rowCls = (active: boolean) =>
 
 /** A nav entry — a plain link, or an expandable group when it has sub-pages. */
 function NavRow({ item, pathname }: { item: NavItem; pathname: string }) {
-  const inSection = pathname.startsWith(item.to)
+  const inSection = pathname.startsWith(item.matchPrefix ?? item.to)
   // Expanded by default while you're inside the section; an explicit toggle wins
   // until you navigate elsewhere (derived, so no state sync needed).
   const [toggled, setToggled] = useState<boolean | null>(null)

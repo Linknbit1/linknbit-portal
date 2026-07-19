@@ -1,7 +1,7 @@
+import { Navigate } from 'react-router-dom'
 import { useAuthContext } from '../context/AuthContext'
 import { MGMT_ROLES } from '../constants/roles'
 import { useIsDesktop } from '../hooks/useMediaQuery'
-import AdminAttendancePage from './admin/AttendancePage'
 import EmployeeAttendancePage from './employee/AttendancePage'
 import { AttendanceHub } from './AttendanceMobile'
 
@@ -14,7 +14,9 @@ export default function AttendancePage() {
 
   if (!isDesktop) return <AttendanceHub />
 
+  // Desktop management has no combined "Attendance" page any more — each section
+  // is its own page, so land on Daily Records (the sidebar dropdown mirrors this).
   return MGMT_ROLES.includes(role)
-    ? <AdminAttendancePage />
+    ? <Navigate to="/attendance/records" replace />
     : <EmployeeAttendancePage />
 }

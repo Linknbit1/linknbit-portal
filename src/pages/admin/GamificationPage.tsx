@@ -1016,7 +1016,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
             ))}
           </div>
         ) : (
-          isDesktop && <Tabs tabs={tabs} activeKey={mainTab} onChange={setMainTab} />
+          isDesktop && !mobileSection && <Tabs tabs={tabs} activeKey={mainTab} onChange={setMainTab} />
         )}
 
         {/* ── POINTS HISTORY ── */}
@@ -1038,6 +1038,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
         {!showHub && activeTab === 'leaderboard' && (
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between gap-3">
+              <h2 className="font-display font-bold text-[22px] text-text-1">{sectionLabel}</h2>
               {isRecognizer && <Button size="sm" className="shrink-0" onClick={() => setShoutoutOpen(true)}><Star size={13} /> Give Shoutout</Button>}
             </div>
 
@@ -1114,6 +1115,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
         {!showHub && activeTab === 'board' && (
           <div className="flex flex-col gap-5">
             <div className="flex items-center justify-between gap-3">
+              <h2 className="font-display font-bold text-[22px] text-text-1">{sectionLabel}</h2>
               {isRecognizer && <Button size="sm" className="shrink-0" onClick={() => setTaskModal('new')}><Plus size={13} /> Post Task</Button>}
             </div>
             {tasksLoading && <div className="flex justify-center py-16 text-text-4"><Loader2 size={20} className="animate-spin" /></div>}
@@ -1250,6 +1252,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
         {!showHub && activeTab === 'shoutouts' && (
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between gap-3">
+              <h2 className="font-display font-bold text-[22px] text-text-1">{sectionLabel}</h2>
               {isRecognizer && <Button size="sm" className="shrink-0" onClick={() => setShoutoutOpen(true)}><Plus size={13} /> Give Shoutout</Button>}
             </div>
 
@@ -1314,6 +1317,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
         {/* ── BADGES ── */}
         {!showHub && activeTab === 'badges' && (
           <div className="flex flex-col gap-3">
+            <h2 className="font-display font-bold text-[22px] text-text-1">{sectionLabel}</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
               {badges.map((b) => {
                 const earned = earnedBadgeIds.has(b.id)
@@ -1335,6 +1339,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
         {/* ── REWARDS SHOP ── */}
         {!showHub && activeTab === 'rewards' && (
           <div className="flex flex-col gap-5">
+            <h2 className="font-display font-bold text-[22px] text-text-1">{sectionLabel}</h2>
             <div className="flex items-center gap-4 bg-surface-1 border border-border-default rounded-xl px-6 py-4">
               <div className="size-12 rounded-xl bg-coin-gold/15 border border-coin-gold/30 flex items-center justify-center"><Coins size={20} className="text-coin-gold" /></div>
               <div><p className="font-display font-bold text-[28px] text-coin-gold leading-none">{myLP.toLocaleString()}</p><p className="font-ui text-[12px] text-text-3 mt-0.5">XP available · resets monthly</p></div>
@@ -1465,6 +1470,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
         {/* ── MANAGE (governance) ── */}
         {!showHub && activeTab === 'admin' && showAdmin && (
           <div className="flex flex-col gap-8">
+            <h2 className="font-display font-bold text-[22px] text-text-1">{sectionLabel}</h2>
 
             {/* Task submissions to review */}
             {isRecognizer && (
