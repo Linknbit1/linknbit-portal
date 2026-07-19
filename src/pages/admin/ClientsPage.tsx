@@ -42,7 +42,7 @@ export default function ClientsPage() {
   return (
     <div className="flex flex-col flex-1">
       <Topbar title="Clients" />
-      <div className="p-4 lg:p-6 flex flex-col gap-5 max-w-content mx-auto w-full">
+      <div className="p-4 lg:px-8 lg:py-7 flex flex-col gap-6">
         <div className="flex flex-wrap items-center gap-3">
           <div>
             <h2 className="font-display font-bold text-[22px] text-text-1">Clients</h2>

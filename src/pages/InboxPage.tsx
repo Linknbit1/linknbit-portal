@@ -48,7 +48,7 @@ export default function InboxPage() {
   return (
     <div className="flex flex-col flex-1">
       <Topbar title="Inbox" />
-      <div className="p-4 lg:p-6 flex flex-col gap-4 max-w-3xl mx-auto w-full">
+      <div className="p-4 lg:px-8 lg:py-7 flex flex-col gap-6">
         <div className="flex items-center gap-3">
           <h2 className="font-display font-bold text-[22px] text-text-1">Inbox</h2>
           {unread > 0 && <span className="px-2 py-0.5 rounded-full bg-brand-red text-white text-[11px] font-bold">{unread}</span>}

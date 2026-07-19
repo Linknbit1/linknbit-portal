@@ -88,7 +88,7 @@ export default function TasksPage() {
   return (
     <div className="flex flex-col flex-1">
       <Topbar title="Tasks" />
-      <div className="p-4 lg:p-6 flex flex-col gap-4 max-w-content mx-auto w-full">
+      <div className="p-4 lg:px-8 lg:py-7 flex flex-col gap-5">
         <div className="flex flex-wrap items-center gap-3">
           <h2 className="font-display font-bold text-[22px] text-text-1">Tasks</h2>
           <Button size="sm" className="ml-auto" iconLeft={<Plus size={15} />} onClick={() => setShowForm(true)}>New Task</Button>

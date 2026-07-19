@@ -208,7 +208,23 @@ export function AttendanceSectionScreen() {
   const { profile } = useAuthContext()
   const { section } = useParams()
 
-  if (isDesktop) return <Navigate to="/attendance" replace />
+  const isMgmtRole = MGMT_ROLES.includes(profile?.role ?? '')
+
+  // Desktop: each section is a full page of its own (the sidebar dropdown
+  // navigates here rather than switching an in-page tab).
+  if (isDesktop) {
+    const desktopEntry = isMgmtRole && section ? ADMIN_SECTIONS[section] : undefined
+    if (!desktopEntry) return <Navigate to="/attendance" replace />
+    return (
+      <div className="flex flex-col flex-1">
+        <Topbar title={desktopEntry.title} />
+        <div className="px-4 py-6 lg:px-8 lg:py-7 flex flex-col gap-6">
+          <h2 className="font-display font-bold text-[22px] text-text-1">{desktopEntry.title}</h2>
+          {desktopEntry.render()}
+        </div>
+      </div>
+    )
+  }
 
   const canSeeTeam = profile?.role === 'team_lead' || profile?.role === 'project_manager'
 

@@ -43,7 +43,7 @@ export default function StandupPage() {
   return (
     <div className="flex flex-col flex-1">
       <Topbar title="Daily Standup" />
-      <div className="p-4 lg:p-6 flex flex-col gap-5 max-w-4xl mx-auto w-full">
+      <div className="p-4 lg:px-8 lg:py-7 flex flex-col gap-6">
         <div>
           <h2 className="font-display font-bold text-[22px] text-text-1">Daily Standup</h2>
           <p className="font-ui text-[13px] text-text-3">

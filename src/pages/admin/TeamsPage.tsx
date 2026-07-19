@@ -191,7 +191,7 @@ export default function TeamsPage() {
   return (
     <div className="flex flex-col flex-1">
       <Topbar title="Teams" back="/more" />
-      <div className="px-4 py-6 lg:p-6 flex flex-col gap-5 max-w-content mx-auto w-full">
+      <div className="px-4 py-6 lg:px-8 lg:py-7 flex flex-col gap-6">
         <div className="flex items-center justify-between">
           <p className="font-mono text-[11.5px] text-text-3">{teams.length} team{teams.length === 1 ? '' : 's'} · {people.length} internal members</p>
           {canManage && <Button size="sm" onClick={() => setTeamModal('new')}><Plus size={13} /> Create Team</Button>}
