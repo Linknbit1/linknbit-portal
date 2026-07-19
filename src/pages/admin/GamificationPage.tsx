@@ -37,6 +37,7 @@ import {
 } from '../../hooks/useGamification'
 import { formatRelativeTime } from '../../lib/utils'
 import { cn } from '../../lib/cn'
+import { groupByDate, isoDayKey, formatDayHeading } from '../../lib/dateGroups'
 import type {
   RewardRow, QuestTaskRow, ShoutoutRow, QuestTaskClaimRow, RewardPoolWithMembers,
 } from '../../api/gamification'
@@ -825,6 +826,11 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
     (shoutFilter.allMonths || s.created_at.startsWith(shoutFilter.prefix)) &&
     (shoutMember === 'all' || s.to_profile_id === shoutMember),
   ), [shoutFeed, shoutFilter.allMonths, shoutFilter.prefix, shoutMember])
+  // Shoutouts only carry created_at, so the day they were given is the heading.
+  const shoutGroups = useMemo(
+    () => groupByDate(visibleShoutouts, (s) => [isoDayKey(s.created_at)]),
+    [visibleShoutouts],
+  )
 
   // Split the shop: individual rewards keep the classic redeem flow; group rewards
   // (group_size >= 2) go through the pool section below.
@@ -1277,7 +1283,18 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
                     : `No shoutouts in ${shoutFilter.label}.`}
                 </div>
               )}
-              {visibleShoutouts.map((s: ShoutoutRow) => (
+              {shoutGroups.map((group) => (
+                <div key={group.date} className="space-y-3">
+                  <div className="flex items-center gap-2 pt-1">
+                    <span className="font-display font-semibold text-[12.5px] text-text-1">{formatDayHeading(group.date).label}</span>
+                    {formatDayHeading(group.date).relative && (
+                      <span className="px-1.5 py-0.5 rounded-xs bg-brand-red/10 border border-brand-red/20 text-brand-red text-[10px] font-mono font-semibold uppercase tracking-wide">
+                        {formatDayHeading(group.date).relative}
+                      </span>
+                    )}
+                    <span className="ml-auto font-mono text-[11px] text-text-4">{group.items.length}</span>
+                  </div>
+                  {group.items.map((s: ShoutoutRow) => (
                 <div key={s.id} className="bg-surface-1 border border-border-default rounded-xl p-5 flex gap-4">
                   <div className="size-10 rounded-full bg-coin-gold/15 border border-coin-gold/30 flex items-center justify-center shrink-0"><Star size={16} className="text-coin-gold" /></div>
                   <div className="flex-1 min-w-0">
@@ -1289,6 +1306,8 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
                     <p className="font-ui text-body-sm/relaxed text-text-2 mt-1.5">"{s.message}"</p>
                     <p className="font-mono text-[11px] text-text-4 mt-1.5">From {nameOf(s.from_profile_id)} · {formatRelativeTime(s.created_at)}</p>
                   </div>
+                </div>
+                  ))}
                 </div>
               ))}
             </div>
