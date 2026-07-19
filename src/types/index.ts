@@ -32,6 +32,7 @@ export type ProjectStatus =
   | 'awaiting_client'
   | 'completed'
   | 'on_hold'
+  | 'ongoing'
 
 export type ApprovalStatus = 'pending' | 'approved' | 'revision_requested' | 'rejected'
 

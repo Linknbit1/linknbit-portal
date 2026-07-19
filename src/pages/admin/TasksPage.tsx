@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Search, Plus, CheckSquare, ListTodo, AlertOctagon, Clock } from 'lucide-react'
+import { Search, Plus, CheckSquare, ListTodo, AlertOctagon, Clock, LayoutList, Columns } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -13,6 +13,7 @@ import { cn } from '../../lib/cn'
 import { formatDate, isOverdue, STATUS_LABELS, PRIORITY_LABELS } from '../../lib/utils'
 import { useTasks } from '../../hooks/useTasks'
 import { useServices } from '../../hooks/useServices'
+import { TaskBoard } from '../../components/shared/TaskBoard'
 import { TaskFormModal } from './TaskFormModal'
 import { TaskDetailDrawer } from './TaskDetailDrawer'
 import type { Priority, TaskStatus } from '../../types'
@@ -30,6 +31,7 @@ export default function TasksPage() {
   const [serviceFilter, setServiceFilter] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [openTaskId, setOpenTaskId] = useState<string | null>(null)
+  const [view, setView] = useState<'table' | 'board'>('table')
 
   const stats = useMemo(() => ({
     total: tasks.length,
@@ -74,12 +76,28 @@ export default function TasksPage() {
           <Select value={statusFilter} onChange={setStatusFilter} options={statusOptions} size="sm" />
           <Select value={priorityFilter} onChange={setPriorityFilter} options={priorityOptions} size="sm" />
           <Select value={serviceFilter} onChange={setServiceFilter} options={serviceOptions} size="sm" />
+          <div className="ml-auto flex items-center gap-1 bg-surface-1 border border-border-default rounded-lg p-1">
+            {(['table', 'board'] as const).map((v) => (
+              <button
+                key={v}
+                onClick={() => setView(v)}
+                className={cn(
+                  'flex items-center gap-1.5 px-3 h-8 rounded-md font-ui font-medium text-[12.5px] capitalize transition-colors',
+                  view === v ? 'bg-surface-3 text-text-1 shadow-sm' : 'text-text-3 hover:text-text-1',
+                )}
+              >
+                {v === 'table' ? <LayoutList size={13} /> : <Columns size={13} />} {v}
+              </button>
+            ))}
+          </div>
         </div>
 
         {isLoading ? (
           <div className="space-y-2">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-14" />)}</div>
         ) : filtered.length === 0 ? (
           <div className="py-16 text-center font-ui text-[13px] text-text-4">No tasks match your filters.</div>
+        ) : view === 'board' ? (
+          <TaskBoard tasks={filtered} onOpenTask={setOpenTaskId} showProject />
         ) : (
           <div className="bg-surface-1 border border-border-default rounded-md overflow-x-auto">
             <table className="w-full text-left min-w-[760px]">

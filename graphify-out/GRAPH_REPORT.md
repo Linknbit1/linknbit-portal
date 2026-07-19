@@ -1,16 +1,16 @@
 # Graph Report - linknbit-portal  (2026-07-19)
 
 ## Corpus Check
-- 293 files · ~337,800 words
+- 311 files · ~343,366 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2737 nodes · 6156 edges · 128 communities (124 shown, 4 thin omitted)
+- 2800 nodes · 6391 edges · 128 communities (122 shown, 6 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 21 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `a891525a`
+- Built from commit: `18a936bb`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -143,8 +143,8 @@
 - [[_COMMUNITY_Community 125|Community 125]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `cn()` - 150 edges
-2. `useToast()` - 90 edges
+1. `cn()` - 161 edges
+2. `useToast()` - 96 edges
 3. `$()` - 85 edges
 4. `$()` - 85 edges
 5. `useAuthContext()` - 73 edges
@@ -166,325 +166,325 @@
 - `toast()` --calls--> `handleRemoveMember()`  [INFERRED]
   references/office-quest-app/assets/js/office-quest.js → src/pages/admin/TeamsPage.tsx
 
-## Communities (128 total, 4 thin omitted)
+## Communities (128 total, 6 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.02
 Nodes (104): addColumn(), attendanceRecords, attendanceRequests, attendanceSettings, AVATARS, bell, BEN_COLORS, benefits (+96 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.04
-Nodes (84): addCompanyWfhDay(), addWorkingSaturday(), adminCheckOut(), checkIn(), CheckInResult, checkOut(), CompanyWfhDay, createHoliday() (+76 more)
+Cohesion: 0.05
+Nodes (66): AddProjectMemberModal(), AddProjectMemberModalProps, ApprovalModal(), ApprovalModalProps, ClientFormModal(), ClientFormModalProps, ClientStatus, STATUS_OPTIONS (+58 more)
 
 ### Community 2 - "Community 2"
-Cohesion: 0.03
-Nodes (71): CLOCKED_STATUSES, EmployeeStat, EXC_STATUS_META, ExceptionsTab(), ExcStatusChip(), fmtMinutes(), fmtNet(), GrantWfhModal() (+63 more)
+Cohesion: 0.04
+Nodes (87): addCompanyWfhDay(), addWorkingSaturday(), adminCheckOut(), approveDevice(), checkIn(), CheckInResult, checkOut(), CompanyWfhDay (+79 more)
 
 ### Community 3 - "Community 3"
 Cohesion: 0.03
-Nodes (48): TimelineView(), ALL_APPROVALS, ApprovalCard(), ApprovalStatus, cardVariants, ClientApprovalsPage(), containerVariants, EXTRA_APPROVALS (+40 more)
+Nodes (56): TimelineView(), ALL_APPROVALS, ApprovalCard(), ApprovalStatus, cardVariants, ClientApprovalsPage(), containerVariants, EXTRA_APPROVALS (+48 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.05
-Nodes (66): awardBadge(), BadgeAwardRow, BadgeRow, cancelRewardPool(), claimQuestTask(), createQuest(), createQuestTask(), createReward() (+58 more)
+Cohesion: 0.03
+Nodes (62): CLOCKED_STATUSES, EmployeeStat, EnrolledDevicesTab(), EXC_STATUS_META, ExceptionsTab(), fmtMinutes(), fmtNet(), GrantWfhModal() (+54 more)
 
 ### Community 5 - "Community 5"
 Cohesion: 0.05
-Nodes (63): CLAIM_STATUS_META, CONDITION_TYPES, DIFFICULTY_LP, DIFFICULTY_META, GAMIFICATION_SECTIONS, GamificationPage(), INITIAL_SHOUTOUTS, MONTH_NAMES (+55 more)
+Nodes (66): awardBadge(), BadgeAwardRow, BadgeRow, cancelRewardPool(), claimQuestTask(), createQuest(), createQuestTask(), createReward() (+58 more)
 
 ### Community 6 - "Community 6"
 Cohesion: 0.05
-Nodes (48): ClickUpPage(), FEED_ICON_MAP, Period, SERVICE_COLORS, WorkloadBars(), Meta(), PROGRESS_COLOR(), ProjectDetailPage() (+40 more)
+Nodes (64): CLAIM_STATUS_META, CONDITION_TYPES, DIFFICULTY_LP, DIFFICULTY_META, GAMIFICATION_SECTIONS, GamificationPage(), INITIAL_SHOUTOUTS, MONTH_NAMES (+56 more)
 
 ### Community 7 - "Community 7"
+Cohesion: 0.07
+Nodes (66): handleRedeem(), handleShoutoutSave(), addReaction(), adminGiveShoutout(), attendanceCheckState(), awardAttendance(), buildShell(), cancelCommunityTask() (+58 more)
+
+### Community 8 - "Community 8"
 Cohesion: 0.05
 Nodes (65): $(), buildShell(), buildSidebar(), closeNotifDropdown(), closeTaskPage(), completeSprint(), deleteBenefit(), deleteChannel() (+57 more)
 
-### Community 8 - "Community 8"
-Cohesion: 0.06
-Nodes (53): deletePushSubscription(), fetchNotificationPreferences(), fetchNotifications(), fetchPushSubscriptions(), fetchVapidPublicKey(), markAllRead(), markNotificationRead(), NotificationPreferenceRow (+45 more)
-
 ### Community 9 - "Community 9"
-Cohesion: 0.06
-Nodes (60): $(), closeNotifDropdown(), closeTaskPage(), completeSprint(), deleteBenefit(), deleteChannel(), deleteEmployee(), deleteProject() (+52 more)
+Cohesion: 0.08
+Nodes (61): addReaction(), adminGiveShoutout(), attendanceCheckState(), awardAttendance(), cancelCommunityTask(), canGiveShoutout(), claimCommunityTask(), claimProjectTask() (+53 more)
 
 ### Community 10 - "Community 10"
-Cohesion: 0.08
-Nodes (60): handleRedeem(), handleShoutoutSave(), addReaction(), adminGiveShoutout(), attendanceCheckState(), awardAttendance(), cancelCommunityTask(), claimCommunityTask() (+52 more)
+Cohesion: 0.07
+Nodes (50): deletePushSubscription(), fetchNotificationPreferences(), fetchNotifications(), fetchPushSubscriptions(), fetchVapidPublicKey(), markAllRead(), markNotificationRead(), NotificationPreferenceRow (+42 more)
 
 ### Community 11 - "Community 11"
 Cohesion: 0.05
 Nodes (58): AI Collaboration Rules, API keys, Applying migrations, Approval Flow States, Architecture Discipline, Border Radius, ClickUp Integration UI, Client Portal (light mode — completely separate theme) (+50 more)
 
 ### Community 12 - "Community 12"
-Cohesion: 0.09
-Nodes (58): addReaction(), adminGiveShoutout(), attendanceCheckState(), awardAttendance(), cancelCommunityTask(), claimCommunityTask(), claimProjectTask(), claimTask() (+50 more)
+Cohesion: 0.06
+Nodes (37): Meta(), PROGRESS_COLOR(), ProjectDetailPage(), ProjectTab, SERVICE_ACCENT, TABS, TaskRow(), Kpi() (+29 more)
 
 ### Community 13 - "Community 13"
-Cohesion: 0.07
-Nodes (36): AddProjectMemberModal(), AddProjectMemberModalProps, ApprovalModal(), ApprovalModalProps, ClientFormModal(), ClientFormModalProps, ClientStatus, STATUS_OPTIONS (+28 more)
+Cohesion: 0.06
+Nodes (53): $(), closeNotifDropdown(), closeTaskPage(), completeSprint(), deleteBenefit(), deleteChannel(), deleteEmployee(), deleteProject() (+45 more)
 
 ### Community 14 - "Community 14"
 Cohesion: 0.06
-Nodes (42): Period, ReportsPage(), SERVICE_DIST, STATUS_DIST, TASK_TREND, TOOLTIP_STYLE, XP_TREND, handleWFHSubmit() (+34 more)
+Nodes (34): ExcStatusChip(), StatusChip(), WFHStatusChip(), PodiumSlot(), updatePassword(), AuthBtn(), AuthInput(), NewPasswordView() (+26 more)
 
 ### Community 15 - "Community 15"
-Cohesion: 0.07
-Nodes (46): addCommentLink(), addImage(), addLink(), attendanceStatusMeta(), avEmoji(), buildShell(), chatChHTML(), closeThread() (+38 more)
+Cohesion: 0.06
+Nodes (41): Period, ReportsPage(), SERVICE_DIST, STATUS_DIST, TASK_TREND, TOOLTIP_STYLE, XP_TREND, handleWFHSubmit() (+33 more)
 
 ### Community 16 - "Community 16"
-Cohesion: 0.07
-Nodes (41): AttendanceException, AttendanceRow, asExcType(), EXC_STATUS_CLS, EXC_TYPE_LABELS, ExcType, LeaveSection(), localToday() (+33 more)
-
-### Community 17 - "Community 17"
-Cohesion: 0.08
-Nodes (35): AttendancePage(), DailyRecordsTab(), EmployeeAttendancePage(), HistoryTable(), useAdminCheckOut(), useAllAttendance(), useAllAttendanceExceptions(), useAllLeaveRequests() (+27 more)
-
-### Community 18 - "Community 18"
 Cohesion: 0.08
 Nodes (44): addCommentLink(), addImage(), addLink(), attendanceStatusMeta(), avEmoji(), chatChHTML(), closeThread(), duelCardHTML() (+36 more)
 
-### Community 19 - "Community 19"
+### Community 17 - "Community 17"
 Cohesion: 0.08
-Nodes (34): PRIORITY_DOTS, PRIORITY_ORDER, STATUS_ORDER, TaskDetailContent(), TaskDetailContentProps, isPriority(), isStatus(), PRIORITY_DOTS (+26 more)
+Nodes (44): addCommentLink(), addImage(), addLink(), attendanceStatusMeta(), avEmoji(), chatChHTML(), closeThread(), duelCardHTML() (+36 more)
+
+### Community 18 - "Community 18"
+Cohesion: 0.08
+Nodes (37): AttendanceException, AttendanceRow, asExcType(), EXC_STATUS_CLS, EXC_TYPE_LABELS, ExcType, HistoryTable(), LeaveSection() (+29 more)
+
+### Community 19 - "Community 19"
+Cohesion: 0.07
+Nodes (28): ClickUpPage(), FEED_ICON_MAP, Period, SERVICE_COLORS, WorkloadBars(), TaskDetailDrawer(), TaskDetailDrawerProps, handleSync() (+20 more)
 
 ### Community 20 - "Community 20"
 Cohesion: 0.06
 Nodes (19): KANBAN_COLS, KANBAN_COLUMNS, KanbanCard(), KanbanCardProps, KanbanView(), MilestonesView(), MONTH_NAMES, PM_LIST (+11 more)
 
 ### Community 21 - "Community 21"
+Cohesion: 0.1
+Nodes (26): PRIORITY_DOTS, PRIORITY_ORDER, STATUS_ORDER, TaskDetailContent(), TaskDetailContentProps, MentionSource, syncMentions(), DocEditor() (+18 more)
+
+### Community 22 - "Community 22"
 Cohesion: 0.05
 Nodes (37): 10. Row Level Security Policies, Attachments, Attendance, Audit Logs, Checklists & Checklist Items, ClickUp Status Mappings, Clients, code:sql (CREATE OR REPLACE FUNCTION current_user_role() RETURNS text ) (+29 more)
 
-### Community 22 - "Community 22"
-Cohesion: 0.08
-Nodes (17): container, fadeUp, ATTENDANCE_ADMIN_ROLES, MGMT_ROLES, SETTINGS_ROLES, AuthProvider(), NAV_ITEMS, NavItem (+9 more)
-
 ### Community 23 - "Community 23"
-Cohesion: 0.09
-Nodes (26): EnrolledDevicesTab(), approveDevice(), deactivateDevice(), EnrolledDevice, EnrolledDeviceWithProfile, fetchEnrolledDevices(), fetchMyEnrolledDevices(), registerDevice() (+18 more)
+Cohesion: 0.12
+Nodes (29): KIND_ICON, ProjectFilesTab(), ProjectFilesTabProps, AttachmentRow, AttachmentWithUploader, deleteAttachment(), fetchAttachments(), fetchProjectFiles() (+21 more)
 
 ### Community 24 - "Community 24"
 Cohesion: 0.07
-Nodes (20): ChangePasswordModal(), InviteModal(), JOB_TYPE_LABELS, JOB_TYPE_OPTIONS, ListProps, MenuItem(), Option, PeoplePage() (+12 more)
+Nodes (22): ChangePasswordModal(), EditDrawer(), InviteModal(), JOB_TYPE_LABELS, JOB_TYPE_OPTIONS, ListProps, MenuItem(), Option (+14 more)
 
 ### Community 25 - "Community 25"
-Cohesion: 0.11
-Nodes (22): PlaceholderPageProps, notificationHref(), useMarkAllRead(), useMarkRead(), useNotifications(), HubRow(), HubRowItem, MobileHub() (+14 more)
+Cohesion: 0.1
+Nodes (25): ATTENDANCE_ADMIN_ROLES, MGMT_ROLES, EmployeeAttendancePage(), useMyAttendanceHistory(), useMyMonthlyAttendance(), useIsDesktop(), useMediaQuery(), ADMIN_SECTIONS (+17 more)
 
 ### Community 26 - "Community 26"
-Cohesion: 0.11
-Nodes (21): PodiumSlot(), NewPasswordView(), AuthInput(), RegisterPage(), ResetPasswordPage(), Status, LinknbitMark(), LinknbitMarkProps (+13 more)
+Cohesion: 0.1
+Nodes (25): AttendancePage(), DailyRecordsTab(), useAdminCheckOut(), useAllAttendance(), useAllAttendanceExceptions(), useAllLeaveRequests(), useAllOvertimeRequests(), useAllWfhRequests() (+17 more)
 
 ### Community 27 - "Community 27"
 Cohesion: 0.11
-Nodes (25): AddMemberModal(), isService(), Option, SERVICE_OPTIONS, serviceChip(), TeamModal(), TeamsPage(), WORKLOAD_META (+17 more)
+Nodes (22): PlaceholderPageProps, notificationHref(), useMarkAllRead(), useMarkRead(), useNotifications(), HubRow(), HubRowItem, MobileHub() (+14 more)
 
 ### Community 28 - "Community 28"
-Cohesion: 0.08
-Nodes (17): ClientsPage(), STATUS_BADGE, STATUS_META, ClientWithStats, handleAdd(), CLIENTS, useClients(), useDeleteClient() (+9 more)
+Cohesion: 0.09
+Nodes (22): FEATURE_LABELS, FEATURE_SECTIONS, INTERNAL_ROLES, PermissionsPanel(), ROLE_LABELS, ServiceRow(), SETTINGS_SECTIONS, SettingsPage() (+14 more)
 
 ### Community 29 - "Community 29"
-Cohesion: 0.09
-Nodes (21): AuthBtn(), AuthInput(), AuthView, BootItem(), BootStep, BrandPanel(), DEMO_ACCOUNTS, DemoAccount (+13 more)
+Cohesion: 0.11
+Nodes (26): AddMemberModal(), isService(), Option, SERVICE_OPTIONS, serviceChip(), TeamModal(), TeamsPage(), WORKLOAD_META (+18 more)
 
 ### Community 30 - "Community 30"
+Cohesion: 0.08
+Nodes (19): ASSIGNEE_OPTIONS, formatDate(), PRIORITY_COLORS, PRIORITY_LABELS, PRIORITY_OPTIONS, SERVICE_ACCENT, STATUS_COLORS, STATUS_LABELS (+11 more)
+
+### Community 31 - "Community 31"
 Cohesion: 0.07
 Nodes (27): Claude Design Prompt, code:md (Design a comprehensive UI design system for a product called), code:md (Using the Linknbit Unified Operations Portal design system, ), code:md (Using the Linknbit Unified Operations Portal design system, ), code:md (Using the Linknbit Unified Operations Portal design system, ), code:md (Using the Linknbit Unified Operations Portal design system, ), code:md (Design a comprehensive UI design system for a product called), code:md (Using the Linknbit Unified Operations Portal design system e) (+19 more)
 
-### Community 31 - "Community 31"
+### Community 32 - "Community 32"
+Cohesion: 0.1
+Nodes (14): GamificationSectionScreen(), SETTINGS_ROLES, NAV_ITEMS, NavItem, HomeRedirect(), PrivateRoute(), RoleGuard(), RoleGuardProps (+6 more)
+
+### Community 33 - "Community 33"
+Cohesion: 0.09
+Nodes (20): AuthView, BootItem(), BootStep, BrandPanel(), DEMO_ACCOUNTS, DemoAccount, ForgotForm(), getCurrentMonthYear() (+12 more)
+
+### Community 34 - "Community 34"
 Cohesion: 0.09
 Nodes (12): headers, refreshToken, secure, supabase, headers, supabase, accessToken, headers (+4 more)
 
-### Community 32 - "Community 32"
-Cohesion: 0.14
-Nodes (21): AttachmentRow, AttachmentWithUploader, deleteAttachment(), fetchAttachments(), getAttachmentUrl(), toggleAttachmentVisibility(), uploadAttachment(), UploadAttachmentArgs (+13 more)
-
-### Community 33 - "Community 33"
-Cohesion: 0.16
-Nodes (17): useAuthContext(), AppShell(), BottomTabBar(), MobileNavContext, MobileNavValue, NavChromeContext, NavChromeValue, useMobileNav() (+9 more)
-
-### Community 34 - "Community 34"
-Cohesion: 0.1
-Nodes (9): dcFlatten(), DCSection(), DesignCanvas(), DC, DCCtx, dcFlatten(), DCSection(), DesignCanvas() (+1 more)
-
 ### Community 35 - "Community 35"
 Cohesion: 0.13
-Nodes (22): **1.10 Special Shoutouts (Examples)**, **1.11 System Discipline & Participation Restrictions**, **1.12 System Rules Summary**, **1.13 Simple Understanding of System**, **1.14 Final Note**, **1.1 Purpose of the System**, **1.2 System Overview**, **1.3 Currency System (Link Points \- LP)** (+14 more)
+Nodes (18): formatTime(), TodayAttendanceCard(), useCheckIn(), useCheckOut(), useMyTodayAttendance(), BraveNavigator, CurrentDeviceStatus, useCurrentDevice() (+10 more)
 
 ### Community 36 - "Community 36"
-Cohesion: 0.15
-Nodes (16): addProjectMember(), fetchProjectMembers(), ProjectMember, removeProjectMember(), createProject(), deleteProject(), fetchProject(), fetchProjects() (+8 more)
+Cohesion: 0.14
+Nodes (19): createClient(), deleteClient(), fetchClient(), fetchClients(), updateClient(), createStage(), deleteStage(), fetchStages() (+11 more)
 
 ### Community 37 - "Community 37"
 Cohesion: 0.1
-Nodes (15): PRIORITY_LABELS, PROJECT_STATUS_LABELS, SERVICE_LABELS, STATUS_LABELS, APPROVAL_STATUS_CONFIG, PROJECT_STATUS_CONFIG, StatusChipProps, TASK_STATUS_CONFIG (+7 more)
+Nodes (9): dcFlatten(), DCSection(), DesignCanvas(), DC, DCCtx, dcFlatten(), DCSection(), DesignCanvas() (+1 more)
 
 ### Community 38 - "Community 38"
-Cohesion: 0.09
-Nodes (18): [ah, am], anonClient, authHeader, checkInTime, CORS_HEADERS, dayOfWeek, [eh, em], [endH, endM] (+10 more)
+Cohesion: 0.13
+Nodes (22): ProjectsPage(), isPriority(), isStatus(), PRIORITY_DOTS, PRIORITY_ORDER, STATUS_ORDER, TaskFormModal(), TaskFormModalProps (+14 more)
 
 ### Community 39 - "Community 39"
-Cohesion: 0.17
-Nodes (16): ANON_KEY, bffFetch(), bffRefreshSession(), BffSession, bffSignIn(), bffSignOut(), fetchActiveProfiles(), fetchProfile() (+8 more)
+Cohesion: 0.13
+Nodes (22): **1.10 Special Shoutouts (Examples)**, **1.11 System Discipline & Participation Restrictions**, **1.12 System Rules Summary**, **1.13 Simple Understanding of System**, **1.14 Final Note**, **1.1 Purpose of the System**, **1.2 System Overview**, **1.3 Currency System (Link Points \- LP)** (+14 more)
 
 ### Community 40 - "Community 40"
 Cohesion: 0.19
-Nodes (18): deletePerson(), fetchPeople(), fetchSalary(), functionErrorMessage(), InvitePayload, InviteResult, inviteUser(), Person (+10 more)
+Nodes (16): useAuthContext(), AppShell(), BottomTabBar(), MobileNavContext, MobileNavValue, NavChromeContext, NavChromeValue, useMobileNav() (+8 more)
 
 ### Community 41 - "Community 41"
-Cohesion: 0.11
-Nodes (13): anonClient, authHeader, CORS_HEADERS, INTERNAL_ROLES, resendKey, service, siteUrl, anonClient (+5 more)
+Cohesion: 0.09
+Nodes (18): [ah, am], anonClient, authHeader, checkInTime, CORS_HEADERS, dayOfWeek, [eh, em], [endH, endM] (+10 more)
 
 ### Community 42 - "Community 42"
-Cohesion: 0.13
-Nodes (12): FEATURE_LABELS, FEATURE_SECTIONS, INTERNAL_ROLES, PermissionsPanel(), ROLE_LABELS, SETTINGS_SECTIONS, SettingsPage(), Tab (+4 more)
+Cohesion: 0.16
+Nodes (16): ANON_KEY, bffFetch(), bffRefreshSession(), BffSession, bffSignIn(), bffSignOut(), fetchActiveProfiles(), fetchProfile() (+8 more)
 
 ### Community 43 - "Community 43"
-Cohesion: 0.18
-Nodes (14): createTask(), deleteTask(), fetchTask(), fetchTasks(), fetchTasksByProject(), TaskFilters, TaskListItem, TaskPriority (+6 more)
+Cohesion: 0.16
+Nodes (16): addProjectMember(), fetchProjectMembers(), ProjectMember, removeProjectMember(), createProject(), deleteProject(), fetchProject(), fetchProjects() (+8 more)
 
 ### Community 44 - "Community 44"
-Cohesion: 0.2
-Nodes (18): AccountStatusChip(), EditDrawer(), PersonActionsMenu(), PersonCard(), PersonRow(), PersonTableRow(), useUpdatePersonDetails(), useSetProfileTeams() (+10 more)
+Cohesion: 0.19
+Nodes (19): PeoplePage(), deletePerson(), fetchPeople(), fetchSalary(), functionErrorMessage(), InvitePayload, InviteResult, inviteUser() (+11 more)
 
 ### Community 45 - "Community 45"
 Cohesion: 0.11
-Nodes (11): ASSIGNEE_OPTIONS, formatDate(), PRIORITY_COLORS, PRIORITY_LABELS, PRIORITY_OPTIONS, SERVICE_ACCENT, STATUS_COLORS, STATUS_LABELS (+3 more)
+Nodes (13): anonClient, authHeader, CORS_HEADERS, INTERNAL_ROLES, resendKey, service, siteUrl, anonClient (+5 more)
 
 ### Community 46 - "Community 46"
+Cohesion: 0.13
+Nodes (19): HolidaysTab(), minutesSinceMidnight(), ReportsTab(), SettingsTab(), SummaryStats(), UpcomingScheduleSection(), useAddCompanyWfhDay(), useAddWorkingSaturday() (+11 more)
+
+### Community 47 - "Community 47"
 Cohesion: 0.11
 Nodes (18): 11. SaaS Scalability, 1. Architecture Overview, 2. Role-Based Access Control, 5. Discord Integration, ClickUp OAuth for SaaS, code:block1 (┌──────────────────────────────────────────────────────────┐), code:block10 (Settings page), code:block11 ([ACTION] Role changed) (+10 more)
 
-### Community 47 - "Community 47"
-Cohesion: 0.16
-Nodes (13): CommentRow, CommentWithAuthor, createComment(), deleteComment(), fetchComments(), COMMENT_KEYS, useComments(), useCreateComment() (+5 more)
-
 ### Community 48 - "Community 48"
-Cohesion: 0.19
-Nodes (14): ProjectsPage(), ServicesPanel(), StageFormModal(), StageFormModalProps, createStage(), deleteStage(), fetchStages(), reorderStages() (+6 more)
+Cohesion: 0.18
+Nodes (14): BubbleBtn(), RichEditor(), RichEditorProps, ITEMS, SlashCommand, SlashItem, slashSuggestion, SuggestionItem (+6 more)
 
 ### Community 49 - "Community 49"
-Cohesion: 0.18
-Nodes (13): createClient(), deleteClient(), fetchClient(), fetchClients(), updateClient(), CLIENT_KEYS, CompositeTypes, Constants (+5 more)
+Cohesion: 0.19
+Nodes (14): createTask(), deleteTask(), fetchTask(), fetchTasks(), fetchTasksByProject(), TaskFilters, TaskPriority, TaskRow (+6 more)
 
 ### Community 50 - "Community 50"
-Cohesion: 0.18
-Nodes (15): DesignationRow(), DesignationsPanel(), createDesignation(), deleteDesignation(), Designation, DesignationUsage, fetchDesignations(), fetchDesignationUsage() (+7 more)
+Cohesion: 0.17
+Nodes (16): DesignationRow(), DesignationsPanel(), createDesignation(), deleteDesignation(), Designation, DesignationUsage, fetchDesignations(), fetchDesignationUsage() (+8 more)
 
 ### Community 51 - "Community 51"
-Cohesion: 0.12
-Nodes (14): attendanceByProfile, CORS_HEADERS, doneKeys, newCompletions, profileIds, quest, questIds, questMap (+6 more)
+Cohesion: 0.18
+Nodes (12): CommentRow, CommentWithAuthor, createComment(), CreateCommentArgs, deleteComment(), fetchComments(), COMMENT_KEYS, supabase (+4 more)
 
 ### Community 52 - "Community 52"
 Cohesion: 0.12
-Nodes (13): Attendance, code:php (wp_insert_user([), code:php ([), code:php (current_user_can('manage_options')), code:php (current_user_can('linknbit_war_room_manage')), code:js (const apiRoot = window.linknbitWarRoomSettings.restUrl;), code:php (wp_localize_script('linknbit-war-room', 'linknbitWarRoomSett), Database (+5 more)
+Nodes (14): attendanceByProfile, CORS_HEADERS, doneKeys, newCompletions, profileIds, quest, questIds, questMap (+6 more)
 
 ### Community 53 - "Community 53"
-Cohesion: 0.17
-Nodes (12): GamificationSectionScreen(), SettingsSectionScreen(), useIsDesktop(), useMediaQuery(), AttendanceSectionScreen(), TeamAttendanceSectionScreen(), AttendancePage(), Drawer() (+4 more)
+Cohesion: 0.12
+Nodes (13): Attendance, code:php (wp_insert_user([), code:php ([), code:php (current_user_can('manage_options')), code:php (current_user_can('linknbit_war_room_manage')), code:js (const apiRoot = window.linknbitWarRoomSettings.restUrl;), code:php (wp_localize_script('linknbit-war-room', 'linknbitWarRoomSett), Database (+5 more)
 
 ### Community 54 - "Community 54"
 Cohesion: 0.12
 Nodes (16): **10\. Final Notes**, **6.12 Team Management**, **6.15 Files & Deliverables**, **6.17 Reports**, **6.18 Permissions System**, **6.19 Settings**, **6.20 Audit Logs**, **6.5 Stage Template System** (+8 more)
 
 ### Community 55 - "Community 55"
-Cohesion: 0.21
-Nodes (13): ServiceRow(), createService(), deleteService(), fetchServices(), fetchServiceUsage(), Service, ServiceUsage, slugify() (+5 more)
-
-### Community 56 - "Community 56"
 Cohesion: 0.13
 Nodes (15): **1\. Overview**, **2\. Core Objectives**, **3\. Core Architecture Philosophy**, **4\. Service-Based System (Core Backbone)**, **6.1 Authentication & Access**, **6.2 Client Management**, **6.3 Project Management**, **6.4 Service-Based Client Journeys** (+7 more)
+
+### Community 56 - "Community 56"
+Cohesion: 0.22
+Nodes (14): ensurePerformanceTeam(), fmtMonth(), getPerfMonths(), perfStatusLabel(), renderAdminDashboard(), renderAdminLeaderboard(), renderAdminPerformance(), renderEmpLeaderboard() (+6 more)
 
 ### Community 57 - "Community 57"
 Cohesion: 0.22
 Nodes (14): ensurePerformanceTeam(), fmtMonth(), getPerfMonths(), perfStatusLabel(), renderAdminDashboard(), renderAdminLeaderboard(), renderAdminPerformance(), renderEmpLeaderboard() (+6 more)
 
 ### Community 58 - "Community 58"
-Cohesion: 0.22
-Nodes (14): ensurePerformanceTeam(), fmtMonth(), getPerfMonths(), perfStatusLabel(), renderAdminDashboard(), renderAdminLeaderboard(), renderAdminPerformance(), renderEmpLeaderboard() (+6 more)
-
-### Community 59 - "Community 59"
 Cohesion: 0.24
 Nodes (13): androidSplashIconSvg(), BANNER_SOURCE, DARK_ICON, __dirname, glyph(), main(), out(), png() (+5 more)
 
-### Community 60 - "Community 60"
-Cohesion: 0.15
-Nodes (14): CreateRewardModal(), lp(), QuestFormModal(), RedeemModal(), RewardModal(), ShoutoutModal(), SubmitProofModal(), useCreateQuest() (+6 more)
-
-### Community 61 - "Community 61"
-Cohesion: 0.19
-Nodes (10): useSaveProfile(), getInitials(), ProfilePage(), Avatar(), AvatarGroup(), AvatarGroupProps, AvatarProps, getGradient() (+2 more)
-
-### Community 62 - "Community 62"
+### Community 59 - "Community 59"
 Cohesion: 0.14
 Nodes (12): anonClient, authHeader, CORS_HEADERS, [dh, dm], gapMinutes, [localH, localM], localTimeStr, now (+4 more)
 
-### Community 63 - "Community 63"
-Cohesion: 0.19
-Nodes (8): BeforeInstallPromptEvent, installed, isIos(), listeners, PwaInstall, usePwaInstall(), InstallAppButton(), IOS_STEPS
+### Community 60 - "Community 60"
+Cohesion: 0.17
+Nodes (12): fetchHalfDayLeaveDates(), fetchMonthlyAttendance(), fetchMonthlyOvertime(), fetchMyMonthlyAttendance(), AttendanceLike, computeEmployeeHours(), ComputeHoursArgs, DayHours (+4 more)
 
-### Community 64 - "Community 64"
-Cohesion: 0.19
-Nodes (7): useClickOutside(), CLIENT_NAV, CLIENT_NOTIFICATIONS, ClientNavItem, ClientShell(), dropdownVariants, useClickOutside()
-
-### Community 65 - "Community 65"
-Cohesion: 0.23
-Nodes (11): ApprovalFilters, ApprovalRow, ApprovalStatus, ApprovalType, ApprovalWithNames, fetchApprovals(), requestApproval(), reviewApproval() (+3 more)
-
-### Community 66 - "Community 66"
+### Community 61 - "Community 61"
 Cohesion: 0.18
 Nodes (8): ToastContext, ToastContextValue, ToastType, ICONS, STYLES, Toast, ToastItem(), ToastProvider()
 
-### Community 67 - "Community 67"
+### Community 62 - "Community 62"
+Cohesion: 0.32
+Nodes (12): AccountStatusChip(), PersonActionsMenu(), PersonRow(), AccountStatus, canEditDetails(), canManagePeople(), canManageTarget(), canResendInvite() (+4 more)
+
+### Community 63 - "Community 63"
 Cohesion: 0.15
 Nodes (13): 4. ClickUp Integration, Bidirectional Sync Flow, Bootstrap Sync (Initial ClickUp Import), ClickUp Status Mapping, code:block6 (Portal action                           ClickUp action), code:typescript (// Inside clickup-webhook Edge Function), code:sql (-- Recursively mark all dependents as failed), code:block9 (POST https://api.clickup.com/api/v2/team/{team_id}/webhook) (+5 more)
 
-### Community 68 - "Community 68"
+### Community 64 - "Community 64"
+Cohesion: 0.2
+Nodes (7): BeforeInstallPromptEvent, installed, isIos(), listeners, PwaInstall, usePwaInstall(), IOS_STEPS
+
+### Community 65 - "Community 65"
 Cohesion: 0.21
 Nodes (10): LeaderboardEntry, XpTransactionRow, usePointsLedger(), fmtLp(), LedgerRow(), MONTH_NAMES, monthKey(), PointsHistory() (+2 more)
 
-### Community 69 - "Community 69"
+### Community 66 - "Community 66"
+Cohesion: 0.26
+Nodes (10): createService(), deleteService(), fetchServices(), fetchServiceUsage(), Service, ServiceUsage, slugify(), updateService() (+2 more)
+
+### Community 67 - "Community 67"
+Cohesion: 0.24
+Nodes (10): ApprovalFilters, ApprovalRow, ApprovalStatus, ApprovalType, ApprovalWithNames, fetchApprovals(), requestApproval(), reviewApproval() (+2 more)
+
+### Community 68 - "Community 68"
 Cohesion: 0.17
 Nodes (10): anonClient, authHeader, checkOutTime, CORS_HEADERS, [endH, endM], [excH, excM], [localH, localM], localTimeStr (+2 more)
 
-### Community 70 - "Community 70"
-Cohesion: 0.17
-Nodes (11): Always-active conventions (every phase), code:block1 (Phase 0: Project Setup), code:bash (supabase migration new <descriptive_name>   # creates timest), code:block3 (Component → src/hooks/ → src/api/ → Supabase JS client), Dependency Graph, Edge Function, Frontend, Linknbit Portal — Implementation Phases (+3 more)
-
-### Community 71 - "Community 71"
-Cohesion: 0.17
-Nodes (12): code:block12 (src/lib/deviceUtils.ts), code:bash (supabase migration new create_teams_table), code:block14 (src/api/attendance.ts   — checkIn(), checkOut(), fetchMyAtte), code:block15 (src/hooks/useAttendance.ts   — useMyAttendance(), useAllAtte), Edge Function, Frontend, Migrations, Phase 3 — Attendance (+4 more)
-
-### Community 72 - "Community 72"
+### Community 69 - "Community 69"
 Cohesion: 0.17
 Nodes (12): code:bash (supabase migration new create_sync_queue), code:bash (supabase migration new add_sync_queue_trigger), code:block27 (src/api/integrations.ts   — fetchIntegrations(), connectClic), code:block28 (src/hooks/useIntegrations.ts), Edge Functions, Frontend, Migrations, Outbound trigger (+4 more)
 
-### Community 73 - "Community 73"
+### Community 70 - "Community 70"
+Cohesion: 0.17
+Nodes (12): code:block12 (src/lib/deviceUtils.ts), code:bash (supabase migration new create_teams_table), code:block14 (src/api/attendance.ts   — checkIn(), checkOut(), fetchMyAtte), code:block15 (src/hooks/useAttendance.ts   — useMyAttendance(), useAllAtte), Edge Function, Frontend, Migrations, Phase 3 — Attendance (+4 more)
+
+### Community 71 - "Community 71"
+Cohesion: 0.17
+Nodes (11): Always-active conventions (every phase), code:block1 (Phase 0: Project Setup), code:bash (supabase migration new <descriptive_name>   # creates timest), code:block3 (Component → src/hooks/ → src/api/ → Supabase JS client), Dependency Graph, Edge Function, Frontend, Linknbit Portal — Implementation Phases (+3 more)
+
+### Community 72 - "Community 72"
 Cohesion: 0.18
 Nodes (11): 8. Supabase Edge Functions, `attendance-checkin`, `clickup-sync-worker`, `clickup-webhook`, code:block17 (1. SELECT id, operation, resource_type, payload, depends_on,), code:block18 (GET /functions/v1/file-proxy/:attachmentId), code:block19 (Request body: {), code:block20 (Trigger-based (count quests):) (+3 more)
 
-### Community 74 - "Community 74"
+### Community 73 - "Community 73"
 Cohesion: 0.31
 Nodes (7): createSubtask(), deleteSubtask(), fetchSubtasks(), SubtaskRow, toggleSubtask(), updateSubtask(), SUBTASK_KEYS
 
-### Community 75 - "Community 75"
+### Community 74 - "Community 74"
 Cohesion: 0.2
 Nodes (8): anonClient, APPROVER_ROLES, authHeader, CORS_HEADERS, notifications, nowIso, privileged, service
+
+### Community 75 - "Community 75"
+Cohesion: 0.2
+Nodes (10): code:bash (supabase migration new create_audit_logs_partitioned), code:block23 (src/api/auditLogs.ts   — fetchAuditLogs(filters)), code:block24 (src/hooks/useAuditLogs.ts), Frontend, Migrations, Monthly cron, Phase 6 — Audit Logging, src/api/ (+2 more)
 
 ### Community 76 - "Community 76"
 Cohesion: 0.2
 Nodes (10): code:block10 (src/api/gamification.ts     — fetchXpTransactions(), fetchRe), code:block11 (src/hooks/useGamification.ts    — useXpTransactions(), useRe), code:bash (supabase migration new create_notifications_table), Edge Function, Frontend, Migrations, Phase 2 — Gamification, src/api/ (+2 more)
-
-### Community 77 - "Community 77"
-Cohesion: 0.2
-Nodes (10): code:bash (supabase migration new create_audit_logs_partitioned), code:block23 (src/api/auditLogs.ts   — fetchAuditLogs(filters)), code:block24 (src/hooks/useAuditLogs.ts), Frontend, Migrations, Monthly cron, Phase 6 — Audit Logging, src/api/ (+2 more)
 
 ### Community 78 - "Community 78"
 Cohesion: 0.33
 Nodes (8): canFulfillPayouts(), canGovernGamification(), canParticipate(), canRecognize(), CLIENT_ROLES, GOVERN_ROLES, has(), RECOGNIZE_ROLES
 
 ### Community 79 - "Community 79"
+Cohesion: 0.31
+Nodes (7): ProfileSelfUpdate, updateOwnProfile(), updatePassword(), uploadAvatar(), SaveProfileInput, useUpdatePassword(), Tables
+
+### Community 80 - "Community 80"
 Cohesion: 0.33
 Nodes (7): Popover(), PopoverProps, fmt2(), parseTime(), TimePicker(), TimePickerProps, toAmPm()
 
@@ -498,11 +498,11 @@ Nodes (6): admin, b64urlToBytes(), bytesToB64url(), dead, payload, vapidKeysToJw
 
 ### Community 83 - "Community 83"
 Cohesion: 0.22
-Nodes (9): code:bash (supabase migration new create_clients_tables), code:block20 (src/api/projects.ts      — fetchProjects(), createProject(),), code:block21 (src/hooks/useProjects.ts), Frontend, Migrations, Phase 5 — Projects & Tasks Core, src/api/, src/hooks/ (+1 more)
+Nodes (9): code:bash (supabase migration new create_levels_table), code:block7 (src/api/auth.ts          — signIn(), signOut(), getSession()), code:block8 (src/hooks/useAuth.ts         — useCurrentUser(), useSignIn()), Frontend, Migrations, Phase 1 — Authentication & Core Foundation, src/api/, src/hooks/ (+1 more)
 
 ### Community 84 - "Community 84"
 Cohesion: 0.22
-Nodes (9): code:bash (supabase migration new create_levels_table), code:block7 (src/api/auth.ts          — signIn(), signOut(), getSession()), code:block8 (src/hooks/useAuth.ts         — useCurrentUser(), useSignIn()), Frontend, Migrations, Phase 1 — Authentication & Core Foundation, src/api/, src/hooks/ (+1 more)
+Nodes (9): code:bash (supabase migration new create_clients_tables), code:block20 (src/api/projects.ts      — fetchProjects(), createProject(),), code:block21 (src/hooks/useProjects.ts), Frontend, Migrations, Phase 5 — Projects & Tasks Core, src/api/, src/hooks/ (+1 more)
 
 ### Community 85 - "Community 85"
 Cohesion: 0.22
@@ -513,124 +513,120 @@ Cohesion: 0.25
 Nodes (3): container, fadeUp, FAQS
 
 ### Community 87 - "Community 87"
-Cohesion: 0.36
-Nodes (6): ProfileSelfUpdate, updateOwnProfile(), updatePassword(), uploadAvatar(), SaveProfileInput, useUpdatePassword()
-
-### Community 88 - "Community 88"
 Cohesion: 0.39
 Nodes (6): addTeamMember(), fetchTeamMembers(), removeTeamMember(), setProfileTeams(), TeamMember, TEAM_MEMBER_KEYS
 
-### Community 89 - "Community 89"
-Cohesion: 0.25
-Nodes (7): AttendanceLike, computeEmployeeHours(), ComputeHoursArgs, DayHours, DayKind, EmployeeHours, HoursSettings
-
-### Community 90 - "Community 90"
+### Community 88 - "Community 88"
 Cohesion: 0.25
 Nodes (7): 7. Audit Logging, Audit Trigger, code:sql (CREATE OR REPLACE FUNCTION fn_audit_log()), code:sql (-- Run on the 25th of each month), Design Principles, Monthly Partition Management, Semantic Action RPC (for events triggers can't infer)
 
-### Community 91 - "Community 91"
+### Community 89 - "Community 89"
 Cohesion: 0.29
 Nodes (6): **A. DESIGN SERVICE**, **B. DEVELOPMENT SERVICE**, **Characteristics:**, **Characteristics:**, **Stages:**, **Stages:**
 
-### Community 92 - "Community 92"
+### Community 90 - "Community 90"
 Cohesion: 0.25
 Nodes (8): **5.1 Super Admin**, **5.2 Admin / Operations Manager**, **5.3 Project Manager**, **5.4 Team Lead**, **5.5 Employee**, **5.6 Client Owner**, **5.7 Client Member**, **5\. User Roles**
 
-### Community 93 - "Community 93"
+### Community 91 - "Community 91"
 Cohesion: 0.25
 Nodes (6): code:bash (node preview-server.js), Files, Fixes Applied, Preview Login, Viewing It, WordPress Integration Direction
 
-### Community 94 - "Community 94"
+### Community 92 - "Community 92"
 Cohesion: 0.29
 Nodes (6): copy, focused, payload, PRECACHE_URLS, target, url
 
-### Community 95 - "Community 95"
+### Community 93 - "Community 93"
 Cohesion: 0.29
 Nodes (6): fs, http, path, port, server, types
 
+### Community 95 - "Community 95"
+Cohesion: 0.29
+Nodes (4): anonClient, authHeader, CORS_HEADERS, service
+
 ### Community 96 - "Community 96"
-Cohesion: 0.43
-Nodes (5): fetchRoleFlags(), RoleFeatureFlagRow, updateRoleFlag(), ROLE_FLAG_KEYS, Tables
+Cohesion: 0.29
+Nodes (4): anonClient, authHeader, CORS_HEADERS, service
 
 ### Community 97 - "Community 97"
 Cohesion: 0.29
-Nodes (5): Tab, TabPanel(), TabPanelProps, Tabs(), TabsProps
+Nodes (7): 6. Real-time Strategy, Broadcast Pattern (Task Board Status), Channel Separation: `postgres_changes` vs Broadcast, code:typescript (// Comments — postgres_changes (low frequency, RLS needed)), code:typescript (// Subscribe), Connection Management, `postgres_changes` Subscription Pattern
 
 ### Community 98 - "Community 98"
 Cohesion: 0.29
-Nodes (4): anonClient, authHeader, CORS_HEADERS, service
+Nodes (7): 3. Database Schema, code:sql (-- All domain types are text + CHECK (defined inline on each), code:sql (-- ─────────────────────────────────────────), code:sql (CREATE INDEX idx_tasks_project      ON tasks(project_id, sta), Key Indexes, Tables, Types
 
 ### Community 99 - "Community 99"
 Cohesion: 0.29
-Nodes (4): anonClient, authHeader, CORS_HEADERS, service
-
-### Community 100 - "Community 100"
-Cohesion: 0.29
-Nodes (7): 6. Real-time Strategy, Broadcast Pattern (Task Board Status), Channel Separation: `postgres_changes` vs Broadcast, code:typescript (// Comments — postgres_changes (low frequency, RLS needed)), code:typescript (// Subscribe), Connection Management, `postgres_changes` Subscription Pattern
-
-### Community 101 - "Community 101"
-Cohesion: 0.29
-Nodes (7): 3. Database Schema, code:sql (-- All domain types are text + CHECK (defined inline on each), code:sql (-- ─────────────────────────────────────────), code:sql (CREATE INDEX idx_tasks_project      ON tasks(project_id, sta), Key Indexes, Tables, Types
-
-### Community 102 - "Community 102"
-Cohesion: 0.29
 Nodes (7): code:block31 (src/api/reports.ts   — fetchAttendanceReport(), fetchProject), code:block32 (src/hooks/useReports.ts), Frontend, No new migrations needed, Phase 10 — Reports & Analytics, src/api/, src/hooks/
 
-### Community 103 - "Community 103"
+### Community 100 - "Community 100"
 Cohesion: 0.53
 Nodes (5): isoToZonedMinutes(), tzOffsetMinutes(), WallParts, zonedParts(), zonedWallTimeToIso()
 
-### Community 104 - "Community 104"
+### Community 101 - "Community 101"
+Cohesion: 0.33
+Nodes (6): CreateRewardModal(), lp(), RedeemModal(), RewardModal(), useCreateReward(), useUpdateReward()
+
+### Community 102 - "Community 102"
 Cohesion: 0.33
 Nodes (5): code:js (export default defineConfig([), code:js (// eslint.config.js), Expanding the ESLint configuration, React Compiler, React + TypeScript + Vite
 
-### Community 105 - "Community 105"
+### Community 103 - "Community 103"
 Cohesion: 0.33
 Nodes (5): 9. Sync Queue & Conflict Resolution, code:sql (INSERT INTO tasks (clickup_task_id, title, status, updated_a), Idempotency, Timestamp-gated Upsert, Webhook Deduplication
 
-### Community 106 - "Community 106"
+### Community 104 - "Community 104"
 Cohesion: 0.33
 Nodes (6): **6.11 Gamification System**, **Design:**, **Development:**, **Features:**, **Marketing:**, **XP Logic:**
 
-### Community 107 - "Community 107"
-Cohesion: 0.4
-Nodes (5): asDifficulty(), difficultyMeta(), QuestTaskModal(), useCreateQuestTask(), useUpdateQuestTask()
-
-### Community 108 - "Community 108"
+### Community 105 - "Community 105"
 Cohesion: 0.5
 Nodes (3): CsvCell, downloadCsv(), toCsv()
 
-### Community 109 - "Community 109"
+### Community 106 - "Community 106"
 Cohesion: 0.4
-Nodes (5): code:block4 (VITE_SUPABASE_URL=http://localhost:54321), code:block5 (src/), Deliverable, Phase 0 — Project Setup, Steps
+Nodes (5): asDifficulty(), difficultyMeta(), QuestTaskModal(), useCreateQuestTask(), useUpdateQuestTask()
 
-### Community 110 - "Community 110"
+### Community 107 - "Community 107"
 Cohesion: 0.4
 Nodes (5): code:bash (supabase migration new seed_client_roles), Frontend, Migrations, Phase 9 — Client Portal, Testing checklist
 
-### Community 111 - "Community 111"
+### Community 108 - "Community 108"
+Cohesion: 0.4
+Nodes (5): code:block4 (VITE_SUPABASE_URL=http://localhost:54321), code:block5 (src/), Deliverable, Phase 0 — Project Setup, Steps
+
+### Community 109 - "Community 109"
 Cohesion: 0.4
 Nodes (5): code:block29 (src/hooks/realtime/useRealtimeComments.ts     — postgres_cha), Frontend, Phase 8 — Realtime & Notifications, src/hooks/realtime/, Testing checklist
 
-### Community 112 - "Community 112"
-Cohesion: 0.4
-Nodes (5): **8\. Tech Stack**, **Auth:**, **Backend:**, **Frontend:**, **Integrations:**
-
-### Community 113 - "Community 113"
+### Community 110 - "Community 110"
 Cohesion: 0.4
 Nodes (5): **6.7 Task Templates (Service-Based)**, **Design:**, **Development:**, **Example:**, **Marketing:**
 
-### Community 114 - "Community 114"
+### Community 111 - "Community 111"
+Cohesion: 0.4
+Nodes (5): **8\. Tech Stack**, **Auth:**, **Backend:**, **Frontend:**, **Integrations:**
+
+### Community 112 - "Community 112"
 Cohesion: 0.5
 Nodes (4): **6.13 Dashboards**, **Admin Dashboard**, **Client Dashboard**, **Employee Dashboard**
 
-### Community 115 - "Community 115"
+### Community 113 - "Community 113"
 Cohesion: 0.5
 Nodes (3): Answer, Q: Why does cn() connect Community 0 to Community 1, Community 10, Community 3, and Community 5?, Source Nodes
 
-### Community 116 - "Community 116"
+### Community 114 - "Community 114"
+Cohesion: 0.67
+Nodes (3): QuestFormModal(), useCreateQuest(), useUpdateQuest()
+
+### Community 115 - "Community 115"
 Cohesion: 0.67
 Nodes (3): code:sql (ALTER TABLE role_feature_flags ENABLE ROW LEVEL SECURITY;), code:typescript (// src/api/roleFlags.ts), Role Feature Flags
+
+### Community 116 - "Community 116"
+Cohesion: 0.67
+Nodes (3): **6.10 ClickUp Integration**, **Mapping:**, **Sync:**
 
 ### Community 117 - "Community 117"
 Cohesion: 0.67
@@ -638,43 +634,39 @@ Nodes (3): **6.6 Task Management**, **Fields:**, **Statuses:**
 
 ### Community 118 - "Community 118"
 Cohesion: 0.67
-Nodes (3): **9\. MVP Scope**, **Exclude:**, **Include:**
+Nodes (3): **6.14 Communication System**, **Features:**, **Rules:**
 
 ### Community 119 - "Community 119"
 Cohesion: 0.67
-Nodes (3): **6.14 Communication System**, **Features:**, **Rules:**
+Nodes (3): **9\. MVP Scope**, **Exclude:**, **Include:**
 
 ### Community 120 - "Community 120"
 Cohesion: 0.67
-Nodes (3): **6.16 Notifications**, **Channels:**, **Types:**
+Nodes (3): **6.9 Approval System**, **Status:**, **Types:**
 
 ### Community 121 - "Community 121"
 Cohesion: 0.67
-Nodes (3): **6.9 Approval System**, **Status:**, **Types:**
-
-### Community 122 - "Community 122"
-Cohesion: 0.67
-Nodes (3): **6.10 ClickUp Integration**, **Mapping:**, **Sync:**
+Nodes (3): **6.16 Notifications**, **Channels:**, **Types:**
 
 ## Knowledge Gaps
-- **757 isolated node(s):** `env`, `PRECACHE_URLS`, `url`, `copy`, `payload` (+752 more)
+- **776 isolated node(s):** `env`, `PRECACHE_URLS`, `url`, `copy`, `payload` (+771 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **4 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **6 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `toast()` connect `Community 10` to `Community 0`, `Community 2`, `Community 6`, `Community 7`, `Community 42`, `Community 45`, `Community 14`, `Community 18`, `Community 27`, `Community 28`?**
-  _High betweenness centrality (0.235) - this node is a cross-community bridge._
-- **Why does `cn()` connect `Community 26` to `Community 2`, `Community 3`, `Community 5`, `Community 6`, `Community 8`, `Community 13`, `Community 14`, `Community 16`, `Community 17`, `Community 19`, `Community 20`, `Community 22`, `Community 23`, `Community 24`, `Community 25`, `Community 27`, `Community 28`, `Community 29`, `Community 32`, `Community 33`, `Community 37`, `Community 42`, `Community 44`, `Community 45`, `Community 53`, `Community 61`, `Community 63`, `Community 64`, `Community 66`, `Community 68`, `Community 79`, `Community 97`?**
-  _High betweenness centrality (0.068) - this node is a cross-community bridge._
-- **Why does `useToast()` connect `Community 60` to `Community 2`, `Community 5`, `Community 6`, `Community 8`, `Community 13`, `Community 14`, `Community 16`, `Community 17`, `Community 19`, `Community 20`, `Community 23`, `Community 24`, `Community 27`, `Community 28`, `Community 32`, `Community 33`, `Community 42`, `Community 44`, `Community 45`, `Community 48`, `Community 50`, `Community 55`, `Community 61`, `Community 66`, `Community 107`?**
-  _High betweenness centrality (0.023) - this node is a cross-community bridge._
+- **Why does `toast()` connect `Community 7` to `Community 0`, `Community 1`, `Community 4`, `Community 13`, `Community 15`, `Community 16`, `Community 19`, `Community 28`, `Community 29`, `Community 30`?**
+  _High betweenness centrality (0.248) - this node is a cross-community bridge._
+- **Why does `cn()` connect `Community 14` to `Community 1`, `Community 3`, `Community 4`, `Community 6`, `Community 10`, `Community 12`, `Community 15`, `Community 18`, `Community 19`, `Community 20`, `Community 21`, `Community 23`, `Community 24`, `Community 25`, `Community 26`, `Community 27`, `Community 28`, `Community 29`, `Community 30`, `Community 32`, `Community 33`, `Community 35`, `Community 38`, `Community 40`, `Community 44`, `Community 48`, `Community 61`, `Community 62`, `Community 64`, `Community 65`, `Community 80`?**
+  _High betweenness centrality (0.071) - this node is a cross-community bridge._
+- **Why does `handleShoutoutSave()` connect `Community 7` to `Community 6`?**
+  _High betweenness centrality (0.028) - this node is a cross-community bridge._
 - **What connects `env`, `PRECACHE_URLS`, `url` to the rest of the system?**
-  _757 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _776 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
   _Cohesion score 0.02 - nodes in this community are weakly interconnected._
 - **Should `Community 1` be split into smaller, more focused modules?**
-  _Cohesion score 0.04 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05 - nodes in this community are weakly interconnected._
 - **Should `Community 2` be split into smaller, more focused modules?**
-  _Cohesion score 0.03 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.04 - nodes in this community are weakly interconnected._

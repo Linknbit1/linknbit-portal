@@ -7,6 +7,27 @@ export interface AttachmentWithUploader extends AttachmentRow {
   uploader: { id: string; name: string; avatar_url: string | null } | null
 }
 
+export interface ProjectFile extends AttachmentRow {
+  uploader: { id: string; name: string; avatar_url: string | null } | null
+  task: { id: string; title: string } | null
+}
+
+/**
+ * All files under a project — both project-level (task_id null) and task-level —
+ * joined with the owning task so the UI can show a "Project" vs "Task: <title>"
+ * differentiator. (Unlike fetchAttachments({projectId}), this does NOT exclude
+ * task files.)
+ */
+export async function fetchProjectFiles(projectId: string): Promise<ProjectFile[]> {
+  const { data, error } = await supabase
+    .from('attachments')
+    .select('*, uploader:profiles!attachments_uploader_id_fkey(id,name,avatar_url), task:tasks(id,title)')
+    .eq('project_id', projectId)
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return data
+}
+
 export interface UploadAttachmentArgs {
   projectId: string
   taskId?: string | null
