@@ -1,0 +1,717 @@
+import { useState } from 'react'
+import { useParams, Link } from 'react-router-dom'
+import {
+  Mail, Phone, BadgeCheck, Pencil, Users2, FolderKanban, ListChecks, Plane, Home,
+  Lock, Briefcase, Zap, Trophy, Star, Award, Target, Megaphone, History,
+  ArrowUpRight, ArrowDownRight, CalendarDays, TrendingUp, Palmtree, AlertCircle, Hourglass,
+} from 'lucide-react'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { Topbar } from '../components/layout/Topbar'
+import { Avatar } from '../components/ui/Avatar'
+import { RoleBadge } from '../components/shared/RoleBadge'
+import { ServiceChip } from '../components/shared/ServiceChip'
+import { StatusChip } from '../components/shared/StatusChip'
+import { SalaryCard } from '../components/shared/SalaryCard'
+import { PersonLink } from '../components/shared/PersonLink'
+import { MonthStepper } from '../components/shared/MonthFilter'
+import { useAuthContext } from '../context/AuthContext'
+import { useMonthFilter } from '../hooks/useMonthFilter'
+import { usePerson, usePersonTeams, usePersonProjects } from '../hooks/usePeople'
+import { useDesignations } from '../hooks/useDesignations'
+import { useTasks } from '../hooks/useTasks'
+import {
+  useLeaveByProfile, useWfhByProfile, useAttendanceByProfileMonth, useLeaveBalancesByProfile,
+  useExceptionsByProfile, useOvertimeByProfile,
+} from '../hooks/useAttendance'
+import {
+  useLeaderboard, useProfileDirectory, useXpTransactions, useMyBadgeAwards,
+  useBadges, useMyClaims, useAllQuestTasks, useApprovedShoutouts, useMyLpHistory,
+} from '../hooks/useGamification'
+import { toUserRole } from '../lib/peopleAccess'
+import { formatRelativeTime } from '../lib/utils'
+import { cn } from '../lib/cn'
+import type { Person, PersonTeam, PersonProject } from '../api/people'
+import type { TaskListItem } from '../api/tasks'
+import type { LeaveRequestWithType, WfhRequest } from '../api/attendance'
+
+const GOVERNOR_ROLES = ['super_admin', 'admin', 'hr', 'project_manager']
+const HR_ADMIN_ROLES = ['super_admin', 'admin', 'hr']
+
+const ATT_STATUS: Record<string, { label: string; cls: string; dot: string }> = {
+  present:  { label: 'Present',  cls: 'bg-success/10 text-success border-success/30',                     dot: 'bg-success' },
+  late:     { label: 'Late',     cls: 'bg-warning/10 text-warning border-warning/30',                     dot: 'bg-warning' },
+  absent:   { label: 'Absent',   cls: 'bg-error/10 text-error border-error/30',                           dot: 'bg-error' },
+  half_day: { label: 'Half Day', cls: 'bg-service-design/10 text-service-design border-service-design/30', dot: 'bg-service-design' },
+  leave:    { label: 'Leave',    cls: 'bg-service-dev/10 text-service-dev border-service-dev/30',          dot: 'bg-service-dev' },
+  wfh:      { label: 'WFH',      cls: 'bg-service-dev/10 text-service-dev border-service-dev/30',          dot: 'bg-service-dev' },
+  holiday:  { label: 'Holiday',  cls: 'bg-text-3/10 text-text-3 border-border-default',                   dot: 'bg-text-3' },
+}
+
+// leave_types.color is a token slug ('service-dev' etc). Static lookups so Tailwind sees literals.
+const LEAVE_COLOR: Record<string, { bar: string; text: string }> = {
+  'service-dev':    { bar: 'bg-service-dev',    text: 'text-service-dev' },
+  'service-mkt':    { bar: 'bg-service-mkt',    text: 'text-service-mkt' },
+  'service-design': { bar: 'bg-service-design', text: 'text-service-design' },
+  success:          { bar: 'bg-success',        text: 'text-success' },
+  warning:          { bar: 'bg-warning',        text: 'text-warning' },
+}
+const leaveColor = (c: string | null | undefined) => LEAVE_COLOR[c ?? 'service-dev'] ?? LEAVE_COLOR['service-dev']
+
+const EXC_TYPE: Record<string, { label: string; cls: string }> = {
+  late_arrival:    { label: 'Late arrival',    cls: 'bg-warning/10 text-warning border-warning/25' },
+  early_departure: { label: 'Early departure', cls: 'bg-service-design/10 text-service-design border-service-design/25' },
+  out_of_office:   { label: 'Out of office',   cls: 'bg-service-dev/10 text-service-dev border-service-dev/25' },
+}
+
+// Exception/overtime times are 'HH:MM:SS' time-of-day strings → "9:05 AM".
+const fmtClock = (t: string | null) => {
+  if (!t) return '—'
+  const [h, m] = t.split(':').map(Number)
+  if (Number.isNaN(h)) return t
+  const ampm = h >= 12 ? 'PM' : 'AM'
+  return `${h % 12 || 12}:${String(m ?? 0).padStart(2, '0')} ${ampm}`
+}
+
+const REQ_STATUS: Record<string, string> = {
+  pending:  'bg-warning/10 text-warning border-warning/25',
+  approved: 'bg-success/10 text-success border-success/25',
+  rejected: 'bg-error/10 text-error border-error/25',
+}
+
+// Internal portal is dark-only; match the ReportsPage Recharts theming.
+const CHART_LP = '#FBBF24' // LP / coin-gold — single series, so one hue, no legend
+const CHART_AXIS_TICK = { fontSize: 10, fill: '#4A5468', fontFamily: 'JetBrains Mono' }
+const CHART_TOOLTIP = {
+  backgroundColor: '#0F1620', border: '1px solid rgba(255,255,255,0.08)',
+  borderRadius: 8, color: '#E2E8F0', fontSize: 12, fontFamily: 'JetBrains Mono, monospace',
+}
+const MONTH_ABBR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+// monthly_lp_history.period is a 'YYYY-MM…' string → "Mon 'YY".
+const periodLabel = (period: string) => {
+  const [y, m] = period.split('-')
+  const mi = Number(m) - 1
+  return `${MONTH_ABBR[mi] ?? m} '${y.slice(2)}`
+}
+
+const fmtDay = (iso: string) =>
+  new Date(iso + (iso.length === 10 ? 'T00:00:00' : '')).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+const fmtShort = (iso: string) =>
+  new Date(iso + (iso.length === 10 ? 'T00:00:00' : '')).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+const fmtTime = (iso: string | null) =>
+  iso ? new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '—'
+
+/* ── Small building blocks ─────────────────────────────────────────────────── */
+function StatTile({ icon: Icon, label, value, accent }: {
+  icon: typeof Zap; label: string; value: string; accent: string
+}) {
+  return (
+    <div className="flex items-center gap-3 rounded-lg border border-border-subtle bg-surface-2/40 px-3.5 py-2.5">
+      <div className={cn('flex size-9 shrink-0 items-center justify-center rounded-md', accent)}>
+        <Icon size={16} />
+      </div>
+      <div className="min-w-0">
+        <p className="font-display text-[18px] font-bold leading-none text-text-1">{value}</p>
+        <p className="mt-1 font-ui text-[11px] text-text-3">{label}</p>
+      </div>
+    </div>
+  )
+}
+
+function SectionCard({ title, icon: Icon, action, children, className }: {
+  title: string; icon: typeof Users2; action?: React.ReactNode; children: React.ReactNode; className?: string
+}) {
+  return (
+    <section className={cn('overflow-hidden rounded-xl border border-border-default bg-surface-1', className)}>
+      <div className="flex items-center justify-between gap-2 border-b border-border-subtle px-5 py-3">
+        <h2 className="flex items-center gap-2 font-display text-[14px] font-bold text-text-1">
+          <Icon size={15} className="text-text-3" /> {title}
+        </h2>
+        {action}
+      </div>
+      <div className="p-5">{children}</div>
+    </section>
+  )
+}
+
+function Empty({ label }: { label: string }) {
+  return <p className="py-2 font-ui text-[12.5px] text-text-4">{label}</p>
+}
+
+function ChipRow({ items, emptyLabel }: { items: string[]; emptyLabel: string }) {
+  if (items.length === 0) return <Empty label={emptyLabel} />
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {items.map((v) => (
+        <span key={v} className="rounded-xs border border-border-subtle bg-surface-2 px-2 py-0.5 font-ui text-[12px] text-text-1">{v}</span>
+      ))}
+    </div>
+  )
+}
+
+/* ── Page ──────────────────────────────────────────────────────────────────── */
+type Tab = 'overview' | 'attendance' | 'recognition'
+
+export default function MemberProfilePage() {
+  const { id } = useParams<{ id: string }>()
+  const { profile: viewer } = useAuthContext()
+
+  const { data: person, isLoading } = usePerson(id)
+  const { data: teams = [] } = usePersonTeams(id)
+  const { data: projects = [] } = usePersonProjects(id)
+  const { data: tasks = [] } = useTasks(id ? { assigneeId: id } : {})
+  const { data: leaderboard = [] } = useLeaderboard()
+  const { data: designations = [] } = useDesignations()
+  const designationName = person?.designation_id
+    ? designations.find((d) => d.id === person.designation_id)?.name ?? null
+    : null
+
+  const viewerRole = viewer?.role ?? ''
+  const isSelf = viewer?.id === id
+  const isGovernor = GOVERNOR_ROLES.includes(viewerRole)
+  const isTeamLead = viewerRole === 'team_lead'
+
+  const { data: leave = [] } = useLeaveByProfile(id)
+  const { data: wfh = [] } = useWfhByProfile(id)
+  const canSeeTimeOff = isSelf || isGovernor || (isTeamLead && (leave.length > 0 || wfh.length > 0))
+  const canSeeSalary = isSelf || HR_ADMIN_ROLES.includes(viewerRole)
+
+  const [tab, setTab] = useState<Tab>('overview')
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-1 flex-col">
+        <Topbar title="Member" back />
+        <div className="w-full px-4 py-6 lg:px-8 lg:py-7">
+          <div className="h-44 animate-pulse rounded-xl border border-border-default bg-surface-inset" />
+        </div>
+      </div>
+    )
+  }
+  if (!person) {
+    return (
+      <div className="flex flex-1 flex-col">
+        <Topbar title="Member" back />
+        <div className="px-4 py-16 text-center font-ui text-[13px] text-text-4">This member could not be found.</div>
+      </div>
+    )
+  }
+
+  const rankIndex = leaderboard.findIndex((e) => e.profile_id === person.id)
+  const rank = rankIndex >= 0 ? rankIndex + 1 : null
+  const activeTasks = tasks.filter((t) => t.status !== 'completed')
+
+  const tabs: { id: Tab; label: string }[] = [
+    { id: 'overview', label: 'Overview' },
+    ...(canSeeTimeOff ? [{ id: 'attendance' as Tab, label: 'Attendance' }] : []),
+    { id: 'recognition', label: 'Recognition' },
+  ]
+  const activeTab: Tab = tabs.some((t) => t.id === tab) ? tab : 'overview'
+
+  return (
+    <div className="flex flex-1 flex-col">
+      <Topbar title={person.name} back />
+
+      <div className="flex w-full flex-col gap-5 px-4 py-6 lg:px-8 lg:py-7">
+        {/* ── Hero ── */}
+        <div className="overflow-hidden rounded-xl border border-border-default bg-surface-1">
+          <div className="h-16 bg-linear-to-r from-brand-red/18 via-service-design/12 to-service-dev/12" />
+          <div className="flex flex-col gap-5 px-5 pb-5 lg:flex-row lg:items-end lg:justify-between">
+            <div className="flex items-end gap-4">
+              <div className="-mt-9 shrink-0 rounded-full ring-4 ring-surface-1">
+                <Avatar name={person.name} src={person.avatar_url ?? undefined} size="xl" />
+              </div>
+              <div className="min-w-0 pb-0.5">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h1 className="truncate font-display text-[22px] font-bold text-text-1">{person.name}</h1>
+                  <RoleBadge role={toUserRole(person.role)} size="sm" />
+                  {!person.is_active && (
+                    <span className="rounded-xs border border-border-subtle px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wide text-text-4">Inactive</span>
+                  )}
+                </div>
+                {person.job_title && (
+                  <p className="mt-1 flex items-center gap-1.5 font-ui text-[13px] text-text-2">
+                    <Briefcase size={13} className="text-text-4" /> {person.job_title}
+                  </p>
+                )}
+                <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 font-ui text-[12.5px] text-text-3">
+                  <a href={`mailto:${person.email}`} className="flex items-center gap-1.5 transition-colors hover:text-text-1"><Mail size={13} className="text-text-4" /> {person.email}</a>
+                  {person.phone && <a href={`tel:${person.phone}`} className="flex items-center gap-1.5 transition-colors hover:text-text-1"><Phone size={13} className="text-text-4" /> {person.phone}</a>}
+                  {designationName && <span className="flex items-center gap-1.5"><BadgeCheck size={13} className="text-text-4" /> {designationName}</span>}
+                </div>
+              </div>
+            </div>
+            {isSelf && (
+              <Link to="/profile" className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-sm border border-border-default px-3 py-1.5 font-ui text-[12px] font-medium text-text-2 transition-colors hover:bg-surface-2 hover:text-text-1 lg:self-auto">
+                <Pencil size={13} /> Edit profile
+              </Link>
+            )}
+          </div>
+          {/* stat tiles */}
+          <div className="grid grid-cols-2 gap-3 border-t border-border-subtle p-4 sm:grid-cols-4">
+            <StatTile icon={Trophy} label="Level" value={String(person.level)} accent="bg-coin-gold/12 text-coin-gold" />
+            <StatTile icon={Zap} label="Experience" value={person.lp_balance.toLocaleString()} accent="bg-service-mkt/12 text-service-mkt" />
+            <StatTile icon={Star} label="Reputation" value={person.reputation_total.toLocaleString()} accent="bg-service-design/12 text-service-design" />
+            <StatTile icon={TrendingUp} label="Rank" value={rank ? `#${rank}` : '—'} accent="bg-service-dev/12 text-service-dev" />
+          </div>
+        </div>
+
+        {/* ── Tabs ── */}
+        <div className="flex items-center gap-1 self-start rounded-lg border border-border-default bg-surface-1 p-1">
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={cn(
+                'rounded-sm px-4 py-1.5 font-ui text-[13px] font-medium transition-colors',
+                activeTab === t.id ? 'bg-surface-3 text-text-1 shadow-sm' : 'text-text-3 hover:text-text-1',
+              )}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {activeTab === 'overview' && (
+          <OverviewTab person={person} teams={teams} projects={projects} tasks={tasks} activeTasks={activeTasks} canSeeSalary={canSeeSalary} isSelf={isSelf} />
+        )}
+        {activeTab === 'attendance' && canSeeTimeOff && (
+          <AttendanceTab personId={person.id} leave={leave} wfh={wfh} />
+        )}
+        {activeTab === 'recognition' && (
+          <RecognitionTab personId={person.id} />
+        )}
+      </div>
+    </div>
+  )
+}
+
+/* ── Overview ──────────────────────────────────────────────────────────────── */
+function OverviewTab({ person, teams, projects, tasks, activeTasks, canSeeSalary, isSelf }: {
+  person: Person
+  teams: PersonTeam[]
+  projects: PersonProject[]
+  tasks: TaskListItem[]
+  activeTasks: TaskListItem[]
+  canSeeSalary: boolean
+  isSelf: boolean
+}) {
+  const taskList = tasks
+  return (
+    <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+      <SectionCard title="About" icon={Users2} className="lg:col-span-2">
+        <div className="flex flex-col gap-4">
+          {person.bio
+            ? <p className="whitespace-pre-line font-ui text-body-sm/relaxed text-text-2">{person.bio}</p>
+            : <Empty label="No bio yet." />}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <p className="mb-1.5 font-mono text-[10px] uppercase tracking-wider text-text-4">Skills</p>
+              <ChipRow items={person.skills} emptyLabel="No skills listed." />
+            </div>
+            <div>
+              <p className="mb-1.5 font-mono text-[10px] uppercase tracking-wider text-text-4">Tech stacks</p>
+              <ChipRow items={person.tech_stacks} emptyLabel="No tech stacks listed." />
+            </div>
+          </div>
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Teams" icon={Users2}>
+        {teams.length === 0 ? <Empty label="Not a member of any team." /> : (
+          <div className="flex flex-wrap gap-2">
+            {teams.map((t) => (
+              <Link key={t.id} to="/teams" className="inline-flex items-center gap-1.5 rounded-full border border-border-subtle bg-surface-2 px-3 py-1 font-ui text-[12.5px] text-text-1 transition-colors hover:border-border-default">
+                {t.name}{t.is_lead && <span className="font-mono text-[9.5px] uppercase tracking-wide text-brand-red">Lead</span>}
+              </Link>
+            ))}
+          </div>
+        )}
+      </SectionCard>
+
+      <SectionCard title="Projects" icon={FolderKanban} action={<span className="font-mono text-[11px] text-text-4">{projects.length}</span>}>
+        {projects.length === 0 ? <Empty label="Not on any projects." /> : (
+          <div className="-my-2 flex flex-col divide-y divide-border-subtle">
+            {projects.map((p) => (
+              <Link key={p.id} to={`/admin/projects/${p.id}`} className="group flex items-center gap-3 py-2.5">
+                <ServiceChip service={p.service_type} />
+                <span className="min-w-0 flex-1 truncate font-ui text-[13px] text-text-1 transition-colors group-hover:text-brand-red">{p.name}</span>
+                <StatusChip status={p.status} type="project" />
+              </Link>
+            ))}
+          </div>
+        )}
+      </SectionCard>
+
+      <SectionCard title="Tasks" icon={ListChecks} className="lg:col-span-2" action={<span className="font-mono text-[11px] text-text-4">{activeTasks.length} open · {taskList.length} total</span>}>
+        {taskList.length === 0 ? <Empty label="No tasks assigned." /> : (
+          <div className="-my-2 flex flex-col divide-y divide-border-subtle">
+            {taskList.slice(0, 12).map((t) => (
+              <Link key={t.id} to={`/admin/tasks/${t.id}`} className="group flex items-center gap-3 py-2.5">
+                <span className="min-w-0 flex-1 truncate font-ui text-[13px] text-text-1 transition-colors group-hover:text-brand-red">{t.title}</span>
+                {t.project && <span className="hidden max-w-40 shrink-0 truncate font-mono text-[11px] text-text-4 sm:inline">{t.project.name}</span>}
+                <StatusChip status={t.status} />
+              </Link>
+            ))}
+          </div>
+        )}
+      </SectionCard>
+
+      {canSeeSalary && (
+        <SectionCard title="Compensation" icon={Lock} className="lg:col-span-2">
+          <SalaryCard profileId={person.id} context={isSelf ? 'self' : 'admin'} />
+        </SectionCard>
+      )}
+    </div>
+  )
+}
+
+/* ── Attendance ────────────────────────────────────────────────────────────── */
+function AttendanceTab({ personId, leave, wfh }: {
+  personId: string
+  leave: LeaveRequestWithType[]
+  wfh: WfhRequest[]
+}) {
+  const mf = useMonthFilter()
+  const { data: records = [] } = useAttendanceByProfileMonth(personId, mf.year, mf.month)
+
+  const count = (s: string) => records.filter((r) => r.status === s).length
+  const attended = count('present') + count('late') + count('wfh') + count('half_day')
+  const expected = attended + count('absent')
+  const rate = expected > 0 ? Math.round((attended / expected) * 100) : null
+
+  const { data: balances = [] } = useLeaveBalancesByProfile(personId)
+  const totalRemaining = balances.reduce((s, b) => s + b.remaining, 0)
+  const totalAllowed = balances.reduce((s, b) => s + b.type.days_allowed, 0)
+
+  const summary = [
+    { label: 'Present',  value: count('present'),  dot: 'bg-success',        text: 'text-success' },
+    { label: 'Late',     value: count('late'),     dot: 'bg-warning',        text: 'text-warning' },
+    { label: 'Absent',   value: count('absent'),   dot: 'bg-error',          text: 'text-error' },
+    { label: 'Leave',    value: count('leave'),    dot: 'bg-service-dev',    text: 'text-service-dev' },
+    { label: 'WFH',      value: count('wfh'),      dot: 'bg-service-dev',    text: 'text-service-dev' },
+    { label: 'Half day', value: count('half_day'), dot: 'bg-service-design', text: 'text-service-design' },
+  ]
+
+  const { data: exceptions = [] } = useExceptionsByProfile(personId)
+  const { data: overtime = [] } = useOvertimeByProfile(personId)
+
+  const monthLeave = leave.filter((l) => mf.inMonth(l.start_date))
+  const monthWfh = wfh.filter((w) => mf.inMonth(w.date))
+  const monthExc = exceptions.filter((e) => mf.inMonth(e.date))
+  const monthOt = overtime.filter((o) => mf.inMonth(o.date))
+
+  return (
+    <div className="flex flex-col gap-5">
+      {/* Month filter — right-aligned, controls the whole tab */}
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        <MonthStepper filter={mf} hideAllMonths />
+      </div>
+
+      {/* Summary metric cards */}
+      <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
+        {summary.map((s) => (
+          <div key={s.label} className="rounded-xl border border-border-default bg-surface-1 p-3.5 transition-colors hover:border-border-strong">
+            <div className="mb-2 flex items-center gap-1.5">
+              <span className={cn('size-1.5 rounded-full', s.dot)} />
+              <span className="font-ui text-[11px] text-text-3">{s.label}</span>
+            </div>
+            <p className={cn('font-display text-[24px] font-bold leading-none', s.text)}>{s.value}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+        {/* Attendance records */}
+        <SectionCard
+          title="Attendance history"
+          icon={CalendarDays}
+          className="lg:col-span-2"
+          action={rate !== null ? <span className="font-mono text-[11px] text-text-4">{records.length} days · {mf.label}</span> : undefined}
+        >
+          {rate !== null && (
+            <div className="mb-4 flex items-center gap-3">
+              <div className="h-2 flex-1 overflow-hidden rounded-full bg-surface-inset">
+                <div className="h-full rounded-full bg-success" style={{ width: `${rate}%` }} />
+              </div>
+              <span className="font-mono text-[12px] font-semibold text-text-2">{rate}% present</span>
+            </div>
+          )}
+          {records.length === 0 ? <Empty label="No attendance recorded for this month." /> : (
+            <div className="-mx-5 -mb-5 divide-y divide-border-subtle border-t border-border-subtle">
+              {records.map((r) => {
+                const meta = ATT_STATUS[r.status]
+                return (
+                  <div key={r.id} className="flex items-center gap-3 px-5 py-2.5 transition-colors hover:bg-surface-2/40">
+                    <span className={cn('size-2 shrink-0 rounded-full', meta?.dot ?? 'bg-text-4')} />
+                    <span className="w-32 shrink-0 font-ui text-[12.5px] font-medium text-text-1">{fmtShort(r.date)}</span>
+                    <span className={cn('shrink-0 rounded-xs border px-2 py-0.5 font-mono text-[10px] font-semibold', meta?.cls ?? 'border-border-default text-text-3')}>
+                      {meta?.label ?? r.status}
+                    </span>
+                    <span className="ml-auto font-mono text-[11.5px] text-text-3">
+                      {fmtTime(r.check_in)} <span className="text-text-4">→</span> {fmtTime(r.check_out)}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </SectionCard>
+
+        {/* Leave balance / holidays */}
+        <SectionCard title="Leave balance" icon={Palmtree}>
+          <div className="mb-4 rounded-lg border border-border-subtle bg-surface-2/40 p-4 text-center">
+            <p className="font-display text-[28px] font-bold leading-none text-text-1">
+              {totalRemaining}<span className="font-ui text-[16px] font-medium text-text-4"> / {totalAllowed}</span>
+            </p>
+            <p className="mt-1.5 font-ui text-[11.5px] text-text-3">Holiday days remaining this year</p>
+          </div>
+          {balances.length === 0 ? <Empty label="No leave types configured." /> : (
+            <div className="flex flex-col gap-3.5">
+              {balances.map((b) => {
+                const c = leaveColor(b.type.color)
+                const pct = b.type.days_allowed > 0 ? Math.min(100, (b.used / b.type.days_allowed) * 100) : 0
+                return (
+                  <div key={b.type.id}>
+                    <div className="flex items-center justify-between font-ui text-[12px]">
+                      <span className="text-text-1">{b.type.name}</span>
+                      <span className="font-mono text-text-3">
+                        <span className={cn('font-semibold', c.text)}>{b.remaining}</span> / {b.type.days_allowed} left
+                      </span>
+                    </div>
+                    <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-surface-inset">
+                      <div className={cn('h-full rounded-full', c.bar)} style={{ width: `${pct}%` }} />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </SectionCard>
+      </div>
+
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <SectionCard title="Leave requests" icon={Plane} action={<span className="font-mono text-[11px] text-text-4">{mf.label}</span>}>
+          {monthLeave.length === 0 ? <Empty label="No leave this month." /> : (
+            <div className="flex flex-col gap-2.5">
+              {monthLeave.map((l) => (
+                <div key={l.id} className="flex items-center gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-ui text-[12.5px] text-text-1">
+                      {l.leave_types?.name ?? 'Leave'} · {fmtDay(l.start_date)}{l.end_date !== l.start_date ? ` – ${fmtDay(l.end_date)}` : ''}
+                    </p>
+                    {l.reason && <p className="truncate font-ui text-[11.5px] text-text-4">{l.reason}</p>}
+                  </div>
+                  <span className={cn('shrink-0 rounded-xs border px-1.5 py-0.5 font-mono text-[10px] font-semibold capitalize', REQ_STATUS[l.status] ?? REQ_STATUS.pending)}>{l.status}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </SectionCard>
+
+        <SectionCard title="WFH requests" icon={Home} action={<span className="font-mono text-[11px] text-text-4">{mf.label}</span>}>
+          {monthWfh.length === 0 ? <Empty label="No WFH this month." /> : (
+            <div className="flex flex-col gap-2.5">
+              {monthWfh.map((w) => (
+                <div key={w.id} className="flex items-center gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-ui text-[12.5px] text-text-1">{fmtDay(w.date)}</p>
+                    {w.reason && <p className="truncate font-ui text-[11.5px] text-text-4">{w.reason}</p>}
+                  </div>
+                  <span className={cn('shrink-0 rounded-xs border px-1.5 py-0.5 font-mono text-[10px] font-semibold capitalize', REQ_STATUS[w.status] ?? REQ_STATUS.pending)}>{w.status}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </SectionCard>
+      </div>
+
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <SectionCard title="Exceptions" icon={AlertCircle} action={<span className="font-mono text-[11px] text-text-4">{mf.label}</span>}>
+          {monthExc.length === 0 ? <Empty label="No exceptions this month." /> : (
+            <div className="flex flex-col gap-2.5">
+              {monthExc.map((e) => {
+                const t = EXC_TYPE[e.exception_type]
+                return (
+                  <div key={e.id} className="flex items-center gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="flex items-center gap-1.5 font-ui text-[12.5px] text-text-1">
+                        <span className={cn('shrink-0 rounded-xs border px-1.5 py-0.5 font-mono text-[9.5px] font-semibold', t?.cls ?? 'border-border-default text-text-3')}>{t?.label ?? e.exception_type}</span>
+                        <span className="truncate">{fmtDay(e.date)}</span>
+                      </p>
+                      <p className="truncate font-ui text-[11.5px] text-text-4">
+                        {fmtClock(e.requested_time)}{e.return_time ? ` → ${fmtClock(e.return_time)}` : ''}{e.reason ? ` · ${e.reason}` : ''}
+                      </p>
+                    </div>
+                    <span className={cn('shrink-0 rounded-xs border px-1.5 py-0.5 font-mono text-[10px] font-semibold capitalize', REQ_STATUS[e.status] ?? REQ_STATUS.pending)}>{e.status}</span>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </SectionCard>
+
+        <SectionCard title="Overtime" icon={Hourglass} action={<span className="font-mono text-[11px] text-text-4">{mf.label}</span>}>
+          {monthOt.length === 0 ? <Empty label="No overtime this month." /> : (
+            <div className="flex flex-col gap-2.5">
+              {monthOt.map((o) => (
+                <div key={o.id} className="flex items-center gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-ui text-[12.5px] text-text-1">
+                      {fmtDay(o.date)} · <span className="font-mono text-text-3">{fmtClock(o.start_time)} – {fmtClock(o.end_time)}</span>
+                    </p>
+                    {o.reason && <p className="truncate font-ui text-[11.5px] text-text-4">{o.reason}</p>}
+                  </div>
+                  <span className="shrink-0 font-display text-[14px] font-bold text-service-mkt">{o.hours}h</span>
+                  <span className={cn('shrink-0 rounded-xs border px-1.5 py-0.5 font-mono text-[10px] font-semibold capitalize', REQ_STATUS[o.status] ?? REQ_STATUS.pending)}>{o.status}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </SectionCard>
+      </div>
+    </div>
+  )
+}
+
+/* ── Recognition ───────────────────────────────────────────────────────────── */
+function RecognitionTab({ personId }: { personId: string }) {
+  const { data: badgeAwards = [] } = useMyBadgeAwards(personId)
+  const { data: badges = [] } = useBadges()
+  const { data: claims = [] } = useMyClaims(personId)
+  const { data: quests = [] } = useAllQuestTasks()
+  const { data: shoutouts = [] } = useApprovedShoutouts()
+  const { data: xp = [] } = useXpTransactions(personId)
+  const { data: lpHistory = [] } = useMyLpHistory(personId)
+  const { data: directory = {} } = useProfileDirectory()
+
+  // Oldest → newest for the time axis.
+  const lpTrend = [...lpHistory].reverse().map((h) => ({ period: periodLabel(h.period), lp: h.lp_final }))
+
+  const badgeById = new Map(badges.map((b) => [b.id, b]))
+  const questById = new Map(quests.map((q) => [q.id, q]))
+  const nameOf = (pid: string) => directory[pid]?.name ?? 'Someone'
+
+  const received = shoutouts.filter((s) => s.to_profile_id === personId)
+  const given = shoutouts.filter((s) => s.from_profile_id === personId)
+  const questsDone = claims.filter((c) => c.status === 'approved')
+
+  return (
+    <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+      {/* Monthly LP trend */}
+      <SectionCard title="Monthly LP trend" icon={TrendingUp} className="lg:col-span-2" action={<span className="font-mono text-[11px] text-text-4">last {lpTrend.length || 12} mo</span>}>
+        {lpTrend.length === 0 ? <Empty label="No monthly history yet — it fills in as months close." /> : (
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={lpTrend} barCategoryGap="28%">
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+              <XAxis dataKey="period" tick={CHART_AXIS_TICK} axisLine={false} tickLine={false} />
+              <YAxis tick={CHART_AXIS_TICK} axisLine={false} tickLine={false} width={36} allowDecimals={false} />
+              <Tooltip contentStyle={CHART_TOOLTIP} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
+              <Bar dataKey="lp" name="LP earned" fill={CHART_LP} radius={[4, 4, 0, 0]} maxBarSize={40} />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
+      </SectionCard>
+
+      {/* Awards / badges */}
+      <SectionCard title="Awards" icon={Award} action={<span className="font-mono text-[11px] text-text-4">{badgeAwards.length}</span>}>
+        {badgeAwards.length === 0 ? <Empty label="No badges earned yet." /> : (
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+            {badgeAwards.map((a) => {
+              const b = badgeById.get(a.badge_id)
+              return (
+                <div key={a.id} className="flex items-center gap-3 rounded-lg border border-border-subtle bg-surface-2/40 px-3 py-2.5">
+                  <span className="text-[26px] leading-none">{b?.icon ?? '🏅'}</span>
+                  <div className="min-w-0">
+                    <p className="truncate font-ui text-[12.5px] font-semibold text-text-1">{b?.name ?? 'Badge'}</p>
+                    <p className="font-mono text-[10.5px] text-text-4">{fmtDay(a.awarded_at)}</p>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </SectionCard>
+
+      {/* Quests */}
+      <SectionCard title="Quests" icon={Target} action={<span className="font-mono text-[11px] text-text-4">{questsDone.length} done</span>}>
+        {claims.length === 0 ? <Empty label="No quests claimed yet." /> : (
+          <div className="flex flex-col gap-2.5">
+            {claims.slice(0, 10).map((c) => {
+              const q = questById.get(c.task_id)
+              return (
+                <div key={c.id} className="flex items-center gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-ui text-[12.5px] text-text-1">{q?.title ?? 'Quest'}</p>
+                    <p className="font-mono text-[10.5px] text-text-4">{formatRelativeTime(c.claimed_at)}</p>
+                  </div>
+                  {(c.lp_awarded ?? q?.lp_value) != null && (
+                    <span className="flex shrink-0 items-center gap-1 font-mono text-[11px] font-semibold text-coin-gold"><Zap size={11} /> {c.lp_awarded ?? q?.lp_value}</span>
+                  )}
+                  <span className={cn('shrink-0 rounded-xs border px-1.5 py-0.5 font-mono text-[10px] font-semibold capitalize', REQ_STATUS[c.status] ?? REQ_STATUS.pending)}>{c.status}</span>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </SectionCard>
+
+      {/* Shoutouts */}
+      <SectionCard title="Shoutouts" icon={Megaphone} className="lg:col-span-2" action={<span className="font-mono text-[11px] text-text-4">{received.length} received · {given.length} given</span>}>
+        {received.length === 0 && given.length === 0 ? <Empty label="No shoutouts yet." /> : (
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <div>
+              <p className="mb-2 font-mono text-[10px] uppercase tracking-wider text-text-4">Received</p>
+              {received.length === 0 ? <Empty label="None received." /> : (
+                <div className="flex flex-col gap-2.5">
+                  {received.slice(0, 6).map((s) => (
+                    <div key={s.id} className="rounded-lg border border-border-subtle bg-surface-2/40 p-3">
+                      <p className="font-ui text-[12.5px] text-text-1">“{s.message}”</p>
+                      <p className="mt-1.5 flex items-center gap-1 font-ui text-[11px] text-text-4">
+                        <ArrowDownRight size={12} className="text-success" /> from <PersonLink personId={s.from_profile_id} className="text-text-3">{nameOf(s.from_profile_id)}</PersonLink> · {s.category}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div>
+              <p className="mb-2 font-mono text-[10px] uppercase tracking-wider text-text-4">Given</p>
+              {given.length === 0 ? <Empty label="None given." /> : (
+                <div className="flex flex-col gap-2.5">
+                  {given.slice(0, 6).map((s) => (
+                    <div key={s.id} className="rounded-lg border border-border-subtle bg-surface-2/40 p-3">
+                      <p className="font-ui text-[12.5px] text-text-1">“{s.message}”</p>
+                      <p className="mt-1.5 flex items-center gap-1 font-ui text-[11px] text-text-4">
+                        <ArrowUpRight size={12} className="text-service-mkt" /> to <PersonLink personId={s.to_profile_id} className="text-text-3">{nameOf(s.to_profile_id)}</PersonLink> · {s.category}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </SectionCard>
+
+      {/* Points timeline */}
+      <SectionCard title="Points timeline" icon={History} className="lg:col-span-2">
+        {xp.length === 0 ? <Empty label="No points activity yet." /> : (
+          <div className="-my-1.5 flex flex-col divide-y divide-border-subtle">
+            {xp.slice(0, 20).map((t) => (
+              <div key={t.id} className="flex items-center gap-3 py-2">
+                <span className={cn('flex size-7 shrink-0 items-center justify-center rounded-md', t.amount >= 0 ? 'bg-success/12 text-success' : 'bg-error/12 text-error')}>
+                  {t.amount >= 0 ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
+                </span>
+                <span className="min-w-0 flex-1 truncate font-ui text-[12.5px] text-text-2">{t.reason}</span>
+                <span className="shrink-0 font-mono text-[10.5px] text-text-4">{formatRelativeTime(t.created_at)}</span>
+                <span className={cn('w-14 shrink-0 text-right font-mono text-[12px] font-semibold', t.amount >= 0 ? 'text-success' : 'text-error')}>
+                  {t.amount >= 0 ? '+' : ''}{t.amount.toLocaleString()}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </SectionCard>
+    </div>
+  )
+}

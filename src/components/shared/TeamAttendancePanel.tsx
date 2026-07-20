@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Users, Loader2 } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { Avatar } from '../ui/Avatar'
+import { PersonLink } from './PersonLink'
 import { Tabs } from '../ui/Tabs'
 import { DatePicker } from '../ui/DatePicker'
 import { PeriodStepper } from '../ui/PeriodStepper'
@@ -53,17 +54,18 @@ function Pill({ status, map }: { status: string; map: Record<string, string> }) 
 }
 
 // Row shell: avatar + name on the left, meta + status on the right (wraps on mobile).
-function Row({ name, avatar, children, status }: {
+function Row({ name, avatar, personId, children, status }: {
   name: string
   avatar: string | null
+  personId?: string | null
   children?: React.ReactNode
   status: React.ReactNode
 }) {
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 px-4 py-3 border-b border-border-subtle last:border-0">
       <div className="flex items-center gap-2.5 min-w-0 flex-1">
-        <Avatar name={name} src={avatar ?? undefined} size="sm" />
-        <span className="font-ui font-medium text-[13px] text-text-1 truncate">{name}</span>
+        <Avatar name={name} src={avatar ?? undefined} size="sm" personId={personId} />
+        <PersonLink personId={personId} className="font-ui font-medium text-[13px] text-text-1 truncate">{name}</PersonLink>
       </div>
       {children && (
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[12px] text-text-2 pl-10.5 sm:pl-0">
@@ -176,7 +178,7 @@ export function TeamRoster() {
         (dayQ.data ?? []).length === 0 ? <Empty label="No team attendance for this date." /> :
         <div>
           {dayQ.data!.map((r) => (
-            <Row key={r.id} name={r.profiles?.name ?? '—'} avatar={r.profiles?.avatar_url ?? null}
+            <Row key={r.id} name={r.profiles?.name ?? '—'} avatar={r.profiles?.avatar_url ?? null} personId={r.profile_id}
               status={<Pill status={r.status} map={ATTENDANCE_STATUS} />}>
               <span>In: <span className="text-text-1">{fmtTime(r.check_in)}</span></span>
               <span>Out: <span className="text-text-1">{fmtTime(r.check_out)}</span></span>
@@ -188,7 +190,7 @@ export function TeamRoster() {
         tallies.length === 0 ? <Empty label="No team attendance this month." /> :
         <div>
           {tallies.map((t) => (
-            <Row key={t.profileId} name={t.name} avatar={t.avatar}
+            <Row key={t.profileId} name={t.name} avatar={t.avatar} personId={t.profileId}
               status={<span className="font-mono text-[11px] text-success font-semibold">{t.present + t.late}<span className="text-text-4"> days in</span></span>}>
               <span>Present <span className="text-success">{t.present}</span></span>
               <span>Late <span className="text-warning">{t.late}</span></span>

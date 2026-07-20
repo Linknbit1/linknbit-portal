@@ -208,7 +208,7 @@ function ListView({ projects, onOpen }: { projects: ProjectListItem[]; onOpen: (
               </td>
               <td className="px-4 py-3">
                 {p.members.length > 0
-                  ? <AvatarGroup users={p.members.map((m) => ({ id: m.id, name: m.name, avatarUrl: m.avatar_url ?? undefined }))} max={4} size="xs" />
+                  ? <AvatarGroup users={p.members.map((m) => ({ id: m.id, name: m.name, avatarUrl: m.avatar_url ?? undefined }))} max={4} size="xs" linkToProfile />
                   : <span className="text-text-4 text-[12px]">—</span>}
               </td>
               <td className="px-4 py-3 text-right"><ChevronRight size={15} className="text-text-4" /></td>
@@ -282,7 +282,7 @@ function KanbanView({ projects, onOpen }: { projects: ProjectListItem[]; onOpen:
                   <ProgressBar value={p.progress} className="mt-2.5" />
                   <div className="flex items-center justify-between mt-2.5">
                     {p.members.length > 0
-                      ? <AvatarGroup users={p.members.map((m) => ({ id: m.id, name: m.name, avatarUrl: m.avatar_url ?? undefined }))} max={3} size="xs" />
+                      ? <AvatarGroup users={p.members.map((m) => ({ id: m.id, name: m.name, avatarUrl: m.avatar_url ?? undefined }))} max={3} size="xs" linkToProfile />
                       : <span />}
                     <span className="font-mono text-[10.5px] text-text-4">{p.progress}%</span>
                   </div>

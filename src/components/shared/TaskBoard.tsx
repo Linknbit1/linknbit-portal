@@ -118,9 +118,9 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
                         </span>
                       )}
                       {t.assignees.length > 0
-                        ? <AvatarGroup users={t.assignees.map((a) => ({ id: a.id, name: a.name, avatarUrl: a.avatar_url ?? undefined }))} max={3} size="xs" />
+                        ? <AvatarGroup users={t.assignees.map((a) => ({ id: a.id, name: a.name, avatarUrl: a.avatar_url ?? undefined }))} max={3} size="xs" linkToProfile />
                         : t.assignee
-                          ? <Avatar name={t.assignee.name} src={t.assignee.avatar_url ?? undefined} size="xs" />
+                          ? <Avatar name={t.assignee.name} src={t.assignee.avatar_url ?? undefined} size="xs" personId={t.assignee.id} />
                           : <span className="size-6 rounded-full border border-dashed border-border-strong shrink-0" />}
                     </div>
                   </div>

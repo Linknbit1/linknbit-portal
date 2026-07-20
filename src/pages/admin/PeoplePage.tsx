@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Avatar } from '../../components/ui/Avatar'
+import { PersonLink } from '../../components/shared/PersonLink'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Select } from '../../components/ui/Select'
@@ -593,10 +594,10 @@ function PersonTableRow({ person, myRole, myId, teamLabels, designationName, ...
   return (
     <div className={cn('grid items-center gap-4 px-5 py-3.5 transition-colors hover:bg-surface-2/45', GRID_COLS, !person.is_active && 'opacity-60')}>
       <div className="flex min-w-0 items-center gap-3">
-        <Avatar name={person.name} src={person.avatar_url ?? undefined} size="sm" />
+        <Avatar name={person.name} src={person.avatar_url ?? undefined} size="sm" personId={person.id} />
         <div className="min-w-0">
           <p className="flex items-center gap-2 truncate font-ui text-[13px] font-semibold text-text-1">
-            <span className="truncate">{person.name}</span>
+            <PersonLink personId={person.id} className="truncate">{person.name}</PersonLink>
             <span className="shrink-0 rounded-full bg-surface-2 px-1.5 py-0.5 font-display text-[10px] font-bold text-text-2">Lv {person.level}</span>
             {inactiveBadge}
           </p>

@@ -15,6 +15,7 @@ import RegisterPage from './pages/auth/RegisterPage'
 import ResetPasswordPage from './pages/auth/ResetPasswordPage'
 import DashboardPage from './pages/DashboardPage'
 import ProfilePage from './pages/ProfilePage'
+import MemberProfilePage from './pages/MemberProfilePage'
 import MorePage from './pages/MorePage'
 import NotificationsPage from './pages/NotificationsPage'
 import InboxPage from './pages/InboxPage'
@@ -65,6 +66,8 @@ export default function App() {
               <Route element={<PrivateRoute><AppShell /></PrivateRoute>}>
                 <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
+                {/* Public (to all internal staff) member profile — tiered sections gated by role/RLS */}
+                <Route path="/members/:id" element={<RoleGuard allowedRoles={SETTINGS_ROLES}><MemberProfilePage /></RoleGuard>} />
                 <Route path="/more" element={<MorePage />} />
                 {/* Mobile-only list; redirects to /dashboard on desktop (bell dropdown). */}
                 <Route path="/notifications" element={<NotificationsPage />} />

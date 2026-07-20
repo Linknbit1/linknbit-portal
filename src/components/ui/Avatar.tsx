@@ -1,5 +1,6 @@
 import { cn } from '../../lib/cn'
 import { getInitials } from '../../lib/utils'
+import { PersonLink } from '../shared/PersonLink'
 
 const SIZE_CLASSES = {
   xs: 'w-6 h-6 text-[9px]',
@@ -29,10 +30,12 @@ interface AvatarProps {
   online?: boolean
   className?: string
   src?: string
+  /** When set, the avatar links to that member's profile page. */
+  personId?: string | null
 }
 
-export function Avatar({ name, size = 'md', online, className, src }: AvatarProps) {
-  return (
+export function Avatar({ name, size = 'md', online, className, src, personId }: AvatarProps) {
+  const body = (
     <span className={cn('relative inline-flex shrink-0', className)}>
       {src ? (
         <img
@@ -63,15 +66,26 @@ export function Avatar({ name, size = 'md', online, className, src }: AvatarProp
       )}
     </span>
   )
+
+  if (personId) {
+    return (
+      <PersonLink personId={personId} className="rounded-full hover:opacity-90 hover:no-underline" ariaLabel={`View ${name}'s profile`}>
+        {body}
+      </PersonLink>
+    )
+  }
+  return body
 }
 
 interface AvatarGroupProps {
   users: Array<{ id: string; name: string; avatarUrl?: string | null }>
   max?: number
   size?: keyof typeof SIZE_CLASSES
+  /** When true, each avatar links to that member's profile (users[].id must be a profile id). */
+  linkToProfile?: boolean
 }
 
-export function AvatarGroup({ users, max = 3, size = 'sm' }: AvatarGroupProps) {
+export function AvatarGroup({ users, max = 3, size = 'sm', linkToProfile = false }: AvatarGroupProps) {
   const shown = users.slice(0, max)
   const rest = users.length - max
 
@@ -79,7 +93,7 @@ export function AvatarGroup({ users, max = 3, size = 'sm' }: AvatarGroupProps) {
     <div className="flex items-center">
       {shown.map((user, i) => (
         <span key={user.id} className={cn('ring-2 ring-bg-base rounded-full', i > 0 && '-ml-2')}>
-          <Avatar name={user.name} src={user.avatarUrl ?? undefined} size={size} />
+          <Avatar name={user.name} src={user.avatarUrl ?? undefined} size={size} personId={linkToProfile ? user.id : undefined} />
         </span>
       ))}
       {rest > 0 && (

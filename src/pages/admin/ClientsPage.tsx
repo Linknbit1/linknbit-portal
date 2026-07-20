@@ -5,6 +5,7 @@ import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Badge } from '../../components/ui/Badge'
 import { Avatar } from '../../components/ui/Avatar'
+import { PersonLink } from '../../components/shared/PersonLink'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { Skeleton } from '../../components/ui/Skeleton'
 import { ResponsiveTable } from '../../components/ui/ResponsiveTable'
@@ -98,8 +99,8 @@ export default function ClientsPage() {
                         <td className="px-4 py-3">
                           {c.account_manager ? (
                             <span className="flex items-center gap-2">
-                              <Avatar name={c.account_manager.name} src={c.account_manager.avatar_url ?? undefined} size="xs" />
-                              <span className="text-[12px] text-text-2">{c.account_manager.name}</span>
+                              <Avatar name={c.account_manager.name} src={c.account_manager.avatar_url ?? undefined} size="xs" personId={c.account_manager.id} />
+                              <PersonLink personId={c.account_manager.id} className="text-[12px] text-text-2">{c.account_manager.name}</PersonLink>
                             </span>
                           ) : <span className="text-text-4 text-[12px]">Unassigned</span>}
                         </td>

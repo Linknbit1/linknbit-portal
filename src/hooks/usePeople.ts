@@ -2,16 +2,44 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   fetchPeople, inviteUser, updatePersonRole, updatePersonDetails, uploadPersonAvatar, setPersonActive, deletePerson,
   resendInvite, setUserPassword, fetchSalary, upsertSalary,
+  fetchPerson, fetchPersonTeams, fetchPersonProjects,
   type InvitePayload,
 } from '../api/people'
 
 export const PEOPLE_KEYS = {
   all: ['people'] as const,
+  person: (id: string) => ['people', 'person', id] as const,
+  personTeams: (id: string) => ['people', 'person', id, 'teams'] as const,
+  personProjects: (id: string) => ['people', 'person', id, 'projects'] as const,
   salary: (profileId: string) => ['salary', profileId] as const,
 }
 
 export function usePeople() {
   return useQuery({ queryKey: PEOPLE_KEYS.all, queryFn: fetchPeople, staleTime: 30_000 })
+}
+
+export function usePerson(id: string | undefined) {
+  return useQuery({
+    queryKey: PEOPLE_KEYS.person(id ?? ''),
+    queryFn: () => fetchPerson(id ?? ''),
+    enabled: !!id,
+  })
+}
+
+export function usePersonTeams(id: string | undefined) {
+  return useQuery({
+    queryKey: PEOPLE_KEYS.personTeams(id ?? ''),
+    queryFn: () => fetchPersonTeams(id ?? ''),
+    enabled: !!id,
+  })
+}
+
+export function usePersonProjects(id: string | undefined) {
+  return useQuery({
+    queryKey: PEOPLE_KEYS.personProjects(id ?? ''),
+    queryFn: () => fetchPersonProjects(id ?? ''),
+    enabled: !!id,
+  })
 }
 
 export function useInviteUser() {
