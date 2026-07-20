@@ -50,6 +50,7 @@ import {
   updateLeaveType,
   deleteLeaveType,
   submitLeaveRequest,
+  enterLeaveForEmployee,
   updateLeaveRequest,
   fetchMyLeaveRequests,
   fetchAllLeaveRequests,
@@ -66,6 +67,7 @@ import type {
   SubmitOvertimePayload,
   LeaveTypePayload,
   SubmitLeavePayload,
+  EnterLeavePayload,
 } from '../api/attendance'
 import type { TablesUpdate } from '../types/database'
 
@@ -648,6 +650,20 @@ export function useSubmitLeave() {
     mutationFn: (payload: SubmitLeavePayload) => submitLeaveRequest(payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['attendance', 'leave'] })
+    },
+  })
+}
+
+// HR/admin enters leave on an employee's behalf. HR → pending; admin → applied directly
+// (writes attendance rows), so invalidate the attendance views too.
+export function useEnterLeaveForEmployee() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: EnterLeavePayload) => enterLeaveForEmployee(payload),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['attendance', 'leave'] })
+      qc.invalidateQueries({ queryKey: ['attendance', 'all'] })
+      qc.invalidateQueries({ queryKey: ['attendance', 'monthly'] })
     },
   })
 }

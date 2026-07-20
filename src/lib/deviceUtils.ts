@@ -25,6 +25,19 @@ function writeCookie(name: string, value: string): void {
   document.cookie = `${name}=${encodeURIComponent(value)}; Max-Age=${COOKIE_MAX_AGE_SEC}; Path=/; SameSite=Lax${secure}`
 }
 
+// crypto.randomUUID exists only in secure contexts (HTTPS / localhost). Over plain
+// HTTP on a LAN IP it is undefined, so fall back to a v4 UUID built on
+// crypto.getRandomValues, which is available in insecure contexts too.
+function randomUUID(): string {
+  if (typeof crypto.randomUUID === 'function') return crypto.randomUUID()
+
+  const bytes = crypto.getRandomValues(new Uint8Array(16))
+  bytes[6] = (bytes[6] & 0x0f) | 0x40 // version 4
+  bytes[8] = (bytes[8] & 0x3f) | 0x80 // variant 10
+  const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0'))
+  return `${hex.slice(0, 4).join('')}-${hex.slice(4, 6).join('')}-${hex.slice(6, 8).join('')}-${hex.slice(8, 10).join('')}-${hex.slice(10, 16).join('')}`
+}
+
 function randomCookieName(): string {
   const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_'
   const len = 12 + Math.floor(Math.random() * 8)
@@ -42,12 +55,12 @@ export function getDeviceToken(): string {
   const existing = readCookie(DEVICE_COOKIE_NAME)
   if (existing) return existing
 
-  const token = crypto.randomUUID()
+  const token = randomUUID()
   writeCookie(DEVICE_COOKIE_NAME, token)
   for (let i = 0; i < DECOY_COOKIE_COUNT; i++) {
     const name = randomCookieName()
     if (name === DEVICE_COOKIE_NAME) continue // never shadow the legit cookie
-    writeCookie(name, crypto.randomUUID())
+    writeCookie(name, randomUUID())
   }
   return token
 }
@@ -90,10 +103,30 @@ export async function getDeviceFingerprint(): Promise<string> {
   }
 
   const raw = signals.join('|')
+
+  // crypto.subtle, like crypto.randomUUID, exists only in secure contexts. Over
+  // plain HTTP on a LAN IP it is undefined, so fall back to a non-crypto hash —
+  // this is a soft signal only, so a weaker hash is acceptable.
+  if (!crypto.subtle) return fallbackHash(raw)
+
   const encoded = new TextEncoder().encode(raw)
   const hashBuffer = await crypto.subtle.digest('SHA-256', encoded)
   const hashArray = Array.from(new Uint8Array(hashBuffer))
   return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
+}
+
+// FNV-1a 32-bit, expanded to a 64-bit hex string by hashing with two seeds.
+// Non-cryptographic — used only when crypto.subtle is unavailable (insecure context).
+function fallbackHash(input: string): string {
+  const fnv = (seed: number): string => {
+    let h = seed >>> 0
+    for (let i = 0; i < input.length; i++) {
+      h ^= input.charCodeAt(i)
+      h = Math.imul(h, 0x01000193)
+    }
+    return (h >>> 0).toString(16).padStart(8, '0')
+  }
+  return fnv(0x811c9dc5) + fnv(0x7fffffff)
 }
 
 /**

@@ -937,6 +937,8 @@ export interface LeaveRequestWithType extends LeaveRequest {
 export interface LeaveRequestWithProfile extends LeaveRequest {
   profiles: { name: string; avatar_url: string | null } | null
   leave_types: { name: string; color: string } | null
+  // Set when HR/an admin entered the leave on the employee's behalf; null for self-submitted.
+  entered_by_profile: { name: string } | null
 }
 
 export type LeaveDayPart = 'full' | 'first_half' | 'second_half'
@@ -956,6 +958,36 @@ export async function submitLeaveRequest(payload: SubmitLeavePayload): Promise<L
   const { data, error } = await supabase
     .from('leave_requests')
     .insert({ ...payload, profile_id: user.id })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export interface EnterLeavePayload extends SubmitLeavePayload {
+  /** The employee the leave is for. */
+  profile_id: string
+}
+
+// HR/admin logs leave on an employee's behalf (e.g. backdated "old" leave), with
+// entered_by = the actor. Admins/super_admins apply it directly (inserted 'approved'
+// → trg_leave_sync writes attendance immediately); HR always creates it 'pending' for
+// an admin to approve. RLS enforces both the status gate and the approval segregation.
+export async function enterLeaveForEmployee(payload: EnterLeavePayload): Promise<LeaveRequest> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+  const { profile_id, ...rest } = payload
+
+  const { data: me } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  const appliesDirectly = me?.role === 'admin' || me?.role === 'super_admin'
+
+  const { data, error } = await supabase
+    .from('leave_requests')
+    .insert(
+      appliesDirectly
+        ? { ...rest, profile_id, entered_by: user.id, status: 'approved', reviewed_by: user.id, reviewed_at: new Date().toISOString() }
+        : { ...rest, profile_id, entered_by: user.id },
+    )
     .select()
     .single()
   if (error) throw error
@@ -1000,7 +1032,7 @@ export async function fetchMyLeaveRequests(): Promise<LeaveRequestWithType[]> {
 export async function fetchAllLeaveRequests(status?: string): Promise<LeaveRequestWithProfile[]> {
   let q = supabase
     .from('leave_requests')
-    .select('*, profiles!leave_requests_profile_id_fkey(name, avatar_url), leave_types(name, color)')
+    .select('*, profiles!leave_requests_profile_id_fkey(name, avatar_url), leave_types(name, color), entered_by_profile:profiles!leave_requests_entered_by_fkey(name)')
     .order('created_at', { ascending: false })
   if (status) q = q.eq('status', status)
   const { data, error } = await q
