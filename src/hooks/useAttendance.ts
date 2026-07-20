@@ -54,6 +54,11 @@ import {
   updateLeaveRequest,
   fetchMyLeaveRequests,
   fetchAllLeaveRequests,
+  fetchLeaveByProfile,
+  fetchWfhByProfile,
+  fetchAttendanceByProfileMonth,
+  fetchLeaveBalancesByProfile,
+  fetchOvertimeByProfile,
   reviewLeaveRequest,
   deleteLeaveRequest,
   fetchMyLeaveBalances,
@@ -94,6 +99,13 @@ export const ATTENDANCE_KEYS = {
   leaveTypes: (activeOnly?: boolean) => ['attendance', 'leave-types', activeOnly] as const,
   myLeave: ['attendance', 'leave', 'my'] as const,
   allLeave: (status?: string) => ['attendance', 'leave', 'all', status] as const,
+  leaveByProfile: (id: string) => ['attendance', 'leave', 'by-profile', id] as const,
+  wfhByProfile: (id: string) => ['attendance', 'wfh', 'by-profile', id] as const,
+  attendanceByProfileMonth: (id: string, year: number, month: number) =>
+    ['attendance', 'by-profile-month', id, year, month] as const,
+  leaveBalancesByProfile: (id: string) => ['attendance', 'leave', 'balances', 'by-profile', id] as const,
+  exceptionsByProfile: (id: string) => ['attendance', 'exceptions', 'by-profile', id] as const,
+  overtimeByProfile: (id: string) => ['attendance', 'overtime', 'by-profile', id] as const,
   myLeaveBalances: ['attendance', 'leave', 'balances', 'my'] as const,
 }
 
@@ -633,6 +645,59 @@ export function useAllLeaveRequests(status?: string) {
   return useQuery({
     queryKey: ATTENDANCE_KEYS.allLeave(status),
     queryFn: () => fetchAllLeaveRequests(status),
+  })
+}
+
+// Member profile page: leave & WFH for one person (RLS gates who actually gets rows).
+export function useLeaveByProfile(id: string | undefined) {
+  return useQuery({
+    queryKey: ATTENDANCE_KEYS.leaveByProfile(id ?? ''),
+    queryFn: () => fetchLeaveByProfile(id ?? ''),
+    enabled: !!id,
+  })
+}
+
+export function useWfhByProfile(id: string | undefined) {
+  return useQuery({
+    queryKey: ATTENDANCE_KEYS.wfhByProfile(id ?? ''),
+    queryFn: () => fetchWfhByProfile(id ?? ''),
+    enabled: !!id,
+  })
+}
+
+export function useAttendanceByProfileMonth(id: string | undefined, year: number, month: number) {
+  return useQuery({
+    queryKey: ATTENDANCE_KEYS.attendanceByProfileMonth(id ?? '', year, month),
+    queryFn: () => fetchAttendanceByProfileMonth(id ?? '', year, month),
+    enabled: !!id,
+    staleTime: 1000 * 60 * 5,
+  })
+}
+
+export function useLeaveBalancesByProfile(id: string | undefined) {
+  return useQuery({
+    queryKey: ATTENDANCE_KEYS.leaveBalancesByProfile(id ?? ''),
+    queryFn: () => fetchLeaveBalancesByProfile(id ?? ''),
+    enabled: !!id,
+    staleTime: 1000 * 60 * 5,
+  })
+}
+
+export function useExceptionsByProfile(id: string | undefined) {
+  return useQuery({
+    queryKey: ATTENDANCE_KEYS.exceptionsByProfile(id ?? ''),
+    queryFn: () => fetchAttendanceExceptions({ profileId: id }),
+    enabled: !!id,
+    staleTime: 1000 * 60 * 5,
+  })
+}
+
+export function useOvertimeByProfile(id: string | undefined) {
+  return useQuery({
+    queryKey: ATTENDANCE_KEYS.overtimeByProfile(id ?? ''),
+    queryFn: () => fetchOvertimeByProfile(id ?? ''),
+    enabled: !!id,
+    staleTime: 1000 * 60 * 5,
   })
 }
 

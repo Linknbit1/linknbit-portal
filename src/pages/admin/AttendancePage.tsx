@@ -460,7 +460,7 @@ export function DailyRecordsTab() {
                 <tr key={rec.id} className="border-b border-border-subtle hover:bg-white/1.5 transition-colors">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2.5">
-                      <Avatar name={rec.profiles?.name ?? '?'} src={rec.profiles?.avatar_url ?? undefined} size="sm" />
+                      <Avatar name={rec.profiles?.name ?? '?'} src={rec.profiles?.avatar_url ?? undefined} size="sm" personId={rec.profile_id} />
                       <span className="font-ui font-medium text-[13px] text-text-1">
                         {rec.profiles?.name ?? rec.profile_id.slice(0, 8)}
                       </span>
@@ -538,7 +538,7 @@ export function DailyRecordsTab() {
               <div key={rec.id} className="px-4 py-3.5 border-b border-border-subtle last:border-0 flex flex-col gap-2.5">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <Avatar name={rec.profiles?.name ?? '?'} src={rec.profiles?.avatar_url ?? undefined} size="sm" />
+                    <Avatar name={rec.profiles?.name ?? '?'} src={rec.profiles?.avatar_url ?? undefined} size="sm" personId={rec.profile_id} />
                     <span className="font-ui font-medium text-[13px] text-text-1 truncate">
                       {rec.profiles?.name ?? rec.profile_id.slice(0, 8)}
                     </span>
@@ -754,7 +754,7 @@ export function WFHRequestsTab() {
               return (
                 <div key={req.id} className="hover:bg-white/1.5 transition-colors">
                   <div className="flex items-center gap-3 px-5 py-3.5">
-                    <Avatar name={req.profiles?.name ?? '?'} src={req.profiles?.avatar_url ?? undefined} size="sm" />
+                    <Avatar name={req.profiles?.name ?? '?'} src={req.profiles?.avatar_url ?? undefined} size="sm" personId={req.profile_id} />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
                         <span className="font-ui font-medium text-[13px] text-text-1">{req.profiles?.name ?? '?'}</span>
@@ -1213,7 +1213,7 @@ export function LeaveTab() {
                 <div className="divide-y divide-border-subtle">
             {group.items.map((req) => (
               <div key={req.id} className="flex items-start gap-3 px-5 py-3.5">
-                <Avatar name={req.profiles?.name ?? '?'} src={req.profiles?.avatar_url ?? undefined} size="sm" />
+                <Avatar name={req.profiles?.name ?? '?'} src={req.profiles?.avatar_url ?? undefined} size="sm" personId={req.profile_id} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap mb-0.5">
                     <span className="font-ui font-medium text-[13px] text-text-1">{req.profiles?.name ?? '?'}</span>
@@ -1436,7 +1436,7 @@ export function EnrolledDevicesTab() {
     )}>
       <td className="px-4 py-3">
         <div className="flex items-center gap-2.5">
-          <Avatar name={d.profiles?.name ?? '?'} src={d.profiles?.avatar_url ?? undefined} size="sm" />
+          <Avatar name={d.profiles?.name ?? '?'} src={d.profiles?.avatar_url ?? undefined} size="sm" personId={d.profile_id} />
           <span className="font-ui font-medium text-[13px] text-text-1">{d.profiles?.name ?? d.profile_id.slice(0, 8)}</span>
         </div>
       </td>
@@ -1748,7 +1748,7 @@ export function ExceptionsTab() {
                   <tr key={exc.id} className="border-b border-border-subtle hover:bg-white/1.5 transition-colors">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2.5">
-                        <Avatar name={excWp.profiles?.name ?? '?'} src={excWp.profiles?.avatar_url ?? undefined} size="sm" />
+                        <Avatar name={excWp.profiles?.name ?? '?'} src={excWp.profiles?.avatar_url ?? undefined} size="sm" personId={excWp.profile_id} />
                         <span className="font-ui font-medium text-[13px] text-text-1">
                           {excWp.profiles?.name ?? exc.profile_id.slice(0, 8)}
                         </span>
@@ -2672,7 +2672,7 @@ export function OvertimeTab() {
                   <tr key={req.id} className="border-b border-border-subtle hover:bg-white/1.5 transition-colors">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2.5">
-                        <Avatar name={r.profiles?.name ?? '?'} src={r.profiles?.avatar_url ?? undefined} size="sm" />
+                        <Avatar name={r.profiles?.name ?? '?'} src={r.profiles?.avatar_url ?? undefined} size="sm" personId={r.profile_id} />
                         <span className="font-ui font-medium text-[13px] text-text-1">{r.profiles?.name ?? req.profile_id.slice(0, 8)}</span>
                       </div>
                     </td>
@@ -2744,7 +2744,7 @@ export function OvertimeTab() {
                 <div key={req.id} className="px-4 py-3.5 border-b border-border-subtle last:border-0 flex flex-col gap-2.5">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <Avatar name={r.profiles?.name ?? '?'} src={r.profiles?.avatar_url ?? undefined} size="sm" />
+                      <Avatar name={r.profiles?.name ?? '?'} src={r.profiles?.avatar_url ?? undefined} size="sm" personId={r.profile_id} />
                       <span className="font-ui font-medium text-[13px] text-text-1 truncate">{r.profiles?.name ?? req.profile_id.slice(0, 8)}</span>
                     </div>
                     <span className={cn('inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-ui font-semibold border shrink-0', meta.cls)}>

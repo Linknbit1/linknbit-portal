@@ -722,6 +722,18 @@ export async function fetchAllOvertimeRequests(
   return data as unknown as OvertimeRequestWithProfile[]
 }
 
+// Overtime for one member (member profile page). RLS gates it: self, governors, and
+// the person's team lead (shares_team_with) — unauthorized viewers get an empty array.
+export async function fetchOvertimeByProfile(profileId: string): Promise<OvertimeRequest[]> {
+  const { data, error } = await supabase
+    .from('overtime_requests')
+    .select('*')
+    .eq('profile_id', profileId)
+    .order('date', { ascending: false })
+  if (error) throw error
+  return data
+}
+
 // Approved overtime for a whole month (all employees) — folded into the attendance report.
 export async function fetchMonthlyOvertime(year: number, month: number): Promise<OvertimeRequest[]> {
   const pad = (n: number) => String(n).padStart(2, '0')
@@ -1029,6 +1041,52 @@ export async function fetchMyLeaveRequests(): Promise<LeaveRequestWithType[]> {
   return data as unknown as LeaveRequestWithType[]
 }
 
+// Leave for one member (member profile page). RLS gates who sees it: the person,
+// governors (super_admin/admin/hr/pm), and the person's team lead (shares_team_with).
+// Unauthorized viewers get an empty array.
+export async function fetchLeaveByProfile(profileId: string): Promise<LeaveRequestWithType[]> {
+  const { data, error } = await supabase
+    .from('leave_requests')
+    .select('*, leave_types(name, color)')
+    .eq('profile_id', profileId)
+    .order('start_date', { ascending: false })
+  if (error) throw error
+  return data as unknown as LeaveRequestWithType[]
+}
+
+// One member's attendance rows for a calendar month (member profile page).
+// RLS gates it: self, governors, and the person's team lead (shares_team_with).
+export async function fetchAttendanceByProfileMonth(
+  profileId: string,
+  year: number,
+  month: number, // 1-indexed
+): Promise<AttendanceRow[]> {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const from = `${year}-${pad(month)}-01`
+  const last = new Date(year, month, 0).getDate()
+  const to = `${year}-${pad(month)}-${pad(last)}`
+  const { data, error } = await supabase
+    .from('attendance')
+    .select('*')
+    .eq('profile_id', profileId)
+    .gte('date', from)
+    .lte('date', to)
+    .order('date', { ascending: false })
+  if (error) throw error
+  return data
+}
+
+// WFH for one member — same RLS gating as fetchLeaveByProfile.
+export async function fetchWfhByProfile(profileId: string): Promise<WfhRequest[]> {
+  const { data, error } = await supabase
+    .from('wfh_requests')
+    .select('*')
+    .eq('profile_id', profileId)
+    .order('date', { ascending: false })
+  if (error) throw error
+  return data
+}
+
 export async function fetchAllLeaveRequests(status?: string): Promise<LeaveRequestWithProfile[]> {
   let q = supabase
     .from('leave_requests')
@@ -1088,6 +1146,32 @@ export async function fetchMyLeaveBalances(): Promise<LeaveBalance[]> {
       .from('leave_requests')
       .select('leave_type_id, days, status, start_date')
       .eq('profile_id', user.id)
+      .eq('status', 'approved')
+      .gte('start_date', `${year}-01-01`)
+      .lte('start_date', `${year}-12-31`),
+  ])
+  if (typeErr) throw typeErr
+  if (reqErr) throw reqErr
+
+  return (types ?? []).map((type) => {
+    const used = (requests ?? [])
+      .filter((r) => r.leave_type_id === type.id)
+      .reduce((sum, r) => sum + (r.days ?? 0), 0)
+    return { type, used, remaining: Math.max(0, type.days_allowed - used) }
+  })
+}
+
+// Leave balance for one member (member profile page). Same shape as
+// fetchMyLeaveBalances but for an arbitrary profile — RLS on leave_requests scopes
+// the "used" tally to what the viewer may see (empty → full allowance shown).
+export async function fetchLeaveBalancesByProfile(profileId: string): Promise<LeaveBalance[]> {
+  const year = new Date().getFullYear()
+  const [{ data: types, error: typeErr }, { data: requests, error: reqErr }] = await Promise.all([
+    supabase.from('leave_types').select('*').eq('is_active', true).order('name'),
+    supabase
+      .from('leave_requests')
+      .select('leave_type_id, days, status, start_date')
+      .eq('profile_id', profileId)
       .eq('status', 'approved')
       .gte('start_date', `${year}-01-01`)
       .lte('start_date', `${year}-12-31`),

@@ -131,6 +131,59 @@ export async function setUserPassword(profileId: string, password: string): Prom
 
 // Returns null when the caller isn't allowed to see this salary (RLS filters the
 // row out) or none has been set yet.
+// ── Single-member profile reads (for the public member profile page) ──────────
+// profiles.* is broadly readable, so this returns basic identity for any member.
+export async function fetchPerson(id: string): Promise<Person | null> {
+  const { data, error } = await supabase.from('profiles').select('*').eq('id', id).maybeSingle()
+  if (error) throw error
+  return data
+}
+
+export interface PersonTeam {
+  id: string
+  name: string
+  is_lead: boolean
+}
+
+export async function fetchPersonTeams(profileId: string): Promise<PersonTeam[]> {
+  const { data, error } = await supabase
+    .from('team_members')
+    .select('team:teams(id, name, lead_id)')
+    .eq('profile_id', profileId)
+  if (error) throw error
+  return data.flatMap((m) =>
+    m.team ? [{ id: m.team.id, name: m.team.name, is_lead: m.team.lead_id === profileId }] : [],
+  )
+}
+
+export interface PersonProject {
+  id: string
+  name: string
+  service_type: string
+  status: string
+  role_in_project: string | null
+}
+
+// RLS on project_members/projects scopes this to projects the viewer may see.
+export async function fetchPersonProjects(profileId: string): Promise<PersonProject[]> {
+  const { data, error } = await supabase
+    .from('project_members')
+    .select('role_in_project, project:projects(id, name, service_type, status)')
+    .eq('profile_id', profileId)
+  if (error) throw error
+  return data.flatMap((m) =>
+    m.project
+      ? [{
+          id: m.project.id,
+          name: m.project.name,
+          service_type: m.project.service_type,
+          status: m.project.status,
+          role_in_project: m.role_in_project,
+        }]
+      : [],
+  )
+}
+
 export async function fetchSalary(profileId: string): Promise<EmployeeSalary | null> {
   const { data, error } = await supabase
     .from('employee_salaries')

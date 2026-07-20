@@ -8,6 +8,7 @@ import { Topbar } from '../../components/layout/Topbar'
 import { Button } from '../../components/ui/Button'
 import { ProgressBar } from '../../components/ui/ProgressBar'
 import { Avatar, AvatarGroup } from '../../components/ui/Avatar'
+import { PersonLink } from '../../components/shared/PersonLink'
 import { Skeleton } from '../../components/ui/Skeleton'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { ServiceChip } from '../../components/shared/ServiceChip'
@@ -276,8 +277,8 @@ export default function ProjectDetailPage() {
               <p className="text-center text-[12px] text-text-4 py-6">No members yet</p>
             ) : members.map((m) => (
               <div key={m.id} className="flex items-center gap-2.5 px-3 py-2 rounded-md hover:bg-surface-2 group">
-                <Avatar name={m.name} src={m.avatar_url ?? undefined} size="sm" />
-                <span className="flex-1 min-w-0 font-ui text-[13px] text-text-1 truncate">{m.name}</span>
+                <Avatar name={m.name} src={m.avatar_url ?? undefined} size="sm" personId={m.id} />
+                <PersonLink personId={m.id} className="flex-1 min-w-0 font-ui text-[13px] text-text-1 truncate">{m.name}</PersonLink>
                 {canManage && (
                   <button onClick={() => removeMember.mutate({ projectId: id, profileId: m.id }, { onError: (e) => toast(e instanceof Error ? e.message : 'Failed', 'error') })} className="size-7 rounded-sm flex items-center justify-center text-text-4 hover:text-error opacity-0 group-hover:opacity-100 transition-opacity" aria-label="Remove"><X size={13} /></button>
                 )}
@@ -384,7 +385,7 @@ function TaskList({ tasks, onOpenTask }: { tasks: TaskListItem[]; onOpenTask: (i
           <PriorityChip priority={t.priority} />
           <StatusChip status={t.status} />
           {t.assignees.length > 0
-            ? <AvatarGroup users={t.assignees.map((a) => ({ id: a.id, name: a.name, avatarUrl: a.avatar_url ?? undefined }))} max={3} size="xs" />
+            ? <AvatarGroup users={t.assignees.map((a) => ({ id: a.id, name: a.name, avatarUrl: a.avatar_url ?? undefined }))} max={3} size="xs" linkToProfile />
             : <span className="size-6 rounded-full border border-dashed border-border-strong shrink-0" />}
         </li>
       ))}

@@ -9,6 +9,7 @@ import { Topbar } from '../../components/layout/Topbar'
 import { HubRow } from '../../components/layout/MobileHub'
 import { useIsDesktop } from '../../hooks/useMediaQuery'
 import { Avatar, AvatarGroup } from '../../components/ui/Avatar'
+import { PersonLink } from '../../components/shared/PersonLink'
 import { Button } from '../../components/ui/Button'
 import { Tabs } from '../../components/ui/Tabs'
 import { Select } from '../../components/ui/Select'
@@ -169,7 +170,7 @@ function useMonthFilter(): MonthFilter {
 // ── Leaderboard podium (top 3 by monthly LP) ───────────────────────────────────────
 
 function PodiumSlot({ entry, place }: {
-  entry: { name: string; lp_balance: number; isMe: boolean; avatarUrl?: string | null } | null
+  entry: { name: string; lp_balance: number; isMe: boolean; avatarUrl?: string | null; profileId?: string } | null
   place: 1 | 2 | 3
 }) {
   const heights = { 1: 'h-24', 2: 'h-16', 3: 'h-12' } as const
@@ -181,7 +182,7 @@ function PodiumSlot({ entry, place }: {
   return (
     <div className="flex flex-col items-center gap-2 w-24">
       {entry ? (
-        <Avatar name={entry.name} src={entry.avatarUrl ?? undefined} size={place === 1 ? 'xl' : 'lg'} />
+        <Avatar name={entry.name} src={entry.avatarUrl ?? undefined} size={place === 1 ? 'xl' : 'lg'} personId={entry.profileId} />
       ) : (
         <div className="size-10 rounded-full bg-surface-2 border border-border-subtle flex items-center justify-center">
           <span className="font-mono text-[12px] text-text-4">?</span>
@@ -1074,7 +1075,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
                     <PodiumSlot
                       key={place}
                       place={place}
-                      entry={e ? { name: e.name, lp_balance: e.lp_balance, isMe: e.isMe, avatarUrl: directory[e.profile_id]?.avatar_url } : null}
+                      entry={e ? { name: e.name, lp_balance: e.lp_balance, isMe: e.isMe, avatarUrl: directory[e.profile_id]?.avatar_url, profileId: e.profile_id } : null}
                     />
                   )
                 })}
@@ -1090,10 +1091,10 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
                   <div key={e.profile_id} className={cn('grid grid-cols-[40px_1fr] gap-3 items-center lg:grid-cols-[40px_1fr_110px_110px_70px] px-4 lg:px-5 py-3 border-b border-border-subtle last:border-0', e.isMe && 'bg-service-dev/8')}>
                     <span className={cn('font-display font-bold text-[14px]', e.rank <= 3 ? 'text-coin-gold' : 'text-text-4')}>{e.rank}</span>
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <Avatar name={e.name} src={directory[e.profile_id]?.avatar_url ?? undefined} size="sm" />
+                      <Avatar name={e.name} src={directory[e.profile_id]?.avatar_url ?? undefined} size="sm" personId={e.profile_id} />
                       <div className="min-w-0">
                         <p className={cn('font-ui font-semibold text-[13px] truncate', e.isMe ? 'text-service-dev' : 'text-text-1')}>
-                          {e.name}{e.isMe && <span className="ml-2 text-[10px] font-mono text-service-dev">(you)</span>}
+                          <PersonLink personId={e.profile_id}>{e.name}</PersonLink>{e.isMe && <span className="ml-2 text-[10px] font-mono text-service-dev">(you)</span>}
                           {e.is_restricted && <Ban size={11} className="inline ml-1.5 text-error" aria-label="Restricted" />}
                         </p>
                         <p className="text-[11px] font-mono text-text-3 capitalize">{e.role.replace(/_/g, ' ')}</p>

@@ -4,6 +4,7 @@ import {
 } from 'lucide-react'
 import { Topbar } from '../components/layout/Topbar'
 import { Avatar } from '../components/ui/Avatar'
+import { PersonLink } from '../components/shared/PersonLink'
 import { Badge } from '../components/ui/Badge'
 import { Skeleton } from '../components/ui/Skeleton'
 import { DatePicker } from '../components/ui/DatePicker'
@@ -210,8 +211,8 @@ function TeamStandups() {
           <div className="flex flex-wrap gap-2">
             {missing.map((m) => (
               <span key={m.profile_id} className="inline-flex items-center gap-1.5 bg-surface-2 border border-border-default rounded-full pl-0.5 pr-2.5 py-0.5">
-                <Avatar name={m.name} src={m.avatar_url ?? undefined} size="xs" />
-                <span className="font-ui text-[12px] text-text-2">{m.name}</span>
+                <Avatar name={m.name} src={m.avatar_url ?? undefined} size="xs" personId={m.profile_id} />
+                <PersonLink personId={m.profile_id} className="font-ui text-[12px] text-text-2">{m.name}</PersonLink>
               </span>
             ))}
           </div>
@@ -234,9 +235,11 @@ function StandupCard({ standup }: { standup: StandupDetail }) {
   return (
     <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
       <div className="flex items-center gap-3 px-4 py-3 border-b border-border-subtle">
-        <Avatar name={standup.profile?.name ?? '?'} src={standup.profile?.avatar_url ?? undefined} size="sm" />
+        <Avatar name={standup.profile?.name ?? '?'} src={standup.profile?.avatar_url ?? undefined} size="sm" personId={standup.profile?.id} />
         <div className="min-w-0 flex-1">
-          <p className="font-ui font-semibold text-[13px] text-text-1 truncate">{standup.profile?.name ?? 'Unknown'}</p>
+          <p className="font-ui font-semibold text-[13px] text-text-1 truncate">
+            <PersonLink personId={standup.profile?.id}>{standup.profile?.name ?? 'Unknown'}</PersonLink>
+          </p>
           <p className="font-mono text-[10px] text-text-4">{formatRelativeTime(standup.submitted_at)} · {fmtMinutes(total)} logged</p>
         </div>
         {standup.is_late && <Badge variant="warning">Late</Badge>}

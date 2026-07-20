@@ -7,6 +7,7 @@ import { Select } from '../../components/ui/Select'
 import { DatePicker } from '../../components/ui/DatePicker'
 import { usePeople } from '../../hooks/usePeople'
 import { Avatar, AvatarGroup } from '../../components/ui/Avatar'
+import { PersonLink } from '../../components/shared/PersonLink'
 import { Skeleton } from '../../components/ui/Skeleton'
 import { ServiceChip } from '../../components/shared/ServiceChip'
 import { StatusChip } from '../../components/shared/StatusChip'
@@ -181,9 +182,9 @@ export default function TasksPage() {
                     </td>
                     <td className="px-4 py-3">
                       {t.assignees.length === 1
-                        ? <span className="flex items-center gap-2"><Avatar name={t.assignees[0].name} src={t.assignees[0].avatar_url ?? undefined} size="xs" /><span className="font-ui text-[12px] text-text-2">{t.assignees[0].name}</span></span>
+                        ? <span className="flex items-center gap-2"><Avatar name={t.assignees[0].name} src={t.assignees[0].avatar_url ?? undefined} size="xs" personId={t.assignees[0].id} /><PersonLink personId={t.assignees[0].id} className="font-ui text-[12px] text-text-2">{t.assignees[0].name}</PersonLink></span>
                         : t.assignees.length > 1
-                          ? <AvatarGroup users={t.assignees.map((a) => ({ id: a.id, name: a.name, avatarUrl: a.avatar_url ?? undefined }))} max={4} size="xs" />
+                          ? <AvatarGroup users={t.assignees.map((a) => ({ id: a.id, name: a.name, avatarUrl: a.avatar_url ?? undefined }))} max={4} size="xs" linkToProfile />
                           : <span className="text-text-4 text-[12px]">Unassigned</span>}
                     </td>
                   </tr>

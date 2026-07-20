@@ -14,6 +14,7 @@ import { useSetTaskAssignees } from '../../hooks/useTaskAssignees'
 import { DatePicker } from '../../components/ui/DatePicker'
 import { Toggle } from '../../components/ui/Toggle'
 import { Avatar } from '../../components/ui/Avatar'
+import { PersonLink } from '../../components/shared/PersonLink'
 import { Skeleton } from '../../components/ui/Skeleton'
 import { ServiceChip } from '../../components/shared/ServiceChip'
 import { StatusChip } from '../../components/shared/StatusChip'
@@ -209,10 +210,10 @@ export function TaskDetailContent({ taskId, onClosed, wide }: TaskDetailContentP
         <label className="text-label font-ui font-semibold text-text-2 uppercase tracking-wider flex items-center gap-1.5"><MessageSquare size={13} /> Comments</label>
         {comments.map((c) => (
           <div key={c.id} className="flex gap-2.5">
-            <Avatar name={c.author?.name ?? '?'} src={c.author?.avatar_url ?? undefined} size="sm" />
+            <Avatar name={c.author?.name ?? '?'} src={c.author?.avatar_url ?? undefined} size="sm" personId={c.author?.id} />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <span className="font-ui font-semibold text-[12.5px] text-text-1">{c.author?.name ?? 'Unknown'}</span>
+                <PersonLink personId={c.author?.id} className="font-ui font-semibold text-[12.5px] text-text-1">{c.author?.name ?? 'Unknown'}</PersonLink>
                 <span className="font-mono text-[10px] text-text-4">{formatRelativeTime(c.created_at)}</span>
                 {!c.is_internal && <span className="text-[9.5px] font-ui font-semibold uppercase text-service-mkt">Client</span>}
               </div>
