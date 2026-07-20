@@ -59,6 +59,7 @@ import {
   useAllLeaveRequests,
   useReviewLeave,
   useDeleteLeave,
+  useEnterLeaveForEmployee,
 } from '../../hooks/useAttendance'
 import type {
   AttendanceExceptionWithProfile,
@@ -66,6 +67,7 @@ import type {
   WfhRequestWithProfile,
   LeaveRequestWithProfile,
   LeaveType,
+  LeaveDayPart,
 } from '../../api/attendance'
 import { useActiveProfiles } from '../../hooks/useAuth'
 import { AttendanceCheckInCard } from '../../components/shared/AttendanceCheckInCard'
@@ -972,6 +974,137 @@ const LEAVE_COLOR_CLS: Record<string, { dot: string; chip: string }> = {
 }
 const leaveColor = (c: string | null | undefined) => LEAVE_COLOR_CLS[c ?? 'service-dev'] ?? LEAVE_COLOR_CLS['service-dev']
 
+/* ── Add leave on an employee's behalf (HR/admin) — pending admin approval ──── */
+function AddLeaveModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const toast = useToast()
+  const { profile } = useAuthContext()
+  const enterMut = useEnterLeaveForEmployee()
+  const { data: people = [] } = useActiveProfiles()
+  const { data: types = [] } = useLeaveTypes(true)
+  // Admins apply directly; HR entries go to an admin for approval. (RLS enforces this too.)
+  const appliesDirectly = profile?.role === 'admin' || profile?.role === 'super_admin'
+  const [profileId, setProfileId] = useState('')
+  const [leaveTypeId, setLeaveTypeId] = useState('')
+  const [startDate, setStartDate] = useState(localToday)
+  const [endDate, setEndDate] = useState(localToday)
+  const [dayPart, setDayPart] = useState<LeaveDayPart>('full')
+  const [reason, setReason] = useState('')
+
+  // Half-day leave must be a single calendar day (DB trigger enforces it too).
+  const isHalf = dayPart !== 'full'
+  const effectiveEnd = isHalf ? startDate : endDate
+  const canSubmit = !!profileId && !!leaveTypeId && !!reason.trim() && effectiveEnd >= startDate && !enterMut.isPending
+
+  const reset = () => {
+    setProfileId(''); setLeaveTypeId(''); setReason('')
+    setStartDate(localToday()); setEndDate(localToday()); setDayPart('full')
+  }
+
+  const handleSubmit = async () => {
+    if (!canSubmit) return
+    try {
+      const result = await enterMut.mutateAsync({
+        profile_id: profileId,
+        leave_type_id: leaveTypeId,
+        start_date: startDate,
+        end_date: effectiveEnd,
+        reason: reason.trim(),
+        day_part: dayPart,
+      })
+      toast(
+        result.status === 'approved' ? 'Leave added and applied to attendance' : 'Leave added — pending admin approval',
+        'success',
+      )
+      onClose(); reset()
+    } catch {
+      toast('Failed to add leave', 'error')
+    }
+  }
+
+  if (!open) return null
+
+  const labelCls = 'block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5'
+
+  return (
+    <ModalShell onClose={onClose} size="md" contentClassName="p-5 sm:p-6">
+      <div className="flex items-start justify-between mb-5">
+        <div>
+          <h3 className="font-display font-bold text-[16px] text-text-1">Add Leave</h3>
+          <p className="text-[11.5px] font-ui text-text-3 mt-0.5">
+            {appliesDirectly
+              ? 'Logs leave for an employee and applies it to their attendance immediately.'
+              : 'Logs leave for an employee. Sent to an admin for approval before it applies.'}
+          </p>
+        </div>
+        <button onClick={onClose} className="text-text-4 hover:text-text-1 transition-colors shrink-0"><X size={18} /></button>
+      </div>
+      <div className="space-y-4">
+        <div>
+          <label className={labelCls}>Employee</label>
+          <Select
+            value={profileId}
+            onChange={setProfileId}
+            placeholder="Select employee…"
+            options={people.filter((p) => !p.attendance_excluded).map((p) => ({ value: p.id, label: p.name, avatar: { name: p.name, url: p.avatar_url } }))}
+          />
+        </div>
+        <div>
+          <label className={labelCls}>Leave Type</label>
+          <Select
+            value={leaveTypeId}
+            onChange={setLeaveTypeId}
+            placeholder="Select leave type…"
+            options={types.map((t) => ({ value: t.id, label: t.name }))}
+          />
+        </div>
+        <div>
+          <label className={labelCls}>Duration</label>
+          <Select
+            value={dayPart}
+            onChange={(v) => { if (v === 'full' || v === 'first_half' || v === 'second_half') setDayPart(v) }}
+            options={[
+              { value: 'full', label: 'Full day(s)' },
+              { value: 'first_half', label: 'First half (single day)' },
+              { value: 'second_half', label: 'Second half (single day)' },
+            ]}
+          />
+        </div>
+        <div className={cn('grid gap-4', isHalf ? 'grid-cols-1' : 'grid-cols-2')}>
+          <div>
+            <label className={labelCls}>{isHalf ? 'Date' : 'From'}</label>
+            <DatePicker value={startDate} onChange={setStartDate} />
+          </div>
+          {!isHalf && (
+            <div>
+              <label className={labelCls}>To</label>
+              <DatePicker value={endDate} onChange={setEndDate} />
+            </div>
+          )}
+        </div>
+        {!isHalf && effectiveEnd < startDate && (
+          <p className="text-[11.5px] font-ui text-error">End date must be on or after the start date.</p>
+        )}
+        <div>
+          <label className={labelCls}>Reason</label>
+          <textarea
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="Why was this leave taken?"
+            rows={2}
+            className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-ui text-text-1 placeholder:text-text-4 outline-none focus:border-border-focus resize-none"
+          />
+        </div>
+      </div>
+      <div className="flex gap-2.5 mt-5">
+        <Button variant="ghost" size="sm" className="flex-1" onClick={onClose}>Cancel</Button>
+        <Button size="sm" className="flex-1" onClick={handleSubmit} disabled={!canSubmit}>
+          <Check size={14} /> {appliesDirectly ? 'Add & Apply' : 'Add Leave'}
+        </Button>
+      </div>
+    </ModalShell>
+  )
+}
+
 export function LeaveTab() {
   const toast = useToast()
   const { profile } = useAuthContext()
@@ -988,6 +1121,7 @@ export function LeaveTab() {
   const [rejectTarget, setRejectTarget] = useState<LeaveRequestWithProfile | null>(null)
   const [rejectNote, setRejectNote] = useState('')
   const [deleteTarget, setDeleteTarget] = useState<LeaveRequestWithProfile | null>(null)
+  const [addOpen, setAddOpen] = useState(false)
   const monthFilter = useMonthFilter()
 
   const filtered = requests.filter((r) => statusFilter === 'all' || r.status === statusFilter)
@@ -1065,6 +1199,9 @@ export function LeaveTab() {
               { value: 'rejected', label: 'Rejected' },
             ]}
           />
+          <Button size="sm" onClick={() => setAddOpen(true)}>
+            <Plus size={13} /> Add Leave
+          </Button>
         </SectionToolbar>
         {groups.length === 0 ? (
           <div className="py-12 text-center font-ui text-[13px] text-text-4">No leave requests for this period.</div>
@@ -1090,6 +1227,11 @@ export function LeaveTab() {
                         Half day
                       </span>
                     )}
+                    {req.entered_by && (
+                      <span className="text-[10px] font-mono bg-service-dev/10 text-service-dev border border-service-dev/20 px-1.5 py-0.5 rounded-xs uppercase tracking-wide">
+                        Added by {req.entered_by_profile?.name ?? 'HR'}
+                      </span>
+                    )}
                   </div>
                   <p className="font-ui text-[12px] text-text-3 truncate">{req.reason}</p>
                   <p className="font-mono text-[10.5px] text-text-4 mt-0.5">
@@ -1098,6 +1240,12 @@ export function LeaveTab() {
                   {req.review_note && <p className="font-ui text-[11px] text-error mt-0.5 italic">"{req.review_note}"</p>}
                 </div>
                 {req.status === 'pending' ? (
+                  // On-behalf (entered_by) entries can only be approved by an admin/super_admin.
+                  req.entered_by && !isAdmin ? (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-xs border border-warning/25 bg-warning/10 text-warning text-[11px] font-mono font-semibold shrink-0 mt-0.5 whitespace-nowrap">
+                      Awaiting admin
+                    </span>
+                  ) : (
                   <div className="flex items-center gap-1.5 shrink-0">
                     <button onClick={() => approve(req.id)}
                       className="flex items-center gap-1 px-2.5 py-1.5 rounded-sm bg-success/10 border border-success/30 text-success text-[11.5px] font-ui font-semibold hover:bg-success/20 transition-colors">
@@ -1108,6 +1256,7 @@ export function LeaveTab() {
                       <ThumbsDown size={12} /> Reject
                     </button>
                   </div>
+                  )
                 ) : (
                   <span className={cn('inline-flex items-center px-2 py-0.5 rounded-xs border text-[11px] font-mono font-semibold shrink-0 mt-0.5',
                     LEAVE_STATUS_CLS[req.status] ?? LEAVE_STATUS_CLS.pending)}>
@@ -1164,6 +1313,8 @@ export function LeaveTab() {
       </div>
 
       <LeaveTypeModal open={typeModalOpen} onClose={() => setTypeModalOpen(false)} editing={editingType} />
+
+      <AddLeaveModal open={addOpen} onClose={() => setAddOpen(false)} />
 
       <ConfirmDialog
         open={deleteTarget !== null}

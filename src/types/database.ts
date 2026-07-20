@@ -856,6 +856,7 @@ export type Database = {
           day_part: string
           days: number
           end_date: string
+          entered_by: string | null
           id: string
           leave_type_id: string
           profile_id: string
@@ -872,6 +873,7 @@ export type Database = {
           day_part?: string
           days?: number
           end_date: string
+          entered_by?: string | null
           id?: string
           leave_type_id: string
           profile_id: string
@@ -888,6 +890,7 @@ export type Database = {
           day_part?: string
           days?: number
           end_date?: string
+          entered_by?: string | null
           id?: string
           leave_type_id?: string
           profile_id?: string
@@ -900,6 +903,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "leave_requests_entered_by_fkey"
+            columns: ["entered_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "leave_requests_leave_type_id_fkey"
             columns: ["leave_type_id"]
