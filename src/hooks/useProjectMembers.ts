@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { fetchProjectMembers, addProjectMember, removeProjectMember } from '../api/projectMembers'
+import { fetchProjectMembers, addProjectMember, addProjectMembers, removeProjectMember } from '../api/projectMembers'
 import { PROJECT_KEYS } from './useProjects'
 
 export const PROJECT_MEMBER_KEYS = {
@@ -25,6 +25,15 @@ export function useAddProjectMember() {
       qc.invalidateQueries({ queryKey: PROJECT_KEYS.detail(v.projectId) })
       qc.invalidateQueries({ queryKey: PROJECT_KEYS.all })
     },
+  })
+}
+
+export function useAddProjectMembers() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ projectId, profileIds }: { projectId: string; profileIds: string[] }) =>
+      addProjectMembers(projectId, profileIds),
+    onSuccess: (_, v) => qc.invalidateQueries({ queryKey: PROJECT_MEMBER_KEYS.byProject(v.projectId) }),
   })
 }
 

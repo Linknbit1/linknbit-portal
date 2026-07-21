@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   fetchAttachments, fetchProjectFiles, uploadAttachment, deleteAttachment, toggleAttachmentVisibility,
-  type UploadAttachmentArgs,
+  addAttachmentLink, setAttachmentConfidential,
+  type UploadAttachmentArgs, type AddLinkArgs,
 } from '../api/attachments'
 import { TASK_KEYS } from './useTasks'
 import { PROJECT_KEYS } from './useProjects'
@@ -64,10 +65,27 @@ export function useToggleAttachmentVisibility() {
   })
 }
 
+export function useAddAttachmentLink() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (args: AddLinkArgs) => addAttachmentLink(args),
+    onSuccess: (row) => invalidateAttachment(qc, row.project_id, row.task_id),
+  })
+}
+
+export function useSetAttachmentConfidential() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, isConfidential }: { id: string; isConfidential: boolean }) =>
+      setAttachmentConfidential(id, isConfidential),
+    onSuccess: (row) => invalidateAttachment(qc, row.project_id, row.task_id),
+  })
+}
+
 export function useDeleteAttachment() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, storagePath }: { id: string; storagePath: string; projectId: string; taskId?: string | null }) =>
+    mutationFn: ({ id, storagePath }: { id: string; storagePath: string | null; projectId: string; taskId?: string | null }) =>
       deleteAttachment(id, storagePath),
     onSuccess: (_, v) => invalidateAttachment(qc, v.projectId, v.taskId),
   })

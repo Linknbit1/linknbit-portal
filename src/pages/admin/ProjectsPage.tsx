@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useCanDeleteProjects } from '../../hooks/useRoleFlags'
-import { useAuthContext } from '../../context/AuthContext'
+import { useCanDeleteProjects, useCanAccess } from '../../hooks/useRoleFlags'
 import {
   List, Columns, Calendar, Flag, Plus, Search, ChevronRight, AlertCircle, SlidersHorizontal, Trash2,
 } from 'lucide-react'
@@ -70,10 +69,8 @@ export default function ProjectsPage() {
   const [showNew, setShowNew] = useState(false)
   const [pendingDelete, setPendingDelete] = useState<ProjectListItem | null>(null)
 
-  const { profile } = useAuthContext()
-  // p_projects_insert allows exactly these roles; showing the button to anyone else
-  // produced a create form that always failed at RLS. (Candidate future flag.)
-  const canCreateProject = ['super_admin', 'admin', 'project_manager'].includes(profile?.role ?? '')
+  // Mirrors p_projects_insert, which now reads the same flag.
+  const canCreateProject = useCanAccess('can_create_projects')
   const canDeleteProject = useCanDeleteProjects()
 
   const { data: projects = [], isLoading } = useProjects()
@@ -157,7 +154,7 @@ export default function ProjectsPage() {
         {isLoading ? (
           <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-16" />)}</div>
         ) : projects.length === 0 ? (
-          <EmptyState onNew={() => setShowNew(true)} />
+          <EmptyState onNew={() => setShowNew(true)} canCreate={canCreateProject} />
         ) : (
           <>
             {view === 'list' && <ListView projects={filtered} onOpen={(id) => navigate(`/admin/projects/${id}`)} onDelete={setPendingDelete} canDelete={canDeleteProject} />}
@@ -201,12 +198,14 @@ export default function ProjectsPage() {
   )
 }
 
-function EmptyState({ onNew }: { onNew: () => void }) {
+function EmptyState({ onNew, canCreate }: { onNew: () => void; canCreate: boolean }) {
   return (
     <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
       <span className="size-12 rounded-full bg-surface-2 flex items-center justify-center text-text-3"><Columns size={22} /></span>
       <p className="font-ui text-[14px] text-text-2">No projects yet</p>
-      <Button size="sm" variant="secondary" iconLeft={<Plus size={15} />} onClick={onNew}>Create your first project</Button>
+      {canCreate && (
+        <Button size="sm" variant="secondary" iconLeft={<Plus size={15} />} onClick={onNew}>Create your first project</Button>
+      )}
     </div>
   )
 }

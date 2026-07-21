@@ -85,9 +85,12 @@ export type Database = {
           file_name: string
           file_size: number | null
           id: string
+          is_confidential: boolean
+          kind: string
+          link_url: string | null
           mime_type: string | null
           project_id: string
-          storage_path: string
+          storage_path: string | null
           task_id: string | null
           uploader_id: string | null
         }
@@ -97,9 +100,12 @@ export type Database = {
           file_name: string
           file_size?: number | null
           id?: string
+          is_confidential?: boolean
+          kind?: string
+          link_url?: string | null
           mime_type?: string | null
           project_id: string
-          storage_path: string
+          storage_path?: string | null
           task_id?: string | null
           uploader_id?: string | null
         }
@@ -109,9 +115,12 @@ export type Database = {
           file_name?: string
           file_size?: number | null
           id?: string
+          is_confidential?: boolean
+          kind?: string
+          link_url?: string | null
           mime_type?: string | null
           project_id?: string
-          storage_path?: string
+          storage_path?: string | null
           task_id?: string | null
           uploader_id?: string | null
         }

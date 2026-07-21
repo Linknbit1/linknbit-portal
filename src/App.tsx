@@ -86,14 +86,14 @@ export default function App() {
                   element={<RoleGuard allowedRoles={SETTINGS_ROLES}><SettingsSectionScreen /></RoleGuard>}
                 />
 
-                {/* Management areas — authoritative roles only */}
+                {/* Directory — readable by all internal staff; actions gated in-page */}
                 <Route
                   path="/people"
-                  element={<RoleGuard feature="can_manage_people"><PeoplePage /></RoleGuard>}
+                  element={<RoleGuard allowedRoles={SETTINGS_ROLES}><PeoplePage /></RoleGuard>}
                 />
                 <Route
                   path="/teams"
-                  element={<RoleGuard feature="can_manage_people"><TeamsPage /></RoleGuard>}
+                  element={<RoleGuard allowedRoles={SETTINGS_ROLES}><TeamsPage /></RoleGuard>}
                 />
 
                 {/* Projects, Tasks & Clients — live for internal staff (RLS scopes data) */}

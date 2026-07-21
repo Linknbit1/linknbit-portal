@@ -63,6 +63,12 @@ export function AttachmentUploader({ projectId, taskId, canManage = true, classN
   }
 
   const handleDownload = async (file: AttachmentWithUploader) => {
+    // Link rows have no storage object — open the URL directly.
+    if (file.kind === 'link') {
+      if (file.link_url) window.open(file.link_url, '_blank', 'noopener,noreferrer')
+      return
+    }
+    if (!file.storage_path) return
     try {
       setDownloadingId(file.id)
       const url = await getAttachmentUrl(file.storage_path)
