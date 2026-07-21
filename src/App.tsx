@@ -7,8 +7,7 @@ import { RoleGuard } from './components/layout/RoleGuard'
 import { AppShell } from './components/layout/AppShell'
 import { ClientShell } from './components/layout/ClientShell'
 import { showWipFeatures } from './lib/featureFlags'
-import { AUTHORITATIVE_ROLES } from './lib/roles'
-import { SETTINGS_ROLES } from './constants/roles'
+import { SETTINGS_ROLES, CLIENT_ROLES } from './constants/roles'
 
 import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
@@ -25,7 +24,6 @@ import { GamificationSectionScreen } from './pages/admin/GamificationPage'
 import AdminProjectsPage from './pages/admin/ProjectsPage'
 import AdminProjectDetailPage from './pages/admin/ProjectDetailPage'
 import AdminTaskDetailPage from './pages/admin/TaskDetailPage'
-import GamificationPage from './pages/admin/GamificationPage'
 import ClientsPage from './pages/admin/ClientsPage'
 import TeamsPage from './pages/admin/TeamsPage'
 import PeoplePage from './pages/admin/PeoplePage'
@@ -87,17 +85,15 @@ export default function App() {
                   path="/settings/:section"
                   element={<RoleGuard allowedRoles={SETTINGS_ROLES}><SettingsSectionScreen /></RoleGuard>}
                 />
-                <Route path="/employee/leaderboard" element={<GamificationPage />} />
-                <Route path="/employee/rewards" element={<GamificationPage />} />
 
                 {/* Management areas — authoritative roles only */}
                 <Route
                   path="/people"
-                  element={<RoleGuard allowedRoles={AUTHORITATIVE_ROLES}><PeoplePage /></RoleGuard>}
+                  element={<RoleGuard feature="can_manage_people"><PeoplePage /></RoleGuard>}
                 />
                 <Route
                   path="/teams"
-                  element={<RoleGuard allowedRoles={AUTHORITATIVE_ROLES}><TeamsPage /></RoleGuard>}
+                  element={<RoleGuard feature="can_manage_people"><TeamsPage /></RoleGuard>}
                 />
 
                 {/* Projects, Tasks & Clients — live for internal staff (RLS scopes data) */}
@@ -105,13 +101,11 @@ export default function App() {
                 <Route path="/admin/projects/:id" element={<RoleGuard allowedRoles={SETTINGS_ROLES}><AdminProjectDetailPage /></RoleGuard>} />
                 <Route path="/admin/tasks" element={<RoleGuard allowedRoles={SETTINGS_ROLES}><TasksPage /></RoleGuard>} />
                 <Route path="/admin/tasks/:id" element={<RoleGuard allowedRoles={SETTINGS_ROLES}><AdminTaskDetailPage /></RoleGuard>} />
-                <Route path="/admin/clients" element={<RoleGuard allowedRoles={AUTHORITATIVE_ROLES}><ClientsPage /></RoleGuard>} />
-                <Route path="/employee/tasks" element={<RoleGuard allowedRoles={SETTINGS_ROLES}><TasksPage /></RoleGuard>} />
-                <Route path="/employee/projects" element={<RoleGuard allowedRoles={SETTINGS_ROLES}><AdminProjectsPage /></RoleGuard>} />
+                <Route path="/admin/clients" element={<RoleGuard feature="can_manage_clients"><ClientsPage /></RoleGuard>} />
 
                 {/* Still work-in-progress — only routable in development builds */}
                 {showWipFeatures && (
-                  <Route path="/admin/reports" element={<ReportsPage />} />
+                  <Route path="/admin/reports" element={<RoleGuard feature="can_view_reports"><ReportsPage /></RoleGuard>} />
                 )}
 
                 {/* Legacy path redirects */}
@@ -126,7 +120,7 @@ export default function App() {
               </Route>
 
               {/* Client portal (light mode) */}
-              <Route element={<PrivateRoute><ClientShell /></PrivateRoute>}>
+              <Route element={<PrivateRoute><RoleGuard allowedRoles={CLIENT_ROLES} redirectTo="/dashboard"><ClientShell /></RoleGuard></PrivateRoute>}>
                 <Route path="/client" element={<Navigate to="/client/dashboard" replace />} />
                 <Route path="/client/dashboard" element={<ClientDashboardPage />} />
                 <Route path="/client/projects" element={<ClientProjectsPage />} />

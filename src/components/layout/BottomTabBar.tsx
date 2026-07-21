@@ -1,16 +1,14 @@
 import { NavLink, useLocation } from 'react-router-dom'
 import { MoreHorizontal } from 'lucide-react'
 import { cn } from '../../lib/cn'
-import { useAuthContext } from '../../context/AuthContext'
 import { useNavChrome } from './MobileNavContext'
-import { visibleNavItems } from './navItems'
+import { useNavItems } from './navItems'
 
 /** Mobile primary navigation. Hidden at lg+ where the sidebar takes over. */
 export function BottomTabBar() {
   const location = useLocation()
-  const { profile } = useAuthContext()
   const navChrome = useNavChrome()
-  const primary = visibleNavItems(profile?.role).filter((i) => i.primaryMobile)
+  const primary = useNavItems().filter((i) => i.primaryMobile)
   const moreActive = location.pathname.startsWith('/more') || location.pathname.startsWith('/profile')
 
   // Hide on pushed/drill-in screens (those with a back affordance) so the tabs

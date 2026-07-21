@@ -63,7 +63,10 @@
       "PowerShell(npm run *)",
       "PowerShell(npx supabase functions deploy invite-user --project-ref pifsboyhheazpccyliwy 2>&1 | Select-Object -Last 20; \"exit: $LASTEXITCODE\")",
       "PowerShell(pnpm exec *)",
-      "PowerShell(pnpm *)"
+      "PowerShell(pnpm *)",
+      "Bash(xargs ls)",
+      "Bash(awk 'NR>=1932 && NR<=3727 && \\(/isAdmin/ || /profile\\\\?\\\\.role/ || /isHr/\\)' src/pages/admin/AttendancePage.tsx)",
+      "Bash(awk '{print $5, $9}')"
     ]
   },
   "enableAllProjectMcpServers": true,

@@ -2650,6 +2650,11 @@ export type Database = {
         Args: { p_month: number; p_year: number }
         Returns: undefined
       }
+      delete_project_cascade: {
+        Args: { p_project_id: string }
+        Returns: string[]
+      }
+      delete_task_cascade: { Args: { p_task_id: string }; Returns: string[] }
       expire_reward_pools: { Args: never; Returns: undefined }
       fn_all_internal_staff: {
         Args: never
@@ -2729,6 +2734,7 @@ export type Database = {
         }
         Returns: string
       }
+      has_feature: { Args: { p_key: string }; Returns: boolean }
       is_internal: { Args: never; Returns: boolean }
       is_project_member: { Args: { p_project_id: string }; Returns: boolean }
       is_task_assignee: { Args: { p_task_id: string }; Returns: boolean }

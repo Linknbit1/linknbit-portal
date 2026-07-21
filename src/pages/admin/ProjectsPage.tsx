@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useCanDeleteProjects } from '../../hooks/useRoleFlags'
+import { useAuthContext } from '../../context/AuthContext'
 import {
   List, Columns, Calendar, Flag, Plus, Search, ChevronRight, AlertCircle, SlidersHorizontal, Trash2,
 } from 'lucide-react'
@@ -68,6 +70,12 @@ export default function ProjectsPage() {
   const [showNew, setShowNew] = useState(false)
   const [pendingDelete, setPendingDelete] = useState<ProjectListItem | null>(null)
 
+  const { profile } = useAuthContext()
+  // p_projects_insert allows exactly these roles; showing the button to anyone else
+  // produced a create form that always failed at RLS. (Candidate future flag.)
+  const canCreateProject = ['super_admin', 'admin', 'project_manager'].includes(profile?.role ?? '')
+  const canDeleteProject = useCanDeleteProjects()
+
   const { data: projects = [], isLoading } = useProjects()
   const { data: people = [] } = usePeople()
   const deleteProject = useDeleteProject()
@@ -99,7 +107,9 @@ export default function ProjectsPage() {
             <h2 className="font-display font-bold text-[22px] text-text-1">Projects</h2>
             <p className="font-ui text-[13px] text-text-3">{filtered.length} of {projects.length} project{projects.length !== 1 ? 's' : ''}</p>
           </div>
-          <Button size="sm" className="ml-auto" iconLeft={<Plus size={15} />} onClick={() => setShowNew(true)}>New Project</Button>
+          {canCreateProject && (
+            <Button size="sm" className="ml-auto" iconLeft={<Plus size={15} />} onClick={() => setShowNew(true)}>New Project</Button>
+          )}
         </div>
 
         {/* View switcher */}
@@ -150,7 +160,7 @@ export default function ProjectsPage() {
           <EmptyState onNew={() => setShowNew(true)} />
         ) : (
           <>
-            {view === 'list' && <ListView projects={filtered} onOpen={(id) => navigate(`/admin/projects/${id}`)} onDelete={setPendingDelete} />}
+            {view === 'list' && <ListView projects={filtered} onOpen={(id) => navigate(`/admin/projects/${id}`)} onDelete={setPendingDelete} canDelete={canDeleteProject} />}
             {view === 'kanban' && <KanbanView projects={filtered} onOpen={(id) => navigate(`/admin/projects/${id}`)} />}
             {view === 'timeline' && <TimelineView projects={filtered} onOpen={(id) => navigate(`/admin/projects/${id}`)} />}
             {view === 'milestones' && <MilestonesView onOpen={(id) => navigate(`/admin/projects/${id}`)} />}
@@ -202,7 +212,7 @@ function EmptyState({ onNew }: { onNew: () => void }) {
 }
 
 // ── List view ────────────────────────────────────────────────────────
-function ListView({ projects, onOpen, onDelete }: { projects: ProjectListItem[]; onOpen: (id: string) => void; onDelete: (project: ProjectListItem) => void }) {
+function ListView({ projects, onOpen, onDelete, canDelete }: { projects: ProjectListItem[]; onOpen: (id: string) => void; onDelete: (project: ProjectListItem) => void; canDelete: boolean }) {
   return (
     <div className="bg-surface-1 border border-border-default rounded-md overflow-x-auto">
       <table className="w-full text-left min-w-[860px]">
@@ -246,13 +256,13 @@ function ListView({ projects, onOpen, onDelete }: { projects: ProjectListItem[];
               </td>
               <td className="px-4 py-3 text-right">
                 <div className="flex justify-end gap-1">
-                  <button
+                  {canDelete && <button
                     onClick={(e) => { e.stopPropagation(); onDelete(p) }}
                     className="size-7 rounded-sm inline-flex items-center justify-center text-text-3 hover:text-error hover:bg-error/10"
                     aria-label={`Delete ${p.name}`}
                   >
                     <Trash2 size={13} />
-                  </button>
+                  </button>}
                   <ChevronRight size={15} className="text-text-4 self-center" />
                 </div>
               </td>

@@ -27,9 +27,10 @@ import {
 } from '../../hooks/usePeople'
 import type { Person, InviteResult } from '../../api/people'
 import {
-  canManagePeople, canInvite, canEditDetails, canManageTarget, assignableRoles, toUserRole,
+  canEditDetails, canManageTarget, assignableRoles, toUserRole,
   accountStatus, canSetPassword, canResendInvite, type AccountStatus,
 } from '../../lib/peopleAccess'
+import { useCanManagePeople } from '../../hooks/useRoleFlags'
 import { ROLE_LABELS } from '../../lib/utils'
 import { cn } from '../../lib/cn'
 import { ModalShell } from '../../components/ui/ModalShell'
@@ -500,12 +501,13 @@ function PersonActionsMenu({ person, myRole, myId, onEdit, onToggleActive, onDel
   onChangePassword: () => void
   onResend: () => void
 }) {
+  const canManagePeople = useCanManagePeople()
   const mayManage = canManageTarget(myRole, person.role)
   const mayEdit = mayManage || canEditDetails(myRole)
   const mayDelete = (myRole === 'super_admin' || myRole === 'admin') && mayManage
   const mayPassword = canSetPassword(myRole, person.role) && person.id !== myId
   const mayResend = canResendInvite(myRole, person.role) && accountStatus(person) === 'invited'
-  const showAnyAction = canManagePeople(myRole) && (mayEdit || mayManage || mayPassword || mayResend)
+  const showAnyAction = canManagePeople && (mayEdit || mayManage || mayPassword || mayResend)
 
   const triggerRef = useRef<HTMLButtonElement>(null)
   const [open, setOpen] = useState(false)
@@ -778,6 +780,8 @@ export default function PeoplePage() {
   const { profile } = useAuthContext()
   const myRole = profile?.role ?? ''
   const myId = profile?.id ?? ''
+  // Inviting is the same capability as managing people (was canInvite = canManagePeople).
+  const canInvite = useCanManagePeople()
 
   const { data: people = [], isLoading } = usePeople()
   const { data: teams = [] } = useTeams()
@@ -870,7 +874,7 @@ export default function PeoplePage() {
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex-1 sm:flex-none sm:w-44"><Select value={roleFilter} onChange={setRoleFilter} options={roleFilterOptions} /></div>
             <PeopleViewToggle value={viewMode} onChange={setViewMode} />
-            {canInvite(myRole) && <Button size="sm" className="shrink-0" onClick={() => setInviteOpen(true)}><Plus size={13} /> Invite</Button>}
+            {canInvite && <Button size="sm" className="shrink-0" onClick={() => setInviteOpen(true)}><Plus size={13} /> Invite</Button>}
           </div>
         </div>
 

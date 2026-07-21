@@ -16,12 +16,53 @@ export function useRoleFlags() {
   })
 }
 
+/**
+ * Capability check for the signed-in user. Mirrors the SQL `has_feature()` helper,
+ * including its `super_admin` short-circuit, so UI and RLS never disagree.
+ *
+ * Returns false while flags are still loading — fine for hiding a button, but NOT
+ * for gating navigation or a route (that would flash/redirect). Use
+ * `useFeatureAccess` there so you can wait on `isLoading`.
+ */
 export function useCanAccess(featureKey: string): boolean {
+  return useFeatureAccess(featureKey).allowed
+}
+
+export interface FeatureAccess {
+  allowed: boolean
+  /** True until the flag matrix has loaded. Guards should render a spinner, not redirect. */
+  isLoading: boolean
+}
+
+export function useFeatureAccess(featureKey: string): FeatureAccess {
   const { profile } = useAuthContext()
-  const { data: flags } = useRoleFlags()
-  if (!profile || !flags) return false
+  const { data: flags, isLoading } = useRoleFlags()
+
+  if (profile?.role === 'super_admin') return { allowed: true, isLoading: false }
+  if (!profile || !flags) return { allowed: false, isLoading }
+
   const flag = flags.find((f) => f.role === profile.role && f.feature_key === featureKey)
-  return flag?.enabled ?? false
+  return { allowed: flag?.enabled ?? false, isLoading: false }
+}
+
+// ── Named capability hooks ────────────────────────────────────────────────────
+// These replace the hardcoded role arrays that used to live in src/lib/*Access.ts.
+// Each mirrors the SQL helper of the same name, so UI and RLS agree by construction.
+
+export const useCanManagePeople = () => useCanAccess('can_manage_people')
+export const useCanManageClients = () => useCanAccess('can_manage_clients')
+export const useCanManageAttendance = () => useCanAccess('can_manage_attendance')
+export const useCanApproveRequests = () => useCanAccess('can_approve_requests')
+export const useCanApproveTasks = () => useCanAccess('can_approve_tasks')
+export const useCanDeleteProjects = () => useCanAccess('can_delete_projects')
+export const useCanGovernGamification = () => useCanAccess('can_govern_gamification')
+export const useCanRecognize = () => useCanAccess('can_recognize')
+
+/** Finance may mark cash payouts fulfilled, in addition to gamification governors. */
+export function useCanFulfillPayouts(): boolean {
+  const { profile } = useAuthContext()
+  const governs = useCanGovernGamification()
+  return governs || profile?.role === 'finance'
 }
 
 export function useUpdateRoleFlag() {

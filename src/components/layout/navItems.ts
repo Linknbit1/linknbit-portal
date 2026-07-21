@@ -14,8 +14,9 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { showWipFeatures } from '../../lib/featureFlags'
-import { isAuthoritative } from '../../lib/roles'
 import { SETTINGS_ROLES } from '../../constants/roles'
+import { useRoleFlags } from '../../hooks/useRoleFlags'
+import { useAuthContext } from '../../context/AuthContext'
 
 export interface NavItem {
   label: string
@@ -24,10 +25,14 @@ export interface NavItem {
   badge?: number
   // Not yet production-ready — only rendered in development builds.
   devOnly?: boolean
-  // Only rendered for authoritative (management) roles.
-  authoritativeOnly?: boolean
-  // If set, only rendered for these roles (e.g. Settings → super_admin/admin).
+  // If set, only rendered for these roles.
   roles?: readonly string[]
+  /**
+   * Capability required to see this item. A string = that flag; an array = ANY of
+   * them. Keeps the sidebar honest: if a role cannot use a destination, it is not
+   * offered one. Route guards use the same key so URLs can't bypass it.
+   */
+  feature?: string | readonly string[]
   // Surfaced directly in the mobile bottom tab bar (the rest live behind "More").
   primaryMobile?: boolean
   /** Path prefix used for "is this section active" when `to` points at a child page. */
@@ -36,61 +41,95 @@ export interface NavItem {
   children?: NavItem[]
 }
 
-/** Attendance sub-pages — each is its own route at /attendance/:section. */
+/** Attendance sub-pages — the management views at /attendance/:section. */
 const ATTENDANCE_CHILDREN: NavItem[] = [
-  { label: 'Daily Records',    icon: CalendarCheck, to: '/attendance/records', authoritativeOnly: true },
-  { label: 'Leave',            icon: CalendarCheck, to: '/attendance/leave', authoritativeOnly: true },
-  { label: 'WFH Requests',     icon: CalendarCheck, to: '/attendance/wfh', authoritativeOnly: true },
-  { label: 'Exceptions',       icon: CalendarCheck, to: '/attendance/exceptions', authoritativeOnly: true },
-  { label: 'Overtime',         icon: CalendarCheck, to: '/attendance/overtime', authoritativeOnly: true },
-  { label: 'Schedule',         icon: CalendarCheck, to: '/attendance/schedule', authoritativeOnly: true },
-  { label: 'Enrolled Devices', icon: CalendarCheck, to: '/attendance/devices', authoritativeOnly: true },
-  { label: 'Reports',          icon: CalendarCheck, to: '/attendance/reports', authoritativeOnly: true },
-  { label: 'Settings',         icon: CalendarCheck, to: '/attendance/settings', authoritativeOnly: true },
+  { label: 'Daily Records',    icon: CalendarCheck, to: '/attendance/records',    feature: 'can_manage_attendance' },
+  { label: 'Leave',            icon: CalendarCheck, to: '/attendance/leave',      feature: 'can_manage_attendance' },
+  { label: 'WFH Requests',     icon: CalendarCheck, to: '/attendance/wfh',        feature: 'can_manage_attendance' },
+  { label: 'Exceptions',       icon: CalendarCheck, to: '/attendance/exceptions', feature: 'can_manage_attendance' },
+  { label: 'Overtime',         icon: CalendarCheck, to: '/attendance/overtime',   feature: 'can_manage_attendance' },
+  { label: 'Schedule',         icon: CalendarCheck, to: '/attendance/schedule',   feature: 'can_manage_attendance' },
+  { label: 'Enrolled Devices', icon: CalendarCheck, to: '/attendance/devices',    feature: 'can_manage_attendance' },
+  { label: 'Reports',          icon: CalendarCheck, to: '/attendance/reports',    feature: 'can_manage_attendance' },
+  { label: 'Settings',         icon: CalendarCheck, to: '/attendance/settings',   feature: 'can_manage_attendance' },
 ]
 
 /** Gamification sub-pages — each is its own route at /gamification/:section. */
 const GAMIFICATION_CHILDREN: NavItem[] = [
-  { label: 'Leaderboard',   icon: Trophy, to: '/gamification/leaderboard' },
-  { label: 'Quest Board',   icon: Trophy, to: '/gamification/board' },
-  { label: 'Shoutouts',     icon: Trophy, to: '/gamification/shoutouts' },
-  { label: 'Badges',        icon: Trophy, to: '/gamification/badges' },
-  { label: 'Rewards Shop',  icon: Trophy, to: '/gamification/rewards' },
+  { label: 'Leaderboard',    icon: Trophy, to: '/gamification/leaderboard' },
+  { label: 'Quest Board',    icon: Trophy, to: '/gamification/board' },
+  { label: 'Shoutouts',      icon: Trophy, to: '/gamification/shoutouts' },
+  { label: 'Badges',         icon: Trophy, to: '/gamification/badges' },
+  { label: 'Rewards Shop',   icon: Trophy, to: '/gamification/rewards' },
   { label: 'Points History', icon: Trophy, to: '/gamification/history' },
-  { label: 'Settings',      icon: Trophy, to: '/gamification/admin', authoritativeOnly: true },
+  // Governors run the catalog/approvals; recognizers post quests & review submissions.
+  { label: 'Settings',       icon: Trophy, to: '/gamification/admin',
+    feature: ['can_govern_gamification', 'can_recognize'] },
 ]
+
+// Everyone internal except finance: finance is never required to submit a standup and
+// cannot view the team tab, so the page is a dead end for them.
+const STANDUP_ROLES = ['super_admin', 'admin', 'hr', 'project_manager', 'team_lead', 'employee'] as const
 
 export const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', icon: LayoutDashboard, to: '/dashboard', primaryMobile: true },
   { label: 'Projects', icon: FolderOpen, to: '/admin/projects' },
   { label: 'Tasks', icon: CheckSquare, to: '/admin/tasks' },
   { label: 'Inbox', icon: Inbox, to: '/inbox' },
-  { label: 'Clients', icon: UserCircle, to: '/admin/clients', authoritativeOnly: true },
-  { label: 'Teams', icon: Users, to: '/teams', authoritativeOnly: true },
-  { label: 'People', icon: UserCog, to: '/people', authoritativeOnly: true },
-  { label: 'Attendance', icon: CalendarCheck, to: '/attendance/records', matchPrefix: '/attendance', primaryMobile: true, children: ATTENDANCE_CHILDREN },
-  { label: 'Standup', icon: ClipboardList, to: '/standup' },
+  { label: 'Clients', icon: UserCircle, to: '/admin/clients', feature: 'can_manage_clients' },
+  { label: 'Teams', icon: Users, to: '/teams', feature: 'can_manage_people' },
+  { label: 'People', icon: UserCog, to: '/people', feature: 'can_manage_people' },
+  // `to` is rewritten below: managers land on Daily Records, everyone else on their
+  // own self-service view (the old hardcoded /attendance/records bounced 4 of 7 roles).
+  { label: 'Attendance', icon: CalendarCheck, to: '/attendance', matchPrefix: '/attendance', primaryMobile: true, children: ATTENDANCE_CHILDREN },
+  { label: 'Standup', icon: ClipboardList, to: '/standup', roles: STANDUP_ROLES },
   { label: 'Gamification', icon: Trophy, to: '/gamification/leaderboard', matchPrefix: '/gamification', primaryMobile: true, children: GAMIFICATION_CHILDREN },
-  { label: 'Reports', icon: BarChart2, to: '/admin/reports', devOnly: true },
+  { label: 'Reports', icon: BarChart2, to: '/admin/reports', devOnly: true, feature: 'can_view_reports' },
   { label: 'Settings', icon: Settings, to: '/settings', roles: SETTINGS_ROLES },
 ]
 
-/** Nav items visible to the given role in the current build (WIP + authoritative filtering). */
-export function visibleNavItems(role: string | null | undefined): NavItem[] {
-  const authoritative = isAuthoritative(role)
+type CanFn = (feature: string) => boolean
+
+/** Pure filter — `can` supplies capability answers so this stays testable. */
+export function filterNavItems(role: string | null | undefined, can: CanFn): NavItem[] {
+  const hasFeature = (item: NavItem): boolean => {
+    if (!item.feature) return true
+    return Array.isArray(item.feature)
+      ? item.feature.some(can)
+      : can(item.feature as string)
+  }
   const allowed = (item: NavItem) =>
     (showWipFeatures || !item.devOnly) &&
-    (authoritative || !item.authoritativeOnly) &&
-    (!item.roles || item.roles.includes(role ?? ''))
+    (!item.roles || item.roles.includes(role ?? '')) &&
+    hasFeature(item)
 
   return NAV_ITEMS.filter(allowed).map((item) => {
-    if (!item.children) return item
-    const children = item.children.filter(allowed)
-    return children.length > 0 ? { ...item, children } : { ...item, children: undefined }
+    const children = item.children?.filter(allowed)
+    // Send non-managers to their own attendance view rather than an admin URL.
+    const to = item.matchPrefix === '/attendance' && !can('can_manage_attendance')
+      ? '/attendance'
+      : item.matchPrefix === '/attendance'
+        ? '/attendance/records'
+        : item.to
+    return { ...item, to, children: children && children.length > 0 ? children : undefined }
   })
 }
 
+/** Nav items visible to the signed-in user, capability-filtered. */
+export function useNavItems(): NavItem[] {
+  const { profile } = useAuthContext()
+  const { data: flags } = useRoleFlags()
+  const role = profile?.role
+
+  const can: CanFn = (feature) => {
+    if (role === 'super_admin') return true
+    if (!flags || !role) return false
+    return flags.find((f) => f.role === role && f.feature_key === feature)?.enabled ?? false
+  }
+  return filterNavItems(role, can)
+}
+
 /** Secondary destinations for the mobile "More" tab (everything not in the bottom bar). */
-export function moreNavItems(role: string | null | undefined): NavItem[] {
-  return visibleNavItems(role).filter((item) => !item.primaryMobile)
+export function useMoreNavItems(): NavItem[] {
+  return useNavItems().filter((item) => !item.primaryMobile)
 }

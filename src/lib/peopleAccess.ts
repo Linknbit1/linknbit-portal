@@ -11,11 +11,9 @@ export type InternalRole = (typeof INTERNAL_ROLES)[number]
 const has = (list: readonly string[], role: string | null | undefined): boolean =>
   !!role && list.includes(role)
 
-/** HR + Admins manage the directory (invite, role/team/service, activate). */
-export const canManagePeople = (role: string | null | undefined): boolean =>
-  has(['super_admin', 'admin', 'hr'], role)
-
-export const canInvite = canManagePeople
+// NOTE: "can this role manage people at all?" is now a feature flag —
+// use useCanManagePeople() from src/hooks/useRoleFlags.ts. What remains here is the
+// authority HIERARCHY (who outranks whom), which is not a toggleable capability.
 
 /** Only super_admin/admin may edit personal details (name, avatar). HR cannot. */
 export const canEditDetails = (role: string | null | undefined): boolean =>
@@ -54,11 +52,11 @@ export function accountStatus(p: {
 
 /** Can the actor set another user's password? (Excludes self — handled in the UI.) */
 export const canSetPassword = (actor: string | null | undefined, targetRole: string): boolean =>
-  canManagePeople(actor) && canManageTarget(actor, targetRole)
+  canManageTarget(actor, targetRole)
 
 /** Can the actor re-send an invite to a user who hasn't onboarded yet? */
 export const canResendInvite = (actor: string | null | undefined, targetRole: string): boolean =>
-  canManagePeople(actor) && canManageTarget(actor, targetRole)
+  canManageTarget(actor, targetRole)
 
 /** Narrow a free-form role string to the UserRole union (for RoleBadge etc.). */
 export function toUserRole(r: string): UserRole {

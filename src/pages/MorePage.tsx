@@ -5,7 +5,7 @@ import { HubRow } from '../components/layout/MobileHub'
 import { InstallAppButton } from '../components/pwa/InstallAppButton'
 import { Avatar } from '../components/ui/Avatar'
 import { RoleBadge } from '../components/shared/RoleBadge'
-import { moreNavItems } from '../components/layout/navItems'
+import { useMoreNavItems } from '../components/layout/navItems'
 import { useAuthContext } from '../context/AuthContext'
 import { useIsDesktop } from '../hooks/useMediaQuery'
 import type { UserRole } from '../types'
@@ -16,10 +16,10 @@ export default function MorePage() {
   const isDesktop = useIsDesktop()
   const navigate = useNavigate()
   const { profile, signOut } = useAuthContext()
+  // Must run before the early return — hooks cannot be called conditionally.
+  const items = useMoreNavItems()
 
   if (isDesktop) return <Navigate to="/dashboard" replace />
-
-  const items = moreNavItems(profile?.role)
 
   const handleLogout = async () => {
     await signOut()

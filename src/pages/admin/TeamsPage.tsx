@@ -9,7 +9,6 @@ import { Select } from '../../components/ui/Select'
 import { ServiceChip } from '../../components/shared/ServiceChip'
 import { RoleBadge } from '../../components/shared/RoleBadge'
 import { useToast } from '../../components/ui/toast-context'
-import { useAuthContext } from '../../context/AuthContext'
 import { useTeams, useCreateTeam, useUpdateTeam } from '../../hooks/useTeams'
 import { usePeople } from '../../hooks/usePeople'
 import { useServices } from '../../hooks/useServices'
@@ -18,7 +17,7 @@ import { useTeamMembers, useAddTeamMember, useRemoveTeamMember } from '../../hoo
 import type { Team } from '../../api/teams'
 import type { Person } from '../../api/people'
 import type { UserRole } from '../../types'
-import { canManagePeople } from '../../lib/peopleAccess'
+import { useCanManagePeople } from '../../hooks/useRoleFlags'
 import { ModalShell } from '../../components/ui/ModalShell'
 
 type Option = { value: string; label: string }
@@ -137,8 +136,7 @@ function AddMemberModal({ team, candidates, onClose }: {
 
 export default function TeamsPage() {
   const toast = useToast()
-  const { profile } = useAuthContext()
-  const canManage = canManagePeople(profile?.role)
+  const canManage = useCanManagePeople()
 
   const { data: teams = [], isLoading } = useTeams()
   const { data: people = [] } = usePeople()
