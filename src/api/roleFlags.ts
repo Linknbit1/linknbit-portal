@@ -9,6 +9,9 @@ export async function fetchRoleFlags(): Promise<RoleFeatureFlagRow[]> {
   return data
 }
 
+// Upsert, not update: an `.update()` against a (role, feature_key) pair that has no
+// row matches zero rows and returns NO error, so the optimistic UI would report a
+// successful toggle that never persisted. The table's PK is (role, feature_key).
 export async function updateRoleFlag(
   role: string,
   featureKey: string,
@@ -17,8 +20,9 @@ export async function updateRoleFlag(
 ): Promise<void> {
   const { error } = await supabase
     .from('role_feature_flags')
-    .update({ enabled, updated_by: updatedBy, updated_at: new Date().toISOString() })
-    .eq('role', role)
-    .eq('feature_key', featureKey)
+    .upsert(
+      { role, feature_key: featureKey, enabled, updated_by: updatedBy, updated_at: new Date().toISOString() },
+      { onConflict: 'role,feature_key' },
+    )
   if (error) throw error
 }

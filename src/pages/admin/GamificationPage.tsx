@@ -20,8 +20,11 @@ import { DatePicker } from '../../components/ui/DatePicker'
 import { useToast } from '../../components/ui/toast-context'
 import { useAuthContext } from '../../context/AuthContext'
 import {
-  canGovernGamification, canRecognize, canFulfillPayouts, canParticipate,
+  canParticipate,
 } from '../../lib/gamificationAccess'
+import {
+  useCanGovernGamification, useCanRecognize, useCanFulfillPayouts,
+} from '../../hooks/useRoleFlags'
 import {
   useLeaderboard, useProfileDirectory, useGamificationParticipants,
   useAllQuestTasks, useMyClaims, useClaimsToReview, useQuestClaimants,
@@ -695,9 +698,9 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
   const profileId = profile?.id ?? ''
   const role = profile?.role
 
-  const isGovernor = canGovernGamification(role)
-  const isRecognizer = canRecognize(role)
-  const canFulfill = canFulfillPayouts(role)
+  const isGovernor = useCanGovernGamification()
+  const isRecognizer = useCanRecognize()
+  const canFulfill = useCanFulfillPayouts()
   const isParticipant = canParticipate(role)
   const showAdmin = isRecognizer || canFulfill
 
@@ -1774,7 +1777,16 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
  */
 export function GamificationSectionScreen() {
   const { section } = useParams()
+  const canGovern = useCanGovernGamification()
+  const canRecog = useCanRecognize()
+  const canFulfil = useCanFulfillPayouts()
+
   const valid = GAMIFICATION_SECTIONS.some((s) => s.key === section)
   if (!section || !valid) return <Navigate to="/gamification" replace />
+  // Guard by capability, not just key validity — otherwise /gamification/admin renders
+  // an empty shell for anyone who types the URL (every panel inside is role-gated).
+  if (section === 'admin' && !(canGovern || canRecog || canFulfil)) {
+    return <Navigate to="/gamification" replace />
+  }
   return <GamificationPage mobileSection={section} />
 }

@@ -65,6 +65,9 @@ export default function StandupPage() {
 }
 
 function MyStandup({ win }: { win: NonNullable<ReturnType<typeof useStandupWindow>['data']> }) {
+  // Only reviewers actually have a team view to be pointed at.
+  const { profile: viewer } = useAuthContext()
+  const canReviewTeam = isAuthoritative(viewer?.role)
   const untilOpen = useWindowCountdown(win.server_now, win.opens_at)
   const untilOnTime = useWindowCountdown(win.server_now, win.on_time_until)
   const opensLabel = officeTime(win.opens_at, win.timezone)
@@ -90,7 +93,9 @@ function MyStandup({ win }: { win: NonNullable<ReturnType<typeof useStandupWindo
   if (!win.is_required) {
     return (
       <Panel icon={Coffee} tone="muted" title="No standup required">
-        Standups are for employees. You can review the team's updates in the Team tab.
+        {canReviewTeam
+          ? "Standups are for employees — the team's updates are listed below."
+          : 'Standups are only required for employees, so there is nothing for you to submit here.'}
       </Panel>
     )
   }

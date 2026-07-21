@@ -2,15 +2,13 @@ import { useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { ChevronRight, ChevronDown } from 'lucide-react'
 import { cn } from '../../lib/cn'
-import { useAuthContext } from '../../context/AuthContext'
-import { visibleNavItems, type NavItem } from './navItems'
+import { useNavItems, type NavItem } from './navItems'
 import { LinknbitMark } from '../brand/LinknbitLogo'
 import { InstallAppButton } from '../pwa/InstallAppButton'
 
 export function Sidebar() {
   const location = useLocation()
-  const { profile } = useAuthContext()
-  const navItems = visibleNavItems(profile?.role)
+  const navItems = useNavItems()
 
   return (
     <aside className="w-sidebar-expanded bg-surface-1 border-r border-border-default hidden lg:flex flex-col sticky top-0 h-screen overflow-y-auto shrink-0">

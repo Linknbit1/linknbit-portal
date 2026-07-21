@@ -75,6 +75,9 @@ export default function ProjectDetailPage() {
   const reviewApproval = useReviewApproval()
 
   const canViewBudget = useCanAccess('can_view_budget')
+  // Delete is enforced by delete_project_cascade via the flag; showing it to anyone
+  // else produced a button that always errored.
+  const canDeleteProject = useCanAccess('can_delete_projects')
   const [projectView, setProjectView] = useState<ProjectTab>('pipeline')
   const [showEdit, setShowEdit] = useState(false)
   const [showAddMember, setShowAddMember] = useState(false)
@@ -176,7 +179,9 @@ export default function ProjectDetailPage() {
               {canManage && (
                 <>
                   <Button size="sm" variant="secondary" iconLeft={<Pencil size={13} />} onClick={() => setShowEdit(true)}>Edit</Button>
-                  <Button size="sm" variant="danger" iconLeft={<Trash2 size={13} />} onClick={() => setConfirmProjectDelete(true)}>Delete</Button>
+                  {canDeleteProject && (
+                    <Button size="sm" variant="danger" iconLeft={<Trash2 size={13} />} onClick={() => setConfirmProjectDelete(true)}>Delete</Button>
+                  )}
                 </>
               )}
             </div>

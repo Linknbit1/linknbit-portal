@@ -21,7 +21,6 @@ import {
 } from '../../hooks/useDesignations'
 import type { Service } from '../../api/services'
 import type { Designation } from '../../api/designations'
-import { showWipFeatures } from '../../lib/featureFlags'
 import { cn } from '../../lib/cn'
 
 type Tab = 'devices' | 'notifications' | 'services' | 'designations' | 'permissions'
@@ -44,7 +43,9 @@ function visibleSectionsFor(role: string | undefined): typeof SETTINGS_SECTIONS 
     if (key === 'devices' || key === 'notifications') return !!role
     if (key === 'services')     return role === 'super_admin' || role === 'admin'
     if (key === 'designations') return role === 'super_admin' || role === 'admin' || role === 'hr'
-    if (key === 'permissions')  return (role === 'super_admin' || role === 'admin') && showWipFeatures
+    // Now that flags genuinely drive RLS, this panel has to exist in production —
+    // it is the only way to administer capabilities.
+    if (key === 'permissions')  return role === 'super_admin' || role === 'admin'
     return false
   })
 }
@@ -256,24 +257,38 @@ const ROLE_LABELS: Record<string, string> = {
   team_lead: 'Team Lead', employee: 'Employee', hr: 'HR', finance: 'Finance',
 }
 const FEATURE_LABELS: Record<string, string> = {
-  can_view_reports:                'View Reports',
-  can_approve_tasks:               'Approve Tasks',
-  can_delete_projects:             'Delete Projects',
-  can_manage_clients:              'Manage Clients',
-  can_view_clients:                'View Clients',
-  can_view_projects:               'View Projects',
-  can_manage_people:               'Manage People',
-  can_manage_integrations:         'Manage Integrations',
+  can_delete_projects:      'Delete Projects',
+  can_view_budget:          'View Budget',
+  can_approve_tasks:        'Approve Tasks',
+  can_manage_clients:       'Manage Clients',
+  can_manage_people:        'Manage People',
+  can_view_reports:         'View Reports',
+  can_manage_attendance:    'Manage Attendance',
+  can_approve_requests:     'Approve Leave / WFH / Overtime',
+  can_view_all_attendance:  'View All Attendance (vs own team)',
+  can_govern_gamification:  'Govern Gamification',
+  can_recognize:            'Post Quests & Shoutouts',
 }
 
 const FEATURE_SECTIONS: { label: string; features: string[] }[] = [
-  { label: 'Projects',     features: ['can_view_projects', 'can_delete_projects'] },
+  { label: 'Projects',     features: ['can_delete_projects', 'can_view_budget'] },
   { label: 'Tasks',        features: ['can_approve_tasks'] },
-  { label: 'Clients',      features: ['can_view_clients', 'can_manage_clients'] },
+  { label: 'Clients',      features: ['can_manage_clients'] },
   { label: 'People',       features: ['can_manage_people'] },
   { label: 'Reports',      features: ['can_view_reports'] },
-  { label: 'Integrations', features: ['can_manage_integrations'] },
+  { label: 'Attendance',   features: ['can_manage_attendance', 'can_approve_requests', 'can_view_all_attendance'] },
+  { label: 'Gamification', features: ['can_govern_gamification', 'can_recognize'] },
 ]
+
+/**
+ * Some switches must never be flipped off or the org locks itself out — there is no
+ * super_admin account to recover with, so `admin` must keep People management (the
+ * only route back into this panel). super_admin is always-on by definition
+ * (has_feature() short-circuits it server-side).
+ */
+function isLockedOn(role: string, featureKey: string): boolean {
+  return role === 'super_admin' || (role === 'admin' && featureKey === 'can_manage_people')
+}
 
 function PermissionsPanel({ canEdit }: { canEdit: boolean }) {
   const toast = useToast()
@@ -323,14 +338,19 @@ function PermissionsPanel({ canEdit }: { canEdit: boolean }) {
                         <td className="py-3 pl-3 font-ui text-[13px] text-text-2 pr-6 whitespace-nowrap">{label}</td>
                         {INTERNAL_ROLES.map((role) => {
                           const flag = flags.find((f) => f.role === role && f.feature_key === featureKey)
-                          const enabled = flag?.enabled ?? false
+                          const locked = isLockedOn(role, featureKey)
+                          const enabled = locked || (flag?.enabled ?? false)
                           return (
                             <td key={role} className="text-center py-3 px-2">
-                              <div className="flex justify-center">
+                              <div
+                                className={cn('flex justify-center', locked && 'opacity-60')}
+                                title={locked ? 'Always on — cannot be disabled without locking everyone out' : undefined}
+                              >
                                 <Toggle
                                   checked={enabled}
+                                  disabled={locked}
                                   onChange={(val) => {
-                                    if (!canEdit || updating) return
+                                    if (!canEdit || updating || locked) return
                                     updateFlag(
                                       { role, featureKey, enabled: val },
                                       { onError: () => toast('Failed to update permission', 'error') },
