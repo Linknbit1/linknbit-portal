@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
-  fetchTasks, fetchTask, createTask, updateTask, updateTaskStatus, deleteTask,
+  fetchTasks, fetchTask, createTask, updateTask, updateTaskStatus,
   type TaskFilters, type TaskStatus,
 } from '../api/tasks'
+import { deleteTaskCascade, fetchTaskDeleteImpact } from '../api/deleteCascade'
 import { PROJECT_KEYS } from './useProjects'
 import type { TablesInsert, TablesUpdate } from '../types/database'
 
@@ -70,7 +71,21 @@ export function useUpdateTaskStatus() {
 export function useDeleteTask() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id }: { id: string; projectId?: string }) => deleteTask(id),
-    onSuccess: (_, v) => invalidateTasks(qc, v.projectId),
+    mutationFn: ({ id }: { id: string; projectId?: string }) => deleteTaskCascade(id),
+    onSuccess: (_, v) => {
+      invalidateTasks(qc, v.projectId)
+      qc.invalidateQueries({ queryKey: ['comments'] })
+      qc.invalidateQueries({ queryKey: ['attachments'] })
+      qc.invalidateQueries({ queryKey: ['subtasks'] })
+    },
+  })
+}
+
+export function useTaskDeleteImpact(id: string | undefined) {
+  return useQuery({
+    queryKey: ['tasks', id ?? '', 'delete-impact'],
+    queryFn: () => fetchTaskDeleteImpact(id!),
+    enabled: !!id,
+    staleTime: 0,
   })
 }

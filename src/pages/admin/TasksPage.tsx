@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Search, Plus, CheckSquare, ListTodo, AlertOctagon, Clock, LayoutList, Columns, SlidersHorizontal } from 'lucide-react'
+import { Search, Plus, CheckSquare, ListTodo, AlertOctagon, Clock, LayoutList, Columns, SlidersHorizontal, Trash2 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -9,13 +9,15 @@ import { usePeople } from '../../hooks/usePeople'
 import { Avatar, AvatarGroup } from '../../components/ui/Avatar'
 import { PersonLink } from '../../components/shared/PersonLink'
 import { Skeleton } from '../../components/ui/Skeleton'
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { ServiceChip } from '../../components/shared/ServiceChip'
 import { StatusChip } from '../../components/shared/StatusChip'
 import { PriorityChip } from '../../components/shared/PriorityChip'
 import { cn } from '../../lib/cn'
 import { formatDate, isOverdue, STATUS_LABELS, PRIORITY_LABELS } from '../../lib/utils'
-import { useTasks } from '../../hooks/useTasks'
+import { useDeleteTask, useTaskDeleteImpact, useTasks } from '../../hooks/useTasks'
 import { useServices } from '../../hooks/useServices'
+import { useToast } from '../../components/ui/toast-context'
 import { TaskBoard } from '../../components/shared/TaskBoard'
 import { TaskFormModal } from './TaskFormModal'
 import { TaskDetailDrawer } from './TaskDetailDrawer'
@@ -44,9 +46,11 @@ function sortTasks(list: TaskListItem[], sort: string): TaskListItem[] {
 }
 
 export default function TasksPage() {
+  const toast = useToast()
   const { data: services = [] } = useServices()
   const { data: people = [] } = usePeople()
   const { data: tasks = [], isLoading } = useTasks()
+  const deleteTask = useDeleteTask()
 
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
@@ -59,7 +63,9 @@ export default function TasksPage() {
   const [showAdv, setShowAdv] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [openTaskId, setOpenTaskId] = useState<string | null>(null)
+  const [pendingDelete, setPendingDelete] = useState<TaskListItem | null>(null)
   const [view, setView] = useState<'table' | 'board'>('table')
+  const { data: deleteImpact, isLoading: deleteImpactLoading } = useTaskDeleteImpact(pendingDelete?.id)
 
   const stats = useMemo(() => ({
     total: tasks.length,
@@ -161,6 +167,7 @@ export default function TasksPage() {
                   <th className="px-4 py-2.5 font-medium">Status</th>
                   <th className="px-4 py-2.5 font-medium">Due</th>
                   <th className="px-4 py-2.5 font-medium">Assignee</th>
+                  <th className="px-4 py-2.5" />
                 </tr>
               </thead>
               <tbody>
@@ -187,6 +194,15 @@ export default function TasksPage() {
                           ? <AvatarGroup users={t.assignees.map((a) => ({ id: a.id, name: a.name, avatarUrl: a.avatar_url ?? undefined }))} max={4} size="xs" linkToProfile />
                           : <span className="text-text-4 text-[12px]">Unassigned</span>}
                     </td>
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setPendingDelete(t) }}
+                        className="size-7 rounded-sm inline-flex items-center justify-center text-text-3 hover:text-error hover:bg-error/10"
+                        aria-label={`Delete ${t.title}`}
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -197,6 +213,60 @@ export default function TasksPage() {
 
       {showForm && <TaskFormModal onClose={() => setShowForm(false)} />}
       <TaskDetailDrawer taskId={openTaskId} open={!!openTaskId} onClose={() => setOpenTaskId(null)} />
+      <ConfirmDialog
+        open={!!pendingDelete}
+        title="Delete task?"
+        message={
+          <DeleteImpactMessage
+            subject={pendingDelete?.title ?? ''}
+            loading={deleteImpactLoading}
+            lines={[
+              ['Comments', deleteImpact?.comments],
+              ['Attachments', deleteImpact?.attachments],
+              ['Subtasks', deleteImpact?.subtasks],
+              ['Assignees', deleteImpact?.assignees],
+            ]}
+          />
+        }
+        confirmLabel="Delete task"
+        danger
+        isPending={deleteTask.isPending || deleteImpactLoading}
+        onConfirm={() => {
+          if (!pendingDelete) return
+          deleteTask.mutate({ id: pendingDelete.id, projectId: pendingDelete.project_id }, {
+            onSuccess: () => { toast('Task deleted', 'success'); setPendingDelete(null) },
+            onError: (e) => toast(e instanceof Error ? e.message : 'Failed', 'error'),
+          })
+        }}
+        onClose={() => setPendingDelete(null)}
+      />
+    </div>
+  )
+}
+
+function DeleteImpactMessage({
+  subject, loading, lines,
+}: {
+  subject: string
+  loading: boolean
+  lines: [string, number | undefined][]
+}) {
+  return (
+    <div className="space-y-3">
+      <p><strong className="text-text-1">{subject}</strong> will be deleted after confirmation.</p>
+      {loading ? (
+        <p className="text-text-3">Checking linked records...</p>
+      ) : (
+        <div className="grid grid-cols-2 gap-2">
+          {lines.map(([label, value]) => (
+            <div key={label} className="rounded-md border border-border-default bg-surface-2 px-3 py-2">
+              <p className="font-mono text-[10px] uppercase tracking-wider text-text-4">{label}</p>
+              <p className="font-display text-[18px] font-bold text-text-1">{value ?? 0}</p>
+            </div>
+          ))}
+        </div>
+      )}
+      <p className="text-text-3">Comments, attachments, subtasks, and assignee links will be removed before the task leaves active lists.</p>
     </div>
   )
 }

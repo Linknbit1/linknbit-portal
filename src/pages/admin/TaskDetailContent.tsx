@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import type { JSONContent } from '@tiptap/react'
-import { Plus, Trash2, Send, CheckCircle2, Archive, MessageSquare, ListChecks, RotateCcw } from 'lucide-react'
+import { Plus, Trash2, Send, CheckCircle2, MessageSquare, ListChecks, RotateCcw } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { DocEditor } from '../../components/editor/DocEditor'
 import { RichEditor } from '../../components/editor/RichEditor'
@@ -16,13 +16,14 @@ import { Toggle } from '../../components/ui/Toggle'
 import { Avatar } from '../../components/ui/Avatar'
 import { PersonLink } from '../../components/shared/PersonLink'
 import { Skeleton } from '../../components/ui/Skeleton'
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { ServiceChip } from '../../components/shared/ServiceChip'
 import { StatusChip } from '../../components/shared/StatusChip'
 import { PriorityChip } from '../../components/shared/PriorityChip'
 import { AttachmentUploader } from '../../components/shared/AttachmentUploader'
 import { useToast } from '../../components/ui/toast-context'
 import { formatRelativeTime, PRIORITY_LABELS, STATUS_LABELS } from '../../lib/utils'
-import { useTask, useUpdateTask, useDeleteTask } from '../../hooks/useTasks'
+import { useTask, useUpdateTask, useDeleteTask, useTaskDeleteImpact } from '../../hooks/useTasks'
 import { useStages } from '../../hooks/useStages'
 import { useProjectMembers } from '../../hooks/useProjectMembers'
 import { useSubtasks, useCreateSubtask, useToggleSubtask, useDeleteSubtask } from '../../hooks/useSubtasks'
@@ -48,6 +49,8 @@ export function TaskDetailContent({ taskId, onClosed, wide }: TaskDetailContentP
   const { data: task, isLoading } = useTask(taskId)
   const updateTask = useUpdateTask()
   const deleteTask = useDeleteTask()
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const { data: deleteImpact, isLoading: deleteImpactLoading } = useTaskDeleteImpact(confirmDelete ? taskId : undefined)
   useRealtimeComments(taskId)
 
   const projectId = task?.project_id
@@ -105,9 +108,9 @@ export function TaskDetailContent({ taskId, onClosed, wide }: TaskDetailContentP
     toast(isDone ? 'Task reopened' : 'Task marked complete', 'success')
   }
 
-  const archive = () => {
+  const confirmTaskDelete = () => {
     deleteTask.mutate({ id: task.id, projectId: task.project_id }, {
-      onSuccess: () => { toast('Task archived', 'success'); onClosed?.() },
+      onSuccess: () => { toast('Task deleted', 'success'); setConfirmDelete(false); onClosed?.() },
       onError: (e) => toast(e instanceof Error ? e.message : 'Failed', 'error'),
     })
   }
@@ -249,10 +252,58 @@ export function TaskDetailContent({ taskId, onClosed, wide }: TaskDetailContentP
       {/* Actions */}
       <div className={cn('flex items-center gap-2 pt-2 border-t border-border-subtle', wide && 'lg:col-span-2')}>
         <Button size="sm" variant={isDone ? 'secondary' : 'primary'} iconLeft={isDone ? <RotateCcw size={14} /> : <CheckCircle2 size={14} />} onClick={toggleComplete}>{isDone ? 'Reopen' : 'Mark complete'}</Button>
-        <Button size="sm" variant="danger" iconLeft={<Archive size={14} />} onClick={archive} loading={deleteTask.isPending}>Archive</Button>
+        <Button size="sm" variant="danger" iconLeft={<Trash2 size={14} />} onClick={() => setConfirmDelete(true)} loading={deleteTask.isPending}>Delete</Button>
         <div className="ml-auto"><StatusChip status={task.status} /></div>
         <PriorityChip priority={task.priority} />
       </div>
+      <ConfirmDialog
+        open={confirmDelete}
+        title="Delete task?"
+        message={
+          <DeleteImpactMessage
+            subject={task.title}
+            loading={deleteImpactLoading}
+            lines={[
+              ['Comments', deleteImpact?.comments],
+              ['Attachments', deleteImpact?.attachments],
+              ['Subtasks', deleteImpact?.subtasks],
+              ['Assignees', deleteImpact?.assignees],
+            ]}
+          />
+        }
+        confirmLabel="Delete task"
+        danger
+        isPending={deleteTask.isPending || deleteImpactLoading}
+        onConfirm={confirmTaskDelete}
+        onClose={() => setConfirmDelete(false)}
+      />
+    </div>
+  )
+}
+
+function DeleteImpactMessage({
+  subject, loading, lines,
+}: {
+  subject: string
+  loading: boolean
+  lines: [string, number | undefined][]
+}) {
+  return (
+    <div className="space-y-3">
+      <p><strong className="text-text-1">{subject}</strong> will be deleted after confirmation.</p>
+      {loading ? (
+        <p className="text-text-3">Checking linked records...</p>
+      ) : (
+        <div className="grid grid-cols-2 gap-2">
+          {lines.map(([label, value]) => (
+            <div key={label} className="rounded-md border border-border-default bg-surface-2 px-3 py-2">
+              <p className="font-mono text-[10px] uppercase tracking-wider text-text-4">{label}</p>
+              <p className="font-display text-[18px] font-bold text-text-1">{value ?? 0}</p>
+            </div>
+          ))}
+        </div>
+      )}
+      <p className="text-text-3">Comments, attachments, subtasks, and assignee links will be removed before the task leaves active lists.</p>
     </div>
   )
 }
