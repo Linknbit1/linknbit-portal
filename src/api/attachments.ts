@@ -103,8 +103,56 @@ export async function toggleAttachmentVisibility(id: string, clientVisible: bool
   return data
 }
 
-export async function deleteAttachment(id: string, storagePath: string): Promise<void> {
+// Link rows have no storage object, so only remove from the bucket for files.
+export async function deleteAttachment(id: string, storagePath: string | null): Promise<void> {
   const { error } = await supabase.from('attachments').delete().eq('id', id)
   if (error) throw error
-  await supabase.storage.from(BUCKET).remove([storagePath])
+  if (storagePath) await supabase.storage.from(BUCKET).remove([storagePath])
+}
+
+export interface AddLinkArgs {
+  projectId: string
+  taskId?: string | null
+  title: string
+  url: string
+  isConfidential?: boolean
+  clientVisible?: boolean
+}
+
+/**
+ * Attach an external document (Google Doc/Sheet/Slide, Drive, any URL). Stored in
+ * `attachments` with kind='link' so it lists alongside uploaded files and inherits
+ * the same RLS — including the confidential filter.
+ */
+export async function addAttachmentLink(args: AddLinkArgs): Promise<AttachmentRow> {
+  const { data: auth } = await supabase.auth.getUser()
+  const { data, error } = await supabase
+    .from('attachments')
+    .insert({
+      project_id: args.projectId,
+      task_id: args.taskId ?? null,
+      uploader_id: auth.user?.id ?? null,
+      file_name: args.title.trim(),
+      kind: 'link',
+      link_url: args.url.trim(),
+      is_confidential: args.isConfidential ?? false,
+      client_visible: args.clientVisible ?? false,
+    })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+// Guarded server-side by trg_guard_attachment_confidential: callers without
+// can_view_confidential get 'forbidden_confidential'.
+export async function setAttachmentConfidential(id: string, isConfidential: boolean): Promise<AttachmentRow> {
+  const { data, error } = await supabase
+    .from('attachments')
+    .update({ is_confidential: isConfidential })
+    .eq('id', id)
+    .select()
+    .single()
+  if (error) throw error
+  return data
 }

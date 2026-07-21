@@ -32,6 +32,18 @@ export async function addProjectMember(projectId: string, profileId: string): Pr
   if (error) throw error
 }
 
+/** Add several people to a project in one round-trip (bulk member picker). */
+export async function addProjectMembers(projectId: string, profileIds: string[]): Promise<void> {
+  if (profileIds.length === 0) return
+  const { error } = await supabase
+    .from('project_members')
+    .upsert(
+      profileIds.map((profile_id) => ({ project_id: projectId, profile_id })),
+      { onConflict: 'project_id,profile_id' },
+    )
+  if (error) throw error
+}
+
 export async function removeProjectMember(projectId: string, profileId: string): Promise<void> {
   const { error } = await supabase
     .from('project_members')

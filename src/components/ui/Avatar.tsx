@@ -69,7 +69,7 @@ export function Avatar({ name, size = 'md', online, className, src, personId }: 
 
   if (personId) {
     return (
-      <PersonLink personId={personId} className="rounded-full hover:opacity-90 hover:no-underline" ariaLabel={`View ${name}'s profile`}>
+      <PersonLink personId={personId} className="inline-flex rounded-full hover:opacity-90 hover:no-underline" ariaLabel={`View ${name}'s profile`}>
         {body}
       </PersonLink>
     )
@@ -92,14 +92,14 @@ export function AvatarGroup({ users, max = 3, size = 'sm', linkToProfile = false
   return (
     <div className="flex items-center">
       {shown.map((user, i) => (
-        <span key={user.id} className={cn('ring-2 ring-bg-base rounded-full', i > 0 && '-ml-2')}>
+        <span key={user.id} className={cn('inline-flex rounded-full ring-2 ring-bg-base', i > 0 && '-ml-2')}>
           <Avatar name={user.name} src={user.avatarUrl ?? undefined} size={size} personId={linkToProfile ? user.id : undefined} />
         </span>
       ))}
       {rest > 0 && (
         <span
           className={cn(
-            '-ml-2 rounded-full bg-surface-3 border-2 border-bg-base inline-flex items-center justify-center font-ui font-bold text-text-2',
+            '-ml-2 inline-flex items-center justify-center rounded-full bg-surface-3 ring-2 ring-bg-base font-ui font-bold text-text-2',
             SIZE_CLASSES[size],
           )}
         >

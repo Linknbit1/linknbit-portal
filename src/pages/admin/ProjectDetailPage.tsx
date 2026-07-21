@@ -23,7 +23,7 @@ import { useCanAccess } from '../../hooks/useRoleFlags'
 import { useProjectWatch } from '../../hooks/useWatchers'
 import { useProjectFiles } from '../../hooks/useAttachments'
 import { cn } from '../../lib/cn'
-import { formatDate, formatCurrency, isOverdue } from '../../lib/utils'
+import { formatDate, formatCurrency, isOverdue, ROLE_LABELS } from '../../lib/utils'
 import { isAuthoritative } from '../../lib/roles'
 import { useAuthContext } from '../../context/AuthContext'
 import { useToast } from '../../components/ui/toast-context'
@@ -41,6 +41,7 @@ import { TaskDetailDrawer } from './TaskDetailDrawer'
 import type { StageRow } from '../../api/stages'
 import type { TaskListItem } from '../../api/tasks'
 import type { ApprovalStatus } from '../../api/approvals'
+import type { UserRole } from '../../types'
 
 const TABS = [
   { key: 'pipeline', label: 'Pipeline', icon: Layers },
@@ -284,18 +285,51 @@ export default function ProjectDetailPage() {
         )}
 
         {projectView === 'team' && (
-          <div className="bg-surface-1 border border-border-default rounded-xl p-2 max-w-2xl">
+          <div className="max-w-3xl overflow-hidden rounded-xl border border-border-default bg-surface-1">
+            <div className="flex items-center justify-between gap-2 border-b border-border-subtle px-5 py-3">
+              <h3 className="flex items-center gap-2 font-display text-[14px] font-bold text-text-1">
+                <Users size={15} className="text-text-3" /> Project team
+                <span className="font-mono text-[11px] font-normal text-text-4">{members.length}</span>
+              </h3>
+              {canManage && (
+                <Button size="sm" variant="secondary" iconLeft={<Plus size={13} />} onClick={() => setShowAddMember(true)}>
+                  Add members
+                </Button>
+              )}
+            </div>
             {members.length === 0 ? (
-              <p className="text-center text-[12px] text-text-4 py-6">No members yet</p>
-            ) : members.map((m) => (
-              <div key={m.id} className="flex items-center gap-2.5 px-3 py-2 rounded-md hover:bg-surface-2 group">
-                <Avatar name={m.name} src={m.avatar_url ?? undefined} size="sm" personId={m.id} />
-                <PersonLink personId={m.id} className="flex-1 min-w-0 font-ui text-[13px] text-text-1 truncate">{m.name}</PersonLink>
-                {canManage && (
-                  <button onClick={() => removeMember.mutate({ projectId: id, profileId: m.id }, { onError: (e) => toast(e instanceof Error ? e.message : 'Failed', 'error') })} className="size-7 rounded-sm flex items-center justify-center text-text-4 hover:text-error opacity-0 group-hover:opacity-100 transition-opacity" aria-label="Remove"><X size={13} /></button>
-                )}
+              <div className="flex flex-col items-center gap-2 py-12 text-center">
+                <span className="flex size-11 items-center justify-center rounded-full bg-surface-2 text-text-3"><Users size={19} /></span>
+                <p className="font-ui text-[13px] text-text-2">No members yet</p>
+                <p className="font-ui text-[11.5px] text-text-4">Add people individually or pull in a whole team at once.</p>
               </div>
-            ))}
+            ) : (
+              <div className="grid grid-cols-1 gap-2 p-4 sm:grid-cols-2">
+                {members.map((m) => (
+                  <div
+                    key={m.id}
+                    className="group flex items-center gap-3 rounded-lg border border-border-subtle bg-surface-2/40 px-3 py-2.5 transition-colors hover:border-border-default"
+                  >
+                    <Avatar name={m.name} src={m.avatar_url ?? undefined} size="sm" personId={m.id} />
+                    <div className="min-w-0 flex-1">
+                      <PersonLink personId={m.id} className="block truncate font-ui text-[13px] font-medium text-text-1">{m.name}</PersonLink>
+                      <p className="truncate font-mono text-[10.5px] text-text-4">
+                        {m.role_in_project ?? ROLE_LABELS[m.role as UserRole] ?? m.role}
+                      </p>
+                    </div>
+                    {canManage && (
+                      <button
+                        onClick={() => removeMember.mutate({ projectId: id, profileId: m.id }, { onError: (e) => toast(e instanceof Error ? e.message : 'Failed', 'error') })}
+                        className="flex size-7 shrink-0 items-center justify-center rounded-sm text-text-4 opacity-0 transition-all hover:bg-error/10 hover:text-error group-hover:opacity-100"
+                        aria-label={`Remove ${m.name}`}
+                      >
+                        <X size={13} />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>

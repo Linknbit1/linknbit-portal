@@ -77,8 +77,10 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Tasks', icon: CheckSquare, to: '/admin/tasks' },
   { label: 'Inbox', icon: Inbox, to: '/inbox' },
   { label: 'Clients', icon: UserCircle, to: '/admin/clients', feature: 'can_manage_clients' },
-  { label: 'Teams', icon: Users, to: '/teams', feature: 'can_manage_people' },
-  { label: 'People', icon: UserCog, to: '/people', feature: 'can_manage_people' },
+  // Directory views: everyone internal can browse people/teams. The management
+  // actions inside are gated on can_manage_people; RLS blocks writes regardless.
+  { label: 'Teams', icon: Users, to: '/teams' },
+  { label: 'People', icon: UserCog, to: '/people' },
   // `to` is rewritten below: managers land on Daily Records, everyone else on their
   // own self-service view (the old hardcoded /attendance/records bounced 4 of 7 roles).
   { label: 'Attendance', icon: CalendarCheck, to: '/attendance', matchPrefix: '/attendance', primaryMobile: true, children: ATTENDANCE_CHILDREN },

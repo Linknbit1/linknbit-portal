@@ -257,8 +257,10 @@ const ROLE_LABELS: Record<string, string> = {
   team_lead: 'Team Lead', employee: 'Employee', hr: 'HR', finance: 'Finance',
 }
 const FEATURE_LABELS: Record<string, string> = {
+  can_create_projects:      'Create Projects',
   can_delete_projects:      'Delete Projects',
   can_view_budget:          'View Budget',
+  can_view_confidential:    'View Confidential Docs',
   can_approve_tasks:        'Approve Tasks',
   can_manage_clients:       'Manage Clients',
   can_manage_people:        'Manage People',
@@ -271,7 +273,7 @@ const FEATURE_LABELS: Record<string, string> = {
 }
 
 const FEATURE_SECTIONS: { label: string; features: string[] }[] = [
-  { label: 'Projects',     features: ['can_delete_projects', 'can_view_budget'] },
+  { label: 'Projects',     features: ['can_create_projects', 'can_delete_projects', 'can_view_budget', 'can_view_confidential'] },
   { label: 'Tasks',        features: ['can_approve_tasks'] },
   { label: 'Clients',      features: ['can_manage_clients'] },
   { label: 'People',       features: ['can_manage_people'] },
