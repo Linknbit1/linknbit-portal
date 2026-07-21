@@ -494,12 +494,12 @@ function AttendanceTab({ personId, leave, wfh }: {
           {monthLeave.length === 0 ? <Empty label="No leave this month." /> : (
             <div className="flex flex-col gap-2.5">
               {monthLeave.map((l) => (
-                <div key={l.id} className="flex items-center gap-2">
+                <div key={l.id} className="flex items-start gap-2">
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-ui text-[12.5px] text-text-1">
                       {l.leave_types?.name ?? 'Leave'} · {fmtDay(l.start_date)}{l.end_date !== l.start_date ? ` – ${fmtDay(l.end_date)}` : ''}
                     </p>
-                    {l.reason && <p className="truncate font-ui text-[11.5px] text-text-4">{l.reason}</p>}
+                    {l.reason && <p className="wrap-break-word font-ui text-[11.5px] text-text-4">{l.reason}</p>}
                   </div>
                   <span className={cn('shrink-0 rounded-xs border px-1.5 py-0.5 font-mono text-[10px] font-semibold capitalize', REQ_STATUS[l.status] ?? REQ_STATUS.pending)}>{l.status}</span>
                 </div>
@@ -512,10 +512,10 @@ function AttendanceTab({ personId, leave, wfh }: {
           {monthWfh.length === 0 ? <Empty label="No WFH this month." /> : (
             <div className="flex flex-col gap-2.5">
               {monthWfh.map((w) => (
-                <div key={w.id} className="flex items-center gap-2">
+                <div key={w.id} className="flex items-start gap-2">
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-ui text-[12.5px] text-text-1">{fmtDay(w.date)}</p>
-                    {w.reason && <p className="truncate font-ui text-[11.5px] text-text-4">{w.reason}</p>}
+                    {w.reason && <p className="wrap-break-word font-ui text-[11.5px] text-text-4">{w.reason}</p>}
                   </div>
                   <span className={cn('shrink-0 rounded-xs border px-1.5 py-0.5 font-mono text-[10px] font-semibold capitalize', REQ_STATUS[w.status] ?? REQ_STATUS.pending)}>{w.status}</span>
                 </div>
@@ -532,15 +532,16 @@ function AttendanceTab({ personId, leave, wfh }: {
               {monthExc.map((e) => {
                 const t = EXC_TYPE[e.exception_type]
                 return (
-                  <div key={e.id} className="flex items-center gap-2">
+                  <div key={e.id} className="flex items-start gap-2">
                     <div className="min-w-0 flex-1">
                       <p className="flex items-center gap-1.5 font-ui text-[12.5px] text-text-1">
                         <span className={cn('shrink-0 rounded-xs border px-1.5 py-0.5 font-mono text-[9.5px] font-semibold', t?.cls ?? 'border-border-default text-text-3')}>{t?.label ?? e.exception_type}</span>
                         <span className="truncate">{fmtDay(e.date)}</span>
                       </p>
-                      <p className="truncate font-ui text-[11.5px] text-text-4">
-                        {fmtClock(e.requested_time)}{e.return_time ? ` → ${fmtClock(e.return_time)}` : ''}{e.reason ? ` · ${e.reason}` : ''}
+                      <p className="font-ui text-[11.5px] text-text-4">
+                        {fmtClock(e.requested_time)}{e.return_time ? ` → ${fmtClock(e.return_time)}` : ''}
                       </p>
+                      {e.reason && <p className="wrap-break-word font-ui text-[11.5px] text-text-4">{e.reason}</p>}
                     </div>
                     <span className={cn('shrink-0 rounded-xs border px-1.5 py-0.5 font-mono text-[10px] font-semibold capitalize', REQ_STATUS[e.status] ?? REQ_STATUS.pending)}>{e.status}</span>
                   </div>
@@ -554,12 +555,12 @@ function AttendanceTab({ personId, leave, wfh }: {
           {monthOt.length === 0 ? <Empty label="No overtime this month." /> : (
             <div className="flex flex-col gap-2.5">
               {monthOt.map((o) => (
-                <div key={o.id} className="flex items-center gap-2">
+                <div key={o.id} className="flex items-start gap-2">
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-ui text-[12.5px] text-text-1">
                       {fmtDay(o.date)} · <span className="font-mono text-text-3">{fmtClock(o.start_time)} – {fmtClock(o.end_time)}</span>
                     </p>
-                    {o.reason && <p className="truncate font-ui text-[11.5px] text-text-4">{o.reason}</p>}
+                    {o.reason && <p className="wrap-break-word font-ui text-[11.5px] text-text-4">{o.reason}</p>}
                   </div>
                   <span className="shrink-0 font-display text-[14px] font-bold text-service-mkt">{o.hours}h</span>
                   <span className={cn('shrink-0 rounded-xs border px-1.5 py-0.5 font-mono text-[10px] font-semibold capitalize', REQ_STATUS[o.status] ?? REQ_STATUS.pending)}>{o.status}</span>
@@ -702,7 +703,7 @@ function RecognitionTab({ personId }: { personId: string }) {
                 <span className={cn('flex size-7 shrink-0 items-center justify-center rounded-md', t.amount >= 0 ? 'bg-success/12 text-success' : 'bg-error/12 text-error')}>
                   {t.amount >= 0 ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
                 </span>
-                <span className="min-w-0 flex-1 truncate font-ui text-[12.5px] text-text-2">{t.reason}</span>
+                <span className="min-w-0 flex-1 wrap-break-word font-ui text-[12.5px] text-text-2">{t.reason}</span>
                 <span className="shrink-0 font-mono text-[10.5px] text-text-4">{formatRelativeTime(t.created_at)}</span>
                 <span className={cn('w-14 shrink-0 text-right font-mono text-[12px] font-semibold', t.amount >= 0 ? 'text-success' : 'text-error')}>
                   {t.amount >= 0 ? '+' : ''}{t.amount.toLocaleString()}

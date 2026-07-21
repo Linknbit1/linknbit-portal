@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
-  fetchProjects, fetchProject, createProject, updateProject, updateProjectStatus, deleteProject,
+  fetchProjects, fetchProject, createProject, updateProject, updateProjectStatus,
   type ProjectFilters, type ProjectStatus,
 } from '../api/projects'
+import { deleteProjectCascade, fetchProjectDeleteImpact } from '../api/deleteCascade'
 import type { TablesInsert, TablesUpdate } from '../types/database'
 
 export const PROJECT_KEYS = {
@@ -64,10 +65,22 @@ export function useUpdateProjectStatus() {
 export function useDeleteProject() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => deleteProject(id),
+    mutationFn: (id: string) => deleteProjectCascade(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: PROJECT_KEYS.all })
+      qc.invalidateQueries({ queryKey: ['tasks'] })
+      qc.invalidateQueries({ queryKey: ['stages'] })
+      qc.invalidateQueries({ queryKey: ['attachments'] })
       qc.invalidateQueries({ queryKey: ['clients'] })
     },
+  })
+}
+
+export function useProjectDeleteImpact(id: string | undefined) {
+  return useQuery({
+    queryKey: ['projects', id ?? '', 'delete-impact'],
+    queryFn: () => fetchProjectDeleteImpact(id!),
+    enabled: !!id,
+    staleTime: 0,
   })
 }

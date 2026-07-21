@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import {
   Plus, Users, Layers, Paperclip, Calendar, Wallet, UserCircle,
   Pencil, Trash2, Flag, X, CheckCircle2, Columns, FileText, Bell,
@@ -27,7 +27,7 @@ import { formatDate, formatCurrency, isOverdue } from '../../lib/utils'
 import { isAuthoritative } from '../../lib/roles'
 import { useAuthContext } from '../../context/AuthContext'
 import { useToast } from '../../components/ui/toast-context'
-import { useProject, useUpdateProject } from '../../hooks/useProjects'
+import { useDeleteProject, useProject, useProjectDeleteImpact, useUpdateProject } from '../../hooks/useProjects'
 import { useStages, useDeleteStage } from '../../hooks/useStages'
 import { useTasks } from '../../hooks/useTasks'
 import { useProjectMembers, useRemoveProjectMember } from '../../hooks/useProjectMembers'
@@ -53,6 +53,7 @@ type ProjectTab = typeof TABS[number]['key']
 
 export default function ProjectDetailPage() {
   const { id = '' } = useParams()
+  const navigate = useNavigate()
   const toast = useToast()
   const { profile } = useAuthContext()
   const canManage = isAuthoritative(profile?.role)
@@ -66,6 +67,7 @@ export default function ProjectDetailPage() {
   useRealtimeTasks(id)
 
   const updateProject = useUpdateProject()
+  const deleteProject = useDeleteProject()
   const watch = useProjectWatch(id)
   const deleteStage = useDeleteStage()
   const removeMember = useRemoveProjectMember()
@@ -83,6 +85,8 @@ export default function ProjectDetailPage() {
   const [openTaskId, setOpenTaskId] = useState<string | null>(null)
   const [reviewStage, setReviewStage] = useState<StageRow | null>(null)
   const [pendingStageDelete, setPendingStageDelete] = useState<StageRow | null>(null)
+  const [confirmProjectDelete, setConfirmProjectDelete] = useState(false)
+  const { data: projectDeleteImpact, isLoading: projectDeleteImpactLoading } = useProjectDeleteImpact(confirmProjectDelete ? id : undefined)
 
   // Group tasks by stage; tasks without a stage fall into an "Unstaged" bucket.
   const tasksByStage = useMemo(() => {
@@ -170,7 +174,10 @@ export default function ProjectDetailPage() {
                 {watch.isWatching ? 'Watching' : 'Notify'}
               </Button>
               {canManage && (
-                <Button size="sm" variant="secondary" iconLeft={<Pencil size={13} />} onClick={() => setShowEdit(true)}>Edit</Button>
+                <>
+                  <Button size="sm" variant="secondary" iconLeft={<Pencil size={13} />} onClick={() => setShowEdit(true)}>Edit</Button>
+                  <Button size="sm" variant="danger" iconLeft={<Trash2 size={13} />} onClick={() => setConfirmProjectDelete(true)}>Delete</Button>
+                </>
               )}
             </div>
           </div>
@@ -296,6 +303,35 @@ export default function ProjectDetailPage() {
       <TaskDetailDrawer taskId={openTaskId} open={!!openTaskId} onClose={() => setOpenTaskId(null)} />
 
       <ConfirmDialog
+        open={confirmProjectDelete}
+        title="Delete project?"
+        message={
+          <DeleteImpactMessage
+            subject={project.name}
+            loading={projectDeleteImpactLoading}
+            lines={[
+              ['Tasks', projectDeleteImpact?.tasks],
+              ['Stages', projectDeleteImpact?.stages],
+              ['Comments', projectDeleteImpact?.comments],
+              ['Attachments', projectDeleteImpact?.attachments],
+              ['Subtasks', projectDeleteImpact?.subtasks],
+            ]}
+            note="The project and its tasks will be hidden from active lists. Related comments, files, stages, subtasks, and assignees will be removed."
+          />
+        }
+        confirmLabel="Delete project"
+        danger
+        isPending={deleteProject.isPending || projectDeleteImpactLoading}
+        onConfirm={() => {
+          deleteProject.mutate(id, {
+            onSuccess: () => { toast('Project deleted', 'success'); navigate('/admin/projects') },
+            onError: (e) => toast(e instanceof Error ? e.message : 'Failed', 'error'),
+          })
+        }}
+        onClose={() => setConfirmProjectDelete(false)}
+      />
+
+      <ConfirmDialog
         open={!!pendingStageDelete}
         title="Delete stage?"
         message={pendingStageDelete ? `"${pendingStageDelete.name}" will be removed. Its tasks stay but become unstaged.` : ''}
@@ -311,6 +347,34 @@ export default function ProjectDetailPage() {
         }}
         onClose={() => setPendingStageDelete(null)}
       />
+    </div>
+  )
+}
+
+function DeleteImpactMessage({
+  subject, loading, lines, note,
+}: {
+  subject: string
+  loading: boolean
+  lines: [string, number | undefined][]
+  note: string
+}) {
+  return (
+    <div className="space-y-3">
+      <p><strong className="text-text-1">{subject}</strong> will be deleted after confirmation.</p>
+      {loading ? (
+        <p className="text-text-3">Checking linked records...</p>
+      ) : (
+        <div className="grid grid-cols-2 gap-2">
+          {lines.map(([label, value]) => (
+            <div key={label} className="rounded-md border border-border-default bg-surface-2 px-3 py-2">
+              <p className="font-mono text-[10px] uppercase tracking-wider text-text-4">{label}</p>
+              <p className="font-display text-[18px] font-bold text-text-1">{value ?? 0}</p>
+            </div>
+          ))}
+        </div>
+      )}
+      <p className="text-text-3">{note}</p>
     </div>
   )
 }

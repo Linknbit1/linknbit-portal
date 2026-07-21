@@ -762,7 +762,7 @@ export function WFHRequestsTab() {
                           <span className="text-[10px] font-mono bg-service-dev/10 text-service-dev border border-service-dev/20 px-1.5 py-0.5 rounded-xs uppercase tracking-wide">HR Granted</span>
                         )}
                       </div>
-                      <p className="text-[12px] font-ui text-text-3 truncate max-w-85">{req.reason}</p>
+                      <p className="text-[12px] font-ui text-text-3 wrap-break-word">{req.reason}</p>
                     </div>
                     <div className="flex items-center gap-1.5 text-[12px] font-mono text-text-2 shrink-0">
                       <Calendar size={12} className="text-text-4" />
@@ -1233,7 +1233,7 @@ export function LeaveTab() {
                       </span>
                     )}
                   </div>
-                  <p className="font-ui text-[12px] text-text-3 truncate">{req.reason}</p>
+                  <p className="font-ui text-[12px] text-text-3 wrap-break-word">{req.reason}</p>
                   <p className="font-mono text-[10.5px] text-text-4 mt-0.5">
                     For {fmtRange(req.start_date, req.end_date)} · Requested {formatRequestedAt(req.created_at)}
                   </p>
@@ -1769,8 +1769,8 @@ export function ExceptionsTab() {
                         <span className="text-text-4 ml-1">→ {fmtTimeStr(exc.return_time)}</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 font-ui text-[12px] text-text-2 max-w-40">
-                      <span className="line-clamp-2">{exc.reason}</span>
+                    <td className="px-4 py-3 font-ui text-[12px] text-text-2 max-w-60">
+                      <span className="wrap-break-word">{exc.reason}</span>
                     </td>
                     <td className="px-4 py-3"><ExcStatusChip status={exc.status} /></td>
                     <td className="px-4 py-3">
@@ -2352,7 +2352,7 @@ export function HolidaysTab() {
               <div key={d.id} className="flex items-center gap-4 px-5 py-3 hover:bg-white/1.5 transition-colors">
                 <div className="flex-1 min-w-0">
                   <p className="font-ui font-semibold text-[13px] text-text-1">{fmtDate(d.date)}</p>
-                  <p className="font-ui text-[11px] text-text-4 mt-0.5 truncate">{d.reason}</p>
+                  <p className="font-ui text-[11px] text-text-4 mt-0.5 wrap-break-word">{d.reason}</p>
                 </div>
                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-ui font-semibold bg-service-dev/10 text-service-dev border border-service-dev/25 shrink-0">
                   Work From Home
@@ -2683,8 +2683,8 @@ export function OvertimeTab() {
                     <td className="px-4 py-3">
                       <span className="font-display font-bold text-[15px] text-service-mkt">{req.hours}h</span>
                     </td>
-                    <td className="px-4 py-3 font-ui text-[12px] text-text-2 max-w-50">
-                      <span className="line-clamp-2">{req.reason}</span>
+                    <td className="px-4 py-3 font-ui text-[12px] text-text-2 max-w-60">
+                      <span className="wrap-break-word">{req.reason}</span>
                     </td>
                     <td className="px-4 py-3">
                       <span className={cn('inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-ui font-semibold border', meta.cls)}>
@@ -2692,7 +2692,7 @@ export function OvertimeTab() {
                         {meta.label}
                       </span>
                       {req.review_note && (
-                        <p className="font-ui text-[10.5px] text-text-4 mt-0.5 max-w-40 truncate italic">"{req.review_note}"</p>
+                        <p className="font-ui text-[10.5px] text-text-4 mt-0.5 max-w-40 wrap-break-word italic">"{req.review_note}"</p>
                       )}
                     </td>
                     <td className="px-4 py-3">

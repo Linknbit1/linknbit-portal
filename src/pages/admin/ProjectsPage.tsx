@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  List, Columns, Calendar, Flag, Plus, Search, ChevronRight, AlertCircle, SlidersHorizontal,
+  List, Columns, Calendar, Flag, Plus, Search, ChevronRight, AlertCircle, SlidersHorizontal, Trash2,
 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Button } from '../../components/ui/Button'
@@ -12,11 +12,12 @@ import { usePeople } from '../../hooks/usePeople'
 import { AvatarGroup } from '../../components/ui/Avatar'
 import { ProgressBar } from '../../components/ui/ProgressBar'
 import { Skeleton } from '../../components/ui/Skeleton'
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { ServiceChip } from '../../components/shared/ServiceChip'
 import { StatusChip } from '../../components/shared/StatusChip'
 import { cn } from '../../lib/cn'
 import { formatDate, isOverdue, PROJECT_STATUS_LABELS } from '../../lib/utils'
-import { useProjects, useUpdateProjectStatus } from '../../hooks/useProjects'
+import { useDeleteProject, useProjectDeleteImpact, useProjects, useUpdateProjectStatus } from '../../hooks/useProjects'
 import { useServices } from '../../hooks/useServices'
 import { useApprovals } from '../../hooks/useApprovals'
 import { useToast } from '../../components/ui/toast-context'
@@ -65,9 +66,13 @@ export default function ProjectsPage() {
   const [sortBy, setSortBy] = useState('recent')
   const [showAdv, setShowAdv] = useState(false)
   const [showNew, setShowNew] = useState(false)
+  const [pendingDelete, setPendingDelete] = useState<ProjectListItem | null>(null)
 
   const { data: projects = [], isLoading } = useProjects()
   const { data: people = [] } = usePeople()
+  const deleteProject = useDeleteProject()
+  const { data: deleteImpact, isLoading: deleteImpactLoading } = useProjectDeleteImpact(pendingDelete?.id)
+  const toast = useToast()
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -145,7 +150,7 @@ export default function ProjectsPage() {
           <EmptyState onNew={() => setShowNew(true)} />
         ) : (
           <>
-            {view === 'list' && <ListView projects={filtered} onOpen={(id) => navigate(`/admin/projects/${id}`)} />}
+            {view === 'list' && <ListView projects={filtered} onOpen={(id) => navigate(`/admin/projects/${id}`)} onDelete={setPendingDelete} />}
             {view === 'kanban' && <KanbanView projects={filtered} onOpen={(id) => navigate(`/admin/projects/${id}`)} />}
             {view === 'timeline' && <TimelineView projects={filtered} onOpen={(id) => navigate(`/admin/projects/${id}`)} />}
             {view === 'milestones' && <MilestonesView onOpen={(id) => navigate(`/admin/projects/${id}`)} />}
@@ -154,6 +159,34 @@ export default function ProjectsPage() {
       </div>
 
       {showNew && <ProjectFormModal onClose={() => setShowNew(false)} />}
+      <ConfirmDialog
+        open={!!pendingDelete}
+        title="Delete project?"
+        message={
+          <DeleteImpactMessage
+            subject={pendingDelete?.name ?? ''}
+            loading={deleteImpactLoading}
+            lines={[
+              ['Tasks', deleteImpact?.tasks],
+              ['Stages', deleteImpact?.stages],
+              ['Comments', deleteImpact?.comments],
+              ['Attachments', deleteImpact?.attachments],
+              ['Subtasks', deleteImpact?.subtasks],
+            ]}
+          />
+        }
+        confirmLabel="Delete project"
+        danger
+        isPending={deleteProject.isPending || deleteImpactLoading}
+        onConfirm={() => {
+          if (!pendingDelete) return
+          deleteProject.mutate(pendingDelete.id, {
+            onSuccess: () => { toast('Project deleted', 'success'); setPendingDelete(null) },
+            onError: (e) => toast(e instanceof Error ? e.message : 'Failed', 'error'),
+          })
+        }}
+        onClose={() => setPendingDelete(null)}
+      />
     </div>
   )
 }
@@ -169,7 +202,7 @@ function EmptyState({ onNew }: { onNew: () => void }) {
 }
 
 // ── List view ────────────────────────────────────────────────────────
-function ListView({ projects, onOpen }: { projects: ProjectListItem[]; onOpen: (id: string) => void }) {
+function ListView({ projects, onOpen, onDelete }: { projects: ProjectListItem[]; onOpen: (id: string) => void; onDelete: (project: ProjectListItem) => void }) {
   return (
     <div className="bg-surface-1 border border-border-default rounded-md overflow-x-auto">
       <table className="w-full text-left min-w-[860px]">
@@ -211,11 +244,49 @@ function ListView({ projects, onOpen }: { projects: ProjectListItem[]; onOpen: (
                   ? <AvatarGroup users={p.members.map((m) => ({ id: m.id, name: m.name, avatarUrl: m.avatar_url ?? undefined }))} max={4} size="xs" linkToProfile />
                   : <span className="text-text-4 text-[12px]">—</span>}
               </td>
-              <td className="px-4 py-3 text-right"><ChevronRight size={15} className="text-text-4" /></td>
+              <td className="px-4 py-3 text-right">
+                <div className="flex justify-end gap-1">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onDelete(p) }}
+                    className="size-7 rounded-sm inline-flex items-center justify-center text-text-3 hover:text-error hover:bg-error/10"
+                    aria-label={`Delete ${p.name}`}
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                  <ChevronRight size={15} className="text-text-4 self-center" />
+                </div>
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
+    </div>
+  )
+}
+
+function DeleteImpactMessage({
+  subject, loading, lines,
+}: {
+  subject: string
+  loading: boolean
+  lines: [string, number | undefined][]
+}) {
+  return (
+    <div className="space-y-3">
+      <p><strong className="text-text-1">{subject}</strong> will be deleted after confirmation.</p>
+      {loading ? (
+        <p className="text-text-3">Checking linked records...</p>
+      ) : (
+        <div className="grid grid-cols-2 gap-2">
+          {lines.map(([label, value]) => (
+            <div key={label} className="rounded-md border border-border-default bg-surface-2 px-3 py-2">
+              <p className="font-mono text-[10px] uppercase tracking-wider text-text-4">{label}</p>
+              <p className="font-display text-[18px] font-bold text-text-1">{value ?? 0}</p>
+            </div>
+          ))}
+        </div>
+      )}
+      <p className="text-text-3">Related task comments, files, stages, subtasks, and assignee links will be removed before the project leaves active lists.</p>
     </div>
   )
 }
