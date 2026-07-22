@@ -3,12 +3,13 @@ import { motion } from 'framer-motion'
 import { cn } from '../../lib/cn'
 import { useIsDesktop } from '../../hooks/useMediaQuery'
 
-export type ModalSize = 'sm' | 'md' | 'lg'
+export type ModalSize = 'sm' | 'md' | 'lg' | 'xl'
 
 const SIZE_CLASS: Record<ModalSize, string> = {
   sm: 'sm:max-w-sm',
   md: 'sm:max-w-md',
   lg: 'sm:max-w-lg',
+  xl: 'sm:max-w-5xl',
 }
 
 interface ModalShellProps {

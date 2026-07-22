@@ -4,6 +4,7 @@ import { RichEditor } from './RichEditor'
 import { extractMentionIds, isEmptyDoc, toDbDoc, fromDbDoc } from '../../lib/richText'
 import { useSyncMentions } from '../../hooks/useMentions'
 import type { PersonMini } from '../../api/projects'
+import type { FileMentionItem } from './fileMention'
 import type { MentionSource } from '../../api/mentions'
 import type { Json } from '../../types/database'
 
@@ -12,6 +13,8 @@ interface DocEditorProps {
   /** Persist the document (null when empty). Called debounced. */
   onSave: (doc: Json | null) => void
   mentionItems: PersonMini[]
+  /** Project files/links taggable with #. */
+  fileItems?: FileMentionItem[]
   placeholder?: string
   /** Where this doc lives, so newly-added @mentions can be recorded/notified. */
   source: { type: MentionSource; id: string; projectId: string }
@@ -23,7 +26,7 @@ interface DocEditorProps {
  * @mentions (which notify). Give it a stable `key` per record (task/project id)
  * so switching records remounts it with fresh content.
  */
-export function DocEditor({ value, onSave, mentionItems, placeholder, source, className }: DocEditorProps) {
+export function DocEditor({ value, onSave, mentionItems, fileItems, placeholder, source, className }: DocEditorProps) {
   const syncMentions = useSyncMentions()
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const latest = useRef<JSONContent | null>(fromDbDoc(value))
@@ -53,6 +56,7 @@ export function DocEditor({ value, onSave, mentionItems, placeholder, source, cl
       value={fromDbDoc(value)}
       onChange={handleChange}
       mentionItems={mentionItems}
+      fileItems={fileItems}
       placeholder={placeholder}
       className={className}
     />

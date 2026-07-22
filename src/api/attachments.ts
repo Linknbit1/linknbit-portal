@@ -86,6 +86,14 @@ export async function uploadAttachment(file: File, args: UploadAttachmentArgs): 
 }
 
 /** Short-lived signed URL for downloading/previewing a private file. */
+// Resolve a single attachment (for file-tag clicks / the viewer). RLS-gated, so a
+// confidential row returns null for a viewer without can_view_confidential.
+export async function fetchAttachmentById(id: string): Promise<AttachmentRow | null> {
+  const { data, error } = await supabase.from('attachments').select('*').eq('id', id).maybeSingle()
+  if (error) throw error
+  return data
+}
+
 export async function getAttachmentUrl(storagePath: string): Promise<string> {
   const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(storagePath, 600)
   if (error) throw error

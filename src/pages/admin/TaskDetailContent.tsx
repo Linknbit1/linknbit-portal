@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import type { JSONContent } from '@tiptap/react'
 import { Plus, Trash2, Send, CheckCircle2, MessageSquare, ListChecks, RotateCcw } from 'lucide-react'
 import { cn } from '../../lib/cn'
@@ -26,6 +26,8 @@ import { formatRelativeTime, PRIORITY_LABELS, STATUS_LABELS } from '../../lib/ut
 import { useTask, useUpdateTask, useDeleteTask, useTaskDeleteImpact } from '../../hooks/useTasks'
 import { useStages } from '../../hooks/useStages'
 import { useProjectMembers } from '../../hooks/useProjectMembers'
+import { useProjectFiles } from '../../hooks/useAttachments'
+import { fileKind } from '../../lib/attachment'
 import { useSubtasks, useCreateSubtask, useToggleSubtask, useDeleteSubtask } from '../../hooks/useSubtasks'
 import { useComments, useCreateComment } from '../../hooks/useComments'
 import { useRealtimeComments } from '../../hooks/realtime/useRealtimeComments'
@@ -56,6 +58,10 @@ export function TaskDetailContent({ taskId, onClosed, wide }: TaskDetailContentP
   const projectId = task?.project_id
   const { data: stages = [] } = useStages(projectId)
   const { data: members = [] } = useProjectMembers(projectId)
+  const { data: projectFiles = [] } = useProjectFiles(projectId)
+  const fileItems = useMemo(() => projectFiles.map((f) => ({
+    id: f.id, name: f.file_name, kind: f.kind === 'link' ? 'link' : fileKind(f.mime_type, f.file_name),
+  })), [projectFiles])
   const { data: subtasks = [] } = useSubtasks(taskId)
   const { data: comments = [] } = useComments(taskId)
   const createSubtask = useCreateSubtask()
@@ -166,6 +172,7 @@ export function TaskDetailContent({ taskId, onClosed, wide }: TaskDetailContentP
             value={task.doc}
             onSave={(doc) => patch({ doc })}
             mentionItems={members}
+            fileItems={fileItems}
             source={{ type: 'task', id: task.id, projectId: task.project_id }}
             placeholder="Add a description… type / for commands, @ to mention"
           />
@@ -235,7 +242,8 @@ export function TaskDetailContent({ taskId, onClosed, wide }: TaskDetailContentP
               compact
               onSubmit={sendComment}
               mentionItems={members}
-              placeholder="Write a comment… @ to mention"
+              fileItems={fileItems}
+              placeholder="Write a comment… @ to mention, # to attach a file"
             />
           </div>
           <div className="flex items-center justify-between">

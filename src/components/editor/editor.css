@@ -65,10 +65,17 @@
   white-space: nowrap;
 }
 .ProseMirror .fileref {
-  background: var(--color-surface-3, #232E3F);
-  border: 1px solid var(--color-border-default, #2A3647);
+  background: var(--color-service-dev-soft, rgba(34, 211, 238, 0.12));
+  color: var(--color-service-dev, #22D3EE);
+  border: 1px solid var(--color-service-dev, #22D3EE);
+  border-color: color-mix(in srgb, var(--color-service-dev, #22D3EE) 30%, transparent);
   border-radius: 4px;
   padding: 0 0.3em;
+  font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
+  transition: background 0.12s ease;
+}
+.ProseMirror .fileref:hover {
+  background: color-mix(in srgb, var(--color-service-dev, #22D3EE) 22%, transparent);
 }
