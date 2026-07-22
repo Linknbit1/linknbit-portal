@@ -8,6 +8,12 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react(), tailwindcss()],
+    // These are lazy-loaded via dynamic import() inside the file viewer. Pre-bundling
+    // them (and their transitive deps like fflate) lets Vite dev resolve the subpath
+    // at runtime — otherwise the import works in `build` but 404s in `dev`.
+    optimizeDeps: {
+      include: ['read-excel-file/browser', 'mammoth', 'marked'],
+    },
     server: {
       proxy: {
         // Routes /api/auth/* → Supabase Edge Functions

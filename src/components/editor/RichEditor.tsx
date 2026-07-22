@@ -87,15 +87,11 @@ export function RichEditor({
     onUpdate: ({ editor: ed }) => onChange(ed.getJSON()),
   })
 
-  // Reset content when a different record loads (value identity change from parent).
-  useEffect(() => {
-    if (!editor) return
-    const current = editor.getJSON()
-    if (JSON.stringify(current) !== JSON.stringify(value ?? { type: 'doc', content: [{ type: 'paragraph' }] })) {
-      editor.commands.setContent(value ?? '', { emitUpdate: false })
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editor, value === null])
+  // NOTE: content is intentionally set only at editor creation (`content: value`).
+  // We must NOT sync the `value` prop back into the editor while it's mounted: the
+  // parent autosaves and re-feeds project.doc, so a re-sync would overwrite whatever
+  // the user typed during the save round-trip (data loss). All call sites remount via
+  // `key` when the underlying record changes, which is the correct reset path.
 
   if (!editor) return null
 
