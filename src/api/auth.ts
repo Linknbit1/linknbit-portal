@@ -55,6 +55,38 @@ export async function bffSignOut(accessToken: string): Promise<void> {
   })
 }
 
+// ── Impersonation (admin only) ────────────────────────────────────────────────
+
+export interface ImpersonationSession {
+  access_token: string
+  refresh_token: string
+  user: { id: string; name: string }
+}
+
+// Mints a real session for a member via the auth-impersonate Edge Function. Uses the
+// current (admin) session's token for authorization; the function verifies the caller
+// is an admin and the target is a non-admin. AuthContext applies the returned tokens
+// in memory only, leaving the admin's HTTP-only cookie intact for a clean exit.
+export async function impersonateUser(profileId: string): Promise<ImpersonationSession> {
+  const { data, error } = await supabase.functions.invoke('auth-impersonate', {
+    body: { profile_id: profileId },
+  })
+  if (error) {
+    // Surface the function's JSON error message when present.
+    if (error && typeof error === 'object' && 'context' in error) {
+      const ctx = (error as { context: unknown }).context
+      if (ctx instanceof Response) {
+        try {
+          const body = await ctx.json()
+          if (body?.error) throw new Error(body.error)
+        } catch { /* fall through */ }
+      }
+    }
+    throw error instanceof Error ? error : new Error('Impersonation failed')
+  }
+  return data as ImpersonationSession
+}
+
 // ── Direct Supabase calls (OTP / password reset / invite flows) ───────────────
 // These use the in-memory Supabase session set by AuthContext.
 

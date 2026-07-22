@@ -7,9 +7,16 @@ import {
   bffRefreshSession,
   bffSignOut,
   fetchProfile,
+  impersonateUser,
   type BffSession,
   type ProfileRow,
 } from '../api/auth'
+
+/** Set while an admin is viewing the app as another member. */
+export interface ImpersonationState {
+  targetName: string
+  adminName: string
+}
 
 interface AuthContextValue {
   user: User | null
@@ -19,6 +26,10 @@ interface AuthContextValue {
   signIn: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
+  /** Non-null while impersonating a member (admins only). */
+  impersonating: ImpersonationState | null
+  impersonate: (profileId: string) => Promise<void>
+  stopImpersonating: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -38,6 +49,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<ProfileRow | null>(null)
   const [accessToken, setAccessToken] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [impersonating, setImpersonating] = useState<ImpersonationState | null>(null)
+  // Gate the cookie-based auto-refresh: while impersonating, bffRefreshSession would
+  // return the ADMIN's session and silently swap us back mid-view.
+  const impersonatingRef = useRef(false)
 
   // Stable ref so the scheduled refresh timer always closes over the latest token
   const accessTokenRef = useRef<string | null>(null)
@@ -120,6 +135,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // before giving up and signing the user out. A successful refresh reschedules
   // the timer via applySession, so this only clears on genuine token expiry.
   async function refreshWithRetry(attempt = 0): Promise<void> {
+    // Never cookie-refresh while impersonating — it would restore the admin session.
+    if (impersonatingRef.current) return
     try {
       await runRefresh()
     } catch {
@@ -145,7 +162,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await applySession(session)
   }
 
+  // ── Impersonation ──────────────────────────────────────────────────────────
+  // Applies a member's minted session in memory only (no refresh scheduled — a
+  // cookie refresh would restore the admin). The admin's HTTP-only cookie is left
+  // untouched, so stopImpersonating() / a page reload cleanly returns to the admin.
+  async function applyImpersonationSession(accessToken: string, refreshToken: string, targetId: string): Promise<void> {
+    await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
+    const { data } = await supabase.auth.getUser()
+    const resolved = data.user
+    if (!resolved) throw new Error('Could not start the impersonation session')
+    setUser(resolved)
+    setAccessToken(accessToken)
+    accessTokenRef.current = accessToken
+    setProfile(await fetchProfile(targetId))
+  }
+
+  async function impersonate(profileId: string): Promise<void> {
+    const adminName = profile?.name ?? 'your account'
+    const res = await impersonateUser(profileId)
+    // Pause admin auto-refresh, purge admin-scoped cache, then swap identity.
+    if (refreshTimerRef.current) { clearTimeout(refreshTimerRef.current); refreshTimerRef.current = null }
+    impersonatingRef.current = true
+    queryClient.clear()
+    await applyImpersonationSession(res.access_token, res.refresh_token, res.user.id)
+    setImpersonating({ targetName: res.user.name, adminName })
+  }
+
+  async function stopImpersonating(): Promise<void> {
+    impersonatingRef.current = false
+    setImpersonating(null)
+    queryClient.clear()
+    await runRefresh() // bffRefreshSession → admin session; applySession reschedules refresh
+  }
+
   async function signOut(): Promise<void> {
+    // Return to the admin session first so we revoke the admin's cookie, not the member's.
+    if (impersonatingRef.current) {
+      impersonatingRef.current = false
+      setImpersonating(null)
+      try { await runRefresh() } catch { /* fall through to a hard clear */ }
+    }
     const token = accessTokenRef.current
     clearAll() // clear state immediately so UI responds at once
     if (token) await bffSignOut(token).catch(() => {}) // best-effort server revocation
@@ -174,6 +230,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // after the phone slept" symptom.
   useEffect(() => {
     function maybeRefresh() {
+      if (impersonatingRef.current) return // don't cookie-refresh back to the admin
       const token = accessTokenRef.current
       if (!token) return
       if (getTokenExpiry(token) - Date.now() < 2 * 60 * 1000) {
@@ -194,7 +251,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <AuthContext.Provider value={{ user, profile, accessToken, loading, signIn, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ user, profile, accessToken, loading, signIn, signOut, refreshProfile, impersonating, impersonate, stopImpersonating }}>
       {children}
     </AuthContext.Provider>
   )
