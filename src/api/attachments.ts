@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import { inferContentType } from '../lib/attachment'
 import type { Tables } from '../types/database'
 
 export type AttachmentRow = Tables<'attachments'>
@@ -60,7 +61,7 @@ export async function uploadAttachment(file: File, args: UploadAttachmentArgs): 
 
   const { error: uploadError } = await supabase.storage
     .from(BUCKET)
-    .upload(path, file, { cacheControl: '3600', upsert: false })
+    .upload(path, file, { cacheControl: '3600', upsert: false, contentType: file.type || inferContentType(file.name) })
   if (uploadError) throw uploadError
 
   const { data, error } = await supabase
