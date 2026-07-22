@@ -24,6 +24,7 @@ import { useProjectWatch } from '../../hooks/useWatchers'
 import { useProjectFiles } from '../../hooks/useAttachments'
 import { cn } from '../../lib/cn'
 import { formatDate, formatCurrency, isOverdue, ROLE_LABELS } from '../../lib/utils'
+import { fileKind } from '../../lib/attachment'
 import { isAuthoritative } from '../../lib/roles'
 import { useAuthContext } from '../../context/AuthContext'
 import { useToast } from '../../components/ui/toast-context'
@@ -65,6 +66,9 @@ export default function ProjectDetailPage() {
   const { data: members = [] } = useProjectMembers(id)
   const { data: approvals = [] } = useApprovals({ projectId: id })
   const { data: projectFiles = [] } = useProjectFiles(id)
+  const fileItems = useMemo(() => projectFiles.map((f) => ({
+    id: f.id, name: f.file_name, kind: f.kind === 'link' ? 'link' : fileKind(f.mime_type, f.file_name),
+  })), [projectFiles])
   useRealtimeTasks(id)
 
   const updateProject = useUpdateProject()
@@ -272,8 +276,9 @@ export default function ProjectDetailPage() {
               value={project.doc}
               onSave={(doc) => updateProject.mutate({ id, updates: { doc } })}
               mentionItems={members}
+              fileItems={fileItems}
               source={{ type: 'project', id, projectId: id }}
-              placeholder="Project docs, credentials, resources… type / for commands, @ to mention"
+              placeholder="Project docs… / for commands, @ to mention, # to attach a file"
             />
           </div>
         )}

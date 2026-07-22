@@ -11,6 +11,8 @@ import { SlashCommand } from './slashCommand'
 import { renderSuggestion } from './suggestionUtils'
 import { SuggestionList } from './SuggestionList'
 import type { PersonMini } from '../../api/projects'
+import { fileRefExtension, type FileMentionItem } from './fileMention'
+import { useFileRefClick } from './useFileRefClick'
 
 interface RichEditorProps {
   value: JSONContent | null
@@ -18,6 +20,8 @@ interface RichEditorProps {
   placeholder?: string
   /** People available to @mention (kept fresh via a ref). */
   mentionItems?: PersonMini[]
+  /** Project files/links taggable with # (kept fresh via a ref). */
+  fileItems?: FileMentionItem[]
   /** Compact composer mode: Enter submits (Shift+Enter = newline). */
   compact?: boolean
   onSubmit?: () => void
@@ -26,10 +30,14 @@ interface RichEditorProps {
 }
 
 export function RichEditor({
-  value, onChange, placeholder, mentionItems = [], compact, onSubmit, className, autoFocus,
+  value, onChange, placeholder, mentionItems = [], fileItems, compact, onSubmit, className, autoFocus,
 }: RichEditorProps) {
   const mentionsRef = useRef(mentionItems)
   useEffect(() => { mentionsRef.current = mentionItems }, [mentionItems])
+  const filesRef = useRef(fileItems ?? [])
+  useEffect(() => { filesRef.current = fileItems ?? [] }, [fileItems])
+  const enableFileRefs = fileItems !== undefined
+  const onFileRefClick = useFileRefClick()
   const onSubmitRef = useRef(onSubmit)
   useEffect(() => { onSubmitRef.current = onSubmit }, [onSubmit])
   const [linkOpen, setLinkOpen] = useState(false)
@@ -61,6 +69,8 @@ export function RichEditor({
         },
       }),
       SlashCommand,
+      // eslint-disable-next-line react-hooks/refs -- items() runs on trigger, not render; the ref keeps files fresh without recreating the editor.
+      ...(enableFileRefs ? [fileRefExtension(() => filesRef.current)] : []),
     ],
     content: value ?? undefined,
     autofocus: autoFocus ? 'end' : false,
@@ -104,7 +114,7 @@ export function RichEditor({
   }
 
   return (
-    <div className={cn('rich-editor', className)}>
+    <div className={cn('rich-editor', className)} onClick={onFileRefClick}>
       <BubbleMenu editor={editor} className="flex items-center gap-0.5 bg-surface-2 border border-border-strong rounded-md shadow-lg p-1">
         {linkOpen ? (
           <div className="flex items-center gap-1">

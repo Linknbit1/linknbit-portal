@@ -2,37 +2,27 @@ import { useMemo, useRef, useState } from 'react'
 import {
   Upload, Download, Trash2, Image as ImageIcon, FileText, FileSpreadsheet,
   FileArchive, Presentation, File as FileIcon, Loader2, FolderOpen, CheckSquare,
-  Link2, Plus, Lock, ExternalLink, X,
+  Link2, Lock, ExternalLink, Eye, FileVideo,
 } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { validateAttachmentFile, formatFileSize, fileKind, type FileKind } from '../../lib/attachment'
 import { getAttachmentUrl, type ProjectFile } from '../../api/attachments'
 import {
   useProjectFiles, useUploadAttachment, useDeleteAttachment, useToggleAttachmentVisibility,
-  useAddAttachmentLink, useSetAttachmentConfidential,
+  useSetAttachmentConfidential,
 } from '../../hooks/useAttachments'
 import { useCanAccess } from '../../hooks/useRoleFlags'
+import { useFileViewer } from '../../components/shared/fileViewerContext'
+import { AddLinkModal } from '../../components/shared/AddLinkModal'
+import { linkMeta } from '../../lib/linkMeta'
 import { useToast } from '../../components/ui/toast-context'
 import { ClientVisibility } from '../../components/shared/ClientVisibility'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
-import { ModalShell } from '../../components/ui/ModalShell'
-import { Button } from '../../components/ui/Button'
-import { Input } from '../../components/ui/Input'
-import { Toggle } from '../../components/ui/Toggle'
 import { formatRelativeTime } from '../../lib/utils'
 
 const KIND_ICON: Record<FileKind, typeof FileIcon> = {
-  image: ImageIcon, pdf: FileText, doc: FileText, sheet: FileSpreadsheet,
+  image: ImageIcon, video: FileVideo, pdf: FileText, doc: FileText, sheet: FileSpreadsheet,
   slides: Presentation, archive: FileArchive, text: FileText, other: FileIcon,
-}
-
-/** Recognise the common Google Workspace URLs so links get a meaningful icon + label. */
-function linkMeta(url: string): { icon: typeof FileIcon; label: string; tint: string } {
-  if (/docs\.google\.com\/spreadsheets/.test(url)) return { icon: FileSpreadsheet, label: 'Google Sheet', tint: 'text-success' }
-  if (/docs\.google\.com\/document/.test(url))     return { icon: FileText,        label: 'Google Doc',   tint: 'text-service-dev' }
-  if (/docs\.google\.com\/presentation/.test(url)) return { icon: Presentation,    label: 'Google Slides', tint: 'text-service-mkt' }
-  if (/drive\.google\.com/.test(url))              return { icon: FolderOpen,      label: 'Google Drive', tint: 'text-service-mkt' }
-  return { icon: Link2, label: 'Link', tint: 'text-text-3' }
 }
 
 type Filter = 'all' | 'files' | 'links' | 'confidential'
@@ -45,6 +35,7 @@ interface ProjectFilesTabProps {
 
 export function ProjectFilesTab({ projectId, canManage = true, onOpenTask }: ProjectFilesTabProps) {
   const toast = useToast()
+  const { openAttachment } = useFileViewer()
   const inputRef = useRef<HTMLInputElement>(null)
   const [dragOver, setDragOver] = useState(false)
   const [pendingDelete, setPendingDelete] = useState<ProjectFile | null>(null)
@@ -224,9 +215,17 @@ export function ProjectFilesTab({ projectId, canManage = true, onOpenTask }: Pro
                     <Lock size={13} />
                   </button>
                 )}
-                {canManage && !file.is_confidential && (
+                {/* Client visibility is independent of confidential — always available. */}
+                {canManage && (
                   <ClientVisibility visible={file.client_visible} onChange={(v) => toggleVisibility.mutate({ id: file.id, clientVisible: v, projectId, taskId: file.task_id })} />
                 )}
+                <button
+                  onClick={() => openAttachment(file)}
+                  className="flex size-7 shrink-0 items-center justify-center rounded-sm text-text-3 transition-colors hover:bg-surface-2 hover:text-text-1"
+                  aria-label="Preview"
+                >
+                  <Eye size={13} />
+                </button>
                 <button
                   onClick={() => handleOpen(file)}
                   disabled={downloadingId === file.id}
@@ -272,79 +271,3 @@ export function ProjectFilesTab({ projectId, canManage = true, onOpenTask }: Pro
   )
 }
 
-/* ── Add document link ─────────────────────────────────────────────────────── */
-function AddLinkModal({ projectId, canMarkConfidential, onClose }: {
-  projectId: string
-  canMarkConfidential: boolean
-  onClose: () => void
-}) {
-  const toast = useToast()
-  const addLink = useAddAttachmentLink()
-  const [title, setTitle] = useState('')
-  const [url, setUrl] = useState('')
-  const [confidential, setConfidential] = useState(false)
-
-  const trimmed = url.trim()
-  const looksValid = /^https?:\/\/\S+$/i.test(trimmed)
-  const meta = looksValid ? linkMeta(trimmed) : null
-  const canSubmit = !!title.trim() && looksValid && !addLink.isPending
-
-  const submit = () => {
-    if (!canSubmit) return
-    addLink.mutate(
-      { projectId, title, url: trimmed, isConfidential: confidential },
-      {
-        onSuccess: () => { toast('Link added', 'success'); onClose() },
-        onError: (e) => toast(e instanceof Error ? e.message : 'Could not add link', 'error'),
-      },
-    )
-  }
-
-  return (
-    <ModalShell onClose={onClose} size="md" contentClassName="p-5 sm:p-6">
-      <div className="mb-5 flex items-start justify-between">
-        <div>
-          <h3 className="font-display text-[16px] font-bold text-text-1">Add document link</h3>
-          <p className="mt-0.5 font-ui text-[11.5px] text-text-3">Link a Google Doc, Sheet, Slide deck, or any URL.</p>
-        </div>
-        <button onClick={onClose} className="shrink-0 text-text-4 transition-colors hover:text-text-1"><X size={18} /></button>
-      </div>
-
-      <div className="space-y-4">
-        <Input label="Title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Q3 Budget Sheet" />
-        <div>
-          <Input label="URL" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://docs.google.com/spreadsheets/d/…" />
-          {trimmed && !looksValid && (
-            <p className="mt-1 font-ui text-[11.5px] text-error">Enter a full URL starting with http:// or https://</p>
-          )}
-          {meta && (
-            <p className={cn('mt-1.5 flex items-center gap-1.5 font-ui text-[11.5px]', meta.tint)}>
-              <meta.icon size={12} /> Detected: {meta.label}
-            </p>
-          )}
-        </div>
-
-        {canMarkConfidential && (
-          <label className="flex cursor-pointer items-start justify-between gap-3 rounded-lg border border-border-default bg-surface-inset px-3.5 py-3">
-            <span className="min-w-0">
-              <span className="flex items-center gap-1.5 font-ui text-[12.5px] font-medium text-text-1">
-                <Lock size={12} className="text-warning" /> Confidential
-              </span>
-              <span className="mt-0.5 block font-ui text-[11px] text-text-4">
-                Hidden from anyone without the “View Confidential Docs” permission, and never shown to clients.
-              </span>
-            </span>
-            <Toggle checked={confidential} onChange={setConfidential} />
-          </label>
-        )}
-      </div>
-
-      <div className="mt-5 flex gap-2.5">
-        <Button variant="ghost" size="sm" className="flex-1" onClick={onClose}>Cancel</Button>
-        <Button size="sm" className="flex-1" disabled={!canSubmit} onClick={submit}>
-          {addLink.isPending ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />} Add link
-        </Button>
-      </div>
-    </ModalShell>
-  )
-}
