@@ -1,0 +1,5 @@
+- Chat Feature
+- Service Layer in projects
+- Funnel Layer of projects with multiple steps
+- Ability to tag a task
+- UX

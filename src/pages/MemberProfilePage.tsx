@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import {
-  Mail, Phone, BadgeCheck, Pencil, Users2, FolderKanban, ListChecks, Plane, Home,
+  Mail, Phone, BadgeCheck, Pencil, UserCog, Loader2, Users2, FolderKanban, ListChecks, Plane, Home,
   Lock, Briefcase, Zap, Trophy, Star, Award, Target, Megaphone, History,
   ArrowUpRight, ArrowDownRight, CalendarDays, TrendingUp, Palmtree, AlertCircle, Hourglass,
 } from 'lucide-react'
@@ -15,6 +15,7 @@ import { SalaryCard } from '../components/shared/SalaryCard'
 import { PersonLink } from '../components/shared/PersonLink'
 import { MonthStepper } from '../components/shared/MonthFilter'
 import { useAuthContext } from '../context/AuthContext'
+import { useToast } from '../components/ui/toast-context'
 import { useMonthFilter } from '../hooks/useMonthFilter'
 import { usePerson, usePersonTeams, usePersonProjects } from '../hooks/usePeople'
 import { useDesignations } from '../hooks/useDesignations'
@@ -36,6 +37,7 @@ import type { LeaveRequestWithType, WfhRequest } from '../api/attendance'
 
 const GOVERNOR_ROLES = ['super_admin', 'admin', 'hr', 'project_manager']
 const HR_ADMIN_ROLES = ['super_admin', 'admin', 'hr']
+const ADMIN_ROLES = ['super_admin', 'admin']
 
 const ATT_STATUS: Record<string, { label: string; cls: string; dot: string }> = {
   present:  { label: 'Present',  cls: 'bg-success/10 text-success border-success/30',                     dot: 'bg-success' },
@@ -153,7 +155,10 @@ type Tab = 'overview' | 'attendance' | 'recognition'
 
 export default function MemberProfilePage() {
   const { id } = useParams<{ id: string }>()
-  const { profile: viewer } = useAuthContext()
+  const navigate = useNavigate()
+  const toast = useToast()
+  const { profile: viewer, impersonate } = useAuthContext()
+  const [impersonatePending, setImpersonatePending] = useState(false)
 
   const { data: person, isLoading } = usePerson(id)
   const { data: teams = [] } = usePersonTeams(id)
@@ -176,6 +181,21 @@ export default function MemberProfilePage() {
   const canSeeSalary = isSelf || HR_ADMIN_ROLES.includes(viewerRole)
 
   const [tab, setTab] = useState<Tab>('overview')
+
+  // Admins can "log in as" any non-admin member to see exactly what they see.
+  const canImpersonate =
+    ADMIN_ROLES.includes(viewerRole) && !isSelf && !!person && !ADMIN_ROLES.includes(person.role) && person.is_active
+  const handleImpersonate = async () => {
+    if (!person) return
+    setImpersonatePending(true)
+    try {
+      await impersonate(person.id)
+      navigate('/dashboard')
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'Could not impersonate this member', 'error')
+      setImpersonatePending(false)
+    }
+  }
 
   if (isLoading) {
     return (
@@ -240,11 +260,24 @@ export default function MemberProfilePage() {
                 </div>
               </div>
             </div>
-            {isSelf && (
-              <Link to="/profile" className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-sm border border-border-default px-3 py-1.5 font-ui text-[12px] font-medium text-text-2 transition-colors hover:bg-surface-2 hover:text-text-1 lg:self-auto">
-                <Pencil size={13} /> Edit profile
-              </Link>
-            )}
+            <div className="flex shrink-0 items-center gap-2 self-start lg:self-auto">
+              {isSelf && (
+                <Link to="/profile" className="inline-flex items-center gap-1.5 rounded-sm border border-border-default px-3 py-1.5 font-ui text-[12px] font-medium text-text-2 transition-colors hover:bg-surface-2 hover:text-text-1">
+                  <Pencil size={13} /> Edit profile
+                </Link>
+              )}
+              {canImpersonate && (
+                <button
+                  onClick={handleImpersonate}
+                  disabled={impersonatePending}
+                  className="inline-flex items-center gap-1.5 rounded-sm border border-brand-red/40 bg-brand-red/10 px-3 py-1.5 font-ui text-[12px] font-semibold text-brand-red transition-colors hover:bg-brand-red/20 disabled:opacity-60"
+                  title="Sign in as this member to see the app exactly as they do"
+                >
+                  {impersonatePending ? <Loader2 size={13} className="animate-spin" /> : <UserCog size={13} />}
+                  Log in as {person.name.split(' ')[0]}
+                </button>
+              )}
+            </div>
           </div>
           {/* stat tiles */}
           <div className="grid grid-cols-2 gap-3 border-t border-border-subtle p-4 sm:grid-cols-4">

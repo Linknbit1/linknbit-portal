@@ -6,6 +6,7 @@ import { NavChromeContext } from './MobileNavContext'
 import { useAuthContext } from '../../context/AuthContext'
 import { useRealtimeNotifications } from '../../hooks/realtime/useRealtimeNotifications'
 import { FileViewerProvider } from '../shared/FileViewer'
+import { ImpersonationBanner } from './ImpersonationBanner'
 
 export function AppShell() {
   const location = useLocation()
@@ -42,13 +43,16 @@ export function AppShell() {
   return (
     <NavChromeContext.Provider value={{ hasBack, setHasBack }}>
       <FileViewerProvider>
-        <div className="flex min-h-dvh w-full bg-bg-base">
-          <Sidebar />
-          {/* pb clears the mobile bottom tab bar (incl. the home-indicator safe area). */}
-          <main ref={mainRef} className="flex-1 min-w-0 flex flex-col bg-bg-base overflow-x-hidden pb-safe-nav lg:pb-0">
-            <Outlet />
-          </main>
-          <BottomTabBar />
+        <div className="flex min-h-dvh w-full flex-col bg-bg-base">
+          <ImpersonationBanner />
+          <div className="flex w-full flex-1">
+            <Sidebar />
+            {/* pb clears the mobile bottom tab bar (incl. the home-indicator safe area). */}
+            <main ref={mainRef} className="flex-1 min-w-0 flex flex-col bg-bg-base overflow-x-hidden pb-safe-nav lg:pb-0">
+              <Outlet />
+            </main>
+            <BottomTabBar />
+          </div>
         </div>
       </FileViewerProvider>
     </NavChromeContext.Provider>
