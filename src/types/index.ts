@@ -38,6 +38,20 @@ export type ApprovalStatus = 'pending' | 'approved' | 'revision_requested' | 're
 
 export type ClickUpSyncStatus = 'synced' | 'pending' | 'error'
 
+// ── Audit log ─────────────────────────────────────────────────────────────────
+export type AuditModule = 'attendance' | 'gamification' | 'projects' | 'access'
+export type AuditSeverity = 'info' | 'warning' | 'danger'
+
+export interface AuditLogFilters {
+  module?: AuditModule | 'all'
+  severity?: AuditSeverity | 'all'
+  flaggedOnly?: boolean
+  actorId?: string
+  /** Inclusive date bounds, YYYY-MM-DD. */
+  from?: string
+  to?: string
+}
+
 export type WorkloadLevel = 'light' | 'medium' | 'heavy'
 
 /* ---- Users ---- */
