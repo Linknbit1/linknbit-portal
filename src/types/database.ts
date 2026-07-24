@@ -345,6 +345,78 @@ export type Database = {
           },
         ]
       }
+      audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_kind: string
+          actor_name: string | null
+          actor_role: string | null
+          changed_fields: string[] | null
+          context: Json
+          created_at: string
+          flag_reason: string | null
+          flagged: boolean
+          id: string
+          module: string
+          new_values: Json | null
+          old_values: Json | null
+          operation: string
+          record_id: string | null
+          severity: string
+          subject_id: string | null
+          subject_name: string | null
+          summary: string
+          table_name: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_kind?: string
+          actor_name?: string | null
+          actor_role?: string | null
+          changed_fields?: string[] | null
+          context?: Json
+          created_at?: string
+          flag_reason?: string | null
+          flagged?: boolean
+          id?: string
+          module: string
+          new_values?: Json | null
+          old_values?: Json | null
+          operation: string
+          record_id?: string | null
+          severity?: string
+          subject_id?: string | null
+          subject_name?: string | null
+          summary: string
+          table_name: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_kind?: string
+          actor_name?: string | null
+          actor_role?: string | null
+          changed_fields?: string[] | null
+          context?: Json
+          created_at?: string
+          flag_reason?: string | null
+          flagged?: boolean
+          id?: string
+          module?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          operation?: string
+          record_id?: string | null
+          severity?: string
+          subject_id?: string | null
+          subject_name?: string | null
+          summary?: string
+          table_name?: string
+        }
+        Relationships: []
+      }
       badge_awards: {
         Row: {
           awarded_at: string
@@ -818,6 +890,42 @@ export type Database = {
           {
             foreignKeyName: "holidays_created_by_fkey"
             columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      impersonation_log: {
+        Row: {
+          admin_id: string | null
+          id: string
+          started_at: string
+          target_id: string | null
+        }
+        Insert: {
+          admin_id?: string | null
+          id?: string
+          started_at?: string
+          target_id?: string | null
+        }
+        Update: {
+          admin_id?: string | null
+          id?: string
+          started_at?: string
+          target_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "impersonation_log_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "impersonation_log_target_id_fkey"
+            columns: ["target_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
