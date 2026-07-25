@@ -29,6 +29,7 @@ import TeamsPage from './pages/admin/TeamsPage'
 import PeoplePage from './pages/admin/PeoplePage'
 import TasksPage from './pages/admin/TasksPage'
 import ReportsPage from './pages/admin/ReportsPage'
+import AuditLogPage from './pages/admin/AuditLogPage'
 import SettingsPage, { SettingsSectionScreen } from './pages/admin/SettingsPage'
 import AttendancePage from './pages/AttendancePage'
 
@@ -102,6 +103,7 @@ export default function App() {
                 <Route path="/admin/tasks" element={<RoleGuard allowedRoles={SETTINGS_ROLES}><TasksPage /></RoleGuard>} />
                 <Route path="/admin/tasks/:id" element={<RoleGuard allowedRoles={SETTINGS_ROLES}><AdminTaskDetailPage /></RoleGuard>} />
                 <Route path="/admin/clients" element={<RoleGuard feature="can_manage_clients"><ClientsPage /></RoleGuard>} />
+                <Route path="/admin/audit" element={<RoleGuard feature="can_view_audit_log"><AuditLogPage /></RoleGuard>} />
 
                 {/* Still work-in-progress — only routable in development builds */}
                 {showWipFeatures && (

@@ -1181,7 +1181,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
                           )}
                         </div>
                       </div>
-                      <p className="font-ui text-[12.5px] text-text-2 mb-3 leading-snug flex-1">{t.description}</p>
+                      <p className="font-ui text-[12.5px] text-text-2 mb-3 leading-snug flex-1 whitespace-pre-wrap">{t.description}</p>
                       <div className="flex items-center justify-between">
                         <span className="font-mono text-[12px] text-coin-gold font-bold">+{lp(t.lp_value)}</span>
                         {mine && (mine.status === 'claimed' || mine.status === 'submitted' || mine.status === 'approved')

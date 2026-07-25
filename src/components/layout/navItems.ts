@@ -11,11 +11,13 @@ import {
   Settings,
   UserCircle,
   CalendarCheck,
+  ShieldAlert,
   type LucideIcon,
 } from 'lucide-react'
 import { showWipFeatures } from '../../lib/featureFlags'
 import { SETTINGS_ROLES } from '../../constants/roles'
 import { useRoleFlags } from '../../hooks/useRoleFlags'
+import { useAuditDangerCount } from '../../hooks/useAuditLog'
 import { useAuthContext } from '../../context/AuthContext'
 
 export interface NavItem {
@@ -87,6 +89,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Standup', icon: ClipboardList, to: '/standup', roles: STANDUP_ROLES },
   { label: 'Gamification', icon: Trophy, to: '/gamification/leaderboard', matchPrefix: '/gamification', primaryMobile: true, children: GAMIFICATION_CHILDREN },
   { label: 'Reports', icon: BarChart2, to: '/admin/reports', devOnly: true, feature: 'can_view_reports' },
+  { label: 'Audit Log', icon: ShieldAlert, to: '/admin/audit', feature: 'can_view_audit_log' },
   { label: 'Settings', icon: Settings, to: '/settings', roles: SETTINGS_ROLES },
 ]
 
@@ -121,6 +124,7 @@ export function filterNavItems(role: string | null | undefined, can: CanFn): Nav
 export function useNavItems(): NavItem[] {
   const { profile } = useAuthContext()
   const { data: flags } = useRoleFlags()
+  const { data: dangerCount } = useAuditDangerCount()
   const role = profile?.role
 
   const can: CanFn = (feature) => {
@@ -128,7 +132,11 @@ export function useNavItems(): NavItem[] {
     if (!flags || !role) return false
     return flags.find((f) => f.role === role && f.feature_key === feature)?.enabled ?? false
   }
-  return filterNavItems(role, can)
+
+  // Surface recent flagged-action count on the Audit Log item.
+  return filterNavItems(role, can).map((item) =>
+    item.to === '/admin/audit' && dangerCount ? { ...item, badge: dangerCount } : item,
+  )
 }
 
 /** Secondary destinations for the mobile "More" tab (everything not in the bottom bar). */
