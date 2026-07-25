@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       approvals: {
@@ -498,6 +523,89 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      channel_members: {
+        Row: {
+          channel_id: string
+          created_at: string
+          last_read_at: string
+          notifications_muted: boolean
+          profile_id: string
+          role_in_channel: string
+        }
+        Insert: {
+          channel_id: string
+          created_at?: string
+          last_read_at?: string
+          notifications_muted?: boolean
+          profile_id: string
+          role_in_channel?: string
+        }
+        Update: {
+          channel_id?: string
+          created_at?: string
+          last_read_at?: string
+          notifications_muted?: boolean
+          profile_id?: string
+          role_in_channel?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channel_members_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "channels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_members_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      channels: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_archived: boolean
+          kind: string
+          name: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_archived?: boolean
+          kind: string
+          name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_archived?: boolean
+          kind?: string
+          name?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channels_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       client_members: {
         Row: {
@@ -1157,6 +1265,167 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      message_attachments: {
+        Row: {
+          channel_id: string
+          created_at: string
+          file_name: string
+          file_size: number | null
+          id: string
+          kind: string
+          link_url: string | null
+          message_id: string | null
+          mime_type: string | null
+          storage_path: string | null
+          uploader_id: string | null
+        }
+        Insert: {
+          channel_id: string
+          created_at?: string
+          file_name: string
+          file_size?: number | null
+          id?: string
+          kind?: string
+          link_url?: string | null
+          message_id?: string | null
+          mime_type?: string | null
+          storage_path?: string | null
+          uploader_id?: string | null
+        }
+        Update: {
+          channel_id?: string
+          created_at?: string
+          file_name?: string
+          file_size?: number | null
+          id?: string
+          kind?: string
+          link_url?: string | null
+          message_id?: string | null
+          mime_type?: string | null
+          storage_path?: string | null
+          uploader_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_attachments_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "channels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_attachments_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_attachments_uploader_id_fkey"
+            columns: ["uploader_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      message_reactions: {
+        Row: {
+          channel_id: string
+          created_at: string
+          emoji: string
+          id: string
+          message_id: string
+          profile_id: string
+        }
+        Insert: {
+          channel_id: string
+          created_at?: string
+          emoji: string
+          id?: string
+          message_id: string
+          profile_id: string
+        }
+        Update: {
+          channel_id?: string
+          created_at?: string
+          emoji?: string
+          id?: string
+          message_id?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_reactions_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "channels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_reactions_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_reactions_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          author_id: string | null
+          body_doc: Json | null
+          body_text: string
+          channel_id: string
+          created_at: string
+          deleted_at: string | null
+          edited_at: string | null
+          id: string
+        }
+        Insert: {
+          author_id?: string | null
+          body_doc?: Json | null
+          body_text?: string
+          channel_id: string
+          created_at?: string
+          deleted_at?: string | null
+          edited_at?: string | null
+          id?: string
+        }
+        Update: {
+          author_id?: string | null
+          body_doc?: Json | null
+          body_text?: string
+          channel_id?: string
+          created_at?: string
+          deleted_at?: string | null
+          edited_at?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "channels"
             referencedColumns: ["id"]
           },
         ]
@@ -2781,11 +3050,26 @@ export type Database = {
       }
       fn_auto_checkout_missing: { Args: never; Returns: undefined }
       fn_award_badges: { Args: { p_profile_id: string }; Returns: undefined }
+      fn_chat_unread_counts: {
+        Args: never
+        Returns: {
+          channel_id: string
+          unread_count: number
+        }[]
+      }
       fn_exception_label: { Args: { t: string }; Returns: string }
       fn_fmt_day: { Args: { d: string }; Returns: string }
+      fn_get_or_create_dm: {
+        Args: { p_other_profile_id: string }
+        Returns: string
+      }
       fn_is_working_day: { Args: { d: string }; Returns: boolean }
       fn_mark_absent_for_date: { Args: { d: string }; Returns: undefined }
       fn_mark_absent_today: { Args: never; Returns: undefined }
+      fn_mark_channel_read: {
+        Args: { p_channel_id: string }
+        Returns: undefined
+      }
       fn_monthly_lp_reset: { Args: never; Returns: undefined }
       fn_next_working_start: { Args: { p_date: string }; Returns: string }
       fn_notify: {
@@ -2822,6 +3106,10 @@ export type Database = {
           work_end_time: string
         }[]
       }
+      fn_toggle_reaction: {
+        Args: { p_emoji: string; p_message_id: string }
+        Returns: boolean
+      }
       fn_unwind_reward_pool: {
         Args: {
           p_pool: Database["public"]["Tables"]["reward_pools"]["Row"]
@@ -2852,6 +3140,8 @@ export type Database = {
         Returns: string
       }
       has_feature: { Args: { p_key: string }; Returns: boolean }
+      is_channel_member: { Args: { p_channel_id: string }; Returns: boolean }
+      is_channel_owner: { Args: { p_channel_id: string }; Returns: boolean }
       is_internal: { Args: never; Returns: boolean }
       is_project_member: { Args: { p_project_id: string }; Returns: boolean }
       is_task_assignee: { Args: { p_task_id: string }; Returns: boolean }
@@ -3069,6 +3359,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       queue_status: ["pending", "processing", "done", "failed"],

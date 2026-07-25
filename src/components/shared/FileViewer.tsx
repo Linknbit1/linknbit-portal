@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   Download, ExternalLink, Loader2, Lock, FileText, FileSpreadsheet, Presentation,
-  FileArchive, File as FileIcon, Link2, X,
+  FileArchive, File as FileIcon, FileAudio, Link2, X,
 } from 'lucide-react'
 import { fetchAttachmentById, getAttachmentUrl, type AttachmentRow } from '../../api/attachments'
 import { FileViewerContext } from './fileViewerContext'
@@ -12,7 +12,7 @@ import { Button } from '../ui/Button'
 import { cn } from '../../lib/cn'
 
 const DOWNLOAD_ICON: Record<FileKind, typeof FileIcon> = {
-  image: FileIcon, video: FileIcon, pdf: FileText, doc: FileText, sheet: FileSpreadsheet,
+  image: FileIcon, video: FileIcon, audio: FileAudio, pdf: FileText, doc: FileText, sheet: FileSpreadsheet,
   slides: Presentation, archive: FileArchive, text: FileText, other: FileIcon,
 }
 
@@ -171,6 +171,15 @@ function UploadedViewer({ file, mode, onClose }: {
     return (
       <div className="flex h-[74vh] items-center justify-center bg-black p-2">
         <video src={url} controls className="max-h-full max-w-full" />
+      </div>
+    )
+  }
+  if (mode === 'audio') {
+    return (
+      <div className="flex items-center justify-center p-10">
+        <audio src={url} controls className="w-full max-w-md">
+          <track kind="captions" />
+        </audio>
       </div>
     )
   }

@@ -73,13 +73,16 @@ export function formatFileSize(bytes: number | null | undefined): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-export type FileKind = 'image' | 'video' | 'pdf' | 'doc' | 'sheet' | 'slides' | 'archive' | 'text' | 'other'
+export type FileKind = 'image' | 'video' | 'audio' | 'pdf' | 'doc' | 'sheet' | 'slides' | 'archive' | 'text' | 'other'
 
 export function fileKind(mimeType: string | null, fileName: string): FileKind {
   const mt = mimeType ?? ''
   const ext = fileName.split('.').pop()?.toLowerCase() ?? ''
   if (mt.startsWith('image/') || ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(ext)) return 'image'
   if (mt.startsWith('video/') || ['mp4', 'webm', 'mov', 'ogv'].includes(ext)) return 'video'
+  // Audio only reaches here from the chat bucket — the project `attachments`
+  // bucket doesn't allow it.
+  if (mt.startsWith('audio/') || ['mp3', 'wav', 'm4a', 'oga', 'opus'].includes(ext)) return 'audio'
   if (mt === 'application/pdf' || ext === 'pdf') return 'pdf'
   if (mt.includes('word') || ['doc', 'docx'].includes(ext)) return 'doc'
   if (mt.includes('sheet') || mt.includes('excel') || ['xls', 'xlsx', 'csv'].includes(ext)) return 'sheet'
@@ -96,7 +99,7 @@ export function fileKind(mimeType: string | null, fileName: string): FileKind {
  */
 // image/video/pdf render natively; docx (via mammoth) / csv / text are parsed in the
 // browser so the file never leaves our storage; everything else is download-only.
-export type PreviewMode = 'image' | 'video' | 'pdf' | 'docx' | 'xlsx' | 'csv' | 'markdown' | 'text' | 'download'
+export type PreviewMode = 'image' | 'video' | 'audio' | 'pdf' | 'docx' | 'xlsx' | 'csv' | 'markdown' | 'text' | 'download'
 
 export function previewMode(mimeType: string | null, fileName: string): PreviewMode {
   const mt = mimeType ?? ''
@@ -104,6 +107,7 @@ export function previewMode(mimeType: string | null, fileName: string): PreviewM
   const k = fileKind(mimeType, fileName)
   if (k === 'image') return 'image'
   if (k === 'video') return 'video'
+  if (k === 'audio') return 'audio'
   if (k === 'pdf') return 'pdf'
   if (ext === 'docx' || mt.includes('wordprocessingml')) return 'docx'
   if (ext === 'xlsx' || mt.includes('spreadsheetml')) return 'xlsx'

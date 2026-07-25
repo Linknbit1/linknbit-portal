@@ -24,6 +24,9 @@ export function renderSuggestion<P extends object>(List: ComponentType<P>) {
   return () => {
     let component: ReactRenderer<unknown, P> | null = null
 
+    const MARGIN = 8 // viewport gutter
+    const GAP = 6    // breathing room between caret and popup
+
     const place = (clientRect: ClientRect) => {
       if (!component) return
       const el = component.element as HTMLElement
@@ -31,14 +34,36 @@ export function renderSuggestion<P extends object>(List: ComponentType<P>) {
       el.style.zIndex = '70'
       const rect = clientRect?.()
       if (!rect) return
-      const h = el.offsetHeight || 240
-      const spaceBelow = window.innerHeight - rect.bottom
-      // Flip above the caret when there isn't room below (comment composers etc.).
-      const openUp = spaceBelow < h + 12 && rect.top > h + 12
-      const top = openUp ? Math.max(8, rect.top - h - 6) : rect.bottom + 6
-      const left = Math.max(8, Math.min(rect.left, window.innerWidth - 268))
+
+      // The scrollable list is the child; capping ITS height is what keeps the
+      // popup inside the viewport (the wrapper has no overflow of its own).
+      const list = (el.firstElementChild as HTMLElement | null) ?? el
+      list.style.maxHeight = ''
+      const natural = el.offsetHeight || list.scrollHeight || 240
+
+      const spaceBelow = window.innerHeight - rect.bottom - GAP - MARGIN
+      const spaceAbove = rect.top - GAP - MARGIN
+      // Open upward when below can't fit the list and above has more room — the
+      // usual case for a composer pinned to the bottom of the screen.
+      const openUp = natural > spaceBelow && spaceAbove > spaceBelow
+      const available = Math.max(120, openUp ? spaceAbove : spaceBelow)
+      const height = Math.min(natural, available)
+
+      list.style.maxHeight = `${available}px`
+      const top = openUp ? Math.max(MARGIN, rect.top - GAP - height) : rect.bottom + GAP
+      const width = el.offsetWidth || 268
+      const left = Math.max(MARGIN, Math.min(rect.left, window.innerWidth - width - MARGIN))
       el.style.top = `${top}px`
       el.style.left = `${left}px`
+    }
+
+    /**
+     * ReactRenderer mounts asynchronously, so the first measurement reads a
+     * height of 0. Re-place on the next frame with the real dimensions.
+     */
+    const placeAfterPaint = (clientRect: ClientRect) => {
+      place(clientRect)
+      requestAnimationFrame(() => place(clientRect))
     }
 
     return {
@@ -47,11 +72,12 @@ export function renderSuggestion<P extends object>(List: ComponentType<P>) {
         // the editor is an Editor at runtime. Types can't express this contract.
         component = new ReactRenderer(List, { props: props as unknown as P, editor: props.editor as Editor })
         document.body.appendChild(component.element)
-        place(props.clientRect)
+        placeAfterPaint(props.clientRect)
       },
       onUpdate: (props: RenderProps) => {
         component?.updateProps(props)
-        place(props.clientRect)
+        // The filtered list changes length as you type, so re-measure after paint.
+        placeAfterPaint(props.clientRect)
       },
       onKeyDown: (props: { event: KeyboardEvent }) => {
         if (props.event.key === 'Escape') return true

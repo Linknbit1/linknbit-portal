@@ -5,6 +5,7 @@ import { BottomTabBar } from './BottomTabBar'
 import { NavChromeContext } from './MobileNavContext'
 import { useAuthContext } from '../../context/AuthContext'
 import { useRealtimeNotifications } from '../../hooks/realtime/useRealtimeNotifications'
+import { useRealtimeChannelList } from '../../hooks/realtime/useRealtimeChannelList'
 import { FileViewerProvider } from '../shared/FileViewer'
 import { ImpersonationBanner } from './ImpersonationBanner'
 
@@ -31,6 +32,10 @@ export function AppShell() {
   // route and both breakpoints — the toast should never depend on which page
   // or layout happens to be on screen.
   useRealtimeNotifications(profile?.id ?? '')
+
+  // Same reasoning for chat: the conversation list and the sidebar unread badge
+  // stay live regardless of which page is open.
+  useRealtimeChannelList(!!profile?.id)
 
   // Reset scroll to the top whenever the route changes, so a freshly opened
   // screen never starts mid-page (e.g. drilling into a section after scrolling

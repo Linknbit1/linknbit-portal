@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { useEditor, EditorContent, type JSONContent } from '@tiptap/react'
+import { useEditor, EditorContent, type Editor, type JSONContent } from '@tiptap/react'
 import './editor.css'
 import { BubbleMenu } from '@tiptap/react/menus'
 import StarterKit from '@tiptap/starter-kit'
@@ -27,10 +27,12 @@ interface RichEditorProps {
   onSubmit?: () => void
   className?: string
   autoFocus?: boolean
+  /** Hands the editor instance out so callers can insert content (e.g. emoji). */
+  onEditorReady?: (editor: Editor) => void
 }
 
 export function RichEditor({
-  value, onChange, placeholder, mentionItems = [], fileItems, compact, onSubmit, className, autoFocus,
+  value, onChange, placeholder, mentionItems = [], fileItems, compact, onSubmit, className, autoFocus, onEditorReady,
 }: RichEditorProps) {
   const mentionsRef = useRef(mentionItems)
   useEffect(() => { mentionsRef.current = mentionItems }, [mentionItems])
@@ -92,6 +94,10 @@ export function RichEditor({
   // parent autosaves and re-feeds project.doc, so a re-sync would overwrite whatever
   // the user typed during the save round-trip (data loss). All call sites remount via
   // `key` when the underlying record changes, which is the correct reset path.
+
+  const onReadyRef = useRef(onEditorReady)
+  useEffect(() => { onReadyRef.current = onEditorReady }, [onEditorReady])
+  useEffect(() => { if (editor) onReadyRef.current?.(editor) }, [editor])
 
   if (!editor) return null
 
