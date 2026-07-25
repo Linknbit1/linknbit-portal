@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import {
   Upload, Download, Trash2, Image as ImageIcon, FileText, FileSpreadsheet,
-  FileArchive, Presentation, File as FileIcon, FileVideo, Loader2, Link2, Lock, Eye, ExternalLink,
+  FileArchive, Presentation, File as FileIcon, FileVideo, FileAudio, Loader2, Link2, Lock, Eye, ExternalLink,
 } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { validateAttachmentFile, formatFileSize, fileKind, type FileKind } from '../../lib/attachment'
@@ -20,7 +20,7 @@ import { ConfirmDialog } from '../ui/ConfirmDialog'
 import { formatRelativeTime } from '../../lib/utils'
 
 const KIND_ICON: Record<FileKind, typeof FileIcon> = {
-  image: ImageIcon, video: FileVideo, pdf: FileText, doc: FileText, sheet: FileSpreadsheet,
+  image: ImageIcon, video: FileVideo, audio: FileAudio, pdf: FileText, doc: FileText, sheet: FileSpreadsheet,
   slides: Presentation, archive: FileArchive, text: FileText, other: FileIcon,
 }
 

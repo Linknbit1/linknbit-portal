@@ -7,6 +7,7 @@ import {
   BarChart2,
   Trophy,
   Inbox,
+  MessageCircle,
   ClipboardList,
   Settings,
   UserCircle,
@@ -18,6 +19,7 @@ import { showWipFeatures } from '../../lib/featureFlags'
 import { SETTINGS_ROLES } from '../../constants/roles'
 import { useRoleFlags } from '../../hooks/useRoleFlags'
 import { useAuditDangerCount } from '../../hooks/useAuditLog'
+import { useChatUnreadTotal } from '../../hooks/useChatUnreadCount'
 import { useAuthContext } from '../../context/AuthContext'
 
 export interface NavItem {
@@ -78,6 +80,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Projects', icon: FolderOpen, to: '/admin/projects' },
   { label: 'Tasks', icon: CheckSquare, to: '/admin/tasks' },
   { label: 'Inbox', icon: Inbox, to: '/inbox' },
+  { label: 'Chat', icon: MessageCircle, to: '/chat', matchPrefix: '/chat', primaryMobile: true },
   { label: 'Clients', icon: UserCircle, to: '/admin/clients', feature: 'can_manage_clients' },
   // Directory views: everyone internal can browse people/teams. The management
   // actions inside are gated on can_manage_people; RLS blocks writes regardless.
@@ -125,6 +128,7 @@ export function useNavItems(): NavItem[] {
   const { profile } = useAuthContext()
   const { data: flags } = useRoleFlags()
   const { data: dangerCount } = useAuditDangerCount()
+  const chatUnread = useChatUnreadTotal()
   const role = profile?.role
 
   const can: CanFn = (feature) => {
@@ -133,10 +137,12 @@ export function useNavItems(): NavItem[] {
     return flags.find((f) => f.role === role && f.feature_key === feature)?.enabled ?? false
   }
 
-  // Surface recent flagged-action count on the Audit Log item.
-  return filterNavItems(role, can).map((item) =>
-    item.to === '/admin/audit' && dangerCount ? { ...item, badge: dangerCount } : item,
-  )
+  // Surface live counts: flagged actions on Audit Log, unread messages on Chat.
+  return filterNavItems(role, can).map((item) => {
+    if (item.to === '/admin/audit' && dangerCount) return { ...item, badge: dangerCount }
+    if (item.to === '/chat' && chatUnread) return { ...item, badge: chatUnread }
+    return item
+  })
 }
 
 /** Secondary destinations for the mobile "More" tab (everything not in the bottom bar). */
