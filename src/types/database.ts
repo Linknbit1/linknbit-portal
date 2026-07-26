@@ -3094,6 +3094,10 @@ export type Database = {
           profile_id: string
         }[]
       }
+      fn_set_channel_muted: {
+        Args: { p_channel_id: string; p_muted: boolean }
+        Returns: undefined
+      }
       fn_standup_window: {
         Args: { p_profile: string }
         Returns: {

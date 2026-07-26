@@ -1,11 +1,11 @@
 import { useRef, useState } from 'react'
-import { MoreVertical, CheckCheck, LogOut, Trash2 } from 'lucide-react'
+import { MoreVertical, CheckCheck, LogOut, Trash2, Bell, BellOff } from 'lucide-react'
 import { Popover } from '../ui/Popover'
 import { ConfirmDialog } from '../ui/ConfirmDialog'
 import { useToast } from '../ui/toast-context'
 import { useCanAccess } from '../../hooks/useRoleFlags'
 import { useHideChannel, useDeleteChannel } from '../../hooks/useChannels'
-import { useLeaveChannel } from '../../hooks/useChannelMembers'
+import { useLeaveChannel, useSetChannelMuted } from '../../hooks/useChannelMembers'
 import { useMarkChannelRead } from '../../hooks/useMessages'
 import { cn } from '../../lib/cn'
 import type { ChannelListItem } from '../../api/channels'
@@ -37,6 +37,7 @@ export function ConversationMenu({ channel, title, hasUnread, onRemoved }: Conve
   const { mutate: hide, isPending: hiding } = useHideChannel()
   const { mutate: leave, isPending: leaving } = useLeaveChannel()
   const { mutate: destroy, isPending: destroying } = useDeleteChannel()
+  const { mutate: setMuted } = useSetChannelMuted()
 
   const isDM = channel.kind === 'dm'
   const canDeleteForEveryone = channel.kind === 'channel' && canManageAll
@@ -98,6 +99,19 @@ export function ConversationMenu({ channel, title, hasUnread, onRemoved }: Conve
               <CheckCheck size={13} /> Mark as read
             </button>
           )}
+
+          <button
+            className={itemClass}
+            onClick={() => {
+              setMuted(
+                { channelId: channel.id, muted: !channel.muted },
+                { onError: () => toast('Could not change notifications', 'error') },
+              )
+              setOpen(false)
+            }}
+          >
+            {channel.muted ? <><Bell size={13} /> Unmute notifications</> : <><BellOff size={13} /> Mute notifications</>}
+          </button>
 
           {!isDM && (
             <button

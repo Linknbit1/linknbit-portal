@@ -57,6 +57,13 @@ export const NOTIFICATION_GROUPS: NotificationGroup[] = [
     ],
   },
   {
+    key: 'chat',
+    label: 'Chat',
+    items: [
+      { type: 'chat_message', label: 'New messages', description: 'When someone messages you or posts in a channel you are in' },
+    ],
+  },
+  {
     key: 'to_review',
     label: 'Waiting on me',
     items: [
@@ -99,6 +106,9 @@ export function notificationHref(resourceType: string | null, resourceId?: strin
     case 'reward_pool':
     case 'employee_of_the_month':
       return '/gamification'
+    case 'channel':
+      // resource_id is the conversation, so a chat notification opens the thread.
+      return resourceId ? `/chat/${resourceId}` : '/chat'
     case 'enrolled_device':
       return '/settings/devices'
     default:

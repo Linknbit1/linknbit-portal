@@ -3,7 +3,7 @@ import { type JSONContent } from '@tiptap/react'
 import { Hash, Users as UsersIcon, PanelRight } from 'lucide-react'
 import { Avatar } from '../ui/Avatar'
 import { cn } from '../../lib/cn'
-import { ChannelFilesPanel } from './ChannelFilesPanel'
+import { ConversationInfoPanel } from './ConversationInfoPanel'
 import { MessageList } from './MessageList'
 import { MessageComposer, type ComposerPayload } from './MessageComposer'
 import { ChannelMembersModal } from './ChannelMembersModal'
@@ -134,8 +134,13 @@ export function ChatThread({ channelId, hideHeader }: ChatThreadProps) {
         </div>
 
         {infoOpen && (
-          <aside className="w-72 shrink-0 border-l border-border-default bg-surface-1 hidden lg:flex flex-col min-h-0">
-            <ChannelFilesPanel channelId={channelId} />
+          <aside className="hidden min-h-0 w-80 shrink-0 flex-col border-l border-border-default bg-surface-1 lg:flex">
+            <ConversationInfoPanel
+              channel={channel ?? null}
+              counterpart={counterpart}
+              title={title}
+              memberCount={members.length}
+            />
           </aside>
         )}
       </div>

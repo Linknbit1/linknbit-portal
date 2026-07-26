@@ -6,6 +6,7 @@ import { ConfirmDialog } from '../ui/ConfirmDialog'
 import { MessageAttachment } from './MessageAttachment'
 import { ReactionBar } from './ReactionBar'
 import { EmojiPicker } from './EmojiPicker'
+import { UserProfileCard } from './UserProfileCard'
 import { cn } from '../../lib/cn'
 import { fromDbDoc } from '../../lib/richText'
 import { isOptimistic } from './chatUtils'
@@ -55,15 +56,17 @@ export function MessageBubble({
 }: MessageBubbleProps) {
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [reactOpen, setReactOpen] = useState(false)
+  const [profileOpen, setProfileOpen] = useState(false)
   const reactBtnRef = useRef<HTMLButtonElement>(null)
+  const authorRef = useRef<HTMLButtonElement>(null)
   const mine = message.author_id === myProfileId
   const pending = isOptimistic(message.id)
 
   if (message.deleted_at) {
     return (
-      <div className={cn('px-4 py-1 flex gap-3', startsGroup && 'mt-3')}>
-        <span className="w-8 shrink-0" />
-        <p className="flex items-baseline gap-1.5 font-ui text-[12.5px] italic text-text-4">
+      <div className={cn('flex gap-3 px-4 py-1', startsGroup && 'mt-4')}>
+        <span className="w-10 shrink-0" />
+        <p className="flex items-baseline gap-1.5 font-ui text-[13.5px] italic text-text-4">
           This message was deleted
           {/* The deletion time, not created_at — that's the moment that matters here. */}
           <span className="font-mono text-[10px] not-italic">{timeOf(message.deleted_at)}</span>
@@ -73,26 +76,40 @@ export function MessageBubble({
   }
 
   return (
-    <div className={cn('group px-4 py-0.5 flex gap-3 hover:bg-surface-1/40', startsGroup && 'mt-3')}>
+    <div className={cn('group flex gap-3 px-4 py-0.5 hover:bg-surface-1/40', startsGroup && 'mt-4')}>
       {startsGroup ? (
-        <Avatar name={message.author?.name ?? '?'} src={message.author?.avatar_url ?? undefined} size="sm" personId={message.author?.id} />
+        // Opens the mini profile rather than navigating away, so you don't lose
+        // your place in the conversation.
+        <button
+          ref={authorRef}
+          onClick={() => message.author && setProfileOpen((v) => !v)}
+          aria-label={message.author ? `View ${message.author.name}'s profile` : undefined}
+          className="shrink-0 rounded-full transition-opacity hover:opacity-90"
+        >
+          <Avatar name={message.author?.name ?? '?'} src={message.author?.avatar_url ?? undefined} size="lg" />
+        </button>
       ) : (
-        <span className="w-8 shrink-0 flex items-start justify-end pt-1">
-          <span className="font-mono text-[9px] text-text-4 opacity-0 group-hover:opacity-100 transition-opacity">
+        <span className="flex w-10 shrink-0 items-start justify-end pt-1">
+          <span className="font-mono text-[10px] text-text-4 opacity-0 transition-opacity group-hover:opacity-100">
             {timeOf(message.created_at)}
           </span>
         </span>
       )}
 
-      <div className="flex-1 min-w-0">
+      <div className="min-w-0 flex-1">
         {startsGroup && (
-          <div className="flex items-baseline gap-2">
-            <span className="font-ui font-semibold text-[13px] text-text-1">{message.author?.name ?? 'Unknown'}</span>
-            <span className="font-mono text-[10px] text-text-4">{timeOf(message.created_at)}</span>
-            {message.edited_at && <span className="font-mono text-[10px] text-text-4">(edited)</span>}
+          <div className="flex flex-wrap items-baseline gap-2">
+            <button
+              onClick={() => message.author && setProfileOpen((v) => !v)}
+              className="font-ui text-[14.5px] font-semibold text-text-1 transition-colors hover:underline"
+            >
+              {message.author?.name ?? 'Unknown'}
+            </button>
+            <span className="font-mono text-[11px] text-text-4">{timeOf(message.created_at)}</span>
+            {message.edited_at && <span className="font-mono text-[11px] text-text-4">(edited)</span>}
           </div>
         )}
-        <div className={cn('font-ui text-[13.5px] text-text-2', pending && 'opacity-60')}>
+        <div className={cn('font-ui text-[15px] leading-relaxed text-text-2', pending && 'opacity-60')}>
           {message.body_text || message.body_doc ? (
             message.body_doc
               ? <RichRenderer doc={fromDbDoc(message.body_doc)} />
@@ -142,6 +159,17 @@ export function MessageBubble({
         anchorRef={reactBtnRef}
         onPick={(emoji) => onToggleReaction(message.id, emoji)}
       />
+
+      {message.author && (
+        <UserProfileCard
+          profileId={message.author.id}
+          name={message.author.name}
+          avatarUrl={message.author.avatar_url}
+          open={profileOpen}
+          onClose={() => setProfileOpen(false)}
+          anchorRef={authorRef}
+        />
+      )}
 
       <ConfirmDialog
         open={confirmOpen}

@@ -11,6 +11,8 @@ export interface ChannelListItem extends ChannelRow {
   last_message_preview: string | null
   /** When the viewer removed this from their own list, if they did. */
   hidden_at?: string | null
+  /** Whether the viewer silenced notifications for this conversation. */
+  muted?: boolean
 }
 
 export interface CreateChannelArgs {
@@ -30,7 +32,7 @@ export async function fetchChannels(): Promise<ChannelListItem[]> {
 
   const { data, error } = await supabase
     .from('channels')
-    .select('*, channel_members(profile_id,hidden_at,profile:profiles(id,name,avatar_url)), messages(body_text,created_at)')
+    .select('*, channel_members(profile_id,hidden_at,notifications_muted,profile:profiles(id,name,avatar_url)), messages(body_text,created_at)')
     .order('updated_at', { ascending: false })
     // Only the newest message per channel — without these two the nested select
     // would pull each channel's entire history just to render a one-line preview.
@@ -48,6 +50,7 @@ export async function fetchChannels(): Promise<ChannelListItem[]> {
         last_message_at: latest?.created_at ?? null,
         last_message_preview: latest?.body_text ?? null,
         hidden_at: membership?.hidden_at ?? null,
+        muted: membership?.notifications_muted ?? false,
       }
     })
     // A conversation you removed from your list stays hidden until someone
