@@ -528,6 +528,7 @@ export type Database = {
         Row: {
           channel_id: string
           created_at: string
+          hidden_at: string | null
           last_read_at: string
           notifications_muted: boolean
           profile_id: string
@@ -536,6 +537,7 @@ export type Database = {
         Insert: {
           channel_id: string
           created_at?: string
+          hidden_at?: string | null
           last_read_at?: string
           notifications_muted?: boolean
           profile_id: string
@@ -544,6 +546,7 @@ export type Database = {
         Update: {
           channel_id?: string
           created_at?: string
+          hidden_at?: string | null
           last_read_at?: string
           notifications_muted?: boolean
           profile_id?: string
@@ -3063,6 +3066,7 @@ export type Database = {
         Args: { p_other_profile_id: string }
         Returns: string
       }
+      fn_hide_channel: { Args: { p_channel_id: string }; Returns: undefined }
       fn_is_working_day: { Args: { d: string }; Returns: boolean }
       fn_mark_absent_for_date: { Args: { d: string }; Returns: undefined }
       fn_mark_absent_today: { Args: never; Returns: undefined }

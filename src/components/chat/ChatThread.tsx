@@ -141,6 +141,9 @@ export function ChatThread({ channelId, hideHeader }: ChatThreadProps) {
       </div>
 
       <MessageComposer
+        // Remounting is what loads the message being edited into the input —
+        // the composer seeds its state on mount and never re-syncs after.
+        key={editing?.id ?? 'new'}
         channelId={channelId}
         mentionItems={mentionItems}
         placeholder={channel?.kind === 'channel' ? `Message #${title}` : `Message ${title}`}

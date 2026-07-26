@@ -7,6 +7,7 @@ import {
 import { Topbar } from '../../components/layout/Topbar'
 import { Avatar } from '../../components/ui/Avatar'
 import { PersonLink } from '../../components/shared/PersonLink'
+import { StartDMButton } from '../../components/chat/StartDMButton'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Select } from '../../components/ui/Select'
@@ -610,7 +611,10 @@ function PersonTableRow({ person, myRole, myId, teamLabels, designationName, ...
       <TeamsCell labels={teamLabels} />
       <DesignationCell name={designationName} jobType={person.job_type} />
       <AccountStatusChip person={person} />
-      <PersonActionsMenu person={person} myRole={myRole} myId={myId} {...actions} />
+      <div className="flex items-center justify-end gap-1">
+        <StartDMButton profileId={person.id} name={person.name} role={person.role} />
+        <PersonActionsMenu person={person} myRole={myRole} myId={myId} {...actions} />
+      </div>
     </div>
   )
 }
@@ -638,6 +642,7 @@ function PersonCard({ person, myRole, myId, teamLabels, designationName, ...acti
             </div>
             <p className="mt-1 truncate font-mono text-[11.5px] text-text-3">{person.email}</p>
           </div>
+          <StartDMButton profileId={person.id} name={person.name} role={person.role} />
           <PersonActionsMenu person={person} myRole={myRole} myId={myId} {...actions} />
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-2">

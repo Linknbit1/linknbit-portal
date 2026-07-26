@@ -28,6 +28,9 @@ export default function ChatPage() {
 
   const openChannel = (id: string) => navigate(`/chat/${id}`)
   const afterCreate = (id: string) => { setCreateOpen(false); setDmOpen(false); openChannel(id) }
+  // Leaving the removed conversation open would show an empty thread you can no
+  // longer post to, so fall back to the chat index.
+  const afterRemoved = (id: string) => { if (id === channelId) navigate('/chat', { replace: true }) }
 
   const modals = (
     <>
@@ -42,7 +45,12 @@ export default function ChatPage() {
     }
     return (
       <>
-        <MobileChatHub onSelect={openChannel} onNewChannel={() => setCreateOpen(true)} onNewDM={() => setDmOpen(true)} />
+        <MobileChatHub
+          onSelect={openChannel}
+          onNewChannel={() => setCreateOpen(true)}
+          onNewDM={() => setDmOpen(true)}
+          onRemoved={afterRemoved}
+        />
         {modals}
       </>
     )
@@ -57,6 +65,7 @@ export default function ChatPage() {
           onSelect={openChannel}
           onNewChannel={() => setCreateOpen(true)}
           onNewDM={() => setDmOpen(true)}
+          onRemoved={afterRemoved}
         />
         {channelId ? (
           <ChatThread key={channelId} channelId={channelId} />
@@ -90,12 +99,13 @@ function MobileThreadScreen({ channelId }: { channelId: string }) {
 }
 
 interface MobileChatHubProps {
+  onRemoved: (channelId: string) => void
   onSelect: (id: string) => void
   onNewChannel: () => void
   onNewDM: () => void
 }
 
-function MobileChatHub({ onSelect, onNewChannel, onNewDM }: MobileChatHubProps) {
+function MobileChatHub({ onSelect, onNewChannel, onNewDM, onRemoved }: MobileChatHubProps) {
   const { profile } = useAuthContext()
   const { data: channels = [], isLoading } = useChannels()
   const unreadMap = useChatUnreadMap()
@@ -130,6 +140,7 @@ function MobileChatHub({ onSelect, onNewChannel, onNewDM }: MobileChatHubProps) 
               myProfileId={profile?.id}
               unread={unreadMap.get(c.id) ?? 0}
               onClick={() => onSelect(c.id)}
+              onRemoved={onRemoved}
             />
           ))}
         </div>

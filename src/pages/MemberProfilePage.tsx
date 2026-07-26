@@ -13,6 +13,7 @@ import { ServiceChip } from '../components/shared/ServiceChip'
 import { StatusChip } from '../components/shared/StatusChip'
 import { SalaryCard } from '../components/shared/SalaryCard'
 import { PersonLink } from '../components/shared/PersonLink'
+import { StartDMButton } from '../components/chat/StartDMButton'
 import { MonthStepper } from '../components/shared/MonthFilter'
 import { useAuthContext } from '../context/AuthContext'
 import { useToast } from '../components/ui/toast-context'
@@ -261,6 +262,7 @@ export default function MemberProfilePage() {
               </div>
             </div>
             <div className="flex shrink-0 items-center gap-2 self-start lg:self-auto">
+              <StartDMButton profileId={person.id} name={person.name} role={person.role} variant="button" />
               {isSelf && (
                 <Link to="/profile" className="inline-flex items-center gap-1.5 rounded-sm border border-border-default px-3 py-1.5 font-ui text-[12px] font-medium text-text-2 transition-colors hover:bg-surface-2 hover:text-text-1">
                   <Pencil size={13} /> Edit profile
