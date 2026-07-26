@@ -90,7 +90,7 @@ export function ConversationListPane({ activeChannelId, onSelect, onNewChannel, 
               <Plus size={16} />
             </button>
             <Popover anchorRef={newBtnRef} open={newOpen} onClose={() => setNewOpen(false)}>
-              <div className="w-52 py-1">
+              <div className="w-52 overflow-hidden rounded-md border border-border-strong bg-surface-2 py-1 shadow-lg">
                 <button
                   onClick={() => { setNewOpen(false); onNewDM() }}
                   className="w-full text-left px-3 py-2 flex items-center gap-2.5 font-ui text-[13px] text-text-2 hover:bg-surface-2 hover:text-text-1 transition-colors"

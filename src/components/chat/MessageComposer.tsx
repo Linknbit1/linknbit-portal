@@ -132,7 +132,7 @@ export function MessageComposer({
       )}
 
       <div className="flex items-end gap-2">
-        <div className="flex-1 min-w-0 bg-surface-inset border border-border-default rounded-md pl-3 pr-2 py-2 focus-within:border-border-focus transition-colors">
+        <div className="min-w-0 flex-1 rounded-md border border-border-default bg-surface-inset py-2.5 pl-3.5 pr-2 text-[15px] transition-colors focus-within:border-border-focus">
           <RichEditor
             key={editorKey}
             value={doc}
@@ -171,9 +171,9 @@ export function MessageComposer({
         <button
           onClick={submit}
           aria-label="Send message"
-          className="size-9 shrink-0 rounded-md flex items-center justify-center bg-brand-red text-white hover:bg-brand-red-hover active:bg-brand-red-press transition-colors"
+          className="flex size-10 shrink-0 items-center justify-center rounded-md bg-brand-red text-white transition-colors hover:bg-brand-red-hover active:bg-brand-red-press"
         >
-          <SendHorizonal size={16} />
+          <SendHorizonal size={17} />
         </button>
       </div>
 
