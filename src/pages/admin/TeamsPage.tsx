@@ -3,6 +3,7 @@ import { Users, Plus, X, Loader2, Pencil, UserPlus, UserMinus, Crown, Sparkles, 
 import { Topbar } from '../../components/layout/Topbar'
 import { Avatar, AvatarGroup } from '../../components/ui/Avatar'
 import { PersonLink } from '../../components/shared/PersonLink'
+import { StartDMButton } from '../../components/chat/StartDMButton'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Select } from '../../components/ui/Select'
@@ -308,6 +309,7 @@ export default function TeamsPage() {
                             )}
                           </div>
                         </div>
+                        <StartDMButton profileId={m.id} name={m.name} role={m.role} className="shrink-0" />
                         {canManage && (
                           <button
                             onClick={() => removeMember(team, m)}

@@ -9,6 +9,8 @@ export interface ChannelListItem extends ChannelRow {
   members: PersonMini[]
   last_message_at: string | null
   last_message_preview: string | null
+  /** When the viewer removed this from their own list, if they did. */
+  hidden_at?: string | null
 }
 
 export interface CreateChannelArgs {
@@ -23,9 +25,12 @@ export interface CreateChannelArgs {
  * other person's name/avatar without a second round-trip.
  */
 export async function fetchChannels(): Promise<ChannelListItem[]> {
+  const { data: auth } = await supabase.auth.getUser()
+  const me = auth.user?.id ?? null
+
   const { data, error } = await supabase
     .from('channels')
-    .select('*, channel_members(profile:profiles(id,name,avatar_url)), messages(body_text,created_at)')
+    .select('*, channel_members(profile_id,hidden_at,profile:profiles(id,name,avatar_url)), messages(body_text,created_at)')
     .order('updated_at', { ascending: false })
     // Only the newest message per channel — without these two the nested select
     // would pull each channel's entire history just to render a one-line preview.
@@ -33,15 +38,27 @@ export async function fetchChannels(): Promise<ChannelListItem[]> {
     .limit(1, { referencedTable: 'messages' })
   if (error) throw error
 
-  return data.map((c) => {
-    const latest = c.messages?.[0] ?? null
-    return {
-      ...c,
-      members: (c.channel_members ?? []).flatMap((m) => (m.profile ? [m.profile] : [])),
-      last_message_at: latest?.created_at ?? null,
-      last_message_preview: latest?.body_text ?? null,
-    }
-  })
+  return data
+    .map((c) => {
+      const latest = c.messages?.[0] ?? null
+      const membership = (c.channel_members ?? []).find((m) => m.profile_id === me)
+      return {
+        ...c,
+        members: (c.channel_members ?? []).flatMap((m) => (m.profile ? [m.profile] : [])),
+        last_message_at: latest?.created_at ?? null,
+        last_message_preview: latest?.body_text ?? null,
+        hidden_at: membership?.hidden_at ?? null,
+      }
+    })
+    // A conversation you removed from your list stays hidden until someone
+    // sends something new, which is what makes "delete" non-destructive.
+    .filter((c) => !c.hidden_at || (c.last_message_at !== null && c.last_message_at > c.hidden_at))
+}
+
+/** Removes a conversation from your own list only; history and other members are untouched. */
+export async function hideChannel(channelId: string): Promise<void> {
+  const { error } = await supabase.rpc('fn_hide_channel', { p_channel_id: channelId })
+  if (error) throw error
 }
 
 export async function fetchChannel(id: string): Promise<ChannelListItem | null> {

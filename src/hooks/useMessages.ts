@@ -1,6 +1,6 @@
-import { useInfiniteQuery, useMutation, useQueryClient, type InfiniteData } from '@tanstack/react-query'
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query'
 import {
-  fetchMessages, createMessage, updateMessage, softDeleteMessage, markChannelRead,
+  fetchMessages, createMessage, updateMessage, softDeleteMessage, markChannelRead, searchMessages,
   MESSAGE_PAGE_SIZE, type MessageWithAuthor, type CreateMessageArgs,
 } from '../api/messages'
 import { CHANNEL_KEYS } from './useChannels'
@@ -10,6 +10,7 @@ import type { Json } from '../types/database'
 
 export const MESSAGE_KEYS = {
   byChannel: (channelId: string) => ['messages', channelId] as const,
+  search: (query: string) => ['messages', 'search', query] as const,
 }
 
 type MessagePages = InfiniteData<MessageWithAuthor[], string | undefined>
@@ -107,6 +108,20 @@ export function useDeleteMessage() {
       qc.invalidateQueries({ queryKey: MESSAGE_ATTACHMENT_KEYS.byChannel(v.channelId) })
       qc.invalidateQueries({ queryKey: CHANNEL_KEYS.all })
     },
+  })
+}
+
+/**
+ * Message-content search. Debouncing is left to the caller's input; the query
+ * stays disabled until the term is long enough to be meaningful.
+ */
+export function useMessageSearch(query: string) {
+  const term = query.trim()
+  return useQuery({
+    queryKey: MESSAGE_KEYS.search(term),
+    queryFn: () => searchMessages(term),
+    enabled: term.length >= 2,
+    staleTime: 15_000,
   })
 }
 

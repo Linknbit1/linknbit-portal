@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
-  fetchChannels, fetchChannel, createChannel, createDM, updateChannel, deleteChannel,
+  fetchChannels, fetchChannel, createChannel, createDM, updateChannel, deleteChannel, hideChannel,
   type CreateChannelArgs,
 } from '../api/channels'
+import { CHAT_UNREAD_KEYS } from './useChatUnreadCount'
 
 export const CHANNEL_KEYS = {
   all: ['channels'] as const,
@@ -39,6 +40,17 @@ export function useCreateDM() {
   return useMutation({
     mutationFn: (otherProfileId: string) => createDM(otherProfileId),
     onSuccess: () => { qc.invalidateQueries({ queryKey: CHANNEL_KEYS.all }) },
+  })
+}
+
+export function useHideChannel() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (channelId: string) => hideChannel(channelId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: CHANNEL_KEYS.all })
+      qc.invalidateQueries({ queryKey: CHAT_UNREAD_KEYS.all })
+    },
   })
 }
 

@@ -60,6 +60,37 @@ export async function createMessage(channelId: string, args: CreateMessageArgs):
   return data
 }
 
+export interface MessageSearchHit {
+  id: string
+  channel_id: string
+  body_text: string
+  created_at: string
+  author: { id: string; name: string; avatar_url: string | null } | null
+}
+
+/**
+ * Full-text-ish search across every message the caller can see — RLS already
+ * limits this to their own channels, so no channel filter is needed here.
+ * Matches on the plain-text mirror of the message body.
+ */
+export async function searchMessages(query: string, limit = 30): Promise<MessageSearchHit[]> {
+  const term = query.trim()
+  if (term.length < 2) return []
+
+  // Escape the LIKE wildcards so a literal % or _ doesn't match everything.
+  const escaped = term.replace(/[%_]/g, (c) => `\\${c}`)
+
+  const { data, error } = await supabase
+    .from('messages')
+    .select('id, channel_id, body_text, created_at, author:profiles(id,name,avatar_url)')
+    .is('deleted_at', null)
+    .ilike('body_text', `%${escaped}%`)
+    .order('created_at', { ascending: false })
+    .limit(limit)
+  if (error) throw error
+  return data
+}
+
 export async function updateMessage(id: string, args: CreateMessageArgs): Promise<void> {
   const { error } = await supabase
     .from('messages')

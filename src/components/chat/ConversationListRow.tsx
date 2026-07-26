@@ -1,5 +1,6 @@
 import { Hash, Users } from 'lucide-react'
 import { Avatar } from '../ui/Avatar'
+import { ConversationMenu } from './ConversationMenu'
 import { cn } from '../../lib/cn'
 import { formatRelativeTime } from '../../lib/utils'
 import { channelTitle, dmCounterpart } from './chatUtils'
@@ -11,55 +12,63 @@ interface ConversationListRowProps {
   unread: number
   active?: boolean
   onClick: () => void
+  onRemoved: (channelId: string) => void
 }
 
-export function ConversationListRow({ channel, myProfileId, unread, active, onClick }: ConversationListRowProps) {
+export function ConversationListRow({ channel, myProfileId, unread, active, onClick, onRemoved }: ConversationListRowProps) {
   const title = channelTitle(channel, myProfileId)
   const counterpart = dmCounterpart(channel, myProfileId)
 
   return (
-    <button
-      onClick={onClick}
+    // A container rather than one big button, so the actions menu isn't a
+    // button nested inside a button.
+    <div
       className={cn(
-        'w-full text-left px-3 py-2.5 flex gap-3 items-center transition-colors border-b border-border-subtle last:border-0',
+        'group flex items-center border-b border-border-subtle transition-colors last:border-0',
         active ? 'bg-brand-red/13' : 'hover:bg-surface-2/50',
         unread > 0 && !active && 'bg-brand-red/4',
       )}
     >
-      {channel.kind === 'channel' ? (
-        <span className="size-9 rounded-lg bg-surface-2 flex items-center justify-center text-text-3 shrink-0">
-          <Hash size={16} />
-        </span>
-      ) : channel.kind === 'group_dm' ? (
-        <span className="size-9 rounded-lg bg-surface-2 flex items-center justify-center text-text-3 shrink-0">
-          <Users size={16} />
-        </span>
-      ) : (
-        <Avatar name={counterpart?.name ?? '?'} src={counterpart?.avatar_url ?? undefined} size="md" />
-      )}
+      <button onClick={onClick} className="flex min-w-0 flex-1 items-center gap-3 py-2.5 pl-3 text-left">
+        {channel.kind === 'channel' ? (
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-text-3">
+            <Hash size={16} />
+          </span>
+        ) : channel.kind === 'group_dm' ? (
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-text-3">
+            <Users size={16} />
+          </span>
+        ) : (
+          <Avatar name={counterpart?.name ?? '?'} src={counterpart?.avatar_url ?? undefined} size="md" />
+        )}
 
-      <span className="flex-1 min-w-0">
-        <span className="flex items-center gap-2">
-          <span className={cn('font-ui text-[13px] truncate', unread > 0 ? 'text-text-1 font-semibold' : 'text-text-2')}>
-            {title}
-          </span>
-          {channel.last_message_at && (
-            <span className="ml-auto font-mono text-[10px] text-text-4 shrink-0">
-              {formatRelativeTime(channel.last_message_at)}
+        <span className="min-w-0 flex-1">
+          <span className="flex items-center gap-2">
+            <span className={cn('truncate font-ui text-[13px]', unread > 0 ? 'font-semibold text-text-1' : 'text-text-2')}>
+              {title}
             </span>
-          )}
-        </span>
-        <span className="flex items-center gap-2 mt-0.5">
-          <span className="font-ui text-[12px] text-text-3 truncate flex-1">
-            {channel.last_message_preview || 'No messages yet'}
+            {channel.last_message_at && (
+              <span className="ml-auto shrink-0 font-mono text-[10px] text-text-4">
+                {formatRelativeTime(channel.last_message_at)}
+              </span>
+            )}
           </span>
-          {unread > 0 && (
-            <span className="shrink-0 min-w-[18px] h-[18px] px-1.5 rounded-full bg-brand-red text-white font-mono text-[10px] font-bold flex items-center justify-center">
-              {unread > 99 ? '99+' : unread}
+          <span className="mt-0.5 flex items-center gap-2">
+            <span className="flex-1 truncate font-ui text-[12px] text-text-3">
+              {channel.last_message_preview || 'No messages yet'}
             </span>
-          )}
+            {unread > 0 && (
+              <span className="flex h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-full bg-brand-red px-1.5 font-mono text-[10px] font-bold text-white">
+                {unread > 99 ? '99+' : unread}
+              </span>
+            )}
+          </span>
         </span>
+      </button>
+
+      <span className="shrink-0 pr-1.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 lg:opacity-0">
+        <ConversationMenu channel={channel} title={title} hasUnread={unread > 0} onRemoved={onRemoved} />
       </span>
-    </button>
+    </div>
   )
 }

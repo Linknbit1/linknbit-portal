@@ -25,8 +25,29 @@ interface MessageBubbleProps {
   onToggleReaction: (messageId: string, emoji: string) => void
 }
 
+/**
+ * Time with am/pm, plus a date once the message isn't from today — "2:45 PM"
+ * for today, "Yesterday 2:45 PM", then "12 Jul, 2:45 PM" (with the year when
+ * it isn't the current one).
+ */
 function timeOf(iso: string): string {
-  return new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+  const date = new Date(iso)
+  const time = date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })
+
+  const now = new Date()
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const startOfMessageDay = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+  const daysApart = Math.round((startOfToday.getTime() - startOfMessageDay.getTime()) / 86_400_000)
+
+  if (daysApart === 0) return time
+  if (daysApart === 1) return `Yesterday ${time}`
+
+  const day = date.toLocaleDateString([], {
+    day: 'numeric',
+    month: 'short',
+    ...(date.getFullYear() === now.getFullYear() ? {} : { year: 'numeric' }),
+  })
+  return `${day}, ${time}`
 }
 
 export function MessageBubble({
@@ -42,7 +63,11 @@ export function MessageBubble({
     return (
       <div className={cn('px-4 py-1 flex gap-3', startsGroup && 'mt-3')}>
         <span className="w-8 shrink-0" />
-        <p className="font-ui text-[12.5px] italic text-text-4">This message was deleted</p>
+        <p className="flex items-baseline gap-1.5 font-ui text-[12.5px] italic text-text-4">
+          This message was deleted
+          {/* The deletion time, not created_at — that's the moment that matters here. */}
+          <span className="font-mono text-[10px] not-italic">{timeOf(message.deleted_at)}</span>
+        </p>
       </div>
     )
   }
