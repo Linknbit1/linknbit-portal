@@ -29,18 +29,6 @@
       "purpose": "any"
     },
     {
-      "src": "/splash/android-splash-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/splash/android-splash-1024x1024.png",
-      "sizes": "1024x1024",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
       "src": "/icons/pwa-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
@@ -53,13 +41,13 @@
       "purpose": "any"
     },
     {
-      "src": "/splash/android-splash-maskable-512x512.png",
+      "src": "/icons/pwa-maskable-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/splash/android-splash-maskable-1024x1024.png",
+      "src": "/icons/pwa-maskable-1024x1024.png",
       "sizes": "1024x1024",
       "type": "image/png",
       "purpose": "maskable"

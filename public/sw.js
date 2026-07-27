@@ -1,4 +1,7 @@
-const CACHE_NAME = 'linknbit-portal-v5'
+// Bumped for the app-icon fix: the old cache holds the previous manifest, which
+// pointed the icons at splash art. Without a new name, installed clients would
+// keep serving the stale manifest and the banner icon with it.
+const CACHE_NAME = 'linknbit-portal-v6'
 const PRECACHE_URLS = [
   '/',
   '/index.html',
@@ -21,10 +24,8 @@ const PRECACHE_URLS = [
   '/icons/apple-touch-icon.png',
   '/icons/pwa-192x192.png',
   '/icons/pwa-512x512.png',
-  '/splash/android-splash-512x512.png',
-  '/splash/android-splash-1024x1024.png',
-  '/splash/android-splash-maskable-512x512.png',
-  '/splash/android-splash-maskable-1024x1024.png',
+  '/icons/pwa-maskable-512x512.png',
+  '/icons/pwa-maskable-1024x1024.png',
   '/splash/linknbit-splash.svg',
 ]
 
