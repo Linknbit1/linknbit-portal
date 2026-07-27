@@ -84,54 +84,30 @@ export async function fetchChannel(id: string): Promise<ChannelListItem | null> 
   }
 }
 
-/** Named channel + its member rows. Creator becomes the channel owner. */
+/**
+ * Creates a channel with its owner, members, and role grants in one atomic
+ * call. This has to be a single server-side function: the channels SELECT
+ * policy requires membership, so an INSERT ... RETURNING from the client fails
+ * on the way back — the creator isn't a member until the next statement.
+ */
 export async function createChannel(args: CreateChannelArgs): Promise<ChannelRow> {
-  const { data: auth } = await supabase.auth.getUser()
-  const me = auth.user?.id ?? null
-
-  const { data: channel, error } = await supabase
-    .from('channels')
-    .insert({
-      kind: 'channel',
-      name: args.name,
-      description: args.description ?? null,
-      is_private: args.isPrivate ?? false,
-      created_by: me,
-    })
-    .select()
-    .single()
+  const { data: channelId, error } = await supabase.rpc('fn_create_channel', {
+    p_name: args.name,
+    p_description: args.description ?? undefined,
+    p_is_private: args.isPrivate ?? false,
+    p_member_ids: args.memberIds,
+    p_roles: args.roles ?? [],
+  })
   if (error) throw error
 
-  const rows = [
-    { channel_id: channel.id, profile_id: me!, role_in_channel: 'owner' },
-    ...args.memberIds
-      .filter((id) => id !== me)
-      .map((profile_id) => ({ channel_id: channel.id, profile_id, role_in_channel: 'member' })),
-  ]
-
-  const { error: memberError } = await supabase
-    .from('channel_members')
-    .upsert(rows, { onConflict: 'channel_id,profile_id' })
-  if (memberError) {
-    // Don't leave a channel nobody can reach behind.
-    await supabase.from('channels').delete().eq('id', channel.id)
-    throw memberError
-  }
-
-  // Roles come after the owner row exists, since granting one requires being
-  // the channel's owner (or a channel manager).
-  for (const role of args.roles ?? []) {
-    const { error: roleError } = await supabase.rpc('fn_add_channel_role', {
-      p_channel_id: channel.id,
-      p_role: role,
-    })
-    if (roleError) {
-      await supabase.from('channels').delete().eq('id', channel.id)
-      throw roleError
-    }
-  }
-
-  return channel
+  // Readable now that the owner row exists.
+  const { data, error: fetchError } = await supabase
+    .from('channels')
+    .select('*')
+    .eq('id', channelId)
+    .single()
+  if (fetchError) throw fetchError
+  return data
 }
 
 /** Returns the existing 1:1 dm with this person, or creates it. */

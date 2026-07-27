@@ -48,12 +48,16 @@ export function AppShell() {
   return (
     <NavChromeContext.Provider value={{ hasBack, setHasBack }}>
       <FileViewerProvider>
-        <div className="flex min-h-dvh w-full flex-col bg-bg-base">
+        {/* Fixed viewport height, not min-height: `main` is the scroll container,
+            so a page can hand its own scrolling to an inner element (the chat
+            message list) instead of growing the document. min-h-0 on the row and
+            main is what lets those children shrink below their content. */}
+        <div className="flex h-dvh w-full flex-col overflow-hidden bg-bg-base">
           <ImpersonationBanner />
-          <div className="flex w-full flex-1">
+          <div className="flex w-full min-h-0 flex-1">
             <Sidebar />
             {/* pb clears the mobile bottom tab bar (incl. the home-indicator safe area). */}
-            <main ref={mainRef} className="flex-1 min-w-0 flex flex-col bg-bg-base overflow-x-hidden pb-safe-nav lg:pb-0">
+            <main ref={mainRef} className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden bg-bg-base pb-safe-nav lg:pb-0">
               <Outlet />
             </main>
             <BottomTabBar />

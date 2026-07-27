@@ -13,7 +13,7 @@ import { useChatUnreadMap } from '../../hooks/useChatUnreadCount'
 import { useCanAccess } from '../../hooks/useRoleFlags'
 import { useAuthContext } from '../../context/AuthContext'
 
-type Filter = 'all' | 'unread' | 'channels' | 'dms'
+type Filter = 'channels' | 'dms'
 
 function SectionLabel({ children }: { children: ReactNode }) {
   return (
@@ -37,7 +37,7 @@ export function ConversationListPane({ activeChannelId, onSelect, onNewChannel, 
   const { data: channels = [], isLoading } = useChannels()
   const unreadMap = useChatUnreadMap()
   const canCreateChannels = useCanAccess('can_create_channels')
-  const [filter, setFilter] = useState<Filter>('all')
+  const [filter, setFilter] = useState<Filter>('channels')
   const [search, setSearch] = useState('')
   const [newOpen, setNewOpen] = useState(false)
   const newBtnRef = useRef<HTMLButtonElement>(null)
@@ -48,7 +48,6 @@ export function ConversationListPane({ activeChannelId, onSelect, onNewChannel, 
   const shown = useMemo(() => {
     const q = query.toLowerCase()
     return channels.filter((c) => {
-      if (filter === 'unread' && !unreadMap.get(c.id)) return false
       if (filter === 'channels' && c.kind !== 'channel') return false
       if (filter === 'dms' && c.kind === 'channel') return false
       if (!q) return true
@@ -58,7 +57,7 @@ export function ConversationListPane({ activeChannelId, onSelect, onNewChannel, 
       const memberNames = c.members.map((m) => m.name.toLowerCase())
       return title.includes(q) || memberNames.some((n) => n.includes(q))
     })
-  }, [channels, filter, query, unreadMap, profile?.id])
+  }, [channels, filter, query, profile?.id])
 
   // Message hits are grouped per conversation so one busy thread can't flood
   // the results, and rows for conversations already listed above are dropped.
@@ -116,7 +115,7 @@ export function ConversationListPane({ activeChannelId, onSelect, onNewChannel, 
         </div>
 
         <div className="flex items-center gap-1">
-          {(['all', 'unread', 'channels', 'dms'] as const).map((f) => (
+          {(['channels', 'dms'] as const).map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
@@ -140,7 +139,9 @@ export function ConversationListPane({ activeChannelId, onSelect, onNewChannel, 
               ? 'No conversations yet. Start one with the + button.'
               : query
                 ? `Nothing matches "${query}".`
-                : 'Nothing matches those filters.'}
+                : filter === 'channels'
+                  ? 'No channels yet.'
+                  : 'No direct messages yet.'}
           </p>
         ) : (
           <>

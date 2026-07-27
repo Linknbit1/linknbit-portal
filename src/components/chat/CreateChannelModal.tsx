@@ -61,7 +61,7 @@ export function CreateChannelModal({ open, onClose, onCreated }: CreateChannelMo
         </div>
       }
     >
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 p-5">
         <div className="flex flex-col gap-1.5">
           <label htmlFor="channel-name" className="font-mono text-[11px] uppercase tracking-wider text-text-4">Name</label>
           <Input

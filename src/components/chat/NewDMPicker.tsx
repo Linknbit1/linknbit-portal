@@ -37,7 +37,7 @@ export function NewDMPicker({ open, onClose, onCreated }: NewDMPickerProps) {
 
   return (
     <Modal open={open} onClose={() => { setSearch(''); onClose() }} title="New message" busy={isPending}>
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3 p-5">
         <div className="relative">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-4 pointer-events-none" />
           <Input
