@@ -19,6 +19,10 @@ export interface CreateChannelArgs {
   name: string
   description?: string | null
   memberIds: string[]
+  /** Roles granted the channel — every current holder is added as a member. */
+  roles?: string[]
+  /** Confidential: only channel managers may add people. */
+  isPrivate?: boolean
 }
 
 /**
@@ -87,7 +91,13 @@ export async function createChannel(args: CreateChannelArgs): Promise<ChannelRow
 
   const { data: channel, error } = await supabase
     .from('channels')
-    .insert({ kind: 'channel', name: args.name, description: args.description ?? null, created_by: me })
+    .insert({
+      kind: 'channel',
+      name: args.name,
+      description: args.description ?? null,
+      is_private: args.isPrivate ?? false,
+      created_by: me,
+    })
     .select()
     .single()
   if (error) throw error
@@ -106,6 +116,19 @@ export async function createChannel(args: CreateChannelArgs): Promise<ChannelRow
     // Don't leave a channel nobody can reach behind.
     await supabase.from('channels').delete().eq('id', channel.id)
     throw memberError
+  }
+
+  // Roles come after the owner row exists, since granting one requires being
+  // the channel's owner (or a channel manager).
+  for (const role of args.roles ?? []) {
+    const { error: roleError } = await supabase.rpc('fn_add_channel_role', {
+      p_channel_id: channel.id,
+      p_role: role,
+    })
+    if (roleError) {
+      await supabase.from('channels').delete().eq('id', channel.id)
+      throw roleError
+    }
   }
 
   return channel

@@ -9,3 +9,12 @@ export const SETTINGS_ROLES: readonly string[] = [
 
 /** Client-portal roles. The /client/* tree is restricted to these. */
 export const CLIENT_ROLES: readonly string[] = ['client_owner', 'client_member']
+
+/**
+ * Roles a chat channel can be granted to. Client-portal roles are excluded —
+ * chat is internal-only, and the channel_roles CHECK constraint enforces the
+ * same list server-side.
+ */
+export const CHANNEL_ROLE_OPTIONS: readonly string[] = [
+  'super_admin', 'admin', 'project_manager', 'team_lead', 'employee', 'hr', 'finance',
+]

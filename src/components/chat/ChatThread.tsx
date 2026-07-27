@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { type JSONContent } from '@tiptap/react'
-import { Hash, Users as UsersIcon, PanelRight } from 'lucide-react'
+import { Hash, Users as UsersIcon, PanelRight, Lock } from 'lucide-react'
 import { Avatar } from '../ui/Avatar'
 import { cn } from '../../lib/cn'
 import { ConversationInfoPanel } from './ConversationInfoPanel'
@@ -87,7 +87,12 @@ export function ChatThread({ channelId, hideHeader }: ChatThreadProps) {
             <Avatar name={counterpart?.name ?? '?'} src={counterpart?.avatar_url ?? undefined} size="sm" />
           )}
           <div className="min-w-0">
-            <h2 className="font-display font-bold text-[15px] text-text-1 truncate">{title}</h2>
+            <h2 className="flex items-center gap-1.5 truncate font-display text-[15px] font-bold text-text-1">
+              {title}
+              {channel?.is_private && (
+                <Lock size={12} className="shrink-0 text-text-3" aria-label="Private channel" />
+              )}
+            </h2>
             {channel?.description && (
               <p className="font-ui text-[11.5px] text-text-4 truncate">{channel.description}</p>
             )}

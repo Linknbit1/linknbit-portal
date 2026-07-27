@@ -526,6 +526,7 @@ export type Database = {
       }
       channel_members: {
         Row: {
+          added_via_role: string | null
           channel_id: string
           created_at: string
           hidden_at: string | null
@@ -535,6 +536,7 @@ export type Database = {
           role_in_channel: string
         }
         Insert: {
+          added_via_role?: string | null
           channel_id: string
           created_at?: string
           hidden_at?: string | null
@@ -544,6 +546,7 @@ export type Database = {
           role_in_channel?: string
         }
         Update: {
+          added_via_role?: string | null
           channel_id?: string
           created_at?: string
           hidden_at?: string | null
@@ -569,6 +572,42 @@ export type Database = {
           },
         ]
       }
+      channel_roles: {
+        Row: {
+          channel_id: string
+          created_at: string
+          created_by: string | null
+          role: string
+        }
+        Insert: {
+          channel_id: string
+          created_at?: string
+          created_by?: string | null
+          role: string
+        }
+        Update: {
+          channel_id?: string
+          created_at?: string
+          created_by?: string | null
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channel_roles_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "channels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_roles_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       channels: {
         Row: {
           created_at: string
@@ -576,6 +615,7 @@ export type Database = {
           description: string | null
           id: string
           is_archived: boolean
+          is_private: boolean
           kind: string
           name: string | null
           updated_at: string
@@ -586,6 +626,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_archived?: boolean
+          is_private?: boolean
           kind: string
           name?: string | null
           updated_at?: string
@@ -596,6 +637,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_archived?: boolean
+          is_private?: boolean
           kind?: string
           name?: string | null
           updated_at?: string
@@ -3045,6 +3087,10 @@ export type Database = {
       }
       delete_task_cascade: { Args: { p_task_id: string }; Returns: string[] }
       expire_reward_pools: { Args: never; Returns: undefined }
+      fn_add_channel_role: {
+        Args: { p_channel_id: string; p_role: string }
+        Returns: undefined
+      }
       fn_all_internal_staff: {
         Args: never
         Returns: {
@@ -3088,6 +3134,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      fn_remove_channel_role: {
+        Args: { p_channel_id: string; p_role: string }
+        Returns: undefined
+      }
       fn_request_approvers: {
         Args: { p_requester: string }
         Returns: {
@@ -3113,6 +3163,10 @@ export type Database = {
           timezone: string
           work_end_time: string
         }[]
+      }
+      fn_sync_channel_role: {
+        Args: { p_channel_id: string; p_role: string }
+        Returns: undefined
       }
       fn_toggle_reaction: {
         Args: { p_emoji: string; p_message_id: string }

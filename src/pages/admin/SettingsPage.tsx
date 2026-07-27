@@ -270,6 +270,9 @@ const FEATURE_LABELS: Record<string, string> = {
   can_view_all_attendance:  'View All Attendance (vs own team)',
   can_govern_gamification:  'Govern Gamification',
   can_recognize:            'Post Quests & Shoutouts',
+  can_create_channels:      'Create Channels',
+  can_manage_all_channels:  'Manage Any Channel (members, roles, delete)',
+  can_delete_any_message:   'Delete Any Message',
 }
 
 const FEATURE_SECTIONS: { label: string; features: string[] }[] = [
@@ -280,6 +283,7 @@ const FEATURE_SECTIONS: { label: string; features: string[] }[] = [
   { label: 'Reports',      features: ['can_view_reports'] },
   { label: 'Attendance',   features: ['can_manage_attendance', 'can_approve_requests', 'can_view_all_attendance'] },
   { label: 'Gamification', features: ['can_govern_gamification', 'can_recognize'] },
+  { label: 'Chat',         features: ['can_create_channels', 'can_manage_all_channels', 'can_delete_any_message'] },
 ]
 
 /**
