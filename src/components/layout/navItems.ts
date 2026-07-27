@@ -75,6 +75,17 @@ const GAMIFICATION_CHILDREN: NavItem[] = [
 // cannot view the team tab, so the page is a dead end for them.
 const STANDUP_ROLES = ['super_admin', 'admin', 'hr', 'project_manager', 'team_lead', 'employee'] as const
 
+/** Roles with a team board to review — the same set `isAuthoritative()` covers. */
+const STANDUP_REVIEW_ROLES = ['super_admin', 'admin', 'hr', 'project_manager', 'team_lead'] as const
+
+/** Standup sub-pages — each is its own route at /standup/:section. */
+const STANDUP_CHILDREN: NavItem[] = [
+  { label: 'My Standup', icon: ClipboardList, to: '/standup',          roles: STANDUP_ROLES },
+  { label: 'Team',       icon: ClipboardList, to: '/standup/team',     roles: STANDUP_REVIEW_ROLES },
+  { label: 'History',    icon: ClipboardList, to: '/standup/history',  roles: STANDUP_ROLES },
+  { label: 'Settings',   icon: ClipboardList, to: '/standup/settings', feature: 'can_manage_standups' },
+]
+
 export const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', icon: LayoutDashboard, to: '/dashboard', primaryMobile: true },
   { label: 'Projects', icon: FolderOpen, to: '/admin/projects' },
@@ -89,7 +100,7 @@ export const NAV_ITEMS: NavItem[] = [
   // `to` is rewritten below: managers land on Daily Records, everyone else on their
   // own self-service view (the old hardcoded /attendance/records bounced 4 of 7 roles).
   { label: 'Attendance', icon: CalendarCheck, to: '/attendance', matchPrefix: '/attendance', primaryMobile: true, children: ATTENDANCE_CHILDREN },
-  { label: 'Standup', icon: ClipboardList, to: '/standup', roles: STANDUP_ROLES },
+  { label: 'Standup', icon: ClipboardList, to: '/standup', matchPrefix: '/standup', roles: STANDUP_ROLES, children: STANDUP_CHILDREN },
   { label: 'Gamification', icon: Trophy, to: '/gamification/leaderboard', matchPrefix: '/gamification', primaryMobile: true, children: GAMIFICATION_CHILDREN },
   { label: 'Reports', icon: BarChart2, to: '/admin/reports', devOnly: true, feature: 'can_view_reports' },
   { label: 'Audit Log', icon: ShieldAlert, to: '/admin/audit', feature: 'can_view_audit_log' },

@@ -7,7 +7,7 @@ import { RoleGuard } from './components/layout/RoleGuard'
 import { AppShell } from './components/layout/AppShell'
 import { ClientShell } from './components/layout/ClientShell'
 import { showWipFeatures } from './lib/featureFlags'
-import { SETTINGS_ROLES, CLIENT_ROLES } from './constants/roles'
+import { SETTINGS_ROLES, CLIENT_ROLES, STANDUP_REVIEW_ROLES } from './constants/roles'
 
 import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
@@ -20,6 +20,9 @@ import NotificationsPage from './pages/NotificationsPage'
 import InboxPage from './pages/InboxPage'
 import ChatPage from './pages/ChatPage'
 import StandupPage from './pages/StandupPage'
+import StandupTeamPage from './pages/StandupTeamPage'
+import StandupHistoryPage from './pages/StandupHistoryPage'
+import StandupSettingsPage from './pages/StandupSettingsPage'
 import { AttendanceSectionScreen, TeamAttendanceSectionScreen } from './pages/AttendanceMobile'
 import { GamificationSectionScreen } from './pages/admin/GamificationPage'
 import AdminProjectsPage from './pages/admin/ProjectsPage'
@@ -75,6 +78,16 @@ export default function App() {
                 <Route path="/chat" element={<ChatPage />} />
                 <Route path="/chat/:channelId" element={<ChatPage />} />
                 <Route path="/standup" element={<StandupPage />} />
+                {/* Team board: reviewers only. RLS scopes leads/PMs to their own team. */}
+                <Route
+                  path="/standup/team"
+                  element={<RoleGuard allowedRoles={STANDUP_REVIEW_ROLES}><StandupTeamPage /></RoleGuard>}
+                />
+                <Route path="/standup/history" element={<StandupHistoryPage />} />
+                <Route
+                  path="/standup/settings"
+                  element={<RoleGuard feature="can_manage_standups"><StandupSettingsPage /></RoleGuard>}
+                />
                 <Route path="/attendance" element={<AttendancePage />} />
                 <Route path="/attendance/team/:sub" element={<TeamAttendanceSectionScreen />} />
                 <Route path="/attendance/:section" element={<AttendanceSectionScreen />} />
