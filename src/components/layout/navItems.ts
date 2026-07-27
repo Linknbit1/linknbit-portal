@@ -22,10 +22,34 @@ import { useAuditDangerCount } from '../../hooks/useAuditLog'
 import { useChatUnreadTotal } from '../../hooks/useChatUnreadCount'
 import { useAuthContext } from '../../context/AuthContext'
 
+/**
+ * Sidebar sections, in render order. The flat list had grown to 14 top-level
+ * entries (34 destinations for an admin) mixing four unrelated kinds of work, so
+ * they are grouped rather than split into separate portals — every role sees
+ * broadly the same list, and a portal switcher would add a mode without removing
+ * anything.
+ */
+export const NAV_GROUPS = [
+  { id: 'workspace', label: 'Workspace' },
+  { id: 'delivery',  label: 'Delivery' },
+  { id: 'people',    label: 'People' },
+  { id: 'admin',     label: 'Admin' },
+] as const
+
+export type NavGroupId = typeof NAV_GROUPS[number]['id']
+
+export interface NavGroup {
+  id: NavGroupId
+  label: string
+  items: NavItem[]
+}
+
 export interface NavItem {
   label: string
   icon: LucideIcon
   to: string
+  /** Sidebar section this belongs to. Sub-pages inherit their parent's. */
+  group?: NavGroupId
   badge?: number
   // Not yet production-ready — only rendered in development builds.
   devOnly?: boolean
@@ -87,24 +111,37 @@ const STANDUP_CHILDREN: NavItem[] = [
 ]
 
 export const NAV_ITEMS: NavItem[] = [
-  { label: 'Dashboard', icon: LayoutDashboard, to: '/dashboard', primaryMobile: true },
-  { label: 'Projects', icon: FolderOpen, to: '/admin/projects' },
-  { label: 'Tasks', icon: CheckSquare, to: '/admin/tasks' },
-  { label: 'Inbox', icon: Inbox, to: '/inbox' },
-  { label: 'Chat', icon: MessageCircle, to: '/chat', matchPrefix: '/chat', primaryMobile: true },
-  { label: 'Clients', icon: UserCircle, to: '/admin/clients', feature: 'can_manage_clients' },
-  // Directory views: everyone internal can browse people/teams. The management
-  // actions inside are gated on can_manage_people; RLS blocks writes regardless.
-  { label: 'Teams', icon: Users, to: '/teams' },
-  { label: 'People', icon: UserCog, to: '/people' },
+  // Workspace — what someone opens to do their own day.
+  { label: 'Dashboard', icon: LayoutDashboard, to: '/dashboard', group: 'workspace', primaryMobile: true },
+  { label: 'Inbox', icon: Inbox, to: '/inbox', group: 'workspace' },
+  { label: 'Chat', icon: MessageCircle, to: '/chat', group: 'workspace', matchPrefix: '/chat', primaryMobile: true },
+  // A daily personal ritual for employees; reviewers reach the team board through
+  // its own sub-page, so it belongs here rather than under People.
+  { label: 'Standup', icon: ClipboardList, to: '/standup', group: 'workspace', matchPrefix: '/standup', roles: STANDUP_ROLES, children: STANDUP_CHILDREN },
+  // Personal for most roles (My Devices, Notifications); the admin-only sections
+  // filter themselves in-page. Grouping it under Admin would put an "Admin"
+  // heading in front of all seven roles and mean nothing.
+  { label: 'Settings', icon: Settings, to: '/settings', group: 'workspace', roles: SETTINGS_ROLES },
+
+  // Delivery — the client work itself.
+  { label: 'Projects', icon: FolderOpen, to: '/admin/projects', group: 'delivery' },
+  { label: 'Tasks', icon: CheckSquare, to: '/admin/tasks', group: 'delivery' },
+  { label: 'Clients', icon: UserCircle, to: '/admin/clients', group: 'delivery', feature: 'can_manage_clients' },
+
+  // People — who works here, when, and how they are recognised.
   // `to` is rewritten below: managers land on Daily Records, everyone else on their
   // own self-service view (the old hardcoded /attendance/records bounced 4 of 7 roles).
-  { label: 'Attendance', icon: CalendarCheck, to: '/attendance', matchPrefix: '/attendance', primaryMobile: true, children: ATTENDANCE_CHILDREN },
-  { label: 'Standup', icon: ClipboardList, to: '/standup', matchPrefix: '/standup', roles: STANDUP_ROLES, children: STANDUP_CHILDREN },
-  { label: 'Gamification', icon: Trophy, to: '/gamification/leaderboard', matchPrefix: '/gamification', primaryMobile: true, children: GAMIFICATION_CHILDREN },
-  { label: 'Reports', icon: BarChart2, to: '/admin/reports', devOnly: true, feature: 'can_view_reports' },
-  { label: 'Audit Log', icon: ShieldAlert, to: '/admin/audit', feature: 'can_view_audit_log' },
-  { label: 'Settings', icon: Settings, to: '/settings', roles: SETTINGS_ROLES },
+  { label: 'Attendance', icon: CalendarCheck, to: '/attendance', group: 'people', matchPrefix: '/attendance', primaryMobile: true, children: ATTENDANCE_CHILDREN },
+  // Directory views: everyone internal can browse people/teams. The management
+  // actions inside are gated on can_manage_people; RLS blocks writes regardless.
+  { label: 'Teams', icon: Users, to: '/teams', group: 'people' },
+  { label: 'People', icon: UserCog, to: '/people', group: 'people' },
+  { label: 'Gamification', icon: Trophy, to: '/gamification/leaderboard', group: 'people', matchPrefix: '/gamification', primaryMobile: true, children: GAMIFICATION_CHILDREN },
+
+  // Admin — governance only, so the section genuinely disappears for the five
+  // roles that have none of it.
+  { label: 'Reports', icon: BarChart2, to: '/admin/reports', group: 'admin', devOnly: true, feature: 'can_view_reports' },
+  { label: 'Audit Log', icon: ShieldAlert, to: '/admin/audit', group: 'admin', feature: 'can_view_audit_log' },
 ]
 
 type CanFn = (feature: string) => boolean
@@ -156,7 +193,29 @@ export function useNavItems(): NavItem[] {
   })
 }
 
+/**
+ * Buckets already-filtered items into the sidebar sections. A section with no
+ * items for this role is dropped entirely, so nobody sees a bare heading (an
+ * employee has no Admin section at all).
+ */
+export function groupNavItems(items: NavItem[]): NavGroup[] {
+  return NAV_GROUPS.flatMap(({ id, label }) => {
+    const groupItems = items.filter((item) => (item.group ?? 'workspace') === id)
+    return groupItems.length > 0 ? [{ id, label, items: groupItems }] : []
+  })
+}
+
+/** Nav items for the signed-in user, grouped into sidebar sections. */
+export function useNavGroups(): NavGroup[] {
+  return groupNavItems(useNavItems())
+}
+
 /** Secondary destinations for the mobile "More" tab (everything not in the bottom bar). */
 export function useMoreNavItems(): NavItem[] {
   return useNavItems().filter((item) => !item.primaryMobile)
+}
+
+/** The same "More" destinations, grouped — mobile gets the sections too. */
+export function useMoreNavGroups(): NavGroup[] {
+  return groupNavItems(useMoreNavItems())
 }

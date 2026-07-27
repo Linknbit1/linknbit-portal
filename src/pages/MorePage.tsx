@@ -5,7 +5,7 @@ import { HubRow } from '../components/layout/MobileHub'
 import { InstallAppButton } from '../components/pwa/InstallAppButton'
 import { Avatar } from '../components/ui/Avatar'
 import { RoleBadge } from '../components/shared/RoleBadge'
-import { useMoreNavItems } from '../components/layout/navItems'
+import { useMoreNavGroups } from '../components/layout/navItems'
 import { useAuthContext } from '../context/AuthContext'
 import { useIsDesktop } from '../hooks/useMediaQuery'
 import type { UserRole } from '../types'
@@ -17,7 +17,7 @@ export default function MorePage() {
   const navigate = useNavigate()
   const { profile, signOut } = useAuthContext()
   // Must run before the early return — hooks cannot be called conditionally.
-  const items = useMoreNavItems()
+  const groups = useMoreNavGroups()
 
   if (isDesktop) return <Navigate to="/dashboard" replace />
 
@@ -45,11 +45,17 @@ export default function MorePage() {
           </button>
         )}
 
-        <div className="flex flex-col gap-2.5">
-          {items.map((item) => (
-            <HubRow key={item.to} to={item.to} label={item.label} icon={item.icon} badge={item.badge} />
-          ))}
-        </div>
+        {/* Same sections as the desktop sidebar, so the two agree. */}
+        {groups.map((group) => (
+          <section key={group.id} className="flex flex-col gap-2.5">
+            <h2 className="text-[10px] font-ui font-semibold text-text-4 uppercase tracking-widest px-1">
+              {group.label}
+            </h2>
+            {group.items.map((item) => (
+              <HubRow key={item.to} to={item.to} label={item.label} icon={item.icon} badge={item.badge} />
+            ))}
+          </section>
+        ))}
 
         {/* PWA install — self-gates to null when not installable / already installed. */}
         <InstallAppButton />
