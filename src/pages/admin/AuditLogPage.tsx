@@ -22,6 +22,7 @@ const ROW_GRID =
 const MODULE_OPTIONS = [
   { value: 'all', label: 'All modules' },
   { value: 'attendance', label: 'Attendance' },
+  { value: 'standup', label: 'Standup' },
   { value: 'gamification', label: 'Gamification' },
   { value: 'projects', label: 'Projects' },
   { value: 'access', label: 'Access' },
@@ -36,12 +37,14 @@ const SEVERITY_SEGMENTS: { value: AuditSeverity | 'all'; label: string; active: 
 
 const MODULE_CHIP: Record<string, string> = {
   attendance:   'text-service-dev border-[rgba(34,211,238,0.22)] bg-[rgba(34,211,238,0.1)]',
+  standup:      'text-success border-success/25 bg-success/10',
   gamification: 'text-service-design border-[rgba(167,139,250,0.22)] bg-[rgba(167,139,250,0.1)]',
   projects:     'text-service-mkt border-[rgba(251,191,36,0.22)] bg-[rgba(251,191,36,0.1)]',
   access:       'text-brand-red border-[rgba(238,39,55,0.22)] bg-[rgba(238,39,55,0.1)]',
 }
 const MODULE_LABEL: Record<string, string> = {
-  attendance: 'Attendance', gamification: 'Gamification', projects: 'Projects', access: 'Access',
+  attendance: 'Attendance', standup: 'Standup', gamification: 'Gamification',
+  projects: 'Projects', access: 'Access',
 }
 
 const SEVERITY_ICON: Record<string, typeof Info> = { danger: ShieldAlert, warning: AlertTriangle, info: Info }

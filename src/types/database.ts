@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       approvals: {
@@ -2587,9 +2562,79 @@ export type Database = {
           },
         ]
       }
+      standup_participants: {
+        Row: {
+          is_required: boolean
+          note: string | null
+          profile_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          is_required: boolean
+          note?: string | null
+          profile_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          is_required?: boolean
+          note?: string | null
+          profile_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "standup_participants_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "standup_participants_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      standup_role_settings: {
+        Row: {
+          is_required: boolean
+          role: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          is_required?: boolean
+          role: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          is_required?: boolean
+          role?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "standup_role_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       standups: {
         Row: {
           created_at: string
+          edit_count: number
+          edited_at: string | null
           id: string
           is_late: boolean
           notes: string | null
@@ -2600,6 +2645,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          edit_count?: number
+          edited_at?: string | null
           id?: string
           is_late?: boolean
           notes?: string | null
@@ -2610,6 +2657,8 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          edit_count?: number
+          edited_at?: string | null
           id?: string
           is_late?: boolean
           notes?: string | null
@@ -3148,14 +3197,21 @@ export type Database = {
         Args: { p_channel_id: string; p_muted: boolean }
         Returns: undefined
       }
+      fn_standup_participant: { Args: { p_profile: string }; Returns: boolean }
+      fn_standup_required: {
+        Args: { p_date: string; p_profile: string }
+        Returns: boolean
+      }
       fn_standup_window: {
         Args: { p_profile: string }
         Returns: {
           already_done: boolean
+          can_edit: boolean
           closes_at: string
           is_open: boolean
           is_required: boolean
           is_working_day: boolean
+          my_standup_id: string
           on_time_until: string
           opens_at: string
           server_now: string
@@ -3248,6 +3304,14 @@ export type Database = {
         Args: { p_profile_id: string; p_team_ids: string[] }
         Returns: undefined
       }
+      set_standup_participation: {
+        Args: { p_mode: string; p_note?: string; p_profile: string }
+        Returns: undefined
+      }
+      set_standup_role_requirement: {
+        Args: { p_required: boolean; p_role: string }
+        Returns: undefined
+      }
       shares_team_with: { Args: { p_other: string }; Returns: boolean }
       standup_roster: {
         Args: { p_date: string }
@@ -3266,10 +3330,12 @@ export type Database = {
         Args: never
         Returns: {
           already_done: boolean
+          can_edit: boolean
           closes_at: string
           is_open: boolean
           is_required: boolean
           is_working_day: boolean
+          my_standup_id: string
           on_time_until: string
           opens_at: string
           server_now: string
@@ -3288,6 +3354,10 @@ export type Database = {
       }
       submit_standup: {
         Args: { p_entries: Json; p_notes?: string }
+        Returns: string
+      }
+      update_standup: {
+        Args: { p_entries: Json; p_notes?: string; p_standup_id: string }
         Returns: string
       }
     }
@@ -3421,9 +3491,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       queue_status: ["pending", "processing", "done", "failed"],
