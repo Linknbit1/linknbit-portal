@@ -33,8 +33,7 @@ import { useDeleteProject, useProject, useProjectDeleteImpact, useUpdateProject 
 import { useServiceStages, useDeleteStage } from '../../hooks/useStages'
 import { useTasks } from '../../hooks/useTasks'
 import {
-  useProjectServices, useProjectServiceMembers, useRemoveServiceMember,
-  useAddProjectService, useRemoveProjectService,
+  useProjectServices, useProjectServiceMembers, useRemoveServiceMember, useRemoveProjectService,
 } from '../../hooks/useProjectServices'
 import { useServices } from '../../hooks/useServices'
 import { useUsableTemplates, useApplyTemplate } from '../../hooks/useTemplates'
@@ -43,6 +42,7 @@ import { useRealtimeTasks } from '../../hooks/realtime/useRealtimeTasks'
 import { StageFormModal } from './StageFormModal'
 import { TaskFormModal } from './TaskFormModal'
 import { AddProjectMemberModal } from './AddProjectMemberModal'
+import { AddProjectServiceModal } from './AddProjectServiceModal'
 import { ApprovalModal } from './ApprovalModal'
 import { TaskDetailDrawer } from './TaskDetailDrawer'
 import type { StageRow } from '../../api/stages'
@@ -89,7 +89,6 @@ export default function ProjectDetailPage() {
   const watch = useProjectWatch(id)
   const deleteStage = useDeleteStage()
   const removeMember = useRemoveServiceMember()
-  const addService = useAddProjectService()
   const removeService = useRemoveProjectService()
   const requestApproval = useRequestApproval()
   const reviewApproval = useReviewApproval()
@@ -106,6 +105,7 @@ export default function ProjectDetailPage() {
   // Which service the "add member" modal is filling — the picker is per service now.
   const [addMemberFor, setAddMemberFor] = useState<string | null>(null)
   const [pendingServiceRemoval, setPendingServiceRemoval] = useState<string | null>(null)
+  const [showAddService, setShowAddService] = useState(false)
   const [showStageForm, setShowStageForm] = useState(false)
   const [editingStage, setEditingStage] = useState<StageRow | null>(null)
   const [showTaskForm, setShowTaskForm] = useState(false)
@@ -274,17 +274,9 @@ export default function ProjectDetailPage() {
             )
           })}
           {canManage && unusedServices.length > 0 && (
-            <Select
-              value=""
-              placeholder="+ Add service"
-              size="sm"
-              className="w-44"
-              options={unusedServices.map((c) => ({ value: c.id, label: c.name, dot: c.color }))}
-              onChange={(serviceId) => addService.mutate({ projectId: id, serviceId }, {
-                onSuccess: (created) => { setPickedServiceId(created.id); toast('Service added', 'success') },
-                onError: (e) => toast(e instanceof Error ? e.message : 'Failed', 'error'),
-              })}
-            />
+            <Button size="sm" variant="secondary" iconLeft={<Plus size={13} />} onClick={() => setShowAddService(true)}>
+              Add service
+            </Button>
           )}
         </div>
 
@@ -459,6 +451,14 @@ export default function ProjectDetailPage() {
       </div>
 
       {showEdit && <ProjectFormModal project={project} onClose={() => setShowEdit(false)} />}
+      {showAddService && (
+        <AddProjectServiceModal
+          projectId={id}
+          options={unusedServices.map((c) => ({ id: c.id, name: c.name, color: c.color }))}
+          onAdded={setPickedServiceId}
+          onClose={() => setShowAddService(false)}
+        />
+      )}
       {addMemberFor && (
         <AddProjectMemberModal
           projectId={id}
