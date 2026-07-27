@@ -53,7 +53,7 @@ export function ChannelMembersModal({ open, onClose, channelId, canManage }: Cha
 
   return (
     <Modal open={open} onClose={onClose} title={`Members (${members.length})`}>
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 p-5">
         {canManage && (
           <div className="flex flex-col gap-2">
             <span className="font-mono text-[11px] uppercase tracking-wider text-text-4">Roles with access</span>
