@@ -38,8 +38,9 @@ export interface StandupEntryInput {
 }
 
 export interface StandupEntryDetail extends StandupEntryRow {
-  project: { id: string; name: string; service_type: string } | null
-  task: { id: string; title: string } | null
+  project: { id: string; name: string } | null
+  /** The service is read off the linked task's block, when there is one. */
+  task: { id: string; title: string; project_service: { service: { slug: string } | null } | null } | null
 }
 
 export interface StandupDetail extends StandupRow {
@@ -104,7 +105,7 @@ export async function updateStandup(
 }
 
 const STANDUP_SELECT =
-  '*, profile:profiles(id,name,avatar_url), entries:standup_entries(*, project:projects(id,name,service_type), task:tasks(id,title))'
+  '*,profile:profiles(id,name,avatar_url),entries:standup_entries(*,project:projects(id,name),task:tasks(id,title,project_service:project_services(service:services(slug))))'
 
 /** Standups submitted on a date (management sees all; staff see their own). */
 export async function fetchStandupsByDate(date: string): Promise<StandupDetail[]> {

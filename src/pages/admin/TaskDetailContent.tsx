@@ -25,7 +25,7 @@ import { useToast } from '../../components/ui/toast-context'
 import { formatRelativeTime, PRIORITY_LABELS, STATUS_LABELS } from '../../lib/utils'
 import { useTask, useUpdateTask, useDeleteTask, useTaskDeleteImpact } from '../../hooks/useTasks'
 import { useStages } from '../../hooks/useStages'
-import { useProjectMembers } from '../../hooks/useProjectMembers'
+import { useProjectServiceMembers } from '../../hooks/useProjectServices'
 import { useProjectFiles } from '../../hooks/useAttachments'
 import { fileKind } from '../../lib/attachment'
 import { useSubtasks, useCreateSubtask, useToggleSubtask, useDeleteSubtask } from '../../hooks/useSubtasks'
@@ -57,7 +57,12 @@ export function TaskDetailContent({ taskId, onClosed, wide }: TaskDetailContentP
 
   const projectId = task?.project_id
   const { data: stages = [] } = useStages(projectId)
-  const { data: members = [] } = useProjectMembers(projectId)
+  const { data: allMembers = [] } = useProjectServiceMembers(projectId)
+  // Assignable people are the ones staffed on this task's service, not the whole project.
+  const members = useMemo(
+    () => allMembers.filter((m) => m.project_service_id === task?.project_service_id),
+    [allMembers, task?.project_service_id],
+  )
   const { data: projectFiles = [] } = useProjectFiles(projectId)
   const fileItems = useMemo(() => projectFiles.map((f) => ({
     id: f.id, name: f.file_name, kind: f.kind === 'link' ? 'link' : fileKind(f.mime_type, f.file_name),
@@ -127,7 +132,7 @@ export function TaskDetailContent({ taskId, onClosed, wide }: TaskDetailContentP
       {/* Header */}
       <div className="space-y-2">
         <div className="flex items-center gap-2 flex-wrap">
-          <ServiceChip service={task.project?.service_type ?? task.service_type ?? ''} />
+          {task.project_service?.service && <ServiceChip service={task.project_service.service.slug} />}
           {task.project?.name && <span className="font-ui text-[12px] text-text-3">{task.project.name}</span>}
         </div>
         <h2 className="font-display font-bold text-[18px] text-text-1">{task.title}</h2>

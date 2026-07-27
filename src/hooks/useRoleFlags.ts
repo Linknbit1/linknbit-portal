@@ -54,7 +54,7 @@ export const useCanManageClients = () => useCanAccess('can_manage_clients')
 export const useCanManageAttendance = () => useCanAccess('can_manage_attendance')
 export const useCanApproveRequests = () => useCanAccess('can_approve_requests')
 export const useCanApproveTasks = () => useCanAccess('can_approve_tasks')
-export const useCanDeleteProjects = () => useCanAccess('can_delete_projects')
+export const useCanManageProjects = () => useCanAccess('can_manage_projects')
 export const useCanGovernGamification = () => useCanAccess('can_govern_gamification')
 export const useCanRecognize = () => useCanAccess('can_recognize')
 

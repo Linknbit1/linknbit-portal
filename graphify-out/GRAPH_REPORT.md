@@ -1,12 +1,12 @@
 # Graph Report - linknbit-portal  (2026-07-27)
 
 ## Corpus Check
-- 274 files · ~359,769 words
+- 274 files · ~361,882 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2019 nodes · 2742 edges · 44 communities detected
-- Extraction: 87% EXTRACTED · 13% INFERRED · 0% AMBIGUOUS · INFERRED: 364 edges (avg confidence: 0.8)
+- 2028 nodes · 2767 edges · 44 communities detected
+- Extraction: 86% EXTRACTED · 14% INFERRED · 0% AMBIGUOUS · INFERRED: 375 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Community Hubs (Navigation)
@@ -32,31 +32,31 @@
 - [[_COMMUNITY_Community 21|Community 21]]
 - [[_COMMUNITY_Community 22|Community 22]]
 - [[_COMMUNITY_Community 23|Community 23]]
-- [[_COMMUNITY_Community 26|Community 26]]
-- [[_COMMUNITY_Community 28|Community 28]]
-- [[_COMMUNITY_Community 30|Community 30]]
-- [[_COMMUNITY_Community 32|Community 32]]
+- [[_COMMUNITY_Community 24|Community 24]]
+- [[_COMMUNITY_Community 27|Community 27]]
+- [[_COMMUNITY_Community 29|Community 29]]
+- [[_COMMUNITY_Community 31|Community 31]]
 - [[_COMMUNITY_Community 33|Community 33]]
 - [[_COMMUNITY_Community 34|Community 34]]
 - [[_COMMUNITY_Community 35|Community 35]]
-- [[_COMMUNITY_Community 37|Community 37]]
+- [[_COMMUNITY_Community 36|Community 36]]
 - [[_COMMUNITY_Community 38|Community 38]]
 - [[_COMMUNITY_Community 40|Community 40]]
 - [[_COMMUNITY_Community 44|Community 44]]
-- [[_COMMUNITY_Community 46|Community 46]]
+- [[_COMMUNITY_Community 45|Community 45]]
+- [[_COMMUNITY_Community 47|Community 47]]
 - [[_COMMUNITY_Community 50|Community 50]]
+- [[_COMMUNITY_Community 51|Community 51]]
 - [[_COMMUNITY_Community 52|Community 52]]
-- [[_COMMUNITY_Community 53|Community 53]]
 - [[_COMMUNITY_Community 56|Community 56]]
 - [[_COMMUNITY_Community 60|Community 60]]
 - [[_COMMUNITY_Community 62|Community 62]]
 - [[_COMMUNITY_Community 69|Community 69]]
 - [[_COMMUNITY_Community 74|Community 74]]
-- [[_COMMUNITY_Community 77|Community 77]]
-- [[_COMMUNITY_Community 134|Community 134]]
+- [[_COMMUNITY_Community 132|Community 132]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `select()` - 164 edges
+1. `select()` - 168 edges
 2. `toast()` - 89 edges
 3. `$()` - 85 edges
 4. `switchPanel()` - 42 edges
@@ -83,19 +83,19 @@
 
 ### Community 0 - "Community 0"
 Cohesion: 0.01
-Nodes (160): fetchApprovals(), requestApproval(), reviewApproval(), inferContentType(), addAttachmentLink(), fetchAttachmentById(), fetchAttachments(), fetchProjectFiles() (+152 more)
+Nodes (159): fetchApprovals(), requestApproval(), reviewApproval(), inferContentType(), addAttachmentLink(), fetchAttachmentById(), fetchAttachments(), fetchProjectFiles() (+151 more)
 
 ### Community 1 - "Community 1"
 Cohesion: 0.02
-Nodes (213): handleSend(), handleCheckIn(), handleCheckOut(), $(), addColumn(), addCommentLink(), addImage(), addLink() (+205 more)
+Nodes (215): handleSend(), handleCheckIn(), handleCheckOut(), deleteMessageAttachment(), $(), addColumn(), addCommentLink(), addImage() (+207 more)
 
 ### Community 2 - "Community 2"
 Cohesion: 0.02
-Nodes (61): AppShell(), AttendancePage(), useAuthContext(), remove(), ClientFormModal(), CreateChannelModal(), ImpersonationBanner(), filterNavItems() (+53 more)
+Nodes (104): Always-active conventions (every phase), code:block1 (Phase 0: Project Setup), code:block10 (src/api/gamification.ts     — fetchXpTransactions(), fetchRe), code:block11 (src/hooks/useGamification.ts    — useXpTransactions(), useRe), code:block12 (src/lib/deviceUtils.ts), code:bash (supabase migration new create_teams_table), code:block14 (src/api/attendance.ts   — checkIn(), checkOut(), fetchMyAtte), code:block15 (src/hooks/useAttendance.ts   — useMyAttendance(), useAllAtte) (+96 more)
 
 ### Community 3 - "Community 3"
-Cohesion: 0.02
-Nodes (104): Always-active conventions (every phase), code:block1 (Phase 0: Project Setup), code:block10 (src/api/gamification.ts     — fetchXpTransactions(), fetchRe), code:block11 (src/hooks/useGamification.ts    — useXpTransactions(), useRe), code:block12 (src/lib/deviceUtils.ts), code:bash (supabase migration new create_teams_table), code:block14 (src/api/attendance.ts   — checkIn(), checkOut(), fetchMyAtte), code:block15 (src/hooks/useAttendance.ts   — useMyAttendance(), useAllAtte) (+96 more)
+Cohesion: 0.03
+Nodes (45): AppShell(), AttendancePage(), useAuthContext(), filterNavItems(), useMoreNavItems(), useNavItems(), HomeRedirect(), PrivateRoute() (+37 more)
 
 ### Community 4 - "Community 4"
 Cohesion: 0.02
@@ -103,7 +103,7 @@ Nodes (83): **10\. Final Notes**, **1\. Overview**, **2\. Core Objectives**, **3
 
 ### Community 5 - "Community 5"
 Cohesion: 0.03
-Nodes (41): fileKind(), previewMode(), validateAttachmentFile(), deleteAttachment(), getAttachmentUrl(), handleDownload(), handleFiles(), bucketOf() (+33 more)
+Nodes (33): AddProjectMemberModal(), remove(), ClientFormModal(), CreateChannelModal(), ImpersonationBanner(), NewDMPicker(), SalaryCard(), SalaryForm() (+25 more)
 
 ### Community 6 - "Community 6"
 Cohesion: 0.03
@@ -126,84 +126,84 @@ Cohesion: 0.04
 Nodes (32): patch(), run(), detectBrowser(), detectOs(), fallbackHash(), getDeviceFingerprint(), getDeviceName(), getDeviceToken() (+24 more)
 
 ### Community 13 - "Community 13"
+Cohesion: 0.06
+Nodes (27): chatContentType(), safeStorageName(), validateChatAttachmentFile(), calcStreak(), fetchMessageAttachments(), insertRow(), linkAttachmentsToMessage(), purgeMessageAttachments() (+19 more)
+
+### Community 14 - "Community 14"
 Cohesion: 0.05
 Nodes (42): 10. Row Level Security Policies, Attachments, Attendance, Audit Logs, Checklists & Checklist Items, ClickUp Status Mappings, Clients, code:sql (CREATE OR REPLACE FUNCTION current_user_role() RETURNS text ) (+34 more)
 
-### Community 14 - "Community 14"
-Cohesion: 0.07
-Nodes (10): formatRelativeTime(), grantLp(), asDifficulty(), difficultyMeta(), handleClaim(), handleGrant(), handleRedeem(), nameOf() (+2 more)
-
 ### Community 15 - "Community 15"
-Cohesion: 0.08
-Nodes (12): validateAvatarFile(), dcExport(), dcFlatten(), DCSection(), DesignCanvas(), onPickAvatar(), save(), add() (+4 more)
+Cohesion: 0.06
+Nodes (19): fileKind(), previewMode(), validateAttachmentFile(), deleteAttachment(), getAttachmentUrl(), handleDownload(), handleFiles(), bucketOf() (+11 more)
 
 ### Community 16 - "Community 16"
 Cohesion: 0.07
-Nodes (27): Claude Design Prompt, code:md (Design a comprehensive UI design system for a product called), code:md (Using the Linknbit Unified Operations Portal design system, ), code:md (Using the Linknbit Unified Operations Portal design system, ), code:md (Using the Linknbit Unified Operations Portal design system, ), code:md (Using the Linknbit Unified Operations Portal design system, ), code:md (Design a comprehensive UI design system for a product called), code:md (Using the Linknbit Unified Operations Portal design system e) (+19 more)
+Nodes (10): formatRelativeTime(), grantLp(), asDifficulty(), difficultyMeta(), handleClaim(), handleGrant(), handleRedeem(), nameOf() (+2 more)
 
 ### Community 17 - "Community 17"
-Cohesion: 0.09
-Nodes (9): isAuthoritative(), officeTime(), MyStandup(), StandupPage(), useSetStandupParticipation(), useSetStandupRoleRequirement(), useSettingsInvalidation(), useStandupWindow() (+1 more)
+Cohesion: 0.08
+Nodes (12): validateAvatarFile(), dcExport(), dcFlatten(), DCSection(), DesignCanvas(), onPickAvatar(), save(), add() (+4 more)
 
 ### Community 18 - "Community 18"
+Cohesion: 0.07
+Nodes (27): Claude Design Prompt, code:md (Design a comprehensive UI design system for a product called), code:md (Using the Linknbit Unified Operations Portal design system, ), code:md (Using the Linknbit Unified Operations Portal design system, ), code:md (Using the Linknbit Unified Operations Portal design system, ), code:md (Using the Linknbit Unified Operations Portal design system, ), code:md (Design a comprehensive UI design system for a product called), code:md (Using the Linknbit Unified Operations Portal design system e) (+19 more)
+
+### Community 19 - "Community 19"
 Cohesion: 0.13
 Nodes (22): **1.10 Special Shoutouts (Examples)**, **1.11 System Discipline & Participation Restrictions**, **1.12 System Rules Summary**, **1.13 Simple Understanding of System**, **1.14 Final Note**, **1.1 Purpose of the System**, **1.2 System Overview**, **1.3 Currency System (Link Points \- LP)** (+14 more)
 
-### Community 19 - "Community 19"
+### Community 20 - "Community 20"
 Cohesion: 0.12
 Nodes (13): Attendance, code:php (wp_insert_user([), code:php ([), code:php (current_user_can('manage_options')), code:php (current_user_can('linknbit_war_room_manage')), code:js (const apiRoot = window.linknbitWarRoomSettings.restUrl;), code:php (wp_localize_script('linknbit-war-room', 'linknbitWarRoomSett), Database (+5 more)
 
-### Community 20 - "Community 20"
+### Community 21 - "Community 21"
 Cohesion: 0.19
 Nodes (8): centerActiveTab(), confirm(), fmt2(), isHourDisabled(), scrollTo(), selectHour(), snapMin(), toAmPm()
 
-### Community 21 - "Community 21"
+### Community 22 - "Community 22"
 Cohesion: 0.15
 Nodes (3): fmtClock(), fmtDay(), handleImpersonate()
 
-### Community 22 - "Community 22"
+### Community 23 - "Community 23"
 Cohesion: 0.24
 Nodes (6): dayStr(), isDisabled(), isSelected(), isToday(), select(), toStr()
 
-### Community 23 - "Community 23"
+### Community 24 - "Community 24"
 Cohesion: 0.18
 Nodes (3): handleCheckIn(), handleCheckOut(), handleRegister()
 
-### Community 26 - "Community 26"
+### Community 27 - "Community 27"
 Cohesion: 0.4
 Nodes (9): androidSplashIconSvg(), glyph(), main(), out(), png(), render(), splashSvg(), squareIcon() (+1 more)
 
-### Community 28 - "Community 28"
+### Community 29 - "Community 29"
 Cohesion: 0.4
 Nodes (8): b64urlToUint8(), bufToB64url(), getCurrentSubscription(), permissionState(), pushSupported(), subscribeThisDevice(), toBrowserSubscription(), unsubscribeThisDevice()
 
-### Community 30 - "Community 30"
+### Community 31 - "Community 31"
 Cohesion: 0.25
 Nodes (2): ServiceChip(), useServices()
 
-### Community 32 - "Community 32"
+### Community 33 - "Community 33"
 Cohesion: 0.29
 Nodes (2): useFlatMessages(), useMessages()
 
-### Community 33 - "Community 33"
+### Community 34 - "Community 34"
 Cohesion: 0.32
 Nodes (4): formatDate(), formatRelativeTime(), getDaysUntil(), isOverdue()
 
-### Community 34 - "Community 34"
+### Community 35 - "Community 35"
 Cohesion: 0.43
 Nodes (7): deleteProjectCascade(), deleteStorageObjects(), deleteTaskCascade(), fetchProjectDeleteImpact(), fetchTaskDeleteImpact(), readCount(), taskIdsForProject()
 
-### Community 35 - "Community 35"
+### Community 36 - "Community 36"
 Cohesion: 0.25
 Nodes (6): code:bash (node preview-server.js), Files, Fixes Applied, Preview Login, Viewing It, WordPress Integration Direction
 
-### Community 37 - "Community 37"
+### Community 38 - "Community 38"
 Cohesion: 0.38
 Nodes (5): handleSubmit(), isPriority(), isStatus(), toPriority(), toStatus()
-
-### Community 38 - "Community 38"
-Cohesion: 0.33
-Nodes (2): itemCls(), cn()
 
 ### Community 40 - "Community 40"
 Cohesion: 0.33
@@ -213,7 +213,11 @@ Nodes (3): useFileViewer(), RichRenderer(), useFileRefClick()
 Cohesion: 0.4
 Nodes (3): fetchChannelMembers(), leaveChannel(), removeChannelMember()
 
-### Community 46 - "Community 46"
+### Community 45 - "Community 45"
+Cohesion: 0.33
+Nodes (2): itemCls(), cn()
+
+### Community 47 - "Community 47"
 Cohesion: 0.33
 Nodes (5): code:js (export default defineConfig([), code:js (// eslint.config.js), Expanding the ESLint configuration, React Compiler, React + TypeScript + Vite
 
@@ -221,11 +225,11 @@ Nodes (5): code:js (export default defineConfig([), code:js (// eslint.config.js
 Cohesion: 0.4
 Nodes (2): fileRefExtension(), renderSuggestion()
 
-### Community 52 - "Community 52"
+### Community 51 - "Community 51"
 Cohesion: 0.5
 Nodes (2): isIos(), usePwaInstall()
 
-### Community 53 - "Community 53"
+### Community 52 - "Community 52"
 Cohesion: 0.6
 Nodes (3): useAddChannelRole(), useRemoveChannelRole(), useRoleMutation()
 
@@ -249,26 +253,22 @@ Nodes (2): handleDrop(), statusOf()
 Cohesion: 0.67
 Nodes (1): handleSync()
 
-### Community 77 - "Community 77"
-Cohesion: 0.67
-Nodes (1): handleSubmit()
-
-### Community 134 - "Community 134"
+### Community 132 - "Community 132"
 Cohesion: 1.0
 Nodes (1): graphify
 
 ## Knowledge Gaps
 - **237 isolated node(s):** `graphify`, `Color Naming Convention`, `Typography`, `Border Radius`, `Internal Portal (dark mode — default)` (+232 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **Thin community `Community 30`** (8 nodes): `ServiceChip()`, `ServiceChip.tsx`, `useServices.ts`, `useCreateService()`, `useDeleteService()`, `useServices()`, `useServiceUsage()`, `useUpdateService()`
+- **Thin community `Community 31`** (8 nodes): `ServiceChip()`, `ServiceChip.tsx`, `useServices.ts`, `useCreateService()`, `useDeleteService()`, `useServices()`, `useServiceUsage()`, `useUpdateService()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 32`** (8 nodes): `useMessages.ts`, `useDeleteMessage()`, `useEditMessage()`, `useFlatMessages()`, `useMarkChannelRead()`, `useMessages()`, `useMessageSearch()`, `useSendMessage()`
+- **Thin community `Community 33`** (8 nodes): `useMessages.ts`, `useDeleteMessage()`, `useEditMessage()`, `useFlatMessages()`, `useMarkChannelRead()`, `useMessages()`, `useMessageSearch()`, `useSendMessage()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 38`** (6 nodes): `itemCls()`, `cn()`, `FileTypeIcon()`, `formatDate()`, `BottomTabBar.tsx`, `FilesPage.tsx`
+- **Thin community `Community 45`** (6 nodes): `itemCls()`, `cn()`, `FileTypeIcon()`, `formatDate()`, `BottomTabBar.tsx`, `FilesPage.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 50`** (5 nodes): `fileRefExtension()`, `iconFor()`, `fileMention.tsx`, `suggestionUtils.tsx`, `renderSuggestion()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 52`** (5 nodes): `usePwaInstall.ts`, `emit()`, `isIos()`, `isStandalone()`, `usePwaInstall()`
+- **Thin community `Community 51`** (5 nodes): `usePwaInstall.ts`, `emit()`, `isIos()`, `isStandalone()`, `usePwaInstall()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 56`** (4 nodes): `fmtDate()`, `handleRegister()`, `statusMeta()`, `MyDevicesCard.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
@@ -278,20 +278,18 @@ Nodes (1): graphify
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 74`** (3 nodes): `cn()`, `handleSync()`, `ClickUpPage.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 77`** (3 nodes): `handleSubmit()`, `isStatus()`, `ProjectFormModal.tsx`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 134`** (2 nodes): `AGENTS.md`, `graphify`
+- **Thin community `Community 132`** (2 nodes): `AGENTS.md`, `graphify`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `toast()` connect `Community 1` to `Community 5`, `Community 37`, `Community 7`, `Community 74`, `Community 11`, `Community 77`, `Community 14`, `Community 15`, `Community 21`, `Community 23`, `Community 56`?**
-  _High betweenness centrality (0.141) - this node is a cross-community bridge._
-- **Why does `select()` connect `Community 0` to `Community 10`, `Community 34`, `Community 44`, `Community 5`?**
-  _High betweenness centrality (0.137) - this node is a cross-community bridge._
-- **Are the 162 inferred relationships involving `select()` (e.g. with `fetchComments()` and `createComment()`) actually correct?**
-  _`select()` has 162 INFERRED edges - model-reasoned connections that need verification._
+- **Why does `select()` connect `Community 0` to `Community 10`, `Community 35`, `Community 44`, `Community 13`?**
+  _High betweenness centrality (0.140) - this node is a cross-community bridge._
+- **Why does `toast()` connect `Community 1` to `Community 38`, `Community 7`, `Community 74`, `Community 11`, `Community 15`, `Community 16`, `Community 17`, `Community 22`, `Community 56`, `Community 24`?**
+  _High betweenness centrality (0.135) - this node is a cross-community bridge._
+- **Are the 166 inferred relationships involving `select()` (e.g. with `fetchComments()` and `createComment()`) actually correct?**
+  _`select()` has 166 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 46 inferred relationships involving `toast()` (e.g. with `add()` and `openFile()`) actually correct?**
   _`toast()` has 46 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `graphify`, `Color Naming Convention`, `Typography` to the rest of the system?**

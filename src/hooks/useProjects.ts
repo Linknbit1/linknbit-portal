@@ -32,9 +32,11 @@ export function useProject(id: string | undefined) {
 export function useCreateProject() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (payload: TablesInsert<'projects'>) => createProject(payload),
+    mutationFn: ({ payload, serviceIds }: { payload: TablesInsert<'projects'>; serviceIds: string[] }) =>
+      createProject(payload, serviceIds),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: PROJECT_KEYS.all })
+      qc.invalidateQueries({ queryKey: ['project_services'] })
       qc.invalidateQueries({ queryKey: ['clients'] })
     },
   })

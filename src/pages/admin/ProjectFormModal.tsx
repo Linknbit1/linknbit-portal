@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Check } from 'lucide-react'
 import { Modal } from '../../components/ui/Modal'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -12,6 +13,7 @@ import { useCreateProject, useUpdateProject } from '../../hooks/useProjects'
 import { useCanAccess } from '../../hooks/useRoleFlags'
 import { useToast } from '../../components/ui/toast-context'
 import { PROJECT_STATUS_LABELS } from '../../lib/utils'
+import { cn } from '../../lib/cn'
 import type { ProjectListItem, ProjectStatus } from '../../api/projects'
 import type { ProjectStatus as AppProjectStatus } from '../../types'
 
@@ -36,7 +38,9 @@ export function ProjectFormModal({ project, onClose }: ProjectFormModalProps) {
 
   const [name, setName] = useState(project?.name ?? '')
   const [clientId, setClientId] = useState(project?.client_id ?? '')
-  const [serviceType, setServiceType] = useState(project?.service_type ?? '')
+  // Services are only chosen at creation; afterwards they are managed on the
+  // project page, where each one carries its own stages, tasks and people.
+  const [serviceIds, setServiceIds] = useState<string[]>([])
   const [managerId, setManagerId] = useState(project?.manager_id ?? '')
   const [status, setStatus] = useState<ProjectStatus>(project?.status ?? 'in_progress')
   const [startDate, setStartDate] = useState(project?.start_date ?? '')
@@ -46,7 +50,7 @@ export function ProjectFormModal({ project, onClose }: ProjectFormModalProps) {
   const [clientVisible, setClientVisible] = useState(project?.client_visible ?? false)
 
   const clientOptions = clients.map((c) => ({ value: c.id, label: c.name }))
-  const serviceOptions = services.map((s) => ({ value: s.slug, label: s.name, dot: s.color }))
+  const activeServices = services.filter((s) => s.is_active)
   const managerOptions = [
     { value: '', label: 'Unassigned' },
     ...people.filter((p) => p.is_active).map((p) => ({ value: p.id, label: p.name, avatar: { name: p.name, url: p.avatar_url } })),
@@ -56,11 +60,10 @@ export function ProjectFormModal({ project, onClose }: ProjectFormModalProps) {
 
   const handleSubmit = () => {
     if (!name.trim()) { toast('Project name is required', 'error'); return }
-    if (!serviceType) { toast('Choose a service', 'error'); return }
+    if (!isEdit && serviceIds.length === 0) { toast('Choose at least one service', 'error'); return }
     const payload = {
       name: name.trim(),
       client_id: clientId || null,
-      service_type: serviceType,
       manager_id: managerId || null,
       status,
       start_date: startDate || null,
@@ -73,7 +76,7 @@ export function ProjectFormModal({ project, onClose }: ProjectFormModalProps) {
     const onError = (e: unknown) => toast(e instanceof Error ? e.message : 'Save failed', 'error')
 
     if (isEdit) updateProject.mutate({ id: project.id, updates: payload }, { onSuccess, onError })
-    else createProject.mutate(payload, { onSuccess, onError })
+    else createProject.mutate({ payload, serviceIds }, { onSuccess, onError })
   }
 
   return (
@@ -92,14 +95,42 @@ export function ProjectFormModal({ project, onClose }: ProjectFormModalProps) {
     >
       <div className="p-5 space-y-4">
         <Input label="Project name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Cricket Sansar App" autoFocus />
+        {!isEdit && (
+          <div className="space-y-1.5">
+            <label className="text-label font-ui font-semibold text-text-2 uppercase tracking-wider">Services</label>
+            <div className="flex flex-wrap gap-1.5">
+              {activeServices.map((s) => {
+                const picked = serviceIds.includes(s.id)
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    aria-pressed={picked}
+                    onClick={() => setServiceIds((prev) =>
+                      picked ? prev.filter((id) => id !== s.id) : [...prev, s.id])}
+                    className={cn(
+                      'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-ui text-[12px] transition-colors',
+                      picked
+                        ? 'border-border-strong bg-surface-3 text-text-1'
+                        : 'border-border-default bg-surface-2 text-text-3 hover:text-text-1',
+                    )}
+                  >
+                    <span className="size-2 rounded-full shrink-0" style={{ background: s.color }} />
+                    {s.name}
+                    {picked && <Check size={11} />}
+                  </button>
+                )
+              })}
+            </div>
+            <p className="font-mono text-[10.5px] text-text-4">
+              Each service gets its own stages, tasks and people. You can add more later.
+            </p>
+          </div>
+        )}
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <label className="text-label font-ui font-semibold text-text-2 uppercase tracking-wider">Client</label>
             <Select value={clientId} onChange={setClientId} options={clientOptions} placeholder="Select client…" />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-label font-ui font-semibold text-text-2 uppercase tracking-wider">Service</label>
-            <Select value={serviceType} onChange={setServiceType} options={serviceOptions} placeholder="Select service…" />
           </div>
           <div className="space-y-1.5">
             <label className="text-label font-ui font-semibold text-text-2 uppercase tracking-wider">Project manager</label>

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useCanDeleteProjects, useCanAccess } from '../../hooks/useRoleFlags'
+import { useCanManageProjects } from '../../hooks/useRoleFlags'
 import {
   List, Columns, Calendar, Flag, Plus, Search, ChevronRight, AlertCircle, SlidersHorizontal, Trash2,
 } from 'lucide-react'
@@ -69,9 +69,8 @@ export default function ProjectsPage() {
   const [showNew, setShowNew] = useState(false)
   const [pendingDelete, setPendingDelete] = useState<ProjectListItem | null>(null)
 
-  // Mirrors p_projects_insert, which now reads the same flag.
-  const canCreateProject = useCanAccess('can_create_projects')
-  const canDeleteProject = useCanDeleteProjects()
+  // Mirrors p_projects_insert and delete_project_cascade, which read the same flag.
+  const canManageProjects = useCanManageProjects()
 
   const { data: projects = [], isLoading } = useProjects()
   const { data: people = [] } = usePeople()
@@ -83,7 +82,7 @@ export default function ProjectsPage() {
     const q = search.trim().toLowerCase()
     const list = projects.filter((p) =>
       (!q || p.name.toLowerCase().includes(q) || (p.client?.name ?? '').toLowerCase().includes(q)) &&
-      (!serviceFilter || p.service_type === serviceFilter) &&
+      (!serviceFilter || p.services.some((s) => s.slug === serviceFilter)) &&
       (!statusFilter || p.status === statusFilter) &&
       (!managerFilter || p.manager_id === managerFilter) &&
       (!deadlineFrom || (!!p.deadline && p.deadline >= deadlineFrom)) &&
@@ -104,7 +103,7 @@ export default function ProjectsPage() {
             <h2 className="font-display font-bold text-[22px] text-text-1">Projects</h2>
             <p className="font-ui text-[13px] text-text-3">{filtered.length} of {projects.length} project{projects.length !== 1 ? 's' : ''}</p>
           </div>
-          {canCreateProject && (
+          {canManageProjects && (
             <Button size="sm" className="ml-auto" iconLeft={<Plus size={15} />} onClick={() => setShowNew(true)}>New Project</Button>
           )}
         </div>
@@ -154,10 +153,10 @@ export default function ProjectsPage() {
         {isLoading ? (
           <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-16" />)}</div>
         ) : projects.length === 0 ? (
-          <EmptyState onNew={() => setShowNew(true)} canCreate={canCreateProject} />
+          <EmptyState onNew={() => setShowNew(true)} canCreate={canManageProjects} />
         ) : (
           <>
-            {view === 'list' && <ListView projects={filtered} onOpen={(id) => navigate(`/admin/projects/${id}`)} onDelete={setPendingDelete} canDelete={canDeleteProject} />}
+            {view === 'list' && <ListView projects={filtered} onOpen={(id) => navigate(`/admin/projects/${id}`)} onDelete={setPendingDelete} canDelete={canManageProjects} />}
             {view === 'kanban' && <KanbanView projects={filtered} onOpen={(id) => navigate(`/admin/projects/${id}`)} />}
             {view === 'timeline' && <TimelineView projects={filtered} onOpen={(id) => navigate(`/admin/projects/${id}`)} />}
             {view === 'milestones' && <MilestonesView onOpen={(id) => navigate(`/admin/projects/${id}`)} />}
@@ -235,7 +234,11 @@ function ListView({ projects, onOpen, onDelete, canDelete }: { projects: Project
                 <p className="font-mono text-[10.5px] text-text-4">{p.task_count} task{p.task_count !== 1 ? 's' : ''}</p>
               </td>
               <td className="px-4 py-3 text-[12.5px] text-text-2">{p.client?.name ?? '—'}</td>
-              <td className="px-4 py-3"><ServiceChip service={p.service_type} /></td>
+              <td className="px-4 py-3">
+                <div className="flex flex-wrap items-center gap-1">
+                  {p.services.map((s) => <ServiceChip key={s.id} service={s.slug} />)}
+                </div>
+              </td>
               <td className="px-4 py-3"><StatusChip status={p.status} type="project" /></td>
               <td className="px-4 py-3">
                 <div className="flex items-center gap-2">
@@ -354,7 +357,9 @@ function KanbanView({ projects, onOpen }: { projects: ProjectListItem[]; onOpen:
                   )}
                 >
                   <div className="flex items-center justify-between gap-2 mb-2">
-                    <ServiceChip service={p.service_type} />
+                    <div className="flex flex-wrap items-center gap-1 min-w-0">
+                      {p.services.map((s) => <ServiceChip key={s.id} service={s.slug} showDot={false} />)}
+                    </div>
                     {p.deadline && isOverdue(p.deadline) && p.status !== 'completed' && <AlertCircle size={13} className="text-error shrink-0" />}
                   </div>
                   <p className="font-ui font-semibold text-body-sm/snug text-text-1">{p.name}</p>
@@ -406,7 +411,8 @@ function TimelineView({ projects, onOpen }: { projects: ProjectListItem[]; onOpe
           const end = new Date(p.deadline!).getTime()
           const left = ((start - min) / span) * 100
           const width = Math.max(((end - start) / span) * 100, 2)
-          const color = serviceColor(p.service_type)
+          // A bar is one row, so it takes the colour of the project's first service.
+          const color = p.services[0]?.color ?? serviceColor('')
           return (
             <div key={p.id} onClick={() => onOpen(p.id)} className="relative h-9 cursor-pointer group">
               <div className="absolute inset-0 rounded bg-surface-2/40" />

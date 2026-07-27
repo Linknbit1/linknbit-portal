@@ -3,11 +3,23 @@ import type { Tables, TablesInsert, TablesUpdate } from '../types/database'
 
 export type StageRow = Tables<'stages'>
 
+/** Every stage in a project, across all its services (ordered within each). */
 export async function fetchStages(projectId: string): Promise<StageRow[]> {
   const { data, error } = await supabase
     .from('stages')
     .select('*')
     .eq('project_id', projectId)
+    .order('order_index', { ascending: true })
+  if (error) throw error
+  return data
+}
+
+/** The pipeline of one service block. */
+export async function fetchServiceStages(projectServiceId: string): Promise<StageRow[]> {
+  const { data, error } = await supabase
+    .from('stages')
+    .select('*')
+    .eq('project_service_id', projectServiceId)
     .order('order_index', { ascending: true })
   if (error) throw error
   return data

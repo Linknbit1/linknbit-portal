@@ -59,9 +59,9 @@ function ServiceRow({ service, canManage }: { service: Service; canManage: boole
   const [name, setName] = useState(service.name)
   const [color, setColor] = useState(service.color)
   const [confirming, setConfirming] = useState(false)
-  const usage = useServiceUsage(service.slug, confirming)
+  const usage = useServiceUsage(service.slug, confirming, service.id)
   const dirty = name !== service.name || color !== service.color
-  const inUse = (usage.data?.people ?? 0) + (usage.data?.teams ?? 0) > 0
+  const inUse = (usage.data?.people ?? 0) + (usage.data?.teams ?? 0) + (usage.data?.projects ?? 0) > 0
 
   const save = () => update(
     { id: service.id, updates: { name: name.trim(), color } },
@@ -89,7 +89,7 @@ function ServiceRow({ service, canManage }: { service: Service; canManage: boole
         confirming ? (
           <div className="flex items-center gap-2">
             {usage.isLoading ? <Loader2 size={12} className="animate-spin text-text-4" />
-              : inUse ? <span className="font-mono text-[10.5px] text-error">In use: {usage.data?.people}p · {usage.data?.teams}t</span>
+              : inUse ? <span className="font-mono text-[10.5px] text-error">In use: {usage.data?.teams}t · {usage.data?.projects} project{usage.data?.projects === 1 ? '' : 's'}</span>
               : <button onClick={remove} disabled={deleting} className="font-mono text-[10.5px] text-error font-bold">Delete</button>}
             <button onClick={() => setConfirming(false)} className="font-mono text-[10.5px] text-text-3">Cancel</button>
           </div>
@@ -257,8 +257,7 @@ const ROLE_LABELS: Record<string, string> = {
   team_lead: 'Team Lead', employee: 'Employee', hr: 'HR', finance: 'Finance',
 }
 const FEATURE_LABELS: Record<string, string> = {
-  can_create_projects:      'Create Projects',
-  can_delete_projects:      'Delete Projects',
+  can_manage_projects:      'Manage Projects (create & delete)',
   can_view_budget:          'View Budget',
   can_view_confidential:    'View Confidential Docs',
   can_approve_tasks:        'Approve Tasks',
@@ -276,7 +275,7 @@ const FEATURE_LABELS: Record<string, string> = {
 }
 
 const FEATURE_SECTIONS: { label: string; features: string[] }[] = [
-  { label: 'Projects',     features: ['can_create_projects', 'can_delete_projects', 'can_view_budget', 'can_view_confidential'] },
+  { label: 'Projects',     features: ['can_manage_projects', 'can_view_budget', 'can_view_confidential'] },
   { label: 'Tasks',        features: ['can_approve_tasks'] },
   { label: 'Clients',      features: ['can_manage_clients'] },
   { label: 'People',       features: ['can_manage_people'] },

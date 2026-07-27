@@ -159,26 +159,29 @@ export async function fetchPersonTeams(profileId: string): Promise<PersonTeam[]>
 export interface PersonProject {
   id: string
   name: string
+  /** Slug of the service they work on within that project. */
   service_type: string
   status: string
   role_in_project: string | null
 }
 
-// RLS on project_members/projects scopes this to projects the viewer may see.
+// RLS on service_members/projects scopes this to projects the viewer may see.
+// One row per service the person works on, so someone on both Design and
+// Development of a project shows up under each.
 export async function fetchPersonProjects(profileId: string): Promise<PersonProject[]> {
   const { data, error } = await supabase
-    .from('project_members')
-    .select('role_in_project, project:projects(id, name, service_type, status)')
+    .from('service_members')
+    .select('role_in_service,project_service:project_services(service:services(slug),project:projects(id,name,status))')
     .eq('profile_id', profileId)
   if (error) throw error
   return data.flatMap((m) =>
-    m.project
+    m.project_service?.project
       ? [{
-          id: m.project.id,
-          name: m.project.name,
-          service_type: m.project.service_type,
-          status: m.project.status,
-          role_in_project: m.role_in_project,
+          id: m.project_service.project.id,
+          name: m.project_service.project.name,
+          service_type: m.project_service.service?.slug ?? '',
+          status: m.project_service.project.status,
+          role_in_project: m.role_in_service,
         }]
       : [],
   )
