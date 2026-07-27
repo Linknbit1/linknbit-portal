@@ -1,11 +1,11 @@
 # Graph Report - linknbit-portal  (2026-07-27)
 
 ## Corpus Check
-- 274 files · ~361,882 words
+- 274 files · ~362,314 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2028 nodes · 2767 edges · 44 communities detected
+- 2031 nodes · 2774 edges · 44 communities detected
 - Extraction: 86% EXTRACTED · 14% INFERRED · 0% AMBIGUOUS · INFERRED: 375 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
@@ -41,8 +41,8 @@
 - [[_COMMUNITY_Community 35|Community 35]]
 - [[_COMMUNITY_Community 36|Community 36]]
 - [[_COMMUNITY_Community 38|Community 38]]
-- [[_COMMUNITY_Community 40|Community 40]]
-- [[_COMMUNITY_Community 44|Community 44]]
+- [[_COMMUNITY_Community 39|Community 39]]
+- [[_COMMUNITY_Community 41|Community 41]]
 - [[_COMMUNITY_Community 45|Community 45]]
 - [[_COMMUNITY_Community 47|Community 47]]
 - [[_COMMUNITY_Community 50|Community 50]]
@@ -52,7 +52,7 @@
 - [[_COMMUNITY_Community 60|Community 60]]
 - [[_COMMUNITY_Community 62|Community 62]]
 - [[_COMMUNITY_Community 69|Community 69]]
-- [[_COMMUNITY_Community 74|Community 74]]
+- [[_COMMUNITY_Community 75|Community 75]]
 - [[_COMMUNITY_Community 132|Community 132]]
 
 ## God Nodes (most connected - your core abstractions)
@@ -87,7 +87,7 @@ Nodes (159): fetchApprovals(), requestApproval(), reviewApproval(), inferContent
 
 ### Community 1 - "Community 1"
 Cohesion: 0.02
-Nodes (215): handleSend(), handleCheckIn(), handleCheckOut(), deleteMessageAttachment(), $(), addColumn(), addCommentLink(), addImage() (+207 more)
+Nodes (214): handleSend(), handleSync(), handleCheckIn(), handleCheckOut(), $(), addColumn(), addCommentLink(), addImage() (+206 more)
 
 ### Community 2 - "Community 2"
 Cohesion: 0.02
@@ -95,15 +95,15 @@ Nodes (104): Always-active conventions (every phase), code:block1 (Phase 0: Proj
 
 ### Community 3 - "Community 3"
 Cohesion: 0.03
-Nodes (45): AppShell(), AttendancePage(), useAuthContext(), filterNavItems(), useMoreNavItems(), useNavItems(), HomeRedirect(), PrivateRoute() (+37 more)
+Nodes (36): AddProjectMemberModal(), AppShell(), remove(), ClientFormModal(), CreateChannelModal(), ImpersonationBanner(), NewDMPicker(), SalaryCard() (+28 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.02
-Nodes (83): **10\. Final Notes**, **1\. Overview**, **2\. Core Objectives**, **3\. Core Architecture Philosophy**, **4\. Service-Based System (Core Backbone)**, **5.1 Super Admin**, **5.2 Admin / Operations Manager**, **5.3 Project Manager** (+75 more)
+Cohesion: 0.03
+Nodes (45): AttendancePage(), useAuthContext(), filterNavItems(), groupNavItems(), useMoreNavGroups(), useMoreNavItems(), useNavGroups(), useNavItems() (+37 more)
 
 ### Community 5 - "Community 5"
-Cohesion: 0.03
-Nodes (33): AddProjectMemberModal(), remove(), ClientFormModal(), CreateChannelModal(), ImpersonationBanner(), NewDMPicker(), SalaryCard(), SalaryForm() (+25 more)
+Cohesion: 0.02
+Nodes (83): **10\. Final Notes**, **1\. Overview**, **2\. Core Objectives**, **3\. Core Architecture Philosophy**, **4\. Service-Based System (Core Backbone)**, **5.1 Super Admin**, **5.2 Admin / Operations Manager**, **5.3 Project Manager** (+75 more)
 
 ### Community 6 - "Community 6"
 Cohesion: 0.03
@@ -127,7 +127,7 @@ Nodes (32): patch(), run(), detectBrowser(), detectOs(), fallbackHash(), getDevi
 
 ### Community 13 - "Community 13"
 Cohesion: 0.06
-Nodes (27): chatContentType(), safeStorageName(), validateChatAttachmentFile(), calcStreak(), fetchMessageAttachments(), insertRow(), linkAttachmentsToMessage(), purgeMessageAttachments() (+19 more)
+Nodes (28): chatContentType(), safeStorageName(), validateChatAttachmentFile(), calcStreak(), deleteMessageAttachment(), fetchMessageAttachments(), insertRow(), linkAttachmentsToMessage() (+20 more)
 
 ### Community 14 - "Community 14"
 Cohesion: 0.05
@@ -205,17 +205,17 @@ Nodes (6): code:bash (node preview-server.js), Files, Fixes Applied, Preview Log
 Cohesion: 0.38
 Nodes (5): handleSubmit(), isPriority(), isStatus(), toPriority(), toStatus()
 
-### Community 40 - "Community 40"
+### Community 39 - "Community 39"
+Cohesion: 0.33
+Nodes (2): itemCls(), cn()
+
+### Community 41 - "Community 41"
 Cohesion: 0.33
 Nodes (3): useFileViewer(), RichRenderer(), useFileRefClick()
 
-### Community 44 - "Community 44"
+### Community 45 - "Community 45"
 Cohesion: 0.4
 Nodes (3): fetchChannelMembers(), leaveChannel(), removeChannelMember()
-
-### Community 45 - "Community 45"
-Cohesion: 0.33
-Nodes (2): itemCls(), cn()
 
 ### Community 47 - "Community 47"
 Cohesion: 0.33
@@ -249,9 +249,9 @@ Nodes (3): Answer, Q: Why does cn() connect Community 0 to Community 1, Communit
 Cohesion: 1.0
 Nodes (2): handleDrop(), statusOf()
 
-### Community 74 - "Community 74"
+### Community 75 - "Community 75"
 Cohesion: 0.67
-Nodes (1): handleSync()
+Nodes (1): handleSubmit()
 
 ### Community 132 - "Community 132"
 Cohesion: 1.0
@@ -264,7 +264,7 @@ Nodes (1): graphify
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 33`** (8 nodes): `useMessages.ts`, `useDeleteMessage()`, `useEditMessage()`, `useFlatMessages()`, `useMarkChannelRead()`, `useMessages()`, `useMessageSearch()`, `useSendMessage()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 45`** (6 nodes): `itemCls()`, `cn()`, `FileTypeIcon()`, `formatDate()`, `BottomTabBar.tsx`, `FilesPage.tsx`
+- **Thin community `Community 39`** (6 nodes): `itemCls()`, `cn()`, `FileTypeIcon()`, `formatDate()`, `BottomTabBar.tsx`, `FilesPage.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 50`** (5 nodes): `fileRefExtension()`, `iconFor()`, `fileMention.tsx`, `suggestionUtils.tsx`, `renderSuggestion()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
@@ -276,7 +276,7 @@ Nodes (1): graphify
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 69`** (3 nodes): `TaskBoard.tsx`, `handleDrop()`, `statusOf()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 74`** (3 nodes): `cn()`, `handleSync()`, `ClickUpPage.tsx`
+- **Thin community `Community 75`** (3 nodes): `handleSubmit()`, `isStatus()`, `ProjectFormModal.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 132`** (2 nodes): `AGENTS.md`, `graphify`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
@@ -284,10 +284,10 @@ Nodes (1): graphify
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `select()` connect `Community 0` to `Community 10`, `Community 35`, `Community 44`, `Community 13`?**
-  _High betweenness centrality (0.140) - this node is a cross-community bridge._
-- **Why does `toast()` connect `Community 1` to `Community 38`, `Community 7`, `Community 74`, `Community 11`, `Community 15`, `Community 16`, `Community 17`, `Community 22`, `Community 56`, `Community 24`?**
-  _High betweenness centrality (0.135) - this node is a cross-community bridge._
+- **Why does `toast()` connect `Community 1` to `Community 38`, `Community 7`, `Community 11`, `Community 75`, `Community 15`, `Community 16`, `Community 17`, `Community 22`, `Community 56`, `Community 24`?**
+  _High betweenness centrality (0.147) - this node is a cross-community bridge._
+- **Why does `select()` connect `Community 0` to `Community 35`, `Community 10`, `Community 45`, `Community 13`?**
+  _High betweenness centrality (0.138) - this node is a cross-community bridge._
 - **Are the 166 inferred relationships involving `select()` (e.g. with `fetchComments()` and `createComment()`) actually correct?**
   _`select()` has 166 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 46 inferred relationships involving `toast()` (e.g. with `add()` and `openFile()`) actually correct?**

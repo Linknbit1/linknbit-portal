@@ -2,13 +2,13 @@ import { useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { ChevronRight, ChevronDown } from 'lucide-react'
 import { cn } from '../../lib/cn'
-import { useNavItems, type NavItem } from './navItems'
+import { useNavGroups, type NavItem } from './navItems'
 import { LinknbitMark } from '../brand/LinknbitLogo'
 import { InstallAppButton } from '../pwa/InstallAppButton'
 
 export function Sidebar() {
   const location = useLocation()
-  const navItems = useNavItems()
+  const navGroups = useNavGroups()
 
   return (
     <aside className="w-sidebar-expanded bg-surface-1 border-r border-border-default hidden lg:flex flex-col sticky top-0 h-screen overflow-y-auto shrink-0">
@@ -24,13 +24,17 @@ export function Sidebar() {
         </button>
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 px-3 pt-3 pb-2 flex flex-col gap-px">
-        <p className="text-[10px] font-ui font-semibold text-text-4 uppercase tracking-widest p-2">
-          Main Menu
-        </p>
-        {navItems.map((item) => (
-          <NavRow key={item.to} item={item} pathname={location.pathname} />
+      {/* Nav — one section per kind of work; empty sections drop out per role. */}
+      <nav className="flex-1 px-3 pt-3 pb-2 flex flex-col">
+        {navGroups.map((group, i) => (
+          <section key={group.id} className={cn('flex flex-col gap-px', i > 0 && 'mt-3')}>
+            <h2 className="text-[10px] font-ui font-semibold text-text-4 uppercase tracking-widest px-2 pt-2 pb-1.5">
+              {group.label}
+            </h2>
+            {group.items.map((item) => (
+              <NavRow key={item.to} item={item} pathname={location.pathname} />
+            ))}
+          </section>
         ))}
       </nav>
 
