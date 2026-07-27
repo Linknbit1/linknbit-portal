@@ -30,6 +30,7 @@ import AdminProjectDetailPage from './pages/admin/ProjectDetailPage'
 import AdminTaskDetailPage from './pages/admin/TaskDetailPage'
 import ClientsPage from './pages/admin/ClientsPage'
 import TeamsPage from './pages/admin/TeamsPage'
+import TeamDetailPage from './pages/admin/TeamDetailPage'
 import PeoplePage from './pages/admin/PeoplePage'
 import TasksPage from './pages/admin/TasksPage'
 import ReportsPage from './pages/admin/ReportsPage'
@@ -111,6 +112,12 @@ export default function App() {
                 <Route
                   path="/teams"
                   element={<RoleGuard allowedRoles={SETTINGS_ROLES}><TeamsPage /></RoleGuard>}
+                />
+                {/* Single team — roster is open to all internal staff; the
+                    attendance and template tabs gate themselves in-page. */}
+                <Route
+                  path="/teams/:id"
+                  element={<RoleGuard allowedRoles={SETTINGS_ROLES}><TeamDetailPage /></RoleGuard>}
                 />
 
                 {/* Projects, Tasks & Clients — live for internal staff (RLS scopes data) */}

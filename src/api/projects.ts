@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import { applyTemplateToService } from './templates'
 import type { Tables, TablesInsert, TablesUpdate } from '../types/database'
 
 export type ProjectRow = Tables<'projects'>
@@ -109,29 +110,44 @@ export async function fetchProject(id: string): Promise<ProjectListItem | null> 
   return shapeProject(data)
 }
 
+/** A service to start the project with, optionally pre-filled from a template. */
+export interface NewProjectService {
+  serviceId: string
+  templateId?: string
+}
+
 /**
  * Creates a project together with the services it runs. A project without at
  * least one service has nowhere to hang stages, tasks or people, so the caller
- * must supply one.
+ * must supply one. Any service given a template gets that pipeline copied in.
  */
 export async function createProject(
-  payload: TablesInsert<'projects'>, serviceIds: string[],
+  payload: TablesInsert<'projects'>, services: NewProjectService[],
 ): Promise<ProjectRow> {
-  if (serviceIds.length === 0) throw new Error('Pick at least one service for this project')
+  if (services.length === 0) throw new Error('Pick at least one service for this project')
 
   const { data, error } = await supabase.from('projects').insert(payload).select().single()
   if (error) throw error
 
   const { data: auth } = await supabase.auth.getUser()
-  const { error: serviceError } = await supabase.from('project_services').insert(
-    serviceIds.map((service_id, order_index) => ({
-      project_id: data.id, service_id, order_index, created_by: auth.user?.id ?? null,
-    })),
-  )
+  const { data: created, error: serviceError } = await supabase
+    .from('project_services')
+    .insert(services.map(({ serviceId }, order_index) => ({
+      project_id: data.id, service_id: serviceId, order_index, created_by: auth.user?.id ?? null,
+    })))
+    .select('id,service_id')
   // Leaving a service-less project behind would be worse than failing outright.
   if (serviceError) {
     await supabase.from('projects').delete().eq('id', data.id)
     throw serviceError
+  }
+
+  // Templates are applied after the fact: a failure here leaves a usable project
+  // with empty pipelines rather than discarding everything the user just typed.
+  for (const { serviceId, templateId } of services) {
+    if (!templateId) continue
+    const block = created?.find((row) => row.service_id === serviceId)
+    if (block) await applyTemplateToService(block.id, templateId)
   }
   return data
 }

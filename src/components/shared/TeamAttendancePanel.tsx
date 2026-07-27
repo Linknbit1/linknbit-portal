@@ -1,11 +1,15 @@
 import { useMemo, useState } from 'react'
-import { Users, Loader2 } from 'lucide-react'
+import { Loader2, Home, Plane, AlertCircle, Hourglass, CalendarCheck } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { Avatar } from '../ui/Avatar'
 import { PersonLink } from './PersonLink'
 import { Tabs } from '../ui/Tabs'
 import { DatePicker } from '../ui/DatePicker'
 import { PeriodStepper } from '../ui/PeriodStepper'
+import { SectionToolbar } from '../ui/SectionToolbar'
+import { MonthStepper } from './MonthFilter'
+import { useMonthFilter } from '../../hooks/useMonthFilter'
+import { formatDate } from '../../lib/utils'
 import {
   useAllAttendance,
   useMonthlyAttendance,
@@ -17,6 +21,20 @@ import {
 
 type Section = 'attendance' | 'wfh' | 'exceptions' | 'overtime' | 'leave'
 
+/**
+ * Restricts a list to one team. RLS already scopes a lead to the people they
+ * share a team with; this narrows further to a SPECIFIC team, which matters for
+ * PMs and admins who can see several.
+ */
+export interface TeamScope {
+  memberIds?: ReadonlySet<string>
+}
+
+function inScope(scope: TeamScope, profileId: string | null | undefined): boolean {
+  if (!scope.memberIds) return true
+  return !!profileId && scope.memberIds.has(profileId)
+}
+
 function localToday(): string {
   return new Intl.DateTimeFormat('en-CA').format(new Date())
 }
@@ -26,6 +44,13 @@ const fmtTime = (ts: string | null): string =>
 
 const monthLabel = (year: number, month: number): string =>
   new Date(year, month - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+
+/** "12 Mar 2026" — dates were previously printed as raw ISO strings. */
+const fmtDay = (date: string | null): string => (date ? formatDate(date) : '—')
+
+/** "12 Mar → 15 Mar 2026", collapsing a single-day range. */
+const fmtRange = (start: string, end: string): string =>
+  start === end ? formatDate(start) : `${formatDate(start)} → ${formatDate(end)}`
 
 // ── Status pills ───────────────────────────────────────────────────────────────────
 const REQUEST_STATUS: Record<string, string> = {
@@ -54,6 +79,7 @@ function Pill({ status, map }: { status: string; map: Record<string, string> }) 
 }
 
 // Row shell: avatar + name on the left, meta + status on the right (wraps on mobile).
+// Both the avatar and the name link to the member's profile.
 function Row({ name, avatar, personId, children, status }: {
   name: string
   avatar: string | null
@@ -122,9 +148,9 @@ interface MemberTally {
  * Team roster. In Day mode each member shows their check-in/out + status for the
  * chosen date (who's in office / on leave / WFH today). In Month mode each member
  * shows their attendance tallies for the selected month. RLS scopes rows to the
- * viewer's team.
+ * viewer's team; `memberIds` narrows to one specific team.
  */
-export function TeamRoster() {
+export function TeamRoster({ memberIds }: TeamScope = {}) {
   const now = new Date()
   const [mode, setMode] = useState<'day' | 'month'>('day')
   const [date, setDate] = useState(localToday)
@@ -132,15 +158,19 @@ export function TeamRoster() {
 
   const dayQ = useAllAttendance(date)
   const monthQ = useMonthlyAttendance(ym.year, ym.month)
+  const scope = { memberIds }
 
   const stepMonth = (delta: number) => setYm(({ year, month }) => {
     const d = new Date(year, month - 1 + delta, 1)
     return { year: d.getFullYear(), month: d.getMonth() + 1 }
   })
 
+  const dayRows = (dayQ.data ?? []).filter((r) => inScope(scope, r.profile_id))
+
   const tallies = useMemo<MemberTally[]>(() => {
     const byMember = new Map<string, MemberTally>()
     for (const r of monthQ.data ?? []) {
+      if (!inScope({ memberIds }, r.profile_id)) continue
       const id = r.profile_id
       const t = byMember.get(id) ?? {
         profileId: id, name: r.profiles?.name ?? '—', avatar: r.profiles?.avatar_url ?? null,
@@ -154,7 +184,7 @@ export function TeamRoster() {
       byMember.set(id, t)
     }
     return [...byMember.values()].sort((a, b) => a.name.localeCompare(b.name))
-  }, [monthQ.data])
+  }, [monthQ.data, memberIds])
 
   return (
     <div>
@@ -175,9 +205,9 @@ export function TeamRoster() {
 
       {mode === 'day' ? (
         dayQ.isLoading ? <Loading /> :
-        (dayQ.data ?? []).length === 0 ? <Empty label="No team attendance for this date." /> :
+        dayRows.length === 0 ? <Empty label="No team attendance for this date." /> :
         <div>
-          {dayQ.data!.map((r) => (
+          {dayRows.map((r) => (
             <Row key={r.id} name={r.profiles?.name ?? '—'} avatar={r.profiles?.avatar_url ?? null} personId={r.profile_id}
               status={<Pill status={r.status} map={ATTENDANCE_STATUS} />}>
               <span>In: <span className="text-text-1">{fmtTime(r.check_in)}</span></span>
@@ -206,100 +236,141 @@ export function TeamRoster() {
 }
 
 // ── Request lists (cardless content; parent provides the card) ───────────────────────
+// Each carries its own month stepper, since a team's requests pile up over time and
+// "everything ever" is rarely the question being asked.
 
-export function TeamWfhList() {
+export function TeamWfhList({ memberIds }: TeamScope = {}) {
+  const filter = useMonthFilter()
   const wfh = useAllWfhRequests()
-  if (wfh.isLoading) return <Loading />
-  if ((wfh.data ?? []).length === 0) return <Empty label="No WFH requests from your team." />
+  const rows = (wfh.data ?? []).filter((r) => inScope({ memberIds }, r.profile_id) && filter.inMonth(r.date))
+
   return (
     <div>
-      {wfh.data!.map((r) => (
-        <Row key={r.id} name={r.profiles?.name ?? '—'} avatar={r.profiles?.avatar_url ?? null}
-          status={<Pill status={r.status} map={REQUEST_STATUS} />}>
-          <span className="text-text-1">{r.date}</span>
-          <span className="text-text-3 normal-case font-ui truncate max-w-50">{r.reason}</span>
-        </Row>
-      ))}
+      <SectionToolbar icon={Home} title="WFH requests" badge={rows.filter((r) => r.status === 'pending').length}>
+        <MonthStepper filter={filter} />
+      </SectionToolbar>
+      {wfh.isLoading ? <Loading /> : rows.length === 0 ? <Empty label={`No WFH requests in ${filter.label}.`} /> : (
+        <div>
+          {rows.map((r) => (
+            <Row key={r.id} name={r.profiles?.name ?? '—'} avatar={r.profiles?.avatar_url ?? null} personId={r.profile_id}
+              status={<Pill status={r.status} map={REQUEST_STATUS} />}>
+              <span className="text-text-1">{fmtDay(r.date)}</span>
+              <span className="text-text-3 normal-case font-ui truncate max-w-50">{r.reason}</span>
+            </Row>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
 
-export function TeamExceptionsList() {
+export function TeamExceptionsList({ memberIds }: TeamScope = {}) {
+  const filter = useMonthFilter()
   const exceptions = useAllAttendanceExceptions()
-  if (exceptions.isLoading) return <Loading />
-  if ((exceptions.data ?? []).length === 0) return <Empty label="No exceptions from your team." />
+  const rows = (exceptions.data ?? []).filter((r) => inScope({ memberIds }, r.profile_id) && filter.inMonth(r.date))
+
   return (
     <div>
-      {exceptions.data!.map((r) => (
-        <Row key={r.id} name={r.profiles?.name ?? '—'} avatar={r.profiles?.avatar_url ?? null}
-          status={<Pill status={r.status} map={REQUEST_STATUS} />}>
-          <span className="text-text-1 capitalize">{r.exception_type.replace(/_/g, ' ')}</span>
-          <span>{r.date} · {r.requested_time}</span>
-        </Row>
-      ))}
+      <SectionToolbar icon={AlertCircle} title="Exceptions" badge={rows.filter((r) => r.status === 'pending').length}>
+        <MonthStepper filter={filter} />
+      </SectionToolbar>
+      {exceptions.isLoading ? <Loading /> : rows.length === 0 ? <Empty label={`No exceptions in ${filter.label}.`} /> : (
+        <div>
+          {rows.map((r) => (
+            <Row key={r.id} name={r.profiles?.name ?? '—'} avatar={r.profiles?.avatar_url ?? null} personId={r.profile_id}
+              status={<Pill status={r.status} map={REQUEST_STATUS} />}>
+              <span className="text-text-1 capitalize">{r.exception_type.replace(/_/g, ' ')}</span>
+              <span>{fmtDay(r.date)} · {r.requested_time}</span>
+            </Row>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
 
-export function TeamOvertimeList() {
+export function TeamOvertimeList({ memberIds }: TeamScope = {}) {
+  const filter = useMonthFilter()
   const overtime = useAllOvertimeRequests()
-  if (overtime.isLoading) return <Loading />
-  if ((overtime.data ?? []).length === 0) return <Empty label="No overtime requests from your team." />
+  const rows = (overtime.data ?? []).filter((r) => inScope({ memberIds }, r.profile_id) && filter.inMonth(r.date))
+
   return (
     <div>
-      {overtime.data!.map((r) => (
-        <Row key={r.id} name={r.profiles?.name ?? '—'} avatar={r.profiles?.avatar_url ?? null}
-          status={<Pill status={r.status} map={REQUEST_STATUS} />}>
-          <span className="text-text-1">{r.date}</span>
-          <span>{r.start_time}–{r.end_time} · {r.hours}h</span>
-        </Row>
-      ))}
+      <SectionToolbar icon={Hourglass} title="Overtime" badge={rows.filter((r) => r.status === 'pending').length}>
+        <MonthStepper filter={filter} />
+      </SectionToolbar>
+      {overtime.isLoading ? <Loading /> : rows.length === 0 ? <Empty label={`No overtime requests in ${filter.label}.`} /> : (
+        <div>
+          {rows.map((r) => (
+            <Row key={r.id} name={r.profiles?.name ?? '—'} avatar={r.profiles?.avatar_url ?? null} personId={r.profile_id}
+              status={<Pill status={r.status} map={REQUEST_STATUS} />}>
+              <span className="text-text-1">{fmtDay(r.date)}</span>
+              <span>{r.start_time}–{r.end_time} · {r.hours}h</span>
+            </Row>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
 
-export function TeamLeaveList() {
+export function TeamLeaveList({ memberIds }: TeamScope = {}) {
+  const filter = useMonthFilter()
   const leave = useAllLeaveRequests()
-  if (leave.isLoading) return <Loading />
-  if ((leave.data ?? []).length === 0) return <Empty label="No leave requests from your team." />
+  // A leave spanning a month boundary belongs to both months.
+  const rows = (leave.data ?? []).filter((r) =>
+    inScope({ memberIds }, r.profile_id) && (filter.inMonth(r.start_date) || filter.inMonth(r.end_date)))
+
   return (
     <div>
-      {leave.data!.map((r) => (
-        <Row key={r.id} name={r.profiles?.name ?? '—'} avatar={r.profiles?.avatar_url ?? null}
-          status={<Pill status={r.status} map={REQUEST_STATUS} />}>
-          <span className="text-text-1">{r.leave_types?.name ?? 'Leave'}</span>
-          <span>{r.start_date} → {r.end_date} · {r.days}d</span>
-        </Row>
-      ))}
+      <SectionToolbar icon={Plane} title="Leave" badge={rows.filter((r) => r.status === 'pending').length}>
+        <MonthStepper filter={filter} />
+      </SectionToolbar>
+      {leave.isLoading ? <Loading /> : rows.length === 0 ? <Empty label={`No leave requests in ${filter.label}.`} /> : (
+        <div>
+          {rows.map((r) => (
+            <Row key={r.id} name={r.profiles?.name ?? '—'} avatar={r.profiles?.avatar_url ?? null} personId={r.profile_id}
+              status={<Pill status={r.status} map={REQUEST_STATUS} />}>
+              <span className="text-text-1">{r.leave_types?.name ?? 'Leave'}</span>
+              <span>{fmtRange(r.start_date, r.end_date)} · {r.days}d</span>
+            </Row>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
 
 /**
  * Desktop team view: tabbed roster + request lists in a single card. Mobile uses the
- * exported pieces above as individual stack screens (see AttendanceMobile).
+ * exported pieces above as individual stack screens (see AttendanceMobile), and the
+ * team page passes `memberIds` to pin it to one team.
  */
-export function TeamAttendancePanel() {
+export function TeamAttendancePanel({ memberIds, title = 'My Team' }: TeamScope & { title?: string }) {
   const [section, setSection] = useState<Section>('attendance')
+  const scope = { memberIds }
 
   const wfh = useAllWfhRequests()
   const exceptions = useAllAttendanceExceptions()
   const overtime = useAllOvertimeRequests()
   const leave = useAllLeaveRequests()
 
+  const pending = (rows: { status: string; profile_id: string }[] | undefined) =>
+    (rows ?? []).filter((r) => r.status === 'pending' && inScope(scope, r.profile_id)).length || undefined
+
   const tabs = [
     { key: 'attendance', label: 'Roster' },
-    { key: 'wfh', label: 'WFH', badge: wfh.data?.filter((r) => r.status === 'pending').length || undefined },
-    { key: 'exceptions', label: 'Exceptions', badge: exceptions.data?.filter((r) => r.status === 'pending').length || undefined },
-    { key: 'overtime', label: 'Overtime', badge: overtime.data?.filter((r) => r.status === 'pending').length || undefined },
-    { key: 'leave', label: 'Leave', badge: leave.data?.filter((r) => r.status === 'pending').length || undefined },
+    { key: 'wfh', label: 'WFH', badge: pending(wfh.data) },
+    { key: 'exceptions', label: 'Exceptions', badge: pending(exceptions.data) },
+    { key: 'overtime', label: 'Overtime', badge: pending(overtime.data) },
+    { key: 'leave', label: 'Leave', badge: pending(leave.data) },
   ]
 
   return (
     <section className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
       <div className="flex flex-wrap items-center gap-3 px-4 py-3.5 border-b border-border-subtle">
-        <Users size={15} className="text-brand-red shrink-0" />
-        <h2 className="font-display font-bold text-[15px] text-text-1">My Team</h2>
+        <CalendarCheck size={15} className="text-brand-red shrink-0" />
+        <h2 className="font-display font-bold text-[15px] text-text-1">{title}</h2>
         <span className="font-mono text-[10.5px] text-text-4 uppercase tracking-wider">Read-only</span>
       </div>
 
@@ -307,11 +378,11 @@ export function TeamAttendancePanel() {
         <Tabs tabs={tabs} activeKey={section} onChange={(k) => setSection(k as Section)} />
       </div>
 
-      {section === 'attendance' && <TeamRoster />}
-      {section === 'wfh' && <TeamWfhList />}
-      {section === 'exceptions' && <TeamExceptionsList />}
-      {section === 'overtime' && <TeamOvertimeList />}
-      {section === 'leave' && <TeamLeaveList />}
+      {section === 'attendance' && <TeamRoster memberIds={memberIds} />}
+      {section === 'wfh' && <TeamWfhList memberIds={memberIds} />}
+      {section === 'exceptions' && <TeamExceptionsList memberIds={memberIds} />}
+      {section === 'overtime' && <TeamOvertimeList memberIds={memberIds} />}
+      {section === 'leave' && <TeamLeaveList memberIds={memberIds} />}
     </section>
   )
 }

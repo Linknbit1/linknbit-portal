@@ -55,6 +55,7 @@ import { useToast } from '../../components/ui/toast-context'
 import { cn } from '../../lib/cn'
 import type { AttendanceRow, AttendanceException } from '../../api/attendance'
 import { ModalShell } from '../../components/ui/ModalShell'
+import { showsInlineTeamAttendance } from '../../lib/roles'
 
 function localToday(): string {
   return new Intl.DateTimeFormat('en-CA').format(new Date())
@@ -1169,7 +1170,7 @@ export default function EmployeeAttendancePage() {
 
   const { data: history = [], isLoading } = useMyMonthlyAttendance(year, month)
   const { profile } = useAuthContext()
-  const canSeeTeam = profile?.role === 'team_lead' || profile?.role === 'project_manager'
+  const canSeeTeam = showsInlineTeamAttendance(profile?.role)
 
   const prevMonth = () => {
     if (month === 1) { setYear((y) => y - 1); setMonth(12) }
@@ -1191,8 +1192,9 @@ export default function EmployeeAttendancePage() {
 
         <MyDevicesCard />
 
-        {/* Team leads / PMs: read-only visibility into their team */}
-        {canSeeTeam && <TeamAttendancePanel />}
+        {/* PMs only: read-only visibility across the teams they work with. Team
+            leads get this on their own team page instead (/teams/:id). */}
+        {canSeeTeam && <TeamAttendancePanel title="Teams" />}
 
         <UpcomingScheduleSection />
 
