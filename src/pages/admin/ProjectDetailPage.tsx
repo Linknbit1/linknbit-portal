@@ -10,6 +10,7 @@ import { ProgressBar } from '../../components/ui/ProgressBar'
 import { Avatar, AvatarGroup } from '../../components/ui/Avatar'
 import { PersonLink } from '../../components/shared/PersonLink'
 import { Skeleton } from '../../components/ui/Skeleton'
+import { Select } from '../../components/ui/Select'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { ServiceChip } from '../../components/shared/ServiceChip'
 import { StatusChip } from '../../components/shared/StatusChip'
@@ -29,9 +30,13 @@ import { isAuthoritative } from '../../lib/roles'
 import { useAuthContext } from '../../context/AuthContext'
 import { useToast } from '../../components/ui/toast-context'
 import { useDeleteProject, useProject, useProjectDeleteImpact, useUpdateProject } from '../../hooks/useProjects'
-import { useStages, useDeleteStage } from '../../hooks/useStages'
+import { useServiceStages, useDeleteStage } from '../../hooks/useStages'
 import { useTasks } from '../../hooks/useTasks'
-import { useProjectMembers, useRemoveProjectMember } from '../../hooks/useProjectMembers'
+import {
+  useProjectServices, useProjectServiceMembers, useRemoveServiceMember,
+  useAddProjectService, useRemoveProjectService,
+} from '../../hooks/useProjectServices'
+import { useServices } from '../../hooks/useServices'
 import { useApprovals, useRequestApproval, useReviewApproval } from '../../hooks/useApprovals'
 import { useRealtimeTasks } from '../../hooks/realtime/useRealtimeTasks'
 import { StageFormModal } from './StageFormModal'
@@ -61,9 +66,16 @@ export default function ProjectDetailPage() {
   const canManage = isAuthoritative(profile?.role)
 
   const { data: project, isLoading } = useProject(id)
-  const { data: stages = [] } = useStages(id)
-  const { data: tasks = [] } = useTasks({ projectId: id })
-  const { data: members = [] } = useProjectMembers(id)
+  const { data: services = [] } = useProjectServices(id)
+  // Which service block is on screen. Falls back to the first one until picked,
+  // so the page always shows real work instead of an empty shell.
+  const [pickedServiceId, setPickedServiceId] = useState<string | null>(null)
+  const activeService = services.find((s) => s.id === pickedServiceId) ?? services[0] ?? null
+  const activeServiceId = activeService?.id
+
+  const { data: stages = [] } = useServiceStages(activeServiceId)
+  const { data: tasks = [] } = useTasks({ projectId: id, projectServiceId: activeServiceId })
+  const { data: members = [] } = useProjectServiceMembers(id)
   const { data: approvals = [] } = useApprovals({ projectId: id })
   const { data: projectFiles = [] } = useProjectFiles(id)
   const fileItems = useMemo(() => projectFiles.map((f) => ({
@@ -75,17 +87,22 @@ export default function ProjectDetailPage() {
   const deleteProject = useDeleteProject()
   const watch = useProjectWatch(id)
   const deleteStage = useDeleteStage()
-  const removeMember = useRemoveProjectMember()
+  const removeMember = useRemoveServiceMember()
+  const addService = useAddProjectService()
+  const removeService = useRemoveProjectService()
   const requestApproval = useRequestApproval()
   const reviewApproval = useReviewApproval()
+  const { data: catalog = [] } = useServices()
 
   const canViewBudget = useCanAccess('can_view_budget')
   // Delete is enforced by delete_project_cascade via the flag; showing it to anyone
   // else produced a button that always errored.
-  const canDeleteProject = useCanAccess('can_delete_projects')
+  const canManageProjects = useCanAccess('can_manage_projects')
   const [projectView, setProjectView] = useState<ProjectTab>('pipeline')
   const [showEdit, setShowEdit] = useState(false)
-  const [showAddMember, setShowAddMember] = useState(false)
+  // Which service the "add member" modal is filling — the picker is per service now.
+  const [addMemberFor, setAddMemberFor] = useState<string | null>(null)
+  const [pendingServiceRemoval, setPendingServiceRemoval] = useState<string | null>(null)
   const [showStageForm, setShowStageForm] = useState(false)
   const [editingStage, setEditingStage] = useState<StageRow | null>(null)
   const [showTaskForm, setShowTaskForm] = useState(false)
@@ -95,6 +112,11 @@ export default function ProjectDetailPage() {
   const [pendingStageDelete, setPendingStageDelete] = useState<StageRow | null>(null)
   const [confirmProjectDelete, setConfirmProjectDelete] = useState(false)
   const { data: projectDeleteImpact, isLoading: projectDeleteImpactLoading } = useProjectDeleteImpact(confirmProjectDelete ? id : undefined)
+
+  // Services the catalog can still offer this project.
+  const unusedServices = catalog.filter(
+    (c) => c.is_active && !services.some((s) => s.service_id === c.id),
+  )
 
   // Group tasks by stage; tasks without a stage fall into an "Unstaged" bucket.
   const tasksByStage = useMemo(() => {
@@ -164,7 +186,7 @@ export default function ProjectDetailPage() {
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="font-display font-bold text-[22px] text-text-1">{project.name}</h1>
-                <ServiceChip service={project.service_type} />
+                {services.map((s) => s.service && <ServiceChip key={s.id} service={s.service.slug} />)}
                 <StatusChip status={project.status} type="project" />
                 <ClientVisibility visible={project.client_visible} showLabel />
               </div>
@@ -184,7 +206,7 @@ export default function ProjectDetailPage() {
               {canManage && (
                 <>
                   <Button size="sm" variant="secondary" iconLeft={<Pencil size={13} />} onClick={() => setShowEdit(true)}>Edit</Button>
-                  {canDeleteProject && (
+                  {canManageProjects && (
                     <Button size="sm" variant="danger" iconLeft={<Trash2 size={13} />} onClick={() => setConfirmProjectDelete(true)}>Delete</Button>
                   )}
                 </>
@@ -203,6 +225,61 @@ export default function ProjectDetailPage() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Service switcher — the layer between the project and its pipeline */}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="font-mono text-[10px] uppercase tracking-wider text-text-4 mr-0.5">Service</span>
+          {services.map((s) => {
+            const active = s.id === activeServiceId
+            const count = members.filter((m) => m.project_service_id === s.id).length
+            return (
+              <button
+                key={s.id}
+                onClick={() => setPickedServiceId(s.id)}
+                aria-current={active}
+                className={cn(
+                  'group flex items-center gap-2 rounded-full border pl-1 pr-3 py-1 transition-colors',
+                  active
+                    ? 'border-border-strong bg-surface-3 text-text-1'
+                    : 'border-border-default bg-surface-1 text-text-3 hover:text-text-1',
+                )}
+              >
+                <span
+                  className="size-2 rounded-full ml-1.5 shrink-0"
+                  // Per-service colour from the catalog — not expressible as a token.
+                  style={{ background: s.service?.color ?? '#8A93A3' }}
+                />
+                <span className="font-ui font-semibold text-[12.5px]">{s.service?.name ?? 'Service'}</span>
+                <span className="font-mono text-[10px] text-text-4">{count}</span>
+                {canManage && services.length > 1 && (
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Remove ${s.service?.name ?? 'service'} from this project`}
+                    onClick={(e) => { e.stopPropagation(); setPendingServiceRemoval(s.id) }}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); setPendingServiceRemoval(s.id) } }}
+                    className="-mr-1 flex size-4 items-center justify-center rounded-full text-text-4 opacity-0 transition-opacity hover:bg-error/10 hover:text-error group-hover:opacity-100"
+                  >
+                    <X size={11} />
+                  </span>
+                )}
+              </button>
+            )
+          })}
+          {canManage && unusedServices.length > 0 && (
+            <Select
+              value=""
+              placeholder="+ Add service"
+              size="sm"
+              className="w-44"
+              options={unusedServices.map((c) => ({ value: c.id, label: c.name, dot: c.color }))}
+              onChange={(serviceId) => addService.mutate({ projectId: id, serviceId }, {
+                onSuccess: (created) => { setPickedServiceId(created.id); toast('Service added', 'success') },
+                onError: (e) => toast(e instanceof Error ? e.message : 'Failed', 'error'),
+              })}
+            />
+          )}
         </div>
 
         {/* Tabs */}
@@ -227,8 +304,10 @@ export default function ProjectDetailPage() {
               <Button size="sm" iconLeft={<Plus size={14} />} onClick={() => openAddTask()}>Task</Button>
             </div>
           )}
-          {canManage && projectView === 'team' && (
-            <Button size="sm" iconLeft={<Plus size={14} />} onClick={() => setShowAddMember(true)}>Add member</Button>
+          {canManage && projectView === 'team' && activeServiceId && (
+            <Button size="sm" iconLeft={<Plus size={14} />} onClick={() => setAddMemberFor(activeServiceId)}>
+              Add to {activeService?.service?.name ?? 'service'}
+            </Button>
           )}
         </div>
 
@@ -289,60 +368,94 @@ export default function ProjectDetailPage() {
           </div>
         )}
 
+        {/* People belong to a service, so the team reads as one block per service. */}
         {projectView === 'team' && (
-          <div className="max-w-3xl overflow-hidden rounded-xl border border-border-default bg-surface-1">
-            <div className="flex items-center justify-between gap-2 border-b border-border-subtle px-5 py-3">
-              <h3 className="flex items-center gap-2 font-display text-[14px] font-bold text-text-1">
-                <Users size={15} className="text-text-3" /> Project team
-                <span className="font-mono text-[11px] font-normal text-text-4">{members.length}</span>
-              </h3>
-              {canManage && (
-                <Button size="sm" variant="secondary" iconLeft={<Plus size={13} />} onClick={() => setShowAddMember(true)}>
-                  Add members
-                </Button>
-              )}
-            </div>
-            {members.length === 0 ? (
-              <div className="flex flex-col items-center gap-2 py-12 text-center">
-                <span className="flex size-11 items-center justify-center rounded-full bg-surface-2 text-text-3"><Users size={19} /></span>
-                <p className="font-ui text-[13px] text-text-2">No members yet</p>
-                <p className="font-ui text-[11.5px] text-text-4">Add people individually or pull in a whole team at once.</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 gap-2 p-4 sm:grid-cols-2">
-                {members.map((m) => (
-                  <div
-                    key={m.id}
-                    className="group flex items-center gap-3 rounded-lg border border-border-subtle bg-surface-2/40 px-3 py-2.5 transition-colors hover:border-border-default"
-                  >
-                    <Avatar name={m.name} src={m.avatar_url ?? undefined} size="sm" personId={m.id} />
-                    <div className="min-w-0 flex-1">
-                      <PersonLink personId={m.id} className="block truncate font-ui text-[13px] font-medium text-text-1">{m.name}</PersonLink>
-                      <p className="truncate font-mono text-[10.5px] text-text-4">
-                        {m.role_in_project ?? ROLE_LABELS[m.role as UserRole] ?? m.role}
-                      </p>
-                    </div>
+          <div className="max-w-3xl space-y-3">
+            {services.map((s) => {
+              const roster = members.filter((m) => m.project_service_id === s.id)
+              return (
+                <div key={s.id} className="overflow-hidden rounded-xl border border-border-default bg-surface-1">
+                  <div className="flex items-center justify-between gap-2 border-b border-border-subtle px-5 py-3">
+                    <h3 className="flex items-center gap-2 font-display text-[14px] font-bold text-text-1">
+                      {s.service && <ServiceChip service={s.service.slug} />}
+                      <span className="font-mono text-[11px] font-normal text-text-4">{roster.length}</span>
+                    </h3>
                     {canManage && (
-                      <button
-                        onClick={() => removeMember.mutate({ projectId: id, profileId: m.id }, { onError: (e) => toast(e instanceof Error ? e.message : 'Failed', 'error') })}
-                        className="flex size-7 shrink-0 items-center justify-center rounded-sm text-text-4 opacity-0 transition-all hover:bg-error/10 hover:text-error group-hover:opacity-100"
-                        aria-label={`Remove ${m.name}`}
-                      >
-                        <X size={13} />
-                      </button>
+                      <Button size="sm" variant="secondary" iconLeft={<Plus size={13} />} onClick={() => setAddMemberFor(s.id)}>
+                        Add members
+                      </Button>
                     )}
                   </div>
-                ))}
-              </div>
-            )}
+                  {roster.length === 0 ? (
+                    <div className="flex flex-col items-center gap-2 py-10 text-center">
+                      <span className="flex size-11 items-center justify-center rounded-full bg-surface-2 text-text-3"><Users size={19} /></span>
+                      <p className="font-ui text-[13px] text-text-2">Nobody on this service yet</p>
+                      <p className="font-ui text-[11.5px] text-text-4">Add people individually or pull in a whole team at once.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 gap-2 p-4 sm:grid-cols-2">
+                      {roster.map((m) => (
+                        <div
+                          key={m.id}
+                          className="group flex items-center gap-3 rounded-lg border border-border-subtle bg-surface-2/40 px-3 py-2.5 transition-colors hover:border-border-default"
+                        >
+                          <Avatar name={m.name} src={m.avatar_url ?? undefined} size="sm" personId={m.id} />
+                          <div className="min-w-0 flex-1">
+                            <PersonLink personId={m.id} className="block truncate font-ui text-[13px] font-medium text-text-1">{m.name}</PersonLink>
+                            <p className="truncate font-mono text-[10.5px] text-text-4">
+                              {m.role_in_service ?? ROLE_LABELS[m.role as UserRole] ?? m.role}
+                            </p>
+                          </div>
+                          {canManage && (
+                            <button
+                              onClick={() => removeMember.mutate(
+                                { projectId: id, projectServiceId: s.id, profileId: m.id },
+                                { onError: (e) => toast(e instanceof Error ? e.message : 'Failed', 'error') },
+                              )}
+                              className="flex size-7 shrink-0 items-center justify-center rounded-sm text-text-4 opacity-0 transition-all hover:bg-error/10 hover:text-error group-hover:opacity-100"
+                              aria-label={`Remove ${m.name} from ${s.service?.name ?? 'service'}`}
+                            >
+                              <X size={13} />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
         )}
       </div>
 
       {showEdit && <ProjectFormModal project={project} onClose={() => setShowEdit(false)} />}
-      {showAddMember && <AddProjectMemberModal projectId={id} existingIds={members.map((m) => m.id)} onClose={() => setShowAddMember(false)} />}
-      {showStageForm && <StageFormModal projectId={id} stage={editingStage ?? undefined} nextOrder={stages.length} onClose={() => setShowStageForm(false)} />}
-      {showTaskForm && <TaskFormModal projectId={id} defaultStageId={taskFormStage} onClose={() => setShowTaskForm(false)} />}
+      {addMemberFor && (
+        <AddProjectMemberModal
+          projectId={id}
+          projectServiceId={addMemberFor}
+          serviceName={services.find((s) => s.id === addMemberFor)?.service?.name ?? 'service'}
+          existingIds={members.filter((m) => m.project_service_id === addMemberFor).map((m) => m.id)}
+          onClose={() => setAddMemberFor(null)}
+        />
+      )}
+      {showStageForm && activeServiceId && (
+        <StageFormModal
+          projectId={id}
+          projectServiceId={activeServiceId}
+          stage={editingStage ?? undefined}
+          nextOrder={stages.length}
+          onClose={() => setShowStageForm(false)}
+        />
+      )}
+      {showTaskForm && activeServiceId && (
+        <TaskFormModal
+          projectId={id}
+          projectServiceId={activeServiceId}
+          defaultStageId={taskFormStage}
+          onClose={() => setShowTaskForm(false)}
+        />
+      )}
       {reviewStage && <ApprovalModal title="Review stage" subject={reviewStage.name} pending={reviewApproval.isPending} onSubmit={handleReview} onClose={() => setReviewStage(null)} />}
       <TaskDetailDrawer taskId={openTaskId} open={!!openTaskId} onClose={() => setOpenTaskId(null)} />
 
@@ -373,6 +486,31 @@ export default function ProjectDetailPage() {
           })
         }}
         onClose={() => setConfirmProjectDelete(false)}
+      />
+
+      <ConfirmDialog
+        open={!!pendingServiceRemoval}
+        title="Remove service?"
+        message={
+          pendingServiceRemoval
+            ? `"${services.find((s) => s.id === pendingServiceRemoval)?.service?.name ?? 'This service'}" will be removed from this project, along with the people staffed on it. Its stages and tasks must be moved or deleted first.`
+            : ''
+        }
+        confirmLabel="Remove service"
+        danger
+        isPending={removeService.isPending}
+        onConfirm={() => {
+          if (!pendingServiceRemoval) return
+          removeService.mutate({ projectId: id, projectServiceId: pendingServiceRemoval }, {
+            onSuccess: () => {
+              toast('Service removed', 'success')
+              if (pickedServiceId === pendingServiceRemoval) setPickedServiceId(null)
+              setPendingServiceRemoval(null)
+            },
+            onError: (e) => toast(e instanceof Error ? e.message : 'Failed', 'error'),
+          })
+        }}
+        onClose={() => setPendingServiceRemoval(null)}
       />
 
       <ConfirmDialog

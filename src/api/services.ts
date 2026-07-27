@@ -3,7 +3,7 @@ import type { Tables } from '../types/database'
 
 export type Service = Tables<'services'>
 
-export interface ServiceUsage { people: number; teams: number }
+export interface ServiceUsage { people: number; teams: number; projects: number }
 
 export function slugify(name: string): string {
   return name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
@@ -42,12 +42,22 @@ export async function deleteService(id: string): Promise<void> {
   if (error) throw error
 }
 
-// Count records still pointing at a service slug — used to block deletion gracefully.
-// Employees no longer carry a service (they have a designation), so only teams are
-// counted; `people` stays 0 to preserve the ServiceUsage shape used by the UI.
-export async function fetchServiceUsage(slug: string): Promise<ServiceUsage> {
-  const { count, error } = await supabase
+// Count records still pointing at a service — used to block deletion gracefully.
+// Employees no longer carry a service (they have a designation), so only teams and
+// projects are counted; `people` stays 0 to preserve the ServiceUsage shape.
+// Projects matter most: project_services holds an ON DELETE RESTRICT reference, so
+// a service in use cannot be deleted at all.
+export async function fetchServiceUsage(slug: string, serviceId?: string): Promise<ServiceUsage> {
+  const { count: teams, error } = await supabase
     .from('teams').select('id', { count: 'exact', head: true }).eq('service_type', slug)
   if (error) throw error
-  return { people: 0, teams: count ?? 0 }
+
+  let projects = 0
+  if (serviceId) {
+    const { count, error: projectError } = await supabase
+      .from('project_services').select('project_id', { count: 'exact', head: true }).eq('service_id', serviceId)
+    if (projectError) throw projectError
+    projects = count ?? 0
+  }
+  return { people: 0, teams: teams ?? 0, projects }
 }

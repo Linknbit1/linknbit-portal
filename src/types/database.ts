@@ -1745,38 +1745,51 @@ export type Database = {
           },
         ]
       }
-      project_members: {
+      project_services: {
         Row: {
           created_at: string
-          profile_id: string
+          created_by: string | null
+          id: string
+          order_index: number
           project_id: string
-          role_in_project: string | null
+          service_id: string
         }
         Insert: {
           created_at?: string
-          profile_id: string
+          created_by?: string | null
+          id?: string
+          order_index?: number
           project_id: string
-          role_in_project?: string | null
+          service_id: string
         }
         Update: {
           created_at?: string
-          profile_id?: string
+          created_by?: string | null
+          id?: string
+          order_index?: number
           project_id?: string
-          role_in_project?: string | null
+          service_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "project_members_profile_id_fkey"
-            columns: ["profile_id"]
+            foreignKeyName: "project_services_created_by_fkey"
+            columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "project_members_project_id_fkey"
+            foreignKeyName: "project_services_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
             referencedColumns: ["id"]
           },
         ]
@@ -1831,7 +1844,6 @@ export type Database = {
           manager_id: string | null
           name: string
           progress: number
-          service_type: string
           start_date: string | null
           status: string
           team_id: string | null
@@ -1853,7 +1865,6 @@ export type Database = {
           manager_id?: string | null
           name: string
           progress?: number
-          service_type: string
           start_date?: string | null
           status?: string
           team_id?: string | null
@@ -1875,7 +1886,6 @@ export type Database = {
           manager_id?: string | null
           name?: string
           progress?: number
-          service_type?: string
           start_date?: string | null
           status?: string
           team_id?: string | null
@@ -1909,13 +1919,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "projects_service_type_fkey"
-            columns: ["service_type"]
-            isOneToOne: false
-            referencedRelation: "services"
-            referencedColumns: ["slug"]
           },
           {
             foreignKeyName: "projects_team_id_fkey"
@@ -2342,6 +2345,42 @@ export type Database = {
           },
         ]
       }
+      service_members: {
+        Row: {
+          created_at: string
+          profile_id: string
+          project_service_id: string
+          role_in_service: string | null
+        }
+        Insert: {
+          created_at?: string
+          profile_id: string
+          project_service_id: string
+          role_in_service?: string | null
+        }
+        Update: {
+          created_at?: string
+          profile_id?: string
+          project_service_id?: string
+          role_in_service?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_members_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_members_project_service_id_fkey"
+            columns: ["project_service_id"]
+            isOneToOne: false
+            referencedRelation: "project_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       services: {
         Row: {
           color: string
@@ -2456,8 +2495,8 @@ export type Database = {
           name: string
           order_index: number
           project_id: string
+          project_service_id: string
           requires_approval: boolean
-          service_type: string | null
           status: string
           updated_at: string
         }
@@ -2469,8 +2508,8 @@ export type Database = {
           name: string
           order_index?: number
           project_id: string
+          project_service_id: string
           requires_approval?: boolean
-          service_type?: string | null
           status?: string
           updated_at?: string
         }
@@ -2482,8 +2521,8 @@ export type Database = {
           name?: string
           order_index?: number
           project_id?: string
+          project_service_id?: string
           requires_approval?: boolean
-          service_type?: string | null
           status?: string
           updated_at?: string
         }
@@ -2496,11 +2535,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "stages_service_type_fkey"
-            columns: ["service_type"]
+            foreignKeyName: "stages_service_belongs_to_project"
+            columns: ["project_service_id", "project_id"]
             isOneToOne: false
-            referencedRelation: "services"
-            referencedColumns: ["slug"]
+            referencedRelation: "project_services"
+            referencedColumns: ["id", "project_id"]
           },
         ]
       }
@@ -2775,7 +2814,7 @@ export type Database = {
           parent_task_id: string | null
           priority: string
           project_id: string
-          service_type: string | null
+          project_service_id: string
           stage_id: string | null
           start_date: string | null
           status: string
@@ -2798,7 +2837,7 @@ export type Database = {
           parent_task_id?: string | null
           priority?: string
           project_id: string
-          service_type?: string | null
+          project_service_id: string
           stage_id?: string | null
           start_date?: string | null
           status?: string
@@ -2821,7 +2860,7 @@ export type Database = {
           parent_task_id?: string | null
           priority?: string
           project_id?: string
-          service_type?: string | null
+          project_service_id?: string
           stage_id?: string | null
           start_date?: string | null
           status?: string
@@ -2865,11 +2904,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "tasks_service_type_fkey"
-            columns: ["service_type"]
+            foreignKeyName: "tasks_service_belongs_to_project"
+            columns: ["project_service_id", "project_id"]
             isOneToOne: false
-            referencedRelation: "services"
-            referencedColumns: ["slug"]
+            referencedRelation: "project_services"
+            referencedColumns: ["id", "project_id"]
           },
           {
             foreignKeyName: "tasks_stage_id_fkey"
@@ -3155,6 +3194,16 @@ export type Database = {
           unread_count: number
         }[]
       }
+      fn_create_channel: {
+        Args: {
+          p_description?: string
+          p_is_private?: boolean
+          p_member_ids?: string[]
+          p_name: string
+          p_roles?: string[]
+        }
+        Returns: string
+      }
       fn_exception_label: { Args: { t: string }; Returns: string }
       fn_fmt_day: { Args: { d: string }; Returns: string }
       fn_get_or_create_dm: {
@@ -3262,6 +3311,10 @@ export type Database = {
       is_channel_owner: { Args: { p_channel_id: string }; Returns: boolean }
       is_internal: { Args: never; Returns: boolean }
       is_project_member: { Args: { p_project_id: string }; Returns: boolean }
+      is_service_member: {
+        Args: { p_project_service_id: string }
+        Returns: boolean
+      }
       is_task_assignee: { Args: { p_task_id: string }; Returns: boolean }
       join_reward_pool: { Args: { p_pool_id: string }; Returns: undefined }
       leave_reward_pool: { Args: { p_pool_id: string }; Returns: undefined }
@@ -3271,6 +3324,10 @@ export type Database = {
         Returns: string
       }
       release_quest_claim: { Args: { p_claim_id: string }; Returns: undefined }
+      remove_project_service: {
+        Args: { p_project_service_id: string }
+        Returns: undefined
+      }
       review_quest_task: {
         Args: { p_approve: boolean; p_claim_id: string; p_note?: string }
         Returns: undefined

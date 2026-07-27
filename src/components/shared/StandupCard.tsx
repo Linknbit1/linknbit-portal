@@ -52,7 +52,7 @@ export function StandupCard({ standup, showPerson = true }: StandupCardProps) {
         {standup.entries.map((e) => (
           <div key={e.id} className="px-4 py-3 space-y-1.5">
             <div className="flex items-center gap-2 flex-wrap">
-              {e.project && <ServiceChip service={e.project.service_type} />}
+              {e.task?.project_service?.service && <ServiceChip service={e.task.project_service.service.slug} />}
               <span className="font-ui font-semibold text-[12.5px] text-text-1">{e.project?.name ?? 'Project'}</span>
               {e.task && <span className="font-ui text-[11.5px] text-text-3 truncate">· {e.task.title}</span>}
               <span className="ml-auto font-mono text-[11px] text-text-3 shrink-0">{fmtMinutes(e.minutes_spent)}</span>

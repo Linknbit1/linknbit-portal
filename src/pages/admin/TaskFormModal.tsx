@@ -6,8 +6,8 @@ import { Select } from '../../components/ui/Select'
 import { DatePicker } from '../../components/ui/DatePicker'
 import { Toggle } from '../../components/ui/Toggle'
 import { useProjects } from '../../hooks/useProjects'
-import { useStages } from '../../hooks/useStages'
-import { useProjectMembers } from '../../hooks/useProjectMembers'
+import { useServiceStages } from '../../hooks/useStages'
+import { useProjectServices, useProjectServiceMembers } from '../../hooks/useProjectServices'
 import { useCreateTask, useUpdateTask } from '../../hooks/useTasks'
 import { MultiSelectPeople } from '../../components/ui/MultiSelectPeople'
 import { useSetTaskAssignees } from '../../hooks/useTaskAssignees'
@@ -19,6 +19,8 @@ import type { Priority, TaskStatus } from '../../types'
 interface TaskFormModalProps {
   /** Locks the task to this project (project detail view). Omit for the global picker. */
   projectId?: string
+  /** Locks it to one service block. Omit to let the form pick one. */
+  projectServiceId?: string
   task?: TaskListItem
   defaultStageId?: string
   onClose: () => void
@@ -40,7 +42,7 @@ function toDateInput(iso: string | null): string {
 function toPriority(v: string | null | undefined): Priority { return v && isPriority(v) ? v : 'medium' }
 function toStatus(v: string | null | undefined): TaskStatus { return v && isStatus(v) ? v : 'todo' }
 
-export function TaskFormModal({ projectId, task, defaultStageId, onClose }: TaskFormModalProps) {
+export function TaskFormModal({ projectId, projectServiceId, task, defaultStageId, onClose }: TaskFormModalProps) {
   const toast = useToast()
   const isEdit = !!task
   const { data: projects = [] } = useProjects()
@@ -49,9 +51,20 @@ export function TaskFormModal({ projectId, task, defaultStageId, onClose }: Task
   const setAssignees = useSetTaskAssignees()
 
   const lockedProjectId = projectId ?? task?.project_id
+  const lockedServiceId = projectServiceId ?? task?.project_service_id
   const [selectedProject, setSelectedProject] = useState(lockedProjectId ?? '')
-  const { data: stages = [] } = useStages(selectedProject || undefined)
-  const { data: members = [] } = useProjectMembers(selectedProject || undefined)
+  // A task hangs off a service, so that is picked before stage and assignees.
+  const [selectedService, setSelectedService] = useState(lockedServiceId ?? '')
+  const { data: services = [] } = useProjectServices(selectedProject || undefined)
+  const { data: stages = [] } = useServiceStages(selectedService || undefined)
+  const { data: allMembers = [] } = useProjectServiceMembers(selectedProject || undefined)
+
+  // Switching project invalidates the service; fall back to its first one.
+  const effectiveService = services.some((s) => s.id === selectedService)
+    ? selectedService
+    : services[0]?.id ?? ''
+  // Only people staffed on this service can be assigned its work.
+  const members = allMembers.filter((m) => m.project_service_id === effectiveService)
 
   const [title, setTitle] = useState(task?.title ?? '')
   const [description, setDescription] = useState(task?.description ?? '')
@@ -63,6 +76,8 @@ export function TaskFormModal({ projectId, task, defaultStageId, onClose }: Task
   const [clientVisible, setClientVisible] = useState(task?.client_visible ?? false)
 
   const projectOptions = projects.map((p) => ({ value: p.id, label: p.name }))
+  const serviceOptions = services.flatMap((s) =>
+    s.service ? [{ value: s.id, label: s.service.name, dot: s.service.color }] : [])
   const stageOptions = [{ value: '', label: 'No stage' }, ...stages.map((s) => ({ value: s.id, label: s.name }))]
   const memberPeople = members.map((m) => ({ id: m.id, name: m.name, avatar_url: m.avatar_url }))
   const priorityOptions = PRIORITY_ORDER.map((p) => ({ value: p, label: PRIORITY_LABELS[p], dot: PRIORITY_DOTS[p] }))
@@ -72,6 +87,7 @@ export function TaskFormModal({ projectId, task, defaultStageId, onClose }: Task
 
   const handleSubmit = () => {
     if (!selectedProject) { toast('Choose a project', 'error'); return }
+    if (!effectiveService) { toast('Choose a service', 'error'); return }
     if (!title.trim()) { toast('Task title is required', 'error'); return }
     const due = dueDate ? new Date(`${dueDate}T00:00:00`).toISOString() : null
     const onSuccess = () => { toast(isEdit ? 'Task updated' : 'Task created', 'success'); onClose() }
@@ -79,7 +95,16 @@ export function TaskFormModal({ projectId, task, defaultStageId, onClose }: Task
 
     if (isEdit) {
       updateTask.mutate(
-        { id: task.id, updates: { title: title.trim(), description: description.trim() || null, stage_id: stageId || null, priority, status, due_date: due, client_visible: clientVisible } },
+        {
+          id: task.id,
+          updates: {
+            title: title.trim(),
+            description: description.trim() || null,
+            project_service_id: effectiveService,
+            stage_id: stageId || null,
+            priority, status, due_date: due, client_visible: clientVisible,
+          },
+        },
         {
           onSuccess: () => setAssignees.mutate(
             { taskId: task.id, profileIds: assigneeIds, projectId: task.project_id },
@@ -90,7 +115,15 @@ export function TaskFormModal({ projectId, task, defaultStageId, onClose }: Task
       )
     } else {
       createTask.mutate(
-        { project_id: selectedProject, title: title.trim(), description: description.trim() || null, stage_id: stageId || null, assignee_id: assigneeIds[0] ?? null, priority, status, due_date: due, client_visible: clientVisible },
+        {
+          project_id: selectedProject,
+          project_service_id: effectiveService,
+          title: title.trim(),
+          description: description.trim() || null,
+          stage_id: stageId || null,
+          assignee_id: assigneeIds[0] ?? null,
+          priority, status, due_date: due, client_visible: clientVisible,
+        },
         {
           onSuccess: (row) => {
             if (assigneeIds.length) {
@@ -121,7 +154,18 @@ export function TaskFormModal({ projectId, task, defaultStageId, onClose }: Task
         {!lockedProjectId && (
           <div className="space-y-1.5">
             <label className="text-label font-ui font-semibold text-text-2 uppercase tracking-wider">Project</label>
-            <Select value={selectedProject} onChange={(v) => { setSelectedProject(v); setStageId(''); setAssigneeIds([]) }} options={projectOptions} placeholder="Select a project…" />
+            <Select value={selectedProject} onChange={(v) => { setSelectedProject(v); setSelectedService(''); setStageId(''); setAssigneeIds([]) }} options={projectOptions} placeholder="Select a project…" />
+          </div>
+        )}
+        {!projectServiceId && serviceOptions.length > 0 && (
+          <div className="space-y-1.5">
+            <label className="text-label font-ui font-semibold text-text-2 uppercase tracking-wider">Service</label>
+            <Select
+              value={effectiveService}
+              onChange={(v) => { setSelectedService(v); setStageId(''); setAssigneeIds([]) }}
+              options={serviceOptions}
+              placeholder="Select a service…"
+            />
           </div>
         )}
         <Input label="Title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="What needs to be done?" autoFocus />
