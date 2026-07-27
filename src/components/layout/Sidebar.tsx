@@ -2,13 +2,15 @@ import { useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { ChevronRight, ChevronDown } from 'lucide-react'
 import { cn } from '../../lib/cn'
-import { useNavGroups, type NavItem } from './navItems'
+import { useNavGroups, activeNavPath, type NavItem } from './navItems'
 import { LinknbitMark } from '../brand/LinknbitLogo'
 import { InstallAppButton } from '../pwa/InstallAppButton'
 
 export function Sidebar() {
   const location = useLocation()
   const navGroups = useNavGroups()
+  // Resolved once across every section so exactly one item can be active.
+  const activePath = activeNavPath(navGroups.flatMap((g) => g.items), location.pathname)
 
   return (
     <aside className="w-sidebar-expanded bg-surface-1 border-r border-border-default hidden lg:flex flex-col sticky top-0 h-screen overflow-y-auto shrink-0">
@@ -32,7 +34,7 @@ export function Sidebar() {
               {group.label}
             </h2>
             {group.items.map((item) => (
-              <NavRow key={item.to} item={item} pathname={location.pathname} />
+              <NavRow key={item.to} item={item} pathname={location.pathname} activePath={activePath} />
             ))}
           </section>
         ))}
@@ -53,8 +55,8 @@ const rowCls = (active: boolean) =>
   )
 
 /** A nav entry — a plain link, or an expandable group when it has sub-pages. */
-function NavRow({ item, pathname }: { item: NavItem; pathname: string }) {
-  const inSection = pathname.startsWith(item.matchPrefix ?? item.to)
+function NavRow({ item, pathname, activePath }: { item: NavItem; pathname: string; activePath: string | null }) {
+  const inSection = (item.matchPrefix ?? item.to) === activePath
   // Expanded by default while you're inside the section; an explicit toggle wins
   // until you navigate elsewhere (derived, so no state sync needed).
   const [toggled, setToggled] = useState<boolean | null>(null)

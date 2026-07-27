@@ -37,6 +37,7 @@ import {
   useAddProjectService, useRemoveProjectService,
 } from '../../hooks/useProjectServices'
 import { useServices } from '../../hooks/useServices'
+import { useUsableTemplates, useApplyTemplate } from '../../hooks/useTemplates'
 import { useApprovals, useRequestApproval, useReviewApproval } from '../../hooks/useApprovals'
 import { useRealtimeTasks } from '../../hooks/realtime/useRealtimeTasks'
 import { StageFormModal } from './StageFormModal'
@@ -93,6 +94,8 @@ export default function ProjectDetailPage() {
   const requestApproval = useRequestApproval()
   const reviewApproval = useReviewApproval()
   const { data: catalog = [] } = useServices()
+  const { data: templates = [] } = useUsableTemplates(canManage)
+  const applyTemplate = useApplyTemplate()
 
   const canViewBudget = useCanAccess('can_view_budget')
   // Delete is enforced by delete_project_cascade via the flag; showing it to anyone
@@ -112,6 +115,9 @@ export default function ProjectDetailPage() {
   const [pendingStageDelete, setPendingStageDelete] = useState<StageRow | null>(null)
   const [confirmProjectDelete, setConfirmProjectDelete] = useState(false)
   const { data: projectDeleteImpact, isLoading: projectDeleteImpactLoading } = useProjectDeleteImpact(confirmProjectDelete ? id : undefined)
+
+  // Templates that build the service currently on screen.
+  const serviceTemplates = templates.filter((t) => t.service_id === activeService?.service_id)
 
   // Services the catalog can still offer this project.
   const unusedServices = catalog.filter(
@@ -313,8 +319,31 @@ export default function ProjectDetailPage() {
 
         {projectView === 'pipeline' && (
           stages.length === 0 && (tasksByStage.get('__none__')?.length ?? 0) === 0 ? (
-            <div className="bg-surface-1 border border-border-default rounded-md py-10 text-center font-ui text-[13px] text-text-4">
-              No stages or tasks yet. {canManage && 'Add a stage or task to get started.'}
+            <div className="bg-surface-1 border border-border-default rounded-md py-10 px-4 text-center font-ui text-[13px] text-text-4 space-y-3">
+              <p>No stages or tasks yet. {canManage && 'Add a stage or task to get started.'}</p>
+              {/* A template for this exact service turns an empty block into a pipeline. */}
+              {canManage && activeServiceId && serviceTemplates.length > 0 && (
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  <span className="font-ui text-[12.5px] text-text-3">or start from a template:</span>
+                  <Select
+                    value=""
+                    placeholder="Apply template…"
+                    size="sm"
+                    className="w-56"
+                    options={serviceTemplates.map((t) => ({
+                      value: t.id,
+                      label: `${t.name} · ${t.stages.length} stage${t.stages.length === 1 ? '' : 's'}`,
+                    }))}
+                    onChange={(templateId) => applyTemplate.mutate(
+                      { projectServiceId: activeServiceId, templateId },
+                      {
+                        onSuccess: (r) => toast(`Added ${r.stages_created} stage(s) and ${r.tasks_created} task(s)`, 'success'),
+                        onError: (e) => toast(e instanceof Error ? e.message : 'Failed', 'error'),
+                      },
+                    )}
+                  />
+                </div>
+              )}
             </div>
           ) : (
             <div className="space-y-3">

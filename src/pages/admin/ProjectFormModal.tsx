@@ -10,6 +10,7 @@ import { useClients } from '../../hooks/useClients'
 import { usePeople } from '../../hooks/usePeople'
 import { useServices } from '../../hooks/useServices'
 import { useCreateProject, useUpdateProject } from '../../hooks/useProjects'
+import { useUsableTemplates } from '../../hooks/useTemplates'
 import { useCanAccess } from '../../hooks/useRoleFlags'
 import { useToast } from '../../components/ui/toast-context'
 import { PROJECT_STATUS_LABELS } from '../../lib/utils'
@@ -41,6 +42,8 @@ export function ProjectFormModal({ project, onClose }: ProjectFormModalProps) {
   // Services are only chosen at creation; afterwards they are managed on the
   // project page, where each one carries its own stages, tasks and people.
   const [serviceIds, setServiceIds] = useState<string[]>([])
+  // Optional per-service starting pipeline, keyed by service id.
+  const [templateByService, setTemplateByService] = useState<Record<string, string>>({})
   const [managerId, setManagerId] = useState(project?.manager_id ?? '')
   const [status, setStatus] = useState<ProjectStatus>(project?.status ?? 'in_progress')
   const [startDate, setStartDate] = useState(project?.start_date ?? '')
@@ -51,6 +54,8 @@ export function ProjectFormModal({ project, onClose }: ProjectFormModalProps) {
 
   const clientOptions = clients.map((c) => ({ value: c.id, label: c.name }))
   const activeServices = services.filter((s) => s.is_active)
+  // Only fetched while creating — RLS already limits these to the user's own teams.
+  const { data: templates = [] } = useUsableTemplates(!isEdit)
   const managerOptions = [
     { value: '', label: 'Unassigned' },
     ...people.filter((p) => p.is_active).map((p) => ({ value: p.id, label: p.name, avatar: { name: p.name, url: p.avatar_url } })),
@@ -76,7 +81,10 @@ export function ProjectFormModal({ project, onClose }: ProjectFormModalProps) {
     const onError = (e: unknown) => toast(e instanceof Error ? e.message : 'Save failed', 'error')
 
     if (isEdit) updateProject.mutate({ id: project.id, updates: payload }, { onSuccess, onError })
-    else createProject.mutate({ payload, serviceIds }, { onSuccess, onError })
+    else createProject.mutate(
+      { payload, services: serviceIds.map((serviceId) => ({ serviceId, templateId: templateByService[serviceId] })) },
+      { onSuccess, onError },
+    )
   }
 
   return (
@@ -125,6 +133,31 @@ export function ProjectFormModal({ project, onClose }: ProjectFormModalProps) {
             <p className="font-mono text-[10.5px] text-text-4">
               Each service gets its own stages, tasks and people. You can add more later.
             </p>
+
+            {serviceIds.map((serviceId) => {
+              const forService = templates.filter((t) => t.service_id === serviceId)
+              if (forService.length === 0) return null
+              const service = activeServices.find((s) => s.id === serviceId)
+              return (
+                <div key={serviceId} className="space-y-1.5 pt-1">
+                  <label className="text-label font-ui font-semibold uppercase tracking-wider text-text-2">
+                    {service?.name} starting point
+                  </label>
+                  <Select
+                    value={templateByService[serviceId] ?? ''}
+                    onChange={(v) => setTemplateByService((prev) => ({ ...prev, [serviceId]: v }))}
+                    options={[
+                      { value: '', label: 'Empty — no stages' },
+                      ...forService.map((t) => ({
+                        value: t.id,
+                        label: `${t.name} · ${t.stages.length} stage${t.stages.length === 1 ? '' : 's'}`,
+                      })),
+                    ]}
+                    placeholder="Empty — no stages"
+                  />
+                </div>
+              )
+            })}
           </div>
         )}
         <div className="grid grid-cols-2 gap-3">

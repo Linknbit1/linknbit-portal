@@ -1794,6 +1794,61 @@ export type Database = {
           },
         ]
       }
+      project_templates: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          service_id: string
+          team_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          service_id: string
+          team_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          service_id?: string
+          team_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_templates_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_templates_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_templates_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_watchers: {
         Row: {
           created_at: string
@@ -2991,6 +3046,88 @@ export type Database = {
           },
         ]
       }
+      template_stages: {
+        Row: {
+          client_visible: boolean
+          created_at: string
+          id: string
+          name: string
+          order_index: number
+          requires_approval: boolean
+          template_id: string
+        }
+        Insert: {
+          client_visible?: boolean
+          created_at?: string
+          id?: string
+          name: string
+          order_index?: number
+          requires_approval?: boolean
+          template_id: string
+        }
+        Update: {
+          client_visible?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          order_index?: number
+          requires_approval?: boolean
+          template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "template_stages_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "project_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      template_tasks: {
+        Row: {
+          client_visible: boolean
+          created_at: string
+          description: string | null
+          estimated_minutes: number | null
+          id: string
+          order_index: number
+          priority: string
+          template_stage_id: string
+          title: string
+        }
+        Insert: {
+          client_visible?: boolean
+          created_at?: string
+          description?: string | null
+          estimated_minutes?: number | null
+          id?: string
+          order_index?: number
+          priority?: string
+          template_stage_id: string
+          title: string
+        }
+        Update: {
+          client_visible?: boolean
+          created_at?: string
+          description?: string | null
+          estimated_minutes?: number | null
+          id?: string
+          order_index?: number
+          priority?: string
+          template_stage_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "template_tasks_template_stage_id_fkey"
+            columns: ["template_stage_id"]
+            isOneToOne: false
+            referencedRelation: "template_stages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wfh_requests: {
         Row: {
           created_at: string
@@ -3150,6 +3287,13 @@ export type Database = {
         }
         Returns: undefined
       }
+      apply_template_to_service: {
+        Args: { p_project_service_id: string; p_template_id: string }
+        Returns: {
+          stages_created: number
+          tasks_created: number
+        }[]
+      }
       award_badge: {
         Args: { p_badge_id: string; p_profile_id: string }
         Returns: undefined
@@ -3158,6 +3302,10 @@ export type Database = {
       can_govern_gamification: { Args: never; Returns: boolean }
       can_grant_role: { Args: { p_role: string }; Returns: boolean }
       can_manage_target: { Args: { p_target_role: string }; Returns: boolean }
+      can_manage_team_templates: {
+        Args: { p_team_id: string }
+        Returns: boolean
+      }
       can_recognize: { Args: never; Returns: boolean }
       cancel_reward_pool: {
         Args: { p_note?: string; p_pool_id: string }

@@ -13,6 +13,7 @@ import {
   UserCircle,
   CalendarCheck,
   ShieldAlert,
+  Crown,
   type LucideIcon,
 } from 'lucide-react'
 import { showWipFeatures } from '../../lib/featureFlags'
@@ -20,6 +21,7 @@ import { SETTINGS_ROLES } from '../../constants/roles'
 import { useRoleFlags } from '../../hooks/useRoleFlags'
 import { useAuditDangerCount } from '../../hooks/useAuditLog'
 import { useChatUnreadTotal } from '../../hooks/useChatUnreadCount'
+import { useTeams } from '../../hooks/useTeams'
 import { useAuthContext } from '../../context/AuthContext'
 
 /**
@@ -129,6 +131,9 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Clients', icon: UserCircle, to: '/admin/clients', group: 'delivery', feature: 'can_manage_clients' },
 
   // People — who works here, when, and how they are recognised.
+  // `to` is filled in by useNavItems() with the team this person leads; the item
+  // is dropped for everyone who leads none.
+  { label: 'My Team', icon: Crown, to: '/teams', group: 'people' },
   // `to` is rewritten below: managers land on Daily Records, everyone else on their
   // own self-service view (the old hardcoded /attendance/records bounced 4 of 7 roles).
   { label: 'Attendance', icon: CalendarCheck, to: '/attendance', group: 'people', matchPrefix: '/attendance', primaryMobile: true, children: ATTENDANCE_CHILDREN },
@@ -177,7 +182,11 @@ export function useNavItems(): NavItem[] {
   const { data: flags } = useRoleFlags()
   const { data: dangerCount } = useAuditDangerCount()
   const chatUnread = useChatUnreadTotal()
+  const { data: teams } = useTeams()
   const role = profile?.role
+  // "My Team" is a shortcut, not a section: it points at the team this person
+  // actually leads. Anyone who leads none never sees it.
+  const myTeamId = profile ? teams?.find((t) => t.lead_id === profile.id)?.id : undefined
 
   const can: CanFn = (feature) => {
     if (role === 'super_admin') return true
@@ -186,11 +195,29 @@ export function useNavItems(): NavItem[] {
   }
 
   // Surface live counts: flagged actions on Audit Log, unread messages on Chat.
-  return filterNavItems(role, can).map((item) => {
-    if (item.to === '/admin/audit' && dangerCount) return { ...item, badge: dangerCount }
-    if (item.to === '/chat' && chatUnread) return { ...item, badge: chatUnread }
-    return item
+  return filterNavItems(role, can).flatMap((item) => {
+    if (item.label === 'My Team') {
+      return myTeamId ? [{ ...item, to: `/teams/${myTeamId}` }] : []
+    }
+    if (item.to === '/admin/audit' && dangerCount) return [{ ...item, badge: dangerCount }]
+    if (item.to === '/chat' && chatUnread) return [{ ...item, badge: chatUnread }]
+    return [item]
   })
+}
+
+/**
+ * Which single top-level item the current URL belongs to. Prefix matching alone
+ * lights up every ancestor — /teams/<id> matches both "Teams" (/teams) and
+ * "My Team" (/teams/<id>) — so the longest match wins and only it is active.
+ * Children are excluded on purpose: they mark themselves by exact path, and
+ * including them would un-highlight (and collapse) their parent.
+ */
+export function activeNavPath(items: NavItem[], pathname: string): string | null {
+  const matches = items
+    .map((item) => item.matchPrefix ?? item.to)
+    .filter((path) => pathname === path || pathname.startsWith(`${path}/`))
+  if (matches.length === 0) return null
+  return matches.reduce((longest, path) => (path.length > longest.length ? path : longest))
 }
 
 /**

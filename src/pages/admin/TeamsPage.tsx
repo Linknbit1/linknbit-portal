@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Users, Plus, X, Loader2, Pencil, UserPlus, UserMinus, Crown, Sparkles, ShieldCheck } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Avatar, AvatarGroup } from '../../components/ui/Avatar'
@@ -221,7 +222,12 @@ export default function TeamsPage() {
                         </div>
                         <div className="min-w-0 pt-0.5">
                           <div className="flex flex-wrap items-center gap-2">
-                            <p className="font-display text-[17px] font-bold leading-tight text-text-1 truncate">{team.name}</p>
+                            <Link
+                              to={`/teams/${team.id}`}
+                              className="font-display text-[17px] font-bold leading-tight text-text-1 truncate rounded-xs outline-none hover:underline underline-offset-2 focus-visible:underline"
+                            >
+                              {team.name}
+                            </Link>
                             {lead && (
                               <span className="inline-flex items-center gap-1 rounded-full border border-coin-gold/25 bg-coin-gold/10 px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-coin-gold">
                                 <Crown size={10} /> Led

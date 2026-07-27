@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   fetchProjects, fetchProject, createProject, updateProject, updateProjectStatus,
-  type ProjectFilters, type ProjectStatus,
+  type ProjectFilters, type ProjectStatus, type NewProjectService,
 } from '../api/projects'
 import { deleteProjectCascade, fetchProjectDeleteImpact } from '../api/deleteCascade'
 import type { TablesInsert, TablesUpdate } from '../types/database'
@@ -32,11 +32,14 @@ export function useProject(id: string | undefined) {
 export function useCreateProject() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ payload, serviceIds }: { payload: TablesInsert<'projects'>; serviceIds: string[] }) =>
-      createProject(payload, serviceIds),
+    mutationFn: ({ payload, services }: { payload: TablesInsert<'projects'>; services: NewProjectService[] }) =>
+      createProject(payload, services),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: PROJECT_KEYS.all })
       qc.invalidateQueries({ queryKey: ['project_services'] })
+      // A template fills the new services with stages and tasks.
+      qc.invalidateQueries({ queryKey: ['stages'] })
+      qc.invalidateQueries({ queryKey: ['tasks'] })
       qc.invalidateQueries({ queryKey: ['clients'] })
     },
   })
