@@ -1,4 +1,4 @@
-import { Hash, Users, BellOff } from 'lucide-react'
+import { Hash, Users, BellOff, Lock } from 'lucide-react'
 import { Avatar } from '../ui/Avatar'
 import { ConversationMenu } from './ConversationMenu'
 import { cn } from '../../lib/cn'
@@ -47,6 +47,7 @@ export function ConversationListRow({ channel, myProfileId, unread, active, onCl
             <span className={cn('truncate font-ui text-[14px]', unread > 0 ? 'font-semibold text-text-1' : 'text-text-2')}>
               {title}
             </span>
+            {channel.is_private && <Lock size={11} className="shrink-0 text-text-4" aria-label="Private channel" />}
             {channel.muted && <BellOff size={11} className="shrink-0 text-text-4" aria-label="Muted" />}
             {channel.last_message_at && (
               <span className="ml-auto shrink-0 font-mono text-[10.5px] text-text-4">
