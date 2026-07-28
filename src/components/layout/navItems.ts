@@ -18,7 +18,8 @@ import {
 } from 'lucide-react'
 import { showWipFeatures } from '../../lib/featureFlags'
 import { SETTINGS_ROLES } from '../../constants/roles'
-import { useRoleFlags } from '../../hooks/useRoleFlags'
+import { useMyPermissions } from '../../hooks/usePermissions'
+import { ADMINISTRATOR } from '../../api/permissions'
 import { useAuditDangerCount } from '../../hooks/useAuditLog'
 import { useChatUnreadTotal } from '../../hooks/useChatUnreadCount'
 import { useTeams } from '../../hooks/useTeams'
@@ -179,7 +180,7 @@ export function filterNavItems(role: string | null | undefined, can: CanFn): Nav
 /** Nav items visible to the signed-in user, capability-filtered. */
 export function useNavItems(): NavItem[] {
   const { profile } = useAuthContext()
-  const { data: flags } = useRoleFlags()
+  const { data: permissions } = useMyPermissions()
   const { data: dangerCount } = useAuditDangerCount()
   const chatUnread = useChatUnreadTotal()
   const { data: teams } = useTeams()
@@ -189,9 +190,8 @@ export function useNavItems(): NavItem[] {
   const myTeamId = profile ? teams?.find((t) => t.lead_id === profile.id)?.id : undefined
 
   const can: CanFn = (feature) => {
-    if (role === 'super_admin') return true
-    if (!flags || !role) return false
-    return flags.find((f) => f.role === role && f.feature_key === feature)?.enabled ?? false
+    if (!permissions) return false
+    return permissions.includes(ADMINISTRATOR) || permissions.includes(feature)
   }
 
   // Surface live counts: flagged actions on Audit Log, unread messages on Chat.

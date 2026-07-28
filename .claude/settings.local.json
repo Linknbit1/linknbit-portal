@@ -66,11 +66,13 @@
       "PowerShell(pnpm *)",
       "Bash(xargs ls)",
       "Bash(awk 'NR>=1932 && NR<=3727 && \\(/isAdmin/ || /profile\\\\?\\\\.role/ || /isHr/\\)' src/pages/admin/AttendancePage.tsx)",
-      "Bash(awk '{print $5, $9}')"
+      "Bash(awk '{print $5, $9}')",
+      "mcp__claude_ai_Supabase__list_projects"
     ]
   },
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "supabase"
-  ]
+  ],
+  "prefersReducedMotion": false
 }

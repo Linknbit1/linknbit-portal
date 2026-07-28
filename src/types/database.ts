@@ -81,6 +81,7 @@ export type Database = {
       attachments: {
         Row: {
           client_visible: boolean
+          confidential_scope: string
           created_at: string
           file_name: string
           file_size: number | null
@@ -96,6 +97,7 @@ export type Database = {
         }
         Insert: {
           client_visible?: boolean
+          confidential_scope?: string
           created_at?: string
           file_name: string
           file_size?: number | null
@@ -111,6 +113,7 @@ export type Database = {
         }
         Update: {
           client_visible?: boolean
+          confidential_scope?: string
           created_at?: string
           file_name?: string
           file_size?: number | null
@@ -1621,6 +1624,73 @@ export type Database = {
           },
         ]
       }
+      permissions: {
+        Row: {
+          category: string
+          description: string | null
+          key: string
+          label: string
+          sort_order: number
+        }
+        Insert: {
+          category: string
+          description?: string | null
+          key: string
+          label: string
+          sort_order?: number
+        }
+        Update: {
+          category?: string
+          description?: string | null
+          key?: string
+          label?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      profile_roles: {
+        Row: {
+          granted_at: string
+          granted_by: string | null
+          profile_id: string
+          role_id: string
+        }
+        Insert: {
+          granted_at?: string
+          granted_by?: string | null
+          profile_id: string
+          role_id: string
+        }
+        Update: {
+          granted_at?: string
+          granted_by?: string | null
+          profile_id?: string
+          role_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_roles_granted_by_fkey"
+            columns: ["granted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profile_roles_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profile_roles_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           age: number | null
@@ -2394,6 +2464,83 @@ export type Database = {
           {
             foreignKeyName: "role_feature_flags_updated_by_fkey"
             columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      role_permissions: {
+        Row: {
+          permission_key: string
+          role_id: string
+        }
+        Insert: {
+          permission_key: string
+          role_id: string
+        }
+        Update: {
+          permission_key?: string
+          role_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_permissions_permission_key_fkey"
+            columns: ["permission_key"]
+            isOneToOne: false
+            referencedRelation: "permissions"
+            referencedColumns: ["key"]
+          },
+          {
+            foreignKeyName: "role_permissions_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roles: {
+        Row: {
+          color: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          is_default: boolean
+          is_system: boolean
+          name: string
+          position: number
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_default?: boolean
+          is_system?: boolean
+          name: string
+          position: number
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_default?: boolean
+          is_system?: boolean
+          name?: string
+          position?: number
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roles_created_by_fkey"
+            columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -3307,6 +3454,10 @@ export type Database = {
         Returns: boolean
       }
       can_recognize: { Args: never; Returns: boolean }
+      can_view_confidential_scope: {
+        Args: { p_scope: string }
+        Returns: boolean
+      }
       cancel_reward_pool: {
         Args: { p_note?: string; p_pool_id: string }
         Returns: undefined
@@ -3458,6 +3609,7 @@ export type Database = {
       is_channel_member: { Args: { p_channel_id: string }; Returns: boolean }
       is_channel_owner: { Args: { p_channel_id: string }; Returns: boolean }
       is_internal: { Args: never; Returns: boolean }
+      is_project_creator: { Args: { p_project_id: string }; Returns: boolean }
       is_project_member: { Args: { p_project_id: string }; Returns: boolean }
       is_service_member: {
         Args: { p_project_service_id: string }
@@ -3466,6 +3618,7 @@ export type Database = {
       is_task_assignee: { Args: { p_task_id: string }; Returns: boolean }
       join_reward_pool: { Args: { p_pool_id: string }; Returns: undefined }
       leave_reward_pool: { Args: { p_pool_id: string }; Returns: undefined }
+      my_permissions: { Args: never; Returns: string[] }
       open_reward_pool: { Args: { p_reward_id: string }; Returns: string }
       redeem_reward: {
         Args: { p_profile_id: string; p_reward_id: string }
@@ -3561,6 +3714,7 @@ export type Database = {
         Args: { p_entries: Json; p_notes?: string }
         Returns: string
       }
+      top_role_position: { Args: { p_profile: string }; Returns: number }
       update_standup: {
         Args: { p_entries: Json; p_notes?: string; p_standup_id: string }
         Returns: string
