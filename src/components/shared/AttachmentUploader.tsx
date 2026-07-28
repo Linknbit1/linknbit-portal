@@ -10,7 +10,7 @@ import {
   useTaskAttachments, useProjectAttachments, useUploadAttachment, useDeleteAttachment,
   useToggleAttachmentVisibility, useSetAttachmentConfidential,
 } from '../../hooks/useAttachments'
-import { useCanAccess } from '../../hooks/useRoleFlags'
+import { useCanViewConfidential } from '../../hooks/useRoleFlags'
 import { useFileViewer } from './fileViewerContext'
 import { AddLinkModal } from './AddLinkModal'
 import { linkMeta } from '../../lib/linkMeta'
@@ -50,7 +50,7 @@ export function AttachmentUploader({ projectId, taskId, canManage = true, classN
   const remove = useDeleteAttachment()
   const toggleVisibility = useToggleAttachmentVisibility()
   const setConfidential = useSetAttachmentConfidential()
-  const canSeeConfidential = useCanAccess('can_view_confidential')
+  const canSeeConfidential = useCanViewConfidential('project')
 
   const handleFiles = (fileList: FileList | null) => {
     if (!fileList?.length) return
