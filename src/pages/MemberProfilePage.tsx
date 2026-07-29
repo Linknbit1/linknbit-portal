@@ -345,15 +345,15 @@ function OverviewTab({ person, teams, projects, tasks, activeTasks, canSeeSalary
         <div className="flex flex-col gap-4">
           {person.bio
             ? <p className="whitespace-pre-line font-ui text-body-sm/relaxed text-text-2">{person.bio}</p>
-            : <Empty label="No bio yet." />}
+            : <Empty label="A bio would look great right here. Still nothing, though. Bold choice." />}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <p className="mb-1.5 font-mono text-[10px] uppercase tracking-wider text-text-4">Skills</p>
-              <ChipRow items={person.skills} emptyLabel="No skills listed." />
+              <ChipRow items={person.skills} emptyLabel="Nothing here, so the portal is going with “promising newbie, day one”. Add a few to fight back." />
             </div>
             <div>
               <p className="mb-1.5 font-mono text-[10px] uppercase tracking-wider text-text-4">Tech stacks</p>
-              <ChipRow items={person.tech_stacks} emptyLabel="No tech stacks listed." />
+              <ChipRow items={person.tech_stacks} emptyLabel="Figma, spreadsheets, a camera, a code editor — something goes here. Until then we assume caffeine." />
             </div>
           </div>
         </div>
@@ -386,7 +386,7 @@ function OverviewTab({ person, teams, projects, tasks, activeTasks, canSeeSalary
       </SectionCard>
 
       <SectionCard title="Tasks" icon={ListChecks} className="lg:col-span-2" action={<span className="font-mono text-[11px] text-text-4">{activeTasks.length} open · {taskList.length} total</span>}>
-        {taskList.length === 0 ? <Empty label="No tasks assigned." /> : (
+        {taskList.length === 0 ? <Empty label="No tasks assigned. Enjoy it while it lasts." /> : (
           <div className="-my-2 flex flex-col divide-y divide-border-subtle">
             {taskList.slice(0, 12).map((t) => (
               <Link key={t.id} to={`/admin/tasks/${t.id}`} className="group flex items-center gap-3 py-2.5">
@@ -479,7 +479,7 @@ function AttendanceTab({ personId, leave, wfh }: {
               <span className="font-mono text-[12px] font-semibold text-text-2">{rate}% present</span>
             </div>
           )}
-          {records.length === 0 ? <Empty label="No attendance recorded for this month." /> : (
+          {records.length === 0 ? <Empty label="Nothing recorded this month. Either a very quiet month or the clock-ins wandered off." /> : (
             <div className="-mx-5 -mb-5 divide-y divide-border-subtle border-t border-border-subtle">
               {records.map((r) => {
                 const meta = ATT_STATUS[r.status]
@@ -508,7 +508,7 @@ function AttendanceTab({ personId, leave, wfh }: {
             </p>
             <p className="mt-1.5 font-ui text-[11.5px] text-text-3">Holiday days remaining this year</p>
           </div>
-          {balances.length === 0 ? <Empty label="No leave types configured." /> : (
+          {balances.length === 0 ? <Empty label="No leave types configured. Somebody in HR has some clicking to do." /> : (
             <div className="flex flex-col gap-3.5">
               {balances.map((b) => {
                 const c = leaveColor(b.type.color)
@@ -534,7 +534,7 @@ function AttendanceTab({ personId, leave, wfh }: {
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         <SectionCard title="Leave requests" icon={Plane} action={<span className="font-mono text-[11px] text-text-4">{mf.label}</span>}>
-          {monthLeave.length === 0 ? <Empty label="No leave this month." /> : (
+          {monthLeave.length === 0 ? <Empty label="No leave this month. Rest is apparently for other people." /> : (
             <div className="flex flex-col gap-2.5">
               {monthLeave.map((l) => (
                 <div key={l.id} className="flex items-start gap-2">
@@ -552,7 +552,7 @@ function AttendanceTab({ personId, leave, wfh }: {
         </SectionCard>
 
         <SectionCard title="WFH requests" icon={Home} action={<span className="font-mono text-[11px] text-text-4">{mf.label}</span>}>
-          {monthWfh.length === 0 ? <Empty label="No WFH this month." /> : (
+          {monthWfh.length === 0 ? <Empty label="No WFH this month. Office chair 1, sofa 0." /> : (
             <div className="flex flex-col gap-2.5">
               {monthWfh.map((w) => (
                 <div key={w.id} className="flex items-start gap-2">
@@ -570,7 +570,7 @@ function AttendanceTab({ personId, leave, wfh }: {
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         <SectionCard title="Exceptions" icon={AlertCircle} action={<span className="font-mono text-[11px] text-text-4">{mf.label}</span>}>
-          {monthExc.length === 0 ? <Empty label="No exceptions this month." /> : (
+          {monthExc.length === 0 ? <Empty label="No exceptions this month. Suspiciously spotless." /> : (
             <div className="flex flex-col gap-2.5">
               {monthExc.map((e) => {
                 const t = EXC_TYPE[e.exception_type]
@@ -595,7 +595,7 @@ function AttendanceTab({ personId, leave, wfh }: {
         </SectionCard>
 
         <SectionCard title="Overtime" icon={Hourglass} action={<span className="font-mono text-[11px] text-text-4">{mf.label}</span>}>
-          {monthOt.length === 0 ? <Empty label="No overtime this month." /> : (
+          {monthOt.length === 0 ? <Empty label="No overtime this month. Work-life balance, spotted in the wild." /> : (
             <div className="flex flex-col gap-2.5">
               {monthOt.map((o) => (
                 <div key={o.id} className="flex items-start gap-2">
@@ -643,7 +643,7 @@ function RecognitionTab({ personId }: { personId: string }) {
     <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
       {/* Monthly LP trend */}
       <SectionCard title="Monthly LP trend" icon={TrendingUp} className="lg:col-span-2" action={<span className="font-mono text-[11px] text-text-4">last {lpTrend.length || 12} mo</span>}>
-        {lpTrend.length === 0 ? <Empty label="No monthly history yet — it fills in as months close." /> : (
+        {lpTrend.length === 0 ? <Empty label="No monthly history yet. A month has to actually end before the chart gets interesting." /> : (
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={lpTrend} barCategoryGap="28%">
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
@@ -658,7 +658,7 @@ function RecognitionTab({ personId }: { personId: string }) {
 
       {/* Awards / badges */}
       <SectionCard title="Awards" icon={Award} action={<span className="font-mono text-[11px] text-text-4">{badgeAwards.length}</span>}>
-        {badgeAwards.length === 0 ? <Empty label="No badges earned yet." /> : (
+        {badgeAwards.length === 0 ? <Empty label="No badges yet. The trophy shelf is aggressively dust-free." /> : (
           <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
             {badgeAwards.map((a) => {
               const b = badgeById.get(a.badge_id)
@@ -678,7 +678,7 @@ function RecognitionTab({ personId }: { personId: string }) {
 
       {/* Quests */}
       <SectionCard title="Quests" icon={Target} action={<span className="font-mono text-[11px] text-text-4">{questsDone.length} done</span>}>
-        {claims.length === 0 ? <Empty label="No quests claimed yet." /> : (
+        {claims.length === 0 ? <Empty label="No quests claimed yet. The board sits there, waiting, judging quietly." /> : (
           <div className="flex flex-col gap-2.5">
             {claims.slice(0, 10).map((c) => {
               const q = questById.get(c.task_id)
@@ -701,7 +701,7 @@ function RecognitionTab({ personId }: { personId: string }) {
 
       {/* Shoutouts */}
       <SectionCard title="Shoutouts" icon={Megaphone} className="lg:col-span-2" action={<span className="font-mono text-[11px] text-text-4">{received.length} received · {given.length} given</span>}>
-        {received.length === 0 && given.length === 0 ? <Empty label="No shoutouts yet." /> : (
+        {received.length === 0 && given.length === 0 ? <Empty label="No shoutouts yet. Someone should really fix that." /> : (
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <div>
               <p className="mb-2 font-mono text-[10px] uppercase tracking-wider text-text-4">Received</p>
@@ -739,7 +739,7 @@ function RecognitionTab({ personId }: { personId: string }) {
 
       {/* Points timeline */}
       <SectionCard title="Points timeline" icon={History} className="lg:col-span-2">
-        {xp.length === 0 ? <Empty label="No points activity yet." /> : (
+        {xp.length === 0 ? <Empty label="No points activity yet. A ledger of pure, untouched potential." /> : (
           <div className="-my-1.5 flex flex-col divide-y divide-border-subtle">
             {xp.slice(0, 20).map((t) => (
               <div key={t.id} className="flex items-center gap-3 py-2">
