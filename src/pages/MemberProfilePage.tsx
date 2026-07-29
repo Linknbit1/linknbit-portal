@@ -183,9 +183,17 @@ export default function MemberProfilePage() {
 
   const [tab, setTab] = useState<Tab>('overview')
 
-  // Admins can "log in as" any non-admin member to see exactly what they see.
+  // "Log in as" is rank-based: you may impersonate someone below you, never a
+  // peer or someone above. So a super admin can step into an admin's account,
+  // an admin cannot step into another admin's, and nobody can take a super
+  // admin's. Mirrors the check the edge function enforces server-side.
   const canImpersonate =
-    ADMIN_ROLES.includes(viewerRole) && !isSelf && !!person && !ADMIN_ROLES.includes(person.role) && person.is_active
+    !!person &&
+    !isSelf &&
+    person.is_active &&
+    (viewerRole === 'super_admin'
+      ? person.role !== 'super_admin'
+      : viewerRole === 'admin' && !ADMIN_ROLES.includes(person.role))
   const handleImpersonate = async () => {
     if (!person) return
     setImpersonatePending(true)

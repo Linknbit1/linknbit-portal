@@ -14,6 +14,7 @@ import {
   CalendarCheck,
   ShieldAlert,
   Crown,
+  StickyNote,
   type LucideIcon,
 } from 'lucide-react'
 import { showWipFeatures } from '../../lib/featureFlags'
@@ -121,6 +122,9 @@ export const NAV_ITEMS: NavItem[] = [
   // A daily personal ritual for employees; reviewers reach the team board through
   // its own sub-page, so it belongs here rather than under People.
   { label: 'Standup', icon: ClipboardList, to: '/standup', group: 'workspace', matchPrefix: '/standup', roles: STANDUP_ROLES, children: STANDUP_CHILDREN },
+  // A private pin-board. Gated on a capability rather than a role so it can be
+  // handed to anyone from Settings; the notes themselves are owner-only in RLS.
+  { label: 'My Notes', icon: StickyNote, to: '/notes', group: 'workspace', feature: 'can_use_sticky_notes' },
   // Personal for most roles (My Devices, Notifications); the admin-only sections
   // filter themselves in-page. Grouping it under Admin would put an "Admin"
   // heading in front of all seven roles and mean nothing.

@@ -1723,6 +1723,7 @@ export type Database = {
           role: string
           skills: string[]
           tech_stacks: string[]
+          theme: string
           updated_at: string
         }
         Insert: {
@@ -1756,6 +1757,7 @@ export type Database = {
           role?: string
           skills?: string[]
           tech_stacks?: string[]
+          theme?: string
           updated_at?: string
         }
         Update: {
@@ -1789,6 +1791,7 @@ export type Database = {
           role?: string
           skills?: string[]
           tech_stacks?: string[]
+          theme?: string
           updated_at?: string
         }
         Relationships: [
@@ -2911,6 +2914,53 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "standups_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sticky_notes: {
+        Row: {
+          color: string
+          content: string
+          created_at: string
+          id: string
+          pos_x: number
+          pos_y: number
+          profile_id: string
+          rotation: number
+          shape: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string
+          content?: string
+          created_at?: string
+          id?: string
+          pos_x?: number
+          pos_y?: number
+          profile_id: string
+          rotation?: number
+          shape?: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string
+          content?: string
+          created_at?: string
+          id?: string
+          pos_x?: number
+          pos_y?: number
+          profile_id?: string
+          rotation?: number
+          shape?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sticky_notes_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
