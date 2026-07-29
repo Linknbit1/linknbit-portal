@@ -150,6 +150,22 @@
   --shadow-ring-focus: 0 0 0 3px rgba(238, 39, 55, 0.35);
   --shadow-badge-glow: 0 0 24px rgba(251, 191, 36, 0.35);
 
+  /* ── Sticky-note board ──
+     Pastels sit on cork, not on the dark app surfaces, so they are tuned for a
+     warm mid-tone background and paired with a dark ink colour for the text. */
+  --color-note-pink: #FBCFE8;
+  --color-note-lavender: #DDD6FE;
+  --color-note-mint: #BBF7D0;
+  --color-note-peach: #FED7AA;
+  --color-note-butter: #FEF08A;
+  --color-note-sky: #BAE6FD;
+  --color-note-ink: #4A3A46;
+  --color-cork: #C99A62;
+  --color-cork-dark: #A8763F;
+  /* Lighter fleck; cork grain reads as both darker pits and paler flecks. */
+  --color-cork-speck: #E0B784;
+  --color-cork-frame: #7C4F2A;
+
   /* ── Layout sizing ── */
   --width-sidebar-expanded: 248px;
   --width-sidebar-collapsed: 72px;
@@ -166,6 +182,57 @@
 @keyframes shimmer {
   0%   { background-position: -200% 0; }
   100% { background-position: 200% 0; }
+}
+
+/*
+ * Per-user theme (profiles.theme), set on <html> so body, scrollbars and every
+ * portal surface inherit it. Only the variables are redefined — each utility
+ * resolves through them, so no component changes anywhere.
+ *
+ * The whole dark scale is rotated from navy (~216°) to jade (~170°) at the SAME
+ * lightness and saturation as the default palette, step for step. Keeping the
+ * lightness ladder intact means every text/surface contrast ratio established
+ * for the default theme carries over unchanged.
+ *
+ * Deliberately NOT rotated: success / warning / error / info, the service
+ * accents (design violet, dev cyan, marketing amber) and coin gold. Those carry
+ * meaning rather than branding — an error that is not red stops reading as an
+ * error. Role tints follow the brand, so the two red ones become jade.
+ */
+.theme-jade {
+  /* Brand */
+  --color-brand-red: #14B8A6;
+  --color-brand-red-hover: #2DD4BF;
+  --color-brand-red-press: #0F9488;
+  --color-brand-navy: #182B27;
+
+  /* Backgrounds */
+  --color-bg-base: #0B1816;
+  --color-bg-canvas: #10211E;
+
+  /* Surfaces */
+  --color-surface-1: #142926;
+  --color-surface-2: #1A3530;
+  --color-surface-3: #23403C;
+  --color-surface-inset: #0C1F1C;
+
+  /* Borders */
+  --color-border-default: #2A4641;
+  --color-border-subtle: #1E3733;
+  --color-border-strong: #3A5F59;
+  --color-border-focus: #14B8A6;
+
+  /* Text — near-neutral, warmed very slightly toward the jade base */
+  --color-text-1: #EFF7F5;
+  --color-text-2: #AFC7C2;
+  --color-text-3: #77948E;
+  --color-text-4: #486761;
+
+  /* Role tints: only the two that echoed the brand red move. */
+  --color-role-super-admin: #14B8A6;
+  --color-role-admin: #0D9488;
+
+  --shadow-ring-focus: 0 0 0 3px rgba(20, 184, 166, 0.35);
 }
 
 /* ── Safe-area insets (iOS notch / Dynamic Island / home indicator, Android) ── */
@@ -189,8 +256,8 @@
   }
 
   body {
-    background-color: #0B1018;
-    color: #F2F5F9;
+    background-color: var(--color-bg-base);
+    color: var(--color-text-1);
     font-family: var(--font-ui);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -208,8 +275,8 @@
   /* Custom scrollbar */
   ::-webkit-scrollbar { width: 10px; height: 10px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #232E3F; border-radius: 999px; border: 2px solid #0B1018; }
-  ::-webkit-scrollbar-thumb:hover { background: #3B4A60; }
+  ::-webkit-scrollbar-thumb { background: var(--color-surface-3); border-radius: 999px; border: 2px solid var(--color-bg-base); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--color-border-strong); }
 
   /* Client portal scrollbar */
   .client-portal ::-webkit-scrollbar-thumb { background: #DBD2C0; border: 2px solid #FAF7F2; }
@@ -227,7 +294,7 @@
 @layer components {
   /* Skeleton shimmer */
   .skeleton {
-    background: linear-gradient(90deg, #1A2433 25%, #232E3F 50%, #1A2433 75%);
+    background: linear-gradient(90deg, var(--color-surface-2) 25%, var(--color-surface-3) 50%, var(--color-surface-2) 75%);
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite linear;
   }

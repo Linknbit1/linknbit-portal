@@ -37,6 +37,16 @@ export function AppShell() {
   // stay live regardless of which page is open.
   useRealtimeChannelList(!!profile?.id)
 
+  // Theme goes on <html>, not on a wrapper div: body paints the area outside the
+  // app (iOS overscroll), scrollbars are styled at the document level, and modals
+  // portal out of this tree. A wrapper would leave all three on the default navy.
+  useEffect(() => {
+    const root = document.documentElement
+    const theme = profile?.theme === 'jade' ? 'theme-jade' : null
+    if (theme) root.classList.add(theme)
+    return () => { if (theme) root.classList.remove(theme) }
+  }, [profile?.theme])
+
   // Reset scroll to the top whenever the route changes, so a freshly opened
   // screen never starts mid-page (e.g. drilling into a section after scrolling
   // the hub). Targets the <main> scroll container and the window.

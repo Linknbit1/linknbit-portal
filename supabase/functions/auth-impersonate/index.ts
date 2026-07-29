@@ -1,7 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 // Admin impersonation ("log in as member"). Verifies the caller is an admin/super_admin,
-// checks the target is impersonable (an active NON-admin member), mints a real session
+// checks the target is active and ranked strictly below the caller, mints a real session
 // for that member via a magic-link token, records an audit row, and returns the tokens.
 // The frontend applies these in-memory only — the admin's HTTP-only cookie is untouched,
 // so exiting impersonation just re-reads that cookie.
@@ -55,7 +55,11 @@ Deno.serve(async (req: Request) => {
     return json({ error: 'Only admins can impersonate' }, 403)
   }
 
-  // 2. Validate the target — active, exists, and NOT an admin/super_admin (no escalation).
+  // 2. Validate the target — exists, active, and ranked strictly below the caller.
+  //
+  // Rank rather than a flat "no admins" rule: a super admin needs to be able to
+  // step into an admin's account, while an admin still must not be able to take
+  // a peer's or a super admin's. Strictly-below is what prevents escalation.
   if (profileId === caller.id) return json({ error: 'Cannot impersonate yourself' }, 400)
   const { data: target } = await service
     .from('profiles')
@@ -64,8 +68,16 @@ Deno.serve(async (req: Request) => {
     .maybeSingle()
   if (!target) return json({ error: 'Member not found' }, 404)
   if (!target.is_active) return json({ error: 'That member is inactive' }, 400)
-  if (['super_admin', 'admin'].includes(target.role)) {
-    return json({ error: 'Admins cannot be impersonated' }, 403)
+
+  const [{ data: callerRank }, { data: targetRank }] = await Promise.all([
+    service.rpc('top_role_position', { p_profile: caller.id }),
+    service.rpc('top_role_position', { p_profile: target.id }),
+  ])
+  if (typeof callerRank !== 'number' || typeof targetRank !== 'number') {
+    return json({ error: 'Could not resolve role ranks' }, 500)
+  }
+  if (targetRank >= callerRank) {
+    return json({ error: 'You can only log in as someone ranked below you' }, 403)
   }
   if (!target.email) return json({ error: 'That member has no email to sign in with' }, 400)
 
