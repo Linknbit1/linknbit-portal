@@ -3,14 +3,39 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 // Admin impersonation ("log in as member"). Verifies the caller is an admin/super_admin,
 // checks the target is active and ranked strictly below the caller, mints a real session
 // for that member via a magic-link token, records an audit row, and returns the tokens.
-// The frontend applies these in-memory only — the admin's HTTP-only cookie is untouched,
-// so exiting impersonation just re-reads that cookie.
+//
+// The minted session is also written to its own HTTP-only cookie, separate from and
+// alongside the admin's. That is what survives a reload: auth-refresh prefers the
+// impersonation cookie when it is present, so a hard refresh comes back as the member
+// rather than snapping to the admin. The admin's own cookie is never touched, so exiting
+// is still just a matter of clearing this one and re-reading that.
+//
+// Because the cookie has to belong to the app's origin, this function must be called
+// through the /api/auth proxy — a response from *.supabase.co cannot set a cookie the
+// app origin will send back.
 //
 // Required secrets (all auto-provided): SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ANON_KEY.
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+// Cookie helpers inlined, matching the other auth functions — see auth-refresh.
+const IMPERSONATION_COOKIE = 'sb-impersonation'
+// A working session, not a login. Short enough that a forgotten impersonation
+// lapses on its own rather than persisting for the admin cookie's 30 days.
+const IMPERSONATION_MAX_AGE = 60 * 60 * 12
+
+function isSecureRequest(req: Request): boolean {
+  const origin = req.headers.get('origin') ?? ''
+  if (origin.startsWith('http://')) return false
+  if (origin.startsWith('https://')) return true
+  return (req.headers.get('x-forwarded-proto') ?? 'https') !== 'http'
+}
+
+function setCookie(name: string, value: string, maxAge: number, secure: boolean): string {
+  return `${name}=${encodeURIComponent(value)}; HttpOnly${secure ? '; Secure' : ''}; SameSite=Lax; Path=/; Max-Age=${maxAge}`
 }
 
 function json(body: unknown, status: number): Response {
@@ -50,7 +75,9 @@ Deno.serve(async (req: Request) => {
   const { data: { user: caller }, error: authError } = await callerClient.auth.getUser()
   if (authError || !caller) return json({ error: 'Unauthorized' }, 401)
 
-  const { data: me } = await service.from('profiles').select('role').eq('id', caller.id).maybeSingle()
+  // `name` is carried into the cookie so the banner can still say who is behind
+  // the impersonation after a reload, when the client has no admin profile loaded.
+  const { data: me } = await service.from('profiles').select('role, name').eq('id', caller.id).maybeSingle()
   if (!me || !['super_admin', 'admin'].includes(me.role)) {
     return json({ error: 'Only admins can impersonate' }, 403)
   }
@@ -112,9 +139,29 @@ Deno.serve(async (req: Request) => {
     await service.from('impersonation_log').insert({ admin_id: caller.id, target_id: target.id })
   }
 
-  return json({
-    access_token: verified.session.access_token,
-    refresh_token: verified.session.refresh_token,
-    user: { id: target.id, name: target.name },
-  }, 200)
+  // The cookie carries the member's refresh token plus the two names the
+  // impersonation banner needs, so a reload can rebuild the whole state without
+  // the client having to remember anything itself.
+  const cookie = setCookie(
+    IMPERSONATION_COOKIE,
+    JSON.stringify({
+      rt: verified.session.refresh_token,
+      targetName: target.name,
+      adminName: me.name ?? 'an admin',
+    }),
+    IMPERSONATION_MAX_AGE,
+    isSecureRequest(req),
+  )
+
+  const headers = new Headers({ 'Content-Type': 'application/json', ...CORS_HEADERS })
+  headers.append('Set-Cookie', cookie)
+
+  return new Response(
+    JSON.stringify({
+      access_token: verified.session.access_token,
+      refresh_token: verified.session.refresh_token,
+      user: { id: target.id, name: target.name },
+    }),
+    { status: 200, headers },
+  )
 })
