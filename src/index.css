@@ -166,7 +166,10 @@
   --color-note-pink: #17655C;
   --color-note-lavender: #253C6E;
   --color-note-mint: #0F5347;
-  --color-note-peach: #6A4A20;
+  /* Emerald: the one gap left in the range. The other five sit at jade, teal,
+     ocean, indigo and mustard, so a true green is the only shade that reads as
+     distinct rather than as a near-miss of one of them. */
+  --color-note-peach: #1F6340;
   --color-note-butter: #7A6417;
   --color-note-sky: #10516B;
   --color-note-ink: #FFFEFA;
