@@ -11,7 +11,7 @@ import {
   useProjectFiles, useUploadAttachment, useDeleteAttachment, useToggleAttachmentVisibility,
   useSetAttachmentConfidential,
 } from '../../hooks/useAttachments'
-import { useCanAccess } from '../../hooks/useRoleFlags'
+import { useCanViewConfidential } from '../../hooks/useRoleFlags'
 import { useFileViewer } from '../../components/shared/fileViewerContext'
 import { AddLinkModal } from '../../components/shared/AddLinkModal'
 import { linkMeta } from '../../lib/linkMeta'
@@ -50,7 +50,7 @@ export function ProjectFilesTab({ projectId, canManage = true, onOpenTask }: Pro
   const setConfidential = useSetAttachmentConfidential()
   // Confidential rows are filtered out server-side for anyone without this, so a
   // viewer never even receives them; this only drives the marking affordance.
-  const canSeeConfidential = useCanAccess('can_view_confidential')
+  const canSeeConfidential = useCanViewConfidential('project')
 
   const counts = useMemo(() => ({
     all: files.length,

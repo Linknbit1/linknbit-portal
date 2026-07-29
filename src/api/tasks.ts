@@ -7,7 +7,9 @@ export type TaskStatus = TaskRow['status']
 export type TaskPriority = TaskRow['priority']
 
 export interface TaskListItem extends TaskRow {
-  project: { id: string; name: string; service_type: string } | null
+  project: { id: string; name: string } | null
+  /** The project service this task belongs to — the layer above its stage. */
+  project_service: { id: string; service: { id: string; name: string; slug: string; color: string } | null } | null
   /** Primary assignee (tasks.assignee_id) — kept for filters/back-compat. */
   assignee: PersonMini | null
   /** Everyone assigned (task_assignees join table). */
@@ -20,15 +22,18 @@ export interface TaskListItem extends TaskRow {
 
 export interface TaskFilters {
   projectId?: string
+  /** Narrow to one service block of a project (the 4-layer view). */
+  projectServiceId?: string
   status?: TaskStatus
   priority?: TaskPriority
+  /** Service slug — matches tasks in any project's block of that service. */
   service?: string
   assigneeId?: string
   search?: string
 }
 
 const TASK_SELECT =
-  '*, project:projects(id,name,service_type), assignee:profiles!tasks_assignee_id_fkey(id,name,avatar_url), assignees:task_assignees(profile:profiles(id,name,avatar_url)), stage:stages(id,name), subtask_count:subtasks(count), comment_count:comments(count), attachment_count:attachments(count)'
+  '*, project:projects(id,name), project_service:project_services(id, service:services(id,name,slug,color)), assignee:profiles!tasks_assignee_id_fkey(id,name,avatar_url), assignees:task_assignees(profile:profiles(id,name,avatar_url)), stage:stages(id,name), subtask_count:subtasks(count), comment_count:comments(count), attachment_count:attachments(count)'
 
 export async function fetchTasks(filters: TaskFilters = {}): Promise<TaskListItem[]> {
   let query = supabase
@@ -40,21 +45,26 @@ export async function fetchTasks(filters: TaskFilters = {}): Promise<TaskListIte
     .order('created_at', { ascending: false })
 
   if (filters.projectId) query = query.eq('project_id', filters.projectId)
+  if (filters.projectServiceId) query = query.eq('project_service_id', filters.projectServiceId)
   if (filters.status) query = query.eq('status', filters.status)
   if (filters.priority) query = query.eq('priority', filters.priority)
-  if (filters.service) query = query.eq('service_type', filters.service)
   if (filters.assigneeId) query = query.eq('assignee_id', filters.assigneeId)
   if (filters.search) query = query.ilike('title', `%${filters.search}%`)
 
   const { data, error } = await query
   if (error) throw error
-  return data.map(({ subtask_count, comment_count, attachment_count, assignees, ...rest }) => ({
+  const shaped = data.map(({ subtask_count, comment_count, attachment_count, assignees, ...rest }) => ({
     ...rest,
     assignees: assignees.flatMap((a) => (a.profile ? [a.profile] : [])),
     subtask_count: subtask_count[0]?.count ?? 0,
     comment_count: comment_count[0]?.count ?? 0,
     attachment_count: attachment_count[0]?.count ?? 0,
   }))
+  // Service lives two joins away, so it is matched here rather than with an
+  // embedded filter (which would drop the embed instead of the row).
+  return filters.service
+    ? shaped.filter((t) => t.project_service?.service?.slug === filters.service)
+    : shaped
 }
 
 export function fetchTasksByProject(projectId: string): Promise<TaskListItem[]> {

@@ -1,15 +1,20 @@
 import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
-  fetchStandupWindow, submitStandup, fetchStandupsByDate, fetchMyStandups, fetchStandupRoster,
-  type StandupEntryInput,
+  fetchStandupWindow, submitStandup, updateStandup, fetchStandupsByDate, fetchMyStandups,
+  fetchMyStandup, fetchStandupRoster, fetchStandupRoleSettings, fetchStandupParticipants,
+  setStandupRoleRequirement, setStandupParticipation,
+  type StandupEntryInput, type ParticipationMode,
 } from '../api/standups'
 
 export const STANDUP_KEYS = {
   window: ['standup', 'window'] as const,
   byDate: (date: string) => ['standups', 'date', date] as const,
   mine: (profileId: string) => ['standups', 'mine', profileId] as const,
+  myDay: (profileId: string, date: string) => ['standups', 'mine', profileId, date] as const,
   roster: (date: string) => ['standups', 'roster', date] as const,
+  roleSettings: ['standup', 'settings', 'roles'] as const,
+  participants: ['standup', 'settings', 'participants'] as const,
 }
 
 /**
@@ -62,6 +67,28 @@ export function useSubmitStandup() {
   })
 }
 
+export function useUpdateStandup() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ standupId, entries, notes }: { standupId: string; entries: StandupEntryInput[]; notes?: string }) =>
+      updateStandup(standupId, entries, notes),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: STANDUP_KEYS.window })
+      qc.invalidateQueries({ queryKey: ['standups'] })
+    },
+  })
+}
+
+/** One specific day of the signed-in user's own standup (prefills the edit form). */
+export function useMyStandup(profileId: string | undefined, date: string) {
+  return useQuery({
+    queryKey: STANDUP_KEYS.myDay(profileId ?? '', date),
+    queryFn: () => fetchMyStandup(profileId!, date),
+    enabled: !!profileId,
+    staleTime: 20_000,
+  })
+}
+
 export function useStandupsByDate(date: string) {
   return useQuery({
     queryKey: STANDUP_KEYS.byDate(date),
@@ -70,10 +97,10 @@ export function useStandupsByDate(date: string) {
   })
 }
 
-export function useMyStandups(profileId: string | undefined) {
+export function useMyStandups(profileId: string | undefined, limit = 14) {
   return useQuery({
-    queryKey: STANDUP_KEYS.mine(profileId ?? ''),
-    queryFn: () => fetchMyStandups(profileId!),
+    queryKey: [...STANDUP_KEYS.mine(profileId ?? ''), limit] as const,
+    queryFn: () => fetchMyStandups(profileId!, limit),
     enabled: !!profileId,
     staleTime: 20_000,
   })
@@ -85,5 +112,52 @@ export function useStandupRoster(date: string, enabled = true) {
     queryFn: () => fetchStandupRoster(date),
     enabled,
     staleTime: 20_000,
+  })
+}
+
+/* ── Participation settings ─────────────────────────────────────────────────── */
+
+export function useStandupRoleSettings() {
+  return useQuery({
+    queryKey: STANDUP_KEYS.roleSettings,
+    queryFn: fetchStandupRoleSettings,
+    staleTime: 60_000,
+  })
+}
+
+export function useStandupParticipants() {
+  return useQuery({
+    queryKey: STANDUP_KEYS.participants,
+    queryFn: fetchStandupParticipants,
+    staleTime: 60_000,
+  })
+}
+
+/** Both settings mutations invalidate the window too — the rule they encode decides who sees the form. */
+function useSettingsInvalidation() {
+  const qc = useQueryClient()
+  return () => {
+    qc.invalidateQueries({ queryKey: STANDUP_KEYS.roleSettings })
+    qc.invalidateQueries({ queryKey: STANDUP_KEYS.participants })
+    qc.invalidateQueries({ queryKey: STANDUP_KEYS.window })
+    qc.invalidateQueries({ queryKey: ['standups'] })
+  }
+}
+
+export function useSetStandupRoleRequirement() {
+  const invalidate = useSettingsInvalidation()
+  return useMutation({
+    mutationFn: ({ role, required }: { role: string; required: boolean }) =>
+      setStandupRoleRequirement(role, required),
+    onSuccess: invalidate,
+  })
+}
+
+export function useSetStandupParticipation() {
+  const invalidate = useSettingsInvalidation()
+  return useMutation({
+    mutationFn: ({ profileId, mode, note }: { profileId: string; mode: ParticipationMode; note?: string }) =>
+      setStandupParticipation(profileId, mode, note),
+    onSuccess: invalidate,
   })
 }

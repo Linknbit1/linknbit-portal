@@ -9,6 +9,8 @@ import type { StageRow } from '../../api/stages'
 
 interface StageFormModalProps {
   projectId: string
+  /** The service block this stage belongs to — stages live under a service now. */
+  projectServiceId: string
   /** Pre-filled for editing; omit to create. */
   stage?: StageRow
   /** order_index to use for a newly created stage. */
@@ -16,7 +18,7 @@ interface StageFormModalProps {
   onClose: () => void
 }
 
-export function StageFormModal({ projectId, stage, nextOrder = 0, onClose }: StageFormModalProps) {
+export function StageFormModal({ projectId, projectServiceId, stage, nextOrder = 0, onClose }: StageFormModalProps) {
   const toast = useToast()
   const createStage = useCreateStage()
   const updateStage = useUpdateStage()
@@ -40,7 +42,14 @@ export function StageFormModal({ projectId, stage, nextOrder = 0, onClose }: Sta
       )
     } else {
       createStage.mutate(
-        { project_id: projectId, name: name.trim(), order_index: nextOrder, requires_approval: requiresApproval, client_visible: clientVisible },
+        {
+          project_id: projectId,
+          project_service_id: projectServiceId,
+          name: name.trim(),
+          order_index: nextOrder,
+          requires_approval: requiresApproval,
+          client_visible: clientVisible,
+        },
         { onSuccess, onError },
       )
     }

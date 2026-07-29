@@ -12,10 +12,10 @@ export function useServices() {
   return useQuery({ queryKey: SERVICE_KEYS.all, queryFn: fetchServices, staleTime: 5 * 60_000 })
 }
 
-export function useServiceUsage(slug: string, enabled: boolean) {
+export function useServiceUsage(slug: string, enabled: boolean, serviceId?: string) {
   return useQuery({
     queryKey: SERVICE_KEYS.usage(slug),
-    queryFn: () => fetchServiceUsage(slug),
+    queryFn: () => fetchServiceUsage(slug, serviceId),
     enabled,
   })
 }

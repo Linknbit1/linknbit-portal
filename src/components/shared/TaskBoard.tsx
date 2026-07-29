@@ -103,7 +103,7 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
                 >
                   {showProject && t.project && (
                     <div className="flex items-center gap-1.5 mb-1.5">
-                      <ServiceChip service={t.project.service_type} showDot={false} />
+                      {t.project_service?.service && <ServiceChip service={t.project_service.service.slug} showDot={false} />}
                       <span className="font-ui text-[10.5px] text-text-4 truncate">{t.project.name}</span>
                     </div>
                   )}

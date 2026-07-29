@@ -80,7 +80,7 @@ export default function TasksPage() {
       (!q || t.title.toLowerCase().includes(q) || (t.project?.name ?? '').toLowerCase().includes(q)) &&
       (!statusFilter || t.status === statusFilter) &&
       (!priorityFilter || t.priority === priorityFilter) &&
-      (!serviceFilter || t.service_type === serviceFilter || t.project?.service_type === serviceFilter) &&
+      (!serviceFilter || t.project_service?.service?.slug === serviceFilter) &&
       (!assigneeFilter || t.assignees.some((a) => a.id === assigneeFilter)) &&
       (!dueFrom || (!!t.due_date && t.due_date.slice(0, 10) >= dueFrom)) &&
       (!dueTo || (!!t.due_date && t.due_date.slice(0, 10) <= dueTo)))
@@ -176,7 +176,7 @@ export default function TasksPage() {
                     <td className="px-4 py-3 font-ui text-[13px] text-text-1">{t.title}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <ServiceChip service={t.project?.service_type ?? t.service_type ?? ''} showDot={false} />
+                        {t.project_service?.service && <ServiceChip service={t.project_service.service.slug} showDot={false} />}
                         <span className="font-ui text-[12px] text-text-3 truncate max-w-[140px]">{t.project?.name ?? '—'}</span>
                       </div>
                     </td>

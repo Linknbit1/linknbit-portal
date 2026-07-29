@@ -1,13 +1,13 @@
 import { useMemo, useState } from 'react'
-import { Plus, Trash2, Send, AlertTriangle, Clock } from 'lucide-react'
+import { Plus, Trash2, Send, AlertTriangle, Clock, Save } from 'lucide-react'
 import { Button } from '../components/ui/Button'
 import { Select } from '../components/ui/Select'
 import { cn } from '../lib/cn'
 import { useToast } from '../components/ui/toast-context'
 import { useProjects } from '../hooks/useProjects'
 import { useTasks } from '../hooks/useTasks'
-import { useSubmitStandup } from '../hooks/useStandups'
-import type { StandupEntryInput } from '../api/standups'
+import { useSubmitStandup, useUpdateStandup } from '../hooks/useStandups'
+import type { StandupDetail, StandupEntryInput } from '../api/standups'
 
 /** Minimums mirrored from the DB CHECK constraints so errors surface inline. */
 const MIN_WORK_DONE = 15
@@ -27,6 +27,18 @@ const emptyDraft = (): Draft => ({
   key: crypto.randomUUID(), projectId: '', taskId: '', hours: '', minutes: '', workDone: '', blocker: '',
 })
 
+/** Reopens a submitted standup as editable drafts. */
+const draftsFrom = (standup: StandupDetail): Draft[] =>
+  standup.entries.map((e) => ({
+    key: e.id,
+    projectId: e.project_id,
+    taskId: e.task_id ?? '',
+    hours: String(Math.floor(e.minutes_spent / 60) || ''),
+    minutes: String(e.minutes_spent % 60 || ''),
+    workDone: e.work_done,
+    blocker: e.blocker ?? '',
+  }))
+
 function totalMinutes(d: Draft): number {
   return (parseInt(d.hours || '0', 10) || 0) * 60 + (parseInt(d.minutes || '0', 10) || 0)
 }
@@ -41,14 +53,24 @@ function draftError(d: Draft): string | null {
   return null
 }
 
-export function StandupForm({ onDone }: { onDone?: () => void }) {
+interface StandupFormProps {
+  onDone?: () => void
+  /** Present = correcting an existing standup rather than submitting a new one. */
+  editing?: StandupDetail
+  onCancel?: () => void
+}
+
+export function StandupForm({ onDone, editing, onCancel }: StandupFormProps) {
   const toast = useToast()
   const { data: projects = [] } = useProjects()
   const { data: allTasks = [] } = useTasks()
   const submit = useSubmitStandup()
+  const update = useUpdateStandup()
+  const isEditing = !!editing
+  const pending = submit.isPending || update.isPending
 
-  const [drafts, setDrafts] = useState<Draft[]>([emptyDraft()])
-  const [notes, setNotes] = useState('')
+  const [drafts, setDrafts] = useState<Draft[]>(() => (editing ? draftsFrom(editing) : [emptyDraft()]))
+  const [notes, setNotes] = useState(editing?.notes ?? '')
   const [showErrors, setShowErrors] = useState(false)
 
   const projectOptions = projects.map((p) => ({ value: p.id, label: p.name }))
@@ -70,7 +92,17 @@ export function StandupForm({ onDone }: { onDone?: () => void }) {
       minutes_spent: totalMinutes(d),
       blocker: d.blocker.trim() || null,
     }))
-    submit.mutate({ entries, notes: notes.trim() || undefined }, {
+    const trimmedNotes = notes.trim() || undefined
+
+    if (editing) {
+      update.mutate({ standupId: editing.id, entries, notes: trimmedNotes }, {
+        onSuccess: () => { toast('Standup updated', 'success'); onDone?.() },
+        onError: (e) => toast(e instanceof Error ? e.message : 'Could not save changes', 'error'),
+      })
+      return
+    }
+
+    submit.mutate({ entries, notes: trimmedNotes }, {
       onSuccess: () => { toast('Standup submitted', 'success'); onDone?.() },
       onError: (e) => toast(e instanceof Error ? e.message : 'Could not submit', 'error'),
     })
@@ -167,9 +199,22 @@ export function StandupForm({ onDone }: { onDone?: () => void }) {
         />
       </div>
 
-      <div className="flex items-center gap-3 pt-1">
-        <Button iconLeft={<Send size={14} />} onClick={handleSubmit} loading={submit.isPending}>Submit standup</Button>
-        <span className="font-ui text-[11.5px] text-text-4">You can only submit once per day.</span>
+      <div className="flex flex-wrap items-center gap-3 pt-1">
+        <Button
+          iconLeft={isEditing ? <Save size={14} /> : <Send size={14} />}
+          onClick={handleSubmit}
+          loading={pending}
+        >
+          {isEditing ? 'Save changes' : 'Submit standup'}
+        </Button>
+        {isEditing && onCancel && (
+          <Button variant="secondary" onClick={onCancel} disabled={pending}>Cancel</Button>
+        )}
+        <span className="font-ui text-[11.5px] text-text-4">
+          {isEditing
+            ? 'Corrections stay open until the window closes. Your on-time status and XP are unchanged.'
+            : 'You can only submit once per day — you can still correct it afterwards.'}
+        </span>
       </div>
     </div>
   )

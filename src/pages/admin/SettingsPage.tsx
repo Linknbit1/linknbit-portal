@@ -7,12 +7,16 @@ import { HubRow } from '../../components/layout/MobileHub'
 import { MyDevicesCard } from '../../components/shared/MyDevicesCard'
 import { PushDevicesCard } from '../../components/shared/PushDevicesCard'
 import { NotificationPreferencesCard } from '../../components/shared/NotificationPreferencesCard'
+import { RoleManager } from '../../components/shared/RoleManager'
 import { Button } from '../../components/ui/Button'
 import { Toggle } from '../../components/ui/Toggle'
 import { useToast } from '../../components/ui/toast-context'
 import { useAuthContext } from '../../context/AuthContext'
 import { useIsDesktop } from '../../hooks/useMediaQuery'
-import { useRoleFlags, useUpdateRoleFlag } from '../../hooks/useRoleFlags'
+import { useCanManageRoles } from '../../hooks/useRoleFlags'
+import {
+  usePermissionCatalog, useRolePermissions, useRoles, useSetRolePermission,
+} from '../../hooks/usePermissions'
 import {
   useServices, useCreateService, useUpdateService, useDeleteService, useServiceUsage,
 } from '../../hooks/useServices'
@@ -59,9 +63,9 @@ function ServiceRow({ service, canManage }: { service: Service; canManage: boole
   const [name, setName] = useState(service.name)
   const [color, setColor] = useState(service.color)
   const [confirming, setConfirming] = useState(false)
-  const usage = useServiceUsage(service.slug, confirming)
+  const usage = useServiceUsage(service.slug, confirming, service.id)
   const dirty = name !== service.name || color !== service.color
-  const inUse = (usage.data?.people ?? 0) + (usage.data?.teams ?? 0) > 0
+  const inUse = (usage.data?.people ?? 0) + (usage.data?.teams ?? 0) + (usage.data?.projects ?? 0) > 0
 
   const save = () => update(
     { id: service.id, updates: { name: name.trim(), color } },
@@ -89,7 +93,7 @@ function ServiceRow({ service, canManage }: { service: Service; canManage: boole
         confirming ? (
           <div className="flex items-center gap-2">
             {usage.isLoading ? <Loader2 size={12} className="animate-spin text-text-4" />
-              : inUse ? <span className="font-mono text-[10.5px] text-error">In use: {usage.data?.people}p · {usage.data?.teams}t</span>
+              : inUse ? <span className="font-mono text-[10.5px] text-error">In use: {usage.data?.teams}t · {usage.data?.projects} project{usage.data?.projects === 1 ? '' : 's'}</span>
               : <button onClick={remove} disabled={deleting} className="font-mono text-[10.5px] text-error font-bold">Delete</button>}
             <button onClick={() => setConfirming(false)} className="font-mono text-[10.5px] text-text-3">Cancel</button>
           </div>
@@ -249,64 +253,74 @@ function DesignationsPanel({ canManage }: { canManage: boolean }) {
   )
 }
 
-// ── Permissions (role × feature flag matrix) ─────────────────────────────────────
-
-const INTERNAL_ROLES = ['super_admin', 'admin', 'project_manager', 'team_lead', 'employee', 'hr', 'finance'] as const
-const ROLE_LABELS: Record<string, string> = {
-  super_admin: 'Super Admin', admin: 'Admin', project_manager: 'PM',
-  team_lead: 'Team Lead', employee: 'Employee', hr: 'HR', finance: 'Finance',
-}
-const FEATURE_LABELS: Record<string, string> = {
-  can_create_projects:      'Create Projects',
-  can_delete_projects:      'Delete Projects',
-  can_view_budget:          'View Budget',
-  can_view_confidential:    'View Confidential Docs',
-  can_approve_tasks:        'Approve Tasks',
-  can_manage_clients:       'Manage Clients',
-  can_manage_people:        'Manage People',
-  can_view_reports:         'View Reports',
-  can_manage_attendance:    'Manage Attendance',
-  can_approve_requests:     'Approve Leave / WFH / Overtime',
-  can_view_all_attendance:  'View All Attendance (vs own team)',
-  can_govern_gamification:  'Govern Gamification',
-  can_recognize:            'Post Quests & Shoutouts',
-  can_create_channels:      'Create Channels',
-  can_manage_all_channels:  'Manage Any Channel (members, roles, delete)',
-  can_delete_any_message:   'Delete Any Message',
-}
-
-const FEATURE_SECTIONS: { label: string; features: string[] }[] = [
-  { label: 'Projects',     features: ['can_create_projects', 'can_delete_projects', 'can_view_budget', 'can_view_confidential'] },
-  { label: 'Tasks',        features: ['can_approve_tasks'] },
-  { label: 'Clients',      features: ['can_manage_clients'] },
-  { label: 'People',       features: ['can_manage_people'] },
-  { label: 'Reports',      features: ['can_view_reports'] },
-  { label: 'Attendance',   features: ['can_manage_attendance', 'can_approve_requests', 'can_view_all_attendance'] },
-  { label: 'Gamification', features: ['can_govern_gamification', 'can_recognize'] },
-  { label: 'Chat',         features: ['can_create_channels', 'can_manage_all_channels', 'can_delete_any_message'] },
-]
+// ── Permissions (role × permission matrix) ───────────────────────────────────────
 
 /**
- * Some switches must never be flipped off or the org locks itself out — there is no
- * super_admin account to recover with, so `admin` must keep People management (the
- * only route back into this panel). super_admin is always-on by definition
- * (has_feature() short-circuits it server-side).
+ * Both axes are read from the database rather than hardcoded, so a custom role
+ * or a newly added permission key shows up here with no code change.
+ * See docs/permission-model-v2.md.
  */
-function isLockedOn(role: string, featureKey: string): boolean {
-  return role === 'super_admin' || (role === 'admin' && featureKey === 'can_manage_people')
+
+/**
+ * Switches that must never be flipped off, or the org locks itself out.
+ *
+ * `can_manage_roles` is the only route back into this panel and there is no
+ * account holding `administrator` to recover with, so the last role carrying it
+ * is pinned. `administrator` itself is pinned wherever present for the same
+ * reason. The database enforces this too (fn_assert_role_admin_exists) - this
+ * is just so the UI does not offer a toggle that will be rejected.
+ */
+function isLockedOn(permissionKey: string, roleHasIt: boolean, adminCarrierCount: number): boolean {
+  if (permissionKey === 'administrator' && roleHasIt) return true
+  if (permissionKey === 'can_manage_roles' && roleHasIt && adminCarrierCount <= 1) return true
+  return false
 }
 
 function PermissionsPanel({ canEdit }: { canEdit: boolean }) {
   const toast = useToast()
-  const { data: flags = [], isLoading } = useRoleFlags()
-  const { mutate: updateFlag, isPending: updating } = useUpdateRoleFlag()
+  const { data: roles = [], isLoading: rolesLoading } = useRoles()
+  const { data: catalog = [], isLoading: catalogLoading } = usePermissionCatalog()
+  const { data: grants = [], isLoading: grantsLoading } = useRolePermissions()
+  const { mutate: setPermission, isPending: updating } = useSetRolePermission()
+
+  const isLoading = rolesLoading || catalogLoading || grantsLoading
+
+  const granted = useMemo(() => {
+    const set = new Set<string>()
+    for (const g of grants) set.add(`${g.role_id}:${g.permission_key}`)
+    return set
+  }, [grants])
+
+  // How many roles still carry the ability to administer roles at all.
+  const adminCarrierCount = useMemo(
+    () =>
+      roles.filter(
+        (r) =>
+          granted.has(`${r.id}:can_manage_roles`) || granted.has(`${r.id}:administrator`),
+      ).length,
+    [roles, granted],
+  )
+
+  const sections = useMemo(() => {
+    const byCategory = new Map<string, typeof catalog>()
+    for (const perm of catalog) {
+      const list = byCategory.get(perm.category) ?? []
+      list.push(perm)
+      byCategory.set(perm.category, list)
+    }
+    return [...byCategory.entries()].map(([label, permissions]) => ({ label, permissions }))
+  }, [catalog])
 
   return (
     <div>
+      <RoleManager canEdit={canEdit} />
+
       <h2 className="font-display font-bold text-[16px] text-text-1 mb-1">Permissions</h2>
-      <p className="font-ui text-[13px] text-text-3 mb-1">Role-based feature access. Toggle to enable or disable per role.</p>
+      <p className="font-ui text-[13px] text-text-3 mb-1">
+        What each role can do. A person may hold several roles; their permissions are the total of all of them.
+      </p>
       {!canEdit
-        ? <p className="font-mono text-[11px] text-text-4 mb-4">View only — only Super Admins and Admins can change permissions.</p>
+        ? <p className="font-mono text-[11px] text-text-4 mb-4">View only — you need Manage Roles to change permissions.</p>
         : <p className="font-mono text-[11px] text-text-4 mb-4">Changes take effect immediately for all sessions.</p>}
 
       {isLoading ? (
@@ -318,47 +332,53 @@ function PermissionsPanel({ canEdit }: { canEdit: boolean }) {
           <table className="w-full text-[12px] min-w-175">
             <thead>
               <tr className="border-b border-border-subtle">
-                <th className="text-left py-2 font-mono text-text-4 uppercase text-[10px] tracking-wider pr-6 min-w-45">Feature</th>
-                {INTERNAL_ROLES.map((role) => (
-                  <th key={role} className="text-center p-2 font-ui font-semibold text-text-3 min-w-17.5">
-                    {ROLE_LABELS[role]}
+                <th className="text-left py-2 font-mono text-text-4 uppercase text-[10px] tracking-wider pr-6 min-w-45">
+                  Permission
+                </th>
+                {roles.map((role) => (
+                  <th key={role.id} className="text-center p-2 font-ui font-semibold text-text-3 min-w-17.5">
+                    <span
+                      className="inline-block size-2 rounded-full mr-1 align-middle"
+                      style={{ backgroundColor: role.color ?? 'transparent' }}
+                    />
+                    {role.name}
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {FEATURE_SECTIONS.map((section) => (
+              {sections.map((section) => (
                 <React.Fragment key={section.label}>
                   <tr className="border-b border-border-subtle">
-                    <td colSpan={INTERNAL_ROLES.length + 1} className="py-2 px-3 bg-surface-2">
+                    <td colSpan={roles.length + 1} className="py-2 px-3 bg-surface-2">
                       <span className="font-mono text-[10px] font-semibold text-text-4 uppercase tracking-widest">
                         {section.label}
                       </span>
                     </td>
                   </tr>
-                  {section.features.map((featureKey, i) => {
-                    const label = FEATURE_LABELS[featureKey] ?? featureKey
-                    const isLast = i === section.features.length - 1
+                  {section.permissions.map((perm, i) => {
+                    const isLast = i === section.permissions.length - 1
                     return (
-                      <tr key={featureKey} className={cn('border-b border-border-subtle', isLast && 'border-border-default')}>
-                        <td className="py-3 pl-3 font-ui text-[13px] text-text-2 pr-6 whitespace-nowrap">{label}</td>
-                        {INTERNAL_ROLES.map((role) => {
-                          const flag = flags.find((f) => f.role === role && f.feature_key === featureKey)
-                          const locked = isLockedOn(role, featureKey)
-                          const enabled = locked || (flag?.enabled ?? false)
+                      <tr key={perm.key} className={cn('border-b border-border-subtle', isLast && 'border-border-default')}>
+                        <td className="py-3 pl-3 pr-6" title={perm.description ?? undefined}>
+                          <span className="font-ui text-[13px] text-text-2 whitespace-nowrap">{perm.label}</span>
+                        </td>
+                        {roles.map((role) => {
+                          const has = granted.has(`${role.id}:${perm.key}`)
+                          const locked = isLockedOn(perm.key, has, adminCarrierCount)
                           return (
-                            <td key={role} className="text-center py-3 px-2">
+                            <td key={role.id} className="text-center py-3 px-2">
                               <div
                                 className={cn('flex justify-center', locked && 'opacity-60')}
-                                title={locked ? 'Always on — cannot be disabled without locking everyone out' : undefined}
+                                title={locked ? 'Always on — turning this off would lock everyone out' : undefined}
                               >
                                 <Toggle
-                                  checked={enabled}
-                                  disabled={locked}
+                                  checked={has}
+                                  disabled={locked || !canEdit}
                                   onChange={(val) => {
                                     if (!canEdit || updating || locked) return
-                                    updateFlag(
-                                      { role, featureKey, enabled: val },
+                                    setPermission(
+                                      { roleId: role.id, permissionKey: perm.key, granted: val },
                                       { onError: () => toast('Failed to update permission', 'error') },
                                     )
                                   }}
@@ -390,6 +410,9 @@ export default function SettingsPage({ mobileSection }: { mobileSection?: string
   const isDesktop = useIsDesktop()
   const canEditFlags = profile?.role === 'super_admin' || profile?.role === 'admin'
   const canManageDesignations = canEditFlags || profile?.role === 'hr'
+  // Permissions is the one panel already converted off role checks; Services and
+  // Designations follow in Phase 2.
+  const canManageRoles = useCanManageRoles()
 
   const sections = useMemo(() => visibleSectionsFor(profile?.role), [profile?.role])
   const [activeTab, setActiveTab] = useState<Tab>(sections[0]?.key ?? 'designations')
@@ -409,7 +432,7 @@ export default function SettingsPage({ mobileSection }: { mobileSection?: string
     : tab === 'notifications' ? <NotificationPreferencesCard />
     : tab === 'services'     ? <ServicesPanel canManage={canEditFlags} />
     : tab === 'designations' ? <DesignationsPanel canManage={canManageDesignations} />
-    : <PermissionsPanel canEdit={canEditFlags} />
+    : <PermissionsPanel canEdit={canManageRoles} />
 
   // Mobile drill-in: one section rendered as a stack screen with its own back chrome.
   // Guard by role, not just key validity, so HR can't deep-link into Services.

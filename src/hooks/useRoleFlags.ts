@@ -1,95 +1,76 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { fetchRoleFlags, updateRoleFlag, type RoleFeatureFlagRow } from '../api/roleFlags'
-import { useAuthContext } from '../context/AuthContext'
+import { ADMINISTRATOR } from '../api/permissions'
+import { useMyPermissions } from './usePermissions'
 
-export const ROLE_FLAG_KEYS = {
-  all: ['role_feature_flags'] as const,
+/**
+ * Capability checks for the signed-in user.
+ *
+ * These mirror the SQL `has_feature()` helper by construction: both resolve the
+ * union of permissions across every role the user holds, and both treat the
+ * `administrator` permission as granting everything. The resolution itself
+ * happens server-side in `my_permissions()`, so the UI cannot drift from RLS.
+ *
+ * The hook names and signatures here are unchanged from the role-flag era on
+ * purpose - 21 files consume them.
+ *
+ * See docs/permission-model-v2.md.
+ */
+
+export interface FeatureAccess {
+  allowed: boolean
+  /** True until permissions have loaded. Guards should render a spinner, not redirect. */
+  isLoading: boolean
 }
 
-export function useRoleFlags() {
-  const { accessToken } = useAuthContext()
-  return useQuery({
-    queryKey: ROLE_FLAG_KEYS.all,
-    queryFn: fetchRoleFlags,
-    enabled: !!accessToken,
-    staleTime: 5 * 60 * 1000,
-  })
+export function useFeatureAccess(featureKey: string): FeatureAccess {
+  const { data: permissions, isLoading } = useMyPermissions()
+
+  if (!permissions) return { allowed: false, isLoading }
+
+  const allowed =
+    permissions.includes(ADMINISTRATOR) || permissions.includes(featureKey)
+  return { allowed, isLoading: false }
 }
 
 /**
- * Capability check for the signed-in user. Mirrors the SQL `has_feature()` helper,
- * including its `super_admin` short-circuit, so UI and RLS never disagree.
- *
- * Returns false while flags are still loading — fine for hiding a button, but NOT
- * for gating navigation or a route (that would flash/redirect). Use
- * `useFeatureAccess` there so you can wait on `isLoading`.
+ * Returns false while permissions are still loading — fine for hiding a button,
+ * but NOT for gating navigation or a route (that would flash then redirect).
+ * Use `useFeatureAccess` there so you can wait on `isLoading`.
  */
 export function useCanAccess(featureKey: string): boolean {
   return useFeatureAccess(featureKey).allowed
 }
 
-export interface FeatureAccess {
-  allowed: boolean
-  /** True until the flag matrix has loaded. Guards should render a spinner, not redirect. */
-  isLoading: boolean
-}
-
-export function useFeatureAccess(featureKey: string): FeatureAccess {
-  const { profile } = useAuthContext()
-  const { data: flags, isLoading } = useRoleFlags()
-
-  if (profile?.role === 'super_admin') return { allowed: true, isLoading: false }
-  if (!profile || !flags) return { allowed: false, isLoading }
-
-  const flag = flags.find((f) => f.role === profile.role && f.feature_key === featureKey)
-  return { allowed: flag?.enabled ?? false, isLoading: false }
-}
-
 // ── Named capability hooks ────────────────────────────────────────────────────
-// These replace the hardcoded role arrays that used to live in src/lib/*Access.ts.
-// Each mirrors the SQL helper of the same name, so UI and RLS agree by construction.
 
 export const useCanManagePeople = () => useCanAccess('can_manage_people')
 export const useCanManageClients = () => useCanAccess('can_manage_clients')
 export const useCanManageAttendance = () => useCanAccess('can_manage_attendance')
 export const useCanApproveRequests = () => useCanAccess('can_approve_requests')
 export const useCanApproveTasks = () => useCanAccess('can_approve_tasks')
-export const useCanDeleteProjects = () => useCanAccess('can_delete_projects')
+export const useCanManageProjects = () => useCanAccess('can_manage_projects')
 export const useCanGovernGamification = () => useCanAccess('can_govern_gamification')
 export const useCanRecognize = () => useCanAccess('can_recognize')
+export const useCanManageRoles = () => useCanAccess('can_manage_roles')
 
-/** Finance may mark cash payouts fulfilled, in addition to gamification governors. */
-export function useCanFulfillPayouts(): boolean {
-  const { profile } = useAuthContext()
-  const governs = useCanGovernGamification()
-  return governs || profile?.role === 'finance'
+/** Confidentiality domains a document can belong to. */
+export type ConfidentialScope = 'project' | 'hr' | 'finance' | 'legal'
+
+/**
+ * Whether the user may open confidential documents in a given domain.
+ *
+ * Mirrors the SQL `can_view_confidential_scope()` helper: the master key grants
+ * every domain, otherwise the domain-specific key is required. Project files
+ * default to the `project` domain, which is why that is the default here.
+ */
+export function useCanViewConfidential(scope: ConfidentialScope = 'project'): boolean {
+  const master = useCanAccess('can_view_confidential')
+  const scoped = useCanAccess(`can_view_confidential_${scope}`)
+  return master || scoped
 }
 
-export function useUpdateRoleFlag() {
-  const queryClient = useQueryClient()
-  const { profile } = useAuthContext()
-  return useMutation({
-    mutationFn: ({ role, featureKey, enabled }: { role: string; featureKey: string; enabled: boolean }) =>
-      updateRoleFlag(role, featureKey, enabled, profile?.id ?? ''),
-    onMutate: async (variables) => {
-      await queryClient.cancelQueries({ queryKey: ROLE_FLAG_KEYS.all })
-      const prev = queryClient.getQueryData(ROLE_FLAG_KEYS.all)
-      queryClient.setQueryData(
-        ROLE_FLAG_KEYS.all,
-        (old: RoleFeatureFlagRow[] | undefined) =>
-          old?.map((f) =>
-            f.role === variables.role && f.feature_key === variables.featureKey
-              ? { ...f, enabled: variables.enabled }
-              : f,
-          ) ?? [],
-      )
-      return { prev }
-    },
-    onError: (_err, _vars, context) => {
-      if (context?.prev) queryClient.setQueryData(ROLE_FLAG_KEYS.all, context.prev)
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ROLE_FLAG_KEYS.all })
-    },
-  })
-}
+/**
+ * Cash payouts may be fulfilled by gamification governors and by Finance.
+ * Previously a hardcoded `role === 'finance'` check; now a real permission so
+ * it can be granted to a custom role without touching code.
+ */
+export const useCanFulfillPayouts = () => useCanAccess('can_fulfill_payouts')
