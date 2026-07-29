@@ -316,25 +316,55 @@ function NoteCard({ note, zoom, onMove, onChangeContent, onDelete }: NoteCardPro
       style={{ left: x, top: y, width: NOTE_SIZE, height: NOTE_SIZE }}
     >
       <div
-        role="group"
-        aria-label="Sticky note"
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onDoubleClick={() => setEditing(true)}
-        className={cn(
-          'absolute inset-0 select-none transition-shadow',
-          COLOR_CLASS[color],
-          drag ? 'cursor-grabbing shadow-2xl' : 'cursor-grab shadow-lg',
-        )}
+        className="absolute inset-0"
         style={{
           // Pivot about the pin, the way a real sheet hangs from one point —
           // this is what keeps the pin and its hole together as the note tilts.
-          transform: `rotate(${drag ? 0 : note.rotation}deg)`,
+          // The angle is fixed: a pinned note does not straighten when touched.
+          transform: `rotate(${note.rotation}deg)`,
           transformOrigin: `${anchor.x}% ${anchor.y}%`,
-          ...SHAPE_STYLE[shape],
         }}
       >
+        {/*
+          Three layers, and the nesting matters.
+
+          `box-shadow` paints outside the border box, which `clip-path` then cuts
+          away — so twelve of the fourteen shapes showed no shadow at all.
+          `drop-shadow` instead follows the real alpha silhouette, clipped edges
+          included.
+
+          It cannot sit on the same element as the clip: an element's clip-path
+          is applied AFTER its own filter, which would cut the shadow off again.
+          So the filter goes on the wrapper and the clip on the child inside it.
+          Text lives outside the wrapper, or the filter would blur that too.
+        */}
+        <div
+          className="absolute inset-0 transition-[filter] duration-150"
+          style={{
+            // Contact shadow + ambient spread; lifted while dragging.
+            filter: drag
+              ? 'drop-shadow(0 2px 2px rgba(0,0,0,0.22)) drop-shadow(0 14px 20px rgba(0,0,0,0.38))'
+              : 'drop-shadow(0 1px 1px rgba(0,0,0,0.20)) drop-shadow(0 5px 9px rgba(0,0,0,0.30))',
+          }}
+        >
+          {/* The paper itself. Carries the handlers so that hit-testing follows
+              the silhouette — clicking a star's empty corner misses it. */}
+          <div
+            role="group"
+            aria-label="Sticky note"
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onDoubleClick={() => setEditing(true)}
+            className={cn(
+              'absolute inset-0 select-none',
+              COLOR_CLASS[color],
+              drag ? 'cursor-grabbing' : 'cursor-grab',
+            )}
+            style={SHAPE_STYLE[shape]}
+          />
+        </div>
+
         {/* Puncture: sits on the paper and tilts with it, so the pin reads as
             going through the sheet rather than resting on top of it. */}
         <span
@@ -359,8 +389,10 @@ function NoteCard({ note, zoom, onMove, onChangeContent, onDelete }: NoteCardPro
             style={TEXT_INSET[shape]}
           />
         ) : (
+          /* Transparent to the pointer so a drag or double-click started on the
+             writing lands on the paper underneath. */
           <p
-            className="absolute overflow-hidden whitespace-pre-wrap wrap-break-word font-ui text-body text-note-ink"
+            className="absolute overflow-hidden whitespace-pre-wrap wrap-break-word font-ui text-body text-note-ink pointer-events-none"
             style={TEXT_INSET[shape]}
           >
             {note.content || <span className="text-note-ink/40">double-click to write…</span>}
