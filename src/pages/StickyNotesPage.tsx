@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Loader2, Maximize2, Minus, Plus, Sparkles, Trash2 } from 'lucide-react'
+import { ChevronDown, Loader2, Maximize2, Minus, Plus, Sparkles, Trash2 } from 'lucide-react'
 import { Topbar } from '../components/layout/Topbar'
 import { Button } from '../components/ui/Button'
+import { Modal } from '../components/ui/Modal'
+import { Popover } from '../components/ui/Popover'
 import { useToast } from '../components/ui/toast-context'
 import { useAuthContext } from '../context/AuthContext'
 import {
@@ -88,6 +90,40 @@ const COLOR_CLASS: Record<NoteColor, string> = {
   peach: 'bg-note-peach',
   butter: 'bg-note-butter',
   sky: 'bg-note-sky',
+}
+
+/**
+ * What each colour actually looks like now.
+ *
+ * The slugs are stored in `sticky_notes.color` and predate the dark repaint, so
+ * they say pink and butter while the paint says teal and mustard. Renaming them
+ * would orphan every saved note; labelling them here costs nothing and stops the
+ * picker offering a "pink" swatch that is plainly green.
+ */
+const COLOR_LABEL: Record<NoteColor, string> = {
+  mint: 'Jade',
+  pink: 'Teal',
+  sky: 'Ocean',
+  lavender: 'Indigo',
+  peach: 'Emerald',
+  butter: 'Mustard',
+}
+
+const SHAPE_LABEL: Record<NoteShape, string> = {
+  square: 'Square',
+  folded: 'Folded',
+  torn: 'Torn',
+  wavy: 'Wavy',
+  tag: 'Tag',
+  petal: 'Petal',
+  ticket: 'Ticket',
+  scallop: 'Scallop',
+  parallelogram: 'Slant',
+  star: 'Star',
+  house: 'House',
+  bubble: 'Bubble',
+  hexagon: 'Hexagon',
+  pennant: 'Pennant',
 }
 
 /**
@@ -303,6 +339,105 @@ function Pushpin() {
 
 function randomOf<T>(items: T[]): T {
   return items[Math.floor(Math.random() * items.length)]
+}
+
+interface CustomNoteDialogProps {
+  open: boolean
+  onClose: () => void
+  onPin: (color: NoteColor, shape: NoteShape) => void
+  pinning: boolean
+}
+
+/**
+ * Colour and shape picker for a deliberate note, as opposed to the random one
+ * the main button pins.
+ *
+ * Every shape tile is drawn with the chosen colour rather than a neutral swatch,
+ * so the grid is a preview of the actual note — picking a colour repaints all
+ * fourteen at once. The tiles reuse SHAPE_STYLE directly, which is why they stay
+ * correct if a silhouette is ever adjusted.
+ */
+function CustomNoteDialog({ open, onClose, onPin, pinning }: CustomNoteDialogProps) {
+  const [color, setColor] = useState<NoteColor>('mint')
+  const [shape, setShape] = useState<NoteShape>('square')
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="Custom note"
+      size="lg"
+      busy={pinning}
+      footer={
+        <div className="flex items-center justify-end gap-2">
+          <Button variant="ghost" size="sm" onClick={onClose} disabled={pinning}>
+            Cancel
+          </Button>
+          <Button size="sm" loading={pinning} onClick={() => onPin(color, shape)}>
+            <Plus size={14} /> Pin it
+          </Button>
+        </div>
+      }
+    >
+      <div className="px-5 py-4 flex flex-col gap-5">
+        <fieldset>
+          <legend className="font-mono text-label uppercase tracking-wider text-text-4 mb-2">
+            Colour
+          </legend>
+          <div className="flex flex-wrap gap-2">
+            {NOTE_COLORS.map((value) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setColor(value)}
+                aria-pressed={color === value}
+                title={COLOR_LABEL[value]}
+                className={cn(
+                  'size-9 rounded-full transition-shadow',
+                  COLOR_CLASS[value],
+                  color === value
+                    ? 'shadow-[0_0_0_2px_var(--color-bg-canvas),0_0_0_4px_var(--color-brand-red)]'
+                    : 'shadow-[0_0_0_1px_var(--color-border-default)] hover:shadow-[0_0_0_2px_var(--color-border-strong)]',
+                )}
+              >
+                <span className="sr-only">{COLOR_LABEL[value]}</span>
+              </button>
+            ))}
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend className="font-mono text-label uppercase tracking-wider text-text-4 mb-2">
+            Shape
+          </legend>
+          <div className="grid grid-cols-4 gap-2 sm:grid-cols-5">
+            {NOTE_SHAPES.map((value) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setShape(value)}
+                aria-pressed={shape === value}
+                className={cn(
+                  'flex flex-col items-center gap-1.5 rounded-md border p-2 transition-colors',
+                  shape === value
+                    ? 'border-brand-red bg-brand-red/10'
+                    : 'border-border-subtle hover:border-border-strong hover:bg-surface-2',
+                )}
+              >
+                <span className="relative block w-full aspect-square">
+                  <span
+                    className={cn('absolute inset-0 block', COLOR_CLASS[color])}
+                    style={SHAPE_STYLE[value]}
+                  />
+                </span>
+                <span className="font-ui text-caption text-text-2">{SHAPE_LABEL[value]}</span>
+              </button>
+            ))}
+          </div>
+        </fieldset>
+      </div>
+    </Modal>
+  )
 }
 
 interface NoteCardProps {
@@ -596,6 +731,11 @@ export default function StickyNotesPage() {
   const { mutate: updateNote } = useUpdateStickyNote()
   const { mutate: deleteNote } = useDeleteStickyNote()
   useRealtimeStickyNotes()
+
+  /** The split button as a whole — the menu aligns to this, not to the caret. */
+  const pinGroupRef = useRef<HTMLDivElement>(null)
+  const [pinMenuOpen, setPinMenuOpen] = useState(false)
+  const [customOpen, setCustomOpen] = useState(false)
 
   const viewportRef = useRef<HTMLDivElement>(null)
   /**
@@ -903,7 +1043,8 @@ export default function StickyNotesPage() {
     }
   }, [view])
 
-  const handleAdd = () => {
+  /** Colour and shape are picked at random unless the custom dialog supplied them. */
+  const handleAdd = (color?: NoteColor, shape?: NoteShape) => {
     if (!profile) return
     const centre = viewCentre()
     // Scatter around the centre so a run of new notes never stacks exactly.
@@ -911,14 +1052,19 @@ export default function StickyNotesPage() {
     createNote(
       {
         profileId: profile.id,
-        color: randomOf(NOTE_COLORS),
-        shape: randomOf(NOTE_SHAPES),
+        color: color ?? randomOf(NOTE_COLORS),
+        shape: shape ?? randomOf(NOTE_SHAPES),
         rotation: Math.round(Math.random() * 16) - 8,
         posX: Math.min(BOARD_W - NOTE_SIZE, Math.max(0, centre.x + jitter())),
         posY: Math.min(BOARD_H - NOTE_SIZE, Math.max(PIN_HEADROOM, centre.y + jitter())),
       },
       { onError: () => toast('Could not pin that note', 'error') },
     )
+  }
+
+  const handlePinCustom = (color: NoteColor, shape: NoteShape) => {
+    handleAdd(color, shape)
+    setCustomOpen(false)
   }
 
   const handleMove = useCallback(
@@ -951,10 +1097,74 @@ export default function StickyNotesPage() {
               Drag a note to move it, double-click to write. Drag the board to pan, ⌘/Ctrl + scroll to zoom.
             </p>
           </div>
-          <Button size="sm" onClick={handleAdd} loading={creating}>
-            <Plus size={14} /> Pin a note
-          </Button>
+          {/* Split button: the face pins a random note, the caret opens the
+              deliberate route. Sharing an edge is what says they belong to the
+              same action rather than being two unrelated buttons. */}
+          <div ref={pinGroupRef} className="flex items-stretch shrink-0">
+            <Button
+              size="sm"
+              onClick={() => {
+                setPinMenuOpen(false)
+                handleAdd()
+              }}
+              loading={creating}
+              className="rounded-r-none"
+            >
+              <Plus size={14} /> Pin a note
+            </Button>
+            <button
+              type="button"
+              aria-label="More pinning options"
+              aria-haspopup="menu"
+              aria-expanded={pinMenuOpen}
+              onClick={() => setPinMenuOpen((o) => !o)}
+              className={cn(
+                'flex items-center justify-center w-7 rounded-sm rounded-l-none',
+                'bg-brand-red text-white hover:bg-brand-red-hover active:bg-brand-red-press',
+                'border-l border-white/25 focus:outline-none focus:shadow-ring-focus',
+              )}
+            >
+              <ChevronDown size={14} />
+            </button>
+          </div>
         </div>
+
+        {/*
+          Anchored to the whole split button, not the caret, so the menu lines up
+          under the control rather than under the 28px arrow at its edge.
+
+          Popover only positions — it deliberately ships no surface of its own —
+          so the panel chrome is supplied here, matching the other menus in the app.
+        */}
+        <Popover
+          anchorRef={pinGroupRef}
+          open={pinMenuOpen}
+          onClose={() => setPinMenuOpen(false)}
+          matchAnchorWidth
+        >
+          {/* matchAnchorWidth takes the width from the split button, and h-8 with
+              no panel padding matches its height, so the item is the same size as
+              the control it drops out of. */}
+          <div className="w-full overflow-hidden rounded-sm border border-border-strong bg-surface-2 shadow-lg">
+            <button
+              type="button"
+              onClick={() => {
+                setPinMenuOpen(false)
+                setCustomOpen(true)
+              }}
+              className="flex h-8 w-full items-center gap-2 px-3 font-ui text-body-sm text-text-1 hover:bg-surface-3"
+            >
+              <Sparkles size={14} className="text-text-3" /> Custom note…
+            </button>
+          </div>
+        </Popover>
+
+        <CustomNoteDialog
+          open={customOpen}
+          onClose={() => setCustomOpen(false)}
+          onPin={handlePinCustom}
+          pinning={creating}
+        />
 
         {isLoading ? (
           <div className="flex items-center justify-center py-24 text-text-4">
