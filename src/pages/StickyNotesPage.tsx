@@ -311,9 +311,20 @@ function NoteCard({ note, zoom, onMove, onChangeContent, onDelete }: NoteCardPro
   const anchor = PIN_ANCHOR[shape]
 
   return (
+    /* `isolate` keeps the pin's z-20 inside this note's own stacking context.
+       Without it the pin escapes to the board's context and paints over every
+       other note, so a pin stayed visible even when its sheet was buried. Notes
+       then stack purely by DOM order, and a covered pin is covered with it. */
     <div
-      className="absolute group"
-      style={{ left: x, top: y, width: NOTE_SIZE, height: NOTE_SIZE }}
+      className="absolute group isolate"
+      style={{
+        left: x,
+        top: y,
+        width: NOTE_SIZE,
+        height: NOTE_SIZE,
+        // A sheet you have hold of rides over the rest of the board.
+        zIndex: drag ? 1 : undefined,
+      }}
     >
       <div
         className="absolute inset-0"
@@ -385,14 +396,14 @@ function NoteCard({ note, zoom, onMove, onChangeContent, onDelete }: NoteCardPro
             onBlur={() => setEditing(false)}
             onPointerDown={(e) => e.stopPropagation()}
             placeholder="write something…"
-            className="absolute resize-none bg-transparent outline-none font-ui text-body text-note-ink placeholder:text-note-ink/40"
+            className="absolute resize-none bg-transparent outline-none font-hand text-note text-note-ink placeholder:text-note-ink/40"
             style={TEXT_INSET[shape]}
           />
         ) : (
           /* Transparent to the pointer so a drag or double-click started on the
              writing lands on the paper underneath. */
           <p
-            className="absolute overflow-hidden whitespace-pre-wrap wrap-break-word font-ui text-body text-note-ink pointer-events-none"
+            className="absolute overflow-hidden whitespace-pre-wrap wrap-break-word font-hand text-note text-note-ink pointer-events-none"
             style={TEXT_INSET[shape]}
           >
             {note.content || <span className="text-note-ink/40">double-click to write…</span>}
