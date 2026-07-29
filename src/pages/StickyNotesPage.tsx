@@ -48,6 +48,20 @@ function clampView(next: View, vw: number, vh: number): View {
 const minZoomFor = (vw: number, vh: number) =>
   Math.max(MIN_ZOOM, vw / BOARD_W, vh / BOARD_H)
 
+/**
+ * Put a board-space point in the middle of the frame.
+ *
+ * The board is far larger than the viewport, so parking at 0,0 drops you in its
+ * top-left corner — something you only notice once you zoom out far enough to
+ * see two edges at once.
+ */
+const viewCentredOn = (
+  focus: { x: number; y: number },
+  zoom: number,
+  vw: number,
+  vh: number,
+): View => clampView({ zoom, x: vw / 2 - focus.x * zoom, y: vh / 2 - focus.y * zoom }, vw, vh)
+
 const COLOR_CLASS: Record<NoteColor, string> = {
   pink: 'bg-note-pink',
   lavender: 'bg-note-lavender',
@@ -468,21 +482,48 @@ export default function StickyNotesPage() {
    * knows when it has bottomed out.
    */
   const sizeRef = useRef({ w: 0, h: 0 })
-  const [minZoom, setMinZoom] = useState(MIN_ZOOM)
+  const [size, setSize] = useState({ w: 0, h: 0 })
+  const minZoom = useMemo(() => minZoomFor(size.w, size.h), [size])
 
   useEffect(() => {
     const el = viewportRef.current
+    // The viewport is not mounted while the notes are loading, so this has to
+    // re-run once they arrive — otherwise nothing is ever measured and every
+    // clamp below silently works against a zero-sized frame.
     if (!el) return
     const observer = new ResizeObserver(([entry]) => {
       const { width, height } = entry.contentRect
       sizeRef.current = { w: width, h: height }
-      setMinZoom(minZoomFor(width, height))
+      setSize({ w: width, h: height })
       // Re-clamp: a window that just got wider can expose board edges.
       setView((v) => clampView(v, width, height))
     })
     observer.observe(el)
     return () => observer.disconnect()
-  }, [])
+  }, [isLoading])
+
+  /**
+   * Where the board should sit when the page opens: on the notes if there are
+   * any, on the middle of the cork if not. Boards written before this were
+   * filled from a top-left view, so centring blindly would open on bare cork.
+   */
+  const focus = useMemo(() => {
+    if (!notes.length) return { x: BOARD_W / 2, y: BOARD_H / 2 }
+    const xs = notes.map((n) => n.pos_x)
+    const ys = notes.map((n) => n.pos_y)
+    return {
+      x: (Math.min(...xs) + Math.max(...xs) + NOTE_SIZE) / 2,
+      y: (Math.min(...ys) + Math.max(...ys) + NOTE_SIZE) / 2,
+    }
+  }, [notes])
+
+  /** Runs once, as soon as both the frame size and the notes are known. */
+  const centredRef = useRef(false)
+  useEffect(() => {
+    if (centredRef.current || isLoading || !size.w || !size.h) return
+    centredRef.current = true
+    setView((v) => viewCentredOn(focus, v.zoom, size.w, size.h))
+  }, [isLoading, size, focus])
 
   /** Zoom about a fixed point so the board grows out of the cursor, not the corner. */
   const zoomAt = useCallback((nextZoom: number, anchorX: number, anchorY: number) => {
@@ -533,8 +574,7 @@ export default function StickyNotesPage() {
     zoomAt(zoom * factor, (rect?.width ?? 0) / 2, (rect?.height ?? 0) / 2)
   }
 
-  const resetView = () =>
-    setView(clampView({ zoom: 1, x: 0, y: 0 }, sizeRef.current.w, sizeRef.current.h))
+  const resetView = () => setView(viewCentredOn(focus, 1, sizeRef.current.w, sizeRef.current.h))
 
   // Drag anywhere on the cork (or middle-click anywhere) to pan.
   const handleBoardPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
