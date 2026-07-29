@@ -28,6 +28,19 @@ const ZOOM_STEP = 1.2
 /** Slightly in, so notes open at a comfortable reading size rather than 1:1. */
 const DEFAULT_ZOOM = 1.25
 
+/**
+ * Wheel-to-zoom feel.
+ *
+ * A mouse notch reports a deltaY of 100 or more while a trackpad pinch reports
+ * single digits many times a second, so one coefficient cannot serve both: tuned
+ * for the trackpad, a single notch of the wheel multiplied the zoom by e — the
+ * 53%-to-144% jump. Clamping the per-event delta first bounds what one notch can
+ * do without flattening the pinch, which simply accumulates over its many small
+ * events.
+ */
+const ZOOM_WHEEL_SENSITIVITY = 0.006
+const ZOOM_WHEEL_MAX_DELTA = 24
+
 const BOARD_CENTRE = { x: BOARD_W / 2, y: BOARD_H / 2 }
 
 interface View { zoom: number; x: number; y: number }
@@ -546,11 +559,18 @@ export default function StickyNotesPage() {
     setView(viewCentredOn(BOARD_CENTRE, DEFAULT_ZOOM, size.w, size.h))
   }, [isLoading, size])
 
-  /** Zoom about a fixed point so the board grows out of the cursor, not the corner. */
-  const zoomAt = useCallback((nextZoom: number, anchorX: number, anchorY: number) => {
+  /**
+   * Zoom about a fixed point so the board grows out of the cursor, not the corner.
+   *
+   * Expressed as a multiplier rather than a target zoom so the current level is
+   * read inside the updater. That keeps the handlers below free of any `zoom`
+   * dependency, so they attach once instead of being torn down and rebuilt on
+   * every frame of a pinch.
+   */
+  const zoomBy = useCallback((factor: number, anchorX: number, anchorY: number) => {
     setView((v) => {
       const { w, h } = sizeRef.current
-      const target = clampView({ ...v, zoom: nextZoom }, w, h)
+      const target = clampView({ ...v, zoom: v.zoom * factor }, w, h)
       if (target.zoom === v.zoom) return v
       return clampView(
         {
@@ -586,6 +606,8 @@ export default function StickyNotesPage() {
    */
   useEffect(() => {
     const el = viewportRef.current
+    // Same reason as the ResizeObserver: the viewport does not exist while the
+    // notes are loading, so this must re-run once it does.
     if (!el) return
     const onWheel = (e: WheelEvent) => {
       e.preventDefault()
@@ -598,7 +620,12 @@ export default function StickyNotesPage() {
       if (e.ctrlKey || e.metaKey) {
         // Exponential so each notch is a constant ratio: zooming out then back in
         // by the same amount returns you to exactly where you started.
-        zoomAt(zoom * Math.exp(-dy * 0.01), e.clientX - rect.left, e.clientY - rect.top)
+        const step = Math.max(-ZOOM_WHEEL_MAX_DELTA, Math.min(ZOOM_WHEEL_MAX_DELTA, dy))
+        zoomBy(
+          Math.exp(-step * ZOOM_WHEEL_SENSITIVITY),
+          e.clientX - rect.left,
+          e.clientY - rect.top,
+        )
       } else {
         // Shift+wheel is the long-standing convention for horizontal scroll on a
         // mouse, which otherwise has no way to pan sideways.
@@ -608,11 +635,69 @@ export default function StickyNotesPage() {
     }
     el.addEventListener('wheel', onWheel, { passive: false })
     return () => el.removeEventListener('wheel', onWheel)
-  }, [zoom, zoomAt])
+  }, [zoomBy, isLoading])
+
+  /**
+   * Stop the browser zooming the page itself while the board is open.
+   *
+   * The board's own handler only sees events that land on the board. A pinch
+   * that starts a few pixels outside it — on the header, the padding, the page
+   * behind — is an ordinary browser zoom, and since a trackpad pinch is
+   * reported at the cursor, a fast gesture that drifts off the board zooms the
+   * whole screen mid-motion. That is the jarring behaviour: not a bug in the
+   * board, but the page underneath responding to the same gesture.
+   *
+   * So Ctrl/Cmd + wheel is swallowed page-wide for as long as this page is
+   * mounted. Capture phase, so it runs before anything else; no stopPropagation,
+   * so the board's own handler still zooms the board when the cursor is over it.
+   *
+   * Safari is the exception that needs separate work: it reports a trackpad
+   * pinch as non-standard gesture events rather than ctrl+wheel, so without
+   * these it would keep zooming the page. `scale` is read through a type guard
+   * because these events have no TypeScript definitions.
+   */
+  useEffect(() => {
+    const blockPageZoom = (e: WheelEvent) => {
+      if (e.ctrlKey || e.metaKey) e.preventDefault()
+    }
+    document.addEventListener('wheel', blockPageZoom, { passive: false, capture: true })
+
+    let lastScale = 1
+    const onGestureStart = (e: Event) => {
+      e.preventDefault()
+      lastScale = 1
+    }
+    const onGestureChange = (e: Event) => {
+      e.preventDefault()
+      if (!('scale' in e) || typeof e.scale !== 'number' || !e.scale) return
+      const factor = e.scale / lastScale
+      lastScale = e.scale
+
+      const rect = viewportRef.current?.getBoundingClientRect()
+      if (!rect) return
+      if (!('clientX' in e) || typeof e.clientX !== 'number') return
+      if (!('clientY' in e) || typeof e.clientY !== 'number') return
+      const [x, y] = [e.clientX - rect.left, e.clientY - rect.top]
+      // Swallowed everywhere, but only the board zooms — a pinch over the
+      // sidebar should do nothing rather than move the canvas.
+      if (x < 0 || y < 0 || x > rect.width || y > rect.height) return
+      zoomBy(factor, x, y)
+    }
+    document.addEventListener('gesturestart', onGestureStart, { passive: false })
+    document.addEventListener('gesturechange', onGestureChange, { passive: false })
+    document.addEventListener('gestureend', onGestureStart, { passive: false })
+
+    return () => {
+      document.removeEventListener('wheel', blockPageZoom, { capture: true })
+      document.removeEventListener('gesturestart', onGestureStart)
+      document.removeEventListener('gesturechange', onGestureChange)
+      document.removeEventListener('gestureend', onGestureStart)
+    }
+  }, [zoomBy])
 
   const zoomByStep = (factor: number) => {
     const rect = viewportRef.current?.getBoundingClientRect()
-    zoomAt(zoom * factor, (rect?.width ?? 0) / 2, (rect?.height ?? 0) / 2)
+    zoomBy(factor, (rect?.width ?? 0) / 2, (rect?.height ?? 0) / 2)
   }
 
   const resetView = () =>
