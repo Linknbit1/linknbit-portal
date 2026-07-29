@@ -101,7 +101,16 @@ Deno.serve(async (req: Request) => {
   }
 
   // 4. Audit (best-effort — never block impersonation on a logging failure).
-  await service.from('impersonation_log').insert({ admin_id: caller.id, target_id: target.id })
+  //
+  // Super admins are exempt, matching the audit posture set in migration
+  // 20260728220000. The exemption has to be applied here rather than relying on
+  // that one: this insert runs under the service role, so auth.uid() is null and
+  // fn_audit_capture's guard cannot see who the actor is. Skipping the row also
+  // suppresses the audit_log entry, which is written by impersonation_log's own
+  // AFTER INSERT trigger rather than by fn_audit_capture.
+  if (me.role !== 'super_admin') {
+    await service.from('impersonation_log').insert({ admin_id: caller.id, target_id: target.id })
+  }
 
   return json({
     access_token: verified.session.access_token,
