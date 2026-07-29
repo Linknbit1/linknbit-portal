@@ -157,20 +157,29 @@
   --shadow-badge-glow: 0 0 24px rgba(251, 191, 36, 0.35);
 
   /* ── Sticky-note board ──
-     Pastels sit on cork, not on the dark app surfaces, so they are tuned for a
-     warm mid-tone background and paired with a dark ink colour for the text. */
-  --color-note-pink: #FBCFE8;
-  --color-note-lavender: #DDD6FE;
-  --color-note-mint: #BBF7D0;
-  --color-note-peach: #FED7AA;
-  --color-note-butter: #FEF08A;
-  --color-note-sky: #BAE6FD;
-  --color-note-ink: #4A3A46;
-  --color-cork: #C99A62;
-  --color-cork-dark: #A8763F;
-  /* Lighter fleck; cork grain reads as both darker pits and paler flecks. */
-  --color-cork-speck: #E0B784;
-  --color-cork-frame: #7C4F2A;
+     Deep jade → teal → indigo, plus two warm tones so a full board does not read
+     as one colour. All six are dark enough to carry the near-white ink below at
+     4.5:1 or better, which is what fixes the palette to this end of the range.
+     The token names are the values stored in `sticky_notes.color`, so they stay
+     as they are — pink is no longer pink, and renaming would orphan every saved
+     note. */
+  --color-note-pink: #17655C;
+  --color-note-lavender: #253C6E;
+  --color-note-mint: #0F5347;
+  --color-note-peach: #6A4A20;
+  --color-note-butter: #7A6417;
+  --color-note-sky: #10516B;
+  --color-note-ink: #FFFEFA;
+  /* The board is pitch black by request — the one deliberate exception to the
+     no-#000 rule, so the notes read as lit objects floating in the dark. The
+     `cork` names are kept because the board's inline gradients reference them as
+     CSS vars; only the values changed.
+
+     Nothing can be darker than the board now, so the speckle is lighter flecks
+     only — a darker pit would be invisible. */
+  --color-cork: #000000;
+  --color-cork-dark: #0B100E;
+  --color-cork-speck: #18211E;
 
   /* ── Layout sizing ── */
   --width-sidebar-expanded: 248px;
