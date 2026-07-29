@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
-import { Shield, ChevronRight, Loader2, Shapes, IdCard, Plus, Trash2, Smartphone, Bell, type LucideIcon } from 'lucide-react'
+import { Shield, ChevronRight, Loader2, Shapes, IdCard, Plus, Trash2, Smartphone, Bell, Eye, type LucideIcon } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { StackScreen } from '../../components/layout/StackScreen'
 import { HubRow } from '../../components/layout/MobileHub'
@@ -8,6 +8,7 @@ import { MyDevicesCard } from '../../components/shared/MyDevicesCard'
 import { PushDevicesCard } from '../../components/shared/PushDevicesCard'
 import { NotificationPreferencesCard } from '../../components/shared/NotificationPreferencesCard'
 import { RoleManager } from '../../components/shared/RoleManager'
+import { PermissionDetailModal } from '../../components/shared/PermissionDetailModal'
 import { Button } from '../../components/ui/Button'
 import { Toggle } from '../../components/ui/Toggle'
 import { useToast } from '../../components/ui/toast-context'
@@ -25,6 +26,8 @@ import {
 } from '../../hooks/useDesignations'
 import type { Service } from '../../api/services'
 import type { Designation } from '../../api/designations'
+import type { PermissionRow } from '../../api/permissions'
+import { isPermissionLocked, LOCKED_REASON } from '../../lib/roleLocks'
 import { cn } from '../../lib/cn'
 
 type Tab = 'devices' | 'notifications' | 'services' | 'designations' | 'permissions'
@@ -261,27 +264,13 @@ function DesignationsPanel({ canManage }: { canManage: boolean }) {
  * See docs/permission-model-v2.md.
  */
 
-/**
- * Switches that must never be flipped off, or the org locks itself out.
- *
- * `can_manage_roles` is the only route back into this panel and there is no
- * account holding `administrator` to recover with, so the last role carrying it
- * is pinned. `administrator` itself is pinned wherever present for the same
- * reason. The database enforces this too (fn_assert_role_admin_exists) - this
- * is just so the UI does not offer a toggle that will be rejected.
- */
-function isLockedOn(permissionKey: string, roleHasIt: boolean, adminCarrierCount: number): boolean {
-  if (permissionKey === 'administrator' && roleHasIt) return true
-  if (permissionKey === 'can_manage_roles' && roleHasIt && adminCarrierCount <= 1) return true
-  return false
-}
-
 function PermissionsPanel({ canEdit }: { canEdit: boolean }) {
   const toast = useToast()
   const { data: roles = [], isLoading: rolesLoading } = useRoles()
   const { data: catalog = [], isLoading: catalogLoading } = usePermissionCatalog()
   const { data: grants = [], isLoading: grantsLoading } = useRolePermissions()
   const { mutate: setPermission, isPending: updating } = useSetRolePermission()
+  const [detailPermission, setDetailPermission] = useState<PermissionRow | null>(null)
 
   const isLoading = rolesLoading || catalogLoading || grantsLoading
 
@@ -328,15 +317,21 @@ function PermissionsPanel({ canEdit }: { canEdit: boolean }) {
           <Loader2 size={18} className="animate-spin" />
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-[12px] min-w-175">
+        // The matrix gets its own scroll box rather than growing the page: a
+        // sticky header only works inside a container that actually scrolls, and
+        // with 38 permissions the role columns otherwise scroll out of sight.
+        <div className="overflow-auto max-h-[65vh] rounded-md border border-border-default">
+          <table className="w-full text-[12px] min-w-175 border-separate border-spacing-0">
             <thead>
-              <tr className="border-b border-border-subtle">
-                <th className="text-left py-2 font-mono text-text-4 uppercase text-[10px] tracking-wider pr-6 min-w-45">
+              <tr>
+                <th className="sticky top-0 left-0 z-30 bg-surface-1 text-left py-2 pl-3 pr-6 min-w-45 font-mono text-text-4 uppercase text-[10px] tracking-wider border-b border-border-default">
                   Permission
                 </th>
                 {roles.map((role) => (
-                  <th key={role.id} className="text-center p-2 font-ui font-semibold text-text-3 min-w-17.5">
+                  <th
+                    key={role.id}
+                    className="sticky top-0 z-20 bg-surface-1 text-center p-2 min-w-17.5 font-ui font-semibold text-text-3 border-b border-border-default"
+                  >
                     <span
                       className="inline-block size-2 rounded-full mr-1 align-middle"
                       style={{ backgroundColor: role.color ?? 'transparent' }}
@@ -349,28 +344,48 @@ function PermissionsPanel({ canEdit }: { canEdit: boolean }) {
             <tbody>
               {sections.map((section) => (
                 <React.Fragment key={section.label}>
-                  <tr className="border-b border-border-subtle">
-                    <td colSpan={roles.length + 1} className="py-2 px-3 bg-surface-2">
-                      <span className="font-mono text-[10px] font-semibold text-text-4 uppercase tracking-widest">
+                  <tr>
+                    <td colSpan={roles.length + 1} className="py-2 px-3 bg-surface-2 border-b border-border-subtle">
+                      {/* Keeps the category label in view when scrolled sideways. */}
+                      <span className="sticky left-3 inline-block font-mono text-[10px] font-semibold text-text-4 uppercase tracking-widest">
                         {section.label}
                       </span>
                     </td>
                   </tr>
                   {section.permissions.map((perm, i) => {
                     const isLast = i === section.permissions.length - 1
+                    const rowBorder = isLast ? 'border-border-default' : 'border-border-subtle'
                     return (
-                      <tr key={perm.key} className={cn('border-b border-border-subtle', isLast && 'border-border-default')}>
-                        <td className="py-3 pl-3 pr-6" title={perm.description ?? undefined}>
-                          <span className="font-ui text-[13px] text-text-2 whitespace-nowrap">{perm.label}</span>
+                      <tr key={perm.key} className="group">
+                        <td
+                          className={cn(
+                            'sticky left-0 z-10 bg-surface-1 py-3 pl-3 pr-6 border-b',
+                            rowBorder,
+                          )}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="font-ui text-[13px] text-text-2 whitespace-nowrap">
+                              {perm.label}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setDetailPermission(perm)}
+                              aria-label={`What does "${perm.label}" allow?`}
+                              title={`What does "${perm.label}" allow?`}
+                              className="text-text-4 hover:text-text-1 transition-colors shrink-0"
+                            >
+                              <Eye size={14} />
+                            </button>
+                          </div>
                         </td>
                         {roles.map((role) => {
                           const has = granted.has(`${role.id}:${perm.key}`)
-                          const locked = isLockedOn(perm.key, has, adminCarrierCount)
+                          const locked = isPermissionLocked(perm.key, has, adminCarrierCount)
                           return (
-                            <td key={role.id} className="text-center py-3 px-2">
+                            <td key={role.id} className={cn('text-center py-3 px-2 border-b', rowBorder)}>
                               <div
                                 className={cn('flex justify-center', locked && 'opacity-60')}
-                                title={locked ? 'Always on — turning this off would lock everyone out' : undefined}
+                                title={locked ? LOCKED_REASON : undefined}
                               >
                                 <Toggle
                                   checked={has}
@@ -395,6 +410,13 @@ function PermissionsPanel({ canEdit }: { canEdit: boolean }) {
             </tbody>
           </table>
         </div>
+      )}
+
+      {detailPermission && (
+        <PermissionDetailModal
+          permission={detailPermission}
+          onClose={() => setDetailPermission(null)}
+        />
       )}
     </div>
   )
