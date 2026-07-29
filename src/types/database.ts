@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       approvals: {
@@ -106,6 +81,7 @@ export type Database = {
       attachments: {
         Row: {
           client_visible: boolean
+          confidential_scope: string
           created_at: string
           file_name: string
           file_size: number | null
@@ -121,6 +97,7 @@ export type Database = {
         }
         Insert: {
           client_visible?: boolean
+          confidential_scope?: string
           created_at?: string
           file_name: string
           file_size?: number | null
@@ -136,6 +113,7 @@ export type Database = {
         }
         Update: {
           client_visible?: boolean
+          confidential_scope?: string
           created_at?: string
           file_name?: string
           file_size?: number | null
@@ -1646,6 +1624,73 @@ export type Database = {
           },
         ]
       }
+      permissions: {
+        Row: {
+          category: string
+          description: string | null
+          key: string
+          label: string
+          sort_order: number
+        }
+        Insert: {
+          category: string
+          description?: string | null
+          key: string
+          label: string
+          sort_order?: number
+        }
+        Update: {
+          category?: string
+          description?: string | null
+          key?: string
+          label?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      profile_roles: {
+        Row: {
+          granted_at: string
+          granted_by: string | null
+          profile_id: string
+          role_id: string
+        }
+        Insert: {
+          granted_at?: string
+          granted_by?: string | null
+          profile_id: string
+          role_id: string
+        }
+        Update: {
+          granted_at?: string
+          granted_by?: string | null
+          profile_id?: string
+          role_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_roles_granted_by_fkey"
+            columns: ["granted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profile_roles_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profile_roles_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           age: number | null
@@ -1770,38 +1815,106 @@ export type Database = {
           },
         ]
       }
-      project_members: {
+      project_services: {
         Row: {
           created_at: string
-          profile_id: string
+          created_by: string | null
+          id: string
+          order_index: number
           project_id: string
-          role_in_project: string | null
+          service_id: string
         }
         Insert: {
           created_at?: string
-          profile_id: string
+          created_by?: string | null
+          id?: string
+          order_index?: number
           project_id: string
-          role_in_project?: string | null
+          service_id: string
         }
         Update: {
           created_at?: string
-          profile_id?: string
+          created_by?: string | null
+          id?: string
+          order_index?: number
           project_id?: string
-          role_in_project?: string | null
+          service_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "project_members_profile_id_fkey"
-            columns: ["profile_id"]
+            foreignKeyName: "project_services_created_by_fkey"
+            columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "project_members_project_id_fkey"
+            foreignKeyName: "project_services_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_templates: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          service_id: string
+          team_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          service_id: string
+          team_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          service_id?: string
+          team_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_templates_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_templates_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_templates_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
             referencedColumns: ["id"]
           },
         ]
@@ -1856,7 +1969,6 @@ export type Database = {
           manager_id: string | null
           name: string
           progress: number
-          service_type: string
           start_date: string | null
           status: string
           team_id: string | null
@@ -1878,7 +1990,6 @@ export type Database = {
           manager_id?: string | null
           name: string
           progress?: number
-          service_type: string
           start_date?: string | null
           status?: string
           team_id?: string | null
@@ -1900,7 +2011,6 @@ export type Database = {
           manager_id?: string | null
           name?: string
           progress?: number
-          service_type?: string
           start_date?: string | null
           status?: string
           team_id?: string | null
@@ -1934,13 +2044,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "projects_service_type_fkey"
-            columns: ["service_type"]
-            isOneToOne: false
-            referencedRelation: "services"
-            referencedColumns: ["slug"]
           },
           {
             foreignKeyName: "projects_team_id_fkey"
@@ -2367,6 +2470,119 @@ export type Database = {
           },
         ]
       }
+      role_permissions: {
+        Row: {
+          permission_key: string
+          role_id: string
+        }
+        Insert: {
+          permission_key: string
+          role_id: string
+        }
+        Update: {
+          permission_key?: string
+          role_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_permissions_permission_key_fkey"
+            columns: ["permission_key"]
+            isOneToOne: false
+            referencedRelation: "permissions"
+            referencedColumns: ["key"]
+          },
+          {
+            foreignKeyName: "role_permissions_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roles: {
+        Row: {
+          color: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          is_default: boolean
+          is_system: boolean
+          name: string
+          position: number
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_default?: boolean
+          is_system?: boolean
+          name: string
+          position: number
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_default?: boolean
+          is_system?: boolean
+          name?: string
+          position?: number
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roles_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_members: {
+        Row: {
+          created_at: string
+          profile_id: string
+          project_service_id: string
+          role_in_service: string | null
+        }
+        Insert: {
+          created_at?: string
+          profile_id: string
+          project_service_id: string
+          role_in_service?: string | null
+        }
+        Update: {
+          created_at?: string
+          profile_id?: string
+          project_service_id?: string
+          role_in_service?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_members_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_members_project_service_id_fkey"
+            columns: ["project_service_id"]
+            isOneToOne: false
+            referencedRelation: "project_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       services: {
         Row: {
           color: string
@@ -2481,8 +2697,8 @@ export type Database = {
           name: string
           order_index: number
           project_id: string
+          project_service_id: string
           requires_approval: boolean
-          service_type: string | null
           status: string
           updated_at: string
         }
@@ -2494,8 +2710,8 @@ export type Database = {
           name: string
           order_index?: number
           project_id: string
+          project_service_id: string
           requires_approval?: boolean
-          service_type?: string | null
           status?: string
           updated_at?: string
         }
@@ -2507,8 +2723,8 @@ export type Database = {
           name?: string
           order_index?: number
           project_id?: string
+          project_service_id?: string
           requires_approval?: boolean
-          service_type?: string | null
           status?: string
           updated_at?: string
         }
@@ -2521,11 +2737,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "stages_service_type_fkey"
-            columns: ["service_type"]
+            foreignKeyName: "stages_service_belongs_to_project"
+            columns: ["project_service_id", "project_id"]
             isOneToOne: false
-            referencedRelation: "services"
-            referencedColumns: ["slug"]
+            referencedRelation: "project_services"
+            referencedColumns: ["id", "project_id"]
           },
         ]
       }
@@ -2800,7 +3016,7 @@ export type Database = {
           parent_task_id: string | null
           priority: string
           project_id: string
-          service_type: string | null
+          project_service_id: string
           stage_id: string | null
           start_date: string | null
           status: string
@@ -2823,7 +3039,7 @@ export type Database = {
           parent_task_id?: string | null
           priority?: string
           project_id: string
-          service_type?: string | null
+          project_service_id: string
           stage_id?: string | null
           start_date?: string | null
           status?: string
@@ -2846,7 +3062,7 @@ export type Database = {
           parent_task_id?: string | null
           priority?: string
           project_id?: string
-          service_type?: string | null
+          project_service_id?: string
           stage_id?: string | null
           start_date?: string | null
           status?: string
@@ -2890,11 +3106,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "tasks_service_type_fkey"
-            columns: ["service_type"]
+            foreignKeyName: "tasks_service_belongs_to_project"
+            columns: ["project_service_id", "project_id"]
             isOneToOne: false
-            referencedRelation: "services"
-            referencedColumns: ["slug"]
+            referencedRelation: "project_services"
+            referencedColumns: ["id", "project_id"]
           },
           {
             foreignKeyName: "tasks_stage_id_fkey"
@@ -2974,6 +3190,88 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "services"
             referencedColumns: ["slug"]
+          },
+        ]
+      }
+      template_stages: {
+        Row: {
+          client_visible: boolean
+          created_at: string
+          id: string
+          name: string
+          order_index: number
+          requires_approval: boolean
+          template_id: string
+        }
+        Insert: {
+          client_visible?: boolean
+          created_at?: string
+          id?: string
+          name: string
+          order_index?: number
+          requires_approval?: boolean
+          template_id: string
+        }
+        Update: {
+          client_visible?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          order_index?: number
+          requires_approval?: boolean
+          template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "template_stages_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "project_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      template_tasks: {
+        Row: {
+          client_visible: boolean
+          created_at: string
+          description: string | null
+          estimated_minutes: number | null
+          id: string
+          order_index: number
+          priority: string
+          template_stage_id: string
+          title: string
+        }
+        Insert: {
+          client_visible?: boolean
+          created_at?: string
+          description?: string | null
+          estimated_minutes?: number | null
+          id?: string
+          order_index?: number
+          priority?: string
+          template_stage_id: string
+          title: string
+        }
+        Update: {
+          client_visible?: boolean
+          created_at?: string
+          description?: string | null
+          estimated_minutes?: number | null
+          id?: string
+          order_index?: number
+          priority?: string
+          template_stage_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "template_tasks_template_stage_id_fkey"
+            columns: ["template_stage_id"]
+            isOneToOne: false
+            referencedRelation: "template_stages"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -3136,6 +3434,13 @@ export type Database = {
         }
         Returns: undefined
       }
+      apply_template_to_service: {
+        Args: { p_project_service_id: string; p_template_id: string }
+        Returns: {
+          stages_created: number
+          tasks_created: number
+        }[]
+      }
       award_badge: {
         Args: { p_badge_id: string; p_profile_id: string }
         Returns: undefined
@@ -3144,7 +3449,15 @@ export type Database = {
       can_govern_gamification: { Args: never; Returns: boolean }
       can_grant_role: { Args: { p_role: string }; Returns: boolean }
       can_manage_target: { Args: { p_target_role: string }; Returns: boolean }
+      can_manage_team_templates: {
+        Args: { p_team_id: string }
+        Returns: boolean
+      }
       can_recognize: { Args: never; Returns: boolean }
+      can_view_confidential_scope: {
+        Args: { p_scope: string }
+        Returns: boolean
+      }
       cancel_reward_pool: {
         Args: { p_note?: string; p_pool_id: string }
         Returns: undefined
@@ -3296,16 +3609,26 @@ export type Database = {
       is_channel_member: { Args: { p_channel_id: string }; Returns: boolean }
       is_channel_owner: { Args: { p_channel_id: string }; Returns: boolean }
       is_internal: { Args: never; Returns: boolean }
+      is_project_creator: { Args: { p_project_id: string }; Returns: boolean }
       is_project_member: { Args: { p_project_id: string }; Returns: boolean }
+      is_service_member: {
+        Args: { p_project_service_id: string }
+        Returns: boolean
+      }
       is_task_assignee: { Args: { p_task_id: string }; Returns: boolean }
       join_reward_pool: { Args: { p_pool_id: string }; Returns: undefined }
       leave_reward_pool: { Args: { p_pool_id: string }; Returns: undefined }
+      my_permissions: { Args: never; Returns: string[] }
       open_reward_pool: { Args: { p_reward_id: string }; Returns: string }
       redeem_reward: {
         Args: { p_profile_id: string; p_reward_id: string }
         Returns: string
       }
       release_quest_claim: { Args: { p_claim_id: string }; Returns: undefined }
+      remove_project_service: {
+        Args: { p_project_service_id: string }
+        Returns: undefined
+      }
       review_quest_task: {
         Args: { p_approve: boolean; p_claim_id: string; p_note?: string }
         Returns: undefined
@@ -3391,6 +3714,10 @@ export type Database = {
         Args: { p_entries: Json; p_notes?: string }
         Returns: string
       }
+<<<<<<< HEAD
+=======
+      top_role_position: { Args: { p_profile: string }; Returns: number }
+>>>>>>> 0aca0be8a789768de703da347c0708615ff4e1e0
       update_standup: {
         Args: { p_entries: Json; p_notes?: string; p_standup_id: string }
         Returns: string
@@ -3526,9 +3853,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       queue_status: ["pending", "processing", "done", "failed"],

@@ -7,7 +7,7 @@ import { RoleGuard } from './components/layout/RoleGuard'
 import { AppShell } from './components/layout/AppShell'
 import { ClientShell } from './components/layout/ClientShell'
 import { showWipFeatures } from './lib/featureFlags'
-import { SETTINGS_ROLES, CLIENT_ROLES } from './constants/roles'
+import { SETTINGS_ROLES, CLIENT_ROLES, STANDUP_REVIEW_ROLES } from './constants/roles'
 
 import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
@@ -20,6 +20,9 @@ import NotificationsPage from './pages/NotificationsPage'
 import InboxPage from './pages/InboxPage'
 import ChatPage from './pages/ChatPage'
 import StandupPage from './pages/StandupPage'
+import StandupTeamPage from './pages/StandupTeamPage'
+import StandupHistoryPage from './pages/StandupHistoryPage'
+import StandupSettingsPage from './pages/StandupSettingsPage'
 import { AttendanceSectionScreen, TeamAttendanceSectionScreen } from './pages/AttendanceMobile'
 import { GamificationSectionScreen } from './pages/admin/GamificationPage'
 import AdminProjectsPage from './pages/admin/ProjectsPage'
@@ -27,6 +30,7 @@ import AdminProjectDetailPage from './pages/admin/ProjectDetailPage'
 import AdminTaskDetailPage from './pages/admin/TaskDetailPage'
 import ClientsPage from './pages/admin/ClientsPage'
 import TeamsPage from './pages/admin/TeamsPage'
+import TeamDetailPage from './pages/admin/TeamDetailPage'
 import PeoplePage from './pages/admin/PeoplePage'
 import TasksPage from './pages/admin/TasksPage'
 import ReportsPage from './pages/admin/ReportsPage'
@@ -75,6 +79,16 @@ export default function App() {
                 <Route path="/chat" element={<ChatPage />} />
                 <Route path="/chat/:channelId" element={<ChatPage />} />
                 <Route path="/standup" element={<StandupPage />} />
+                {/* Team board: reviewers only. RLS scopes leads/PMs to their own team. */}
+                <Route
+                  path="/standup/team"
+                  element={<RoleGuard allowedRoles={STANDUP_REVIEW_ROLES}><StandupTeamPage /></RoleGuard>}
+                />
+                <Route path="/standup/history" element={<StandupHistoryPage />} />
+                <Route
+                  path="/standup/settings"
+                  element={<RoleGuard feature="can_manage_standups"><StandupSettingsPage /></RoleGuard>}
+                />
                 <Route path="/attendance" element={<AttendancePage />} />
                 <Route path="/attendance/team/:sub" element={<TeamAttendanceSectionScreen />} />
                 <Route path="/attendance/:section" element={<AttendanceSectionScreen />} />
@@ -98,6 +112,12 @@ export default function App() {
                 <Route
                   path="/teams"
                   element={<RoleGuard allowedRoles={SETTINGS_ROLES}><TeamsPage /></RoleGuard>}
+                />
+                {/* Single team — roster is open to all internal staff; the
+                    attendance and template tabs gate themselves in-page. */}
+                <Route
+                  path="/teams/:id"
+                  element={<RoleGuard allowedRoles={SETTINGS_ROLES}><TeamDetailPage /></RoleGuard>}
                 />
 
                 {/* Projects, Tasks & Clients — live for internal staff (RLS scopes data) */}

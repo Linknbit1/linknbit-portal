@@ -6,23 +6,28 @@ import { MultiSelectPeople } from '../../components/ui/MultiSelectPeople'
 import { usePeople } from '../../hooks/usePeople'
 import { useTeams } from '../../hooks/useTeams'
 import { useTeamMembers } from '../../hooks/useTeamMembers'
-import { useAddProjectMembers } from '../../hooks/useProjectMembers'
+import { useAddServiceMembers } from '../../hooks/useProjectServices'
 import { useToast } from '../../components/ui/toast-context'
 import { cn } from '../../lib/cn'
 
 interface AddProjectMemberModalProps {
   projectId: string
-  /** Profile ids already on the project — excluded from the picker. */
+  /** People are staffed on a service, not the project as a whole. */
+  projectServiceId: string
+  serviceName: string
+  /** Profile ids already on this service — excluded from the picker. */
   existingIds: string[]
   onClose: () => void
 }
 
-export function AddProjectMemberModal({ projectId, existingIds, onClose }: AddProjectMemberModalProps) {
+export function AddProjectMemberModal({
+  projectId, projectServiceId, serviceName, existingIds, onClose,
+}: AddProjectMemberModalProps) {
   const toast = useToast()
   const { data: people = [] } = usePeople()
   const { data: teams = [] } = useTeams()
   const { data: teamMembers = [] } = useTeamMembers()
-  const addMembers = useAddProjectMembers()
+  const addMembers = useAddServiceMembers()
   const [selected, setSelected] = useState<string[]>([])
 
   const candidates = useMemo(
@@ -50,10 +55,10 @@ export function AddProjectMemberModal({ projectId, existingIds, onClose }: AddPr
   const handleAdd = () => {
     if (selected.length === 0) return
     addMembers.mutate(
-      { projectId, profileIds: selected },
+      { projectId, projectServiceId, profileIds: selected },
       {
         onSuccess: () => {
-          toast(`${selected.length} member${selected.length === 1 ? '' : 's'} added to project`, 'success')
+          toast(`${selected.length} member${selected.length === 1 ? '' : 's'} added to ${serviceName}`, 'success')
           onClose()
         },
         onError: (e) => toast(e instanceof Error ? e.message : 'Could not add members', 'error'),
@@ -65,7 +70,7 @@ export function AddProjectMemberModal({ projectId, existingIds, onClose }: AddPr
     <Modal
       open
       onClose={onClose}
-      title="Add project members"
+      title={`Add people to ${serviceName}`}
       size="sm"
       busy={addMembers.isPending}
       footer={
@@ -79,7 +84,7 @@ export function AddProjectMemberModal({ projectId, existingIds, onClose }: AddPr
     >
       <div className="space-y-4 p-5">
         {candidates.length === 0 ? (
-          <p className="py-4 text-center font-ui text-[13px] text-text-3">Everyone is already on this project.</p>
+          <p className="py-4 text-center font-ui text-[13px] text-text-3">Everyone is already on this service.</p>
         ) : (
           <>
             {teamShortcuts.length > 0 && (

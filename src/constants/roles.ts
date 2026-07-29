@@ -7,6 +7,14 @@ export const SETTINGS_ROLES: readonly string[] = [
   'super_admin', 'admin', 'hr', 'project_manager', 'team_lead', 'employee', 'finance',
 ]
 
+/**
+ * Roles that review other people's standups. Leads and PMs are included but see
+ * only their own team — that scoping lives in RLS, not here.
+ */
+export const STANDUP_REVIEW_ROLES: readonly string[] = [
+  'super_admin', 'admin', 'hr', 'project_manager', 'team_lead',
+]
+
 /** Client-portal roles. The /client/* tree is restricted to these. */
 export const CLIENT_ROLES: readonly string[] = ['client_owner', 'client_member']
 

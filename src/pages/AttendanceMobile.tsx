@@ -33,6 +33,7 @@ import { MyDevicesCard } from '../components/shared/MyDevicesCard'
 import {
   TeamRoster, TeamWfhList, TeamLeaveList, TeamExceptionsList, TeamOvertimeList,
 } from '../components/shared/TeamAttendancePanel'
+import { showsInlineTeamAttendance } from '../lib/roles'
 
 interface SectionEntry {
   title: string
@@ -173,7 +174,7 @@ function EmployeeAttendanceHub() {
   const { year, month, stepper } = useMonthFilter()
   const { data: history = [], isLoading } = useMyMonthlyAttendance(year, month)
   const { profile } = useAuthContext()
-  const canSeeTeam = profile?.role === 'team_lead' || profile?.role === 'project_manager'
+  const canSeeTeam = showsInlineTeamAttendance(profile?.role)
 
   const items: HubRowItem[] = [
     { to: '/attendance/history',    label: 'History',        icon: CalendarClock },
@@ -228,7 +229,7 @@ export function AttendanceSectionScreen() {
     )
   }
 
-  const canSeeTeam = profile?.role === 'team_lead' || profile?.role === 'project_manager'
+  const canSeeTeam = showsInlineTeamAttendance(profile?.role)
 
   // Team Attendance is its own sub-hub of stack screens (not a single panel).
   if (section === 'team') {
@@ -251,7 +252,7 @@ export function TeamAttendanceSectionScreen() {
 
   if (isDesktop) return <Navigate to="/attendance" replace />
 
-  const canSeeTeam = profile?.role === 'team_lead' || profile?.role === 'project_manager'
+  const canSeeTeam = showsInlineTeamAttendance(profile?.role)
   if (!canSeeTeam) return <Navigate to="/attendance" replace />
 
   const entry = TEAM_SECTIONS.find((s) => s.key === sub)
