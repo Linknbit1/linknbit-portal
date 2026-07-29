@@ -10,6 +10,7 @@ import {
   useStickyNotes,
   useUpdateStickyNote,
 } from '../hooks/useStickyNotes'
+import { useRealtimeStickyNotes } from '../hooks/realtime/useRealtimeStickyNotes'
 import { NOTE_COLORS, NOTE_SHAPES, type NoteColor, type NoteShape, type StickyNote } from '../api/stickyNotes'
 import { cn } from '../lib/cn'
 
@@ -120,9 +121,20 @@ const SHAPE_STYLE: Record<NoteShape, { clipPath?: string; borderRadius?: string 
       'polygon(0 0, 100% 0, 100% 86%, 94% 94%, 88% 86%, 81% 94%, 75% 86%, 69% 94%, 63% 86%, 56% 94%, 50% 86%, 44% 94%, 38% 86%, 31% 94%, 25% 86%, 19% 94%, 13% 86%, 6% 94%, 0 86%)',
   },
   parallelogram: { clipPath: 'polygon(16% 0, 100% 0, 84% 100%, 0 100%)' },
+  /*
+   * Fat-armed star, sized to the largest that fits: outer radius 51.5%, inner
+   * 33.5%, against 19% inner on the original icon-proportioned version.
+   *
+   * A point-up star is wider than it is tall, so width is the binding
+   * constraint — 2·cos(18°)·R must stay inside the box, which caps R at ~51.5%.
+   * The centre is dropped to 52.5% so the top point still starts at the very top
+   * edge; the leftover room ends up under the bottom points, where nothing is
+   * drawn anyway. Growing it further would need a bigger note, not a bigger
+   * polygon, and the other thirteen shapes share NOTE_SIZE.
+   */
   star: {
     clipPath:
-      'polygon(50% 0, 61% 34%, 98% 34%, 68% 56%, 79% 91%, 50% 69%, 21% 91%, 32% 56%, 2% 34%, 39% 34%)',
+      'polygon(50% 1%, 69.7% 25.4%, 99% 36.6%, 81.9% 62.9%, 80.3% 94.2%, 50% 86%, 19.7% 94.2%, 18.1% 62.9%, 1% 36.6%, 30.3% 25.4%)',
   },
   house: { clipPath: 'polygon(50% 0, 100% 34%, 100% 100%, 0 100%, 0 34%)' },
   // Speech bubble with a tail off the bottom-left.
@@ -148,7 +160,9 @@ const TEXT_INSET: Record<NoteShape, React.CSSProperties> = {
   ticket: { top: '9%', left: '12%', right: '12%', bottom: '9%' },
   scallop: { top: '9%', left: '9%', right: '9%', bottom: '20%' },
   parallelogram: { top: '10%', left: '18%', right: '18%', bottom: '10%' },
-  star: { top: '36%', left: '30%', right: '30%', bottom: '34%' },
+  // Centred on 52.5% with the core, and kept just inside the 33.5% inner radius
+  // so even the corners of the text box stay on paper.
+  star: { top: '27%', left: '27%', right: '27%', bottom: '12%' },
   house: { top: '40%', left: '10%', right: '10%', bottom: '9%' },
   bubble: { top: '9%', left: '9%', right: '9%', bottom: '28%' },
   hexagon: { top: '14%', left: '17%', right: '17%', bottom: '14%' },
@@ -174,8 +188,8 @@ const PIN_ANCHOR: Record<NoteShape, { x: number; y: number }> = {
   scallop: { x: 50, y: 9 },
   // Top edge runs from 16% to 100%, so its midpoint sits right of centre.
   parallelogram: { x: 58, y: 10 },
-  // Well inside the body: the upper points are too narrow to hold a pin.
-  star: { x: 50, y: 30 },
+  // Just below where the top arm meets the body, which the fatter core moved up.
+  star: { x: 50, y: 20 },
   // On the roof face, below the apex where the paper is wide enough.
   house: { x: 50, y: 20 },
   bubble: { x: 50, y: 10 },
@@ -297,9 +311,17 @@ interface NoteCardProps {
   zoom: number
   /** `onSettled` fires once the save has resolved, successfully or not. */
   onMove: (id: string, posX: number, posY: number, onSettled: () => void) => void
-  onChangeContent: (id: string, content: string) => void
+  onChangeContent: (id: string, content: string, onSettled: () => void) => void
   onDelete: (id: string) => void
 }
+
+/**
+ * How long typing pauses before the note is saved.
+ *
+ * The note used to save on every keystroke. That is a mutation per character,
+ * and every one of them raced the caret.
+ */
+const TYPING_SAVE_DEBOUNCE_MS = 600
 
 function NoteCard({ note, zoom, onMove, onChangeContent, onDelete }: NoteCardProps) {
   const [editing, setEditing] = useState(false)
@@ -314,6 +336,50 @@ function NoteCard({ note, zoom, onMove, onChangeContent, onDelete }: NoteCardPro
    */
   const [drag, setDrag] = useState<{ x: number; y: number } | null>(null)
   const [dragging, setDragging] = useState(false)
+
+  /**
+   * The text being written, owned locally rather than by the query cache.
+   *
+   * A textarea driven straight from the cache cannot hold a caret. Each
+   * keystroke fired a save, the optimistic write landed a tick later, and in
+   * between React re-rendered with the previous string — so the value prop went
+   * new, old, new. Re-applying a value a controlled input has already moved past
+   * puts the caret at the end, which is why fixing a typo mid-note threw you to
+   * the bottom of the paragraph.
+   *
+   * Non-null from the moment editing starts until the save settles, so the
+   * paper keeps showing what was typed while the write is in flight — and so an
+   * incoming realtime update cannot overwrite text mid-sentence.
+   */
+  const [draft, setDraft] = useState<string | null>(null)
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  /** Latest text not yet handed to the server; null once there is nothing owed. */
+  const unsaved = useRef<string | null>(null)
+
+  /**
+   * Tracked as a ref as well as state because the save callback below fires
+   * asynchronously and would otherwise close over whatever `editing` was when
+   * the save started.
+   */
+  const editingRef = useRef(false)
+
+  const flushContent = useCallback(() => {
+    if (saveTimer.current) clearTimeout(saveTimer.current)
+    saveTimer.current = null
+    const text = unsaved.current
+    if (text === null) return
+    unsaved.current = null
+    onChangeContent(note.id, text, () => {
+      // Handing back to the row mid-sentence would drop everything typed since
+      // this save began and throw the caret to the end again, so the draft is
+      // only retired once the writing has stopped and nothing is still owed.
+      if (!editingRef.current && unsaved.current === null) setDraft(null)
+    })
+  }, [note.id, onChangeContent])
+
+  // A note unmounted mid-sentence — page left, note deleted elsewhere — must not
+  // silently drop the last few characters the timer was still holding.
+  useEffect(() => () => flushContent(), [flushContent])
   const originRef = useRef({ pointerX: 0, pointerY: 0, posX: 0, posY: 0 })
 
   const shape = (note.shape as NoteShape) ?? 'square'
@@ -421,7 +487,11 @@ function NoteCard({ note, zoom, onMove, onChangeContent, onDelete }: NoteCardPro
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
             onPointerCancel={handlePointerUp}
-            onDoubleClick={() => setEditing(true)}
+            onDoubleClick={() => {
+              setDraft(note.content)
+              editingRef.current = true
+              setEditing(true)
+            }}
             className={cn(
               'absolute inset-0 select-none',
               COLOR_CLASS[color],
@@ -454,9 +524,20 @@ function NoteCard({ note, zoom, onMove, onChangeContent, onDelete }: NoteCardPro
         {editing ? (
           <textarea
             autoFocus
-            value={note.content}
-            onChange={(e) => onChangeContent(note.id, e.target.value)}
-            onBlur={() => setEditing(false)}
+            value={draft ?? note.content}
+            onChange={(e) => {
+              // Local first, always — the caret belongs to this element, not to
+              // whatever the server last acknowledged.
+              setDraft(e.target.value)
+              unsaved.current = e.target.value
+              if (saveTimer.current) clearTimeout(saveTimer.current)
+              saveTimer.current = setTimeout(flushContent, TYPING_SAVE_DEBOUNCE_MS)
+            }}
+            onBlur={() => {
+              editingRef.current = false
+              setEditing(false)
+              flushContent()
+            }}
             onPointerDown={(e) => e.stopPropagation()}
             placeholder="write something…"
             className="absolute resize-none bg-transparent outline-none font-hand text-note text-note-ink placeholder:text-note-ink/55"
@@ -469,7 +550,9 @@ function NoteCard({ note, zoom, onMove, onChangeContent, onDelete }: NoteCardPro
             className="absolute overflow-hidden whitespace-pre-wrap wrap-break-word font-hand text-note text-note-ink pointer-events-none"
             style={TEXT_INSET[shape]}
           >
-            {note.content || <span className="text-note-ink/55">double-click to write…</span>}
+            {(draft ?? note.content) || (
+              <span className="text-note-ink/55">double-click to write…</span>
+            )}
           </p>
         )}
       </div>
@@ -512,6 +595,7 @@ export default function StickyNotesPage() {
   const { mutate: createNote, isPending: creating } = useCreateStickyNote()
   const { mutate: updateNote } = useUpdateStickyNote()
   const { mutate: deleteNote } = useDeleteStickyNote()
+  useRealtimeStickyNotes()
 
   const viewportRef = useRef<HTMLDivElement>(null)
   /**
@@ -843,7 +927,8 @@ export default function StickyNotesPage() {
     [updateNote],
   )
   const handleContent = useCallback(
-    (id: string, content: string) => updateNote({ id, content }),
+    (id: string, content: string, onSettled: () => void) =>
+      updateNote({ id, content }, { onSettled }),
     [updateNote],
   )
   const handleDelete = useCallback((id: string) => deleteNote(id), [deleteNote])

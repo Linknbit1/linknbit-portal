@@ -26,6 +26,9 @@ export function useStickyNotes() {
 export function useCreateStickyNote() {
   const queryClient = useQueryClient()
   return useMutation({
+    // Tagged so useRealtimeStickyNotes can tell when this client has writes in
+    // flight and hold off refreshing over the top of them.
+    mutationKey: STICKY_NOTE_KEYS.all,
     mutationFn: (input: CreateStickyNoteInput) => createStickyNote(input),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: STICKY_NOTE_KEYS.all }),
   })
@@ -39,6 +42,7 @@ export function useCreateStickyNote() {
 export function useUpdateStickyNote() {
   const queryClient = useQueryClient()
   return useMutation({
+    mutationKey: STICKY_NOTE_KEYS.all,
     mutationFn: (input: UpdateStickyNoteInput) => updateStickyNote(input),
     onMutate: async (input) => {
       await queryClient.cancelQueries({ queryKey: STICKY_NOTE_KEYS.all })
@@ -69,6 +73,7 @@ export function useUpdateStickyNote() {
 export function useDeleteStickyNote() {
   const queryClient = useQueryClient()
   return useMutation({
+    mutationKey: STICKY_NOTE_KEYS.all,
     mutationFn: (id: string) => deleteStickyNote(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: STICKY_NOTE_KEYS.all }),
   })
