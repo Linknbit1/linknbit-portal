@@ -25,6 +25,11 @@ const MIN_ZOOM = 0.35
 const MAX_ZOOM = 2.5
 const ZOOM_STEP = 1.2
 
+/** Slightly in, so notes open at a comfortable reading size rather than 1:1. */
+const DEFAULT_ZOOM = 1.25
+
+const BOARD_CENTRE = { x: BOARD_W / 2, y: BOARD_H / 2 }
+
 interface View { zoom: number; x: number; y: number }
 
 /**
@@ -277,14 +282,25 @@ interface NoteCardProps {
   note: StickyNote
   /** Board scale, needed to convert pointer travel into board units. */
   zoom: number
-  onMove: (id: string, posX: number, posY: number) => void
+  /** `onSettled` fires once the save has resolved, successfully or not. */
+  onMove: (id: string, posX: number, posY: number, onSettled: () => void) => void
   onChangeContent: (id: string, content: string) => void
   onDelete: (id: string) => void
 }
 
 function NoteCard({ note, zoom, onMove, onChangeContent, onDelete }: NoteCardProps) {
   const [editing, setEditing] = useState(false)
+  /**
+   * Where this note is drawn, when that differs from the saved row.
+   *
+   * It has to outlive the drag itself. The save is optimistic, but TanStack
+   * awaits `cancelQueries` before writing the cache, so the new position lands a
+   * tick after the pointer comes up — and dropping the local position on
+   * pointerup meant one frame rendered from the stale row. That frame was the
+   * flick back to the old spot.
+   */
   const [drag, setDrag] = useState<{ x: number; y: number } | null>(null)
+  const [dragging, setDragging] = useState(false)
   const originRef = useRef({ pointerX: 0, pointerY: 0, posX: 0, posY: 0 })
 
   const shape = (note.shape as NoteShape) ?? 'square'
@@ -300,10 +316,11 @@ function NoteCard({ note, zoom, onMove, onChangeContent, onDelete }: NoteCardPro
     e.currentTarget.setPointerCapture(e.pointerId)
     originRef.current = { pointerX: e.clientX, pointerY: e.clientY, posX: note.pos_x, posY: note.pos_y }
     setDrag({ x: note.pos_x, y: note.pos_y })
+    setDragging(true)
   }
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!drag) return
+    if (!dragging) return
     const o = originRef.current
     // Pointer travel is in screen pixels; the board is scaled, so divide through
     // or the note drifts away from the cursor at any zoom other than 100%.
@@ -316,10 +333,20 @@ function NoteCard({ note, zoom, onMove, onChangeContent, onDelete }: NoteCardPro
   }
 
   const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragging) return
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId)
+    }
+    setDragging(false)
     if (!drag) return
-    e.currentTarget.releasePointerCapture(e.pointerId)
-    if (drag.x !== note.pos_x || drag.y !== note.pos_y) onMove(note.id, drag.x, drag.y)
-    setDrag(null)
+    if (drag.x === note.pos_x && drag.y === note.pos_y) {
+      setDrag(null)
+      return
+    }
+    // The local position is held until the save settles, then handed back to the
+    // row — which by then holds either the new position or, if the save failed,
+    // the rolled-back one, so a lost move visibly returns to where it really is.
+    onMove(note.id, drag.x, drag.y, () => setDrag(null))
   }
 
   const anchor = PIN_ANCHOR[shape]
@@ -337,7 +364,7 @@ function NoteCard({ note, zoom, onMove, onChangeContent, onDelete }: NoteCardPro
         width: NOTE_SIZE,
         height: NOTE_SIZE,
         // A sheet you have hold of rides over the rest of the board.
-        zIndex: drag ? 1 : undefined,
+        zIndex: dragging ? 1 : undefined,
       }}
     >
       <div
@@ -367,7 +394,7 @@ function NoteCard({ note, zoom, onMove, onChangeContent, onDelete }: NoteCardPro
           className="absolute inset-0 transition-[filter] duration-150"
           style={{
             // Contact shadow + ambient spread; lifted while dragging.
-            filter: drag
+            filter: dragging
               ? 'drop-shadow(0 2px 2px rgba(0,0,0,0.22)) drop-shadow(0 14px 20px rgba(0,0,0,0.38))'
               : 'drop-shadow(0 1px 1px rgba(0,0,0,0.20)) drop-shadow(0 5px 9px rgba(0,0,0,0.30))',
           }}
@@ -380,11 +407,12 @@ function NoteCard({ note, zoom, onMove, onChangeContent, onDelete }: NoteCardPro
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerUp}
             onDoubleClick={() => setEditing(true)}
             className={cn(
               'absolute inset-0 select-none',
               COLOR_CLASS[color],
-              drag ? 'cursor-grabbing' : 'cursor-grab',
+              dragging ? 'cursor-grabbing' : 'cursor-grab',
             )}
             style={SHAPE_STYLE[shape]}
           />
@@ -398,8 +426,16 @@ function NoteCard({ note, zoom, onMove, onChangeContent, onDelete }: NoteCardPro
             left: `${anchor.x}%`,
             top: `${anchor.y}%`,
             transform: 'translate(-50%, -50%)',
-            background:
-              'radial-gradient(circle, rgba(60,30,10,0.45) 0%, rgba(60,30,10,0.22) 55%, transparent 75%)',
+            // Whatever is behind the paper showing through, not a dark pit: the
+            // notes are now darker than the board, so the hole reads as board
+            // colour rather than as depth. Taken from the cork token so it stays
+            // right if the board is ever retinted.
+            background: [
+              'radial-gradient(circle,',
+              'color-mix(in srgb, var(--color-cork) 55%, transparent) 0%,',
+              'color-mix(in srgb, var(--color-cork) 26%, transparent) 55%,',
+              'transparent 75%)',
+            ].join(' '),
           }}
         />
         {editing ? (
@@ -410,7 +446,7 @@ function NoteCard({ note, zoom, onMove, onChangeContent, onDelete }: NoteCardPro
             onBlur={() => setEditing(false)}
             onPointerDown={(e) => e.stopPropagation()}
             placeholder="write something…"
-            className="absolute resize-none bg-transparent outline-none font-hand text-note text-note-ink placeholder:text-note-ink/40"
+            className="absolute resize-none bg-transparent outline-none font-hand text-note text-note-ink placeholder:text-note-ink/55"
             style={TEXT_INSET[shape]}
           />
         ) : (
@@ -420,7 +456,7 @@ function NoteCard({ note, zoom, onMove, onChangeContent, onDelete }: NoteCardPro
             className="absolute overflow-hidden whitespace-pre-wrap wrap-break-word font-hand text-note text-note-ink pointer-events-none"
             style={TEXT_INSET[shape]}
           >
-            {note.content || <span className="text-note-ink/40">double-click to write…</span>}
+            {note.content || <span className="text-note-ink/55">double-click to write…</span>}
           </p>
         )}
       </div>
@@ -471,7 +507,7 @@ export default function StickyNotesPage() {
    * breaks under StrictMode, which invokes updaters twice — the pan would be
    * applied double on every zoom.
    */
-  const [view, setView] = useState<View>({ zoom: 1, x: 0, y: 0 })
+  const [view, setView] = useState<View>({ zoom: DEFAULT_ZOOM, x: 0, y: 0 })
   const { zoom } = view
   const [panning, setPanning] = useState(false)
   const panOrigin = useRef({ pointerX: 0, pointerY: 0, panX: 0, panY: 0 })
@@ -502,28 +538,13 @@ export default function StickyNotesPage() {
     return () => observer.disconnect()
   }, [isLoading])
 
-  /**
-   * Where the board should sit when the page opens: on the notes if there are
-   * any, on the middle of the cork if not. Boards written before this were
-   * filled from a top-left view, so centring blindly would open on bare cork.
-   */
-  const focus = useMemo(() => {
-    if (!notes.length) return { x: BOARD_W / 2, y: BOARD_H / 2 }
-    const xs = notes.map((n) => n.pos_x)
-    const ys = notes.map((n) => n.pos_y)
-    return {
-      x: (Math.min(...xs) + Math.max(...xs) + NOTE_SIZE) / 2,
-      y: (Math.min(...ys) + Math.max(...ys) + NOTE_SIZE) / 2,
-    }
-  }, [notes])
-
-  /** Runs once, as soon as both the frame size and the notes are known. */
+  /** Open in the middle of the cork, once the frame has actually been measured. */
   const centredRef = useRef(false)
   useEffect(() => {
     if (centredRef.current || isLoading || !size.w || !size.h) return
     centredRef.current = true
-    setView((v) => viewCentredOn(focus, v.zoom, size.w, size.h))
-  }, [isLoading, size, focus])
+    setView(viewCentredOn(BOARD_CENTRE, DEFAULT_ZOOM, size.w, size.h))
+  }, [isLoading, size])
 
   /** Zoom about a fixed point so the board grows out of the cursor, not the corner. */
   const zoomAt = useCallback((nextZoom: number, anchorX: number, anchorY: number) => {
@@ -548,8 +569,20 @@ export default function StickyNotesPage() {
    * is passive — preventDefault there is ignored and the page scrolls instead of
    * the board zooming.
    *
-   * Ctrl/Cmd + wheel zooms (this is also what browsers report for a trackpad
-   * pinch); a plain wheel pans, matching Figma.
+   * One handler covers three devices, because browsers report all of them as
+   * wheel events:
+   *
+   *  - Trackpad pinch (macOS and Windows precision touchpads alike) arrives as a
+   *    wheel event with ctrlKey synthesised by the browser. There is no separate
+   *    pinch event to listen for.
+   *  - Two-finger trackpad scroll arrives as deltaX/deltaY and pans, matching
+   *    Figma and every map on the web.
+   *  - A mouse wheel has no horizontal axis and no pinch, so Ctrl/Cmd + wheel is
+   *    the zoom, and the on-screen buttons are there for anyone who misses that.
+   *
+   * deltaMode has to be normalised or the same gesture moves wildly different
+   * distances per browser: Firefox reports scroll in lines, not pixels, and some
+   * mice report whole pages.
    */
   useEffect(() => {
     const el = viewportRef.current
@@ -557,12 +590,20 @@ export default function StickyNotesPage() {
     const onWheel = (e: WheelEvent) => {
       e.preventDefault()
       const rect = el.getBoundingClientRect()
+      // DOM_DELTA_LINE (1) and DOM_DELTA_PAGE (2) are not pixels.
+      const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? rect.height : 1
+      const dx = e.deltaX * unit
+      const dy = e.deltaY * unit
+
       if (e.ctrlKey || e.metaKey) {
-        zoomAt(zoom * Math.exp(-e.deltaY * 0.01), e.clientX - rect.left, e.clientY - rect.top)
+        // Exponential so each notch is a constant ratio: zooming out then back in
+        // by the same amount returns you to exactly where you started.
+        zoomAt(zoom * Math.exp(-dy * 0.01), e.clientX - rect.left, e.clientY - rect.top)
       } else {
-        setView((v) =>
-          clampView({ ...v, x: v.x - e.deltaX, y: v.y - e.deltaY }, rect.width, rect.height),
-        )
+        // Shift+wheel is the long-standing convention for horizontal scroll on a
+        // mouse, which otherwise has no way to pan sideways.
+        const [panX, panY] = e.shiftKey && dx === 0 ? [dy, 0] : [dx, dy]
+        setView((v) => clampView({ ...v, x: v.x - panX, y: v.y - panY }, rect.width, rect.height))
       }
     }
     el.addEventListener('wheel', onWheel, { passive: false })
@@ -574,17 +615,79 @@ export default function StickyNotesPage() {
     zoomAt(zoom * factor, (rect?.width ?? 0) / 2, (rect?.height ?? 0) / 2)
   }
 
-  const resetView = () => setView(viewCentredOn(focus, 1, sizeRef.current.w, sizeRef.current.h))
+  const resetView = () =>
+    setView(viewCentredOn(BOARD_CENTRE, DEFAULT_ZOOM, sizeRef.current.w, sizeRef.current.h))
+
+  /**
+   * Touch pinch is tracked by hand.
+   *
+   * A trackpad pinch is delivered as a ctrl+wheel event, but a touchscreen pinch
+   * is not — it is two independent pointers, and the browser gives us nothing
+   * higher-level than that (`touch-none` is what stops it becoming a page zoom).
+   * So every live pointer is recorded, and the moment there are two the gesture
+   * switches from pan to pinch.
+   */
+  const pointersRef = useRef(new Map<number, { x: number; y: number }>())
+  const pinchRef = useRef<{ dist: number; view: View; mid: { x: number; y: number } } | null>(null)
+
+  /** Pointer positions relative to the frame, which is what the view maths uses. */
+  const localPoint = (e: { clientX: number; clientY: number }) => {
+    const rect = viewportRef.current?.getBoundingClientRect()
+    return { x: e.clientX - (rect?.left ?? 0), y: e.clientY - (rect?.top ?? 0) }
+  }
+
+  const beginPinch = () => {
+    const [a, b] = [...pointersRef.current.values()]
+    if (!a || !b) return
+    setPanning(false)
+    pinchRef.current = {
+      dist: Math.hypot(a.x - b.x, a.y - b.y),
+      mid: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 },
+      view,
+    }
+  }
 
   // Drag anywhere on the cork (or middle-click anywhere) to pan.
   const handleBoardPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.button !== 0 && e.button !== 1) return
     e.currentTarget.setPointerCapture(e.pointerId)
+    pointersRef.current.set(e.pointerId, localPoint(e))
+
+    if (pointersRef.current.size >= 2) {
+      beginPinch()
+      return
+    }
     panOrigin.current = { pointerX: e.clientX, pointerY: e.clientY, panX: view.x, panY: view.y }
     setPanning(true)
   }
 
   const handleBoardPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (pointersRef.current.has(e.pointerId)) pointersRef.current.set(e.pointerId, localPoint(e))
+
+    const pinch = pinchRef.current
+    if (pinch && pointersRef.current.size >= 2) {
+      const [a, b] = [...pointersRef.current.values()]
+      const dist = Math.hypot(a.x - b.x, a.y - b.y)
+      if (!pinch.dist) return
+      const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }
+      const { w, h } = sizeRef.current
+      const zoomed = clampView({ ...pinch.view, zoom: pinch.view.zoom * (dist / pinch.dist) }, w, h)
+      // Keep the board point that started under the fingers under them still, so
+      // the pinch zooms and drags in one motion the way a photo viewer does.
+      const anchor = {
+        x: (pinch.mid.x - pinch.view.x) / pinch.view.zoom,
+        y: (pinch.mid.y - pinch.view.y) / pinch.view.zoom,
+      }
+      setView(
+        clampView(
+          { zoom: zoomed.zoom, x: mid.x - anchor.x * zoomed.zoom, y: mid.y - anchor.y * zoomed.zoom },
+          w,
+          h,
+        ),
+      )
+      return
+    }
+
     if (!panning) return
     const o = panOrigin.current
     setView((v) =>
@@ -597,8 +700,26 @@ export default function StickyNotesPage() {
   }
 
   const handleBoardPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!panning) return
-    e.currentTarget.releasePointerCapture(e.pointerId)
+    pointersRef.current.delete(e.pointerId)
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId)
+    }
+
+    if (pointersRef.current.size < 2) pinchRef.current = null
+    // Lifting one finger of a pinch should hand back to a one-finger pan rather
+    // than freezing the board until you let go of both.
+    const [rest] = [...pointersRef.current.entries()]
+    if (rest) {
+      const rect = viewportRef.current?.getBoundingClientRect()
+      panOrigin.current = {
+        pointerX: rest[1].x + (rect?.left ?? 0),
+        pointerY: rest[1].y + (rect?.top ?? 0),
+        panX: view.x,
+        panY: view.y,
+      }
+      setPanning(true)
+      return
+    }
     setPanning(false)
   }
 
@@ -632,7 +753,8 @@ export default function StickyNotesPage() {
   }
 
   const handleMove = useCallback(
-    (id: string, posX: number, posY: number) => updateNote({ id, posX, posY }),
+    (id: string, posX: number, posY: number, onSettled: () => void) =>
+      updateNote({ id, posX, posY }, { onSettled }),
     [updateNote],
   )
   const handleContent = useCallback(
@@ -675,9 +797,14 @@ export default function StickyNotesPage() {
               onPointerDown={handleBoardPointerDown}
               onPointerMove={handleBoardPointerMove}
               onPointerUp={handleBoardPointerUp}
+              // A touch can be cancelled (system gesture, call, palm rejection)
+              // without ever reporting pointerup, which would strand the gesture.
+              onPointerCancel={handleBoardPointerUp}
               className={cn(
-                'relative overflow-hidden rounded-lg border-12 border-cork-frame',
-                'bg-cork shadow-[inset_0_0_60px_rgba(0,0,0,0.28)]',
+                // No frame, and no inner vignette — a black shadow on a black
+                // board is invisible, so it was only costing a paint.
+                'relative overflow-hidden rounded-lg',
+                'bg-cork',
                 'touch-none',
                 panning ? 'cursor-grabbing' : 'cursor-grab',
               )}
@@ -719,8 +846,8 @@ export default function StickyNotesPage() {
 
               {notes.length === 0 && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center px-6 pointer-events-none">
-                  <p className="font-display font-bold text-h4 text-cork-frame">Your board is empty</p>
-                  <p className="font-ui text-body-sm text-cork-frame/80 max-w-80">
+                  <p className="font-display font-bold text-h4 text-text-2">Your board is empty</p>
+                  <p className="font-ui text-body-sm text-text-4 max-w-80">
                     Pin your first note and it will show up here, exactly where you leave it.
                   </p>
                 </div>
