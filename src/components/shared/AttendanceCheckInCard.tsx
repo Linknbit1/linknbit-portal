@@ -12,6 +12,7 @@ import {
   useHolidays,
   useWorkingSaturdays,
 } from '../../hooks/useAttendance'
+import { useMyTerminalGate } from '../../hooks/useBiometric'
 import { useCurrentDevice } from '../../hooks/useCurrentDevice'
 import { useRegisterDevice } from '../../hooks/useEnrolledDevices'
 import { useAuthContext } from '../../context/AuthContext'
@@ -45,12 +46,13 @@ function ErrorBanner({ msg }: { msg: string }) {
   )
 }
 
-type DeviceNoticeTone = 'info' | 'pending' | 'blocked'
+type DeviceNoticeTone = 'info' | 'pending' | 'blocked' | 'terminal'
 
 const DEVICE_NOTICE_TONE: Record<DeviceNoticeTone, { ring: string; fg: string }> = {
-  info:    { ring: 'bg-brand-red/10 border-brand-red/30', fg: 'text-brand-red' },
-  pending: { ring: 'bg-warning/10 border-warning/30',     fg: 'text-warning' },
-  blocked: { ring: 'bg-error/10 border-error/30',         fg: 'text-error' },
+  info:     { ring: 'bg-brand-red/10 border-brand-red/30',   fg: 'text-brand-red' },
+  pending:  { ring: 'bg-warning/10 border-warning/30',       fg: 'text-warning' },
+  blocked:  { ring: 'bg-error/10 border-error/30',           fg: 'text-error' },
+  terminal: { ring: 'bg-service-dev/10 border-service-dev/30', fg: 'text-service-dev' },
 }
 
 function DeviceNotice({
@@ -117,6 +119,7 @@ export function AttendanceCheckInCard() {
   const { data: settings }         = useAttendanceSettings()
   const { data: holidays = [] }    = useHolidays(year)
   const { data: workingSats = [] } = useWorkingSaturdays(year)
+  const { data: terminalGate }     = useMyTerminalGate()
   const checkInMut  = useCheckIn()
   const checkOutMut = useCheckOut()
   const registerMut = useRegisterDevice()
@@ -165,7 +168,8 @@ export function AttendanceCheckInCard() {
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? ''
       const msg  = err instanceof Error ? err.message : 'Check-in failed'
-      if      (code === 'outside_window')      setErrorMsg(msg)
+      if      (code === 'use_terminal')        setErrorMsg(msg || 'Please check in at the biometric terminal.')
+      else if (code === 'outside_window')      setErrorMsg(msg)
       else if (code === 'wrong_network')       setErrorMsg('You must be on the office WiFi to check in.')
       else if (code === 'duplicate')           setErrorMsg('You have already checked in today.')
       else if (code === 'on_leave')            setErrorMsg('You are on approved leave today.')
@@ -356,8 +360,23 @@ export function AttendanceCheckInCard() {
           )}
           {errorMsg && <ErrorBanner msg={errorMsg} />}
 
-          {/* Device gating — only admins and approved devices reach the check-in button. */}
-          {deviceReady && !canCheckIn && deviceStatus === 'unregistered' ? (
+          {/* Terminal routing takes precedence over device gating: when you punch a
+              finger, whether this browser is an approved device is irrelevant. The
+              server decides this (get_my_terminal_gate) using the same rule
+              attendance-checkin enforces, and it flips back to the button on its own
+              once the relay stops reporting. */}
+          {terminalGate?.must_use_terminal ? (
+            <DeviceNotice
+              tone="terminal"
+              icon={Fingerprint}
+              title="Check in at the terminal"
+              body={
+                terminalGate.terminal_location
+                  ? `Place your finger on the terminal at ${terminalGate.terminal_location}. Your check-in appears here within a few seconds.`
+                  : 'Place your finger on the biometric terminal. Your check-in appears here within a few seconds.'
+              }
+            />
+          ) : deviceReady && !canCheckIn && deviceStatus === 'unregistered' ? (
             <DeviceNotice
               tone="info"
               icon={Fingerprint}

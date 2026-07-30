@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
 import {
   Users, Home, Plane, AlertCircle, Smartphone, Palmtree, Hourglass, BarChart2,
-  Settings as SettingsIcon, CalendarClock, Calendar,
+  Settings as SettingsIcon, CalendarClock, Calendar, Fingerprint,
 } from 'lucide-react'
 import { MobileHub, HubRow, type HubRowItem } from '../components/layout/MobileHub'
 import { StackScreen } from '../components/layout/StackScreen'
@@ -29,6 +29,7 @@ import {
   OooSection, SummaryStats, HistoryTable,
 } from './employee/AttendancePage'
 import { AttendanceCheckInCard } from '../components/shared/AttendanceCheckInCard'
+import { BiometricTerminalsTab } from '../components/shared/BiometricTerminalsTab'
 import { MyDevicesCard } from '../components/shared/MyDevicesCard'
 import {
   TeamRoster, TeamWfhList, TeamLeaveList, TeamExceptionsList, TeamOvertimeList,
@@ -46,6 +47,7 @@ const ADMIN_SECTIONS: Record<string, SectionEntry> = {
   leave:      { title: 'Leave',            render: () => <LeaveTab /> },
   exceptions: { title: 'Exceptions',       render: () => <ExceptionsTab /> },
   devices:    { title: 'Enrolled Devices', render: () => <EnrolledDevicesTab /> },
+  terminals:  { title: 'Terminals',        render: () => <BiometricTerminalsTab /> },
   schedule:   { title: 'Schedule',         render: () => <HolidaysTab /> },
   overtime:   { title: 'Overtime',         render: () => <OvertimeTab /> },
   reports:    { title: 'Reports',          render: () => <ReportsTab /> },
@@ -157,6 +159,7 @@ function AdminAttendanceHub() {
     { to: '/attendance/leave',      label: 'Leave',            icon: Plane,       badge: pendingLeave.length },
     { to: '/attendance/exceptions', label: 'Exceptions',       icon: AlertCircle, badge: pendingExc.length },
     { to: '/attendance/devices',    label: 'Enrolled Devices', icon: Smartphone,  badge: pendingDevices },
+    { to: '/attendance/terminals',  label: 'Terminals',        icon: Fingerprint },
     { to: '/attendance/schedule',   label: 'Schedule',         icon: Palmtree },
     { to: '/attendance/overtime',   label: 'Overtime',         icon: Hourglass,   badge: pendingOt.length },
     { to: '/attendance/reports',    label: 'Reports',          icon: BarChart2 },
