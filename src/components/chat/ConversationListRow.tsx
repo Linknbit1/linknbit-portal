@@ -68,7 +68,10 @@ export function ConversationListRow({ channel, myProfileId, unread, active, onCl
         </span>
       </button>
 
-      <span className="shrink-0 pr-1.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 lg:opacity-0">
+      {/* Always visible on touch — there is no hover to reveal it. Hover-gated
+          from lg up only, and the lg: variants must carry group-hover too, or
+          the plain lg:opacity-0 (emitted later) would win and hide it always. */}
+      <span className="shrink-0 pr-1.5 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:focus-within:opacity-100">
         <ConversationMenu channel={channel} title={title} hasUnread={unread > 0} onRemoved={onRemoved} />
       </span>
     </div>

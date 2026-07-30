@@ -11,6 +11,7 @@ import { validateChatAttachmentFile } from '../../lib/chatAttachment'
 import { useUploadChatAttachment } from '../../hooks/useMessageAttachments'
 import type { PersonMini } from '../../api/projects'
 import type { Json } from '../../types/database'
+import { randomUUID } from '../../lib/uuid'
 
 export interface ComposerPayload {
   bodyText: string
@@ -51,7 +52,7 @@ export function MessageComposer({
       const problem = validateChatAttachmentFile(file)
       if (problem) { toast(problem, 'error'); continue }
 
-      const localId = crypto.randomUUID()
+      const localId = randomUUID()
       setPending((prev) => [...prev, {
         localId, name: file.name, size: file.size, mimeType: file.type, progress: 0, attachmentId: null,
       }])

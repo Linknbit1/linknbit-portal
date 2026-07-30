@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { MessageSquare } from 'lucide-react'
+import { MessageSquare, Info } from 'lucide-react'
 import { Topbar } from '../components/layout/Topbar'
 import { StackScreen } from '../components/layout/StackScreen'
+import { Drawer } from '../components/ui/Drawer'
 import { ConversationListPane } from '../components/chat/ConversationListPane'
 import { ConversationListRow } from '../components/chat/ConversationListRow'
+import { ConversationInfoPanel } from '../components/chat/ConversationInfoPanel'
 import { ChatThread } from '../components/chat/ChatThread'
 import { CreateChannelModal } from '../components/chat/CreateChannelModal'
 import { NewDMPicker } from '../components/chat/NewDMPicker'
@@ -13,7 +15,7 @@ import { useIsDesktop } from '../hooks/useMediaQuery'
 import { useChannels } from '../hooks/useChannels'
 import { useChatUnreadMap } from '../hooks/useChatUnreadCount'
 import { useAuthContext } from '../context/AuthContext'
-import { channelTitle } from '../components/chat/chatUtils'
+import { channelTitle, dmCounterpart } from '../components/chat/chatUtils'
 
 /**
  * Desktop renders the list and thread side by side; mobile uses the hub →
@@ -87,13 +89,39 @@ export default function ChatPage() {
 function MobileThreadScreen({ channelId }: { channelId: string }) {
   const { profile } = useAuthContext()
   const { data: channels = [] } = useChannels()
+  const [infoOpen, setInfoOpen] = useState(false)
   const channel = channels.find((c) => c.id === channelId)
   const title = channel ? channelTitle(channel, profile?.id) : 'Chat'
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
-      <Topbar title={title} back="/chat" />
+      <Topbar
+        title={title}
+        back="/chat"
+        actions={
+          <button
+            onClick={() => setInfoOpen(true)}
+            aria-label="Conversation details"
+            className="flex size-9 items-center justify-center rounded-sm text-text-2 transition-colors hover:bg-surface-2 hover:text-text-1"
+          >
+            <Info size={18} />
+          </button>
+        }
+      />
       <ChatThread key={channelId} channelId={channelId} hideHeader />
+
+      {/* The desktop info pane is an lg-only sidebar, so phones reach the same
+          content (profile, members, shared media) through a bottom sheet. */}
+      <Drawer open={infoOpen} onClose={() => setInfoOpen(false)} title="Details" side="bottom">
+        <div className="h-[70vh]">
+          <ConversationInfoPanel
+            channel={channel ?? null}
+            counterpart={channel ? dmCounterpart(channel, profile?.id) : null}
+            title={title}
+            memberCount={channel?.members.length ?? 0}
+          />
+        </div>
+      </Drawer>
     </div>
   )
 }

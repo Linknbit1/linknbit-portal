@@ -90,7 +90,7 @@ export function MessageBubble({
         </button>
       ) : (
         <span className="flex w-10 shrink-0 items-start justify-end pt-1">
-          <span className="font-mono text-[10px] text-text-4 opacity-0 transition-opacity group-hover:opacity-100">
+          <span className="font-mono text-[10px] text-text-4 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100">
             {timeOf(message.created_at)}
           </span>
         </span>
@@ -109,7 +109,9 @@ export function MessageBubble({
             {message.edited_at && <span className="font-mono text-[11px] text-text-4">(edited)</span>}
           </div>
         )}
-        <div className={cn('font-ui text-[15px] leading-relaxed text-text-2', pending && 'opacity-60')}>
+        {/* break-words stops an unbroken URL or long token from forcing the
+            whole thread to scroll sideways on a narrow screen. */}
+        <div className={cn('font-ui text-[15px] leading-relaxed wrap-break-word text-text-2', pending && 'opacity-60')}>
           {message.body_text || message.body_doc ? (
             message.body_doc
               ? <RichRenderer doc={fromDbDoc(message.body_doc)} />
@@ -123,7 +125,7 @@ export function MessageBubble({
       </div>
 
       {!pending && (
-        <div className="shrink-0 flex items-start gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+        <div className="flex shrink-0 items-start gap-1 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:focus-within:opacity-100">
           <button
             ref={reactBtnRef}
             onClick={() => setReactOpen((v) => !v)}

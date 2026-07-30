@@ -50,13 +50,13 @@ export function MessageAttachment({ attachment }: MessageAttachmentProps) {
           onClick={openFile}
           className="mt-1.5 block max-w-sm rounded-md overflow-hidden border border-border-default hover:border-border-strong transition-colors"
         >
-          <img src={url} alt={attachment.file_name} className="max-h-64 w-auto object-cover" />
+          <img src={url} alt={attachment.file_name} className="max-h-64 w-auto max-w-full object-cover" />
         </button>
       )
     }
     if (kind === 'video') {
       return (
-        <video src={url} controls className="mt-1.5 max-h-64 max-w-sm rounded-md border border-border-default">
+        <video src={url} controls className="mt-1.5 max-h-64 w-full max-w-sm rounded-md border border-border-default">
           <track kind="captions" />
         </video>
       )

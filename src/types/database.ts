@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       approvals: {
@@ -298,6 +323,7 @@ export type Database = {
           checkout_buffer_min: number
           early_checkin_min: number
           grace_period_min: number
+          min_excluded_gap_min: number
           office_ip_cidr: string | null
           saturday_working: boolean
           singleton: boolean
@@ -313,6 +339,7 @@ export type Database = {
           checkout_buffer_min?: number
           early_checkin_min?: number
           grace_period_min?: number
+          min_excluded_gap_min?: number
           office_ip_cidr?: string | null
           saturday_working?: boolean
           singleton?: boolean
@@ -328,6 +355,7 @@ export type Database = {
           checkout_buffer_min?: number
           early_checkin_min?: number
           grace_period_min?: number
+          min_excluded_gap_min?: number
           office_ip_cidr?: string | null
           saturday_working?: boolean
           singleton?: boolean
@@ -499,6 +527,120 @@ export type Database = {
           id?: string
           is_active?: boolean
           name?: string
+        }
+        Relationships: []
+      }
+      biometric_punches: {
+        Row: {
+          created_at: string
+          id: string
+          local_date: string
+          processed_at: string | null
+          profile_id: string | null
+          punch_uid: string
+          punched_at: string
+          raw: Json
+          resolution: string
+          terminal_id: string
+          zk_user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          local_date: string
+          processed_at?: string | null
+          profile_id?: string | null
+          punch_uid: string
+          punched_at: string
+          raw?: Json
+          resolution?: string
+          terminal_id: string
+          zk_user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          local_date?: string
+          processed_at?: string | null
+          profile_id?: string | null
+          punch_uid?: string
+          punched_at?: string
+          raw?: Json
+          resolution?: string
+          terminal_id?: string
+          zk_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "biometric_punches_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "biometric_punches_terminal_id_fkey"
+            columns: ["terminal_id"]
+            isOneToOne: false
+            referencedRelation: "biometric_terminals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      biometric_terminals: {
+        Row: {
+          clock_skew_sec: number | null
+          created_at: string
+          device_ip: string | null
+          device_log_count: number | null
+          device_roster: Json
+          firmware: string | null
+          id: string
+          is_active: boolean
+          last_heartbeat_at: string | null
+          last_poll_at: string | null
+          location: string | null
+          name: string
+          roster_synced_at: string | null
+          secret_hash: string
+          serial_number: string | null
+          updated_at: string
+        }
+        Insert: {
+          clock_skew_sec?: number | null
+          created_at?: string
+          device_ip?: string | null
+          device_log_count?: number | null
+          device_roster?: Json
+          firmware?: string | null
+          id?: string
+          is_active?: boolean
+          last_heartbeat_at?: string | null
+          last_poll_at?: string | null
+          location?: string | null
+          name: string
+          roster_synced_at?: string | null
+          secret_hash: string
+          serial_number?: string | null
+          updated_at?: string
+        }
+        Update: {
+          clock_skew_sec?: number | null
+          created_at?: string
+          device_ip?: string | null
+          device_log_count?: number | null
+          device_roster?: Json
+          firmware?: string | null
+          id?: string
+          is_active?: boolean
+          last_heartbeat_at?: string | null
+          last_poll_at?: string | null
+          location?: string | null
+          name?: string
+          roster_synced_at?: string | null
+          secret_hash?: string
+          serial_number?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1065,6 +1207,7 @@ export type Database = {
       }
       job_type_policies: {
         Row: {
+          attendance_via_terminal: boolean
           auto_detect_network: boolean
           enforce_schedule_window: boolean
           job_type: string
@@ -1073,6 +1216,7 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
+          attendance_via_terminal?: boolean
           auto_detect_network?: boolean
           enforce_schedule_window?: boolean
           job_type: string
@@ -1081,6 +1225,7 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
+          attendance_via_terminal?: boolean
           auto_detect_network?: boolean
           enforce_schedule_window?: boolean
           job_type?: string
@@ -1628,6 +1773,7 @@ export type Database = {
         Row: {
           category: string
           description: string | null
+          is_hidden: boolean
           key: string
           label: string
           sort_order: number
@@ -1635,6 +1781,7 @@ export type Database = {
         Insert: {
           category: string
           description?: string | null
+          is_hidden?: boolean
           key: string
           label: string
           sort_order?: number
@@ -1642,6 +1789,7 @@ export type Database = {
         Update: {
           category?: string
           description?: string | null
+          is_hidden?: boolean
           key?: string
           label?: string
           sort_order?: number
@@ -1723,7 +1871,9 @@ export type Database = {
           role: string
           skills: string[]
           tech_stacks: string[]
+          theme: string
           updated_at: string
+          zk_user_id: string | null
         }
         Insert: {
           age?: number | null
@@ -1756,7 +1906,9 @@ export type Database = {
           role?: string
           skills?: string[]
           tech_stacks?: string[]
+          theme?: string
           updated_at?: string
+          zk_user_id?: string | null
         }
         Update: {
           age?: number | null
@@ -1789,7 +1941,9 @@ export type Database = {
           role?: string
           skills?: string[]
           tech_stacks?: string[]
+          theme?: string
           updated_at?: string
+          zk_user_id?: string | null
         }
         Relationships: [
           {
@@ -2507,6 +2661,7 @@ export type Database = {
           created_by: string | null
           id: string
           is_default: boolean
+          is_hidden: boolean
           is_system: boolean
           name: string
           position: number
@@ -2519,6 +2674,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           is_default?: boolean
+          is_hidden?: boolean
           is_system?: boolean
           name: string
           position: number
@@ -2531,6 +2687,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           is_default?: boolean
+          is_hidden?: boolean
           is_system?: boolean
           name?: string
           position?: number
@@ -2911,6 +3068,53 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "standups_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sticky_notes: {
+        Row: {
+          color: string
+          content: string
+          created_at: string
+          id: string
+          pos_x: number
+          pos_y: number
+          profile_id: string
+          rotation: number
+          shape: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string
+          content?: string
+          created_at?: string
+          id?: string
+          pos_x?: number
+          pos_y?: number
+          profile_id: string
+          rotation?: number
+          shape?: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string
+          content?: string
+          created_at?: string
+          id?: string
+          pos_x?: number
+          pos_y?: number
+          profile_id?: string
+          rotation?: number
+          shape?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sticky_notes_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -3609,8 +3813,10 @@ export type Database = {
       is_channel_member: { Args: { p_channel_id: string }; Returns: boolean }
       is_channel_owner: { Args: { p_channel_id: string }; Returns: boolean }
       is_internal: { Args: never; Returns: boolean }
+      is_permission_hidden: { Args: { p_key: string }; Returns: boolean }
       is_project_creator: { Args: { p_project_id: string }; Returns: boolean }
       is_project_member: { Args: { p_project_id: string }; Returns: boolean }
+      is_role_hidden: { Args: { p_role_id: string }; Returns: boolean }
       is_service_member: {
         Args: { p_project_service_id: string }
         Returns: boolean
@@ -3714,10 +3920,7 @@ export type Database = {
         Args: { p_entries: Json; p_notes?: string }
         Returns: string
       }
-<<<<<<< HEAD
-=======
       top_role_position: { Args: { p_profile: string }; Returns: number }
->>>>>>> 0aca0be8a789768de703da347c0708615ff4e1e0
       update_standup: {
         Args: { p_entries: Json; p_notes?: string; p_standup_id: string }
         Returns: string
@@ -3853,6 +4056,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       queue_status: ["pending", "processing", "done", "failed"],

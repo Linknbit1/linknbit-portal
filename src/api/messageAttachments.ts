@@ -2,6 +2,7 @@ import * as tus from 'tus-js-client'
 import { supabase } from '../lib/supabase'
 import { chatContentType, safeStorageName, RESUMABLE_THRESHOLD_BYTES } from '../lib/chatAttachment'
 import type { Tables } from '../types/database'
+import { randomUUID } from '../lib/uuid'
 
 export type MessageAttachmentRow = Tables<'message_attachments'>
 
@@ -111,7 +112,7 @@ async function uploadResumable(file: File, path: string, onProgress?: (percent: 
  */
 export async function uploadChatAttachment(file: File, args: UploadChatFileArgs): Promise<MessageAttachmentRow> {
   const { data: auth } = await supabase.auth.getUser()
-  const path = `${args.channelId}/${crypto.randomUUID()}-${safeStorageName(file.name)}`
+  const path = `${args.channelId}/${randomUUID()}-${safeStorageName(file.name)}`
 
   if (file.size > RESUMABLE_THRESHOLD_BYTES) {
     await uploadResumable(file, path, args.onProgress)

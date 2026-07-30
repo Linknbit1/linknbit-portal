@@ -30,7 +30,9 @@ export function EmojiPicker({ open, onClose, anchorRef, onPick }: EmojiPickerPro
 
   return (
     <Popover anchorRef={anchorRef} open={open} onClose={onClose}>
-      <div className="w-[312px] bg-surface-2 border border-border-strong rounded-md shadow-lg overflow-hidden">
+      {/* Never wider than the viewport allows — the popover clamps its x position,
+          but a fixed width would still overflow a narrow phone. */}
+      <div className="w-[min(312px,calc(100vw-24px))] overflow-hidden rounded-md border border-border-strong bg-surface-2 shadow-lg">
         <div className="p-2 border-b border-border-default">
           <div className="relative">
             <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-4 pointer-events-none" />
