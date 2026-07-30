@@ -227,10 +227,21 @@ async function reconcileDay(
     return
   }
 
-  // ── Derive in / out / middle pairs.
-  const first = rows[0]
-  const last = rows.length > 1 ? rows[rows.length - 1] : null
-  const middle = rows.slice(1, Math.max(1, rows.length - 1))
+  // ── Interpret the punch sequence.
+  // If a human (portal/admin) check-in already exists, every terminal punch is a
+  // post-check-in event: the latest is the check-out, and any earlier ones pair
+  // up as out-of-office gaps. If the terminal owns the day, the first punch is
+  // the check-in instead. This is what makes "check in on the portal, check out
+  // on the finger" work — a lone terminal punch after a portal check-in is a
+  // check-out, not a second check-in.
+  const terminalOwnsRow = !existing || existing.source === 'system' || existing.source === 'biometric'
+  const checkInCovered = !terminalOwnsRow && !!existing?.check_in
+
+  const checkInPunch = checkInCovered ? null : rows[0]
+  const checkOutPunch = checkInCovered || rows.length > 1 ? rows[rows.length - 1] : null
+  const middle = checkInCovered
+    ? rows.slice(0, rows.length - 1)
+    : rows.slice(1, Math.max(1, rows.length - 1))
 
   const outIds: string[] = []
   const inIds: string[] = []
@@ -321,18 +332,16 @@ async function reconcileDay(
   const { lateCutoff } = await resolveCutoffs(
     db, profileId, date, settings, profile?.allowed_check_in ?? null,
   )
-  const arrivalMinutes = localParts(new Date(first.punched_at), tz).localMinutes
+  const arrivalMinutes = localParts(new Date((checkInPunch ?? rows[0]).punched_at), tz).localMinutes
   const status = computeStatus(arrivalMinutes, lateCutoff, policy.enforce_schedule_window)
 
   // ── Write attendance.
-  const terminalOwnsRow = !existing || existing.source === 'system' || existing.source === 'biometric'
-
   if (!existing) {
     await db.from('attendance').insert({
       profile_id: profileId,
       date,
-      check_in: first.punched_at,
-      check_out: last?.punched_at ?? null,
+      check_in: rows[0].punched_at,
+      check_out: checkOutPunch?.punched_at ?? null,
       source: 'biometric',
       status,
       device_name: terminalName,
@@ -346,8 +355,8 @@ async function reconcileDay(
     await db
       .from('attendance')
       .update({
-        check_in: first.punched_at,
-        check_out: last?.punched_at ?? existing.check_out,
+        check_in: rows[0].punched_at,
+        check_out: checkOutPunch?.punched_at ?? existing.check_out,
         source: 'biometric',
         status,
         device_name: terminalName,
@@ -356,12 +365,20 @@ async function reconcileDay(
       })
       .eq('id', existing.id)
   } else {
-    // A human record wins on arrival; the terminal still supplies departure and
-    // time-out-of-office, which the portal has no other way to observe.
+    // A human already recorded the check-in (portal, or an admin correction). The
+    // terminal supplies the check-out — its latest punch, when that is after the
+    // recorded check-in — plus any time out of office. A single terminal punch
+    // counts: "check in on the portal, check out on the finger" is the common case.
+    const checkOut =
+      checkOutPunch &&
+      (!existing.check_in ||
+        new Date(checkOutPunch.punched_at) > new Date(existing.check_in))
+        ? checkOutPunch.punched_at
+        : existing.check_out
     await db
       .from('attendance')
       .update({
-        check_out: last?.punched_at ?? existing.check_out,
+        check_out: checkOut,
         excluded_minutes: excludedMinutes,
       })
       .eq('id', existing.id)
@@ -369,7 +386,7 @@ async function reconcileDay(
     await auditOnce(db, {
       action: 'attendance.terminal_punch_alongside_manual_record',
       severity: 'info',
-      summary: `Terminal punches for ${subjectName ?? 'a member'} on ${date} supplied check-out only; the existing ${existing.source} check-in was kept.`,
+      summary: `Terminal supplied the check-out for ${subjectName ?? 'a member'} on ${date}; the existing ${existing.source} check-in was kept.`,
       flagReason: null,
       subjectId: profileId,
       subjectName,
@@ -380,8 +397,8 @@ async function reconcileDay(
   }
 
   // ── Record how each punch was interpreted.
-  await setResolution([first.id], 'check_in')
-  if (last) await setResolution([last.id], 'check_out')
+  if (checkInPunch) await setResolution([checkInPunch.id], 'check_in')
+  if (checkOutPunch) await setResolution([checkOutPunch.id], 'check_out')
   await setResolution(outIds, 'ooo_out')
   await setResolution(inIds, 'ooo_in')
   await setResolution(belowIds, 'ignored_below_threshold')

@@ -41,7 +41,24 @@ Every punch exists in two places until the server confirms it:
 key, so re-sending after an ambiguous failure is always a no-op. Delivery only has
 to be at-least-once, which the Pi can actually guarantee.
 
-## Install on the Pi
+## Install on the Pi — automated
+
+Once SSH is enabled on the Pi (Raspberry Pi OS ships with it **off**: either
+`sudo raspi-config` → Interface Options → SSH on the Pi itself, or put an empty file
+named `ssh` in the boot partition of its SD card and reboot):
+
+```bash
+./deploy_to_pi.sh pi@192.168.18.43
+```
+
+That copies the code, creates the `zkbridge` service account, builds the venv,
+writes `/etc/linknbit-zk.env` (0600, secret read from your local `.env` and never
+echoed), runs a connectivity check to the terminal **as the service user**, then
+enables and starts the service. Idempotent — re-run it after editing any `.py` file.
+
+The manual equivalent is below, if you'd rather do it by hand.
+
+## Install on the Pi — manual
 
 ```bash
 sudo adduser --system --group zkbridge
