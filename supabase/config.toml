@@ -421,3 +421,10 @@ s3_secret_key = "env(S3_SECRET_KEY)"
 # the x-push-secret header instead (see PUSH_HOOK_SECRET).
 [functions.send-push]
 verify_jwt = false
+
+# attendance-biometric-punch is invoked by the Raspberry Pi bridge, which has no
+# user session — there is no JWT to verify. It authenticates the caller with the
+# x-terminal-secret header, compared in constant time against
+# biometric_terminals.secret_hash (see script/README.md).
+[functions.attendance-biometric-punch]
+verify_jwt = false

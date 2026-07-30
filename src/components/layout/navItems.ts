@@ -82,6 +82,7 @@ const ATTENDANCE_CHILDREN: NavItem[] = [
   { label: 'Overtime',         icon: CalendarCheck, to: '/attendance/overtime',   feature: 'can_manage_attendance' },
   { label: 'Schedule',         icon: CalendarCheck, to: '/attendance/schedule',   feature: 'can_manage_attendance' },
   { label: 'Enrolled Devices', icon: CalendarCheck, to: '/attendance/devices',    feature: 'can_manage_attendance' },
+  { label: 'Terminals',        icon: CalendarCheck, to: '/attendance/terminals',  feature: 'can_manage_attendance' },
   { label: 'Reports',          icon: CalendarCheck, to: '/attendance/reports',    feature: 'can_manage_attendance' },
   { label: 'Settings',         icon: CalendarCheck, to: '/attendance/settings',   feature: 'can_manage_attendance' },
 ]

@@ -1,0 +1,3 @@
+# The bridge deliberately depends on pyzk alone; HTTP uses urllib from the
+# standard library so there is less to keep patched on a long-lived Pi.
+pyzk==0.9

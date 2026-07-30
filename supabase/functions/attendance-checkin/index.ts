@@ -1,4 +1,14 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import {
+  DEFAULT_POLICY,
+  checkDayGates,
+  classifyExistingRow,
+  computeStatus,
+  fmtHHMM,
+  ipInCidr,
+  localParts,
+  resolveCutoffs,
+} from '../_shared/attendancePolicy.ts'
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -10,21 +20,6 @@ function json(body: unknown, status: number): Response {
     status,
     headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
   })
-}
-
-function ipInCidr(ip: string, cidr: string): boolean {
-  try {
-    const [range, bits] = cidr.split('/')
-    const mask = ~((1 << (32 - Number(bits))) - 1) >>> 0
-    const ipParts = ip.split('.').map(Number)
-    const rangeParts = range.split('.').map(Number)
-    if (ipParts.length !== 4 || rangeParts.length !== 4) return false
-    const ipInt = ((ipParts[0] << 24) | (ipParts[1] << 16) | (ipParts[2] << 8) | ipParts[3]) >>> 0
-    const rangeInt = ((rangeParts[0] << 24) | (rangeParts[1] << 16) | (rangeParts[2] << 8) | rangeParts[3]) >>> 0
-    return (ipInt & mask) === (rangeInt & mask)
-  } catch {
-    return false
-  }
 }
 
 Deno.serve(async (req: Request) => {
@@ -85,14 +80,10 @@ Deno.serve(async (req: Request) => {
   const jobType = callerProfile?.job_type ?? 'on_site'
   const { data: policyRow } = await supabase
     .from('job_type_policies')
-    .select('require_office_network, auto_detect_network, enforce_schedule_window')
+    .select('require_office_network, auto_detect_network, enforce_schedule_window, attendance_via_terminal')
     .eq('job_type', jobType)
     .maybeSingle()
-  const policy = policyRow ?? {
-    require_office_network: true,
-    auto_detect_network: false,
-    enforce_schedule_window: true,
-  }
+  const policy = policyRow ?? DEFAULT_POLICY
 
   // 3. Load settings
   const { data: settings, error: settingsError } = await supabase
@@ -103,99 +94,49 @@ Deno.serve(async (req: Request) => {
 
   const tz = settings.timezone ?? 'Asia/Karachi'
 
-  // 4. Time window check
-  // Use Intl.DateTimeFormat to extract local time — avoids new Date(toLocaleString())
-  // which is unreliable in Deno because the locale string format is not guaranteed parseable.
-  const now = new Date()
+  // 3a. Terminal routing — on-site staff mark attendance at the biometric
+  //     terminal, not here. Enforced only while a terminal relay is actually
+  //     alive; if every terminal has gone stale this falls through so a dead Pi
+  //     can't strand anyone. get_my_terminal_gate() applies the same rule for the
+  //     UI, and both read terminal_stale_min so they cannot disagree.
+  if (policy.attendance_via_terminal) {
+    const staleMin = settings.terminal_stale_min ?? 10
+    const staleBefore = new Date(Date.now() - staleMin * 60_000).toISOString()
+    const { data: liveTerminal } = await supabase
+      .from('biometric_terminals')
+      .select('name, location')
+      .eq('is_active', true)
+      .gte('last_heartbeat_at', staleBefore)
+      .limit(1)
+      .maybeSingle()
 
-  const localTimeStr = new Intl.DateTimeFormat('en-US', {
-    timeZone: tz, hour: '2-digit', minute: '2-digit', hour12: false,
-  }).format(now)
-  const [localH, localM] = localTimeStr.split(':').map(Number)
-  const localMinutes = localH * 60 + localM
-
-  // en-CA locale reliably formats as YYYY-MM-DD, which PostgreSQL date columns expect
-  const today = new Intl.DateTimeFormat('en-CA', { timeZone: tz }).format(now)
-
-  // 4a. Weekend gate — derive day-of-week from the already-localized date string
-  const [ty, tm, td] = today.split('-').map(Number)
-  const dayOfWeek = new Date(ty, tm - 1, td).getDay() // 0 = Sun, 6 = Sat
-
-  if (dayOfWeek === 0) {
-    return json({ error: 'Check-in is not allowed on Sundays.', code: 'weekend' }, 422)
-  }
-
-  if (dayOfWeek === 6) {
-    if (!settings.saturday_working) {
-      // Check if this specific Saturday is in the working_saturdays table
-      const { data: workingSat } = await supabase
-        .from('working_saturdays')
-        .select('id')
-        .eq('date', today)
-        .maybeSingle()
-
-      if (!workingSat) {
-        return json({ error: 'Check-in is not allowed on Saturdays.', code: 'weekend' }, 422)
-      }
+    if (liveTerminal) {
+      const where = liveTerminal.location ?? liveTerminal.name
+      return json({
+        error: `Please check in at the biometric terminal (${where}).`,
+        code: 'use_terminal',
+      }, 403)
     }
   }
 
-  // 4b. Holiday gate — no check-in on a company holiday (any weekday).
-  const { data: holiday } = await supabase
-    .from('holidays')
-    .select('name')
-    .eq('date', today)
-    .maybeSingle()
-  if (holiday) {
-    return json({
-      error: `Check-in is not allowed on a holiday${holiday.name ? ` (${holiday.name})` : ''}.`,
-      code: 'holiday',
-    }, 422)
+  // 4. Time window check
+  const now = new Date()
+  const { today, localMinutes, dayOfWeek } = localParts(now, tz)
+
+  // 4a/4b. Weekend and holiday gates.
+  const dayGate = await checkDayGates(supabase, today, dayOfWeek, settings)
+  if (dayGate.blocked) {
+    return json({ error: dayGate.message, code: dayGate.code }, 422)
   }
 
-  const [startH, startM] = settings.work_start_time.split(':').map(Number)
-  const [endH, endM] = settings.work_end_time.split(':').map(Number)
-  const graceMin = settings.grace_period_min
-
-  const earlyMin = settings.early_checkin_min ?? 0
-  const EXC_GRACE_MIN = 10 // grace applied to approved exception times
-
-  const startMinutes = startH * 60 + startM
-  const openMinutes  = startMinutes - earlyMin
-  const endMinutes   = endH * 60 + endM
-  let   lateCutoff   = startMinutes + graceMin
-
-  // Per-employee allowed check-in overrides the start+grace cutoff entirely: arriving
-  // at or before this time is on-time, and the grace period does NOT apply on top.
-  if (callerProfile?.allowed_check_in) {
-    const [ah, am] = callerProfile.allowed_check_in.split(':').map(Number)
-    lateCutoff = ah * 60 + am
-  }
-
-  const fmtHHMM = (m: number) =>
-    `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`
-
-  // 4c. Approved late-arrival exception widens the late cutoff to requested_time + grace
-  //     and waives the early-window lower bound (they are arriving late on purpose).
-  let lowerBoundActive = true
-  const { data: lateExc } = await supabase
-    .from('attendance_exceptions')
-    .select('requested_time')
-    .eq('profile_id', profileId)
-    .eq('date', today)
-    .eq('exception_type', 'late_arrival')
-    .eq('status', 'approved')
-    .maybeSingle()
-  if (lateExc?.requested_time) {
-    const [eh, em] = lateExc.requested_time.split(':').map(Number)
-    lateCutoff = eh * 60 + em + EXC_GRACE_MIN
-    lowerBoundActive = false
-  }
+  // 4c. Late cutoff, layering per-employee allowance and approved late arrival.
+  const { lateCutoff, openMinutes, endMinutes, lowerBoundActive } = await resolveCutoffs(
+    supabase, profileId, today, settings, callerProfile?.allowed_check_in ?? null,
+  )
 
   // Schedule-window enforcement is per-job-type. When disabled (e.g. flexible
   // remote/hybrid hours) the early/late bounds are skipped and the arrival is
-  // never marked late (see status computation below). Weekend/holiday gates
-  // above still apply to everyone.
+  // never marked late. Weekend/holiday gates above still apply to everyone.
   if (policy.enforce_schedule_window) {
     if (lowerBoundActive && localMinutes < openMinutes) {
       return json({
@@ -212,10 +153,6 @@ Deno.serve(async (req: Request) => {
   }
 
   // 5. Existing-row handling.
-  //    An approved WFH/Leave or the daily absence job may have already written a
-  //    'system' row for today. WFH employees may still check in (to record hours);
-  //    Leave blocks; a real self row is a true duplicate; any other system row
-  //    (e.g. 'absent') is overridden by a normal check-in.
   const { data: existing } = await supabase
     .from('attendance')
     .select('id, source, status')
@@ -223,18 +160,14 @@ Deno.serve(async (req: Request) => {
     .eq('date', today)
     .maybeSingle()
 
-  let wfhOverride = false
-  if (existing) {
-    if (existing.source === 'self') {
-      return json({ error: 'Already checked in today', code: 'duplicate' }, 409)
-    }
-    if (existing.source === 'system' && existing.status === 'leave') {
-      return json({ error: 'You are on approved leave today.', code: 'on_leave' }, 409)
-    }
-    if (existing.source === 'system' && existing.status === 'wfh') {
-      wfhOverride = true
-    }
+  const existingKind = classifyExistingRow(existing)
+  if (existingKind === 'duplicate') {
+    return json({ error: 'Already checked in today', code: 'duplicate' }, 409)
   }
+  if (existingKind === 'leave') {
+    return json({ error: 'You are on approved leave today.', code: 'on_leave' }, 409)
+  }
+  const wfhOverride = existingKind === 'wfh'
 
   // 6. WiFi / IP check — driven by the job-type policy:
   //    • require_office_network (on-site): hard gate, block when off-network.
@@ -342,10 +275,7 @@ Deno.serve(async (req: Request) => {
     }, 200)
   }
 
-  // With schedule enforcement off, there is no late penalty — always 'present'.
-  const attendanceStatus = !policy.enforce_schedule_window || localMinutes <= lateCutoff
-    ? 'present'
-    : 'late'
+  const attendanceStatus = computeStatus(localMinutes, lateCutoff, policy.enforce_schedule_window)
 
   // 8b. Override a non-blocking system row (e.g. 'absent') with a real self check-in.
   if (existing) {
