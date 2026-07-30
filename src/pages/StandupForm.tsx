@@ -8,6 +8,7 @@ import { useProjects } from '../hooks/useProjects'
 import { useTasks } from '../hooks/useTasks'
 import { useSubmitStandup, useUpdateStandup } from '../hooks/useStandups'
 import type { StandupDetail, StandupEntryInput } from '../api/standups'
+import { randomUUID } from '../lib/uuid'
 
 /** Minimums mirrored from the DB CHECK constraints so errors surface inline. */
 const MIN_WORK_DONE = 15
@@ -24,7 +25,7 @@ interface Draft {
 }
 
 const emptyDraft = (): Draft => ({
-  key: crypto.randomUUID(), projectId: '', taskId: '', hours: '', minutes: '', workDone: '', blocker: '',
+  key: randomUUID(), projectId: '', taskId: '', hours: '', minutes: '', workDone: '', blocker: '',
 })
 
 /** Reopens a submitted standup as editable drafts. */

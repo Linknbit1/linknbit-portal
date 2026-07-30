@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Bell, Search, Check, CheckCheck, ChevronDown, UserCircle, LogOut, ChevronLeft } from 'lucide-react'
 import { cn } from '../../lib/cn'
@@ -28,9 +28,11 @@ interface TopbarProps {
   // Mobile stack screens pass this to show a ‹ back affordance. `true` = history
   // back; a string = navigate to that path. Ignored on desktop (sidebar nav).
   back?: boolean | string
+  /** Screen-specific controls, placed just before the bell / avatar. */
+  actions?: ReactNode
 }
 
-export function Topbar({ title, breadcrumb, className, back }: TopbarProps) {
+export function Topbar({ title, breadcrumb, className, back, actions }: TopbarProps) {
   const navigate = useNavigate()
   const { profile, signOut } = useAuthContext()
   const profileId = profile?.id ?? ''
@@ -120,6 +122,10 @@ export function Topbar({ title, breadcrumb, className, back }: TopbarProps) {
           </span>
         </div>
       )}
+
+      {/* Screen-specific controls. ml-auto so they anchor right even when the
+          bell is hidden (drill-in screens). */}
+      {actions && <div className="ml-auto flex shrink-0 items-center gap-1">{actions}</div>}
 
       {/* Mobile bell — the dropdown needs room, so phones get a dedicated screen.
           Hidden on drill-in screens so it never sits beside a back button. */}

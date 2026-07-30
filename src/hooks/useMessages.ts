@@ -7,6 +7,7 @@ import { CHANNEL_KEYS } from './useChannels'
 import { CHAT_UNREAD_KEYS } from './useChatUnreadCount'
 import { MESSAGE_ATTACHMENT_KEYS } from './useMessageAttachments'
 import type { Json } from '../types/database'
+import { randomUUID } from '../lib/uuid'
 
 export const MESSAGE_KEYS = {
   byChannel: (channelId: string) => ['messages', channelId] as const,
@@ -54,7 +55,7 @@ export function useSendMessage() {
       const previous = qc.getQueryData<MessagePages>(key)
 
       const optimistic: MessageWithAuthor = {
-        id: `optimistic-${crypto.randomUUID()}`,
+        id: `optimistic-${randomUUID()}`,
         channel_id: v.channelId,
         author_id: v.author?.id ?? null,
         body_text: v.bodyText,

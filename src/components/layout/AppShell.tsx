@@ -3,6 +3,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { BottomTabBar } from './BottomTabBar'
 import { NavChromeContext } from './MobileNavContext'
+import { cn } from '../../lib/cn'
 import { useAuthContext } from '../../context/AuthContext'
 import { useRealtimeNotifications } from '../../hooks/realtime/useRealtimeNotifications'
 import { useRealtimeChannelList } from '../../hooks/realtime/useRealtimeChannelList'
@@ -56,8 +57,17 @@ export function AppShell() {
           <ImpersonationBanner />
           <div className="flex w-full min-h-0 flex-1">
             <Sidebar />
-            {/* pb clears the mobile bottom tab bar (incl. the home-indicator safe area). */}
-            <main ref={mainRef} className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden bg-bg-base pb-safe-nav lg:pb-0">
+            {/* pb clears the mobile bottom tab bar (incl. the home-indicator safe
+                area) — but only when that bar is actually showing. A stack screen
+                hides it, and the padding would otherwise leave dead space under
+                the content (most visible under the chat composer). */}
+            <main
+              ref={mainRef}
+              className={cn(
+                'flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden bg-bg-base lg:pb-0',
+                !hasBack && 'pb-safe-nav',
+              )}
+            >
               <Outlet />
             </main>
             <BottomTabBar />

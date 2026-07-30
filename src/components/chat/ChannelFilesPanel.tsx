@@ -107,7 +107,7 @@ export function ChannelFilesPanel({ channelId }: ChannelFilesPanelProps) {
                   <button
                     onClick={() => setConfirming(a)}
                     aria-label={`Remove ${a.file_name}`}
-                    className="absolute right-1 top-1 size-6 rounded-sm bg-bg-base/80 text-text-2 hover:text-error flex items-center justify-center opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+                    className="absolute right-1 top-1 flex size-6 items-center justify-center rounded-sm bg-bg-base/80 text-text-2 opacity-100 transition-opacity hover:text-error lg:opacity-0 lg:group-hover:opacity-100 lg:focus:opacity-100"
                   >
                     <Trash2 size={12} />
                   </button>
@@ -140,7 +140,7 @@ export function ChannelFilesPanel({ channelId }: ChannelFilesPanelProps) {
                   <button
                     onClick={() => setConfirming(a)}
                     aria-label={`Remove ${a.file_name}`}
-                    className="mr-1 size-7 shrink-0 rounded-sm flex items-center justify-center text-text-4 hover:text-error hover:bg-surface-3 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+                    className="mr-1 flex size-7 shrink-0 items-center justify-center rounded-sm text-text-4 opacity-100 transition-opacity hover:bg-surface-3 hover:text-error lg:opacity-0 lg:group-hover:opacity-100 lg:focus:opacity-100"
                   >
                     <Trash2 size={13} />
                   </button>

@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase'
 import { inferContentType } from '../lib/attachment'
 import type { Tables } from '../types/database'
+import { randomUUID } from '../lib/uuid'
 
 export type AttachmentRow = Tables<'attachments'>
 
@@ -57,7 +58,7 @@ export async function uploadAttachment(file: File, args: UploadAttachmentArgs): 
   const { data: auth } = await supabase.auth.getUser()
   const uploaderId = auth.user?.id ?? null
   const scope = args.taskId ?? 'project'
-  const path = `${args.projectId}/${scope}/${crypto.randomUUID()}-${file.name}`
+  const path = `${args.projectId}/${scope}/${randomUUID()}-${file.name}`
 
   const { error: uploadError } = await supabase.storage
     .from(BUCKET)
