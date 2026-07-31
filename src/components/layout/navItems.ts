@@ -31,7 +31,7 @@ import {
   useAllOvertimeRequests,
 } from '../../hooks/useAttendance'
 import { useEnrolledDevices } from '../../hooks/useEnrolledDevices'
-import { useOpenQuestTasks } from '../../hooks/useGamification'
+import { useClaimableQuestCount } from '../../hooks/useGamification'
 import { useAuthContext } from '../../context/AuthContext'
 
 /**
@@ -228,8 +228,10 @@ export function useNavItems(): NavItem[] {
   const { data: excPending = [] } = useAllAttendanceExceptions({ status: 'pending' }, canManageAttendance)
   const { data: otPending = [] } = useAllOvertimeRequests('pending', canManageAttendance)
   const { data: devices = [] } = useEnrolledDevices(canManageAttendance)
-  // Open quests are claimable by everyone internal, so the badge shows for all.
-  const { data: openQuests = [] } = useOpenQuestTasks(!!profile)
+  // Claimable = open, not past deadline, slots remaining (quest status is never
+  // auto-closed, so a plain open-count would include expired/full quests).
+  // Claimable by everyone internal, so the badge shows for all.
+  const { data: questCount = 0 } = useClaimableQuestCount(!!profile)
 
   const devicesPending = devices.filter((d) => !d.approved_by && d.is_active).length
   const attendanceByPath: Record<string, number> = {
@@ -240,7 +242,6 @@ export function useNavItems(): NavItem[] {
     '/attendance/devices': devicesPending,
   }
   const attendanceTotal = Object.values(attendanceByPath).reduce((a, n) => a + n, 0)
-  const questCount = openQuests.length
   const gamificationByPath: Record<string, number> = { '/gamification/board': questCount }
 
   // Surface live counts on the relevant items (parent shows the section total).
