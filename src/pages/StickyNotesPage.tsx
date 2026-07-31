@@ -88,16 +88,19 @@ function renderInline(nodes: JSONContent[]): ReactNode[] {
  * light. Matches the editor's look (same font/inset via the caller's style).
  */
 function StaticNoteText({ doc, style }: { doc: JSONContent; style: React.CSSProperties }) {
+  // Uses the SAME `note-prose` class as the editor so viewing and editing share
+  // identical typography (white-space, overflow-wrap, paragraph margins). Any
+  // divergence here reflows the text on double-click, which reads as the font
+  // "changing a bit" when it is really the line breaks moving.
   return (
     <div
-      className="absolute overflow-hidden wrap-break-word font-hand text-note text-note-ink pointer-events-none"
+      className="absolute overflow-hidden font-hand text-note text-note-ink pointer-events-none note-prose"
       style={style}
     >
       {(doc.content ?? []).map((block, i) => (
         <p
           key={i}
-          className="whitespace-pre-wrap"
-          style={{ margin: 0, textAlign: (block.attrs?.textAlign as React.CSSProperties['textAlign']) ?? 'left' }}
+          style={{ textAlign: (block.attrs?.textAlign as React.CSSProperties['textAlign']) ?? 'left' }}
         >
           {block.content && block.content.length ? renderInline(block.content) : <br />}
         </p>
