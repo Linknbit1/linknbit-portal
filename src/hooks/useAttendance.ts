@@ -7,10 +7,8 @@ import {
   fetchMonthlyAttendance,
   fetchHalfDayLeaveDates,
   checkIn,
-  checkOut,
   markAttendance,
   updateAttendanceRecord,
-  adminCheckOut,
   fetchAttendanceSettings,
   updateAttendanceSettings,
   fetchAttendanceExceptions,
@@ -166,33 +164,12 @@ export function useCheckIn() {
   })
 }
 
-export function useCheckOut() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: checkOut,
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ATTENDANCE_KEYS.myToday })
-      qc.invalidateQueries({ queryKey: ATTENDANCE_KEYS.myHistory })
-    },
-  })
-}
-
 export function useMarkAttendance() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (payload: MarkAttendancePayload) => markAttendance(payload),
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: ATTENDANCE_KEYS.allByDate(variables.date) })
-    },
-  })
-}
-
-export function useAdminCheckOut() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: ({ id }: { id: string; date: string }) => adminCheckOut(id),
-    onSuccess: (data) => {
-      qc.invalidateQueries({ queryKey: ATTENDANCE_KEYS.allByDate(data.date) })
     },
   })
 }

@@ -491,7 +491,7 @@ function AttendanceTab({ personId, leave, wfh }: {
                       {meta?.label ?? r.status}
                     </span>
                     <span className="ml-auto font-mono text-[11.5px] text-text-3">
-                      {fmtTime(r.check_in)} <span className="text-text-4">→</span> {fmtTime(r.check_out)}
+                      {fmtTime(r.check_in)}
                     </span>
                   </div>
                 )

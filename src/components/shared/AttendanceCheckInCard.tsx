@@ -1,13 +1,12 @@
 import { useState, useEffect, type ReactNode } from 'react'
 import {
-  MapPin, CheckCircle2, LogOut, Wifi, WifiOff,
+  MapPin, CheckCircle2, Wifi, WifiOff,
   AlertCircle, Fingerprint, Palmtree, Calendar,
   Home, Plane, XCircle, Clock, ShieldX,
 } from 'lucide-react'
 import {
   useMyTodayAttendance,
   useCheckIn,
-  useCheckOut,
   useAttendanceSettings,
   useHolidays,
   useWorkingSaturdays,
@@ -28,13 +27,6 @@ function fmtHHMM(hhmm: string): string {
 
 function fmtIso(iso: string): string {
   return new Date(iso).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
-}
-
-function sessionDuration(checkIn: string, checkOut: string): string {
-  const diff = new Date(checkOut).getTime() - new Date(checkIn).getTime()
-  const h = Math.floor(diff / 3_600_000)
-  const m = Math.floor((diff % 3_600_000) / 60_000)
-  return `${h}h ${m}m`
 }
 
 function ErrorBanner({ msg }: { msg: string }) {
@@ -121,7 +113,6 @@ export function AttendanceCheckInCard() {
   const { data: workingSats = [] } = useWorkingSaturdays(year)
   const { data: terminalGate }     = useMyTerminalGate()
   const checkInMut  = useCheckIn()
-  const checkOutMut = useCheckOut()
   const registerMut = useRegisterDevice()
 
   const { fingerprint, fingerprintHint, deviceName: deviceNameVal, ready: deviceReady, status: deviceStatus, canCheckIn } =
@@ -196,21 +187,6 @@ export function AttendanceCheckInCard() {
       const msg  = err instanceof Error ? err.message : 'Registration failed'
       if (code === 'device_blocked') setErrorMsg('This device has been blocked. Contact your admin to use it.')
       else                           setErrorMsg(msg || 'Registration failed. Please try again.')
-    }
-  }
-
-  const handleCheckOut = async () => {
-    if (!today?.id) return
-    setErrorMsg(null)
-    try {
-      await checkOutMut.mutateAsync(today.id)
-      toast('Checked out — see you tomorrow!', 'success')
-    } catch (err: unknown) {
-      const code = (err as { code?: string }).code ?? ''
-      const msg  = err instanceof Error ? err.message : 'Check-out failed'
-      if      (code === 'early_checkout')     setErrorMsg(msg || 'Cannot check out before work ends.')
-      else if (code === 'duplicate_checkout') setErrorMsg('Already checked out today.')
-      else toast('Check-out failed. Please try again.', 'error')
     }
   }
 
@@ -299,46 +275,29 @@ export function AttendanceCheckInCard() {
       })()}
 
       {/* ── Checked in (real self/admin check-in with a timestamp) ── */}
+      {/* Check-out is no longer a user action — the day-end cron records the end
+          of day. Once checked in, the card just confirms the arrival. */}
       {!todayHoliday && !isDayOff && today && today.check_in && (() => {
-        const checkedOut = Boolean(today.check_out)
-        const isLate     = today.status === 'late'
+        const isLate = today.status === 'late'
         return (
           <>
             {errorMsg && <ErrorBanner msg={errorMsg} />}
 
             <div className={cn(
               'size-24 rounded-full border-2 flex items-center justify-center',
-              checkedOut ? 'bg-text-4/10 border-text-4/20'
-                : isLate ? 'bg-warning/15 border-warning/40'
-                : 'bg-success/15 border-success/40',
+              isLate ? 'bg-warning/15 border-warning/40' : 'bg-success/15 border-success/40',
             )}>
-              <CheckCircle2 size={40} className={checkedOut ? 'text-text-4' : isLate ? 'text-warning' : 'text-success'} />
+              <CheckCircle2 size={40} className={isLate ? 'text-warning' : 'text-success'} />
             </div>
 
             <div className="text-center">
-              <p className={cn('font-display font-bold text-[18px]',
-                checkedOut ? 'text-text-2' : isLate ? 'text-warning' : 'text-success',
-              )}>
-                {checkedOut ? 'Day Complete' : isLate ? 'Checked In (Late)' : 'Checked In'}
+              <p className={cn('font-display font-bold text-[18px]', isLate ? 'text-warning' : 'text-success')}>
+                {isLate ? 'Checked In (Late)' : 'Checked In'}
               </p>
               <p className="font-mono text-[13px] text-text-3 mt-0.5">
                 {today.check_in && fmtIso(today.check_in)}
-                {checkedOut && today.check_out && (
-                  <> → {fmtIso(today.check_out)}
-                    <span className="text-text-4 ml-1.5">
-                      · {sessionDuration(today.check_in!, today.check_out)}
-                    </span>
-                  </>
-                )}
               </p>
             </div>
-
-            {!checkedOut && (
-              <Button variant="secondary" size="sm" onClick={handleCheckOut} disabled={checkOutMut.isPending}>
-                <LogOut size={14} />
-                {checkOutMut.isPending ? 'Checking out…' : 'Check Out'}
-              </Button>
-            )}
 
             <div className="flex items-center gap-5 text-[11.5px] font-mono text-text-4">
               {today.wifi_validated
