@@ -3645,6 +3645,7 @@ export type Database = {
         Returns: undefined
       }
       claim_quest_task: { Args: { p_task_id: string }; Returns: string }
+      count_open_claimable_quests: { Args: never; Returns: number }
       create_biometric_terminal: {
         Args: {
           p_device_ip?: string
@@ -3762,6 +3763,19 @@ export type Database = {
       fn_sync_channel_role: {
         Args: { p_channel_id: string; p_role: string }
         Returns: undefined
+      }
+      fn_task_activity: {
+        Args: { p_limit?: number; p_task_id: string }
+        Returns: {
+          action: string
+          actor_id: string
+          actor_name: string
+          changed_fields: string[]
+          created_at: string
+          id: string
+          new_values: Json
+          old_values: Json
+        }[]
       }
       fn_toggle_reaction: {
         Args: { p_emoji: string; p_message_id: string }

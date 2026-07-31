@@ -795,20 +795,22 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
   const rewardName = (id: string) => allRewards.find((r) => r.id === id)?.name ?? rewards.find((r) => r.id === id)?.name ?? 'Reward'
 
   // ── Quest board: month-scoped history (any status) ───────────────────────────
-  // A quest belongs to the month of the date it shows on its card — its deadline
-  // when it has one (a quest posted Jun 30 but due Jul 2 is a July quest), else
-  // the day it was posted. Each quest lands in exactly one month, never two.
+  // A quest shows in a month when EITHER its posted month or its due month is
+  // that month — so a quest posted Jun 30 due Jul 2 appears under both June and
+  // July (it spans them), rather than landing in exactly one.
   const questFilter = useMonthFilter()
   const boardTasks = useMemo(() => {
     if (questFilter.allMonths) return tasks
     return tasks.filter((t) => {
-      const bucket = (t.deadline ?? t.created_at).slice(0, 7) // "YYYY-MM"
+      const postedBucket = t.created_at.slice(0, 7) // "YYYY-MM"
+      const dueBucket = t.deadline?.slice(0, 7)
+      if (postedBucket === questFilter.prefix || dueBucket === questFilter.prefix) return true
       // Undated open quests never expire, so they stay claimable on the current
       // month rather than being stranded in the month they were posted.
       if (!t.deadline && t.status === 'open' && questFilter.isCurrentMonth) {
-        return bucket <= questFilter.prefix
+        return postedBucket <= questFilter.prefix
       }
-      return bucket === questFilter.prefix
+      return false
     })
   }, [tasks, questFilter.allMonths, questFilter.prefix, questFilter.isCurrentMonth])
 

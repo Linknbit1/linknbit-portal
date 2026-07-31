@@ -4,6 +4,7 @@ import {
   fetchGamificationParticipants,
   fetchProfileDirectory,
   fetchOpenQuestTasks,
+  fetchClaimableQuestCount,
   fetchAllQuestTasks,
   fetchMyClaims,
   fetchClaimsToReview,
@@ -54,6 +55,7 @@ export const GAMIFICATION_KEYS = {
   directory:        () => ['profile_directory'] as const,
   questTasksOpen:   () => ['quest_tasks', 'open'] as const,
   questTasksAll:    () => ['quest_tasks', 'all'] as const,
+  claimableCount:   () => ['quest_tasks', 'claimable-count'] as const,
   myClaims:         (profileId: string) => ['quest_claims', 'mine', profileId] as const,
   claimsToReview:   () => ['quest_claims', 'review'] as const,
   questClaimants:   () => ['quest_claims', 'claimants'] as const,
@@ -91,6 +93,11 @@ export function useGamificationParticipants() {
 
 export function useOpenQuestTasks(enabled = true) {
   return useQuery({ queryKey: GAMIFICATION_KEYS.questTasksOpen(), queryFn: fetchOpenQuestTasks, staleTime: 30_000, enabled })
+}
+
+/** Sidebar badge: count of quests the caller can actually claim right now. */
+export function useClaimableQuestCount(enabled = true) {
+  return useQuery({ queryKey: GAMIFICATION_KEYS.claimableCount(), queryFn: fetchClaimableQuestCount, staleTime: 30_000, enabled })
 }
 
 export function useAllQuestTasks() {
@@ -134,6 +141,7 @@ export function useCreateQuestTask(actorId: string) {
       createQuestTask(task, actorId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.questTasksOpen() })
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.claimableCount() })
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.questTasksAll() })
     },
   })
@@ -145,6 +153,7 @@ export function useUpdateQuestTask() {
     mutationFn: ({ id, updates }: { id: string; updates: Partial<QuestTaskRow> }) => updateQuestTask(id, updates),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.questTasksOpen() })
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.claimableCount() })
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.questTasksAll() })
     },
   })
@@ -156,6 +165,7 @@ export function useDeleteQuestTask() {
     mutationFn: (id: string) => deleteQuestTask(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.questTasksOpen() })
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.claimableCount() })
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.questTasksAll() })
     },
   })
@@ -168,7 +178,9 @@ export function useClaimQuestTask(profileId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.myClaims(profileId) })
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.questTasksOpen() })
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.claimableCount() })
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.questClaimants() })
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.claimableCount() })
     },
   })
 }
@@ -182,6 +194,7 @@ export function useSubmitQuestTask(profileId: string) {
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.myClaims(profileId) })
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.claimsToReview() })
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.questClaimants() })
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.claimableCount() })
     },
   })
 }
@@ -194,6 +207,7 @@ export function useReviewQuestTask() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.claimsToReview() })
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.questClaimants() })
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.claimableCount() })
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.leaderboard() })
     },
   })
