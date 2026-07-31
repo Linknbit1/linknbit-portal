@@ -5173,6 +5173,7 @@ export function ReportsTab() {
                               name={s.name}
                               src={s.avatar ?? undefined}
                               size="sm"
+                              personId={s.profileId}
                             />
                             <span className="font-ui font-medium text-[13px] text-text-1">
                               {s.name}

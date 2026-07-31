@@ -262,7 +262,7 @@ export default function TeamsPage() {
                         <div className="min-w-0">
                           <p className="font-mono text-[9.5px] font-semibold uppercase tracking-wider text-text-4">Team lead</p>
                           {lead ? (
-                            <p className="truncate font-ui text-[12.5px] font-semibold text-text-1">{lead.name}</p>
+                            <PersonLink personId={lead.id} className="block truncate font-ui text-[12.5px] font-semibold text-text-1">{lead.name}</PersonLink>
                           ) : (
                             <p className="font-ui text-[12.5px] text-text-4">Assign a lead to give this team ownership.</p>
                           )}

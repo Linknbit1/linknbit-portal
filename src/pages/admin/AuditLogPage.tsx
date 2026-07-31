@@ -14,6 +14,7 @@ import { usePeople } from '../../hooks/usePeople'
 import { cn } from '../../lib/cn'
 import type { AuditLogRow } from '../../api/auditLog'
 import type { AuditLogFilters, AuditModule, AuditSeverity } from '../../types'
+import { PersonLink } from '../../components/shared/PersonLink'
 
 // Shared grid template so the header row and every data row align column-for-column.
 const ROW_GRID =
@@ -197,7 +198,9 @@ const AuditRow = ({ row, expanded, onToggle }: RowProps) => {
 
         {/* actor (md) */}
         <div className="hidden min-w-0 md:block">
-          <p className="truncate font-ui text-[12.5px] text-text-2">{row.actor_name ?? '—'}</p>
+          <p className="truncate font-ui text-[12.5px] text-text-2">
+            {row.actor_id ? <PersonLink personId={row.actor_id}>{row.actor_name ?? '—'}</PersonLink> : (row.actor_name ?? '—')}
+          </p>
           <p className="truncate font-mono text-[10px] text-text-4">{row.actor_role ?? row.actor_kind}</p>
         </div>
 

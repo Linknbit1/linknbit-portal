@@ -16,6 +16,7 @@ import {
   useSetStandupRoleRequirement, useSetStandupParticipation,
 } from '../hooks/useStandups'
 import type { ParticipationMode } from '../api/standups'
+import { PersonLink } from '../components/shared/PersonLink'
 
 /** Client roles never appear here — standups are an internal ritual. */
 const ROLE_ORDER = ['employee', 'team_lead', 'project_manager', 'hr', 'admin', 'super_admin', 'finance']
@@ -162,7 +163,7 @@ export default function StandupSettingsPage() {
                     <div key={p.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3">
                       <Avatar name={p.name} src={p.avatar_url ?? undefined} size="sm" personId={p.id} />
                       <div className="min-w-0 flex-1">
-                        <p className="font-ui font-medium text-[13px] text-text-1 truncate">{p.name}</p>
+                        <PersonLink personId={p.id} className="block truncate font-ui text-[13px] font-medium text-text-1">{p.name}</PersonLink>
                         <p className="font-mono text-[10px] text-text-4">
                           {p.effective ? 'Submits a standup' : 'No standup required'}
                           {p.mode !== 'inherit' && ' · overridden'}

@@ -18,6 +18,7 @@ import { useToast } from '../ui/toast-context'
 import { ClientVisibility } from './ClientVisibility'
 import { ConfirmDialog } from '../ui/ConfirmDialog'
 import { formatRelativeTime } from '../../lib/utils'
+import { PersonLink } from './PersonLink'
 
 const KIND_ICON: Record<FileKind, typeof FileIcon> = {
   image: ImageIcon, video: FileVideo, audio: FileAudio, pdf: FileText, doc: FileText, sheet: FileSpreadsheet,
@@ -147,7 +148,8 @@ export function AttachmentUploader({ projectId, taskId, canManage = true, classN
                   </div>
                   <p className="truncate font-mono text-[10.5px] text-text-4">
                     {isLink ? meta?.label : formatFileSize(file.file_size)}
-                    {file.uploader ? ` · ${file.uploader.name}` : ''} · {formatRelativeTime(file.created_at)}
+                    {file.uploader && <> · <PersonLink personId={file.uploader.id} className="hover:text-text-2">{file.uploader.name}</PersonLink></>}
+                    {' · '}{formatRelativeTime(file.created_at)}
                   </p>
                 </div>
 
