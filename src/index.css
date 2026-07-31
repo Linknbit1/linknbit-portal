@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Geist:ital,wght@0,100..900;1,100..900&family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=Outfit:wght@300..700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:ital,wght@0,100..900;1,100..900&family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=Outfit:wght@300..700&family=Caveat:wght@400..700&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -6,6 +6,8 @@
   --font-display: "Geist", ui-sans-serif, system-ui, sans-serif;
   --font-ui: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  /* Handwriting, for sticky notes only — the board is meant to read as paper. */
+  --font-hand: "Caveat", "Segoe Script", cursive;
 
   /* ── Font sizes ── */
   --text-display: 56px;
@@ -44,6 +46,10 @@
 
   --text-mono: 13px;
   --text-mono--line-height: 1.5;
+
+  /* Handwriting runs small on the body, so notes get their own larger step. */
+  --text-note: 21px;
+  --text-note--line-height: 1.3;
 
   /* ── Brand ── */
   --color-brand-red: #EE2737;
@@ -150,6 +156,34 @@
   --shadow-ring-focus: 0 0 0 3px rgba(238, 39, 55, 0.35);
   --shadow-badge-glow: 0 0 24px rgba(251, 191, 36, 0.35);
 
+  /* ── Sticky-note board ──
+     Deep jade → teal → indigo, plus two warm tones so a full board does not read
+     as one colour. All six are dark enough to carry the near-white ink below at
+     4.5:1 or better, which is what fixes the palette to this end of the range.
+     The token names are the values stored in `sticky_notes.color`, so they stay
+     as they are — pink is no longer pink, and renaming would orphan every saved
+     note. */
+  --color-note-pink: #17655C;
+  --color-note-lavender: #253C6E;
+  --color-note-mint: #0F5347;
+  /* Emerald: the one gap left in the range. The other five sit at jade, teal,
+     ocean, indigo and mustard, so a true green is the only shade that reads as
+     distinct rather than as a near-miss of one of them. */
+  --color-note-peach: #1F6340;
+  --color-note-butter: #7A6417;
+  --color-note-sky: #10516B;
+  --color-note-ink: #FFFEFA;
+  /* The board is pitch black by request — the one deliberate exception to the
+     no-#000 rule, so the notes read as lit objects floating in the dark. The
+     `cork` names are kept because the board's inline gradients reference them as
+     CSS vars; only the values changed.
+
+     Nothing can be darker than the board now, so the speckle is lighter flecks
+     only — a darker pit would be invisible. */
+  --color-cork: #000000;
+  --color-cork-dark: #0B100E;
+  --color-cork-speck: #18211E;
+
   /* ── Layout sizing ── */
   --width-sidebar-expanded: 248px;
   --width-sidebar-collapsed: 72px;
@@ -166,6 +200,57 @@
 @keyframes shimmer {
   0%   { background-position: -200% 0; }
   100% { background-position: 200% 0; }
+}
+
+/*
+ * Per-user theme (profiles.theme), set on <html> so body, scrollbars and every
+ * portal surface inherit it. Only the variables are redefined — each utility
+ * resolves through them, so no component changes anywhere.
+ *
+ * The whole dark scale is rotated from navy (~216°) to jade (~170°) at the SAME
+ * lightness and saturation as the default palette, step for step. Keeping the
+ * lightness ladder intact means every text/surface contrast ratio established
+ * for the default theme carries over unchanged.
+ *
+ * Deliberately NOT rotated: success / warning / error / info, the service
+ * accents (design violet, dev cyan, marketing amber) and coin gold. Those carry
+ * meaning rather than branding — an error that is not red stops reading as an
+ * error. Role tints follow the brand, so the two red ones become jade.
+ */
+.theme-jade {
+  /* Brand */
+  --color-brand-red: #14B8A6;
+  --color-brand-red-hover: #2DD4BF;
+  --color-brand-red-press: #0F9488;
+  --color-brand-navy: #182B27;
+
+  /* Backgrounds */
+  --color-bg-base: #0B1816;
+  --color-bg-canvas: #10211E;
+
+  /* Surfaces */
+  --color-surface-1: #142926;
+  --color-surface-2: #1A3530;
+  --color-surface-3: #23403C;
+  --color-surface-inset: #0C1F1C;
+
+  /* Borders */
+  --color-border-default: #2A4641;
+  --color-border-subtle: #1E3733;
+  --color-border-strong: #3A5F59;
+  --color-border-focus: #14B8A6;
+
+  /* Text — near-neutral, warmed very slightly toward the jade base */
+  --color-text-1: #EFF7F5;
+  --color-text-2: #AFC7C2;
+  --color-text-3: #77948E;
+  --color-text-4: #486761;
+
+  /* Role tints: only the two that echoed the brand red move. */
+  --color-role-super-admin: #14B8A6;
+  --color-role-admin: #0D9488;
+
+  --shadow-ring-focus: 0 0 0 3px rgba(20, 184, 166, 0.35);
 }
 
 /* ── Safe-area insets (iOS notch / Dynamic Island / home indicator, Android) ── */
@@ -189,8 +274,8 @@
   }
 
   body {
-    background-color: #0B1018;
-    color: #F2F5F9;
+    background-color: var(--color-bg-base);
+    color: var(--color-text-1);
     font-family: var(--font-ui);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -208,8 +293,8 @@
   /* Custom scrollbar */
   ::-webkit-scrollbar { width: 10px; height: 10px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #232E3F; border-radius: 999px; border: 2px solid #0B1018; }
-  ::-webkit-scrollbar-thumb:hover { background: #3B4A60; }
+  ::-webkit-scrollbar-thumb { background: var(--color-surface-3); border-radius: 999px; border: 2px solid var(--color-bg-base); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--color-border-strong); }
 
   /* Client portal scrollbar */
   .client-portal ::-webkit-scrollbar-thumb { background: #DBD2C0; border: 2px solid #FAF7F2; }
@@ -227,7 +312,7 @@
 @layer components {
   /* Skeleton shimmer */
   .skeleton {
-    background: linear-gradient(90deg, #1A2433 25%, #232E3F 50%, #1A2433 75%);
+    background: linear-gradient(90deg, var(--color-surface-2) 25%, var(--color-surface-3) 50%, var(--color-surface-2) 75%);
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite linear;
   }

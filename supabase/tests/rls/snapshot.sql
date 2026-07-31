@@ -29,8 +29,9 @@ create temp table _probe_tables (name text primary key);
 insert into _probe_tables (name) values
   ('attachments'), ('attendance'), ('audit_log'), ('channels'), ('clients'),
   ('employee_salaries'), ('leave_requests'), ('messages'), ('overtime_requests'),
-  ('profiles'), ('projects'), ('standup_entries'), ('standups'), ('tasks'),
-  ('teams'), ('wfh_requests');
+  ('permissions'), ('profile_roles'), ('profiles'), ('projects'), ('role_permissions'),
+  ('roles'), ('standup_entries'), ('standups'), ('sticky_notes'), ('tasks'), ('teams'),
+  ('wfh_requests');
 -- `standups` was added after a Phase 2 regression widened team-lead access to
 -- every standup and went unnoticed because only standup_entries was probed.
 -- When a policy is converted, make sure its table is in this list.

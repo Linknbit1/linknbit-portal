@@ -15,7 +15,7 @@ import { Toggle } from '../../components/ui/Toggle'
 import { TimePicker } from '../../components/ui/TimePicker'
 import { Drawer } from '../../components/ui/Drawer'
 import { Popover } from '../../components/ui/Popover'
-import { RoleBadge } from '../../components/shared/RoleBadge'
+import { ProfileRoles } from '../../components/shared/ProfileRoles'
 import { SalaryCard } from '../../components/shared/SalaryCard'
 import { useToast } from '../../components/ui/toast-context'
 import { useAuthContext } from '../../context/AuthContext'
@@ -284,7 +284,7 @@ function EditDrawer({ person, actorRole, isSelf, teams, designationOptions, curr
               {isSelf ? (
                 <>
                   <div className="flex items-center gap-2 rounded-md border border-border-default bg-surface-inset px-3 py-2">
-                    <RoleBadge role={toUserRole(role)} />
+                    <ProfileRoles profileId={person.id} fallbackRole={role} />
                   </div>
                   <p className="font-mono text-[10px] text-text-4 mt-1">You can't change your own role.</p>
                 </>
@@ -607,7 +607,7 @@ function PersonTableRow({ person, myRole, myId, teamLabels, designationName, ...
           <p className="mt-0.5 truncate font-mono text-[11px] text-text-3">{person.email}</p>
         </div>
       </div>
-      <RoleBadge role={toUserRole(person.role)} />
+      <ProfileRoles profileId={person.id} fallbackRole={person.role} />
       <TeamsCell labels={teamLabels} />
       <DesignationCell name={designationName} jobType={person.job_type} />
       <AccountStatusChip person={person} />
@@ -646,7 +646,7 @@ function PersonCard({ person, myRole, myId, teamLabels, designationName, ...acti
           <PersonActionsMenu person={person} myRole={myRole} myId={myId} {...actions} />
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <RoleBadge role={toUserRole(person.role)} />
+          <ProfileRoles profileId={person.id} fallbackRole={person.role} />
           <span className="inline-flex items-center rounded-full bg-surface-2 px-2.5 py-1 font-display text-[11px] font-bold text-text-1">Lv {person.level}</span>
         </div>
       </div>

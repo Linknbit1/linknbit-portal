@@ -7,6 +7,7 @@ import { Select } from '../components/ui/Select'
 import { Toggle } from '../components/ui/Toggle'
 import { Skeleton } from '../components/ui/Skeleton'
 import { RoleBadge } from '../components/shared/RoleBadge'
+import { ProfileRoles } from '../components/shared/ProfileRoles'
 import { StandupTabs } from '../components/shared/StandupTabs'
 import { toUserRole } from '../lib/peopleAccess'
 import { useToast } from '../components/ui/toast-context'
@@ -169,7 +170,7 @@ export default function StandupSettingsPage() {
                           {p.mode !== 'inherit' && ' · overridden'}
                         </p>
                       </div>
-                      <RoleBadge role={toUserRole(p.role)} />
+                      <ProfileRoles profileId={p.id} fallbackRole={p.role} />
                       <Select
                         value={p.mode}
                         onChange={(v) => handleMode(p.id, v)}

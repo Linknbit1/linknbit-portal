@@ -3,6 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 // Cookie helpers inlined (kept self-contained so this critical auth function
 // has no cross-file dependency at deploy time). Mirrors _shared/cookie.ts.
 const REFRESH_COOKIE = 'sb-refresh-token'
+const IMPERSONATION_COOKIE = 'sb-impersonation'
 function isSecureRequest(req: Request): boolean {
   const origin = req.headers.get('origin') ?? ''
   if (origin.startsWith('http://')) return false
@@ -30,7 +31,11 @@ Deno.serve(async (req: Request) => {
   }
 
   const headers = new Headers({ 'Content-Type': 'application/json' })
-  headers.append('Set-Cookie', clearCookie(REFRESH_COOKIE, isSecureRequest(req)))
+  const secure = isSecureRequest(req)
+  headers.append('Set-Cookie', clearCookie(REFRESH_COOKIE, secure))
+  // Signing out must not leave an impersonation behind for the next person to
+  // open the browser — that cookie would outlive the session it belonged to.
+  headers.append('Set-Cookie', clearCookie(IMPERSONATION_COOKIE, secure))
 
   return new Response(JSON.stringify({ success: true }), { headers })
 })

@@ -117,10 +117,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Single-flight refresh: a second caller while one is in progress awaits the
   // same promise instead of burning the single-use refresh token.
-  async function runRefresh(): Promise<void> {
+  async function runRefresh(opts: { stopImpersonation?: boolean } = {}): Promise<void> {
     if (refreshInFlight.current) return refreshInFlight.current
     const p = (async () => {
-      const next = await bffRefreshSession()
+      const next = await bffRefreshSession(opts)
+      // The BFF decides which session comes back: while an impersonation cookie
+      // is set it returns the member's, so this is also how a reload lands back
+      // in the impersonated portal instead of the admin's.
+      impersonatingRef.current = !!next.impersonating
+      setImpersonating(next.impersonating ?? null)
       await applySession(next)
     })()
     refreshInFlight.current = p
@@ -135,8 +140,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // before giving up and signing the user out. A successful refresh reschedules
   // the timer via applySession, so this only clears on genuine token expiry.
   async function refreshWithRetry(attempt = 0): Promise<void> {
-    // Never cookie-refresh while impersonating — it would restore the admin session.
-    if (impersonatingRef.current) return
+    // Safe to run while impersonating: auth-refresh prefers the impersonation
+    // cookie, so this renews the member's session rather than restoring the
+    // admin's. Without it a long impersonation would simply expire.
     try {
       await runRefresh()
     } catch {
@@ -163,28 +169,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   // ── Impersonation ──────────────────────────────────────────────────────────
-  // Applies a member's minted session in memory only (no refresh scheduled — a
-  // cookie refresh would restore the admin). The admin's HTTP-only cookie is left
-  // untouched, so stopImpersonating() / a page reload cleanly returns to the admin.
-  async function applyImpersonationSession(accessToken: string, refreshToken: string, targetId: string): Promise<void> {
-    await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
-    const { data } = await supabase.auth.getUser()
-    const resolved = data.user
-    if (!resolved) throw new Error('Could not start the impersonation session')
-    setUser(resolved)
-    setAccessToken(accessToken)
-    accessTokenRef.current = accessToken
-    setProfile(await fetchProfile(targetId))
-  }
-
+  // The member's session now goes through the ordinary applySession path. It used
+  // to be applied in memory only, with no refresh scheduled, because a cookie
+  // refresh would have restored the admin — auth-impersonate now writes its own
+  // cookie and auth-refresh prefers it, so the member's session both survives a
+  // reload and renews itself like any other. The admin's cookie stays untouched.
   async function impersonate(profileId: string): Promise<void> {
     const adminName = profile?.name ?? 'your account'
-    const res = await impersonateUser(profileId)
+    const token = accessTokenRef.current
+    if (!token) throw new Error('You are not signed in')
+    const res = await impersonateUser(profileId, token)
     // Pause admin auto-refresh, purge admin-scoped cache, then swap identity.
     if (refreshTimerRef.current) { clearTimeout(refreshTimerRef.current); refreshTimerRef.current = null }
     impersonatingRef.current = true
     queryClient.clear()
-    await applyImpersonationSession(res.access_token, res.refresh_token, res.user.id)
+    await applySession({
+      access_token: res.access_token,
+      refresh_token: res.refresh_token,
+      expires_at: Math.floor(getTokenExpiry(res.access_token) / 1000),
+      user: { id: res.user.id, email: undefined },
+    })
     setImpersonating({ targetName: res.user.name, adminName })
   }
 
@@ -192,7 +196,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     impersonatingRef.current = false
     setImpersonating(null)
     queryClient.clear()
-    await runRefresh() // bffRefreshSession → admin session; applySession reschedules refresh
+    // stopImpersonation clears the member's cookie server-side, so the admin's
+    // session comes back — and a later reload stays with the admin.
+    await runRefresh({ stopImpersonation: true })
   }
 
   async function signOut(): Promise<void> {
@@ -200,7 +206,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (impersonatingRef.current) {
       impersonatingRef.current = false
       setImpersonating(null)
-      try { await runRefresh() } catch { /* fall through to a hard clear */ }
+      try { await runRefresh({ stopImpersonation: true }) } catch { /* fall through to a hard clear */ }
     }
     const token = accessTokenRef.current
     clearAll() // clear state immediately so UI responds at once
@@ -213,8 +219,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // On every page load: ask the BFF to exchange the HTTP-only cookie for a fresh token.
     // If there's no cookie (or it's expired), the user stays logged out.
-    bffRefreshSession()
-      .then(applySession)
+    //
+    // Goes through runRefresh rather than calling the BFF directly so that an
+    // impersonation is restored along with the session — otherwise a reload came
+    // back as the member but with the banner gone and the admin's exit missing.
+    runRefresh()
       .catch(() => {})
       .finally(() => setLoading(false))
 
@@ -230,7 +239,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // after the phone slept" symptom.
   useEffect(() => {
     function maybeRefresh() {
-      if (impersonatingRef.current) return // don't cookie-refresh back to the admin
       const token = accessTokenRef.current
       if (!token) return
       if (getTokenExpiry(token) - Date.now() < 2 * 60 * 1000) {

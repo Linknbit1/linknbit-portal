@@ -2,7 +2,6 @@ import React, { useState, useMemo } from "react";
 import {
   CheckCircle2,
   Clock,
-  LogOut,
   Users,
   Calendar,
   AlertTriangle,
@@ -62,7 +61,6 @@ import {
   useAllAttendance,
   useMarkAttendance,
   useUpdateAttendanceRecord,
-  useAdminCheckOut,
   useAttendanceSettings,
   useUpdateAttendanceSettings,
   useAllAttendanceExceptions,
@@ -261,11 +259,6 @@ function MarkModal({ onClose, dateFilter, editRecord = null }: MarkModalProps) {
       ? minutesToHHMM(isoToZonedMinutes(editRecord.check_in, tz))
       : officeNowHHMM(tz),
   );
-  const [checkOutTime, setCheckOutTime] = useState(() =>
-    editRecord?.check_out
-      ? minutesToHHMM(isoToZonedMinutes(editRecord.check_out, tz))
-      : "",
-  );
   const [note, setNote] = useState(editRecord?.note ?? "");
 
   const isSaving = markMutation.isPending || updateMutation.isPending;
@@ -300,10 +293,6 @@ function MarkModal({ onClose, dateFilter, editRecord = null }: MarkModalProps) {
     const clocked = showTimes;
     const checkInIso =
       clocked && checkInTime ? zonedWallTimeToIso(date, checkInTime, tz) : null;
-    const checkOutIso =
-      clocked && checkOutTime
-        ? zonedWallTimeToIso(date, checkOutTime, tz)
-        : null;
     try {
       if (isEdit && editRecord) {
         await updateMutation.mutateAsync({
@@ -311,7 +300,6 @@ function MarkModal({ onClose, dateFilter, editRecord = null }: MarkModalProps) {
           status,
           note: note.trim() || null,
           checkIn: checkInIso,
-          checkOut: checkOutIso,
         });
         toast("Attendance updated", "success");
       } else {
@@ -321,7 +309,6 @@ function MarkModal({ onClose, dateFilter, editRecord = null }: MarkModalProps) {
           status,
           note: note.trim() || undefined,
           checkIn: checkInIso ?? undefined,
-          checkOut: checkOutIso ?? undefined,
         });
         toast("Attendance marked", "success");
       }
@@ -403,27 +390,15 @@ function MarkModal({ onClose, dateFilter, editRecord = null }: MarkModalProps) {
         </div>
         {showTimes && (
           <>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">
-                  Check in
-                </label>
-                <TimePicker
-                  value={checkInTime}
-                  onChange={setCheckInTime}
-                  placeholder="Time…"
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">
-                  Check out (optional)
-                </label>
-                <TimePicker
-                  value={checkOutTime}
-                  onChange={setCheckOutTime}
-                  placeholder="Time…"
-                />
-              </div>
+            <div>
+              <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">
+                Check in
+              </label>
+              <TimePicker
+                value={checkInTime}
+                onChange={setCheckInTime}
+                placeholder="Time…"
+              />
             </div>
             {computedStatus && cutoffMinutes !== null && (
               <p
@@ -480,7 +455,6 @@ export function DailyRecordsTab() {
   const [editRec, setEditRec] = useState<AttendanceWithProfile | null>(null);
 
   const { data: records = [], isLoading } = useAllAttendance(dateFilter);
-  const adminCheckOutMutation = useAdminCheckOut();
 
   const filtered = records.filter((r) => {
     if (statusFilter !== "all" && r.status !== statusFilter) return false;
@@ -498,15 +472,8 @@ export function DailyRecordsTab() {
     leave: records.filter((r) => r.status === "leave").length,
   };
 
-  const handleCheckOut = async (rec: AttendanceWithProfile) => {
-    try {
-      await adminCheckOutMutation.mutateAsync({ id: rec.id, date: rec.date });
-      toast("Check-out recorded", "success");
-    } catch {
-      toast("Failed to record check-out", "error");
-    }
-  };
-
+  // Duration counts check-in → day-end. Check-out is no longer a user action; the
+  // day-end cron fills check_out to work_end, so this shows "—" until then.
   const durationLabel = (rec: AttendanceWithProfile) => {
     if (!rec.check_in || !rec.check_out) return "—";
     const diff =
@@ -535,7 +502,6 @@ export function DailyRecordsTab() {
         "Date",
         "Status",
         "Check In",
-        "Check Out",
         "Duration",
         "Source",
         "Device",
@@ -546,7 +512,6 @@ export function DailyRecordsTab() {
         r.date,
         r.status,
         fmtTime(r.check_in),
-        fmtTime(r.check_out),
         durationLabel(r),
         r.source,
         r.device_name ?? "",
@@ -674,7 +639,6 @@ export function DailyRecordsTab() {
                 "Member",
                 "Status",
                 "Check In",
-                "Check Out",
                 "Duration",
                 "Source",
                 "Device",
@@ -694,7 +658,7 @@ export function DailyRecordsTab() {
             {isLoading ? (
               <tr>
                 <td
-                  colSpan={9}
+                  colSpan={8}
                   className="px-4 py-12 text-center font-mono text-[12px] text-text-4"
                 >
                   Loading…
@@ -703,7 +667,7 @@ export function DailyRecordsTab() {
             ) : filtered.length === 0 ? (
               <tr>
                 <td
-                  colSpan={9}
+                  colSpan={8}
                   className="px-4 py-12 text-center font-mono text-[12px] text-text-4"
                 >
                   No records for this date / filter
@@ -733,25 +697,6 @@ export function DailyRecordsTab() {
                   </td>
                   <td className="px-4 py-3 font-mono text-[12.5px] text-text-1">
                     {fmtTime(rec.check_in)}
-                  </td>
-                  <td className="px-4 py-3">
-                    {rec.check_out ? (
-                      <span className="font-mono text-[12.5px] text-text-1">
-                        {fmtTime(rec.check_out)}
-                      </span>
-                    ) : rec.check_in ? (
-                      <button
-                        onClick={() => handleCheckOut(rec)}
-                        disabled={adminCheckOutMutation.isPending}
-                        className="flex items-center gap-1 text-[11.5px] font-ui font-semibold text-warning hover:text-warning/80 transition-colors"
-                      >
-                        <LogOut size={12} /> Check Out
-                      </button>
-                    ) : (
-                      <span className="font-mono text-[12.5px] text-text-4">
-                        —
-                      </span>
-                    )}
                   </td>
                   <td className="px-4 py-3 font-mono text-[12px] text-text-2">
                     {durationLabel(rec)}
@@ -860,22 +805,6 @@ export function DailyRecordsTab() {
                     In:{" "}
                     <span className="text-text-1">{fmtTime(rec.check_in)}</span>
                   </span>
-                  {rec.check_out ? (
-                    <span>
-                      Out:{" "}
-                      <span className="text-text-1">
-                        {fmtTime(rec.check_out)}
-                      </span>
-                    </span>
-                  ) : rec.check_in ? (
-                    <button
-                      onClick={() => handleCheckOut(rec)}
-                      disabled={adminCheckOutMutation.isPending}
-                      className="flex items-center gap-1 text-[11.5px] font-ui font-semibold text-warning hover:text-warning/80"
-                    >
-                      <LogOut size={12} /> Check Out
-                    </button>
-                  ) : null}
                   <span>{durationLabel(rec)}</span>
                   <span
                     className={cn(
@@ -4453,14 +4382,13 @@ interface EmployeeStat {
   leave: number;
   holiday: number;
   totalCheckins: number; // rows with check_in != null
-  totalMinutes: number; // sum of session durations (office hours, OOO time excluded)
-  overtimeMinutes: number; // approved overtime for the month
+  totalMinutes: number; // sum of worked minutes (check-in → day-end, OOO excluded)
+  overtimeMinutes: number; // approved overtime for the month (from overtime requests)
   earlyCount: number; // check_in before work_start
   onTimeCount: number; // check_in within grace
   avgCheckinMin: number; // average check_in minutes-since-midnight
   expectedMin: number; // required minutes over elapsed working days
-  workedMin: number; // real worked minutes (capped + OT − excluded)
-  overtimeMin: number; // minutes worked beyond work_end (past buffer)
+  workedMin: number; // real worked minutes (check-in → day-end − excluded)
   netMin: number; // workedMin − expectedMin (− = owed make-up)
 }
 
@@ -4544,7 +4472,6 @@ export function ReportsTab() {
   };
   const workStartMin = settings ? hhmmToMin(settings.work_start_time) : 9 * 60;
   const workEndMin = settings ? hhmmToMin(settings.work_end_time) : 17 * 60;
-  const checkoutBufferMin = settings?.checkout_buffer_min ?? 30;
   const graceMin = settings?.grace_period_min ?? 15;
   const tz = settings?.timezone ?? "Asia/Karachi";
   const todayStr = new Intl.DateTimeFormat("en-CA", { timeZone: tz }).format(
@@ -4648,7 +4575,6 @@ export function ReportsTab() {
       avgCheckinMin: 0,
       expectedMin: 0,
       workedMin: 0,
-      overtimeMin: 0,
       netMin: 0,
     });
   }
@@ -4680,7 +4606,6 @@ export function ReportsTab() {
         avgCheckinMin: 0,
         expectedMin: 0,
         workedMin: 0,
-        overtimeMin: 0,
         netMin: 0,
       });
     }
@@ -4719,15 +4644,8 @@ export function ReportsTab() {
       if (checkinMin < workStartMin) s.earlyCount++;
       else if (checkinMin <= workStartMin + graceMin) s.onTimeCount++;
     }
-
-    if (rec.check_in && rec.check_out) {
-      // Office hours = worked span minus any out-of-office time recorded for the day.
-      const diff =
-        (new Date(rec.check_out).getTime() - new Date(rec.check_in).getTime()) /
-          60000 -
-        (rec.excluded_minutes ?? 0);
-      if (diff > 0) s.totalMinutes += diff;
-    }
+    // Office hours (totalMinutes) are set from the hours engine below (check-in →
+    // day-end − excluded); check-out is no longer tracked.
   }
 
   // Absent = past working days with no attendance record at all
@@ -4758,14 +4676,13 @@ export function ReportsTab() {
       date: r.date,
       status: r.status,
       check_in: r.check_in,
-      check_out: r.check_out,
       excluded_minutes: r.excluded_minutes,
     }));
     const h = computeEmployeeHours({
       records: empRecords,
       year,
       month,
-      settings: { workStartMin, workEndMin, checkoutBufferMin },
+      settings: { workStartMin, workEndMin },
       isWorkingDay,
       halfDayDates: halfDayByProfile.get(profileId) ?? emptyDates,
       todayStr,
@@ -4773,7 +4690,7 @@ export function ReportsTab() {
     });
     s.expectedMin = h.expectedMin;
     s.workedMin = h.workedMin;
-    s.overtimeMin = h.overtimeMin;
+    s.totalMinutes = h.workedMin; // "Office Hrs" = worked minutes (check-in → day-end)
     s.netMin = h.netMin;
   }
 
@@ -4886,7 +4803,6 @@ export function ReportsTab() {
                 "Approved OT (h)",
                 "Expected",
                 "Worked",
-                "Overtime",
                 "Net",
                 "On-Time %",
               ],
@@ -4905,7 +4821,6 @@ export function ReportsTab() {
                 (s.overtimeMinutes / 60).toFixed(2),
                 fmtMinutes(s.expectedMin),
                 fmtMinutes(s.workedMin),
-                fmtMinutes(s.overtimeMin),
                 fmtNet(s.netMin),
                 s.present + s.late > 0
                   ? Math.round(
@@ -5110,13 +5025,6 @@ export function ReportsTab() {
                     onSort={handleSort}
                   />
                   <SortTh
-                    label="Overtime"
-                    col="overtimeMin"
-                    sortKey={sortKey}
-                    sortAsc={sortAsc}
-                    onSort={handleSort}
-                  />
-                  <SortTh
                     label="Net"
                     col="netMin"
                     sortKey={sortKey}
@@ -5230,9 +5138,6 @@ export function ReportsTab() {
                         <td className="px-4 py-3 font-mono text-[12px] text-text-1">
                           {fmtMinutes(s.workedMin)}
                         </td>
-                        <td className="px-4 py-3 font-mono text-[12px] text-service-mkt">
-                          {s.overtimeMin > 0 ? fmtMinutes(s.overtimeMin) : "—"}
-                        </td>
                         <td className="px-4 py-3">
                           <span
                             className={cn(
@@ -5292,7 +5197,7 @@ export function ReportsTab() {
                           key={`${s.profileId}-expanded`}
                           className="border-b border-border-subtle bg-surface-2/50"
                         >
-                          <td colSpan={16} className="px-6 py-3">
+                          <td colSpan={15} className="px-6 py-3">
                             <div className="text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-2">
                               Daily log — {MONTH_NAMES[month - 1]} {year}
                             </div>
@@ -5452,9 +5357,6 @@ function SettingsForm({ settings }: { settings: AttendanceSettings }) {
   const [earlyCheckin, setEarlyCheckin] = useState(() =>
     String(settings.early_checkin_min),
   );
-  const [checkoutBuffer, setCheckoutBuffer] = useState(() =>
-    String(settings.checkout_buffer_min),
-  );
   const [tz, setTz] = useState(() => settings.timezone);
   const [xp, setXp] = useState(() => String(settings.xp_on_time_checkin));
   const [ipCidr, setIpCidr] = useState(() => settings.office_ip_cidr ?? "");
@@ -5472,7 +5374,6 @@ function SettingsForm({ settings }: { settings: AttendanceSettings }) {
         work_end_time: workEnd,
         grace_period_min: parseInt(grace, 10),
         early_checkin_min: parseInt(earlyCheckin, 10),
-        checkout_buffer_min: parseInt(checkoutBuffer, 10),
         timezone: tz,
         xp_on_time_checkin: parseInt(xp, 10),
         office_ip_cidr: ipCidr.trim() || null,
@@ -5560,24 +5461,6 @@ function SettingsForm({ settings }: { settings: AttendanceSettings }) {
             <p className="text-[11px] font-ui text-text-4 mt-1">
               Employees may check in up to {earlyCheckin || "?"} min before
               start time (e.g. early arrivals)
-            </p>
-          </div>
-
-          <div>
-            <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">
-              Checkout Buffer (minutes)
-            </label>
-            <input
-              type="number"
-              min={0}
-              max={120}
-              value={checkoutBuffer}
-              onChange={(e) => setCheckoutBuffer(e.target.value)}
-              className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-mono text-text-1 outline-none focus:border-border-focus"
-            />
-            <p className="text-[11px] font-ui text-text-4 mt-1">
-              Checking out up to {checkoutBuffer || "?"} min after end time
-              still counts as a full day; overtime accrues only beyond it
             </p>
           </div>
 

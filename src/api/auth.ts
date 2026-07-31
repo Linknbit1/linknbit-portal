@@ -11,6 +11,8 @@ export interface BffSession {
   refresh_token: string
   expires_at: number // Unix seconds
   user: { id: string; email: string | undefined }
+  /** Present when the restored session is an impersonation, not the caller's own. */
+  impersonating?: { targetName: string; adminName: string }
 }
 
 // ── BFF fetch helper ──────────────────────────────────────────────────────────
@@ -41,8 +43,20 @@ export async function bffSignIn(email: string, password: string): Promise<BffSes
   return data as BffSession
 }
 
-export async function bffRefreshSession(): Promise<BffSession> {
-  const res = await bffFetch('/api/auth/auth-refresh', { method: 'POST' })
+/**
+ * Exchanges the HTTP-only cookie for a fresh session.
+ *
+ * If an impersonation cookie is present the member's session comes back instead
+ * of the admin's, which is what makes a reload stay in the impersonated portal.
+ * `stopImpersonation` clears that cookie and returns the admin's session.
+ */
+export async function bffRefreshSession(
+  opts: { stopImpersonation?: boolean } = {},
+): Promise<BffSession> {
+  const res = await bffFetch('/api/auth/auth-refresh', {
+    method: 'POST',
+    body: JSON.stringify({ stop_impersonation: opts.stopImpersonation === true }),
+  })
   const data = await res.json()
   if (!res.ok) throw new Error(data.error ?? 'Session expired')
   return data as BffSession
@@ -63,27 +77,30 @@ export interface ImpersonationSession {
   user: { id: string; name: string }
 }
 
-// Mints a real session for a member via the auth-impersonate Edge Function. Uses the
-// current (admin) session's token for authorization; the function verifies the caller
-// is an admin and the target is a non-admin. AuthContext applies the returned tokens
-// in memory only, leaving the admin's HTTP-only cookie intact for a clean exit.
-export async function impersonateUser(profileId: string): Promise<ImpersonationSession> {
-  const { data, error } = await supabase.functions.invoke('auth-impersonate', {
-    body: { profile_id: profileId },
+/**
+ * Mints a real session for a member via the auth-impersonate Edge Function. The
+ * admin's own token authorises the call; the function checks the caller is an
+ * admin and the target ranks strictly below them.
+ *
+ * Routed through the /api/auth proxy rather than supabase.functions.invoke, and
+ * that matters: the function replies with an HTTP-only impersonation cookie, and
+ * a cookie set by a *.supabase.co response would belong to that domain and never
+ * be sent back by the app. Same-origin is what lets the session survive a reload.
+ * The admin's own cookie is left untouched, so exiting stays clean.
+ */
+export async function impersonateUser(
+  profileId: string,
+  adminAccessToken: string,
+): Promise<ImpersonationSession> {
+  const res = await bffFetch('/api/auth/auth-impersonate', {
+    method: 'POST',
+    // The function reads the caller from Authorization, so the admin's JWT
+    // replaces the anon key here; apikey still satisfies the API gateway.
+    headers: { Authorization: `Bearer ${adminAccessToken}`, apikey: ANON_KEY },
+    body: JSON.stringify({ profile_id: profileId }),
   })
-  if (error) {
-    // Surface the function's JSON error message when present.
-    if (error && typeof error === 'object' && 'context' in error) {
-      const ctx = (error as { context: unknown }).context
-      if (ctx instanceof Response) {
-        try {
-          const body = await ctx.json()
-          if (body?.error) throw new Error(body.error)
-        } catch { /* fall through */ }
-      }
-    }
-    throw error instanceof Error ? error : new Error('Impersonation failed')
-  }
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error ?? 'Impersonation failed')
   return data as ImpersonationSession
 }
 

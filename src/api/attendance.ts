@@ -27,10 +27,8 @@ export interface MarkAttendancePayload {
   date: string
   status: string
   note?: string
-  /** ISO timestamp; only written when provided (lets HR record times). */
+  /** ISO timestamp; only written when provided (lets HR record the time). */
   checkIn?: string | null
-  /** ISO timestamp; only written when provided. */
-  checkOut?: string | null
 }
 
 // ── Employee self check-in (calls Edge Function) ──────────────────────────────
@@ -65,36 +63,8 @@ export async function checkIn(payload: {
   return data
 }
 
-// ── Employee self check-out (via Edge Function for time validation) ───────────
-
-export async function checkOut(attendanceId: string): Promise<AttendanceRow> {
-  const { data, error } = await supabase.functions.invoke<{ check_out: string; date: string }>(
-    'attendance-checkout',
-    { body: { attendance_id: attendanceId } },
-  )
-  if (error) {
-    const ctx = (error as { context?: Response }).context
-    if (ctx) {
-      let body: { error?: string; code?: string } | null = null
-      try { body = await ctx.json() } catch { /* non-JSON */ }
-      if (body?.code) {
-        const enriched = new Error(body.error ?? error.message) as Error & { code: string }
-        enriched.code = body.code
-        throw enriched
-      }
-    }
-    throw error
-  }
-  if (!data) throw new Error('No response from attendance-checkout')
-  // Re-fetch the full row so callers get the typed AttendanceRow shape
-  const { data: row, error: fetchErr } = await supabase
-    .from('attendance')
-    .select('*')
-    .eq('id', attendanceId)
-    .single()
-  if (fetchErr) throw fetchErr
-  return row
-}
+// Check-out is no longer a user action. The only clock event is the morning
+// check-in; the day-end cron (fn_auto_checkout_missing) records the end of day.
 
 // ── My attendance history (last 30 days for current user) ────────────────────
 
@@ -177,9 +147,8 @@ export async function markAttendance(payload: MarkAttendancePayload): Promise<At
     source: 'admin',
     note: payload.note,
   }
-  // Only set times when supplied so a plain status mark doesn't wipe existing ones.
+  // Only set the time when supplied so a plain status mark doesn't wipe it.
   if (payload.checkIn !== undefined)  insert.check_in  = payload.checkIn
-  if (payload.checkOut !== undefined) insert.check_out = payload.checkOut
   const { data, error } = await supabase
     .from('attendance')
     .upsert(insert, { onConflict: 'profile_id,date' })
@@ -195,13 +164,12 @@ export interface EditAttendancePayload {
   id: string
   status: string
   note?: string | null
-  /** ISO timestamp or null to clear. Omit a field to leave it unchanged. */
+  /** ISO timestamp or null to clear. Omit to leave it unchanged. */
   checkIn?: string | null
-  checkOut?: string | null
 }
 
-// Updates status/times/note in place without changing `source` (preserves whether
-// the row was a self check-in vs system/admin). RLS: admin/super_admin/hr only.
+// Updates status/check-in/note in place without changing `source` (preserves
+// whether the row was a self check-in vs system/admin). RLS: admin/super_admin/hr.
 export async function updateAttendanceRecord(payload: EditAttendancePayload): Promise<AttendanceRow> {
   const update: TablesUpdate<'attendance'> = {
     status: payload.status,
@@ -209,27 +177,10 @@ export async function updateAttendanceRecord(payload: EditAttendancePayload): Pr
   }
   if (payload.note !== undefined)     update.note      = payload.note
   if (payload.checkIn !== undefined)  update.check_in  = payload.checkIn
-  if (payload.checkOut !== undefined) update.check_out = payload.checkOut
   const { data, error } = await supabase
     .from('attendance')
     .update(update)
     .eq('id', payload.id)
-    .select()
-    .single()
-  if (error) throw error
-  return data
-}
-
-// ── Admin checkout on behalf of employee ─────────────────────────────────────
-
-export async function adminCheckOut(attendanceId: string, checkOutTime?: string): Promise<AttendanceRow> {
-  const payload: TablesUpdate<'attendance'> = {
-    check_out: checkOutTime ?? new Date().toISOString(),
-  }
-  const { data, error } = await supabase
-    .from('attendance')
-    .update(payload)
-    .eq('id', attendanceId)
     .select()
     .single()
   if (error) throw error

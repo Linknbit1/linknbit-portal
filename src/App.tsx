@@ -20,6 +20,7 @@ import NotificationsPage from './pages/NotificationsPage'
 import InboxPage from './pages/InboxPage'
 import ChatPage from './pages/ChatPage'
 import StandupPage from './pages/StandupPage'
+import StickyNotesPage from './pages/StickyNotesPage'
 import StandupTeamPage from './pages/StandupTeamPage'
 import StandupHistoryPage from './pages/StandupHistoryPage'
 import StandupSettingsPage from './pages/StandupSettingsPage'
@@ -78,6 +79,11 @@ export default function App() {
                 <Route path="/inbox" element={<InboxPage />} />
                 <Route path="/chat" element={<ChatPage />} />
                 <Route path="/chat/:channelId" element={<ChatPage />} />
+                {/* Same capability key as the nav item, so the URL can't bypass it. */}
+                <Route
+                  path="/notes"
+                  element={<RoleGuard feature="can_use_sticky_notes"><StickyNotesPage /></RoleGuard>}
+                />
                 <Route path="/standup" element={<StandupPage />} />
                 {/* Team board: reviewers only. RLS scopes leads/PMs to their own team. */}
                 <Route

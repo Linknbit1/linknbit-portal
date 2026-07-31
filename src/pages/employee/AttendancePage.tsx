@@ -265,7 +265,7 @@ export function HistoryTable({ records, periodLabel }: { records: AttendanceRow[
         <table className="w-full overflow-x-auto whitespace-nowrap lg:whitespace-normal">
           <thead>
             <tr className="border-b border-border-subtle">
-              {['Date', 'Status', 'Check In', 'Check Out', 'Hours', 'Source', 'Device'].map((h) => (
+              {['Date', 'Status', 'Check In', 'Hours', 'Source', 'Device'].map((h) => (
                 <th key={h} className="px-5 py-3 text-left font-mono text-[10px] font-semibold text-text-4 uppercase tracking-wider whitespace-nowrap">
                   {h}
                 </th>
@@ -283,9 +283,6 @@ export function HistoryTable({ records, periodLabel }: { records: AttendanceRow[
                 </td>
                 <td className="px-5 py-3 font-mono text-[12px] text-text-2 whitespace-nowrap">
                   {formatTime(row.check_in)}
-                </td>
-                <td className="px-5 py-3 font-mono text-[12px] text-text-2 whitespace-nowrap">
-                  {formatTime(row.check_out)}
                 </td>
                 <td className="px-5 py-3 font-mono text-[12px] text-text-3 whitespace-nowrap">
                   {calcHours(row.check_in, row.check_out, row.excluded_minutes)}

@@ -98,6 +98,15 @@ export async function fetchOpenQuestTasks(): Promise<QuestTaskRow[]> {
   return data
 }
 
+// Number of quests the caller can actually claim right now (open, not past
+// deadline, slots remaining) — for the sidebar badge. quest_tasks.status is
+// never auto-closed, so counting status='open' would include expired/full ones.
+export async function fetchClaimableQuestCount(): Promise<number> {
+  const { data, error } = await supabase.rpc('count_open_claimable_quests')
+  if (error) throw error
+  return data ?? 0
+}
+
 export async function fetchAllQuestTasks(): Promise<QuestTaskRow[]> {
   const { data, error } = await supabase
     .from('quest_tasks')

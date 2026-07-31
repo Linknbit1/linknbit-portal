@@ -1,0 +1,27 @@
+/* TipTap editing surface inside a sticky note.
+ *
+ * The note supplies the font (font-hand), colour (text-note-ink) and size via the
+ * EditorContent wrapper; these rules only strip ProseMirror's defaults so the
+ * editor looks exactly like the static note text — no prose margins, wrapping
+ * that matches, and a placeholder tinted like the old textarea prompt. */
+
+.note-prose {
+  outline: none;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  height: 100%;
+}
+
+.note-prose p {
+  margin: 0;
+}
+
+/* Placeholder: the empty-note prompt, same tint as the read-only "double-click
+ * to write…" text. TipTap's Placeholder extension tags the first empty node. */
+.note-prose p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: color-mix(in srgb, var(--color-note-ink) 55%, transparent);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}

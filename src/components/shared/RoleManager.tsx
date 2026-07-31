@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Loader2, Plus, Trash2, Users } from 'lucide-react'
+import { Loader2, Pencil, Plus, Trash2, Users } from 'lucide-react'
 import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
 import { Modal } from '../ui/Modal'
@@ -18,7 +18,10 @@ import {
 } from '../../hooks/usePermissions'
 import { usePeople } from '../../hooks/usePeople'
 import { useAuthContext } from '../../context/AuthContext'
+import { RoleEditModal } from './RoleEditModal'
+import { PermissionDetailModal } from './PermissionDetailModal'
 import { cn } from '../../lib/cn'
+import type { PermissionRow, RoleRow } from '../../api/permissions'
 
 /**
  * Create roles and decide who holds them.
@@ -63,6 +66,8 @@ export function RoleManager({ canEdit }: { canEdit: boolean }) {
   const [placeBelowId, setPlaceBelowId] = useState('')
   const [newColor, setNewColor] = useState(ROLE_COLORS[5])
   const [openRoleId, setOpenRoleId] = useState<string | null>(null)
+  const [editingRole, setEditingRole] = useState<RoleRow | null>(null)
+  const [detailPermission, setDetailPermission] = useState<PermissionRow | null>(null)
 
   const isLoading = rolesLoading || assignmentsLoading || peopleLoading
 
@@ -216,6 +221,15 @@ export function RoleManager({ canEdit }: { canEdit: boolean }) {
                     <Users size={13} />
                     {members.length}
                   </button>
+                  <button
+                    type="button"
+                    aria-label={`Edit ${role.name}`}
+                    title={`Edit ${role.name}`}
+                    onClick={() => setEditingRole(role)}
+                    className="text-text-4 hover:text-text-1 transition-colors"
+                  >
+                    <Pencil size={14} />
+                  </button>
                   {canEdit && !role.is_system && (
                     <button
                       type="button"
@@ -317,10 +331,26 @@ export function RoleManager({ canEdit }: { canEdit: boolean }) {
           </div>
 
           <p className="font-ui text-[12px] text-text-3 border-t border-border-subtle pt-3">
-            The role starts with no permissions. Grant them in the matrix below, then add members.
+            The role starts with no permissions. Grant them with the pencil icon, then add members.
           </p>
         </div>
       </Modal>
+
+      {editingRole && (
+        <RoleEditModal
+          role={editingRole}
+          canEdit={canEdit}
+          onClose={() => setEditingRole(null)}
+          onShowPermissionDetail={setDetailPermission}
+        />
+      )}
+
+      {detailPermission && (
+        <PermissionDetailModal
+          permission={detailPermission}
+          onClose={() => setDetailPermission(null)}
+        />
+      )}
     </div>
   )
 }

@@ -4,12 +4,11 @@ import { Topbar } from '../components/layout/Topbar'
 import { Avatar } from '../components/ui/Avatar'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
-import { RoleBadge } from '../components/shared/RoleBadge'
+import { ProfileRoles } from '../components/shared/ProfileRoles'
 import { SalaryCard } from '../components/shared/SalaryCard'
 import { useToast } from '../components/ui/toast-context'
 import { useAuthContext } from '../context/AuthContext'
 import { useSaveProfile, useUpdatePassword } from '../hooks/useProfile'
-import { toUserRole } from '../lib/peopleAccess'
 import { cn } from '../lib/cn'
 import { validateAvatarFile } from '../lib/avatar'
 
@@ -153,7 +152,7 @@ export default function ProfilePage() {
           <div className="min-w-0">
             <p className="font-display font-bold text-[18px] text-text-1 truncate">{profile.name}</p>
             <p className="font-mono text-[12px] text-text-3 truncate">{profile.email}</p>
-            <div className="mt-1.5"><RoleBadge role={toUserRole(profile.role)} size="sm" /></div>
+            <ProfileRoles profileId={profile.id} fallbackRole={profile.role} className="mt-1.5" />
           </div>
           <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={onPickFile} />
         </div>
