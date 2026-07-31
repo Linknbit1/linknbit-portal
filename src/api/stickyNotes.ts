@@ -62,6 +62,8 @@ export interface CreateStickyNoteInput {
   rotation: number
   posX: number
   posY: number
+  /** Edge length in board units; omit to take the DB default. */
+  size?: number
 }
 
 export async function createStickyNote(input: CreateStickyNoteInput): Promise<StickyNote> {
@@ -75,6 +77,7 @@ export async function createStickyNote(input: CreateStickyNoteInput): Promise<St
       rotation: input.rotation,
       pos_x: input.posX,
       pos_y: input.posY,
+      ...(input.size === undefined ? {} : { size: input.size }),
     })
     .select()
     .single()
@@ -92,6 +95,8 @@ export interface UpdateStickyNoteInput {
   posY?: number
   /** Paint order; the board raises a note by stamping it with max + 1. */
   zIndex?: number
+  /** Edge length in board units. */
+  size?: number
 }
 
 export async function updateStickyNote(
