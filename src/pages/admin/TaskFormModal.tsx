@@ -12,7 +12,7 @@ import { useCreateTask, useUpdateTask } from '../../hooks/useTasks'
 import { MultiSelectPeople } from '../../components/ui/MultiSelectPeople'
 import { useSetTaskAssignees } from '../../hooks/useTaskAssignees'
 import { useToast } from '../../components/ui/toast-context'
-import { PRIORITY_LABELS, STATUS_LABELS } from '../../lib/utils'
+import { fromDateTimeInput, toDateInput, toTimeInput, PRIORITY_LABELS, STATUS_LABELS } from '../../lib/utils'
 import type { TaskListItem } from '../../api/tasks'
 import type { Priority, TaskStatus } from '../../types'
 
@@ -36,9 +36,6 @@ const PRIORITY_ORDER: Priority[] = ['critical', 'high', 'medium', 'low']
 const isStatus = (v: string): v is TaskStatus => (STATUS_ORDER as string[]).includes(v)
 const isPriority = (v: string): v is Priority => (PRIORITY_ORDER as string[]).includes(v)
 
-function toDateInput(iso: string | null): string {
-  return iso ? iso.slice(0, 10) : ''
-}
 function toPriority(v: string | null | undefined): Priority { return v && isPriority(v) ? v : 'medium' }
 function toStatus(v: string | null | undefined): TaskStatus { return v && isStatus(v) ? v : 'todo' }
 
@@ -89,7 +86,9 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
     if (!selectedProject) { toast('Choose a project', 'error'); return }
     if (!effectiveService) { toast('Choose a service', 'error'); return }
     if (!title.trim()) { toast('Task title is required', 'error'); return }
-    const due = dueDate ? new Date(`${dueDate}T00:00:00`).toISOString() : null
+    // This form only picks the day, so carry over whatever time the task detail
+    // panel set rather than silently resetting it to midnight.
+    const due = fromDateTimeInput(dueDate, toTimeInput(task?.due_date))
     const onSuccess = () => { toast(isEdit ? 'Task updated' : 'Task created', 'success'); onClose() }
     const onError = (e: unknown) => toast(e instanceof Error ? e.message : 'Save failed', 'error')
 

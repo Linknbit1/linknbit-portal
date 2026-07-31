@@ -84,7 +84,7 @@ export function ChatThread({ channelId, hideHeader }: ChatThreadProps) {
           ) : channel?.kind === 'group_dm' ? (
             <span className="size-8 rounded-lg bg-surface-2 flex items-center justify-center text-text-3"><UsersIcon size={15} /></span>
           ) : (
-            <Avatar name={counterpart?.name ?? '?'} src={counterpart?.avatar_url ?? undefined} size="sm" />
+            <Avatar name={counterpart?.name ?? '?'} src={counterpart?.avatar_url ?? undefined} size="sm" personId={counterpart?.id} />
           )}
           <div className="min-w-0">
             <h2 className="flex items-center gap-1.5 truncate font-display text-[15px] font-bold text-text-1">

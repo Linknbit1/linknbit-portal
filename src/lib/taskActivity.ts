@@ -36,8 +36,13 @@ function labelFor(field: string, raw: unknown, names: Map<string, string>): stri
       // Ids are meaningless in a feed; fall back to the id only if unresolved.
       return names.get(value) ?? 'someone'
     case 'due_date':
-    case 'start_date':
-      return new Date(value).toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' })
+    case 'start_date': {
+      const at = new Date(value)
+      const day = at.toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' })
+      // Midnight is what a date-only pick stores, so don't imply a time nobody set.
+      if (at.getHours() === 0 && at.getMinutes() === 0) return day
+      return `${day} at ${at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+    }
     case 'client_visible':
       return value === 'true' ? 'visible to client' : 'internal only'
     case 'estimated_minutes':

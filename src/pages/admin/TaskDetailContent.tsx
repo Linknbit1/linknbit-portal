@@ -2,7 +2,7 @@ import { useMemo, useState, type ReactNode } from 'react'
 import type { JSONContent } from '@tiptap/react'
 import {
   Plus, Trash2, Send, CheckCircle2, MessageSquare, ListChecks, RotateCcw, Pencil,
-  CircleDot, UserRound, CalendarDays, Flag, Layers, Eye, Paperclip, type LucideIcon,
+  CircleDot, UserRound, CalendarDays, Clock, Flag, Layers, Eye, Paperclip, type LucideIcon,
 } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { DocEditor } from '../../components/editor/DocEditor'
@@ -15,6 +15,7 @@ import { Select } from '../../components/ui/Select'
 import { MultiSelectPeople } from '../../components/ui/MultiSelectPeople'
 import { useSetTaskAssignees } from '../../hooks/useTaskAssignees'
 import { DatePicker } from '../../components/ui/DatePicker'
+import { TimePicker } from '../../components/ui/TimePicker'
 import { Toggle } from '../../components/ui/Toggle'
 import { Avatar } from '../../components/ui/Avatar'
 import { PersonLink } from '../../components/shared/PersonLink'
@@ -23,9 +24,14 @@ import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { ServiceChip } from '../../components/shared/ServiceChip'
 import { StatusChip } from '../../components/shared/StatusChip'
 import { PriorityChip } from '../../components/shared/PriorityChip'
+import { SaveIndicator } from '../../components/shared/SaveIndicator'
 import { AttachmentUploader } from '../../components/shared/AttachmentUploader'
 import { useToast } from '../../components/ui/toast-context'
-import { formatRelativeTime, PRIORITY_LABELS, STATUS_LABELS } from '../../lib/utils'
+import { useSaveStatus } from '../../hooks/useSaveStatus'
+import {
+  formatRelativeTime, fromDateTimeInput, toDateInput, toTimeInput,
+  PRIORITY_LABELS, STATUS_LABELS,
+} from '../../lib/utils'
 import { useTask, useUpdateTask, useDeleteTask, useTaskDeleteImpact } from '../../hooks/useTasks'
 import { useStages } from '../../hooks/useStages'
 import { useProjectServiceMembers } from '../../hooks/useProjectServices'
@@ -129,6 +135,7 @@ interface TaskDetailContentProps {
 
 export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentProps) {
   const toast = useToast()
+  const { saveState, markSaving, markSaved, markFailed } = useSaveStatus()
   const { data: task, isLoading } = useTask(taskId)
   const updateTask = useUpdateTask()
   const deleteTask = useDeleteTask()
@@ -192,8 +199,22 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
   if (isLoading) return <div className="p-5 space-y-3"><Skeleton className="h-6 w-2/3" /><Skeleton className="h-24" /><Skeleton className="h-32" /></div>
   if (!task) return <div className="p-8 text-center font-ui text-text-3">Task not found.</div>
 
-  const patch = (updates: Parameters<typeof updateTask.mutate>[0]['updates']) =>
-    updateTask.mutate({ id: task.id, updates }, { onError: (e) => toast(e instanceof Error ? e.message : 'Update failed', 'error') })
+  // Every property here saves on change, so each write reports into the header
+  // badge — otherwise an edit landing (or failing) is invisible.
+  const patch = (updates: Parameters<typeof updateTask.mutate>[0]['updates']) => {
+    markSaving()
+    updateTask.mutate({ id: task.id, updates }, {
+      onSuccess: () => markSaved(),
+      onError: (e) => { markFailed(); toast(e instanceof Error ? e.message : 'Update failed', 'error') },
+    })
+  }
+
+  // start_date / due_date are timestamptz, so each is edited as a date + a time
+  // that recombine into the one column.
+  const startDate = toDateInput(task.start_date)
+  const startTime = toTimeInput(task.start_date)
+  const dueDate = toDateInput(task.due_date)
+  const dueTime = toTimeInput(task.due_date)
 
   const stageOptions = [{ value: '', label: 'No stage' }, ...stages.map((s) => ({ value: s.id, label: s.name }))]
   const statusOptions = STATUS_ORDER.map((s) => ({ value: s, label: STATUS_LABELS[s] }))
@@ -240,9 +261,10 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
       <div className={cn('min-w-0 flex-1 space-y-5 p-5 lg:p-6', fill && 'overflow-y-auto')}>
       {/* Header */}
       <div className="space-y-2">
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex min-h-5 items-center gap-2 flex-wrap">
           {task.project_service?.service && <ServiceChip service={task.project_service.service.slug} />}
           {task.project?.name && <span className="font-ui text-[12px] text-text-3">{task.project.name}</span>}
+          <SaveIndicator state={saveState} className="ml-auto" />
         </div>
         <EditableTitle value={task.title} onSave={(title) => patch({ title })} />
       </div>
@@ -255,16 +277,43 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
         <PropertyRow icon={UserRound} label="Assignees">
           <MultiSelectPeople
             value={task.assignees.map((a) => a.id)}
-            onChange={(ids) => setAssignees.mutate(
-              { taskId: task.id, profileIds: ids, projectId: task.project_id },
-              { onError: (e) => toast(e instanceof Error ? e.message : 'Failed', 'error') },
-            )}
+            onChange={(ids) => {
+              markSaving()
+              setAssignees.mutate(
+                { taskId: task.id, profileIds: ids, projectId: task.project_id },
+                {
+                  onSuccess: () => markSaved(),
+                  onError: (e) => { markFailed(); toast(e instanceof Error ? e.message : 'Failed', 'error') },
+                },
+              )
+            }}
             options={members.map((m) => ({ id: m.id, name: m.name, avatar_url: m.avatar_url }))}
             size="sm"
           />
         </PropertyRow>
+        <PropertyRow icon={CalendarDays} label="Start date">
+          <DatePicker value={startDate} onChange={(v) => patch({ start_date: fromDateTimeInput(v, startTime) })} />
+        </PropertyRow>
+        <PropertyRow icon={Clock} label="Start time">
+          <TimePicker
+            value={startTime}
+            onChange={(v) => patch({ start_date: fromDateTimeInput(startDate, v) })}
+            step={5}
+            disabled={!startDate}
+            placeholder={startDate ? 'Select time…' : 'Set a start date first'}
+          />
+        </PropertyRow>
         <PropertyRow icon={CalendarDays} label="Due date">
-          <DatePicker value={task.due_date ? task.due_date.slice(0, 10) : ''} onChange={(v) => patch({ due_date: v ? new Date(`${v}T00:00:00`).toISOString() : null })} />
+          <DatePicker value={dueDate} onChange={(v) => patch({ due_date: fromDateTimeInput(v, dueTime) })} />
+        </PropertyRow>
+        <PropertyRow icon={Clock} label="Due time">
+          <TimePicker
+            value={dueTime}
+            onChange={(v) => patch({ due_date: fromDateTimeInput(dueDate, v) })}
+            step={5}
+            disabled={!dueDate}
+            placeholder={dueDate ? 'Select time…' : 'Set a due date first'}
+          />
         </PropertyRow>
         <PropertyRow icon={Flag} label="Priority">
           <Select value={task.priority} onChange={(v) => { if (isPriority(v)) patch({ priority: v }) }} options={priorityOptions} size="sm" />

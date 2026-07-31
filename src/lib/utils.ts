@@ -32,6 +32,45 @@ export function isOverdue(dateStr: string): boolean {
   return getDaysUntil(dateStr) < 0
 }
 
+function pad2(n: number): string {
+  return String(n).padStart(2, '0')
+}
+
+/**
+ * Local calendar date (`YYYY-MM-DD`) of a timestamptz, or '' when unset.
+ *
+ * Reads the instant in the viewer's timezone rather than slicing the ISO string,
+ * which would answer in UTC and land on the wrong day for most local times
+ * (PKT is +5, so anything before 05:00 local is still "yesterday" in UTC).
+ */
+export function toDateInput(iso: string | null | undefined): string {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
+}
+
+/** Local wall-clock time (`HH:MM`, 24h) of a timestamptz, or '' when unset. */
+export function toTimeInput(iso: string | null | undefined): string {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`
+}
+
+/**
+ * Recombines a date + time picker pair into a timestamptz. A time on its own has
+ * nothing to anchor to, so a missing date clears the column entirely; a missing
+ * time falls back to midnight local.
+ */
+export function fromDateTimeInput(date: string, time: string): string | null {
+  if (!date) return null
+  const [y, mo, d] = date.split('-').map(Number)
+  if (!y || !mo || !d) return null
+  const [h, mi] = time ? time.split(':').map(Number) : [0, 0]
+  return new Date(y, mo - 1, d, h || 0, mi || 0, 0, 0).toISOString()
+}
+
 export function getInitials(name: string): string {
   return name
     .split(' ')

@@ -1054,7 +1054,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
                   <Avatar name={nameOf(eotmWinner.profile_id)} src={directory[eotmWinner.profile_id]?.avatar_url ?? undefined} size="lg" personId={eotmWinner.profile_id} />
                   <div className="min-w-0">
                     <p className="font-mono text-[10.5px] text-coin-gold uppercase tracking-wider">Employee of the Month · {monthLabel(eotmPrev.year, eotmPrev.month)}</p>
-                    <p className="font-display font-bold text-h4/tight text-text-1 truncate">{nameOf(eotmWinner.profile_id)}</p>
+                    <PersonLink personId={eotmWinner.profile_id} className="block truncate font-display font-bold text-h4/tight text-text-1">{nameOf(eotmWinner.profile_id)}</PersonLink>
                     {eotmWinner.note && <p className="font-ui text-[12.5px] text-text-3 mt-0.5 line-clamp-2">{eotmWinner.note}</p>}
                   </div>
                 </>
@@ -1722,10 +1722,10 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
                     ) : (
                       <div className="flex items-center justify-between gap-3 rounded-md border border-border-default bg-surface-inset px-3 py-2.5">
                         <div className="flex items-center gap-2.5 min-w-0">
-                          <Avatar name={nameOf(eotmSelected.profile_id)} src={directory[eotmSelected.profile_id]?.avatar_url ?? undefined} size="sm" />
+                          <Avatar name={nameOf(eotmSelected.profile_id)} src={directory[eotmSelected.profile_id]?.avatar_url ?? undefined} size="sm" personId={eotmSelected.profile_id} />
                           <div className="min-w-0">
                             <p className="font-mono text-[10px] text-coin-gold uppercase tracking-wider">Winner · {monthLabel(eotmSelYear, eotmSelMonth)}</p>
-                            <p className="font-ui text-[12.5px] font-semibold text-text-1 truncate">{nameOf(eotmSelected.profile_id)}</p>
+                            <PersonLink personId={eotmSelected.profile_id} className="block truncate font-ui text-[12.5px] font-semibold text-text-1">{nameOf(eotmSelected.profile_id)}</PersonLink>
                           </div>
                         </div>
                         <div className="flex items-center gap-1.5 shrink-0">
