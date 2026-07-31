@@ -49,12 +49,24 @@ export function StandupCard({ standup, showPerson = true }: StandupCardProps) {
       </div>
 
       <div className="divide-y divide-border-subtle">
-        {standup.entries.map((e) => (
+        {standup.entries.map((e) => {
+          // Prefer the live project/task name; fall back to the snapshot captured
+          // at submission so a deleted project/task still shows in the backlog.
+          const projectLabel = e.project?.name ?? e.project_name ?? 'Project'
+          const projectGone = !e.project && !!e.project_name
+          const taskLabel = e.task?.title ?? e.task_name
+          const taskGone = !e.task && !!e.task_name
+          return (
           <div key={e.id} className="px-4 py-3 space-y-1.5">
             <div className="flex items-center gap-2 flex-wrap">
               {e.task?.project_service?.service && <ServiceChip service={e.task.project_service.service.slug} />}
-              <span className="font-ui font-semibold text-[12.5px] text-text-1">{e.project?.name ?? 'Project'}</span>
-              {e.task && <span className="font-ui text-[11.5px] text-text-3 truncate">· {e.task.title}</span>}
+              <span className="font-ui font-semibold text-[12.5px] text-text-1">{projectLabel}</span>
+              {projectGone && <span className="font-mono text-[10px] text-text-4" title="This project has been deleted">(deleted)</span>}
+              {taskLabel && (
+                <span className="font-ui text-[11.5px] text-text-3 truncate">
+                  · {taskLabel}{taskGone && <span className="text-text-4" title="This task has been deleted"> (deleted)</span>}
+                </span>
+              )}
               <span className="ml-auto font-mono text-[11px] text-text-3 shrink-0">{fmtMinutes(e.minutes_spent)}</span>
             </div>
             <p className="font-ui text-[13px] text-text-2 whitespace-pre-wrap">{e.work_done}</p>
@@ -64,7 +76,8 @@ export function StandupCard({ standup, showPerson = true }: StandupCardProps) {
               </p>
             )}
           </div>
-        ))}
+          )
+        })}
       </div>
 
       {standup.notes && (
