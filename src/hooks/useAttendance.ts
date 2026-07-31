@@ -210,10 +210,11 @@ export function useAttendanceExceptions(filters: FetchExceptionsFilters = {}) {
   })
 }
 
-export function useAllAttendanceExceptions(filters: FetchExceptionsFilters = {}) {
+export function useAllAttendanceExceptions(filters: FetchExceptionsFilters = {}, enabled = true) {
   return useQuery({
     queryKey: ATTENDANCE_KEYS.allExceptions(filters),
     queryFn: () => fetchAllAttendanceExceptions(filters),
+    enabled,
   })
 }
 
@@ -423,10 +424,11 @@ export function useMyOvertimeRequests() {
   })
 }
 
-export function useAllOvertimeRequests(status?: string) {
+export function useAllOvertimeRequests(status?: string, enabled = true) {
   return useQuery({
     queryKey: ATTENDANCE_KEYS.allOvertime(status),
     queryFn: () => fetchAllOvertimeRequests(status),
+    enabled,
   })
 }
 
@@ -502,10 +504,11 @@ export function useMyWfhRequests() {
   })
 }
 
-export function useAllWfhRequests(status?: string) {
+export function useAllWfhRequests(status?: string, enabled = true) {
   return useQuery({
     queryKey: ATTENDANCE_KEYS.allWfh(status),
     queryFn: () => fetchAllWfhRequests(status),
+    enabled,
   })
 }
 
@@ -618,10 +621,11 @@ export function useMyLeaveRequests() {
   })
 }
 
-export function useAllLeaveRequests(status?: string) {
+export function useAllLeaveRequests(status?: string, enabled = true) {
   return useQuery({
     queryKey: ATTENDANCE_KEYS.allLeave(status),
     queryFn: () => fetchAllLeaveRequests(status),
+    enabled,
   })
 }
 
