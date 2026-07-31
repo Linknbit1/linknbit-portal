@@ -2887,9 +2887,11 @@ export type Database = {
           id: string
           minutes_spent: number
           order_index: number
-          project_id: string
+          project_id: string | null
+          project_name: string | null
           standup_id: string
           task_id: string | null
+          task_name: string | null
           work_done: string
         }
         Insert: {
@@ -2898,9 +2900,11 @@ export type Database = {
           id?: string
           minutes_spent: number
           order_index?: number
-          project_id: string
+          project_id?: string | null
+          project_name?: string | null
           standup_id: string
           task_id?: string | null
+          task_name?: string | null
           work_done: string
         }
         Update: {
@@ -2909,9 +2913,11 @@ export type Database = {
           id?: string
           minutes_spent?: number
           order_index?: number
-          project_id?: string
+          project_id?: string | null
+          project_name?: string | null
           standup_id?: string
           task_id?: string | null
+          task_name?: string | null
           work_done?: string
         }
         Relationships: [
