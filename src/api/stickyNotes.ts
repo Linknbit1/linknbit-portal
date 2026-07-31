@@ -20,6 +20,9 @@ export type NoteShape =
   | 'hexagon'
   | 'pennant'
 
+/** Whole-note text alignment — not per-character. */
+export type NoteAlign = 'left' | 'center' | 'right'
+
 export const NOTE_COLORS: NoteColor[] = ['pink', 'lavender', 'mint', 'peach', 'butter', 'sky']
 export const NOTE_SHAPES: NoteShape[] = [
   'square',
@@ -86,15 +89,25 @@ export interface UpdateStickyNoteInput {
   shape?: NoteShape
   posX?: number
   posY?: number
+  bold?: boolean
+  italic?: boolean
+  strikethrough?: boolean
+  textAlign?: NoteAlign
+  /** Paint order; the board raises a note by stamping it with max + 1. */
+  zIndex?: number
 }
 
-export async function updateStickyNote({ id, posX, posY, ...rest }: UpdateStickyNoteInput): Promise<void> {
+export async function updateStickyNote(
+  { id, posX, posY, textAlign, zIndex, ...rest }: UpdateStickyNoteInput,
+): Promise<void> {
   const { error } = await supabase
     .from('sticky_notes')
     .update({
       ...rest,
       ...(posX === undefined ? {} : { pos_x: posX }),
       ...(posY === undefined ? {} : { pos_y: posY }),
+      ...(textAlign === undefined ? {} : { text_align: textAlign }),
+      ...(zIndex === undefined ? {} : { z_index: zIndex }),
     })
     .eq('id', id)
   if (error) throw error
