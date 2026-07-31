@@ -327,6 +327,7 @@ export type Database = {
           office_ip_cidr: string | null
           saturday_working: boolean
           singleton: boolean
+          terminal_stale_min: number
           timezone: string
           updated_at: string
           updated_by: string | null
@@ -343,6 +344,7 @@ export type Database = {
           office_ip_cidr?: string | null
           saturday_working?: boolean
           singleton?: boolean
+          terminal_stale_min?: number
           timezone?: string
           updated_at?: string
           updated_by?: string | null
@@ -359,6 +361,7 @@ export type Database = {
           office_ip_cidr?: string | null
           saturday_working?: boolean
           singleton?: boolean
+          terminal_stale_min?: number
           timezone?: string
           updated_at?: string
           updated_by?: string | null
@@ -3667,6 +3670,15 @@ export type Database = {
         Returns: undefined
       }
       claim_quest_task: { Args: { p_task_id: string }; Returns: string }
+      create_biometric_terminal: {
+        Args: {
+          p_device_ip?: string
+          p_location?: string
+          p_name: string
+          p_secret?: string
+        }
+        Returns: string
+      }
       current_user_role: { Args: never; Returns: string }
       delete_employee_of_the_month: {
         Args: { p_month: number; p_year: number }
@@ -3776,6 +3788,19 @@ export type Database = {
         Args: { p_channel_id: string; p_role: string }
         Returns: undefined
       }
+      fn_task_activity: {
+        Args: { p_limit?: number; p_task_id: string }
+        Returns: {
+          action: string
+          actor_id: string
+          actor_name: string
+          changed_fields: string[]
+          created_at: string
+          id: string
+          new_values: Json
+          old_values: Json
+        }[]
+      }
       fn_toggle_reaction: {
         Args: { p_emoji: string; p_message_id: string }
         Returns: boolean
@@ -3786,6 +3811,15 @@ export type Database = {
           p_reward_name: string
         }
         Returns: undefined
+      }
+      get_my_terminal_gate: {
+        Args: never
+        Returns: {
+          last_heartbeat_at: string
+          must_use_terminal: boolean
+          terminal_location: string
+          terminal_name: string
+        }[]
       }
       get_quest_claimants: {
         Args: never
@@ -3824,6 +3858,13 @@ export type Database = {
       is_task_assignee: { Args: { p_task_id: string }; Returns: boolean }
       join_reward_pool: { Args: { p_pool_id: string }; Returns: undefined }
       leave_reward_pool: { Args: { p_pool_id: string }; Returns: undefined }
+      link_zk_enrollment: {
+        Args: { p_profile_id: string; p_zk_user_id: string }
+        Returns: {
+          adopted_punches: number
+          affected_dates: string[]
+        }[]
+      }
       my_permissions: { Args: never; Returns: string[] }
       open_reward_pool: { Args: { p_reward_id: string }; Returns: string }
       redeem_reward: {
@@ -3849,6 +3890,10 @@ export type Database = {
       }
       review_shoutout: {
         Args: { p_approve: boolean; p_id: string; p_note?: string }
+        Returns: undefined
+      }
+      rotate_biometric_terminal_secret: {
+        Args: { p_id: string; p_secret: string }
         Returns: undefined
       }
       set_employee_of_the_month: {
@@ -3921,6 +3966,10 @@ export type Database = {
         Returns: string
       }
       top_role_position: { Args: { p_profile: string }; Returns: number }
+      unlink_zk_enrollment: {
+        Args: { p_profile_id: string }
+        Returns: undefined
+      }
       update_standup: {
         Args: { p_entries: Json; p_notes?: string; p_standup_id: string }
         Returns: string

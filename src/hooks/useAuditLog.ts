@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { fetchAuditLog, fetchAuditDangerCount } from '../api/auditLog'
+import { fetchAuditLog, fetchAuditDangerCount, fetchTaskActivity } from '../api/auditLog'
 import type { AuditLogFilters } from '../types'
 import { useAuthContext } from '../context/AuthContext'
 import { useFeatureAccess } from './useRoleFlags'
@@ -8,6 +8,7 @@ export const AUDIT_KEYS = {
   all: ['audit_log'] as const,
   list: (filters: AuditLogFilters) => ['audit_log', 'list', filters] as const,
   dangerCount: ['audit_log', 'danger_count'] as const,
+  task: (taskId: string) => ['audit_log', 'task', taskId] as const,
 }
 
 /** The audit trail, filtered. Only runs for users who pass can_view_audit_log. */
@@ -30,6 +31,17 @@ export function useAuditDangerCount() {
     queryKey: AUDIT_KEYS.dangerCount,
     queryFn: fetchAuditDangerCount,
     enabled: !!accessToken && allowed,
+    staleTime: 15_000,
+  })
+}
+
+/** Activity for a single task — visible to anyone who can open that task. */
+export function useTaskActivity(taskId: string | undefined) {
+  const { accessToken } = useAuthContext()
+  return useQuery({
+    queryKey: AUDIT_KEYS.task(taskId ?? ''),
+    queryFn: () => fetchTaskActivity(taskId!),
+    enabled: !!accessToken && !!taskId,
     staleTime: 15_000,
   })
 }
