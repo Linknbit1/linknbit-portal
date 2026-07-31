@@ -18,7 +18,7 @@ export function TaskDetailDrawer({ taskId, open, onClose }: TaskDetailDrawerProp
     <Drawer
       open={open}
       onClose={onClose}
-      width={wide ? 'min(62vw, 980px)' : 480}
+      width={wide ? 'min(95vw, 1600px)' : 'min(82vw, 1280px)'}
       title={
         <div className="flex items-center gap-2">
           <button
@@ -37,7 +37,7 @@ export function TaskDetailDrawer({ taskId, open, onClose }: TaskDetailDrawerProp
         </div>
       }
     >
-      {taskId && <TaskDetailContent taskId={taskId} onClosed={onClose} wide={wide} />}
+      {taskId && <TaskDetailContent taskId={taskId} onClosed={onClose} fill />}
     </Drawer>
   )
 }

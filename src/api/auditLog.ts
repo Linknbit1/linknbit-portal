@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase'
-import type { Tables } from '../types/database'
+import type { Tables, Json } from '../types/database'
 import type { AuditLogFilters } from '../types'
 
 export type AuditLogRow = Tables<'audit_log'>
@@ -37,4 +37,26 @@ export async function fetchAuditDangerCount(): Promise<number> {
     .gte('created_at', since)
   if (error) throw error
   return count ?? 0
+}
+
+export interface TaskActivityRow {
+  id: string
+  created_at: string
+  actor_id: string | null
+  actor_name: string | null
+  action: string
+  changed_fields: string[]
+  old_values: Json | null
+  new_values: Json | null
+}
+
+/**
+ * Activity for one task. Goes through fn_task_activity rather than reading
+ * audit_log directly: that table is admin-only, while this feed should be
+ * visible to anyone who can open the task.
+ */
+export async function fetchTaskActivity(taskId: string): Promise<TaskActivityRow[]> {
+  const { data, error } = await supabase.rpc('fn_task_activity', { p_task_id: taskId })
+  if (error) throw error
+  return data ?? []
 }
