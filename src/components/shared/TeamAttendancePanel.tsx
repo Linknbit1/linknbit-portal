@@ -211,7 +211,6 @@ export function TeamRoster({ memberIds }: TeamScope = {}) {
             <Row key={r.id} name={r.profiles?.name ?? '—'} avatar={r.profiles?.avatar_url ?? null} personId={r.profile_id}
               status={<Pill status={r.status} map={ATTENDANCE_STATUS} />}>
               <span>In: <span className="text-text-1">{fmtTime(r.check_in)}</span></span>
-              <span>Out: <span className="text-text-1">{fmtTime(r.check_out)}</span></span>
             </Row>
           ))}
         </div>

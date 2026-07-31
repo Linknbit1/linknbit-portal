@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Zap, Flame, Target, ArrowUp, ArrowDown, Minus, Trophy, Home, X, Clock, CheckCircle2, XCircle, LogIn, LogOut, CalendarCheck, Fingerprint } from 'lucide-react'
+import { Zap, Flame, Target, ArrowUp, ArrowDown, Minus, Trophy, Home, X, Clock, CheckCircle2, XCircle, LogIn, CalendarCheck, Fingerprint } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Card } from '../../components/ui/Card'
 import { Avatar } from '../../components/ui/Avatar'
@@ -13,7 +13,7 @@ import { PriorityChip } from '../../components/shared/PriorityChip'
 import { XPBar } from '../../components/shared/XPBar'
 import { useToast } from '../../components/ui/toast-context'
 import { DatePicker } from '../../components/ui/DatePicker'
-import { useMyTodayAttendance, useCheckIn, useCheckOut } from '../../hooks/useAttendance'
+import { useMyTodayAttendance, useCheckIn } from '../../hooks/useAttendance'
 import { useCurrentDevice } from '../../hooks/useCurrentDevice'
 import { TASKS, LEADERBOARD, QUESTS, BADGES, WFH_REQUESTS } from '../../data/mock'
 import type { WFHRequest, WFHStatus } from '../../types'
@@ -32,7 +32,6 @@ function TodayAttendanceCard() {
   const toast = useToast()
   const { data: today, isLoading } = useMyTodayAttendance()
   const checkInMut = useCheckIn()
-  const checkOutMut = useCheckOut()
 
   const { fingerprint: deviceFingerprint, fingerprintHint, deviceName, ready: deviceReady, canCheckIn } = useCurrentDevice()
 
@@ -56,22 +55,11 @@ function TodayAttendanceCard() {
     }
   }
 
-  const handleCheckOut = async () => {
-    if (!today?.id) return
-    try {
-      await checkOutMut.mutateAsync(today.id)
-      toast('Checked out — great work today!', 'success')
-    } catch {
-      toast('Check-out failed', 'error')
-    }
-  }
-
   if (isLoading) {
     return <div className="h-16 bg-surface-2 rounded-xl animate-pulse" />
   }
 
-  const isCheckedIn  = !!today
-  const isCheckedOut = isCheckedIn && !!today.check_out
+  const isCheckedIn = !!today
 
   const statusCfg = today
     ? today.status === 'present'
@@ -94,11 +82,6 @@ function TodayAttendanceCard() {
           {isCheckedIn && (
             <span className="flex items-center gap-1 font-mono text-[11px] text-text-4">
               <LogIn size={10} className="text-success" /> {formatTime(today.check_in)}
-            </span>
-          )}
-          {isCheckedOut && (
-            <span className="flex items-center gap-1 font-mono text-[11px] text-text-4">
-              <LogOut size={10} className="text-error" /> {formatTime(today.check_out)}
             </span>
           )}
           {!isCheckedIn && (
@@ -128,16 +111,6 @@ function TodayAttendanceCard() {
               {checkInMut.isPending ? 'Checking in…' : 'Check In'}
             </Button>
           )
-        ) : !isCheckedOut ? (
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={handleCheckOut}
-            disabled={checkOutMut.isPending}
-          >
-            <LogOut size={13} />
-            {checkOutMut.isPending ? '…' : 'Check Out'}
-          </Button>
         ) : null}
         <Link to="/employee/attendance" className="font-mono text-[11px] text-brand-red hover:text-brand-red-hover transition-colors whitespace-nowrap">
           View history →
