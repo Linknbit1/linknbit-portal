@@ -89,8 +89,8 @@ export function useGamificationParticipants() {
 
 // ── Quest board ──────────────────────────────────────────────────────────────────
 
-export function useOpenQuestTasks() {
-  return useQuery({ queryKey: GAMIFICATION_KEYS.questTasksOpen(), queryFn: fetchOpenQuestTasks, staleTime: 30_000 })
+export function useOpenQuestTasks(enabled = true) {
+  return useQuery({ queryKey: GAMIFICATION_KEYS.questTasksOpen(), queryFn: fetchOpenQuestTasks, staleTime: 30_000, enabled })
 }
 
 export function useAllQuestTasks() {
