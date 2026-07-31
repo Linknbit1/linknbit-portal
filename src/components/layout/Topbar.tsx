@@ -4,22 +4,13 @@ import { Bell, Search, Check, CheckCheck, ChevronDown, UserCircle, LogOut, Chevr
 import { cn } from '../../lib/cn'
 import { showWipFeatures } from '../../lib/featureFlags'
 import { Avatar } from '../ui/Avatar'
-import { RoleBadge } from '../shared/RoleBadge'
+import { ProfileRoles } from '../shared/ProfileRoles'
 import { useAuthContext } from '../../context/AuthContext'
 import { useNavChrome } from './MobileNavContext'
 import { useNotifications, useMarkRead, useMarkAllRead } from '../../hooks/useNotifications'
 import { notificationHref } from '../../constants/notifications'
 import { formatRelativeTime } from '../../lib/utils'
-import type { UserRole } from '../../types'
-
-const VALID_ROLES = new Set<string>([
-  'super_admin', 'admin', 'project_manager', 'team_lead',
-  'employee', 'hr', 'finance', 'client_owner', 'client_member',
-])
-
-function isUserRole(role: string): role is UserRole {
-  return VALID_ROLES.has(role)
-}
+import { isUserRole } from '../../lib/peopleAccess'
 
 interface TopbarProps {
   title?: string
@@ -237,7 +228,13 @@ export function Topbar({ title, breadcrumb, className, back, actions }: TopbarPr
                 <span className="font-ui font-semibold text-[12.5px] text-text-1 whitespace-nowrap">
                   {profile.name}
                 </span>
-                <RoleBadge role={profile.role} size="sm" className="border-0 bg-transparent p-0 text-text-3" />
+                {/* Inline text, not badges — the trigger has to stay one line wide. */}
+                <ProfileRoles
+                  profileId={profile.id}
+                  fallbackRole={profile.role}
+                  variant="text"
+                  className="font-ui text-[11px] text-text-3 whitespace-nowrap"
+                />
               </div>
               <ChevronDown size={14} className="text-text-3 ml-0.5 hidden sm:block" />
             </button>
@@ -250,6 +247,7 @@ export function Topbar({ title, breadcrumb, className, back, actions }: TopbarPr
                 <div className="px-4 py-2.5 border-b border-border-subtle">
                   <p className="font-ui font-semibold text-[12.5px] text-text-1 truncate">{profile.name}</p>
                   <p className="font-mono text-[10.5px] text-text-4 truncate">{profile.email}</p>
+                  <ProfileRoles profileId={profile.id} fallbackRole={profile.role} className="mt-1.5" />
                 </div>
                 <button
                   role="menuitem"

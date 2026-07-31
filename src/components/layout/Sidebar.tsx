@@ -84,6 +84,13 @@ function NavRow({ item, pathname, activePath }: { item: NavItem; pathname: strin
           <item.icon size={16} className={cn('shrink-0', inSection ? 'text-brand-red' : 'text-text-3')} />
           <span className="truncate">{item.label}</span>
         </NavLink>
+        {/* Section total — shown whether collapsed or expanded, alongside the
+            per-child breakdown. */}
+        {item.badge && item.badge > 0 && (
+          <span className="bg-brand-red text-white font-ui font-bold text-[10px] px-1.5 py-px rounded-full leading-tight shrink-0">
+            {item.badge}
+          </span>
+        )}
         <button
           onClick={() => setOpen((v) => !v)}
           aria-label={open ? `Collapse ${item.label}` : `Expand ${item.label}`}
@@ -103,11 +110,16 @@ function NavRow({ item, pathname, activePath }: { item: NavItem; pathname: strin
                 key={child.to}
                 to={child.to}
                 className={cn(
-                  'px-2.5 py-1.5 rounded-sm font-ui text-[12.5px] transition-colors',
+                  'flex items-center gap-2 px-2.5 py-1.5 rounded-sm font-ui text-[12.5px] transition-colors',
                   active ? 'text-white bg-brand-red/13 font-medium' : 'text-text-3 hover:text-text-1 hover:bg-surface-2',
                 )}
               >
-                {child.label}
+                <span className="truncate">{child.label}</span>
+                {child.badge && child.badge > 0 && (
+                  <span className="ml-auto bg-brand-red text-white font-ui font-bold text-[10px] px-1.5 py-px rounded-full leading-tight shrink-0">
+                    {child.badge}
+                  </span>
+                )}
               </NavLink>
             )
           })}

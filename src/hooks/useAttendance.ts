@@ -7,10 +7,8 @@ import {
   fetchMonthlyAttendance,
   fetchHalfDayLeaveDates,
   checkIn,
-  checkOut,
   markAttendance,
   updateAttendanceRecord,
-  adminCheckOut,
   fetchAttendanceSettings,
   updateAttendanceSettings,
   fetchAttendanceExceptions,
@@ -166,33 +164,12 @@ export function useCheckIn() {
   })
 }
 
-export function useCheckOut() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: checkOut,
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ATTENDANCE_KEYS.myToday })
-      qc.invalidateQueries({ queryKey: ATTENDANCE_KEYS.myHistory })
-    },
-  })
-}
-
 export function useMarkAttendance() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (payload: MarkAttendancePayload) => markAttendance(payload),
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: ATTENDANCE_KEYS.allByDate(variables.date) })
-    },
-  })
-}
-
-export function useAdminCheckOut() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: ({ id }: { id: string; date: string }) => adminCheckOut(id),
-    onSuccess: (data) => {
-      qc.invalidateQueries({ queryKey: ATTENDANCE_KEYS.allByDate(data.date) })
     },
   })
 }
@@ -233,10 +210,11 @@ export function useAttendanceExceptions(filters: FetchExceptionsFilters = {}) {
   })
 }
 
-export function useAllAttendanceExceptions(filters: FetchExceptionsFilters = {}) {
+export function useAllAttendanceExceptions(filters: FetchExceptionsFilters = {}, enabled = true) {
   return useQuery({
     queryKey: ATTENDANCE_KEYS.allExceptions(filters),
     queryFn: () => fetchAllAttendanceExceptions(filters),
+    enabled,
   })
 }
 
@@ -446,10 +424,11 @@ export function useMyOvertimeRequests() {
   })
 }
 
-export function useAllOvertimeRequests(status?: string) {
+export function useAllOvertimeRequests(status?: string, enabled = true) {
   return useQuery({
     queryKey: ATTENDANCE_KEYS.allOvertime(status),
     queryFn: () => fetchAllOvertimeRequests(status),
+    enabled,
   })
 }
 
@@ -525,10 +504,11 @@ export function useMyWfhRequests() {
   })
 }
 
-export function useAllWfhRequests(status?: string) {
+export function useAllWfhRequests(status?: string, enabled = true) {
   return useQuery({
     queryKey: ATTENDANCE_KEYS.allWfh(status),
     queryFn: () => fetchAllWfhRequests(status),
+    enabled,
   })
 }
 
@@ -641,10 +621,11 @@ export function useMyLeaveRequests() {
   })
 }
 
-export function useAllLeaveRequests(status?: string) {
+export function useAllLeaveRequests(status?: string, enabled = true) {
   return useQuery({
     queryKey: ATTENDANCE_KEYS.allLeave(status),
     queryFn: () => fetchAllLeaveRequests(status),
+    enabled,
   })
 }
 

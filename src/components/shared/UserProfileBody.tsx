@@ -1,11 +1,10 @@
 import { Link } from 'react-router-dom'
 import { Mail, Phone, BadgeCheck, Briefcase, Users as UsersIcon, CalendarDays, type LucideIcon } from 'lucide-react'
 import { Avatar } from '../ui/Avatar'
-import { RoleBadge } from './RoleBadge'
+import { ProfileRoles } from './ProfileRoles'
 import { StartDMButton } from '../chat/StartDMButton'
 import { usePerson, usePersonTeams } from '../../hooks/usePeople'
 import { useDesignations } from '../../hooks/useDesignations'
-import { toUserRole } from '../../lib/peopleAccess'
 import { cn } from '../../lib/cn'
 
 interface UserProfileBodyProps {
@@ -58,11 +57,7 @@ export function UserProfileBody({
         )}
       </div>
 
-      {person && (
-        <div className="mt-1.5">
-          <RoleBadge role={toUserRole(person.role)} size="sm" />
-        </div>
-      )}
+      {person && <ProfileRoles profileId={person.id} fallbackRole={person.role} className="mt-1.5" />}
 
       {person?.job_title && (
         <p className="mt-2 flex items-center gap-1.5 font-ui text-[12.5px] text-text-2">

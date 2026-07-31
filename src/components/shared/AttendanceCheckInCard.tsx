@@ -1,17 +1,17 @@
 import { useState, useEffect, type ReactNode } from 'react'
 import {
-  MapPin, CheckCircle2, LogOut, Wifi, WifiOff,
+  MapPin, CheckCircle2, Wifi, WifiOff,
   AlertCircle, Fingerprint, Palmtree, Calendar,
   Home, Plane, XCircle, Clock, ShieldX,
 } from 'lucide-react'
 import {
   useMyTodayAttendance,
   useCheckIn,
-  useCheckOut,
   useAttendanceSettings,
   useHolidays,
   useWorkingSaturdays,
 } from '../../hooks/useAttendance'
+import { useMyTerminalGate } from '../../hooks/useBiometric'
 import { useCurrentDevice } from '../../hooks/useCurrentDevice'
 import { useRegisterDevice } from '../../hooks/useEnrolledDevices'
 import { useAuthContext } from '../../context/AuthContext'
@@ -29,13 +29,6 @@ function fmtIso(iso: string): string {
   return new Date(iso).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
 }
 
-function sessionDuration(checkIn: string, checkOut: string): string {
-  const diff = new Date(checkOut).getTime() - new Date(checkIn).getTime()
-  const h = Math.floor(diff / 3_600_000)
-  const m = Math.floor((diff % 3_600_000) / 60_000)
-  return `${h}h ${m}m`
-}
-
 function ErrorBanner({ msg }: { msg: string }) {
   return (
     <div className="w-full flex items-start gap-2.5 bg-error/8 border border-error/25 rounded-md px-3.5 py-2.5">
@@ -45,12 +38,13 @@ function ErrorBanner({ msg }: { msg: string }) {
   )
 }
 
-type DeviceNoticeTone = 'info' | 'pending' | 'blocked'
+type DeviceNoticeTone = 'info' | 'pending' | 'blocked' | 'terminal'
 
 const DEVICE_NOTICE_TONE: Record<DeviceNoticeTone, { ring: string; fg: string }> = {
-  info:    { ring: 'bg-brand-red/10 border-brand-red/30', fg: 'text-brand-red' },
-  pending: { ring: 'bg-warning/10 border-warning/30',     fg: 'text-warning' },
-  blocked: { ring: 'bg-error/10 border-error/30',         fg: 'text-error' },
+  info:     { ring: 'bg-brand-red/10 border-brand-red/30',   fg: 'text-brand-red' },
+  pending:  { ring: 'bg-warning/10 border-warning/30',       fg: 'text-warning' },
+  blocked:  { ring: 'bg-error/10 border-error/30',           fg: 'text-error' },
+  terminal: { ring: 'bg-service-dev/10 border-service-dev/30', fg: 'text-service-dev' },
 }
 
 function DeviceNotice({
@@ -117,8 +111,8 @@ export function AttendanceCheckInCard() {
   const { data: settings }         = useAttendanceSettings()
   const { data: holidays = [] }    = useHolidays(year)
   const { data: workingSats = [] } = useWorkingSaturdays(year)
+  const { data: terminalGate }     = useMyTerminalGate()
   const checkInMut  = useCheckIn()
-  const checkOutMut = useCheckOut()
   const registerMut = useRegisterDevice()
 
   const { fingerprint, fingerprintHint, deviceName: deviceNameVal, ready: deviceReady, status: deviceStatus, canCheckIn } =
@@ -165,7 +159,8 @@ export function AttendanceCheckInCard() {
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? ''
       const msg  = err instanceof Error ? err.message : 'Check-in failed'
-      if      (code === 'outside_window')      setErrorMsg(msg)
+      if      (code === 'use_terminal')        setErrorMsg(msg || 'Please check in at the biometric terminal.')
+      else if (code === 'outside_window')      setErrorMsg(msg)
       else if (code === 'wrong_network')       setErrorMsg('You must be on the office WiFi to check in.')
       else if (code === 'duplicate')           setErrorMsg('You have already checked in today.')
       else if (code === 'on_leave')            setErrorMsg('You are on approved leave today.')
@@ -192,21 +187,6 @@ export function AttendanceCheckInCard() {
       const msg  = err instanceof Error ? err.message : 'Registration failed'
       if (code === 'device_blocked') setErrorMsg('This device has been blocked. Contact your admin to use it.')
       else                           setErrorMsg(msg || 'Registration failed. Please try again.')
-    }
-  }
-
-  const handleCheckOut = async () => {
-    if (!today?.id) return
-    setErrorMsg(null)
-    try {
-      await checkOutMut.mutateAsync(today.id)
-      toast('Checked out — see you tomorrow!', 'success')
-    } catch (err: unknown) {
-      const code = (err as { code?: string }).code ?? ''
-      const msg  = err instanceof Error ? err.message : 'Check-out failed'
-      if      (code === 'early_checkout')     setErrorMsg(msg || 'Cannot check out before work ends.')
-      else if (code === 'duplicate_checkout') setErrorMsg('Already checked out today.')
-      else toast('Check-out failed. Please try again.', 'error')
     }
   }
 
@@ -295,46 +275,29 @@ export function AttendanceCheckInCard() {
       })()}
 
       {/* ── Checked in (real self/admin check-in with a timestamp) ── */}
+      {/* Check-out is no longer a user action — the day-end cron records the end
+          of day. Once checked in, the card just confirms the arrival. */}
       {!todayHoliday && !isDayOff && today && today.check_in && (() => {
-        const checkedOut = Boolean(today.check_out)
-        const isLate     = today.status === 'late'
+        const isLate = today.status === 'late'
         return (
           <>
             {errorMsg && <ErrorBanner msg={errorMsg} />}
 
             <div className={cn(
               'size-24 rounded-full border-2 flex items-center justify-center',
-              checkedOut ? 'bg-text-4/10 border-text-4/20'
-                : isLate ? 'bg-warning/15 border-warning/40'
-                : 'bg-success/15 border-success/40',
+              isLate ? 'bg-warning/15 border-warning/40' : 'bg-success/15 border-success/40',
             )}>
-              <CheckCircle2 size={40} className={checkedOut ? 'text-text-4' : isLate ? 'text-warning' : 'text-success'} />
+              <CheckCircle2 size={40} className={isLate ? 'text-warning' : 'text-success'} />
             </div>
 
             <div className="text-center">
-              <p className={cn('font-display font-bold text-[18px]',
-                checkedOut ? 'text-text-2' : isLate ? 'text-warning' : 'text-success',
-              )}>
-                {checkedOut ? 'Day Complete' : isLate ? 'Checked In (Late)' : 'Checked In'}
+              <p className={cn('font-display font-bold text-[18px]', isLate ? 'text-warning' : 'text-success')}>
+                {isLate ? 'Checked In (Late)' : 'Checked In'}
               </p>
               <p className="font-mono text-[13px] text-text-3 mt-0.5">
                 {today.check_in && fmtIso(today.check_in)}
-                {checkedOut && today.check_out && (
-                  <> → {fmtIso(today.check_out)}
-                    <span className="text-text-4 ml-1.5">
-                      · {sessionDuration(today.check_in!, today.check_out)}
-                    </span>
-                  </>
-                )}
               </p>
             </div>
-
-            {!checkedOut && (
-              <Button variant="secondary" size="sm" onClick={handleCheckOut} disabled={checkOutMut.isPending}>
-                <LogOut size={14} />
-                {checkOutMut.isPending ? 'Checking out…' : 'Check Out'}
-              </Button>
-            )}
 
             <div className="flex items-center gap-5 text-[11.5px] font-mono text-text-4">
               {today.wifi_validated
@@ -356,8 +319,23 @@ export function AttendanceCheckInCard() {
           )}
           {errorMsg && <ErrorBanner msg={errorMsg} />}
 
-          {/* Device gating — only admins and approved devices reach the check-in button. */}
-          {deviceReady && !canCheckIn && deviceStatus === 'unregistered' ? (
+          {/* Terminal routing takes precedence over device gating: when you punch a
+              finger, whether this browser is an approved device is irrelevant. The
+              server decides this (get_my_terminal_gate) using the same rule
+              attendance-checkin enforces, and it flips back to the button on its own
+              once the relay stops reporting. */}
+          {terminalGate?.must_use_terminal ? (
+            <DeviceNotice
+              tone="terminal"
+              icon={Fingerprint}
+              title="Check in at the terminal"
+              body={
+                terminalGate.terminal_location
+                  ? `Place your finger on the terminal at ${terminalGate.terminal_location}. Your check-in appears here within a few seconds.`
+                  : 'Place your finger on the biometric terminal. Your check-in appears here within a few seconds.'
+              }
+            />
+          ) : deviceReady && !canCheckIn && deviceStatus === 'unregistered' ? (
             <DeviceNotice
               tone="info"
               icon={Fingerprint}

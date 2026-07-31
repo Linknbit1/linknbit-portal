@@ -14,23 +14,57 @@ const ROLE_CONFIG: Record<UserRole, string> = {
   client_member: 'text-role-client-member bg-surface-2 border border-border-default',
 }
 
+const BADGE_BASE =
+  'inline-flex w-fit items-center font-mono font-semibold rounded-full uppercase tracking-wider whitespace-nowrap'
+
+const sizeClass = (size: 'sm' | 'md') =>
+  size === 'sm' ? 'text-[10px] px-2 py-0.5' : 'text-caption px-2.5 py-1'
+
 interface RoleBadgeProps {
   role: UserRole
   size?: 'sm' | 'md'
   className?: string
 }
 
+/** Badge for one of the nine built-in roles, tinted from its design token. */
 export function RoleBadge({ role, size = 'sm', className }: RoleBadgeProps) {
+  return (
+    <span className={cn(BADGE_BASE, sizeClass(size), ROLE_CONFIG[role], className)}>
+      {ROLE_LABELS[role]}
+    </span>
+  )
+}
+
+interface CustomRoleBadgeProps {
+  name: string
+  color: string | null
+  size?: 'sm' | 'md'
+  className?: string
+}
+
+/**
+ * Badge for a role defined in the database rather than one of the built-ins.
+ *
+ * Its colour is chosen by whoever created the role, so the tint is mixed inline —
+ * Tailwind cannot express a value that only exists at runtime. Roles saved
+ * without a colour fall back to the neutral token treatment.
+ */
+export function CustomRoleBadge({ name, color, size = 'sm', className }: CustomRoleBadgeProps) {
   return (
     <span
       className={cn(
-        'inline-flex w-fit items-center font-mono font-semibold rounded-full uppercase tracking-wider whitespace-nowrap',
-        size === 'sm' ? 'text-[10px] px-2 py-0.5' : 'text-caption px-2.5 py-1',
-        ROLE_CONFIG[role],
+        BADGE_BASE,
+        sizeClass(size),
+        color ? 'border' : 'text-text-2 bg-surface-2 border border-border-default',
         className,
       )}
+      style={color ? {
+        color,
+        backgroundColor: `color-mix(in srgb, ${color} 12%, transparent)`,
+        borderColor: `color-mix(in srgb, ${color} 32%, transparent)`,
+      } : undefined}
     >
-      {ROLE_LABELS[role]}
+      {name}
     </span>
   )
 }

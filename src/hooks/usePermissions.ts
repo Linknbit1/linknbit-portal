@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   ADMINISTRATOR,
@@ -13,6 +14,7 @@ import {
   setRolePermission,
   updateRole,
   type CreateRoleInput,
+  type RoleRow,
   type UpdateRoleInput,
 } from '../api/permissions'
 import { useAuthContext } from '../context/AuthContext'
@@ -80,6 +82,35 @@ export function useProfileRoles() {
     enabled: !!accessToken,
     staleTime: 5 * 60 * 1000,
   })
+}
+
+/**
+ * Every role each profile holds, ranked most authority first.
+ *
+ * A person can hold several roles, but `profiles.role` only ever carries the
+ * highest-ranked *system* one — so anything custom is invisible to callers that
+ * read that column. This joins the two cached catalogues instead.
+ *
+ * RLS already strips assignments of hidden roles from the response, so whatever
+ * arrives here is safe to render.
+ */
+export function useRolesByProfile(): Map<string, RoleRow[]> {
+  const { data: roles = [] } = useRoles()
+  const { data: assignments = [] } = useProfileRoles()
+
+  return useMemo(() => {
+    const byId = new Map(roles.map((r) => [r.id, r]))
+    const held = new Map<string, RoleRow[]>()
+    for (const a of assignments) {
+      const role = byId.get(a.role_id)
+      if (!role) continue
+      const list = held.get(a.profile_id)
+      if (list) list.push(role)
+      else held.set(a.profile_id, [role])
+    }
+    for (const list of held.values()) list.sort((a, b) => b.position - a.position)
+    return held
+  }, [roles, assignments])
 }
 
 /**

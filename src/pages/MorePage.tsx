@@ -4,11 +4,10 @@ import { Topbar } from '../components/layout/Topbar'
 import { HubRow } from '../components/layout/MobileHub'
 import { InstallAppButton } from '../components/pwa/InstallAppButton'
 import { Avatar } from '../components/ui/Avatar'
-import { RoleBadge } from '../components/shared/RoleBadge'
+import { ProfileRoles } from '../components/shared/ProfileRoles'
 import { useMoreNavGroups } from '../components/layout/navItems'
 import { useAuthContext } from '../context/AuthContext'
 import { useIsDesktop } from '../hooks/useMediaQuery'
-import type { UserRole } from '../types'
 
 // The mobile "More" tab: secondary destinations + profile + log out. Desktop has
 // the sidebar for all of this, so it never renders here.
@@ -39,7 +38,7 @@ export default function MorePage() {
             <Avatar name={profile.name} src={profile.avatar_url ?? undefined} size="lg" />
             <span className="flex-1 min-w-0">
               <span className="block font-display font-bold text-[15px] text-text-1 truncate">{profile.name}</span>
-              <span className="mt-0.5 block"><RoleBadge role={profile.role as UserRole} size="sm" /></span>
+              <ProfileRoles profileId={profile.id} fallbackRole={profile.role} className="mt-0.5" />
             </span>
             <UserCircle size={18} className="text-text-4 shrink-0" />
           </button>

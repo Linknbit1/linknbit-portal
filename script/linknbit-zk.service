@@ -1,0 +1,32 @@
+[Unit]
+Description=Linknbit ZKTeco attendance bridge
+Documentation=https://github.com/linknbit/portal/blob/main/script/README.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=zkbridge
+Group=zkbridge
+WorkingDirectory=/opt/linknbit-zk
+EnvironmentFile=/etc/linknbit-zk.env
+ExecStart=/opt/linknbit-zk/venv/bin/python /opt/linknbit-zk/zk_bridge.py
+
+Restart=always
+RestartSec=10
+
+# The bridge holds a secret that can write attendance for any member, so it runs
+# with no more access than it needs.
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/linknbit-zk
+
+# Journald only; the SD card should not accumulate an unbounded log file.
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=linknbit-zk
+
+[Install]
+WantedBy=multi-user.target

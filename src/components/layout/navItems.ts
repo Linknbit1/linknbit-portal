@@ -14,6 +14,7 @@ import {
   CalendarCheck,
   ShieldAlert,
   Crown,
+  StickyNote,
   type LucideIcon,
 } from 'lucide-react'
 import { showWipFeatures } from '../../lib/featureFlags'
@@ -23,6 +24,14 @@ import { ADMINISTRATOR } from '../../api/permissions'
 import { useAuditDangerCount } from '../../hooks/useAuditLog'
 import { useChatUnreadTotal } from '../../hooks/useChatUnreadCount'
 import { useTeams } from '../../hooks/useTeams'
+import {
+  useAllLeaveRequests,
+  useAllWfhRequests,
+  useAllAttendanceExceptions,
+  useAllOvertimeRequests,
+} from '../../hooks/useAttendance'
+import { useEnrolledDevices } from '../../hooks/useEnrolledDevices'
+import { useClaimableQuestCount } from '../../hooks/useGamification'
 import { useAuthContext } from '../../context/AuthContext'
 
 /**
@@ -81,6 +90,7 @@ const ATTENDANCE_CHILDREN: NavItem[] = [
   { label: 'Overtime',         icon: CalendarCheck, to: '/attendance/overtime',   feature: 'can_manage_attendance' },
   { label: 'Schedule',         icon: CalendarCheck, to: '/attendance/schedule',   feature: 'can_manage_attendance' },
   { label: 'Enrolled Devices', icon: CalendarCheck, to: '/attendance/devices',    feature: 'can_manage_attendance' },
+  { label: 'Terminals',        icon: CalendarCheck, to: '/attendance/terminals',  feature: 'can_manage_attendance' },
   { label: 'Reports',          icon: CalendarCheck, to: '/attendance/reports',    feature: 'can_manage_attendance' },
   { label: 'Settings',         icon: CalendarCheck, to: '/attendance/settings',   feature: 'can_manage_attendance' },
 ]
@@ -121,6 +131,9 @@ export const NAV_ITEMS: NavItem[] = [
   // A daily personal ritual for employees; reviewers reach the team board through
   // its own sub-page, so it belongs here rather than under People.
   { label: 'Standup', icon: ClipboardList, to: '/standup', group: 'workspace', matchPrefix: '/standup', roles: STANDUP_ROLES, children: STANDUP_CHILDREN },
+  // A private pin-board. Gated on a capability rather than a role so it can be
+  // handed to anyone from Settings; the notes themselves are owner-only in RLS.
+  { label: 'My Notes', icon: StickyNote, to: '/notes', group: 'workspace', feature: 'can_use_sticky_notes' },
   // Personal for most roles (My Devices, Notifications); the admin-only sections
   // filter themselves in-page. Grouping it under Admin would put an "Admin"
   // heading in front of all seven roles and mean nothing.
@@ -177,6 +190,18 @@ export function filterNavItems(role: string | null | undefined, can: CanFn): Nav
   })
 }
 
+/** Applies a badge to one child (by path) when the count is > 0. */
+function withChildBadges(item: NavItem, byPath: Record<string, number>): NavItem {
+  if (!item.children) return item
+  return {
+    ...item,
+    children: item.children.map((child) => {
+      const n = byPath[child.to] ?? 0
+      return n > 0 ? { ...child, badge: n } : child
+    }),
+  }
+}
+
 /** Nav items visible to the signed-in user, capability-filtered. */
 export function useNavItems(): NavItem[] {
   const { profile } = useAuthContext()
@@ -194,13 +219,46 @@ export function useNavItems(): NavItem[] {
     return permissions.includes(ADMINISTRATOR) || permissions.includes(feature)
   }
 
-  // Surface live counts: flagged actions on Audit Log, unread messages on Chat.
+  // ── Live pending counts for sidebar badges ──────────────────────────────────
+  // Each query is gated so it only fires for users who can act on it — the
+  // sidebar is always mounted, so firing these for every employee would be waste.
+  const canManageAttendance = can('can_manage_attendance')
+  const { data: leavePending = [] } = useAllLeaveRequests('pending', canManageAttendance)
+  const { data: wfhPending = [] } = useAllWfhRequests('pending', canManageAttendance)
+  const { data: excPending = [] } = useAllAttendanceExceptions({ status: 'pending' }, canManageAttendance)
+  const { data: otPending = [] } = useAllOvertimeRequests('pending', canManageAttendance)
+  const { data: devices = [] } = useEnrolledDevices(canManageAttendance)
+  // Claimable = open, not past deadline, slots remaining (quest status is never
+  // auto-closed, so a plain open-count would include expired/full quests).
+  // Claimable by everyone internal, so the badge shows for all.
+  const { data: questCount = 0 } = useClaimableQuestCount(!!profile)
+
+  const devicesPending = devices.filter((d) => !d.approved_by && d.is_active).length
+  const attendanceByPath: Record<string, number> = {
+    '/attendance/leave': leavePending.length,
+    '/attendance/wfh': wfhPending.length,
+    '/attendance/exceptions': excPending.length,
+    '/attendance/overtime': otPending.length,
+    '/attendance/devices': devicesPending,
+  }
+  const attendanceTotal = Object.values(attendanceByPath).reduce((a, n) => a + n, 0)
+  const gamificationByPath: Record<string, number> = { '/gamification/board': questCount }
+
+  // Surface live counts on the relevant items (parent shows the section total).
   return filterNavItems(role, can).flatMap((item) => {
     if (item.label === 'My Team') {
       return myTeamId ? [{ ...item, to: `/teams/${myTeamId}` }] : []
     }
     if (item.to === '/admin/audit' && dangerCount) return [{ ...item, badge: dangerCount }]
     if (item.to === '/chat' && chatUnread) return [{ ...item, badge: chatUnread }]
+    if (item.matchPrefix === '/attendance') {
+      const withChildren = withChildBadges(item, attendanceByPath)
+      return [attendanceTotal > 0 ? { ...withChildren, badge: attendanceTotal } : withChildren]
+    }
+    if (item.matchPrefix === '/gamification') {
+      const withChildren = withChildBadges(item, gamificationByPath)
+      return [questCount > 0 ? { ...withChildren, badge: questCount } : withChildren]
+    }
     return [item]
   })
 }

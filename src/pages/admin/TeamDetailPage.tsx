@@ -5,7 +5,7 @@ import { Topbar } from '../../components/layout/Topbar'
 import { Avatar } from '../../components/ui/Avatar'
 import { Skeleton } from '../../components/ui/Skeleton'
 import { PersonLink } from '../../components/shared/PersonLink'
-import { RoleBadge } from '../../components/shared/RoleBadge'
+import { ProfileRoles } from '../../components/shared/ProfileRoles'
 import { ServiceChip } from '../../components/shared/ServiceChip'
 import { TeamAttendancePanel } from '../../components/shared/TeamAttendancePanel'
 import { TeamTemplatesTab } from './TeamTemplatesTab'
@@ -14,7 +14,6 @@ import { useTeamMembers } from '../../hooks/useTeamMembers'
 import { usePeople } from '../../hooks/usePeople'
 import { useAuthContext } from '../../context/AuthContext'
 import { useCanAccess } from '../../hooks/useRoleFlags'
-import { toUserRole } from '../../lib/peopleAccess'
 import { cn } from '../../lib/cn'
 
 type Tab = 'overview' | 'attendance' | 'templates'
@@ -158,7 +157,7 @@ export default function TeamDetailPage() {
                         <span className="font-mono text-[10px] text-coin-gold">Team lead</span>
                       )}
                     </div>
-                    <RoleBadge role={toUserRole(m.role)} />
+                    <ProfileRoles profileId={m.id} fallbackRole={m.role} />
                   </div>
                 ))}
               </div>

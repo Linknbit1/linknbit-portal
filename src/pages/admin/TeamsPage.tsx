@@ -9,7 +9,7 @@ import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Select } from '../../components/ui/Select'
 import { ServiceChip } from '../../components/shared/ServiceChip'
-import { RoleBadge } from '../../components/shared/RoleBadge'
+import { ProfileRoles } from '../../components/shared/ProfileRoles'
 import { useToast } from '../../components/ui/toast-context'
 import { useTeams, useCreateTeam, useUpdateTeam } from '../../hooks/useTeams'
 import { usePeople } from '../../hooks/usePeople'
@@ -18,7 +18,6 @@ import { useDesignations } from '../../hooks/useDesignations'
 import { useTeamMembers, useAddTeamMember, useRemoveTeamMember } from '../../hooks/useTeamMembers'
 import type { Team } from '../../api/teams'
 import type { Person } from '../../api/people'
-import type { UserRole } from '../../types'
 import { useCanManagePeople } from '../../hooks/useRoleFlags'
 import { ModalShell } from '../../components/ui/ModalShell'
 
@@ -309,7 +308,7 @@ export default function TeamsPage() {
                             {m.id === team.lead_id && <span className="font-mono text-[9px] font-semibold uppercase tracking-wider text-coin-gold">Lead</span>}
                           </div>
                           <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                            <RoleBadge role={m.role as UserRole} />
+                            <ProfileRoles profileId={m.id} fallbackRole={m.role} />
                             {m.designation_id && designationName.get(m.designation_id) && (
                               <span className="rounded-full bg-surface-inset border border-border-subtle px-2 py-0.5 font-ui text-[10px] text-text-2">{designationName.get(m.designation_id)}</span>
                             )}

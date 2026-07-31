@@ -8,7 +8,7 @@ import {
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { Topbar } from '../components/layout/Topbar'
 import { Avatar } from '../components/ui/Avatar'
-import { RoleBadge } from '../components/shared/RoleBadge'
+import { ProfileRoles } from '../components/shared/ProfileRoles'
 import { ServiceChip } from '../components/shared/ServiceChip'
 import { StatusChip } from '../components/shared/StatusChip'
 import { SalaryCard } from '../components/shared/SalaryCard'
@@ -29,7 +29,6 @@ import {
   useLeaderboard, useProfileDirectory, useXpTransactions, useMyBadgeAwards,
   useBadges, useMyClaims, useAllQuestTasks, useApprovedShoutouts, useMyLpHistory,
 } from '../hooks/useGamification'
-import { toUserRole } from '../lib/peopleAccess'
 import { formatRelativeTime } from '../lib/utils'
 import { cn } from '../lib/cn'
 import type { Person, PersonTeam, PersonProject } from '../api/people'
@@ -183,9 +182,17 @@ export default function MemberProfilePage() {
 
   const [tab, setTab] = useState<Tab>('overview')
 
-  // Admins can "log in as" any non-admin member to see exactly what they see.
+  // "Log in as" is rank-based: you may impersonate someone below you, never a
+  // peer or someone above. So a super admin can step into an admin's account,
+  // an admin cannot step into another admin's, and nobody can take a super
+  // admin's. Mirrors the check the edge function enforces server-side.
   const canImpersonate =
-    ADMIN_ROLES.includes(viewerRole) && !isSelf && !!person && !ADMIN_ROLES.includes(person.role) && person.is_active
+    !!person &&
+    !isSelf &&
+    person.is_active &&
+    (viewerRole === 'super_admin'
+      ? person.role !== 'super_admin'
+      : viewerRole === 'admin' && !ADMIN_ROLES.includes(person.role))
   const handleImpersonate = async () => {
     if (!person) return
     setImpersonatePending(true)
@@ -244,7 +251,7 @@ export default function MemberProfilePage() {
               <div className="min-w-0 pb-0.5">
                 <div className="flex flex-wrap items-center gap-2">
                   <h1 className="truncate font-display text-[22px] font-bold text-text-1">{person.name}</h1>
-                  <RoleBadge role={toUserRole(person.role)} size="sm" />
+                  <ProfileRoles profileId={person.id} fallbackRole={person.role} />
                   {!person.is_active && (
                     <span className="rounded-xs border border-border-subtle px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wide text-text-4">Inactive</span>
                   )}
@@ -337,15 +344,15 @@ function OverviewTab({ person, teams, projects, tasks, activeTasks, canSeeSalary
         <div className="flex flex-col gap-4">
           {person.bio
             ? <p className="whitespace-pre-line font-ui text-body-sm/relaxed text-text-2">{person.bio}</p>
-            : <Empty label="No bio yet." />}
+            : <Empty label="A bio would look great right here. Still nothing, though. Bold choice." />}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <p className="mb-1.5 font-mono text-[10px] uppercase tracking-wider text-text-4">Skills</p>
-              <ChipRow items={person.skills} emptyLabel="No skills listed." />
+              <ChipRow items={person.skills} emptyLabel="Nothing here, so the portal is going with “promising newbie, day one”. Add a few to fight back." />
             </div>
             <div>
               <p className="mb-1.5 font-mono text-[10px] uppercase tracking-wider text-text-4">Tech stacks</p>
-              <ChipRow items={person.tech_stacks} emptyLabel="No tech stacks listed." />
+              <ChipRow items={person.tech_stacks} emptyLabel="Figma, spreadsheets, a camera, a code editor — something goes here. Until then we assume caffeine." />
             </div>
           </div>
         </div>
@@ -378,7 +385,7 @@ function OverviewTab({ person, teams, projects, tasks, activeTasks, canSeeSalary
       </SectionCard>
 
       <SectionCard title="Tasks" icon={ListChecks} className="lg:col-span-2" action={<span className="font-mono text-[11px] text-text-4">{activeTasks.length} open · {taskList.length} total</span>}>
-        {taskList.length === 0 ? <Empty label="No tasks assigned." /> : (
+        {taskList.length === 0 ? <Empty label="Not a single task assigned. Enjoy this rare and fragile moment." /> : (
           <div className="-my-2 flex flex-col divide-y divide-border-subtle">
             {taskList.slice(0, 12).map((t) => (
               <Link key={t.id} to={`/admin/tasks/${t.id}`} className="group flex items-center gap-3 py-2.5">
@@ -471,7 +478,7 @@ function AttendanceTab({ personId, leave, wfh }: {
               <span className="font-mono text-[12px] font-semibold text-text-2">{rate}% present</span>
             </div>
           )}
-          {records.length === 0 ? <Empty label="No attendance recorded for this month." /> : (
+          {records.length === 0 ? <Empty label="This month's clock-ins are missing, presumed on holiday somewhere warm." /> : (
             <div className="-mx-5 -mb-5 divide-y divide-border-subtle border-t border-border-subtle">
               {records.map((r) => {
                 const meta = ATT_STATUS[r.status]
@@ -483,7 +490,7 @@ function AttendanceTab({ personId, leave, wfh }: {
                       {meta?.label ?? r.status}
                     </span>
                     <span className="ml-auto font-mono text-[11.5px] text-text-3">
-                      {fmtTime(r.check_in)} <span className="text-text-4">→</span> {fmtTime(r.check_out)}
+                      {fmtTime(r.check_in)}
                     </span>
                   </div>
                 )
@@ -500,7 +507,7 @@ function AttendanceTab({ personId, leave, wfh }: {
             </p>
             <p className="mt-1.5 font-ui text-[11.5px] text-text-3">Holiday days remaining this year</p>
           </div>
-          {balances.length === 0 ? <Empty label="No leave types configured." /> : (
+          {balances.length === 0 ? <Empty label="HR hasn't set up a single leave type. Unlimited holidays? Almost certainly not." /> : (
             <div className="flex flex-col gap-3.5">
               {balances.map((b) => {
                 const c = leaveColor(b.type.color)
@@ -526,7 +533,7 @@ function AttendanceTab({ personId, leave, wfh }: {
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         <SectionCard title="Leave requests" icon={Plane} action={<span className="font-mono text-[11px] text-text-4">{mf.label}</span>}>
-          {monthLeave.length === 0 ? <Empty label="No leave this month." /> : (
+          {monthLeave.length === 0 ? <Empty label="Not one day off this month. Even the office plants get a weekend." /> : (
             <div className="flex flex-col gap-2.5">
               {monthLeave.map((l) => (
                 <div key={l.id} className="flex items-start gap-2">
@@ -544,7 +551,7 @@ function AttendanceTab({ personId, leave, wfh }: {
         </SectionCard>
 
         <SectionCard title="WFH requests" icon={Home} action={<span className="font-mono text-[11px] text-text-4">{mf.label}</span>}>
-          {monthWfh.length === 0 ? <Empty label="No WFH this month." /> : (
+          {monthWfh.length === 0 ? <Empty label="Zero days worked from home this month. Office chair 1, sofa 0." /> : (
             <div className="flex flex-col gap-2.5">
               {monthWfh.map((w) => (
                 <div key={w.id} className="flex items-start gap-2">
@@ -562,7 +569,7 @@ function AttendanceTab({ personId, leave, wfh }: {
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         <SectionCard title="Exceptions" icon={AlertCircle} action={<span className="font-mono text-[11px] text-text-4">{mf.label}</span>}>
-          {monthExc.length === 0 ? <Empty label="No exceptions this month." /> : (
+          {monthExc.length === 0 ? <Empty label="A completely clean sheet this month. Suspiciously clean. We're impressed and slightly wary." /> : (
             <div className="flex flex-col gap-2.5">
               {monthExc.map((e) => {
                 const t = EXC_TYPE[e.exception_type]
@@ -587,7 +594,7 @@ function AttendanceTab({ personId, leave, wfh }: {
         </SectionCard>
 
         <SectionCard title="Overtime" icon={Hourglass} action={<span className="font-mono text-[11px] text-text-4">{mf.label}</span>}>
-          {monthOt.length === 0 ? <Empty label="No overtime this month." /> : (
+          {monthOt.length === 0 ? <Empty label="Not one extra minute clocked this month. Work-life balance, spotted in the wild." /> : (
             <div className="flex flex-col gap-2.5">
               {monthOt.map((o) => (
                 <div key={o.id} className="flex items-start gap-2">
@@ -635,7 +642,7 @@ function RecognitionTab({ personId }: { personId: string }) {
     <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
       {/* Monthly LP trend */}
       <SectionCard title="Monthly LP trend" icon={TrendingUp} className="lg:col-span-2" action={<span className="font-mono text-[11px] text-text-4">last {lpTrend.length || 12} mo</span>}>
-        {lpTrend.length === 0 ? <Empty label="No monthly history yet — it fills in as months close." /> : (
+        {lpTrend.length === 0 ? <Empty label="Nothing to plot yet. A month has to actually finish before this chart gets interesting." /> : (
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={lpTrend} barCategoryGap="28%">
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
@@ -650,7 +657,7 @@ function RecognitionTab({ personId }: { personId: string }) {
 
       {/* Awards / badges */}
       <SectionCard title="Awards" icon={Award} action={<span className="font-mono text-[11px] text-text-4">{badgeAwards.length}</span>}>
-        {badgeAwards.length === 0 ? <Empty label="No badges earned yet." /> : (
+        {badgeAwards.length === 0 ? <Empty label="The trophy shelf is empty, gleaming, and aggressively dust-free." /> : (
           <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
             {badgeAwards.map((a) => {
               const b = badgeById.get(a.badge_id)
@@ -670,7 +677,7 @@ function RecognitionTab({ personId }: { personId: string }) {
 
       {/* Quests */}
       <SectionCard title="Quests" icon={Target} action={<span className="font-mono text-[11px] text-text-4">{questsDone.length} done</span>}>
-        {claims.length === 0 ? <Empty label="No quests claimed yet." /> : (
+        {claims.length === 0 ? <Empty label="Not one quest claimed. The quest board just sits there, waiting, judging quietly." /> : (
           <div className="flex flex-col gap-2.5">
             {claims.slice(0, 10).map((c) => {
               const q = questById.get(c.task_id)
@@ -693,7 +700,7 @@ function RecognitionTab({ personId }: { personId: string }) {
 
       {/* Shoutouts */}
       <SectionCard title="Shoutouts" icon={Megaphone} className="lg:col-span-2" action={<span className="font-mono text-[11px] text-text-4">{received.length} received · {given.length} given</span>}>
-        {received.length === 0 && given.length === 0 ? <Empty label="No shoutouts yet." /> : (
+        {received.length === 0 && given.length === 0 ? <Empty label="Total silence in here. Not one shoutout. Somebody go be nice about it." /> : (
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <div>
               <p className="mb-2 font-mono text-[10px] uppercase tracking-wider text-text-4">Received</p>
@@ -731,7 +738,7 @@ function RecognitionTab({ personId }: { personId: string }) {
 
       {/* Points timeline */}
       <SectionCard title="Points timeline" icon={History} className="lg:col-span-2">
-        {xp.length === 0 ? <Empty label="No points activity yet." /> : (
+        {xp.length === 0 ? <Empty label="A ledger of pure, untouched potential. Zero, in other words." /> : (
           <div className="-my-1.5 flex flex-col divide-y divide-border-subtle">
             {xp.slice(0, 20).map((t) => (
               <div key={t.id} className="flex items-center gap-3 py-2">

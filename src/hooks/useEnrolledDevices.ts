@@ -15,10 +15,11 @@ export const DEVICE_KEYS = {
   mine: ['enrolled_devices', 'mine'] as const,
 }
 
-export function useEnrolledDevices() {
+export function useEnrolledDevices(enabled = true) {
   return useQuery({
     queryKey: DEVICE_KEYS.all,
     queryFn: fetchEnrolledDevices,
+    enabled,
   })
 }
 

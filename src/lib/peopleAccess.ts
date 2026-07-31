@@ -58,12 +58,27 @@ export const canSetPassword = (actor: string | null | undefined, targetRole: str
 export const canResendInvite = (actor: string | null | undefined, targetRole: string): boolean =>
   canManageTarget(actor, targetRole)
 
-/** Narrow a free-form role string to the UserRole union (for RoleBadge etc.). */
-export function toUserRole(r: string): UserRole {
+/**
+ * Is this one of the nine built-in roles? Custom roles created in Settings ▸ Roles
+ * have their own slugs, and are styled from their database colour instead of the
+ * fixed token per built-in.
+ */
+export function isUserRole(r: string): r is UserRole {
   switch (r) {
     case 'super_admin': case 'admin': case 'project_manager': case 'team_lead':
     case 'employee': case 'hr': case 'finance': case 'client_owner': case 'client_member':
-      return r
-    default: return 'employee'
+      return true
+    default: return false
   }
+}
+
+/**
+ * Narrow a free-form role string to the UserRole union (for RoleBadge etc.).
+ *
+ * Anything unrecognised collapses to employee, so only pass slugs already known
+ * to be built-in — a custom role would otherwise be mislabelled rather than
+ * merely unstyled. Use `isUserRole` to branch.
+ */
+export function toUserRole(r: string): UserRole {
+  return isUserRole(r) ? r : 'employee'
 }
