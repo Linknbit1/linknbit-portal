@@ -634,10 +634,10 @@ function PersonCard({ person, myRole, myId, teamLabels, designationName, ...acti
     <article className={cn('overflow-visible rounded-lg border border-border-default bg-surface-1 shadow-[0_14px_40px_rgba(0,0,0,0.14)] transition-colors hover:border-border-strong', !person.is_active && 'opacity-65')}>
       <div className="border-b border-border-subtle bg-[linear-gradient(135deg,rgba(238,39,55,0.055),rgba(34,211,238,0.045)_58%,rgba(20,29,42,0)_100%)] p-4">
         <div className="flex items-start gap-3">
-          <Avatar name={person.name} src={person.avatar_url ?? undefined} size="lg" />
+          <Avatar name={person.name} src={person.avatar_url ?? undefined} size="lg" personId={person.id} />
           <div className="min-w-0 flex-1">
             <div className="flex min-w-0 items-center gap-2">
-              <h2 className="truncate font-display text-[15px] font-bold leading-tight text-text-1">{person.name}</h2>
+              <PersonLink personId={person.id} className="truncate font-display text-[15px] font-bold leading-tight text-text-1">{person.name}</PersonLink>
               {inactiveBadge}
             </div>
             <p className="mt-1 truncate font-mono text-[11.5px] text-text-3">{person.email}</p>

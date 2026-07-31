@@ -19,6 +19,7 @@ import { useToast } from '../../components/ui/toast-context'
 import { ClientVisibility } from '../../components/shared/ClientVisibility'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { formatRelativeTime } from '../../lib/utils'
+import { PersonLink } from '../../components/shared/PersonLink'
 
 const KIND_ICON: Record<FileKind, typeof FileIcon> = {
   image: ImageIcon, video: FileVideo, audio: FileAudio, pdf: FileText, doc: FileText, sheet: FileSpreadsheet,
@@ -195,7 +196,8 @@ export function ProjectFilesTab({ projectId, canManage = true, onOpenTask }: Pro
                   </div>
                   <p className="truncate font-mono text-[10.5px] text-text-4">
                     {isLink ? meta?.label : formatFileSize(file.file_size)}
-                    {file.uploader ? ` · ${file.uploader.name}` : ''} · {formatRelativeTime(file.created_at)}
+                    {file.uploader && <> · <PersonLink personId={file.uploader.id} className="hover:text-text-2">{file.uploader.name}</PersonLink></>}
+                    {' · '}{formatRelativeTime(file.created_at)}
                   </p>
                 </div>
 

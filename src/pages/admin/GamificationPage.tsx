@@ -1051,7 +1051,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
               <div className="size-12 rounded-xl bg-coin-gold/20 border border-coin-gold/40 flex items-center justify-center text-[26px] shrink-0">🏆</div>
               {eotmWinner ? (
                 <>
-                  <Avatar name={nameOf(eotmWinner.profile_id)} src={directory[eotmWinner.profile_id]?.avatar_url ?? undefined} size="lg" />
+                  <Avatar name={nameOf(eotmWinner.profile_id)} src={directory[eotmWinner.profile_id]?.avatar_url ?? undefined} size="lg" personId={eotmWinner.profile_id} />
                   <div className="min-w-0">
                     <p className="font-mono text-[10.5px] text-coin-gold uppercase tracking-wider">Employee of the Month · {monthLabel(eotmPrev.year, eotmPrev.month)}</p>
                     <p className="font-display font-bold text-h4/tight text-text-1 truncate">{nameOf(eotmWinner.profile_id)}</p>
@@ -1220,8 +1220,8 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
                               const cs = claimStatusMeta(c.status)
                               return (
                                 <li key={c.claim_id} className="flex items-center gap-2">
-                                  <Avatar name={c.name} src={c.avatar_url ?? undefined} size="xs" />
-                                  <span className="font-ui text-[12px] text-text-2 truncate flex-1">{c.name}</span>
+                                  <Avatar name={c.name} src={c.avatar_url ?? undefined} size="xs" personId={c.profile_id} />
+                                  <PersonLink personId={c.profile_id} className="font-ui text-[12px] text-text-2 truncate flex-1">{c.name}</PersonLink>
                                   {confirmReleaseClaim === c.claim_id ? (
                                     <span className="flex items-center gap-1.5 shrink-0">
                                       <button disabled={releasingClaim} onClick={() => handleReleaseClaim(c.claim_id, c.name)} className="font-mono text-[10px] text-error font-bold">Remove</button>
@@ -1675,8 +1675,8 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
                     {participants.map((e) => (
                       <div key={e.profile_id} className="flex items-center justify-between gap-2">
                         <span className="flex items-center gap-2 min-w-0">
-                          <Avatar name={e.name} src={e.avatar_url ?? undefined} size="xs" />
-                          <span className="font-ui text-[12.5px] text-text-2 truncate">{e.name}{e.profile_id === profileId && ' (you)'}</span>
+                          <Avatar name={e.name} src={e.avatar_url ?? undefined} size="xs" personId={e.profile_id} />
+                          <span className="truncate font-ui text-[12.5px] text-text-2"><PersonLink personId={e.profile_id}>{e.name}</PersonLink>{e.profile_id === profileId && ' (you)'}</span>
                         </span>
                         <button
                           onClick={() => setRestriction({ profileId: e.profile_id, restricted: !e.is_restricted, reason: e.is_restricted ? null : 'Disciplinary' }, { onSuccess: () => toast(e.is_restricted ? 'Participation restored' : 'Excluded from gamification', 'success') })}

@@ -12,6 +12,7 @@ import { useChannelRoles, useAddChannelRole, useRemoveChannelRole } from '../../
 import { usePeople } from '../../hooks/usePeople'
 import { toUserRole } from '../../lib/peopleAccess'
 import { cn } from '../../lib/cn'
+import { PersonLink } from '../shared/PersonLink'
 
 interface ChannelMembersModalProps {
   open: boolean
@@ -121,7 +122,7 @@ export function ChannelMembersModal({ open, onClose, channelId, canManage }: Cha
             <div key={m.id} className="flex items-center gap-3 py-2 border-b border-border-subtle last:border-0">
               <Avatar name={m.name} src={m.avatar_url ?? undefined} size="sm" personId={m.id} />
               <span className="flex-1 min-w-0">
-                <span className="block truncate font-ui text-[13px] text-text-1">{m.name}</span>
+                <PersonLink personId={m.id} className="block truncate font-ui text-[13px] text-text-1">{m.name}</PersonLink>
                 <span className="block font-mono text-[10.5px] text-text-4">
                   {m.role.replace(/_/g, ' ')}
                   {m.added_via_role && ' · via role'}
