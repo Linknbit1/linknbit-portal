@@ -4,8 +4,6 @@ import type { AuditLogFilters } from '../types'
 
 export type AuditLogRow = Tables<'audit_log'>
 
-/** How far back the danger badge counts. */
-const DANGER_WINDOW_DAYS = 7
 const PAGE_SIZE = 200
 
 export async function fetchAuditLog(filters: AuditLogFilters = {}): Promise<AuditLogRow[]> {
@@ -27,14 +25,33 @@ export async function fetchAuditLog(filters: AuditLogFilters = {}): Promise<Audi
   return data
 }
 
-/** Count of danger-severity events in the recent window — drives the nav badge. */
-export async function fetchAuditDangerCount(): Promise<number> {
-  const since = new Date(Date.now() - DANGER_WINDOW_DAYS * 86_400_000).toISOString()
+// The nav badge is an unread indicator: how many entries landed since the admin
+// last opened the Audit Log. "Last seen" is a per-browser timestamp — a real
+// read-state (which browser saw what) never needs to survive to the server.
+const LAST_SEEN_KEY = 'audit_log_last_seen'
+/** Cap so a first-ever open (no stored timestamp) doesn't count the entire table. */
+const NEW_COUNT_MAX = 99
+
+export function getAuditLastSeen(): string {
+  try {
+    return localStorage.getItem(LAST_SEEN_KEY) ?? new Date(0).toISOString()
+  } catch {
+    return new Date(0).toISOString()
+  }
+}
+
+/** Called when the admin opens the log — everything up to now is "seen". */
+export function markAuditSeen(): void {
+  try { localStorage.setItem(LAST_SEEN_KEY, new Date().toISOString()) } catch { /* private mode */ }
+}
+
+/** Count of entries created since `since` — drives the nav "new logs" badge. */
+export async function fetchAuditNewCount(since: string): Promise<number> {
   const { count, error } = await supabase
     .from('audit_log')
     .select('*', { count: 'exact', head: true })
-    .eq('severity', 'danger')
-    .gte('created_at', since)
+    .gt('created_at', since)
+    .limit(NEW_COUNT_MAX + 1)
   if (error) throw error
-  return count ?? 0
+  return Math.min(count ?? 0, NEW_COUNT_MAX + 1)
 }

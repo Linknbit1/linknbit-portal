@@ -1,13 +1,13 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
-  ShieldAlert, AlertTriangle, Info, X, ChevronRight, Radio, ArrowRight,
+  ShieldAlert, AlertTriangle, Info, X, ChevronRight, Radio,
 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Select } from '../../components/ui/Select'
 import { DatePicker } from '../../components/ui/DatePicker'
 import { Skeleton } from '../../components/ui/Skeleton'
 import { SeverityChip } from '../../components/shared/SeverityChip'
-import { useAuditLog } from '../../hooks/useAuditLog'
+import { useAuditLog, useMarkAuditSeen } from '../../hooks/useAuditLog'
 import { useRealtimeAuditLog } from '../../hooks/realtime/useRealtimeAuditLog'
 import { useFeatureAccess } from '../../hooks/useRoleFlags'
 import { usePeople } from '../../hooks/usePeople'
@@ -15,9 +15,9 @@ import { cn } from '../../lib/cn'
 import type { AuditLogRow } from '../../api/auditLog'
 import type { AuditLogFilters, AuditModule, AuditSeverity } from '../../types'
 
-// Shared grid template so the header row and every data row align column-for-column.
+// Two columns on mobile (icon + event); the rest fold in on desktop.
 const ROW_GRID =
-  'grid grid-cols-[20px_minmax(0,1fr)_auto] md:grid-cols-[132px_96px_minmax(0,1fr)_168px_150px_128px_20px] items-center gap-x-3'
+  'grid grid-cols-[18px_minmax(0,1fr)_18px] md:grid-cols-[128px_92px_minmax(0,1fr)_128px_18px] items-center gap-x-3'
 
 const MODULE_OPTIONS = [
   { value: 'all', label: 'All modules' },
@@ -49,10 +49,21 @@ const MODULE_LABEL: Record<string, string> = {
 
 const SEVERITY_ICON: Record<string, typeof Info> = { danger: ShieldAlert, warning: AlertTriangle, info: Info }
 
-function humanize(action: string): string {
-  const s = action.replace(/\./g, ' ').replace(/_/g, ' ')
+/** Falls back to a de-slugged action if a row predates readable summaries. */
+function headline(row: AuditLogRow): string {
+  if (row.summary && row.summary.trim()) return row.summary
+  const s = row.action.replace(/\./g, ' ').replace(/_/g, ' ')
   return s.charAt(0).toUpperCase() + s.slice(1)
 }
+
+/** Plain-English verb for an action, for the "What happened" line. */
+function actionPhrase(action: string): string {
+  const s = action.replace(/^[a-z_]+\./, '').replace(/_/g, ' ')
+  return s.charAt(0).toUpperCase() + s.slice(1)
+}
+
+const roleLabel = (role: string | null, kind: string) =>
+  (role && role !== 'unknown' ? role : kind).replace(/_/g, ' ')
 
 function relativeTime(iso: string): string {
   const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60_000)
@@ -86,28 +97,49 @@ const ModuleChip = ({ module }: { module: string }) => (
   </span>
 )
 
+/** Layman "who / what / for what" trio. */
+const FactCell = ({ label, value, muted }: { label: string; value: string; muted?: boolean }) => (
+  <div>
+    <p className="font-mono text-[9.5px] font-semibold uppercase tracking-wider text-text-4">{label}</p>
+    <p className={cn('mt-0.5 font-ui text-[12.5px]', muted ? 'text-text-3' : 'text-text-1')}>{value}</p>
+  </div>
+)
+
 const AuditDetail = ({ row }: { row: AuditLogRow }) => {
   const oldV = (row.old_values ?? {}) as Record<string, unknown>
   const newV = (row.new_values ?? {}) as Record<string, unknown>
   const context = (row.context ?? {}) as Record<string, unknown>
   const keys = diffKeys(row)
   const contextKeys = Object.keys(context)
+  const forWhat = row.target_name ?? row.subject_name ?? '—'
 
   return (
     <div className="space-y-3.5 border-t border-border-subtle bg-surface-inset/40 px-4 py-3.5">
       {row.flagged && row.flag_reason && (
         <div className="flex items-start gap-2 rounded-md border border-[rgba(238,39,55,0.3)] bg-[rgba(238,39,55,0.08)] px-3 py-2">
           <ShieldAlert size={15} className="mt-0.5 shrink-0 text-brand-red" />
-          <p className="font-ui text-[12.5px]/relaxed text-text-1">{row.flag_reason}</p>
+          <div>
+            <p className="font-ui text-[11px] font-semibold uppercase tracking-wide text-brand-red">Why this is flagged</p>
+            <p className="mt-0.5 font-ui text-[12.5px]/relaxed text-text-1">{row.flag_reason}</p>
+          </div>
         </div>
       )}
 
+      {/* Layman: who / what / for what */}
+      <div className="grid gap-3 rounded-md border border-border-subtle bg-surface-1/50 px-3.5 py-3 sm:grid-cols-3">
+        <FactCell label="Who did it" value={`${row.actor_name ?? 'System'} · ${roleLabel(row.actor_role, row.actor_kind)}`} />
+        <FactCell label="What happened" value={actionPhrase(row.action)} />
+        <FactCell label="For / on" value={forWhat} muted={forWhat === '—'} />
+      </div>
+
+      {/* Technical footer */}
       <div className="flex flex-wrap gap-x-5 gap-y-1 font-mono text-[10.5px] uppercase tracking-wide text-text-4">
+        <span>when · {absolute(row.created_at)}</span>
         <span>module · {row.module}</span>
         <span>table · {row.table_name}</span>
         <span>op · {row.operation}</span>
-        <span>actor · {row.actor_role ?? 'unknown'} / {row.actor_kind}</span>
-        <span>when · {absolute(row.created_at)}</span>
+        <span>action · {row.action}</span>
+        <span>log id · {row.id.slice(0, 8)}</span>
         {row.record_id && <span>record · {row.record_id.slice(0, 8)}</span>}
       </div>
 
@@ -127,6 +159,7 @@ const AuditDetail = ({ row }: { row: AuditLogRow }) => {
 
       {keys.length > 0 && (
         <div className="overflow-x-auto">
+          <p className="mb-1 font-mono text-[10px] font-semibold uppercase tracking-wider text-text-4">What changed</p>
           <table className="w-full min-w-105 border-collapse font-mono text-[11.5px]">
             <thead>
               <tr className="text-left text-text-4">
@@ -182,34 +215,15 @@ const AuditRow = ({ row, expanded, onToggle }: RowProps) => {
         {/* col 2 (md): severity chip */}
         <div className="hidden md:flex"><SeverityChip severity={row.severity} /></div>
 
-        {/* event (always) */}
+        {/* event — the readable sentence */}
         <div className="min-w-0">
-          <p className="truncate font-ui text-[13px] text-text-1">{humanize(row.action)}</p>
-          {/* mobile context (columns are hidden below md) */}
+          <p className="truncate font-ui text-[13px] text-text-1">{headline(row)}</p>
+          {/* mobile meta line (columns are hidden below md) */}
           <p className="mt-0.5 truncate font-mono text-[10.5px] text-text-4 md:hidden">
-            {row.actor_name}{row.subject_name ? ` → ${row.subject_name}` : ''} · {MODULE_LABEL[row.module] ?? row.module} · {relativeTime(row.created_at)}
+            {MODULE_LABEL[row.module] ?? row.module} · {relativeTime(row.created_at)}
           </p>
-          <p className="mt-0.5 hidden truncate font-mono text-[10.5px] text-text-4 md:block">{row.action}</p>
           {row.flagged && row.flag_reason && (
-            <p className="mt-0.5 truncate font-ui text-[11px] text-brand-red">{row.flag_reason}</p>
-          )}
-        </div>
-
-        {/* actor (md) */}
-        <div className="hidden min-w-0 md:block">
-          <p className="truncate font-ui text-[12.5px] text-text-2">{row.actor_name ?? '—'}</p>
-          <p className="truncate font-mono text-[10px] text-text-4">{row.actor_role ?? row.actor_kind}</p>
-        </div>
-
-        {/* subject (md) */}
-        <div className="hidden min-w-0 items-center gap-1 md:flex">
-          {row.subject_name ? (
-            <>
-              <ArrowRight size={11} className="shrink-0 text-text-4" />
-              <span className="truncate font-ui text-[12.5px] text-text-2">{row.subject_name}</span>
-            </>
-          ) : (
-            <span className="font-mono text-[11px] text-text-4">—</span>
+            <p className="mt-0.5 truncate font-ui text-[11px] text-brand-red md:hidden">{row.flag_reason}</p>
           )}
         </div>
 
@@ -231,6 +245,10 @@ const AuditLogPage = () => {
   const { allowed } = useFeatureAccess('can_view_audit_log')
   useRealtimeAuditLog(allowed)
 
+  // Opening the page clears the "new logs" badge — everything here is now seen.
+  const markSeen = useMarkAuditSeen()
+  useEffect(() => { if (allowed) markSeen() }, [allowed, markSeen])
+
   const { data: rows, isLoading } = useAuditLog(filters)
   const { data: people } = usePeople()
 
@@ -238,15 +256,6 @@ const AuditLogPage = () => {
     () => [{ value: '', label: 'All actors' }, ...(people ?? []).map((p) => ({ value: p.id, label: p.name ?? p.email ?? p.id }))],
     [people],
   )
-
-  const stats = useMemo(() => {
-    const list = rows ?? []
-    return {
-      total: list.length,
-      danger: list.filter((r) => r.severity === 'danger').length,
-      flagged: list.filter((r) => r.flagged).length,
-    }
-  }, [rows])
 
   const patch = (p: Partial<AuditLogFilters>) => setFilters((f) => ({ ...f, ...p }))
   const clear = () => setFilters({ module: 'all', severity: 'all' })
@@ -307,11 +316,6 @@ const AuditLogPage = () => {
             </button>
 
             <div className="ml-auto flex items-center gap-3">
-              <p className="font-mono text-[11px] text-text-4">
-                <span className="text-text-2">{stats.total}</span> shown
-                {stats.danger > 0 && <> · <span className="text-brand-red">{stats.danger} danger</span></>}
-                {stats.flagged > 0 && <> · <span className="text-brand-red">{stats.flagged} flagged</span></>}
-              </p>
               <span className="inline-flex items-center gap-1.5 rounded-full border border-border-default bg-surface-1 px-2.5 py-1 font-mono text-[10px] uppercase tracking-wide text-text-3">
                 <Radio size={11} className="text-service-dev" /> Live
               </span>
@@ -324,9 +328,10 @@ const AuditLogPage = () => {
           </div>
         </div>
 
-        <p className="mb-4 mt-4 max-w-3xl font-ui text-body-sm/relaxed text-text-3">
-          Every flaggable action across attendance, gamification and projects — who did it, for whom, and what
-          changed. <span className="text-brand-red">Flagged</span> rows are likely attempts to game the system.
+        <p className="my-4 max-w-3xl font-ui text-body-sm/relaxed text-text-3">
+          Every action people take across attendance, gamification and projects — who did it, what happened, and
+          for whom. Automated system actions aren't logged. <span className="text-brand-red">Flagged</span> rows are
+          likely attempts to game the system.
         </p>
 
         {/* Table */}
@@ -348,9 +353,7 @@ const AuditLogPage = () => {
             <div className={cn(ROW_GRID, 'hidden border-b border-border-default bg-surface-2/50 px-4 py-2 font-mono text-[10px] uppercase tracking-wider text-text-4 md:grid')}>
               <span>Time</span>
               <span>Severity</span>
-              <span>Event</span>
-              <span>Actor</span>
-              <span>Subject</span>
+              <span>What happened</span>
               <span>Module</span>
               <span />
             </div>
