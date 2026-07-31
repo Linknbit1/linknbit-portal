@@ -1,11 +1,11 @@
 # Graph Report - linknbit-portal  (2026-07-31)
 
 ## Corpus Check
-- 301 files · ~392,720 words
+- 301 files · ~393,015 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2264 nodes · 3158 edges · 50 communities detected
+- 2269 nodes · 3163 edges · 50 communities detected
 - Extraction: 84% EXTRACTED · 16% INFERRED · 0% AMBIGUOUS · INFERRED: 500 edges (avg confidence: 0.78)
 - Token cost: 0 input · 0 output
 
@@ -23,7 +23,7 @@
 - [[_COMMUNITY_Community 10|Community 10]]
 - [[_COMMUNITY_Community 11|Community 11]]
 - [[_COMMUNITY_Community 12|Community 12]]
-- [[_COMMUNITY_Community 13|Community 13]]
+- [[_COMMUNITY_Community 14|Community 14]]
 - [[_COMMUNITY_Community 15|Community 15]]
 - [[_COMMUNITY_Community 16|Community 16]]
 - [[_COMMUNITY_Community 17|Community 17]]
@@ -97,15 +97,15 @@ Nodes (211): submit(), $(), addColumn(), addCommentLink(), addImage(), addLink()
 
 ### Community 2 - "Community 2"
 Cohesion: 0.02
-Nodes (46): AddProjectMemberModal(), AppShell(), catch(), handleCreate(), handleUnlink(), mintSecret(), SecretReveal(), TerminalCard() (+38 more)
+Nodes (44): AttendancePage(), useAuthContext(), filterNavItems(), groupNavItems(), useMoreNavGroups(), useMoreNavItems(), useNavGroups(), useNavItems() (+36 more)
 
 ### Community 3 - "Community 3"
 Cohesion: 0.02
-Nodes (104): Always-active conventions (every phase), code:block1 (Phase 0: Project Setup), code:block10 (src/api/gamification.ts     — fetchXpTransactions(), fetchRe), code:block11 (src/hooks/useGamification.ts    — useXpTransactions(), useRe), code:block12 (src/lib/deviceUtils.ts), code:bash (supabase migration new create_teams_table), code:block14 (src/api/attendance.ts   — checkIn(), checkOut(), fetchMyAtte), code:block15 (src/hooks/useAttendance.ts   — useMyAttendance(), useAllAtte) (+96 more)
+Nodes (46): AddProjectMemberModal(), AppShell(), catch(), handleCreate(), handleUnlink(), mintSecret(), SecretReveal(), TerminalCard() (+38 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.03
-Nodes (52): AttendancePage(), useAuthContext(), PermissionDetailModal(), HomeRedirect(), PrivateRoute(), RoleEditModal(), RoleGuard(), isAuthoritative() (+44 more)
+Cohesion: 0.02
+Nodes (104): Always-active conventions (every phase), code:block1 (Phase 0: Project Setup), code:block10 (src/api/gamification.ts     — fetchXpTransactions(), fetchRe), code:block11 (src/hooks/useGamification.ts    — useXpTransactions(), useRe), code:block12 (src/lib/deviceUtils.ts), code:bash (supabase migration new create_teams_table), code:block14 (src/api/attendance.ts   — checkIn(), checkOut(), fetchMyAtte), code:block15 (src/hooks/useAttendance.ts   — useMyAttendance(), useAllAtte) (+96 more)
 
 ### Community 5 - "Community 5"
 Cohesion: 0.05
@@ -116,40 +116,40 @@ Cohesion: 0.02
 Nodes (83): **10\. Final Notes**, **1\. Overview**, **2\. Core Objectives**, **3\. Core Architecture Philosophy**, **4\. Service-Based System (Core Backbone)**, **5.1 Super Admin**, **5.2 Admin / Operations Manager**, **5.3 Project Manager** (+75 more)
 
 ### Community 7 - "Community 7"
-Cohesion: 0.03
-Nodes (14): filterNavItems(), groupNavItems(), useMoreNavGroups(), useMoreNavItems(), useNavGroups(), useNavItems(), useAllAttendanceExceptions(), useAllLeaveRequests() (+6 more)
-
-### Community 8 - "Community 8"
 Cohesion: 0.04
 Nodes (36): checkIn(), registerDevice(), checkDayGates(), computeStatus(), localParts(), minutesOf(), resolveCutoffs(), bffFetch() (+28 more)
 
-### Community 9 - "Community 9"
+### Community 8 - "Community 8"
 Cohesion: 0.03
 Nodes (68): 11. SaaS Scalability, 1. Architecture Overview, 2. Role-Based Access Control, 3. Database Schema, 4. ClickUp Integration, 5. Discord Integration, 6. Real-time Strategy, 7. Audit Logging (+60 more)
 
-### Community 10 - "Community 10"
+### Community 9 - "Community 9"
 Cohesion: 0.04
 Nodes (42): approve(), closeModal(), cn(), confirmDelete(), confirmReject(), deleteType(), exportCsv(), fmtDate() (+34 more)
+
+### Community 10 - "Community 10"
+Cohesion: 0.04
+Nodes (32): patch(), run(), detectBrowser(), detectOs(), fallbackHash(), getDeviceFingerprint(), getDeviceName(), getDeviceToken() (+24 more)
 
 ### Community 11 - "Community 11"
 Cohesion: 0.05
 Nodes (58): AI Collaboration Rules, API keys, Applying migrations, Approval Flow States, Architecture Discipline, Border Radius, ClickUp Integration UI, Client Portal (light mode — completely separate theme) (+50 more)
 
 ### Community 12 - "Community 12"
-Cohesion: 0.04
-Nodes (32): patch(), run(), detectBrowser(), detectOs(), fallbackHash(), getDeviceFingerprint(), getDeviceName(), getDeviceToken() (+24 more)
-
-### Community 13 - "Community 13"
 Cohesion: 0.05
 Nodes (28): itemCls(), chatContentType(), safeStorageName(), validateChatAttachmentFile(), cn(), formatDate(), calcStreak(), deleteMessageAttachment() (+20 more)
 
-### Community 15 - "Community 15"
+### Community 14 - "Community 14"
 Cohesion: 0.05
 Nodes (42): 10. Row Level Security Policies, Attachments, Attendance, Audit Logs, Checklists & Checklist Items, ClickUp Status Mappings, Clients, code:sql (CREATE OR REPLACE FUNCTION current_user_role() RETURNS text ) (+34 more)
 
-### Community 16 - "Community 16"
+### Community 15 - "Community 15"
 Cohesion: 0.06
 Nodes (19): fileKind(), previewMode(), validateAttachmentFile(), deleteAttachment(), getAttachmentUrl(), handleDownload(), handleFiles(), bucketOf() (+11 more)
+
+### Community 16 - "Community 16"
+Cohesion: 0.07
+Nodes (22): isAuthoritative(), officeTime(), MyStandup(), StandupPage(), StandupTabs(), useCanAccess(), useCanApproveRequests(), useCanApproveTasks() (+14 more)
 
 ### Community 17 - "Community 17"
 Cohesion: 0.06
@@ -320,12 +320,12 @@ Nodes (1): graphify
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `toast()` connect `Community 1` to `Community 33`, `Community 2`, `Community 41`, `Community 10`, `Community 12`, `Community 76`, `Community 78`, `Community 79`, `Community 16`, `Community 17`, `Community 18`, `Community 22`, `Community 57`, `Community 26`?**
-  _High betweenness centrality (0.187) - this node is a cross-community bridge._
-- **Why does `select()` connect `Community 0` to `Community 39`, `Community 8`, `Community 13`, `Community 47`, `Community 22`?**
-  _High betweenness centrality (0.161) - this node is a cross-community bridge._
-- **Why does `useToast()` connect `Community 2` to `Community 16`, `Community 4`?**
-  _High betweenness centrality (0.123) - this node is a cross-community bridge._
+- **Why does `toast()` connect `Community 1` to `Community 33`, `Community 3`, `Community 41`, `Community 10`, `Community 9`, `Community 76`, `Community 78`, `Community 15`, `Community 79`, `Community 17`, `Community 18`, `Community 22`, `Community 57`, `Community 26`?**
+  _High betweenness centrality (0.170) - this node is a cross-community bridge._
+- **Why does `select()` connect `Community 0` to `Community 39`, `Community 7`, `Community 12`, `Community 47`, `Community 22`?**
+  _High betweenness centrality (0.158) - this node is a cross-community bridge._
+- **Why does `useToast()` connect `Community 3` to `Community 2`, `Community 15`?**
+  _High betweenness centrality (0.121) - this node is a cross-community bridge._
 - **Are the 186 inferred relationships involving `select()` (e.g. with `auditOnce()` and `reconcileDay()`) actually correct?**
   _`select()` has 186 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 50 inferred relationships involving `toast()` (e.g. with `add()` and `openFile()`) actually correct?**
