@@ -20,7 +20,7 @@ export type NoteShape =
   | 'hexagon'
   | 'pennant'
 
-/** Whole-note text alignment — not per-character. */
+/** Paragraph alignment, applied via the TipTap editor to the block(s) in range. */
 export type NoteAlign = 'left' | 'center' | 'right'
 
 export const NOTE_COLORS: NoteColor[] = ['pink', 'lavender', 'mint', 'peach', 'butter', 'sky']
@@ -84,21 +84,18 @@ export async function createStickyNote(input: CreateStickyNoteInput): Promise<St
 
 export interface UpdateStickyNoteInput {
   id: string
+  /** TipTap JSON (stringified). Bold/italic/strike/alignment now live inside it. */
   content?: string
   color?: NoteColor
   shape?: NoteShape
   posX?: number
   posY?: number
-  bold?: boolean
-  italic?: boolean
-  strikethrough?: boolean
-  textAlign?: NoteAlign
   /** Paint order; the board raises a note by stamping it with max + 1. */
   zIndex?: number
 }
 
 export async function updateStickyNote(
-  { id, posX, posY, textAlign, zIndex, ...rest }: UpdateStickyNoteInput,
+  { id, posX, posY, zIndex, ...rest }: UpdateStickyNoteInput,
 ): Promise<void> {
   const { error } = await supabase
     .from('sticky_notes')
@@ -106,7 +103,6 @@ export async function updateStickyNote(
       ...rest,
       ...(posX === undefined ? {} : { pos_x: posX }),
       ...(posY === undefined ? {} : { pos_y: posY }),
-      ...(textAlign === undefined ? {} : { text_align: textAlign }),
       ...(zIndex === undefined ? {} : { z_index: zIndex }),
     })
     .eq('id', id)

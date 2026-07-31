@@ -57,10 +57,6 @@ export function useUpdateStickyNote() {
                 ...(input.shape === undefined ? {} : { shape: input.shape }),
                 ...(input.posX === undefined ? {} : { pos_x: input.posX }),
                 ...(input.posY === undefined ? {} : { pos_y: input.posY }),
-                ...(input.bold === undefined ? {} : { bold: input.bold }),
-                ...(input.italic === undefined ? {} : { italic: input.italic }),
-                ...(input.strikethrough === undefined ? {} : { strikethrough: input.strikethrough }),
-                ...(input.textAlign === undefined ? {} : { text_align: input.textAlign }),
                 ...(input.zIndex === undefined ? {} : { z_index: input.zIndex }),
               }
             : n,

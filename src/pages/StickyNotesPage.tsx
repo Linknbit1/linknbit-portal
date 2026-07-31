@@ -1,8 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import {
   AlignCenter, AlignLeft, AlignRight, Bold, BringToFront, ChevronDown, Italic,
   Loader2, Maximize2, Minus, Plus, Sparkles, Strikethrough, Trash2,
 } from 'lucide-react'
+import { useEditor, useEditorState, EditorContent, type Editor, type JSONContent } from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
+import TextAlign from '@tiptap/extension-text-align'
+import Placeholder from '@tiptap/extension-placeholder'
 import { Topbar } from '../components/layout/Topbar'
 import { Button } from '../components/ui/Button'
 import { Modal } from '../components/ui/Modal'
@@ -16,19 +20,91 @@ import {
   useUpdateStickyNote,
 } from '../hooks/useStickyNotes'
 import { useRealtimeStickyNotes } from '../hooks/realtime/useRealtimeStickyNotes'
-import { NOTE_COLORS, NOTE_SHAPES, type NoteAlign, type NoteColor, type NoteShape, type StickyNote } from '../api/stickyNotes'
+import { NOTE_COLORS, NOTE_SHAPES, type NoteColor, type NoteShape, type StickyNote } from '../api/stickyNotes'
 import { cn } from '../lib/cn'
+import './stickyNotes.css'
 
-/** Formatting the toolbar can toggle on a note. */
-interface NoteFormat {
-  bold?: boolean
-  italic?: boolean
-  strikethrough?: boolean
-  textAlign?: NoteAlign
+/** A sheet being dragged — or being written on — floats above every pinned z-order. */
+const DRAG_Z = 100000
+
+/**
+ * Note text is TipTap rich content so bold/italic/strikethrough can apply to a
+ * selection and alignment to a paragraph. Stored as TipTap JSON in `content`.
+ * StarterKit gives bold/italic/strike + history; TextAlign adds paragraph
+ * alignment; Placeholder shows the empty prompt.
+ */
+const NOTE_EXTENSIONS = [
+  StarterKit,
+  TextAlign.configure({ types: ['paragraph', 'heading'] }),
+  Placeholder.configure({ placeholder: 'write something…' }),
+]
+
+/**
+ * Normalise a stored `content` value into a TipTap doc. New notes hold TipTap
+ * JSON; notes written before rich text hold a plain string, which is turned into
+ * paragraphs so nothing breaks. Used by both the editor and the static renderer.
+ */
+function toEditorDoc(content: string): JSONContent {
+  const raw = content ?? ''
+  if (raw.trimStart().startsWith('{')) {
+    try {
+      const parsed = JSON.parse(raw)
+      if (parsed && parsed.type === 'doc') return parsed
+    } catch { /* fall through to plain-text handling */ }
+  }
+  return {
+    type: 'doc',
+    content: raw.split('\n').map((line) =>
+      line ? { type: 'paragraph', content: [{ type: 'text', text: line }] } : { type: 'paragraph' },
+    ),
+  }
 }
 
-/** A sheet being dragged floats above every pinned z-order until it lands. */
-const DRAG_Z = 100000
+/** Whether a doc holds any visible text (false = show the empty-note prompt). */
+function docHasText(node: JSONContent): boolean {
+  if (node.type === 'text') return !!node.text
+  return (node.content ?? []).some(docHasText)
+}
+
+type Mark = { type?: string }
+
+/** Render a doc's inline text nodes, wrapping each in its marks. */
+function renderInline(nodes: JSONContent[]): ReactNode[] {
+  return nodes.map((n, i) => {
+    if (n.type !== 'text' || !n.text) return null
+    let el: ReactNode = n.text
+    for (const m of (n.marks as Mark[] | undefined) ?? []) {
+      if (m.type === 'bold') el = <strong key="b">{el}</strong>
+      else if (m.type === 'italic') el = <em key="i">{el}</em>
+      else if (m.type === 'strike') el = <s key="s">{el}</s>
+    }
+    return <span key={i}>{el}</span>
+  })
+}
+
+/**
+ * Read-only rendering of a note's rich content — plain React elements, no editor
+ * instance per note and no dangerouslySetInnerHTML, so a board of notes stays
+ * light. Matches the editor's look (same font/inset via the caller's style).
+ */
+function StaticNoteText({ doc, style }: { doc: JSONContent; style: React.CSSProperties }) {
+  return (
+    <div
+      className="absolute overflow-hidden wrap-break-word font-hand text-note text-note-ink pointer-events-none"
+      style={style}
+    >
+      {(doc.content ?? []).map((block, i) => (
+        <p
+          key={i}
+          className="whitespace-pre-wrap"
+          style={{ margin: 0, textAlign: (block.attrs?.textAlign as React.CSSProperties['textAlign']) ?? 'left' }}
+        >
+          {block.content && block.content.length ? renderInline(block.content) : <br />}
+        </p>
+      ))}
+    </div>
+  )
+}
 
 /** Note edge length in board units. */
 const NOTE_SIZE = 232
@@ -454,6 +530,105 @@ function CustomNoteDialog({ open, onClose, onPin, pinning }: CustomNoteDialogPro
   )
 }
 
+/**
+ * How long typing pauses before the note is saved.
+ *
+ * The note used to save on every keystroke. That is a mutation per character,
+ * and every one of them raced the editor.
+ */
+const TYPING_SAVE_DEBOUNCE_MS = 600
+
+/**
+ * ⌘/Ctrl formatting shortcuts inside a note. Plain modifier only (no Shift/Alt),
+ * so ⌘⇧C / ⌘⌥I (devtools) and ⌘Z/⌘X/⌘V keep working. Bold/italic/strike act on
+ * the selection; alignment on the paragraph. Returns true when it handled the key.
+ */
+function runNoteShortcut(editor: Editor, e: KeyboardEvent): boolean {
+  if (!(e.metaKey || e.ctrlKey) || e.shiftKey || e.altKey) return false
+  const chain = editor.chain().focus()
+  switch (e.key.toLowerCase()) {
+    case 'l': chain.setTextAlign('left').run(); return true
+    case 'r': chain.setTextAlign('right').run(); return true
+    case 'c': chain.setTextAlign('center').run(); return true
+    case 'b': chain.toggleBold().run(); return true
+    case 'i': chain.toggleItalic().run(); return true
+    case 's': chain.toggleStrike().run(); return true
+    default: return false
+  }
+}
+
+interface NoteEditorProps {
+  note: StickyNote
+  /** Same per-shape inset the static text uses, so editing looks identical. */
+  insetStyle: React.CSSProperties
+  onSave: (json: string) => void
+  onExit: () => void
+  onEditorReady: (editor: Editor | null) => void
+}
+
+/**
+ * The editing surface for one note — a TipTap editor, mounted only while that
+ * note is being written (so a board of notes carries at most one editor). Content
+ * is seeded once and never re-synced (autosaves would otherwise clobber typing);
+ * changes are debounced to the parent, and blur flushes and exits.
+ */
+function NoteEditor({ note, insetStyle, onSave, onExit, onEditorReady }: NoteEditorProps) {
+  const pending = useRef<string | null>(null)
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const editorRef = useRef<Editor | null>(null)
+  const onSaveRef = useRef(onSave)
+  useEffect(() => { onSaveRef.current = onSave }, [onSave])
+
+  const flush = useCallback(() => {
+    if (timer.current) { clearTimeout(timer.current); timer.current = null }
+    if (pending.current === null) return
+    const json = pending.current
+    pending.current = null
+    onSaveRef.current(json)
+  }, [])
+
+  const editor = useEditor({
+    extensions: NOTE_EXTENSIONS,
+    content: toEditorDoc(note.content),
+    autofocus: 'end',
+    editorProps: {
+      attributes: { class: 'note-prose focus:outline-none' },
+      handleKeyDown: (_view, event) => {
+        const ed = editorRef.current
+        if (ed && runNoteShortcut(ed, event)) { event.preventDefault(); return true }
+        return false
+      },
+    },
+    onUpdate: ({ editor }) => {
+      pending.current = JSON.stringify(editor.getJSON())
+      if (timer.current) clearTimeout(timer.current)
+      timer.current = setTimeout(flush, TYPING_SAVE_DEBOUNCE_MS)
+    },
+    onBlur: () => { flush(); onExit() },
+  })
+
+  useEffect(() => {
+    editorRef.current = editor
+    onEditorReady(editor)
+    return () => onEditorReady(null)
+  }, [editor, onEditorReady])
+
+  // A note unmounted mid-sentence must not drop the last few characters the timer
+  // was still holding.
+  useEffect(() => () => flush(), [flush])
+
+  return (
+    <EditorContent
+      editor={editor}
+      // Stop the board pan from starting under the caret; ProseMirror still gets
+      // the mousedown it needs to place the caret and select text.
+      onPointerDown={(e) => e.stopPropagation()}
+      className="absolute overflow-hidden font-hand text-note text-note-ink"
+      style={insetStyle}
+    />
+  )
+}
+
 interface NoteCardProps {
   note: StickyNote
   /** Board scale, needed to convert pointer travel into board units. */
@@ -463,20 +638,11 @@ interface NoteCardProps {
   /** `onSettled` fires once the save has resolved, successfully or not. */
   onMove: (id: string, posX: number, posY: number, onSettled: () => void) => void
   onChangeContent: (id: string, content: string, onSettled: () => void) => void
-  onFormat: (id: string, patch: NoteFormat) => void
   onRaise: (id: string) => void
   onDelete: (id: string) => void
 }
 
-/**
- * How long typing pauses before the note is saved.
- *
- * The note used to save on every keystroke. That is a mutation per character,
- * and every one of them raced the caret.
- */
-const TYPING_SAVE_DEBOUNCE_MS = 600
-
-function NoteCard({ note, zoom, isTop, onMove, onChangeContent, onFormat, onRaise, onDelete }: NoteCardProps) {
+function NoteCard({ note, zoom, isTop, onMove, onChangeContent, onRaise, onDelete }: NoteCardProps) {
   const [editing, setEditing] = useState(false)
   /**
    * Where this note is drawn, when that differs from the saved row.
@@ -490,53 +656,33 @@ function NoteCard({ note, zoom, isTop, onMove, onChangeContent, onFormat, onRais
   const [drag, setDrag] = useState<{ x: number; y: number } | null>(null)
   const [dragging, setDragging] = useState(false)
 
-  /**
-   * The text being written, owned locally rather than by the query cache.
-   *
-   * A textarea driven straight from the cache cannot hold a caret. Each
-   * keystroke fired a save, the optimistic write landed a tick later, and in
-   * between React re-rendered with the previous string — so the value prop went
-   * new, old, new. Re-applying a value a controlled input has already moved past
-   * puts the caret at the end, which is why fixing a typo mid-note threw you to
-   * the bottom of the paragraph.
-   *
-   * Non-null from the moment editing starts until the save settles, so the
-   * paper keeps showing what was typed while the write is in flight — and so an
-   * incoming realtime update cannot overwrite text mid-sentence.
-   */
-  const [draft, setDraft] = useState<string | null>(null)
-  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  /** Latest text not yet handed to the server; null once there is nothing owed. */
-  const unsaved = useRef<string | null>(null)
+  // The TipTap editor for THIS note while it is being written, lifted here so the
+  // toolbar — which lives in the un-rotated outer container — can drive it and
+  // mirror the current selection's formatting. Null whenever the note isn't open.
+  const [editor, setEditor] = useState<Editor | null>(null)
+  const fmt = useEditorState({
+    editor,
+    selector: ({ editor }) =>
+      editor
+        ? {
+            bold: editor.isActive('bold'),
+            italic: editor.isActive('italic'),
+            strike: editor.isActive('strike'),
+            align: editor.isActive({ textAlign: 'center' })
+              ? 'center'
+              : editor.isActive({ textAlign: 'right' })
+                ? 'right'
+                : 'left',
+          }
+        : null,
+  })
 
-  /**
-   * Tracked as a ref as well as state because the save callback below fires
-   * asynchronously and would otherwise close over whatever `editing` was when
-   * the save started.
-   */
-  const editingRef = useRef(false)
-
-  const flushContent = useCallback(() => {
-    if (saveTimer.current) clearTimeout(saveTimer.current)
-    saveTimer.current = null
-    const text = unsaved.current
-    if (text === null) return
-    unsaved.current = null
-    onChangeContent(note.id, text, () => {
-      // Handing back to the row mid-sentence would drop everything typed since
-      // this save began and throw the caret to the end again, so the draft is
-      // only retired once the writing has stopped and nothing is still owed.
-      if (!editingRef.current && unsaved.current === null) setDraft(null)
-    })
-  }, [note.id, onChangeContent])
-
-  // A note unmounted mid-sentence — page left, note deleted elsewhere — must not
-  // silently drop the last few characters the timer was still holding.
-  useEffect(() => () => flushContent(), [flushContent])
   const originRef = useRef({ pointerX: 0, pointerY: 0, posX: 0, posY: 0 })
 
   const shape = (note.shape as NoteShape) ?? 'square'
   const color = (note.color as NoteColor) ?? 'pink'
+  const doc = useMemo(() => toEditorDoc(note.content), [note.content])
+  const empty = useMemo(() => !docHasText(doc), [doc])
 
   const x = drag?.x ?? note.pos_x
   const y = drag?.y ?? note.pos_y
@@ -583,35 +729,8 @@ function NoteCard({ note, zoom, isTop, onMove, onChangeContent, onFormat, onRais
 
   const anchor = PIN_ANCHOR[shape]
 
-  // Whole-note text styling, merged into each shape's inset for the textarea and
-  // the read-only paragraph alike so both look identical.
-  const fmtStyle: React.CSSProperties = {
-    fontWeight: note.bold ? 700 : undefined,
-    fontStyle: note.italic ? 'italic' : undefined,
-    textDecoration: note.strikethrough ? 'line-through' : undefined,
-    textAlign: (note.text_align as NoteAlign) ?? 'left',
-  }
-
-  // Formatting shortcuts while writing. Only plain ⌘/Ctrl (no Shift/Alt), so the
-  // browser's own ⌘⇧C / ⌘⌥I devtools combos and text ⌘Z/⌘X/⌘V still work.
-  const FORMAT_KEYS: Record<string, NoteFormat> = {
-    l: { textAlign: 'left' },
-    r: { textAlign: 'right' },
-    c: { textAlign: 'center' },
-    b: { bold: !note.bold },
-    i: { italic: !note.italic },
-    s: { strikethrough: !note.strikethrough },
-  }
-  const handleFormatKeys = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (!(e.metaKey || e.ctrlKey) || e.shiftKey || e.altKey) return
-    const patch = FORMAT_KEYS[e.key.toLowerCase()]
-    if (!patch) return
-    e.preventDefault()
-    onFormat(note.id, patch)
-  }
-
   // One toolbar button. A plain factory (not a nested component) so it doesn't
-  // remount on every keystroke while editing.
+  // remount on every editor transaction.
   const fmtBtn = (
     key: string,
     active: boolean,
@@ -696,11 +815,7 @@ function NoteCard({ note, zoom, isTop, onMove, onChangeContent, onFormat, onRais
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
             onPointerCancel={handlePointerUp}
-            onDoubleClick={() => {
-              setDraft(note.content)
-              editingRef.current = true
-              setEditing(true)
-            }}
+            onDoubleClick={() => setEditing(true)}
             className={cn(
               'absolute inset-0 select-none',
               COLOR_CLASS[color],
@@ -731,39 +846,24 @@ function NoteCard({ note, zoom, isTop, onMove, onChangeContent, onFormat, onRais
           }}
         />
         {editing ? (
-          <textarea
-            autoFocus
-            value={draft ?? note.content}
-            onChange={(e) => {
-              // Local first, always — the caret belongs to this element, not to
-              // whatever the server last acknowledged.
-              setDraft(e.target.value)
-              unsaved.current = e.target.value
-              if (saveTimer.current) clearTimeout(saveTimer.current)
-              saveTimer.current = setTimeout(flushContent, TYPING_SAVE_DEBOUNCE_MS)
-            }}
-            onBlur={() => {
-              editingRef.current = false
-              setEditing(false)
-              flushContent()
-            }}
-            onKeyDown={handleFormatKeys}
-            onPointerDown={(e) => e.stopPropagation()}
-            placeholder="write something…"
-            className="absolute resize-none bg-transparent outline-none font-hand text-note text-note-ink placeholder:text-note-ink/55"
-            style={{ ...TEXT_INSET[shape], ...fmtStyle }}
+          <NoteEditor
+            note={note}
+            insetStyle={TEXT_INSET[shape]}
+            onSave={(json) => onChangeContent(note.id, json, () => {})}
+            onExit={() => setEditing(false)}
+            onEditorReady={setEditor}
           />
-        ) : (
+        ) : empty ? (
           /* Transparent to the pointer so a drag or double-click started on the
-             writing lands on the paper underneath. */
+             prompt lands on the paper underneath. */
           <p
-            className="absolute overflow-hidden whitespace-pre-wrap wrap-break-word font-hand text-note text-note-ink pointer-events-none"
-            style={{ ...TEXT_INSET[shape], ...fmtStyle }}
+            className="absolute overflow-hidden font-hand text-note text-note-ink pointer-events-none"
+            style={TEXT_INSET[shape]}
           >
-            {(draft ?? note.content) || (
-              <span className="text-note-ink/55">double-click to write…</span>
-            )}
+            <span className="text-note-ink/55">double-click to write…</span>
           </p>
+        ) : (
+          <StaticNoteText doc={doc} style={TEXT_INSET[shape]} />
         )}
       </div>
 
@@ -807,9 +907,10 @@ function NoteCard({ note, zoom, isTop, onMove, onChangeContent, onFormat, onRais
       {/* Formatting toolbar — only while writing, so it stays out of the way
           otherwise. Lives in the un-rotated outer container so it reads level no
           matter how the note is tilted, and sits below the sheet to clear the pin.
-          preventDefault on mousedown keeps the caret in the textarea, so tapping a
-          button styles the note without ending the edit. */}
-      {editing && (
+          Bold/italic/strike act on the SELECTION; alignment on the paragraph.
+          preventDefault on mousedown keeps focus in the editor, so tapping a
+          button styles the selection without ending the edit. */}
+      {editing && editor && fmt && (
         <div
           onPointerDown={(e) => e.stopPropagation()}
           onMouseDown={(e) => e.preventDefault()}
@@ -818,19 +919,19 @@ function NoteCard({ note, zoom, isTop, onMove, onChangeContent, onFormat, onRais
             'rounded-full border border-border-default bg-surface-1/95 p-1 shadow-lg',
           )}
         >
-          {fmtBtn('al', (note.text_align ?? 'left') === 'left', 'Align left (⌘/Ctrl+L)',
-            () => onFormat(note.id, { textAlign: 'left' }), <AlignLeft size={14} />)}
-          {fmtBtn('ac', note.text_align === 'center', 'Align center (⌘/Ctrl+C)',
-            () => onFormat(note.id, { textAlign: 'center' }), <AlignCenter size={14} />)}
-          {fmtBtn('ar', note.text_align === 'right', 'Align right (⌘/Ctrl+R)',
-            () => onFormat(note.id, { textAlign: 'right' }), <AlignRight size={14} />)}
+          {fmtBtn('al', fmt.align === 'left', 'Align left (⌘/Ctrl+L)',
+            () => editor.chain().focus().setTextAlign('left').run(), <AlignLeft size={14} />)}
+          {fmtBtn('ac', fmt.align === 'center', 'Align center (⌘/Ctrl+C)',
+            () => editor.chain().focus().setTextAlign('center').run(), <AlignCenter size={14} />)}
+          {fmtBtn('ar', fmt.align === 'right', 'Align right (⌘/Ctrl+R)',
+            () => editor.chain().focus().setTextAlign('right').run(), <AlignRight size={14} />)}
           <span className="mx-0.5 h-4 w-px bg-border-default" />
-          {fmtBtn('b', note.bold, 'Bold (⌘/Ctrl+B)',
-            () => onFormat(note.id, { bold: !note.bold }), <Bold size={14} />)}
-          {fmtBtn('i', note.italic, 'Italic (⌘/Ctrl+I)',
-            () => onFormat(note.id, { italic: !note.italic }), <Italic size={14} />)}
-          {fmtBtn('s', note.strikethrough, 'Strikethrough (⌘/Ctrl+S)',
-            () => onFormat(note.id, { strikethrough: !note.strikethrough }), <Strikethrough size={14} />)}
+          {fmtBtn('b', fmt.bold, 'Bold (⌘/Ctrl+B)',
+            () => editor.chain().focus().toggleBold().run(), <Bold size={14} />)}
+          {fmtBtn('i', fmt.italic, 'Italic (⌘/Ctrl+I)',
+            () => editor.chain().focus().toggleItalic().run(), <Italic size={14} />)}
+          {fmtBtn('s', fmt.strike, 'Strikethrough (⌘/Ctrl+S)',
+            () => editor.chain().focus().toggleStrike().run(), <Strikethrough size={14} />)}
         </div>
       )}
 
@@ -1227,10 +1328,6 @@ export default function StickyNotesPage() {
       updateNote({ id, content }, { onSettled }),
     [updateNote],
   )
-  const handleFormat = useCallback(
-    (id: string, patch: NoteFormat) => updateNote({ id, ...patch }),
-    [updateNote],
-  )
   const handleRaise = useCallback(
     (id: string) => {
       const note = notes.find((n) => n.id === id)
@@ -1247,13 +1344,13 @@ export default function StickyNotesPage() {
     <>
       {/* Gradients are declared once for the page; every pin references them by id. */}
       <PushpinDefs />
-      <Topbar title="My Notes" />
+      <Topbar title="My Little World" />
       <div className="px-8 py-7 max-w-content mx-auto w-full">
         <div className="flex items-center justify-between gap-4 mb-5">
           <div>
             <h1 className="font-display font-bold text-h3 text-text-1 flex items-center gap-2">
               <Sparkles size={18} className="text-brand-red" />
-              My Notes
+              My Little World
             </h1>
             <p className="font-ui text-body-sm text-text-3 mt-1">
               Drag a note to move it (it jumps to the front); double-click to write and style it. Drag the board to pan, ⌘/Ctrl + scroll to zoom.
@@ -1382,7 +1479,6 @@ export default function StickyNotesPage() {
                     isTop={isStrictlyTop(note)}
                     onMove={handleMove}
                     onChangeContent={handleContent}
-                    onFormat={handleFormat}
                     onRaise={handleRaise}
                     onDelete={handleDelete}
                   />
