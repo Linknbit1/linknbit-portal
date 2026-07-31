@@ -3055,40 +3055,55 @@ export type Database = {
       }
       sticky_notes: {
         Row: {
+          bold: boolean
           color: string
           content: string
           created_at: string
           id: string
+          italic: boolean
           pos_x: number
           pos_y: number
           profile_id: string
           rotation: number
           shape: string
+          strikethrough: boolean
+          text_align: string
           updated_at: string
+          z_index: number
         }
         Insert: {
+          bold?: boolean
           color?: string
           content?: string
           created_at?: string
           id?: string
+          italic?: boolean
           pos_x?: number
           pos_y?: number
           profile_id: string
           rotation?: number
           shape?: string
+          strikethrough?: boolean
+          text_align?: string
           updated_at?: string
+          z_index?: number
         }
         Update: {
+          bold?: boolean
           color?: string
           content?: string
           created_at?: string
           id?: string
+          italic?: boolean
           pos_x?: number
           pos_y?: number
           profile_id?: string
           rotation?: number
           shape?: string
+          strikethrough?: boolean
+          text_align?: string
           updated_at?: string
+          z_index?: number
         }
         Relationships: [
           {

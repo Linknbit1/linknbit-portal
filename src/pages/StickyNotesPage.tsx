@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ChevronDown, Loader2, Maximize2, Minus, Plus, Sparkles, Trash2 } from 'lucide-react'
+import {
+  AlignCenter, AlignLeft, AlignRight, Bold, BringToFront, ChevronDown, Italic,
+  Loader2, Maximize2, Minus, Plus, Sparkles, Strikethrough, Trash2,
+} from 'lucide-react'
 import { Topbar } from '../components/layout/Topbar'
 import { Button } from '../components/ui/Button'
 import { Modal } from '../components/ui/Modal'
@@ -13,8 +16,19 @@ import {
   useUpdateStickyNote,
 } from '../hooks/useStickyNotes'
 import { useRealtimeStickyNotes } from '../hooks/realtime/useRealtimeStickyNotes'
-import { NOTE_COLORS, NOTE_SHAPES, type NoteColor, type NoteShape, type StickyNote } from '../api/stickyNotes'
+import { NOTE_COLORS, NOTE_SHAPES, type NoteAlign, type NoteColor, type NoteShape, type StickyNote } from '../api/stickyNotes'
 import { cn } from '../lib/cn'
+
+/** Formatting the toolbar can toggle on a note. */
+interface NoteFormat {
+  bold?: boolean
+  italic?: boolean
+  strikethrough?: boolean
+  textAlign?: NoteAlign
+}
+
+/** A sheet being dragged floats above every pinned z-order until it lands. */
+const DRAG_Z = 100000
 
 /** Note edge length in board units. */
 const NOTE_SIZE = 232
@@ -444,9 +458,13 @@ interface NoteCardProps {
   note: StickyNote
   /** Board scale, needed to convert pointer travel into board units. */
   zoom: number
+  /** True when nothing else is stacked above this note. */
+  isTop: boolean
   /** `onSettled` fires once the save has resolved, successfully or not. */
   onMove: (id: string, posX: number, posY: number, onSettled: () => void) => void
   onChangeContent: (id: string, content: string, onSettled: () => void) => void
+  onFormat: (id: string, patch: NoteFormat) => void
+  onRaise: (id: string) => void
   onDelete: (id: string) => void
 }
 
@@ -458,7 +476,7 @@ interface NoteCardProps {
  */
 const TYPING_SAVE_DEBOUNCE_MS = 600
 
-function NoteCard({ note, zoom, onMove, onChangeContent, onDelete }: NoteCardProps) {
+function NoteCard({ note, zoom, isTop, onMove, onChangeContent, onFormat, onRaise, onDelete }: NoteCardProps) {
   const [editing, setEditing] = useState(false)
   /**
    * Where this note is drawn, when that differs from the saved row.
@@ -565,6 +583,58 @@ function NoteCard({ note, zoom, onMove, onChangeContent, onDelete }: NoteCardPro
 
   const anchor = PIN_ANCHOR[shape]
 
+  // Whole-note text styling, merged into each shape's inset for the textarea and
+  // the read-only paragraph alike so both look identical.
+  const fmtStyle: React.CSSProperties = {
+    fontWeight: note.bold ? 700 : undefined,
+    fontStyle: note.italic ? 'italic' : undefined,
+    textDecoration: note.strikethrough ? 'line-through' : undefined,
+    textAlign: (note.text_align as NoteAlign) ?? 'left',
+  }
+
+  // Formatting shortcuts while writing. Only plain ⌘/Ctrl (no Shift/Alt), so the
+  // browser's own ⌘⇧C / ⌘⌥I devtools combos and text ⌘Z/⌘X/⌘V still work.
+  const FORMAT_KEYS: Record<string, NoteFormat> = {
+    l: { textAlign: 'left' },
+    r: { textAlign: 'right' },
+    c: { textAlign: 'center' },
+    b: { bold: !note.bold },
+    i: { italic: !note.italic },
+    s: { strikethrough: !note.strikethrough },
+  }
+  const handleFormatKeys = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (!(e.metaKey || e.ctrlKey) || e.shiftKey || e.altKey) return
+    const patch = FORMAT_KEYS[e.key.toLowerCase()]
+    if (!patch) return
+    e.preventDefault()
+    onFormat(note.id, patch)
+  }
+
+  // One toolbar button. A plain factory (not a nested component) so it doesn't
+  // remount on every keystroke while editing.
+  const fmtBtn = (
+    key: string,
+    active: boolean,
+    label: string,
+    onClick: () => void,
+    icon: React.ReactNode,
+  ) => (
+    <button
+      key={key}
+      type="button"
+      aria-label={label}
+      aria-pressed={active}
+      title={label}
+      onClick={onClick}
+      className={cn(
+        'size-7 rounded-full flex items-center justify-center transition-colors',
+        active ? 'bg-brand-red/15 text-brand-red' : 'text-text-2 hover:bg-surface-2',
+      )}
+    >
+      {icon}
+    </button>
+  )
+
   return (
     /* `isolate` keeps the pin's z-20 inside this note's own stacking context.
        Without it the pin escapes to the board's context and paints over every
@@ -577,8 +647,12 @@ function NoteCard({ note, zoom, onMove, onChangeContent, onDelete }: NoteCardPro
         top: y,
         width: NOTE_SIZE,
         height: NOTE_SIZE,
-        // A sheet you have hold of rides over the rest of the board.
-        zIndex: dragging ? 1 : undefined,
+        // A sheet you have hold of — or are writing on — floats above the rest so
+        // you can see it and its toolbar; the lift is temporary (this state, not a
+        // saved z_index), so it drops back to its stacking order the moment you
+        // stop. Otherwise it sits at its saved order (0 = unset, painted by DOM
+        // order). The toolbar rides along because it lives in this same context.
+        zIndex: dragging || editing ? DRAG_Z : note.z_index || undefined,
       }}
     >
       <div
@@ -673,17 +747,18 @@ function NoteCard({ note, zoom, onMove, onChangeContent, onDelete }: NoteCardPro
               setEditing(false)
               flushContent()
             }}
+            onKeyDown={handleFormatKeys}
             onPointerDown={(e) => e.stopPropagation()}
             placeholder="write something…"
             className="absolute resize-none bg-transparent outline-none font-hand text-note text-note-ink placeholder:text-note-ink/55"
-            style={TEXT_INSET[shape]}
+            style={{ ...TEXT_INSET[shape], ...fmtStyle }}
           />
         ) : (
           /* Transparent to the pointer so a drag or double-click started on the
              writing lands on the paper underneath. */
           <p
             className="absolute overflow-hidden whitespace-pre-wrap wrap-break-word font-hand text-note text-note-ink pointer-events-none"
-            style={TEXT_INSET[shape]}
+            style={{ ...TEXT_INSET[shape], ...fmtStyle }}
           >
             {(draft ?? note.content) || (
               <span className="text-note-ink/55">double-click to write…</span>
@@ -692,19 +767,72 @@ function NoteCard({ note, zoom, onMove, onChangeContent, onDelete }: NoteCardPro
         )}
       </div>
 
-      <button
-        type="button"
-        aria-label="Remove note"
-        onPointerDown={(e) => e.stopPropagation()}
-        onClick={() => onDelete(note.id)}
+      {/* Hover controls, top-right. Bring-to-front only when something is above
+          this note — pressing it when already on top would be a no-op. */}
+      <div
         className={cn(
-          'absolute -right-1 top-2 z-30 size-7 rounded-full bg-surface-1 border border-border-default',
-          'flex items-center justify-center text-text-3 hover:text-brand-red',
-          'opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity',
+          'absolute -right-1 top-2 z-30 flex items-center gap-1',
+          'opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity',
         )}
       >
-        <Trash2 size={13} />
-      </button>
+        {!isTop && (
+          <button
+            type="button"
+            aria-label="Bring to front"
+            title="Bring to front"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={() => onRaise(note.id)}
+            className={cn(
+              'size-7 rounded-full bg-surface-1 border border-border-default',
+              'flex items-center justify-center text-text-3 hover:text-brand-red',
+            )}
+          >
+            <BringToFront size={13} />
+          </button>
+        )}
+        <button
+          type="button"
+          aria-label="Remove note"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={() => onDelete(note.id)}
+          className={cn(
+            'size-7 rounded-full bg-surface-1 border border-border-default',
+            'flex items-center justify-center text-text-3 hover:text-brand-red',
+          )}
+        >
+          <Trash2 size={13} />
+        </button>
+      </div>
+
+      {/* Formatting toolbar — only while writing, so it stays out of the way
+          otherwise. Lives in the un-rotated outer container so it reads level no
+          matter how the note is tilted, and sits below the sheet to clear the pin.
+          preventDefault on mousedown keeps the caret in the textarea, so tapping a
+          button styles the note without ending the edit. */}
+      {editing && (
+        <div
+          onPointerDown={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.preventDefault()}
+          className={cn(
+            'absolute left-1/2 top-full z-40 mt-2 -translate-x-1/2 flex items-center gap-0.5',
+            'rounded-full border border-border-default bg-surface-1/95 p-1 shadow-lg',
+          )}
+        >
+          {fmtBtn('al', (note.text_align ?? 'left') === 'left', 'Align left (⌘/Ctrl+L)',
+            () => onFormat(note.id, { textAlign: 'left' }), <AlignLeft size={14} />)}
+          {fmtBtn('ac', note.text_align === 'center', 'Align center (⌘/Ctrl+C)',
+            () => onFormat(note.id, { textAlign: 'center' }), <AlignCenter size={14} />)}
+          {fmtBtn('ar', note.text_align === 'right', 'Align right (⌘/Ctrl+R)',
+            () => onFormat(note.id, { textAlign: 'right' }), <AlignRight size={14} />)}
+          <span className="mx-0.5 h-4 w-px bg-border-default" />
+          {fmtBtn('b', note.bold, 'Bold (⌘/Ctrl+B)',
+            () => onFormat(note.id, { bold: !note.bold }), <Bold size={14} />)}
+          {fmtBtn('i', note.italic, 'Italic (⌘/Ctrl+I)',
+            () => onFormat(note.id, { italic: !note.italic }), <Italic size={14} />)}
+          {fmtBtn('s', note.strikethrough, 'Strikethrough (⌘/Ctrl+S)',
+            () => onFormat(note.id, { strikethrough: !note.strikethrough }), <Strikethrough size={14} />)}
+        </div>
+      )}
 
       {/* Drawn last so it lies over the paper, and positioned so the needle tip
           lands exactly on the anchor. It does not rotate with the note — a real
@@ -1067,15 +1195,49 @@ export default function StickyNotesPage() {
     setCustomOpen(false)
   }
 
+  /** Highest stacking order currently in use; a raise lands at maxZ + 1. */
+  const maxZ = useMemo(
+    () => notes.reduce((m, n) => Math.max(m, n.z_index ?? 0), 0),
+    [notes],
+  )
+  /**
+   * A note is "on top" only when it strictly outranks every other note. Ties
+   * (e.g. a fresh board where all z are 0) paint by DOM order, so nobody is on
+   * top yet — which is why the raise control still shows on all of them.
+   */
+  const isStrictlyTop = useCallback(
+    (note: StickyNote) =>
+      notes.every((n) => n.id === note.id || (n.z_index ?? 0) < (note.z_index ?? 0)),
+    [notes],
+  )
+
   const handleMove = useCallback(
-    (id: string, posX: number, posY: number, onSettled: () => void) =>
-      updateNote({ id, posX, posY }, { onSettled }),
-    [updateNote],
+    (id: string, posX: number, posY: number, onSettled: () => void) => {
+      // Grabbing a sheet and moving it brings it forward, the way a real note
+      // ends up on top of the pile once you've handled it — folded into the same
+      // write as the move, and skipped when it is already on top.
+      const note = notes.find((n) => n.id === id)
+      const raise = note && !isStrictlyTop(note)
+      updateNote({ id, posX, posY, ...(raise ? { zIndex: maxZ + 1 } : {}) }, { onSettled })
+    },
+    [updateNote, notes, maxZ, isStrictlyTop],
   )
   const handleContent = useCallback(
     (id: string, content: string, onSettled: () => void) =>
       updateNote({ id, content }, { onSettled }),
     [updateNote],
+  )
+  const handleFormat = useCallback(
+    (id: string, patch: NoteFormat) => updateNote({ id, ...patch }),
+    [updateNote],
+  )
+  const handleRaise = useCallback(
+    (id: string) => {
+      const note = notes.find((n) => n.id === id)
+      if (!note || isStrictlyTop(note)) return
+      updateNote({ id, zIndex: maxZ + 1 })
+    },
+    [updateNote, notes, maxZ, isStrictlyTop],
   )
   const handleDelete = useCallback((id: string) => deleteNote(id), [deleteNote])
 
@@ -1094,7 +1256,7 @@ export default function StickyNotesPage() {
               My Notes
             </h1>
             <p className="font-ui text-body-sm text-text-3 mt-1">
-              Drag a note to move it, double-click to write. Drag the board to pan, ⌘/Ctrl + scroll to zoom.
+              Drag a note to move it (it jumps to the front); double-click to write and style it. Drag the board to pan, ⌘/Ctrl + scroll to zoom.
             </p>
           </div>
           {/* Split button: the face pins a random note, the caret opens the
@@ -1217,8 +1379,11 @@ export default function StickyNotesPage() {
                     key={note.id}
                     note={note}
                     zoom={zoom}
+                    isTop={isStrictlyTop(note)}
                     onMove={handleMove}
                     onChangeContent={handleContent}
+                    onFormat={handleFormat}
+                    onRaise={handleRaise}
                     onDelete={handleDelete}
                   />
                 ))}
