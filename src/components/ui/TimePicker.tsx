@@ -10,6 +10,7 @@ interface TimePickerProps {
   placeholder?: string
   className?: string
   step?: number          // minute increment, default 1 (every minute selectable)
+  disabled?: boolean     // renders dimmed and refuses to open
 }
 
 function parseTime(s: string): [number, number] | null {
@@ -36,6 +37,7 @@ export function TimePicker({
   placeholder = 'Select time…',
   className,
   step = 1,
+  disabled = false,
 }: TimePickerProps) {
   const parsed = parseTime(value)
   const minParsed = parseTime(minTime ?? '')
@@ -66,6 +68,7 @@ export function TimePicker({
   }
 
   const toggleOpen = () => {
+    if (disabled) return
     const nextOpen = !open
     if (nextOpen && parsed) {
       setPendingH(parsed[0])
@@ -121,16 +124,21 @@ export function TimePicker({
         ref={triggerRef}
         type="button"
         onClick={toggleOpen}
+        disabled={disabled}
         className={cn(
           'w-full flex items-center gap-2 bg-surface-inset border rounded-md px-3 py-2 text-left transition-colors',
-          open ? 'border-border-focus' : 'border-border-default hover:border-border-strong',
+          disabled
+            ? 'border-border-subtle opacity-60 cursor-not-allowed'
+            : open ? 'border-border-focus' : 'border-border-default hover:border-border-strong',
         )}
       >
         <Clock size={13} className="text-text-4 shrink-0" />
         <span className={cn('flex-1 font-mono text-[13px]', triggerLabel ? 'text-text-1' : 'text-text-4')}>
           {triggerLabel ?? placeholder}
         </span>
-        <ChevronDown size={13} className={cn('text-text-4 shrink-0 transition-transform', open && 'rotate-180')} />
+        {!disabled && (
+          <ChevronDown size={13} className={cn('text-text-4 shrink-0 transition-transform', open && 'rotate-180')} />
+        )}
       </button>
 
       <Popover

@@ -1,1514 +1,1998 @@
 {
-  "D:\\Projects\\react\\linknbit-portal\\eslint.config.js": {
-    "mtime": 1781637487.4094937,
-    "hash": "9b2eba6b61578a79a93ebc7b24518667"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\vite.config.ts": {
-    "mtime": 1779216769.1289012,
-    "hash": "e918371fcfba0bddb83ea16affd36dff"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\public\\sw.js": {
-    "mtime": 1784480395.3658903,
-    "hash": "de5c30f064930fa149fa4904b98fc875"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\references\\office-quest-app\\preview-server.js": {
-    "mtime": 1778922121.4382007,
-    "hash": "b9f14b1bdd2990ef8e475f74bda26eab"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\references\\office-quest-app\\assets\\js\\office-quest.js": {
-    "mtime": 1778922121.5250833,
-    "hash": "e7d25c1d10cdd4f05c9f21ff07bbd3c5"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\references\\resources\\uploads\\design-canvas.jsx": {
-    "mtime": 1778596599.77557,
-    "hash": "2952531bc4efd01c765b4d8370b16f62"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\scripts\\generate-pwa-assets.mjs": {
-    "mtime": 1784370312.832495,
-    "hash": "bacdb856045a4f1e5febd55adf324854"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\App.tsx": {
-    "mtime": 1784488832.2563894,
-    "hash": "0e0e12cb08af53074e501b979cbbb47b"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\main.tsx": {
-    "mtime": 1781531066.662119,
-    "hash": "9ddbfd24c102a52e4885f2fb8ac65666"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pwa.ts": {
-    "mtime": 1781531066.6731184,
-    "hash": "6d9d86121423b002b59095d01c5e99bb"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\api\\approvals.ts": {
-    "mtime": 1784413059.2887154,
-    "hash": "e27a0554b8127f3511530b2b0880646e"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\api\\attachments.ts": {
-    "mtime": 1784459950.871741,
-    "hash": "d236ca5b708859f832b058361d77b54f"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\api\\attendance.ts": {
-    "mtime": 1784370312.833667,
-    "hash": "005984ca49dd11b253d6b6629e5e7295"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\api\\auth.ts": {
-    "mtime": 1784370312.8343265,
-    "hash": "b5db5fc38ca8c742b0940783beff0f58"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\api\\clients.ts": {
-    "mtime": 1784412945.7967904,
-    "hash": "eab884e62946666339ffdd66c15870ac"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\api\\comments.ts": {
-    "mtime": 1784477242.908705,
-    "hash": "0ed18e57e354d943c24ed74055b75a3f"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\api\\designations.ts": {
-    "mtime": 1784370312.8348424,
-    "hash": "579d9ca4d85140eba8930719c0503e33"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\api\\gamification.ts": {
-    "mtime": 1784370312.8354414,
-    "hash": "1a3c3e04a42e1d3aeecf107a088e6ea4"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\api\\index.ts": {
-    "mtime": 1784477283.4936688,
-    "hash": "337c56a4b6c82d1281cceaa8692256ac"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\api\\mentions.ts": {
-    "mtime": 1784477152.0284278,
-    "hash": "c8dc119b132dc8fba19c4d5e05f95559"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\api\\notifications.ts": {
-    "mtime": 1784370312.8366337,
-    "hash": "fd27918a2a6893a88978ee0b98c3ead8"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\api\\people.ts": {
-    "mtime": 1784370312.8372283,
-    "hash": "c0adf4d7fe3a0fd8ae3a8be744ce976c"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\api\\profile.ts": {
-    "mtime": 1781531066.6471193,
-    "hash": "0e0987c919132ccd949c229feb5d49e7"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\api\\projectMembers.ts": {
-    "mtime": 1784412973.3414924,
-    "hash": "0dbe806afa5ec14254fc8e63e4618100"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\api\\projects.ts": {
-    "mtime": 1784412966.4890807,
-    "hash": "14374439e488624556583f3022e29727"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\api\\roleFlags.ts": {
-    "mtime": 1779331645.0015724,
-    "hash": "bfd4ac8bab0869e6979fd324e0e576f1"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\api\\services.ts": {
-    "mtime": 1784370312.8378253,
-    "hash": "21b7d9ef3786ed88e27fbef6a16d8a18"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\api\\stages.ts": {
-    "mtime": 1784412991.1490076,
-    "hash": "46b905ea0915a85f5be1ae3936e97cc3"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\api\\standups.ts": {
-    "mtime": 1784488665.8365154,
-    "hash": "3fb6f165d9e903b03fc7717ed103aa8c"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\api\\subtasks.ts": {
-    "mtime": 1784413023.979842,
-    "hash": "41f10945a1292ecf9203089edcaa6c01"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\api\\taskAssignees.ts": {
-    "mtime": 1784481487.986401,
-    "hash": "0246dffc8df5cb7d3371b72f94d2fcc0"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\api\\tasks.ts": {
-    "mtime": 1784481530.200749,
-    "hash": "4e82c11cd7ce896e152103dcd7e19be6"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\api\\teamMembers.ts": {
-    "mtime": 1784370312.838413,
-    "hash": "266329bdc78207e4e0d1900e62c6ac32"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\api\\teams.ts": {
-    "mtime": 1779462541.8425446,
-    "hash": "165d93095541a97f88adedcdf9358a6f"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\api\\watchers.ts": {
-    "mtime": 1784477161.3763225,
-    "hash": "4c007e51aee470789f7cb6ed8d3dad0b"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\brand\\LinknbitLogo.tsx": {
-    "mtime": 1781637487.4797864,
-    "hash": "db3692d54ff03415c565dba977c3a716"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\editor\\DocEditor.tsx": {
-    "mtime": 1784477341.38109,
-    "hash": "956c724f4bed92dac2827088de3ebe81"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\editor\\RichEditor.tsx": {
-    "mtime": 1784480050.4098194,
-    "hash": "a942268cf8dc8cf78082d0c6de4a9137"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\editor\\RichRenderer.tsx": {
-    "mtime": 1784480061.0758555,
-    "hash": "011bbc3ec708e4aa0feac4f66d97e2bf"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\editor\\slashCommand.tsx": {
-    "mtime": 1784459865.2342024,
-    "hash": "1f7f8dd58152b23b5ce772c52af5f789"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\editor\\SuggestionList.tsx": {
-    "mtime": 1784459574.1589863,
-    "hash": "46bbcc09097484540900936806b6a7de"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\editor\\suggestionUtils.tsx": {
-    "mtime": 1784479982.2393355,
-    "hash": "730113f4098b88565b0ff7c36b852639"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\AppShell.tsx": {
-    "mtime": 1784480425.9204524,
-    "hash": "b9013b57fe98aaa18b284001da6f60bb"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\BottomTabBar.tsx": {
-    "mtime": 1784370312.8394206,
-    "hash": "fd08c7c74878d93caae7d1d1393475d8"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\ClientShell.tsx": {
-    "mtime": 1781664067.1864178,
-    "hash": "255918739c842c28533390c6de8391cc"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\MobileHub.tsx": {
-    "mtime": 1781663457.9974914,
-    "hash": "b8f737ae856b9f2f770d75a12aa93144"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\MobileNavContext.tsx": {
-    "mtime": 1784370312.8399262,
-    "hash": "bec16156a65b28510ae5264b2650eca0"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\MobileNavDrawer.tsx": {
-    "mtime": 1781664082.5274954,
-    "hash": "381590d6959936a097ed04b6b7a18c8e"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\navItems.ts": {
-    "mtime": 1784488843.091681,
-    "hash": "b7833f860bb20aa5d31733b2bc087d0f"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\PrivateRoute.tsx": {
-    "mtime": 1781661659.0246265,
-    "hash": "55ab416abd56da929ba320cfd1f61c1c"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\RoleGuard.tsx": {
-    "mtime": 1781531066.6501186,
-    "hash": "e4ecf96743151bd6d8b310bca8f831a9"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\Sidebar.tsx": {
-    "mtime": 1781637487.4827862,
-    "hash": "11e5c18ef67d909fc1071ab7339ca213"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\StackScreen.tsx": {
-    "mtime": 1781663447.3296728,
-    "hash": "2228ce4e560d7119a75c20f2b7f2ba1f"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\Topbar.tsx": {
-    "mtime": 1784480262.2944512,
-    "hash": "7854e0bcc3e6bbac57c27b4410d00fb9"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\pwa\\InstallAppButton.tsx": {
-    "mtime": 1784370312.8416984,
-    "hash": "378a5fed09a6a9a99da34e21231801f4"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\shared\\AttachmentUploader.tsx": {
-    "mtime": 1784413483.0062451,
-    "hash": "5b00486960a589f8fe1b14551aca8cd0"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\shared\\AttendanceCheckInCard.tsx": {
-    "mtime": 1784370312.842275,
-    "hash": "0afec85618761a9ec68fcf1ffc408a2e"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\shared\\ClickUpStatus.tsx": {
-    "mtime": 1778596599.7816026,
-    "hash": "54c47b0ec06e53cac5115c0721649d99"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\shared\\ClientVisibility.tsx": {
-    "mtime": 1778596599.7826118,
-    "hash": "a3724101dc10f9e8a5411c9e1b011d0e"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\shared\\MonthFilter.tsx": {
-    "mtime": 1784491915.721531,
-    "hash": "20b9969091a7d7b8b9609d5e5755bf3b"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\shared\\MyDevicesCard.tsx": {
-    "mtime": 1784370312.8428488,
-    "hash": "d14ffa5402f94a0af37290c18d74ecc2"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\shared\\NotificationPreferencesCard.tsx": {
-    "mtime": 1784370312.8428488,
-    "hash": "e7c949e134b78c749c794d1e46713b86"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\shared\\PointsHistory.tsx": {
-    "mtime": 1784370312.8434348,
-    "hash": "ed9aea2978d0cb47488306d6ee47c8ff"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\shared\\PriorityChip.tsx": {
-    "mtime": 1784413737.32146,
-    "hash": "fe70e4b1c641b2ed4bbdac3b2a6e19bb"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\shared\\PushDevicesCard.tsx": {
-    "mtime": 1784370312.8434348,
-    "hash": "b5ae6b60cafbb8fda68c88f960ece59c"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\shared\\RoleBadge.tsx": {
-    "mtime": 1780583147.1956122,
-    "hash": "994afbbe22f04245734ed057f0487a52"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\shared\\SalaryCard.tsx": {
-    "mtime": 1781660416.3533976,
-    "hash": "4d450fbcebea72cad49556042ef48b3b"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\shared\\ServiceChip.tsx": {
-    "mtime": 1781637487.4872987,
-    "hash": "f4c0b82cc4addd33d4d4916e1813efcd"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\shared\\StatusChip.tsx": {
-    "mtime": 1784449857.344059,
-    "hash": "c92d4078897211940fb3e20b96eb9329"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\shared\\TaskBoard.tsx": {
-    "mtime": 1784481634.42034,
-    "hash": "de97bef1b04a13f45d43366936b48ea0"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\shared\\TeamAttendancePanel.tsx": {
-    "mtime": 1784370312.8440278,
-    "hash": "caceb58b86a250e1d8bc224461634477"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\shared\\XPBar.tsx": {
-    "mtime": 1778596599.783612,
-    "hash": "de19b1e64236293c8c97e966f0870c39"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\Avatar.tsx": {
-    "mtime": 1781639265.1487393,
-    "hash": "ec63d763e1d549471de3ea4ab12db8d9"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\Badge.tsx": {
-    "mtime": 1784491021.0188494,
-    "hash": "e16678c3839842fe6df270f5a0426e62"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\Button.tsx": {
-    "mtime": 1781637487.4902992,
-    "hash": "0def0b90ee731bbb6b6f3b0243568a2e"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\Card.tsx": {
-    "mtime": 1778596599.7856133,
-    "hash": "6954adf29bf2998167cc210bed3f8acd"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\ConfirmDialog.tsx": {
-    "mtime": 1784370312.8440278,
-    "hash": "51f175bfbc25c3686e0d48525aa216ae"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\DatePicker.tsx": {
-    "mtime": 1784370312.8450348,
-    "hash": "af51598d552c1a286d8cb594b80260ed"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\Drawer.tsx": {
-    "mtime": 1784460336.7274742,
-    "hash": "ccd7e3b70bbe7003d72da20e1fe85537"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\Input.tsx": {
-    "mtime": 1784414934.743249,
-    "hash": "05584fc2b3830607f2d68d720c21a6f9"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\Modal.tsx": {
-    "mtime": 1781664083.8532083,
-    "hash": "770be07da63babd5d2ab4b32e8a9d7e6"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\ModalShell.tsx": {
-    "mtime": 1781664085.519987,
-    "hash": "5a91969520c748c1b8b72b0455193280"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\MultiSelectPeople.tsx": {
-    "mtime": 1784487586.4014232,
-    "hash": "0d1ce40ebc4f8a6bc5a6c4de62636f9d"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\PeriodStepper.tsx": {
-    "mtime": 1784370312.8455398,
-    "hash": "89a77314de7bba924543f59588a26ef0"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\Popover.tsx": {
-    "mtime": 1784370312.8461196,
-    "hash": "6112da67df19bbf7ff4eee4cc46793d1"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\ProgressBar.tsx": {
-    "mtime": 1778596599.7856133,
-    "hash": "6178435e7a185ccb72665edcabf990ec"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\ResponsiveTable.tsx": {
-    "mtime": 1781531066.655118,
-    "hash": "eaa9c9fb8633db37977c802b8414091a"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\SectionToolbar.tsx": {
-    "mtime": 1784370312.8461196,
-    "hash": "d3f1c1ad1725b107b7f040d998c16b47"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\Select.tsx": {
-    "mtime": 1784370312.8467197,
-    "hash": "b01145255e870ef3792bd21355cee215"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\Skeleton.tsx": {
-    "mtime": 1781637487.4932995,
-    "hash": "a3bb8f3e1d8d45a57fe9474c1b1198ac"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\Tabs.tsx": {
-    "mtime": 1781639291.6312802,
-    "hash": "2503577493d615e2f45eab298564e279"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\TimePicker.tsx": {
-    "mtime": 1784370312.847298,
-    "hash": "d7d28116eb2bf6e622e8531e31601290"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\TimezoneSelect.tsx": {
-    "mtime": 1781637487.494303,
-    "hash": "4e937302d707673e8335932142c9139e"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\toast-context.ts": {
-    "mtime": 1779132438.2552013,
-    "hash": "3a1c98ef2e5d5f8717502beb83642617"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\Toast.tsx": {
-    "mtime": 1781637487.4954498,
-    "hash": "d60cdce02f5a0137133f191bf6aa7549"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\components\\ui\\Toggle.tsx": {
-    "mtime": 1781637487.496446,
-    "hash": "ff9eb3f3bbce3b35f99d3ee0e0aa77e4"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\constants\\notifications.ts": {
-    "mtime": 1784480253.4374652,
-    "hash": "2922f65804eb05c618f4d041f55d2e8d"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\constants\\roles.ts": {
-    "mtime": 1784370312.8484504,
-    "hash": "fda71eb278b478b4237aad70dbc63215"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\context\\AuthContext.tsx": {
-    "mtime": 1781639366.4909482,
-    "hash": "4e7351226e157d4c76727e72a9cf29a8"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\data\\mock.ts": {
-    "mtime": 1779132438.256202,
-    "hash": "8aacb390e65a3096c8f517a3a4425339"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useApprovals.ts": {
-    "mtime": 1784413216.7473555,
-    "hash": "cd87c69a710fc1e18fc13766977c7dfc"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useAttachments.ts": {
-    "mtime": 1784459971.370055,
-    "hash": "841fb3d7926a9a297483cfac38e13632"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useAttendance.ts": {
-    "mtime": 1784370312.8496776,
-    "hash": "eca8afdc177bfa0acade14cf345c3073"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useAuth.ts": {
-    "mtime": 1779567390.115311,
-    "hash": "307250f1ae693af68211298ea45f191f"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useClickOutside.ts": {
-    "mtime": 1781531066.6591184,
-    "hash": "1b16beef22cc99f0762d9a284de89f58"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useClients.ts": {
-    "mtime": 1784413125.1223297,
-    "hash": "f67952dedf8149ddf914a4cf2cedaaa0"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useComments.ts": {
-    "mtime": 1784477260.4231112,
-    "hash": "ee6b66a3c196721ba502bdcf4d77e3bc"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useCurrentDevice.ts": {
-    "mtime": 1784370312.8502648,
-    "hash": "fe01be49d4626527ea5b450398537435"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useDesignations.ts": {
-    "mtime": 1784370312.8502648,
-    "hash": "5971f0241db083a9fb4587ed0fb00c5c"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useEnrolledDevices.ts": {
-    "mtime": 1784370312.8508584,
-    "hash": "0a100b2a352386230406ab58ae4732c0"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useGamification.ts": {
-    "mtime": 1784370312.8515062,
-    "hash": "0a0842e32431147259747fce3f8a09b2"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useMediaQuery.ts": {
-    "mtime": 1781531066.6601176,
-    "hash": "cf677e402aa3e1b4308599cc8e4eb714"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useMentions.ts": {
-    "mtime": 1784477268.3403654,
-    "hash": "54bc5bc6f9511670387d2b3a371c13a3"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useMonthFilter.ts": {
-    "mtime": 1784491900.6681213,
-    "hash": "483c53e1f204a16e5ed4fe0cc5936828"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useNotifications.ts": {
-    "mtime": 1784370312.8526635,
-    "hash": "bfc4fc4c2f6ddde049ca61e2d1eceac3"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\usePeople.ts": {
-    "mtime": 1784370312.8526635,
-    "hash": "85248014be0828aac1fe510712a72bfd"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useProfile.ts": {
-    "mtime": 1781531066.6601176,
-    "hash": "5a3c0e6d839cbd10681266efcbdd25c2"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useProjectMembers.ts": {
-    "mtime": 1784413145.5722065,
-    "hash": "09cdea5bf4f628c69e3dc22514b66e6e"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useProjects.ts": {
-    "mtime": 1784413136.1353457,
-    "hash": "25ff34d55ec0ac8071dcd92a39236e85"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\usePwaInstall.ts": {
-    "mtime": 1781533128.9804037,
-    "hash": "dc11fa4c82532a59768966b663e8af72"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useRoleFlags.ts": {
-    "mtime": 1779331687.8865335,
-    "hash": "5c65c3862e8c9a7e7c392cb124497ce2"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useServices.ts": {
-    "mtime": 1780583492.0875251,
-    "hash": "1fff2da6dea8f19b9b03940c32d72160"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useStages.ts": {
-    "mtime": 1784413293.4438727,
-    "hash": "8f8d889f315547755ea2d29e40ae0af2"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useStandups.ts": {
-    "mtime": 1784488723.0739422,
-    "hash": "3fe5e24d477193f11605d211b832fa1d"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useSubtasks.ts": {
-    "mtime": 1784413187.9673426,
-    "hash": "409e54f02ee962fea406cbd3a8f67950"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useTaskAssignees.ts": {
-    "mtime": 1784481539.7964196,
-    "hash": "5abcbb8183f996c3cfbdc183c3f55ba5"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useTasks.ts": {
-    "mtime": 1784413176.2510574,
-    "hash": "72ce00e93df6a2a0490ed16d651641b5"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useTeamMembers.ts": {
-    "mtime": 1784370312.8532681,
-    "hash": "a448f19a2b6becf946144cd51e8e5b5f"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useTeams.ts": {
-    "mtime": 1779462541.8465452,
-    "hash": "ebe30855db0a7e0082f98b406ff3b695"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useWatchers.ts": {
-    "mtime": 1784477276.649067,
-    "hash": "3d7691c33907203ff8d3d3be95b0b0d4"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\realtime\\useRealtimeComments.ts": {
-    "mtime": 1784413230.251719,
-    "hash": "4d7020575c0196b6ceb3e5cb9391ed80"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\realtime\\useRealtimeNotifications.ts": {
-    "mtime": 1784370312.8490245,
-    "hash": "de5a6c4b92e343cb48ffb92d89b1e6a5"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\realtime\\useRealtimeTasks.ts": {
-    "mtime": 1784413224.1217928,
-    "hash": "a5c401f7eef3a007ea9a4373cd2facdf"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\lib\\attachment.ts": {
-    "mtime": 1784413448.6390994,
-    "hash": "9235b5841f7b0137913d09f48db27147"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\lib\\attendanceHours.ts": {
-    "mtime": 1781636520.5013382,
-    "hash": "dbf47e03a3307725d86515609d05f957"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\lib\\avatar.ts": {
-    "mtime": 1781637487.499447,
-    "hash": "079c644aa90f2a08aac2864d12c38e73"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\lib\\cn.ts": {
-    "mtime": 1778596599.7878091,
-    "hash": "d5fc3afa79f0c3df711898805e5da7b2"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\lib\\csv.ts": {
-    "mtime": 1780549972.940848,
-    "hash": "476cfa45e15504b0e6835c0166618ab0"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\lib\\dateGroups.ts": {
-    "mtime": 1784491372.9330254,
-    "hash": "d22dd46024b112e9ad241041db9469bd"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\lib\\deviceUtils.ts": {
-    "mtime": 1784370312.8538694,
-    "hash": "e2d9d37c6595f7e9d764b75f68e634eb"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\lib\\featureFlags.ts": {
-    "mtime": 1781531066.6611178,
-    "hash": "6e4c14a2aeb6a1bae4d69527892162a5"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\lib\\gamificationAccess.ts": {
-    "mtime": 1780553351.235615,
-    "hash": "39ce57f7edf3a4a5bc1d877445af3a50"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\lib\\peopleAccess.ts": {
-    "mtime": 1784370312.8549697,
-    "hash": "14614daf4f829d50ab7f4fcdb17734ed"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\lib\\push.ts": {
-    "mtime": 1784370312.8549697,
-    "hash": "97b0192f68410f543e29158d49499323"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\lib\\richText.ts": {
-    "mtime": 1784477202.9434547,
-    "hash": "ac5b7e487ca3a07f9cdeecffab949392"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\lib\\roles.ts": {
-    "mtime": 1781531066.6611178,
-    "hash": "e97841521a779edba7f09f9f506a3cec"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\lib\\supabase.ts": {
-    "mtime": 1779216780.9574878,
-    "hash": "5bd526445bee0bea72af0a22837a24b5"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\lib\\timezone.ts": {
-    "mtime": 1781636494.7975283,
-    "hash": "bbd8b5efcf486750897827fa8030a356"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\lib\\utils.ts": {
-    "mtime": 1784449854.3063924,
-    "hash": "8d000c3d2b0b761a50771762a0106043"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\AttendanceMobile.tsx": {
-    "mtime": 1784370312.8571177,
-    "hash": "877665592e099d77a12853b01a92374d"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\AttendancePage.tsx": {
-    "mtime": 1781663675.5782335,
-    "hash": "97f1155a525ccda23cf7852f3ddf5d60"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\DashboardPage.tsx": {
-    "mtime": 1781637487.500449,
-    "hash": "0e8b46af6e777edd996bfca2296f3ebc"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\InboxPage.tsx": {
-    "mtime": 1784480330.482026,
-    "hash": "f07958a39bee87b7d5e6da6ae15fe1cd"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\MorePage.tsx": {
-    "mtime": 1784370312.8571177,
-    "hash": "bc770f6d754af67a52028ae0cb2101a7"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\NotificationsPage.tsx": {
-    "mtime": 1784480260.9342568,
-    "hash": "b39e8c6d3d9f7ed99425cae8ba873687"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\ProfilePage.tsx": {
-    "mtime": 1784370312.8583338,
-    "hash": "2f875a5dcfa136abbbbf34342685954c"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\StandupForm.tsx": {
-    "mtime": 1784488759.639412,
-    "hash": "aec09b937e7479992548cfda9ccc5c0d"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\StandupPage.tsx": {
-    "mtime": 1784488808.0902655,
-    "hash": "e7207a259496ab5689a24f3a5cdd9f46"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\AddProjectMemberModal.tsx": {
-    "mtime": 1784413507.385708,
-    "hash": "7bf18d2d9574c78fe0f8d82068a7d01d"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\ApprovalModal.tsx": {
-    "mtime": 1784413661.887112,
-    "hash": "e1bc7da1b20538f0896755fbb172af03"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\AttendancePage.tsx": {
-    "mtime": 1784491925.3801413,
-    "hash": "9d79379fdb72026178397cfc2928e6e6"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\ClickUpPage.tsx": {
-    "mtime": 1781637487.5034475,
-    "hash": "0cd898fd373cc7b24fc83cc93407c678"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\ClientFormModal.tsx": {
-    "mtime": 1784413648.9295998,
-    "hash": "13dad99cdb3ba5a665b62ad2f8954576"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\ClientsPage.tsx": {
-    "mtime": 1784413857.5160766,
-    "hash": "dfaa24145ed15be8ded6b17d953b2414"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\DashboardPage.tsx": {
-    "mtime": 1781637487.5049524,
-    "hash": "28237a70bec32ecfb97dac17dda65519"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\GamificationPage.tsx": {
-    "mtime": 1784491790.9243867,
-    "hash": "a8c86a730ba58f5274c146a598129983"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\PeoplePage.tsx": {
-    "mtime": 1784370312.8618429,
-    "hash": "6a335dd52dd9325153bd5918ff0a7c47"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\PlaceholderPage.tsx": {
-    "mtime": 1781637487.5084794,
-    "hash": "505d7fc1c77adccd6afc7e5d66ece55f"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\ProjectDetailPage.tsx": {
-    "mtime": 1784481643.7590725,
-    "hash": "9b7e7695c1b2a274b5833ed5e3cc993f"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\ProjectFilesTab.tsx": {
-    "mtime": 1784460004.6976137,
-    "hash": "df07b85697ffff03b962df9f86902c88"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\ProjectFormModal.tsx": {
-    "mtime": 1784460053.4525883,
-    "hash": "6218040182d2feabe5e58bd06a7ed210"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\ProjectsPage.tsx": {
-    "mtime": 1784480745.9023025,
-    "hash": "1aae88ac8a03f1c415ed0b863ec82412"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\ReportsPage.tsx": {
-    "mtime": 1781637487.5104795,
-    "hash": "4ae14cdba8cb6eba80e7f85211103fe1"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\SettingsPage.tsx": {
-    "mtime": 1784370312.8624196,
-    "hash": "e4baaa67061475e9d211a0b358e12588"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\StageFormModal.tsx": {
-    "mtime": 1784449897.6346343,
-    "hash": "13001310a0d3aa63c194e10c9a9a406f"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\TaskDetailContent.tsx": {
-    "mtime": 1784481703.372152,
-    "hash": "6366b7e3b832052319a1023d13226905"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\TaskDetailDrawer.tsx": {
-    "mtime": 1784460406.756576,
-    "hash": "8b30c5d48b473b00f1605ccaffd9f6ca"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\TaskDetailPage.tsx": {
-    "mtime": 1784460413.9260988,
-    "hash": "54fd39acb281f83e85fd879fbca4d9c2"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\TaskFormModal.tsx": {
-    "mtime": 1784481622.2488234,
-    "hash": "455dd3fd471e98779c4880076aa2d903"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\TasksPage.tsx": {
-    "mtime": 1784481657.034316,
-    "hash": "619fbe2f0280f64e9063ac715ad79b84"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\TeamsPage.tsx": {
-    "mtime": 1784370312.862991,
-    "hash": "f50f9970d707ae06fc9d936f5ba61f05"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\auth\\LoginPage.tsx": {
-    "mtime": 1784370312.8641565,
-    "hash": "0ebbb05a4922839f2272e4b19a075820"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\auth\\RegisterPage.tsx": {
-    "mtime": 1784370312.8649065,
-    "hash": "888d2ca3a6718923186eab849f3e1714"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\auth\\ResetPasswordPage.tsx": {
-    "mtime": 1784370312.8649065,
-    "hash": "c2c141658ee6d0d572f5f666edb06186"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\client\\AccountPage.tsx": {
-    "mtime": 1781637487.5176077,
-    "hash": "fb900dc7184219111126678339a095e1"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\client\\ApprovalsPage.tsx": {
-    "mtime": 1781637487.5186155,
-    "hash": "27eeb5b35d319f59a2926f2bf732126b"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\client\\DashboardPage.tsx": {
-    "mtime": 1781637487.519615,
-    "hash": "f2066ea762d55c7ad8eda3f48122ea14"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\client\\FilesPage.tsx": {
-    "mtime": 1781637487.520615,
-    "hash": "460a22ff5236b8caf783818e64a5c8c2"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\client\\HelpPage.tsx": {
-    "mtime": 1781637487.520615,
-    "hash": "c4b093a051b37960df5593d3b268b44c"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\client\\ProjectDetailPage.tsx": {
-    "mtime": 1781637487.5216146,
-    "hash": "42446f928fbb10669f3369c98c375b70"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\client\\ProjectsPage.tsx": {
-    "mtime": 1781637487.5226147,
-    "hash": "2cd4bd7ee36d6de9bfce62df82816842"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\client\\ReportsPage.tsx": {
-    "mtime": 1781637487.5236144,
-    "hash": "36f8ff0dbfc18cab0f43ab82f47797f8"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\client\\SettingsPage.tsx": {
-    "mtime": 1781637487.5236144,
-    "hash": "08bbccf4da7b71775bb42bfce103959e"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\employee\\AttendancePage.tsx": {
-    "mtime": 1784370312.8660924,
-    "hash": "93d82bf5c39cd0d627602873330d5859"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\employee\\DashboardPage.tsx": {
-    "mtime": 1784370312.866676,
-    "hash": "b24280e4998d0785bb5c9ea74890ca64"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\types\\database.ts": {
-    "mtime": 1784488647.6022449,
-    "hash": "c18f63a2621f3f2547a88454da17733a"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\src\\types\\index.ts": {
-    "mtime": 1784449851.2897952,
-    "hash": "d52cdbab0b04b4802a326f8bc4f48eb0"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\seed.sql": {
-    "mtime": 1779139008.7085917,
+  "/Users/zainmalik/Documents/projects/linknbit-portal/eslint.config.js": {
+    "mtime": 1784712836.4120903,
+    "hash": "df9c79aa334ec0d7237ceb4f7da2a5f1"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/vite.config.ts": {
+    "mtime": 1784712836.9042954,
+    "hash": "d4782e8fe4bd7377e280451307ea74a7"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/references/office-quest-app/preview-server.js": {
+    "mtime": 1784712836.8105772,
+    "hash": "97d23b7c168e474fabff422891100606"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/references/office-quest-app/assets/js/office-quest.js": {
+    "mtime": 1784712836.8098624,
+    "hash": "da242e167755eaf74cab1be2d1e7e5cd"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/references/resources/uploads/design-canvas.jsx": {
+    "mtime": 1784712836.8158562,
+    "hash": "eeae7d0e36149cdb88c25927aed68a67"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/seed.sql": {
+    "mtime": 1784712836.9028234,
     "hash": "092304828f778f6670a9e0ccda288826"
   },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\functions\\admin-set-password\\index.ts": {
-    "mtime": 1784370312.868998,
-    "hash": "0492bef40b91c9b87a26f0209a84164e"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\functions\\admin-upload-avatar\\index.ts": {
-    "mtime": 1781637487.5276327,
-    "hash": "d48208b51bd61a320056293a30dc5708"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\functions\\attendance-checkin\\index.ts": {
-    "mtime": 1784370312.8695765,
-    "hash": "f29f845b8a7055eed76eb2cc465346ff"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\functions\\attendance-checkout\\index.ts": {
-    "mtime": 1784370312.8701696,
-    "hash": "7ca7c4b669da1b36b83cea1628775dfd"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\functions\\attendance-ooo\\index.ts": {
-    "mtime": 1781637487.5286448,
-    "hash": "0e1bdb9511abe3763853f89a022190fa"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\functions\\auth-refresh\\index.ts": {
-    "mtime": 1781544933.1393566,
-    "hash": "cf202ff2bb6344351b3c04724acbc611"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\functions\\auth-signin\\index.ts": {
-    "mtime": 1781544829.2310138,
-    "hash": "f960f4a8dabe7ee93feec0468c9d6a7a"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\functions\\auth-signout\\index.ts": {
-    "mtime": 1781544943.1740885,
-    "hash": "335d2c15b9c3e3b11458428915cae229"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\functions\\delete-user\\index.ts": {
-    "mtime": 1784370312.8708062,
-    "hash": "83beb3ed01c257e7e7c9866d174ddffa"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\functions\\invite-user\\index.ts": {
-    "mtime": 1784370312.8713963,
-    "hash": "a8dadcaffe52b072375301effb845959"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\functions\\quest-evaluator\\index.ts": {
-    "mtime": 1779462541.8515425,
-    "hash": "e2da58a0a20e2ec1f60237e7d6b3b765"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\functions\\register-device\\index.ts": {
-    "mtime": 1784370312.871989,
-    "hash": "792dfadced292fe33f5d14a4c13d440e"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\functions\\resend-invite\\index.ts": {
-    "mtime": 1784370312.872587,
-    "hash": "bfb72015d85f991e4b5bf04ec130843a"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\functions\\send-push\\index.ts": {
-    "mtime": 1784370312.872587,
-    "hash": "14126248b9b5181bfe3b525327d9c1c3"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\functions\\_shared\\cookie.ts": {
-    "mtime": 1781544810.7973423,
-    "hash": "aafda651407716d042925a2dc3412dcc"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\functions\\_shared\\mail.ts": {
-    "mtime": 1784370312.8684185,
-    "hash": "58da17efb9aff3198d1e12090cd39b64"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260519000001_create_internal_enums.sql": {
-    "mtime": 1779141014.0094352,
-    "hash": "c8652667db60444623478565ae012631"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260519000002_create_levels.sql": {
-    "mtime": 1779141016.5681398,
-    "hash": "69c2f8ab3786a5ab70624d8f3bf89335"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260519000003_create_profiles.sql": {
-    "mtime": 1779141480.9336736,
-    "hash": "aa9c6659065c1f38f5f15627bb2af0cf"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260519000004_create_role_feature_flags.sql": {
-    "mtime": 1779141030.3114355,
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260519000004_create_role_feature_flags.sql": {
+    "mtime": 1784712836.8794546,
     "hash": "c8e1531b799ecea634d53f9bba98a393"
   },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260519000005_create_notifications.sql": {
-    "mtime": 1779141032.918282,
-    "hash": "a59bb732934e4e9105e0c924c982c084"
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260725204256_chat_toggle_reaction_rpc.sql": {
+    "mtime": 1785012189.7256486,
+    "hash": "d469047b20a785bd57aebb809ca8c5ed"
   },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260519000006_add_auto_profile_and_levels_rls.sql": {
-    "mtime": 1779210713.214808,
-    "hash": "7b0d9d6cf17866ee0aefe47e74e316ce"
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260623062757_eotm_not_a_badge.sql": {
+    "mtime": 1784712836.894038,
+    "hash": "3b8a12ed6a91faaad12d3d7a703713f0"
   },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260521015828_create_gamification_tables.sql": {
-    "mtime": 1779329276.3357859,
-    "hash": "acd8a2f120b331ea4d6fda0545e007a2"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260521020139_create_gamification_triggers.sql": {
-    "mtime": 1779329288.5912893,
-    "hash": "8b08226af9593b641a9219bdf6303049"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260521020426_seed_initial_rewards_and_quests.sql": {
-    "mtime": 1779329295.0434868,
-    "hash": "82154db0c675448db78c200d8f65c314"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260521021608_add_xp_admin_insert_policy.sql": {
-    "mtime": 1779330138.028571,
-    "hash": "a72a1181b124503a0c6ab949e43d2efc"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260521030000_add_start_quest_rpc_and_gamification_flags.sql": {
-    "mtime": 1779331495.301919,
-    "hash": "e7de054b6ac209d27f4339af29b218e2"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260521035438_create_teams_table.sql": {
-    "mtime": 1779564456.1804645,
-    "hash": "f236b81a8c50c6934f4a736e6e0acaf7"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260521035448_create_attendance_settings.sql": {
-    "mtime": 1779564458.7350712,
-    "hash": "65b99cd0474259bfc9bf31198a58b174"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260521035515_create_attendance_tables.sql": {
-    "mtime": 1779564471.7057285,
-    "hash": "b8ef913669ffd1579cd8267f06ba5eac"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260521035524_create_enrolled_devices.sql": {
-    "mtime": 1779564475.145623,
-    "hash": "af7de3aa3c83c384426d6068d8b90c31"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260521072748_create_attendance_exceptions.sql": {
-    "mtime": 1779564479.3644798,
-    "hash": "93d8cda46b3042446d049ad883907664"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260521093936_fix_fn_set_attendance_status.sql": {
-    "mtime": 1779462541.8515425,
-    "hash": "6b490ad61b941465965756b3adb40ba2"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260521121611_drop_fn_validate_checkout.sql": {
-    "mtime": 1779462541.852543,
-    "hash": "484e63cf64dc8fa5dd128a4455c8c48f"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260522000001_fix_attendance_self_update_rls_recursion.sql": {
-    "mtime": 1779463876.0245347,
-    "hash": "9fcbc8bbe1727558a12289fe1d12af9f"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260523000001_add_holidays_and_overtime.sql": {
-    "mtime": 1779561851.3510633,
-    "hash": "31b2bd650ce3b19b6ae546f27e9f5082"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260524000001_add_saturday_working.sql": {
-    "mtime": 1779564480.5267892,
-    "hash": "40ba2aa4bf53c461e8a5afe07ed180df"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260524000002_add_working_saturdays.sql": {
-    "mtime": 1779565496.92981,
-    "hash": "10dc23cee300dea058bf1286e3e63f2f"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260524000003_enable_pg_cron.sql": {
-    "mtime": 1779566309.1014278,
-    "hash": "ab420e0b9633a4585f31ce0d427a0784"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260524000004_add_auto_checkout_cron.sql": {
-    "mtime": 1779566314.3366044,
-    "hash": "3fb85ed7dea54feaac64669d6d228ec9"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260604000001_backfill_can_mark_attendance.sql": {
-    "mtime": 1780547715.9217482,
-    "hash": "34da1d10bc7484f1abf341312caf8664"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260604000002_drop_attendance_feature_flags.sql": {
-    "mtime": 1780548683.1300623,
-    "hash": "80aa3a06b3b6bcadd1b853c04fdd07cb"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260604000003_add_wfh_leave_and_absence.sql": {
-    "mtime": 1780549735.038652,
-    "hash": "d4eadaff5c0ef235f5f2167601326da0"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260604000004_allow_system_attendance_source.sql": {
-    "mtime": 1780550687.5494769,
-    "hash": "c63afec39f49f1b827325f70bc6f8eee"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260604000005_gamification_currency_and_roles.sql": {
-    "mtime": 1780552756.686947,
-    "hash": "6582e59af2e919de4fa5a5d2aa423cb9"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260604000006_gamification_quest_board.sql": {
-    "mtime": 1780552789.2276213,
-    "hash": "13514c39ef09cbccf7d8c98d7b942f7a"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260604000007_gamification_shoutouts.sql": {
-    "mtime": 1780552809.8796585,
-    "hash": "8d64450ffd12a143a1ac637887db3d7d"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260604000008_gamification_rewards_redemptions.sql": {
-    "mtime": 1780552841.6173677,
-    "hash": "cc86a0b4102de1c52b12e01b770de1b8"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260604000009_gamification_badges.sql": {
-    "mtime": 1780552869.2871232,
-    "hash": "7a18d3e6c3d71048d21835d58f3a3c95"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260604000010_gamification_monthly_reset.sql": {
-    "mtime": 1780552883.1030798,
-    "hash": "967145219c1acd15106d63685d389afa"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260604000011_people_management.sql": {
-    "mtime": 1780581483.8209994,
-    "hash": "b47938fa24067b5d8e0bde3dae0e9122"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260604000012_dynamic_services.sql": {
-    "mtime": 1780583451.8014934,
-    "hash": "5a7e17dee42fc173bf17d4c7682f2496"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260615115751_allow_hr_write_attendance_settings.sql": {
-    "mtime": 1781531066.6741257,
-    "hash": "bfda853e82fa58df6278fb3f0367598a"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260615130358_revert_attendance_on_holiday_delete.sql": {
-    "mtime": 1781531066.6741257,
-    "hash": "0b713cc93d76ab9a62b84ad047cb3777"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260615133723_create_avatars_bucket.sql": {
-    "mtime": 1781531066.6741257,
-    "hash": "f415a60759e3a9c930013302bf971993"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260615142542_employee_of_the_month.sql": {
-    "mtime": 1781531066.6741257,
-    "hash": "9328639fc57f4617505df808da06a1b1"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260615155210_add_profile_personal_details.sql": {
-    "mtime": 1781531066.6751244,
-    "hash": "fe09c4091e0636b302db23f1cd281b6c"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260615162852_team_lead_attendance_visibility.sql": {
-    "mtime": 1781531066.6751244,
-    "hash": "9826474290b21ceac30426520a170133"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260615174500_block_self_checkin_after_work_end.sql": {
-    "mtime": 1781534055.4047165,
-    "hash": "ccce7cafdeefab14f0c2c3a23bf2bfe8"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260616053938_set_avatar_upload_limits.sql": {
-    "mtime": 1781637487.5306432,
-    "hash": "40841d34b84cb59e0bf692f1438180a9"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260616063218_restrict_device_approval_to_admin.sql": {
-    "mtime": 1781637487.5306432,
-    "hash": "dc130dcf2bde98bf9d29adb4a5d12268"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260616100000_remove_attendance_self_write_rls.sql": {
-    "mtime": 1781575910.9829824,
-    "hash": "7eb59c65db6fccd308a038bc979bb2ae"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260616101000_add_early_checkin_window.sql": {
-    "mtime": 1781576398.1212914,
-    "hash": "486522b44c61841c63e54b1215e70e79"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260616110000_add_attendance_excluded_minutes.sql": {
-    "mtime": 1781637487.5306432,
-    "hash": "5dec14ba980a84ac7ed89044e71a940e"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260616111000_set_lp_on_time_checkin_amount.sql": {
-    "mtime": 1781637487.5316432,
-    "hash": "c6fe777f712450323d0ace09e21aded4"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260616112000_auto_checkout_toggle_and_ooo_tail.sql": {
-    "mtime": 1781637487.5316432,
-    "hash": "1fcf9b769ad0b8716cfc79c5fd94eee2"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260616120000_allow_hr_approve_non_own_devices.sql": {
-    "mtime": 1781637487.5326426,
-    "hash": "09b0bb5c6a3b9e33e3036dfcc00ef3f7"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260617090000_add_checkout_buffer.sql": {
-    "mtime": 1781635954.637076,
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260617090000_add_checkout_buffer.sql": {
+    "mtime": 1784712836.8899632,
     "hash": "a85db6cef6ae0623349e48232604d525"
   },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260617090100_leave_day_part.sql": {
-    "mtime": 1781635969.6378205,
-    "hash": "bc8e4071e47763e7b6fb0cd8a55f07be"
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260715112308_notifications_types_prefs_push.sql": {
+    "mtime": 1784712836.8967228,
+    "hash": "f3bc628086359101501f4186a97d6e47"
   },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260617090200_half_day_leave_sync_and_status_guard.sql": {
-    "mtime": 1781635991.3039966,
-    "hash": "ff7c854e70d88604fe7e412d9d96ae43"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260617120000_add_employee_salaries.sql": {
-    "mtime": 1781639399.0211306,
-    "hash": "82f5edf54dcac6ae681c1cfd8d4af5de"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260617130000_add_profile_auth_status.sql": {
-    "mtime": 1784370312.8731787,
-    "hash": "dc34f0a54ca100143db8ade361e6b0da"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260618100000_add_device_fingerprint_hint.sql": {
-    "mtime": 1784370312.8731787,
-    "hash": "faed284cb0f087237fef6860fc01141e"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260618110000_admin_delete_attendance_requests.sql": {
-    "mtime": 1784370312.8737655,
-    "hash": "0103a2bbd65e35e835bc38b6530c0564"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260619033525_fix_dynamic_service_assignment.sql": {
-    "mtime": 1784370312.8743541,
-    "hash": "11cd13459cb3812f2842c0aca6eb3c59"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260619074255_create_designations_table.sql": {
-    "mtime": 1784370312.8748724,
-    "hash": "20497b4a44d77d9a7c34a2750d99b2eb"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260619074300_add_profile_designation_and_job_type.sql": {
-    "mtime": 1784370312.8748724,
-    "hash": "e63624dc992d372a0545fa38687f337e"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260619074308_create_team_members_junction.sql": {
-    "mtime": 1784370312.875461,
-    "hash": "657cb8d67a7f443fffff0a06b9ea54a0"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260619074321_migrate_attendance_team_scoping_to_team_members.sql": {
-    "mtime": 1784370312.875461,
-    "hash": "da16e7a4502472fb59653b89ef77ca62"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260619074327_drop_profile_team_id_and_service_sync.sql": {
-    "mtime": 1784370312.8760698,
-    "hash": "1999a56405b30901a7a6525ca746a6e9"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260619074347_create_job_type_policies.sql": {
-    "mtime": 1784370312.8760698,
-    "hash": "9a8eb11bb9f1d957fdefc1bc52e8ca07"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260619074401_update_profile_role_rpc_for_designation.sql": {
-    "mtime": 1784370312.876671,
-    "hash": "4e82df796cdf109857104cf7f1707a16"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260619080209_drop_profile_service_type.sql": {
-    "mtime": 1784370312.876671,
-    "hash": "06c27615b464fd4792af40852c04baf4"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260622040842_add_allowed_check_in.sql": {
-    "mtime": 1784370312.8772488,
-    "hash": "266a38d8823113356c9d2306a8825549"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260622043525_fix_attendance_status_trigger_allowed_checkin.sql": {
-    "mtime": 1784370312.8772488,
-    "hash": "a7e5b4fdb5ac8f2d62d9b2c675602cce"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260622044913_award_lp_on_any_present.sql": {
-    "mtime": 1784370312.877864,
-    "hash": "223129cbbd342357bcf46ae551242b47"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260623062757_eotm_not_a_badge.sql": {
-    "mtime": 1784370312.877864,
-    "hash": "4ec94d90fc3926d020da2bea7f4ee3f8"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260623104704_attendance_excluded.sql": {
-    "mtime": 1784370312.8784468,
-    "hash": "15a6095d6e73103fd2bf5a53daccaa14"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260623110207_allow_self_profile_settings.sql": {
-    "mtime": 1784370312.8784468,
-    "hash": "9fe64199598cb05cbe468e535234d9d0"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260630104929_quest_claimants_visible_to_all.sql": {
-    "mtime": 1784370312.8790228,
-    "hash": "1c8291210163d5a64be7411573c44f39"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260630115128_release_quest_claim.sql": {
-    "mtime": 1784370312.8790228,
-    "hash": "9792ec72fb584035560b90db7ebf3a51"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260707000000_shoutout_custom_lp.sql": {
-    "mtime": 1784370312.8796084,
-    "hash": "ae82a5dfbc2c5c083ccc94a389f825be"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260707003000_shoutout_custom_lp_recognizers.sql": {
-    "mtime": 1784370312.8796084,
-    "hash": "ba03beb4d4afaf7f6f142bb398f84433"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260709062531_group_rewards.sql": {
-    "mtime": 1784370312.880295,
-    "hash": "4b39fc85ff3e75d94c61c74f588dd0e7"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260709062748_lock_down_reward_pool_helpers.sql": {
-    "mtime": 1784370312.8808832,
-    "hash": "8de8ecc1d1591db03641cfe1ab560cfd"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260709064255_revoke_reward_pool_helpers_from_public.sql": {
-    "mtime": 1784370312.8808832,
-    "hash": "59062d21b340d0fdaf9e82aacc2ceff0"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260709072110_allow_owner_edit_pending_exception.sql": {
-    "mtime": 1784370312.8814762,
-    "hash": "c673b7413695d55e4b3c9c60843cbc6c"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260715080629_company_wfh_days.sql": {
-    "mtime": 1784370312.8814762,
-    "hash": "363da9e0056c0a40baf367df7e41faec"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260715112308_notifications_types_prefs_push.sql": {
-    "mtime": 1784370312.88206,
-    "hash": "ef1c6a044edc64fbac20ac6af062799b"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260715112543_notification_triggers.sql": {
-    "mtime": 1784370312.8826501,
-    "hash": "3fea9ad0cefcaee09d5483bf98363644"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260715112822_push_dispatch.sql": {
-    "mtime": 1784370312.8832312,
-    "hash": "c1b623c01b56e4cc6a782e13afc4444a"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260719100001_create_clients.sql": {
-    "mtime": 1784412546.2740448,
-    "hash": "ab7952b620dc9d2241cbf692f7be2717"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260719100002_create_projects.sql": {
-    "mtime": 1784412584.7606957,
-    "hash": "422f3c2d9217d79d27b6b1bdac96e67a"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260719100003_create_stages.sql": {
-    "mtime": 1784412619.6113913,
-    "hash": "6d5608099ccafeca181fcd9313c6193a"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260719100004_create_tasks.sql": {
-    "mtime": 1784412654.1713605,
-    "hash": "ffab6cbe1907c48253cd12e029bc7d90"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260719100005_create_subtasks_comments.sql": {
-    "mtime": 1784412700.2705336,
-    "hash": "35537f5aef602f5d13d6fa56828864d4"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260719100006_create_attachments_approvals.sql": {
-    "mtime": 1784412736.8393977,
-    "hash": "10569beea72d830d5a6ee64501b6deb6"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260719100007_create_attachments_bucket.sql": {
-    "mtime": 1784412771.3347018,
-    "hash": "478ef44f363012066b335665e1697ea7"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260719120001_add_ongoing_project_status.sql": {
-    "mtime": 1784449756.8640647,
-    "hash": "98b3621cdc5bc1d75eb5942362dc26f9"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260719130001_add_rich_doc_columns.sql": {
-    "mtime": 1784459278.6086252,
-    "hash": "66b4de69c5738a73bf3bf4866559430f"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260719130002_create_mentions.sql": {
-    "mtime": 1784459294.114932,
-    "hash": "117cce54a1cbbc97b89693c6c6704574"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260719130003_create_project_watchers.sql": {
-    "mtime": 1784459310.0412517,
-    "hash": "21416cc638fe62d7ccc5026aaa10cbcf"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260719130004_seed_can_view_budget_flag.sql": {
-    "mtime": 1784459316.8895192,
-    "hash": "41e6b44f00288f5ffb1f2c2553b7e913"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260719140001_improve_mention_notification.sql": {
-    "mtime": 1784480291.6607614,
-    "hash": "55830ab791b5ae6bd555bb305f3ea548"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260719150001_task_assignees.sql": {
-    "mtime": 1784480541.4473238,
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260719150001_task_assignees.sql": {
+    "mtime": 1784712836.9003704,
     "hash": "45396554a45e8ac23723fc3c6d43b92a"
   },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260720100001_create_standups.sql": {
-    "mtime": 1784488551.6771324,
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260616112000_auto_checkout_toggle_and_ooo_tail.sql": {
+    "mtime": 1784712836.889526,
+    "hash": "d0dc14d15d06fad0a2911c21a0c28095"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260619074308_create_team_members_junction.sql": {
+    "mtime": 1784712836.8921316,
+    "hash": "a5b9a51473c1e3dafa3808ee2b73b872"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260617130000_add_profile_auth_status.sql": {
+    "mtime": 1784712836.8908129,
+    "hash": "e17383c8296e88e79191915560c69890"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260721130000_confidential_docs_and_links.sql": {
+    "mtime": 1784712836.9024231,
+    "hash": "77da8afcf2464108bdfaa1c81da85e60"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260616111000_set_lp_on_time_checkin_amount.sql": {
+    "mtime": 1784712836.889269,
+    "hash": "4c5005bd9ee739be4f0585df1d1030b4"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260707000000_shoutout_custom_lp.sql": {
+    "mtime": 1784712836.8951306,
+    "hash": "13dcdc7643e74ed32d08ff326b03c8b2"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260604000009_gamification_badges.sql": {
+    "mtime": 1784712836.8857286,
+    "hash": "7a18d3e6c3d71048d21835d58f3a3c95"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260519000002_create_levels.sql": {
+    "mtime": 1784712836.8790455,
+    "hash": "69c2f8ab3786a5ab70624d8f3bf89335"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260725195518_create_messages.sql": {
+    "mtime": 1785009396.3233232,
+    "hash": "76a145c5d56a80994a721f5cf0b38d0c"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260720120000_hr_enter_leave_on_behalf.sql": {
+    "mtime": 1784712836.9010677,
+    "hash": "8cc8a59c1834108fea2c9ddc26a7c549"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260619074327_drop_profile_team_id_and_service_sync.sql": {
+    "mtime": 1784712836.8925416,
+    "hash": "e2e67c517e2bcda36543387adbab43c6"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260519000006_add_auto_profile_and_levels_rls.sql": {
+    "mtime": 1784712836.879856,
+    "hash": "7b0d9d6cf17866ee0aefe47e74e316ce"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260521035524_create_enrolled_devices.sql": {
+    "mtime": 1784712836.88181,
+    "hash": "af7de3aa3c83c384426d6068d8b90c31"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260721090100_feature_flags_enforcement.sql": {
+    "mtime": 1784712836.9020076,
+    "hash": "1cfee945b9b23037dc8ae6941b30b195"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260524000002_add_working_saturdays.sql": {
+    "mtime": 1784712836.8832633,
+    "hash": "10dc23cee300dea058bf1286e3e63f2f"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260616120000_allow_hr_approve_non_own_devices.sql": {
+    "mtime": 1784712836.889751,
+    "hash": "94ad10826953c4d41f314c926bf0c3a3"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260728180000_phase2_convert_exact_match_policies.sql": {
+    "mtime": 1785324268.452809,
+    "hash": "08f79484c7b64d92de1aa9da98602192"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260604000004_allow_system_attendance_source.sql": {
+    "mtime": 1784712836.8845172,
+    "hash": "c63afec39f49f1b827325f70bc6f8eee"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260604000012_dynamic_services.sql": {
+    "mtime": 1784712836.8863835,
+    "hash": "5a7e17dee42fc173bf17d4c7682f2496"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260617090200_half_day_leave_sync_and_status_guard.sql": {
+    "mtime": 1784712836.8903935,
+    "hash": "ff7c854e70d88604fe7e412d9d96ae43"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260521072748_create_attendance_exceptions.sql": {
+    "mtime": 1784712836.8820226,
+    "hash": "93d8cda46b3042446d049ad883907664"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260724100300_audit_log_projects_triggers.sql": {
+    "mtime": 1785007233.830827,
+    "hash": "ef57971f214589c1879155e2feddc11e"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260617090100_leave_day_part.sql": {
+    "mtime": 1784712836.8901632,
+    "hash": "bc8e4071e47763e7b6fb0cd8a55f07be"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260719130004_seed_can_view_budget_flag.sql": {
+    "mtime": 1784712836.899975,
+    "hash": "41e6b44f00288f5ffb1f2c2553b7e913"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260725203447_chat_realtime_publication_phase2.sql": {
+    "mtime": 1785011765.9688694,
+    "hash": "7f34d8ef0155c9b150da6f3ade501f56"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260727054204_drop_legacy_project_service_columns.sql": {
+    "mtime": 1785324268.4461493,
+    "hash": "0d4ce52b4b03f8aa01c8c451ce48ce3f"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260721150000_decouple_confidential_from_client.sql": {
+    "mtime": 1784712836.902635,
+    "hash": "81aec2ba5711349ec11bdb1cfddd52a7"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260724100000_audit_log_foundation.sql": {
+    "mtime": 1785007233.8291495,
+    "hash": "4eb9b4a7e66fd4bcdc301e70c5460bd5"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260521121611_drop_fn_validate_checkout.sql": {
+    "mtime": 1784712836.8824315,
+    "hash": "25caed4d88e58c58c0aaff2ca4f672d5"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260724100100_audit_log_attendance_triggers.sql": {
+    "mtime": 1785007233.8296,
+    "hash": "b3d696e102c88fc3b78fcb1b0ccb3150"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260604000006_gamification_quest_board.sql": {
+    "mtime": 1784712836.8850021,
+    "hash": "13514c39ef09cbccf7d8c98d7b942f7a"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260604000002_drop_attendance_feature_flags.sql": {
+    "mtime": 1784712836.8840652,
+    "hash": "80aa3a06b3b6bcadd1b853c04fdd07cb"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260604000007_gamification_shoutouts.sql": {
+    "mtime": 1784712836.8852232,
+    "hash": "8d64450ffd12a143a1ac637887db3d7d"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260725203443_create_chat_attachments_bucket.sql": {
+    "mtime": 1785011743.660966,
+    "hash": "01ab0627c3890e2d8e2947d3a2529437"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260724100200_audit_log_gamification_triggers.sql": {
+    "mtime": 1785007233.8299768,
+    "hash": "6580e0efc3ec6b8f74cfb911adc1ce4c"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260623110207_allow_self_profile_settings.sql": {
+    "mtime": 1784712836.894446,
+    "hash": "31d12c50e0222796d9573bba814b015f"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260604000001_backfill_can_mark_attendance.sql": {
+    "mtime": 1784712836.883856,
+    "hash": "34da1d10bc7484f1abf341312caf8664"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260728210000_phase2_fix_collapsed_role_branches.sql": {
+    "mtime": 1785324268.4545097,
+    "hash": "a584a7540955f08c92b4c92f32ca1f42"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260709062531_group_rewards.sql": {
+    "mtime": 1784712836.8955846,
+    "hash": "c3cfc0e78a2eab9508a12e09d84bec95"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260619080209_drop_profile_service_type.sql": {
+    "mtime": 1784712836.893167,
+    "hash": "db92b0db2b9ed85783823b9cea51d649"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260727103647_fix_project_creation_for_can_manage_projects.sql": {
+    "mtime": 1785324268.4482663,
+    "hash": "5a474f4a73ffe782aef4cf339bdae30a"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260622040842_add_allowed_check_in.sql": {
+    "mtime": 1784712836.8933825,
+    "hash": "c0aae75d8ec6cfd1b7458565f0d84d27"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260615155210_add_profile_personal_details.sql": {
+    "mtime": 1784712836.887422,
+    "hash": "d9116b7ac544f3db9d9cbb4e8db33281"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260728160000_sync_profiles_primary_role.sql": {
+    "mtime": 1785324268.4516542,
+    "hash": "605ce78cb82198734f0a88e6cde27262"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260728150000_permission_can_fulfill_payouts.sql": {
+    "mtime": 1785324268.4510918,
+    "hash": "62fa84bd3b06c618569263c9b4c7030e"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260728130000_permission_model_v2_hierarchy_guards.sql": {
+    "mtime": 1785324268.4502316,
+    "hash": "74594df3eec1501a2aa97d369578d029"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260519000001_create_internal_enums.sql": {
+    "mtime": 1784712836.878843,
+    "hash": "c8652667db60444623478565ae012631"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260728200000_phase2_convert_remaining_policies.sql": {
+    "mtime": 1785324268.4540868,
+    "hash": "d551095aa1aef600a3c58edd108075f5"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260727032057_chat_private_channels_and_roles.sql": {
+    "mtime": 1785122523.4911642,
+    "hash": "1f79879bb3ac52326bf3b7f568b322df"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260623104704_attendance_excluded.sql": {
+    "mtime": 1784712836.8942554,
+    "hash": "22f5dd5800dd56ccda8e91bea9734b10"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260604000011_people_management.sql": {
+    "mtime": 1784712836.886169,
+    "hash": "b47938fa24067b5d8e0bde3dae0e9122"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260524000001_add_saturday_working.sql": {
+    "mtime": 1784712836.8830657,
+    "hash": "40ba2aa4bf53c461e8a5afe07ed180df"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260604000003_add_wfh_leave_and_absence.sql": {
+    "mtime": 1784712836.8843212,
+    "hash": "d4eadaff5c0ef235f5f2167601326da0"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260709072110_allow_owner_edit_pending_exception.sql": {
+    "mtime": 1784712836.8962715,
+    "hash": "1d0cd6e13a9cfadc0850564d2a2c7346"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260617120000_add_employee_salaries.sql": {
+    "mtime": 1784712836.8906002,
+    "hash": "82f5edf54dcac6ae681c1cfd8d4af5de"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260727043741_chat_create_channel_rpc.sql": {
+    "mtime": 1785127081.7344987,
+    "hash": "e96d0792126810e4c191ba4d0c198849"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260618110000_admin_delete_attendance_requests.sql": {
+    "mtime": 1784712836.8912475,
+    "hash": "241204a23d1de00cd7368cc975551dde"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260615174500_block_self_checkin_after_work_end.sql": {
+    "mtime": 1784712836.8878784,
+    "hash": "ccce7cafdeefab14f0c2c3a23bf2bfe8"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260719140001_improve_mention_notification.sql": {
+    "mtime": 1784712836.9001727,
+    "hash": "55830ab791b5ae6bd555bb305f3ea548"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260727111120_fix_stage_task_visibility_for_project_creator.sql": {
+    "mtime": 1785324268.4487586,
+    "hash": "39fae71a469abbb4d5e40794c29a19e7"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260719100006_create_attachments_approvals.sql": {
+    "mtime": 1784712836.8987691,
+    "hash": "10569beea72d830d5a6ee64501b6deb6"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260725195525_chat_realtime_publication_phase1.sql": {
+    "mtime": 1785009437.742982,
+    "hash": "8396bcb6082cef1ae5b396a905ad4149"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260730103715_task_activity_feed.sql": {
+    "mtime": 1785407867.5919197,
+    "hash": "3bb0b7ee56e545d39a3de0de3013d482"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260616063218_restrict_device_approval_to_admin.sql": {
+    "mtime": 1784712836.8882947,
+    "hash": "0d9a324f8e87f16df1f60ba271647b2e"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260715080629_company_wfh_days.sql": {
+    "mtime": 1784712836.8964818,
+    "hash": "e551621b06f5ac5718edc5e296b69f35"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260521020139_create_gamification_triggers.sql": {
+    "mtime": 1784712836.880303,
+    "hash": "8b08226af9593b641a9219bdf6303049"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260521030000_add_start_quest_rpc_and_gamification_flags.sql": {
+    "mtime": 1784712836.880961,
+    "hash": "e7de054b6ac209d27f4339af29b218e2"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260709062748_lock_down_reward_pool_helpers.sql": {
+    "mtime": 1784712836.8958275,
+    "hash": "074decfec15594a11cdce4bccae7f082"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260519000005_create_notifications.sql": {
+    "mtime": 1784712836.8796492,
+    "hash": "a59bb732934e4e9105e0c924c982c084"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260720140001_standup_next_day_and_xp.sql": {
+    "mtime": 1784712836.9015234,
+    "hash": "f628a9a108df93d35a7808ffa03e14fb"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260720111950_cascade_delete_projects_tasks.sql": {
+    "mtime": 1784712836.9008374,
+    "hash": "5e36ea54df3b4eb6757fee860c5edda2"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260725195523_chat_rpcs_phase1.sql": {
+    "mtime": 1785009429.4899328,
+    "hash": "8845d2c094532f5fae548dca6ad0382a"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260524000003_enable_pg_cron.sql": {
+    "mtime": 1784712836.8834698,
+    "hash": "ab420e0b9633a4585f31ce0d427a0784"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260519000003_create_profiles.sql": {
+    "mtime": 1784712836.879246,
+    "hash": "aa9c6659065c1f38f5f15627bb2af0cf"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260524000004_add_auto_checkout_cron.sql": {
+    "mtime": 1784712836.8836625,
+    "hash": "3fb85ed7dea54feaac64669d6d228ec9"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260728120000_permission_model_v2_foundation.sql": {
+    "mtime": 1785324268.4496038,
+    "hash": "42656eb9100c86110a2551e2b481a332"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260719100005_create_subtasks_comments.sql": {
+    "mtime": 1784712836.8985348,
+    "hash": "35537f5aef602f5d13d6fa56828864d4"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260719130003_create_project_watchers.sql": {
+    "mtime": 1784712836.89978,
+    "hash": "21416cc638fe62d7ccc5026aaa10cbcf"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260719100004_create_tasks.sql": {
+    "mtime": 1784712836.898284,
+    "hash": "ffab6cbe1907c48253cd12e029bc7d90"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260619033525_fix_dynamic_service_assignment.sql": {
+    "mtime": 1784712836.8914597,
+    "hash": "f45a7835c3c69ba09d336bd5b1c096d1"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260725203441_create_message_attachments.sql": {
+    "mtime": 1785011715.1963499,
+    "hash": "63bf27aa116146cdea79fdd97f57fc93"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260721120000_can_create_projects_flag.sql": {
+    "mtime": 1784712836.9022076,
+    "hash": "f543c45b1dbc8849846b9af48448e01e"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260719100002_create_projects.sql": {
+    "mtime": 1784712836.8977015,
+    "hash": "422f3c2d9217d79d27b6b1bdac96e67a"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260616053938_set_avatar_upload_limits.sql": {
+    "mtime": 1784712836.8880756,
+    "hash": "0eef12cb989fd794b3bffdbdb00f0ee8"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260521035515_create_attendance_tables.sql": {
+    "mtime": 1784712836.8816137,
+    "hash": "b8ef913669ffd1579cd8267f06ba5eac"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260715112822_push_dispatch.sql": {
+    "mtime": 1784712836.8972378,
+    "hash": "d74b9fb5312c5e07348fdace8a08d4d1"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260715112543_notification_triggers.sql": {
+    "mtime": 1784712836.8970242,
+    "hash": "60fd185375e42bf434d784dfe6f26636"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260728140000_permission_model_v2_my_permissions_rpc.sql": {
+    "mtime": 1785324268.450686,
+    "hash": "489b48e59fedf45c173ffe90811090bd"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260719100007_create_attachments_bucket.sql": {
+    "mtime": 1784712836.8989837,
+    "hash": "478ef44f363012066b335665e1697ea7"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260727070437_template_apply_allows_project_managers.sql": {
+    "mtime": 1785324268.4478016,
+    "hash": "e816a20468cb27a5c00327f5b409fe77"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260618100000_add_device_fingerprint_hint.sql": {
+    "mtime": 1784712836.891015,
+    "hash": "2cacf219198ccad29c7f51c9f29a555a"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260604000008_gamification_rewards_redemptions.sql": {
+    "mtime": 1784712836.8854764,
+    "hash": "cc86a0b4102de1c52b12e01b770de1b8"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260630104929_quest_claimants_visible_to_all.sql": {
+    "mtime": 1784712836.894669,
+    "hash": "08f1caf521ff727a7b73a3d12e1550e0"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260615133723_create_avatars_bucket.sql": {
+    "mtime": 1784712836.886987,
+    "hash": "0af6296f52bac7953c1d759ceb0f5034"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260725195520_chat_role_feature_flags.sql": {
+    "mtime": 1785009411.7106674,
+    "hash": "a8d9b449aa3fd812eb2469c08f510817"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260604000010_gamification_monthly_reset.sql": {
+    "mtime": 1784712836.885947,
+    "hash": "967145219c1acd15106d63685d389afa"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260616101000_add_early_checkin_window.sql": {
+    "mtime": 1784712836.8887255,
+    "hash": "486522b44c61841c63e54b1215e70e79"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260726080701_chat_hide_conversation.sql": {
+    "mtime": 1785053233.2119532,
+    "hash": "e938132c322d3fa74e526afded2ce6ad"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260726100807_chat_message_notifications.sql": {
+    "mtime": 1785060505.6781023,
+    "hash": "bc9a6e0f2656231beec6927a8f319e9d"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260720100001_create_standups.sql": {
+    "mtime": 1784712836.900607,
     "hash": "41e2e862e01a5ed1cf529b6d5cd41c6c"
   },
-  "D:\\Projects\\react\\linknbit-portal\\AGENTS.md": {
-    "mtime": 1778637729.709293,
-    "hash": "747e73a5e1af4b72c0d65c9169c23199"
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260707003000_shoutout_custom_lp_recognizers.sql": {
+    "mtime": 1784712836.8953245,
+    "hash": "d77201fb514cf791fa2712c5b79f0437"
   },
-  "D:\\Projects\\react\\linknbit-portal\\CLAUDE.md": {
-    "mtime": 1781637487.4094937,
-    "hash": "ad136b970bb9b18ea60664fa33f9f469"
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260725195505_create_channels.sql": {
+    "mtime": 1785009382.9449322,
+    "hash": "0e913b8f814fdfb1e1f38d5631077d71"
   },
-  "D:\\Projects\\react\\linknbit-portal\\index.html": {
-    "mtime": 1781639296.6551013,
-    "hash": "273a4abadf41eacdd81fa68bba1cf993"
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260615115751_allow_hr_write_attendance_settings.sql": {
+    "mtime": 1784712836.8865845,
+    "hash": "5612e895222dc64523239dd4c44a431d"
   },
-  "D:\\Projects\\react\\linknbit-portal\\pnpm-workspace.yaml": {
-    "mtime": 1780306272.8490438,
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260728170000_confidential_document_scoping.sql": {
+    "mtime": 1785324268.4522557,
+    "hash": "fcdd17757bd9785d0e7b5b741bd2f15b"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260615130358_revert_attendance_on_holiday_delete.sql": {
+    "mtime": 1784712836.88679,
+    "hash": "b1e6b7377586aec04b8b917dc99f2530"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260604000005_gamification_currency_and_roles.sql": {
+    "mtime": 1784712836.8847582,
+    "hash": "6582e59af2e919de4fa5a5d2aa423cb9"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260619074321_migrate_attendance_team_scoping_to_team_members.sql": {
+    "mtime": 1784712836.8923304,
+    "hash": "dce30e941452f77376ebcc1a9191e4af"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260725203445_create_message_reactions.sql": {
+    "mtime": 1785011758.943911,
+    "hash": "48669e6314d4d5ca0bc5301161478f23"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260727053013_project_services_four_layer_foundation.sql": {
+    "mtime": 1785324268.4449751,
+    "hash": "dfb0be9be7268c93cd25ce0a82cd675a"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260727042745_standup_edit_participation_and_team_scoping.sql": {
+    "mtime": 1785324268.444272,
+    "hash": "f19c6e56e539075da70f6173de8b1550"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260523000001_add_holidays_and_overtime.sql": {
+    "mtime": 1784712836.8828773,
+    "hash": "31b2bd650ce3b19b6ae546f27e9f5082"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260709064255_revoke_reward_pool_helpers_from_public.sql": {
+    "mtime": 1784712836.8960538,
+    "hash": "bd37418e5bbfb738c7065049c0b7ae67"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260728190000_phase2_new_permission_keys.sql": {
+    "mtime": 1785324268.453447,
+    "hash": "c1b168b57892b4af993527310fc034f6"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260616110000_add_attendance_excluded_minutes.sql": {
+    "mtime": 1784712836.8889513,
+    "hash": "61c5d0e31f01d76b1bf37bb8131678b8"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260521093936_fix_fn_set_attendance_status.sql": {
+    "mtime": 1784712836.882235,
+    "hash": "373303988b81fd0c5a6ee1a1669ec464"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260619074255_create_designations_table.sql": {
+    "mtime": 1784712836.8916929,
+    "hash": "b352693a764caf010f21192f720d3480"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260615162852_team_lead_attendance_visibility.sql": {
+    "mtime": 1784712836.8876424,
+    "hash": "38989e45fd13734e93da98290546d634"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260619074347_create_job_type_policies.sql": {
+    "mtime": 1784712836.8927388,
+    "hash": "e267050267e117053261a1849e03af82"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260719130001_add_rich_doc_columns.sql": {
+    "mtime": 1784712836.8993738,
+    "hash": "66b4de69c5738a73bf3bf4866559430f"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260719100001_create_clients.sql": {
+    "mtime": 1784712836.8974473,
+    "hash": "ab7952b620dc9d2241cbf692f7be2717"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260724100400_audit_xp_wording.sql": {
+    "mtime": 1785007233.8312776,
+    "hash": "fc8507ca30560ff25f5dd8999939691e"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260721090000_feature_flags_foundation.sql": {
+    "mtime": 1784712836.9017649,
+    "hash": "a692d02b34b68d0e73e968f7ffda063c"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260521020426_seed_initial_rewards_and_quests.sql": {
+    "mtime": 1784712836.8805468,
+    "hash": "82154db0c675448db78c200d8f65c314"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260727053103_merge_project_permissions.sql": {
+    "mtime": 1785324268.4455557,
+    "hash": "ac298c0a012f7c8fc133b842fed2fc57"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260719120001_add_ongoing_project_status.sql": {
+    "mtime": 1784712836.8991816,
+    "hash": "98b3621cdc5bc1d75eb5942362dc26f9"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260727042516_standup_participation_settings.sql": {
+    "mtime": 1785324268.4439578,
+    "hash": "894e32de7e0bea57a70c367abb581400"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260619074300_add_profile_designation_and_job_type.sql": {
+    "mtime": 1784712836.8919039,
+    "hash": "15961655a9f9f1f5262eb67f75860723"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260622043525_fix_attendance_status_trigger_allowed_checkin.sql": {
+    "mtime": 1784712836.893582,
+    "hash": "90bc26cc6d9be0e9ae80ecea7a58fa7e"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260630115128_release_quest_claim.sql": {
+    "mtime": 1784712836.894882,
+    "hash": "e02922f6edc410b18ca827f793414293"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260719130002_create_mentions.sql": {
+    "mtime": 1784712836.89957,
+    "hash": "117cce54a1cbbc97b89693c6c6704574"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260727070342_project_templates.sql": {
+    "mtime": 1785324268.4472406,
+    "hash": "1be6c9e039f2fff5bc9fc315103af93a"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260521035448_create_attendance_settings.sql": {
+    "mtime": 1784712836.8813787,
+    "hash": "65b99cd0474259bfc9bf31198a58b174"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260521015828_create_gamification_tables.sql": {
+    "mtime": 1784712836.8800867,
+    "hash": "acd8a2f120b331ea4d6fda0545e007a2"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260521035438_create_teams_table.sql": {
+    "mtime": 1784712836.881165,
+    "hash": "f236b81a8c50c6934f4a736e6e0acaf7"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260619074401_update_profile_role_rpc_for_designation.sql": {
+    "mtime": 1784712836.8929577,
+    "hash": "b0853d772e376d8e87b14622e3af64f4"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260622044913_award_lp_on_any_present.sql": {
+    "mtime": 1784712836.8938017,
+    "hash": "7393cc67987792c8a6bdac5d88d72847"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260616100000_remove_attendance_self_write_rls.sql": {
+    "mtime": 1784712836.8885152,
+    "hash": "7eb59c65db6fccd308a038bc979bb2ae"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260719100003_create_stages.sql": {
+    "mtime": 1784712836.898063,
+    "hash": "6d5608099ccafeca181fcd9313c6193a"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260521021608_add_xp_admin_insert_policy.sql": {
+    "mtime": 1784712836.8807604,
+    "hash": "a72a1181b124503a0c6ab949e43d2efc"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260615142542_employee_of_the_month.sql": {
+    "mtime": 1784712836.887207,
+    "hash": "36ac0e6641156fe7893ccd47ab31f3c0"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260720130000_admin_direct_apply_leave.sql": {
+    "mtime": 1784712836.90129,
+    "hash": "1c7e3cd51754be46bb6da0764c7de7da"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260522000001_fix_attendance_self_update_rls_recursion.sql": {
+    "mtime": 1784712836.8826547,
+    "hash": "9fcbc8bbe1727558a12289fe1d12af9f"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/tests/rls/snapshot.sql": {
+    "mtime": 1785324268.4561367,
+    "hash": "95c46d8e79fddf045e41525d8cf47759"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/functions/attendance-checkout/index.ts": {
+    "mtime": 1784712836.874874,
+    "hash": "c6956ef986cd61d6e4d5a85fbf35c510"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/functions/auth-impersonate/index.ts": {
+    "mtime": 1784712836.8755794,
+    "hash": "9266acf079cbc505dad258c0b65578e1"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/functions/quest-evaluator/index.ts": {
+    "mtime": 1784712836.877491,
+    "hash": "ef0ac34c9bd674af9d40cbd15b793d25"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/functions/attendance-ooo/index.ts": {
+    "mtime": 1784712836.875229,
+    "hash": "ef58acb282e434c9816d422df7516d5f"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/functions/attendance-checkin/index.ts": {
+    "mtime": 1784712836.8745058,
+    "hash": "624fc4fce3bdd0a1784ed8ce4aa50c8c"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/functions/invite-user/index.ts": {
+    "mtime": 1784712836.877169,
+    "hash": "75cfaa6f9e2ff309e2fc6e087d185e9c"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/functions/auth-refresh/index.ts": {
+    "mtime": 1784712836.87588,
+    "hash": "cf202ff2bb6344351b3c04724acbc611"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/functions/admin-upload-avatar/index.ts": {
+    "mtime": 1784712836.8740523,
+    "hash": "f29d2a76e361e9ff5d23bfb553671823"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/functions/auth-signin/index.ts": {
+    "mtime": 1784712836.8761714,
+    "hash": "f960f4a8dabe7ee93feec0468c9d6a7a"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/functions/register-device/index.ts": {
+    "mtime": 1784712836.877857,
+    "hash": "6292d667dc2683a3440b3edd3439db17"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/functions/send-push/index.ts": {
+    "mtime": 1784712836.878531,
+    "hash": "1e6d6a1a81772bbebfdc0854404e2b28"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/functions/auth-signout/index.ts": {
+    "mtime": 1784712836.8765075,
+    "hash": "335d2c15b9c3e3b11458428915cae229"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/functions/admin-set-password/index.ts": {
+    "mtime": 1784712836.8737168,
+    "hash": "713a3ab29f51536ce8fe65f8290b5d09"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/functions/_shared/cookie.ts": {
+    "mtime": 1784712836.8731203,
+    "hash": "aafda651407716d042925a2dc3412dcc"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/functions/_shared/mail.ts": {
+    "mtime": 1784712836.873373,
+    "hash": "b7ffcb4c9722fccac9f09a8191335995"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/functions/resend-invite/index.ts": {
+    "mtime": 1784712836.8781939,
+    "hash": "8f7770c6a8f331fdadc4d21caf844d7f"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/functions/delete-user/index.ts": {
+    "mtime": 1784712836.8768513,
+    "hash": "9ce7efd2b7a9aeb529bd86529c4e16dd"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/public/sw.js": {
+    "mtime": 1785324268.4094715,
+    "hash": "d3e9628727824c87c6e92e9436f938f2"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/scripts/generate-pwa-assets.mjs": {
+    "mtime": 1785324268.4103806,
+    "hash": "a313ffaa987867deb101c714bfced8a9"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/App.tsx": {
+    "mtime": 1785324268.4120195,
+    "hash": "a09e683f7d6c95177d22264142128665"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/main.tsx": {
+    "mtime": 1784712836.8543959,
+    "hash": "10a329013874cfe294b1464ad352ec87"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pwa.ts": {
+    "mtime": 1784712836.8709555,
+    "hash": "2cbb2289f78142bb15e91552f57cde69"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/types/database.ts": {
+    "mtime": 1785407954.4096377,
+    "hash": "13776a321c49c81c34cdf388ed5f5324"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/types/index.ts": {
+    "mtime": 1785324268.443528,
+    "hash": "eff2410c6c0eb2c4d0e6399f2085abde"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/context/AuthContext.tsx": {
+    "mtime": 1784712836.8419645,
+    "hash": "34ae301096bd8723f36f9f3d0b7592f1"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/constants/notifications.ts": {
+    "mtime": 1785060549.0797393,
+    "hash": "1afc589fe8205e236de3f097d4e7253b"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/constants/roles.ts": {
+    "mtime": 1785324268.4232411,
+    "hash": "89fcdb279e7d3e5101407dfdb0797934"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/ui/ConfirmDialog.tsx": {
+    "mtime": 1784712836.8367078,
+    "hash": "738696bb0bec1226f7eb5df414a6999b"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/ui/Tabs.tsx": {
+    "mtime": 1784712836.8397217,
+    "hash": "1975ccc4ec6ff6e7d28b5cc18a0474b8"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/ui/DatePicker.tsx": {
+    "mtime": 1784712836.8369553,
+    "hash": "fe43446cf48cee83d584b593843432d5"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/ui/Card.tsx": {
+    "mtime": 1784712836.8365147,
+    "hash": "14987a25cc5c9db952460ed25120dbfa"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/ui/Popover.tsx": {
+    "mtime": 1784712836.8384192,
+    "hash": "3ef90e97b0d0b3ef16092e5998615ccf"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/ui/toast-context.ts": {
+    "mtime": 1784712836.8409834,
+    "hash": "d7ce17bd35742cf31e28b14ff1974ba4"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/ui/ModalShell.tsx": {
+    "mtime": 1784712836.8377912,
+    "hash": "5430adfea85321dc7ed38f639650fe75"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/ui/SectionToolbar.tsx": {
+    "mtime": 1784712836.8390512,
+    "hash": "143c3f42d013aebb4c482d735a58c736"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/ui/Drawer.tsx": {
+    "mtime": 1784712836.8371704,
+    "hash": "fc6497ab6c711c310937cc6bab06fed5"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/ui/ProgressBar.tsx": {
+    "mtime": 1784712836.8386364,
+    "hash": "513bf7c7a4ee0f0629a93801cc36d704"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/ui/PeriodStepper.tsx": {
+    "mtime": 1784712836.8382254,
+    "hash": "d89c762077abd5e11897c65d1106e60e"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/ui/TimePicker.tsx": {
+    "mtime": 1785495029.3123436,
+    "hash": "b5f55e5009c398c402f02c420783143c"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/ui/ResponsiveTable.tsx": {
+    "mtime": 1784712836.8388402,
+    "hash": "cea0a36392be6c6e2182565549648cc6"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/ui/TimezoneSelect.tsx": {
+    "mtime": 1784712836.8402438,
+    "hash": "044d6af12e674bb75c4c68344ab7d068"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/ui/Avatar.tsx": {
+    "mtime": 1784712836.835912,
+    "hash": "52c0598157f97e68c1184236af3015d3"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/ui/MultiSelectPeople.tsx": {
+    "mtime": 1784712836.8380048,
+    "hash": "0d1ce40ebc4f8a6bc5a6c4de62636f9d"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/ui/Badge.tsx": {
+    "mtime": 1784712836.8361173,
+    "hash": "adf54e7b3c80e07f0ecd61563966d0b6"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/ui/Button.tsx": {
+    "mtime": 1784712836.836315,
+    "hash": "8de6c7df1992a81692405e4469db2a66"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/ui/Toggle.tsx": {
+    "mtime": 1784712836.8406975,
+    "hash": "ab4c783600f5800f735c044a5df65494"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/ui/Modal.tsx": {
+    "mtime": 1784712836.8375862,
+    "hash": "2576dcccfb93f0c21c9a565bbf093097"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/ui/Toast.tsx": {
+    "mtime": 1784712836.8404958,
+    "hash": "306b913ecc0afa6b7e88e5b96f223fca"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/ui/Select.tsx": {
+    "mtime": 1784712836.839295,
+    "hash": "f14c112f7e09bc950f83d4efbfc8fac1"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/ui/Input.tsx": {
+    "mtime": 1784712836.8373673,
+    "hash": "890490a5c2a5b8afc517c4caecd30594"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/ui/Skeleton.tsx": {
+    "mtime": 1784712836.8395016,
+    "hash": "90d5ac4a44d8a063aee6b0e4a15b6bf8"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/chat/emojiData.ts": {
+    "mtime": 1785011643.974632,
+    "hash": "36ee429dd7166ed3b1e9dd0b3174b748"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/chat/ChatThread.tsx": {
+    "mtime": 1785494567.7637508,
+    "hash": "ecc681449dede0fe0383dbad07d5cbc1"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/chat/ChannelFilesPanel.tsx": {
+    "mtime": 1785326767.955424,
+    "hash": "bd74a4874c10a42ee96f40d54ac99221"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/chat/ConversationListPane.tsx": {
+    "mtime": 1785128482.058633,
+    "hash": "28923be84af77cd7ce4f50a835b04013"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/chat/StartDMButton.tsx": {
+    "mtime": 1785052844.07514,
+    "hash": "b48ab04e43359c71a2232f3885d16cec"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/chat/EmojiPicker.tsx": {
+    "mtime": 1785326834.953708,
+    "hash": "62ebdcdc5b5db4f4c3ca37aa5bef5791"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/chat/chatUtils.ts": {
+    "mtime": 1785010757.0363057,
+    "hash": "37b4db0c5196bf3830e6cb40f3d7f00e"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/chat/ConversationListRow.tsx": {
+    "mtime": 1785326734.2017293,
+    "hash": "77d78ea227110e21cc4093fbec3c2e61"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/chat/MessageList.tsx": {
+    "mtime": 1785012495.9295907,
+    "hash": "a24444304963c2c076e09cfc6ad286c3"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/chat/ConversationInfoPanel.tsx": {
+    "mtime": 1785483319.6238215,
+    "hash": "6d1290238a669e0f70dc2fa506097fa1"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/chat/MessageAttachment.tsx": {
+    "mtime": 1785326827.5062199,
+    "hash": "104b8fbe4e463ec76857941b2e791d07"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/chat/MessageBubble.tsx": {
+    "mtime": 1785483749.1834743,
+    "hash": "542742a5fb7bc7bdb839f9371e425daa"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/chat/ChannelMembersModal.tsx": {
+    "mtime": 1785490359.987727,
+    "hash": "ee335d5c21ca46b5252910d936c9b0a6"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/chat/RolePicker.tsx": {
+    "mtime": 1785123901.3342586,
+    "hash": "7f95eeab9bc75a62e57c1a199625d137"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/chat/CreateChannelModal.tsx": {
+    "mtime": 1785126761.6124716,
+    "hash": "2f2e99415eafafc874af6bd176ba0b09"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/chat/MessageComposer.tsx": {
+    "mtime": 1785405676.359684,
+    "hash": "5ab1cde41913b2ee1f38d29b24ff1337"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/chat/ChatAttachmentChips.tsx": {
+    "mtime": 1785012260.4041135,
+    "hash": "7ea3a0a214e65a164a4289a417dec788"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/chat/ReactionBar.tsx": {
+    "mtime": 1785012369.3299742,
+    "hash": "89cd58046797632fc8bb84c6da435501"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/chat/NewDMPicker.tsx": {
+    "mtime": 1785126846.4374897,
+    "hash": "ffe12f5c67835bee46ce60a69be3bdb9"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/chat/ConversationMenu.tsx": {
+    "mtime": 1785060619.6000965,
+    "hash": "f04eaa38a5e6255e2b9765af1eb30df5"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/layout/RoleGuard.tsx": {
+    "mtime": 1784712836.8286653,
+    "hash": "bc92b23b2bf110efabad390aa7973d39"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/layout/Topbar.tsx": {
+    "mtime": 1785394272.4962296,
+    "hash": "5065629e83b0ad9366271e26333b0662"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/layout/AppShell.tsx": {
+    "mtime": 1785326798.1937258,
+    "hash": "0c234508e2273c3544ef5fbcd0a5e05f"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/layout/BottomTabBar.tsx": {
+    "mtime": 1784712836.8273313,
+    "hash": "52cde41dcd4c6712170c2f39901d2737"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/layout/navItems.ts": {
+    "mtime": 1785324268.4192197,
+    "hash": "f1b853387dc665c54c99803fd648709e"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/layout/MobileHub.tsx": {
+    "mtime": 1784712836.8280704,
+    "hash": "b8f737ae856b9f2f770d75a12aa93144"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/layout/MobileNavContext.tsx": {
+    "mtime": 1784712836.8282602,
+    "hash": "293f85a504ef9c1f4479ba278122f53d"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/layout/StackScreen.tsx": {
+    "mtime": 1784712836.8290966,
+    "hash": "2228ce4e560d7119a75c20f2b7f2ba1f"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/layout/PrivateRoute.tsx": {
+    "mtime": 1784712836.8284597,
+    "hash": "55ab416abd56da929ba320cfd1f61c1c"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/layout/Sidebar.tsx": {
+    "mtime": 1785324268.4181154,
+    "hash": "aa30f4856ce721daf258bde72037eb27"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/layout/ImpersonationBanner.tsx": {
+    "mtime": 1784712836.827867,
+    "hash": "6e862b375d0c5c9453661608b9fe9ce3"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/layout/ClientShell.tsx": {
+    "mtime": 1784712836.8276277,
+    "hash": "ca2b03a31cb0be0965c33fb5de5a153e"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/brand/LinknbitLogo.tsx": {
+    "mtime": 1784712836.824658,
+    "hash": "ec5e12b437cbbd982dc74ece1ae424e2"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/shared/PriorityChip.tsx": {
+    "mtime": 1784712836.8335164,
+    "hash": "22fcc469498a1adffc7ed5f108af7428"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/shared/MyDevicesCard.tsx": {
+    "mtime": 1784712836.8322537,
+    "hash": "3722619fde4b53f88dabad51e424a3b3"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/shared/StandupTabs.tsx": {
+    "mtime": 1785324268.4211328,
+    "hash": "7eff8822d368ad72d57760eb00b0af03"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/shared/StandupCard.tsx": {
+    "mtime": 1785324268.42098,
+    "hash": "abbd44479e03d340c9fe8d0c229aaa9d"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/shared/NotificationPreferencesCard.tsx": {
+    "mtime": 1784712836.8324747,
+    "hash": "bd6aec9e40219ccaac8f1cac03030ecc"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/shared/ClientVisibility.tsx": {
+    "mtime": 1784712836.8314607,
+    "hash": "5dad6f3af01e9d75611f16fca9950b19"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/shared/PointsHistory.tsx": {
+    "mtime": 1784712836.833151,
+    "hash": "ec943cde1784d9d5686fcf7b46222fc5"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/shared/AddLinkModal.tsx": {
+    "mtime": 1784712836.8304353,
+    "hash": "ff5f7390f01814c00b789a7422e56d50"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/shared/RoleManager.tsx": {
+    "mtime": 1785324268.420522,
+    "hash": "01c37e3d48cdccbaa7fdff082eb9cb15"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/shared/AttendanceCheckInCard.tsx": {
+    "mtime": 1784712836.8310153,
+    "hash": "dc21447c2704c3fc78b2ce948461f584"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/shared/PersonLink.tsx": {
+    "mtime": 1785483373.4814754,
+    "hash": "ade3f7dd98a09aeee1066549962c9681"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/shared/fileViewerContext.ts": {
+    "mtime": 1784712836.8355856,
+    "hash": "b5c7882e65a6052d71cf30f6eed35690"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/shared/SalaryCard.tsx": {
+    "mtime": 1784712836.834204,
+    "hash": "4d450fbcebea72cad49556042ef48b3b"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/shared/TeamAttendancePanel.tsx": {
+    "mtime": 1785324268.4227724,
+    "hash": "56caa555a0c098dd43e05ed457e16bff"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/shared/RoleBadge.tsx": {
+    "mtime": 1784712836.8339987,
+    "hash": "67cd3299812bc108b0db832a565b48b1"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/shared/StatusChip.tsx": {
+    "mtime": 1784712836.834644,
+    "hash": "154a1153715dc175ee0c55a3abdfaf3b"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/shared/ServiceChip.tsx": {
+    "mtime": 1784712836.8344195,
+    "hash": "b002b7e8185a042729fd494559c13619"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/shared/AttachmentUploader.tsx": {
+    "mtime": 1785490382.8949752,
+    "hash": "50a38fd2afe9f63a73733e10231f7eb6"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/shared/UserProfileBody.tsx": {
+    "mtime": 1785483319.619288,
+    "hash": "1ceabc9bcfda63fd40aea386aa057c25"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/shared/PushDevicesCard.tsx": {
+    "mtime": 1784712836.833789,
+    "hash": "5ec76b78bbb7fa3f555c678725e2aa1a"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/shared/TaskBoard.tsx": {
+    "mtime": 1785324268.4218228,
+    "hash": "803aee0dfa45380379e3f128d618d0d7"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/shared/ClickUpStatus.tsx": {
+    "mtime": 1784712836.8312593,
+    "hash": "b9aac07155aceff0428235d35196d960"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/shared/SaveIndicator.tsx": {
+    "mtime": 1785494996.2548215,
+    "hash": "5b24f816d6c720920776724ad8b20b51"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/shared/UserProfileCard.tsx": {
+    "mtime": 1785483319.6209626,
+    "hash": "2beb5b786f9252be4344be8e23cde033"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/shared/FileViewer.tsx": {
+    "mtime": 1785012010.541254,
+    "hash": "114e67a60a1be6c5dc22b91cdc76bf3f"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/shared/SeverityChip.tsx": {
+    "mtime": 1785007233.8234472,
+    "hash": "5fe7110bd63f19a7b2412b156905976f"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/shared/XPBar.tsx": {
+    "mtime": 1784712836.8353856,
+    "hash": "11d86699441766854faced7700aaf187"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/shared/MonthFilter.tsx": {
+    "mtime": 1784712836.8320236,
+    "hash": "c533dc6e59ccb5cae7de5127f554cdf4"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/pwa/InstallAppButton.tsx": {
+    "mtime": 1784712836.830083,
+    "hash": "7ddd078299dd04a549b8656b03e79846"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/editor/RichRenderer.tsx": {
+    "mtime": 1784712836.8254662,
+    "hash": "15784ca6f8b2e376bf59b0a889930a1d"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/editor/RichEditor.tsx": {
+    "mtime": 1785012308.579614,
+    "hash": "e379bf9a5b6e524e006242978d693558"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/editor/SuggestionList.tsx": {
+    "mtime": 1784712836.8256702,
+    "hash": "46bbcc09097484540900936806b6a7de"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/editor/suggestionUtils.tsx": {
+    "mtime": 1785011548.312937,
+    "hash": "034d7700ddf9d060496cf4198cf34468"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/editor/fileMention.tsx": {
+    "mtime": 1784712836.826101,
+    "hash": "aae057c5a332c5029808acee1a3a306b"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/editor/useFileRefClick.ts": {
+    "mtime": 1784712836.8267806,
+    "hash": "5e62ff0b67f730e7116e882ecc4b8301"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/editor/slashCommand.tsx": {
+    "mtime": 1784712836.8263261,
+    "hash": "1f7f8dd58152b23b5ce772c52af5f789"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/editor/DocEditor.tsx": {
+    "mtime": 1784712836.8250172,
+    "hash": "14fc0a65c80ae420e7ff33a1eba948bf"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/useApprovals.ts": {
+    "mtime": 1784712836.8437583,
+    "hash": "cd87c69a710fc1e18fc13766977c7dfc"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/useMonthFilter.ts": {
+    "mtime": 1784712836.8468506,
+    "hash": "483c53e1f204a16e5ed4fe0cc5936828"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/useCurrentDevice.ts": {
+    "mtime": 1784712836.8455067,
+    "hash": "db5b701f3dc6d05350e1e679cde6225e"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/useWatchers.ts": {
+    "mtime": 1784712836.850218,
+    "hash": "3d7691c33907203ff8d3d3be95b0b0d4"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/useClients.ts": {
+    "mtime": 1784712836.8449252,
+    "hash": "f67952dedf8149ddf914a4cf2cedaaa0"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/useAttendance.ts": {
+    "mtime": 1784712836.8442512,
+    "hash": "ef6e718612b97350613afd8de68c1a0b"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/useChatUnreadCount.ts": {
+    "mtime": 1785010653.4994588,
+    "hash": "0e734e1cbc0e3e270226f50db4f9b199"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/useClickOutside.ts": {
+    "mtime": 1784712836.8447242,
+    "hash": "f35f97926663e22fe86482411cd3bea7"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/useMessageAttachments.ts": {
+    "mtime": 1785012232.523913,
+    "hash": "08b0be0ec6300a42ad45070a723930d5"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/useMediaQuery.ts": {
+    "mtime": 1784712836.8464696,
+    "hash": "71855dac0c62c8cbb84562348a5ed99c"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/useStandups.ts": {
+    "mtime": 1785324268.4260883,
+    "hash": "1731b77748d5d0767c719ffe86b00b94"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/useDesignations.ts": {
+    "mtime": 1784712836.8457437,
+    "hash": "247f770dbfe6e5ff2d8aa420360304ba"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/useSaveStatus.ts": {
+    "mtime": 1785494990.3588567,
+    "hash": "a869c3f66be754127d8f89d438c6ba67"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/useServices.ts": {
+    "mtime": 1785324268.4253757,
+    "hash": "17cf379434f315fa6c32c14ce09d4d22"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/useTasks.ts": {
+    "mtime": 1784712836.8496127,
+    "hash": "110da2d0e6a4daa44acc29c630790ebe"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/useAuth.ts": {
+    "mtime": 1784712836.8445017,
+    "hash": "307250f1ae693af68211298ea45f191f"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/useEnrolledDevices.ts": {
+    "mtime": 1784712836.8459632,
+    "hash": "45942f8388c75bc4150242072e4b51b8"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/useChannelMembers.ts": {
+    "mtime": 1785010608.474076,
+    "hash": "4242d0ba41ef0fc63e1ba61d3f309d86"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/useComments.ts": {
+    "mtime": 1784712836.8452306,
+    "hash": "ee6b66a3c196721ba502bdcf4d77e3bc"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/useNotifications.ts": {
+    "mtime": 1784712836.8470783,
+    "hash": "3614ea66f544f0e3cd10ab49edfb68b7"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/useGamification.ts": {
+    "mtime": 1784712836.8462286,
+    "hash": "5eee7366d58b20e73f21b46fa691e94b"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/usePeople.ts": {
+    "mtime": 1784712836.8472824,
+    "hash": "efe5bf3fb32e6b16ae08aed57d72d86e"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/useRecentEmoji.ts": {
+    "mtime": 1785011653.430349,
+    "hash": "9df01e9adc6b75fdd9a9f95fab1a3826"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/useChannels.ts": {
+    "mtime": 1785053288.0329769,
+    "hash": "fc016e6a383e42f174e4dde45b71cbea"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/useMentions.ts": {
+    "mtime": 1784712836.8466592,
+    "hash": "54bc5bc6f9511670387d2b3a371c13a3"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/useStages.ts": {
+    "mtime": 1785324268.425766,
+    "hash": "2c05796805eebb3f4dcd453179efde39"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/useProjects.ts": {
+    "mtime": 1785324268.4245393,
+    "hash": "b31f0a4333482d1fd8f781a5c25abed3"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/useProfile.ts": {
+    "mtime": 1784712836.8474758,
+    "hash": "64002dd25def694c6a571de5dcb53d7e"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/useTemplates.ts": {
+    "mtime": 1785324268.426584,
+    "hash": "61bbd9cfdddc29966d1c69e375700dd6"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/useSubtasks.ts": {
+    "mtime": 1784712836.849218,
+    "hash": "409e54f02ee962fea406cbd3a8f67950"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/useAttachments.ts": {
+    "mtime": 1784712836.8439612,
+    "hash": "5d1439a6c0b76bf585a2f4a2c4ea4092"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/usePwaInstall.ts": {
+    "mtime": 1784712836.8481262,
+    "hash": "fe01dfe47c42684af6749d4b768a1d84"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/useTaskAssignees.ts": {
+    "mtime": 1784712836.849403,
+    "hash": "5abcbb8183f996c3cfbdc183c3f55ba5"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/useMessages.ts": {
+    "mtime": 1785405676.3580813,
+    "hash": "7d0278add0bf4340e1f20922c6dae7a4"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/useTeamMembers.ts": {
+    "mtime": 1784712836.8498447,
+    "hash": "812cfa2e2ce810b2de6fb9b592139655"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/useMessageReactions.ts": {
+    "mtime": 1785012245.551763,
+    "hash": "9a4cd82ceb4561e2090caa979462b548"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/useChannelRoles.ts": {
+    "mtime": 1785122855.0991194,
+    "hash": "a518cc50da5671689e6e8839c04bd617"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/useProjectServices.ts": {
+    "mtime": 1785324268.423929,
+    "hash": "b4f5d54184e6c1ae0da8c9176b04b260"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/useAuditLog.ts": {
+    "mtime": 1785408029.4974802,
+    "hash": "022f68b7fe0a48ac7cd10045f4d418c0"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/usePermissions.ts": {
+    "mtime": 1785324268.4235718,
+    "hash": "8f7a52b4571b3efa646955405b80de6d"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/useTeams.ts": {
+    "mtime": 1784712836.850032,
+    "hash": "af476b4ce0e81a1dffc2481174dd531e"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/useRoleFlags.ts": {
+    "mtime": 1785324268.424979,
+    "hash": "57d40e1145b95b8d2bc648db1c1573a7"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/realtime/useRealtimeComments.ts": {
+    "mtime": 1784712836.8429136,
+    "hash": "4d7020575c0196b6ceb3e5cb9391ed80"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/realtime/useRealtimeChannelList.ts": {
+    "mtime": 1785010668.7534196,
+    "hash": "8c5498bae3400c5172c37568f2814df1"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/realtime/useRealtimeNotifications.ts": {
+    "mtime": 1784712836.843207,
+    "hash": "e66d0887bd2bc00e22cd19bb98ba7ea9"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/realtime/useRealtimeAuditLog.ts": {
+    "mtime": 1785007233.8238196,
+    "hash": "1d237fb7980565813cbbddc0430dff93"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/realtime/useRealtimeChatMessages.ts": {
+    "mtime": 1785012543.8276896,
+    "hash": "569f28a4b545362079d5b537ff7d0bde"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/realtime/useRealtimeTasks.ts": {
+    "mtime": 1784712836.8435233,
+    "hash": "a5c401f7eef3a007ea9a4373cd2facdf"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/lib/chatAttachment.ts": {
+    "mtime": 1785012600.4052925,
+    "hash": "e43f224fff911c32eecba9b49b8eb59e"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/lib/push.ts": {
+    "mtime": 1784712836.8531613,
+    "hash": "31d2519db8262d47c2665a2b1a485cd1"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/lib/linkMeta.ts": {
+    "mtime": 1784712836.8527565,
+    "hash": "1dd547b9983c3935f52c6da117b9b262"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/lib/uuid.ts": {
+    "mtime": 1785405563.565901,
+    "hash": "8021608755fc50e4dc40b1e8f34c6719"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/lib/richText.ts": {
+    "mtime": 1784712836.853368,
+    "hash": "ac5b7e487ca3a07f9cdeecffab949392"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/lib/timezone.ts": {
+    "mtime": 1784712836.8539863,
+    "hash": "bbd8b5efcf486750897827fa8030a356"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/lib/dateGroups.ts": {
+    "mtime": 1784712836.8519335,
+    "hash": "d22dd46024b112e9ad241041db9469bd"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/lib/standup.ts": {
+    "mtime": 1785324268.4273257,
+    "hash": "2e548ae9bd69afc1dc03ee716f897ab9"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/lib/gamificationAccess.ts": {
+    "mtime": 1784712836.8525493,
+    "hash": "0ec3b873939cd6eb18f280f1e420319e"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/lib/cn.ts": {
+    "mtime": 1784712836.8514793,
+    "hash": "9a4cc6f9f3155ffdc1fa7c2c097f6429"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/lib/deviceUtils.ts": {
+    "mtime": 1785405663.6667187,
+    "hash": "02d464f8254cf56b01c6b546c3dd37d2"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/lib/csv.ts": {
+    "mtime": 1784712836.8517058,
+    "hash": "476cfa45e15504b0e6835c0166618ab0"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/lib/utils.ts": {
+    "mtime": 1785495007.480886,
+    "hash": "87507bcd8c5d50ef6de182d79564585e"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/lib/featureFlags.ts": {
+    "mtime": 1784712836.8523562,
+    "hash": "4f104a8a82f629bc2ec6fd0f8786cc2d"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/lib/attachment.ts": {
+    "mtime": 1785011848.9800298,
+    "hash": "900f296a2edac45886cc052f4ee656af"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/lib/attendanceHours.ts": {
+    "mtime": 1784712836.851083,
+    "hash": "dbf47e03a3307725d86515609d05f957"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/lib/avatar.ts": {
+    "mtime": 1784712836.8512743,
+    "hash": "5ff3a33fd6f11c85c712df51f7dd0124"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/lib/roles.ts": {
+    "mtime": 1785324268.4271457,
+    "hash": "def8239676b68875727285f1ad65940f"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/lib/supabase.ts": {
+    "mtime": 1784712836.8537753,
+    "hash": "5bd526445bee0bea72af0a22837a24b5"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/lib/taskActivity.ts": {
+    "mtime": 1785495097.7745676,
+    "hash": "c6670f4ff62a6f5913f93dca92f0ceb1"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/lib/peopleAccess.ts": {
+    "mtime": 1784712836.8529537,
+    "hash": "69af280cdeddab3d1326161fc194b3a6"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/api/comments.ts": {
+    "mtime": 1784712836.8190386,
+    "hash": "0ed18e57e354d943c24ed74055b75a3f"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/api/gamification.ts": {
+    "mtime": 1784712836.8196907,
+    "hash": "60f6ddc90ae6a83b25211be1cdb95ae3"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/api/messageAttachments.ts": {
+    "mtime": 1785405676.361077,
+    "hash": "d002b4f6b40cb6a52150a5e7f91d1f24"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/api/projects.ts": {
+    "mtime": 1785324268.4149776,
+    "hash": "a5b457531e91dd2cc33c7f86fcf62349"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/api/taskAssignees.ts": {
+    "mtime": 1784712836.8225005,
+    "hash": "0246dffc8df5cb7d3371b72f94d2fcc0"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/api/channels.ts": {
+    "mtime": 1785127455.2439828,
+    "hash": "0e2f455547c570bcb4f412eea28c1f6f"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/api/mentions.ts": {
+    "mtime": 1784712836.82013,
+    "hash": "c8dc119b132dc8fba19c4d5e05f95559"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/api/channelRoles.ts": {
+    "mtime": 1785122845.1605773,
+    "hash": "c446b19e254abf352d66466172c6f299"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/api/notifications.ts": {
+    "mtime": 1784712836.8203733,
+    "hash": "9206cc043b3ac4a9359563d284d5af55"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/api/messages.ts": {
+    "mtime": 1785053594.5903292,
+    "hash": "85e06a784b6c7928580f44aef4e7b1b3"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/api/permissions.ts": {
+    "mtime": 1785324268.4137704,
+    "hash": "a6732b95bca950f0b787e9eb4b0fe6b3"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/api/clients.ts": {
+    "mtime": 1784712836.8188355,
+    "hash": "eab884e62946666339ffdd66c15870ac"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/api/subtasks.ts": {
+    "mtime": 1784712836.8223102,
+    "hash": "41f10945a1292ecf9203089edcaa6c01"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/api/channelMembers.ts": {
+    "mtime": 1785123728.9659104,
+    "hash": "be245e45623e90c71182e717fa08997f"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/api/teamMembers.ts": {
+    "mtime": 1784712836.8229291,
+    "hash": "41f6669cf8df3a333a64103ea16b3182"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/api/people.ts": {
+    "mtime": 1785324268.413415,
+    "hash": "874f4523f82d33d862090a4fd5c9b64b"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/api/templates.ts": {
+    "mtime": 1785324268.4173815,
+    "hash": "0960d133f5ca40896a10dc9ea5db770e"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/api/attachments.ts": {
+    "mtime": 1785405676.36175,
+    "hash": "ffed62ca0daf49e8f099ffe67cebba9f"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/api/stages.ts": {
+    "mtime": 1785324268.4158049,
+    "hash": "6dc07365b2d5e8ec2977335f1dd7cafc"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/api/auditLog.ts": {
+    "mtime": 1785407969.3486977,
+    "hash": "7193abac0cc612913e1e5288b2623b28"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/api/chatUnread.ts": {
+    "mtime": 1785010581.7223036,
+    "hash": "c5d857cea1d2d80dc790a113ff95b4c5"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/api/teams.ts": {
+    "mtime": 1784712836.8231769,
+    "hash": "d86e1c08ecbf5c26aef81b029b539722"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/api/profile.ts": {
+    "mtime": 1784712836.8208137,
+    "hash": "0ed9d9525a8be14afb6a85ad2bc444ff"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/api/watchers.ts": {
+    "mtime": 1784712836.8233738,
+    "hash": "4c007e51aee470789f7cb6ed8d3dad0b"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/api/attendance.ts": {
+    "mtime": 1784712836.818362,
+    "hash": "2e69a4b52608e6a60762408b6790bcc6"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/api/designations.ts": {
+    "mtime": 1784712836.8194218,
+    "hash": "fd591ad63fc77a9192d530758b9c098c"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/api/index.ts": {
+    "mtime": 1785324268.412734,
+    "hash": "633cd158698716e05ef590a1bb6b935e"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/api/projectServices.ts": {
+    "mtime": 1785324268.4143217,
+    "hash": "46f13dea638456c9a74164da56592cdd"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/api/approvals.ts": {
+    "mtime": 1784712836.8178017,
+    "hash": "e27a0554b8127f3511530b2b0880646e"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/api/deleteCascade.ts": {
+    "mtime": 1784712836.819234,
+    "hash": "60eab0054bbaeeab25891623cdda6f25"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/api/messageReactions.ts": {
+    "mtime": 1785012221.2036672,
+    "hash": "cc7404c9b50b997d97ad1e4645d3277c"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/api/tasks.ts": {
+    "mtime": 1785324268.4168365,
+    "hash": "2659aabd630ddc59282fc8a930ab7eb4"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/api/services.ts": {
+    "mtime": 1785324268.4153936,
+    "hash": "a2e685a75ecd02d815be335160e2734d"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/api/auth.ts": {
+    "mtime": 1784712836.8186376,
+    "hash": "7bebb7cefba45c07b3420e2bb7066fd4"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/api/standups.ts": {
+    "mtime": 1785324268.416294,
+    "hash": "067e85850450768ae05389b00e5d5602"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/data/mock.ts": {
+    "mtime": 1784712836.8424063,
+    "hash": "724b73020190c95969243b249db1458a"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/ProfilePage.tsx": {
+    "mtime": 1784712836.8564575,
+    "hash": "2ef9a76e3d8653233c68172aa360429a"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/InboxPage.tsx": {
+    "mtime": 1784712836.855385,
+    "hash": "86ca7e17d20377a19d55ef7b5c8b7c0a"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/MemberProfilePage.tsx": {
+    "mtime": 1785052857.6013207,
+    "hash": "bcae60638385262762593a30aa7cb11d"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/NotificationsPage.tsx": {
+    "mtime": 1784712836.856202,
+    "hash": "7f43ee8221a9c755f69d95309e0b3b87"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/StandupHistoryPage.tsx": {
+    "mtime": 1785324268.4290867,
+    "hash": "558d26e3fc053152e7152e511815286a"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/AttendancePage.tsx": {
+    "mtime": 1784712836.854971,
+    "hash": "8b756313a0ed8c0d398c3ce57cbff428"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/StandupSettingsPage.tsx": {
+    "mtime": 1785490359.9884028,
+    "hash": "f9cd1ed194df67f82749ae2050e5fcf7"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/StandupTeamPage.tsx": {
+    "mtime": 1785324268.4297915,
+    "hash": "e47727599dfb598054e966db49977000"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/AttendanceMobile.tsx": {
+    "mtime": 1785324268.4280682,
+    "hash": "1b80df8fd0783b52d3cda8719501712c"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/StandupForm.tsx": {
+    "mtime": 1785405676.363017,
+    "hash": "bced4f719274e9e1874daf781d2950a3"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/StandupPage.tsx": {
+    "mtime": 1785324268.429372,
+    "hash": "885cdcc176fecbc12422b8a818a89d68"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/ChatPage.tsx": {
+    "mtime": 1785394298.1327674,
+    "hash": "b279d6908b78c02da59960db7e13685b"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/MorePage.tsx": {
+    "mtime": 1785324268.4286327,
+    "hash": "bf87eb4048c5fba9e738e5c7ca0952f1"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/DashboardPage.tsx": {
+    "mtime": 1784712836.8551753,
+    "hash": "5a76b4a801f8feba970df1a1e79b91f8"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/auth/RegisterPage.tsx": {
+    "mtime": 1784712836.8662395,
+    "hash": "9926da821513923d86c39efe7194e8f6"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/auth/LoginPage.tsx": {
+    "mtime": 1784712836.8659163,
+    "hash": "f27462ef9c8ba26ad4a7fb1669de68bd"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/admin/ClientFormModal.tsx": {
+    "mtime": 1784712836.8592923,
+    "hash": "13dad99cdb3ba5a665b62ad2f8954576"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/admin/ClickUpPage.tsx": {
+    "mtime": 1784712836.858994,
+    "hash": "9a383bd3de6fd5235cbe65bae21bbf38"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/admin/StageFormModal.tsx": {
+    "mtime": 1785324268.4356575,
+    "hash": "e50cba06b9c2c5232c51c796d64a14aa"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/admin/GamificationPage.tsx": {
+    "mtime": 1785494567.761647,
+    "hash": "85d46e2e8734c8bfa86aef91c5220d96"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/admin/ProjectsPage.tsx": {
+    "mtime": 1785324268.4344122,
+    "hash": "84b9dfae55569c10f56ad7e6627c467e"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/admin/ProjectFilesTab.tsx": {
+    "mtime": 1785490382.8955612,
+    "hash": "acaef3f94e35ecf639a2538b4a4ab44f"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/admin/SettingsPage.tsx": {
+    "mtime": 1785324268.4352283,
+    "hash": "ef3edc6a24727a87b1033bab51801942"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/admin/TaskDetailPage.tsx": {
+    "mtime": 1785408939.8727262,
+    "hash": "53214f18d56d8b7dab777a04f3fa0c64"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/admin/ProjectDetailPage.tsx": {
+    "mtime": 1785324268.4320395,
+    "hash": "6f21e629eed025f3b1873f3e6b572519"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/admin/TeamsPage.tsx": {
+    "mtime": 1785490382.8327627,
+    "hash": "ecef31de04f30b4f41e6af59cc76fa19"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/admin/ReportsPage.tsx": {
+    "mtime": 1784712836.8628447,
+    "hash": "96a69c85bb63c5f6328f8b9465eadcf5"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/admin/PeoplePage.tsx": {
+    "mtime": 1785490359.9923596,
+    "hash": "2a80df8bd4f8540c3bbf45522cfce93b"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/admin/TeamTemplatesTab.tsx": {
+    "mtime": 1785324268.4392002,
+    "hash": "67a1729185f2f23e4598f5549df12388"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/admin/ClientsPage.tsx": {
+    "mtime": 1784712836.85955,
+    "hash": "01dd8d1f47943b4f9d0f6d2bb8ac53e8"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/admin/PlaceholderPage.tsx": {
+    "mtime": 1784712836.86129,
+    "hash": "2b7f5b263daae63a645788d4f0230902"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/admin/TaskFormModal.tsx": {
+    "mtime": 1785495123.06525,
+    "hash": "34b5f2e7101ce39b87af6515a6c39669"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/admin/AttendancePage.tsx": {
+    "mtime": 1785490359.9897556,
+    "hash": "63dda858776f914fd4bcbfdffae69a04"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/admin/AddProjectMemberModal.tsx": {
+    "mtime": 1785324268.430295,
+    "hash": "961be96205a5dd71d781f7b2bfe3da63"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/admin/TeamDetailPage.tsx": {
+    "mtime": 1785324268.4384668,
+    "hash": "b54b2aaf12936ead6f20bb19edbb8cb0"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/admin/AuditLogPage.tsx": {
+    "mtime": 1785494200.1155674,
+    "hash": "59630d56359be169877e87347d05f225"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/admin/ApprovalModal.tsx": {
+    "mtime": 1784712836.8576214,
+    "hash": "e1bc7da1b20538f0896755fbb172af03"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/admin/ProjectFormModal.tsx": {
+    "mtime": 1785324268.433469,
+    "hash": "2e5a9e72a9a45d352abd4d0dc94d72fa"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/admin/TaskDetailDrawer.tsx": {
+    "mtime": 1785410545.2241447,
+    "hash": "ac88c692a0c15edfe497f99744dc296d"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/admin/TasksPage.tsx": {
+    "mtime": 1785324268.4377422,
+    "hash": "b14467cd464dd24a762b209067da2b83"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/admin/TaskDetailContent.tsx": {
+    "mtime": 1785495082.4789977,
+    "hash": "b9dc77ff86616985015229a755aa72da"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/admin/DashboardPage.tsx": {
+    "mtime": 1784712836.8598406,
+    "hash": "eaafaade75d4e9d279978a417b9943de"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/admin/AddProjectServiceModal.tsx": {
+    "mtime": 1785324268.4309294,
+    "hash": "bf674a363c0327a88033995288fd3853"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/employee/AttendancePage.tsx": {
+    "mtime": 1785324268.4414785,
+    "hash": "4624a17a4bc5a266f4943a28d2d17cc1"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/employee/DashboardPage.tsx": {
+    "mtime": 1784712836.870695,
+    "hash": "72b340c9cd975f1b8a7297b03f4e8f17"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/client/ProjectsPage.tsx": {
+    "mtime": 1784712836.8689437,
+    "hash": "c772cd616729226330fd6af152496e43"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/client/SettingsPage.tsx": {
+    "mtime": 1784712836.869524,
+    "hash": "6ba119da24bb94930422fe84db288cac"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/client/ProjectDetailPage.tsx": {
+    "mtime": 1784712836.868558,
+    "hash": "d571ba71072500366d8a4cb6abd691e9"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/client/ReportsPage.tsx": {
+    "mtime": 1784712836.869239,
+    "hash": "f9568c71a27276de2397596f011e7fb0"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/client/HelpPage.tsx": {
+    "mtime": 1784712836.868223,
+    "hash": "a65df0c980d19a84ebb8596d9e1ce9e7"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/client/AccountPage.tsx": {
+    "mtime": 1784712836.866911,
+    "hash": "041277f44711932a2e07ab1b5609fe79"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/client/FilesPage.tsx": {
+    "mtime": 1784712836.8679695,
+    "hash": "88d1d400c736c19b9e73bca2c5d29c77"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/client/ApprovalsPage.tsx": {
+    "mtime": 1784712836.8672476,
+    "hash": "e69c2c3491aea95cfddb1a1627aa1393"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/client/DashboardPage.tsx": {
+    "mtime": 1784712836.867568,
+    "hash": "a27dc024138a383109344850f95647bd"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/index.html": {
+    "mtime": 1784712836.7936804,
+    "hash": "b2f3fd64e96835abc525a90a4fa646ad"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/todo.md": {
+    "mtime": 1784712836.9033477,
+    "hash": "f64f373ea30ca85e5755031a30a6f6a6"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/README.md": {
+    "mtime": 1784712836.4104378,
+    "hash": "f6e3faf55d738cf2affe1b44195f27cf"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/AGENTS.md": {
+    "mtime": 1784712836.4097962,
+    "hash": "da79aa9343cd2b362206f03762160abc"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/CLAUDE.md": {
+    "mtime": 1784712836.4101453,
+    "hash": "fe6cfb286a6267a0398c6f5408a4b51d"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/pnpm-workspace.yaml": {
+    "mtime": 1784712836.7948778,
     "hash": "b9a292c21da1a62afc04bd9299e53dc5"
   },
-  "D:\\Projects\\react\\linknbit-portal\\README.md": {
-    "mtime": 1778596599.7664366,
-    "hash": "1fd1975c826313d9af82af3562df872f"
+  "/Users/zainmalik/Documents/projects/linknbit-portal/references/office-quest-app/index.html": {
+    "mtime": 1784712836.8101988,
+    "hash": "392ec65db1dd8044aa7cc75a42f35d84"
   },
-  "D:\\Projects\\react\\linknbit-portal\\docs\\backend-architecture.md": {
-    "mtime": 1779137852.3261397,
-    "hash": "0d4dbda4f5bbcc081b71a162529cd10c"
+  "/Users/zainmalik/Documents/projects/linknbit-portal/references/office-quest-app/wordpress-integration.md": {
+    "mtime": 1784712836.8108194,
+    "hash": "41da631833ce8b32811fc5d55c21d9c1"
   },
-  "D:\\Projects\\react\\linknbit-portal\\docs\\implementation-phases.md": {
-    "mtime": 1779560826.3615005,
+  "/Users/zainmalik/Documents/projects/linknbit-portal/references/office-quest-app/README.md": {
+    "mtime": 1784712836.8078914,
+    "hash": "75d69d4240c2b9797024156aa3ba75c5"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/references/resources/Client Dashboard.html": {
+    "mtime": 1784712836.8120875,
+    "hash": "7a3da4514e449373f910bd7e1f72c624"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/references/resources/Admin Dashboard.html": {
+    "mtime": 1784712836.8113458,
+    "hash": "ec1f040b56ae5829fb5e04727ec410bf"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/references/resources/phases.md": {
+    "mtime": 1784712836.8150551,
+    "hash": "5450ccc4f141fe9f2cc8f9b673ef5907"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/references/resources/Project Detail.html": {
+    "mtime": 1784712836.8132813,
+    "hash": "aff4e4e2ea71089f786b62ad998a08ea"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/references/resources/Design System.html": {
+    "mtime": 1784712836.8126223,
+    "hash": "cb451417e5c537d0fb4384913d1bd9d7"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/references/resources/Projects.html": {
+    "mtime": 1784712836.8135946,
+    "hash": "f0fc59a6b729478a9f6935a5da07f7c4"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/references/resources/Task Detail.html": {
+    "mtime": 1784712836.8142323,
+    "hash": "8f9862252dff451e72851c86623cff62"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/references/resources/Auth Screens.html": {
+    "mtime": 1784712836.8117268,
+    "hash": "df15cfd4817975f0c0215be0a0d0048c"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/references/docs/Gamified Rewards & Recognition System.docx.md": {
+    "mtime": 1784712836.8072827,
+    "hash": "cff200760cf8b0ad56c1b64246d96eb5"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/references/docs/Linknbit Unified Operations Portal.md": {
+    "mtime": 1784712836.8075633,
+    "hash": "5948461071362b606d1e3be1e94c8a12"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/docs/implementation-phases.md": {
+    "mtime": 1784712836.411831,
     "hash": "29375c64a33296cda56850ef37dcacae"
   },
-  "D:\\Projects\\react\\linknbit-portal\\references\\docs\\Gamified Rewards & Recognition System.docx.md": {
-    "mtime": 1778596599.7664366,
-    "hash": "0467a2a46160f30874268be2ba00045a"
+  "/Users/zainmalik/Documents/projects/linknbit-portal/docs/permission-model-v2.md": {
+    "mtime": 1785324268.349523,
+    "hash": "b0267dcc6ef04f27b3a6a79932aab85a"
   },
-  "D:\\Projects\\react\\linknbit-portal\\references\\docs\\Linknbit Unified Operations Portal.md": {
-    "mtime": 1778919296.3962018,
-    "hash": "296d3aa511008f9d554ad4bd60e21ccf"
+  "/Users/zainmalik/Documents/projects/linknbit-portal/docs/backend-architecture.md": {
+    "mtime": 1784712836.411183,
+    "hash": "0d4dbda4f5bbcc081b71a162529cd10c"
   },
-  "D:\\Projects\\react\\linknbit-portal\\references\\office-quest-app\\index.html": {
-    "mtime": 1778922121.4179854,
-    "hash": "7b804e3845c8026930f43f0dd4b1618e"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\references\\office-quest-app\\README.md": {
-    "mtime": 1778922121.4815636,
-    "hash": "90bc5c341715d1cca6538f59619822ab"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\references\\office-quest-app\\wordpress-integration.md": {
-    "mtime": 1778922121.4895656,
-    "hash": "016584cb6d3282dc6c4f9af5da4c1949"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\references\\resources\\Admin Dashboard.html": {
-    "mtime": 1778596599.7695684,
-    "hash": "71475566fdbff2b1b0d940cf809a7650"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\references\\resources\\Auth Screens.html": {
-    "mtime": 1778596599.7695684,
-    "hash": "24f0b9357e39a6321fa832424db92f7e"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\references\\resources\\Client Dashboard.html": {
-    "mtime": 1778596599.7705686,
-    "hash": "b32a2becaee759307ce79e3826b3c212"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\references\\resources\\Design System.html": {
-    "mtime": 1778596599.7715695,
-    "hash": "e22297616ed0ddde158ba06b1501e3f6"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\references\\resources\\phases.md": {
-    "mtime": 1778596599.7735696,
-    "hash": "a172130e0d9d92d5015bcc827851dde8"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\references\\resources\\Project Detail.html": {
-    "mtime": 1778596599.7715695,
-    "hash": "800808c29b2adb52c50a5f168c00e2e2"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\references\\resources\\Projects.html": {
-    "mtime": 1778596599.7725687,
-    "hash": "eadb4293fcfef12caec1a934e3000469"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\references\\resources\\Task Detail.html": {
-    "mtime": 1778596599.7735696,
-    "hash": "ab8ebd1811090c6bead9a61f55d9c430"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\supabase\\templates\\magic_link.html": {
-    "mtime": 1779328395.3382368,
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/templates/magic_link.html": {
+    "mtime": 1784712836.9031467,
     "hash": "f620350f10e64a12fc5291ec5ab42067"
   },
-  "D:\\Projects\\react\\linknbit-portal\\graphify-out\\memory\\query_20260513_020524_why_does_cn___connect_community_0_to_community_1.md": {
-    "mtime": 1778637924.4197428,
-    "hash": "848deb58838392c2495601d75fca8715"
+  "/Users/zainmalik/Documents/projects/linknbit-portal/graphify-out/memory/query_20260513_020524_why_does_cn___connect_community_0_to_community_1.md": {
+    "mtime": 1784712836.7934425,
+    "hash": "67fc3c9fe6fb4b080373111e74b51c56"
   },
-  "D:\\Projects\\react\\linknbit-portal\\public\\favicon.svg": {
-    "mtime": 1781538461.5128422,
-    "hash": "2f764288d84a58cc80eb4c182db6ba53"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\public\\icons.svg": {
-    "mtime": 1778596599.768564,
-    "hash": "21c7473c592c67dc87223d49892c8f0a"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\public\\install-banner.png": {
-    "mtime": 1784370312.8208213,
-    "hash": "3440f6c0257414893969320f7a8c544c"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\public\\og-image.png": {
-    "mtime": 1784370312.8220344,
-    "hash": "6e5f97b6708606dbef5f611cb5d9d508"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\public\\brand\\linknbit-icon-light.svg": {
-    "mtime": 1781538468.1280465,
-    "hash": "c7e991ed7b4ccc1d5a16d51de547115c"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\public\\brand\\linknbit-icon-maskable.svg": {
-    "mtime": 1781538471.4108715,
-    "hash": "c598215aea3fe691acd617f7c88d55f3"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\public\\brand\\linknbit-icon.svg": {
-    "mtime": 1781538464.7700422,
-    "hash": "2f764288d84a58cc80eb4c182db6ba53"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\public\\brand\\linknbit-mark-dark.svg": {
-    "mtime": 1781538474.7072365,
-    "hash": "6a7f2799c68e142edba818cdc7bd6535"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\public\\brand\\linknbit-mark-light.svg": {
-    "mtime": 1781538477.9715984,
-    "hash": "04438d181043e45092c12aa34a72473f"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\public\\brand\\linknbit-portal-banner-black.svg": {
-    "mtime": 1784370312.8196523,
-    "hash": "bbc4f2ba437068e76ca41b8286eb21df"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\public\\brand\\linknbit-portal-banner-white.svg": {
-    "mtime": 1784370312.8202348,
-    "hash": "d10568933ea7b2e2a6d32a6a8e01bec3"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\public\\brand\\linknbit-wordmark-dark.svg": {
-    "mtime": 1781531066.6321194,
-    "hash": "c38d06eab343d0cd743708fbe98f1978"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\public\\brand\\linknbit-wordmark-light.svg": {
-    "mtime": 1781531066.6321194,
-    "hash": "36955ded6cb3df81bc5710a606633900"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\public\\brand\\source-mark-dark.svg": {
-    "mtime": 1781531066.6331189,
-    "hash": "9819dfda37d21f4aa6438ceaf72cc948"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\public\\brand\\source-mark-light.svg": {
-    "mtime": 1781531066.6331189,
-    "hash": "87dfee1ddc5110cfd7f61542002b4623"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\public\\brand\\source-wordmark-dark.svg": {
-    "mtime": 1781531066.6331189,
-    "hash": "c38d06eab343d0cd743708fbe98f1978"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\public\\brand\\source-wordmark-light.svg": {
-    "mtime": 1781531066.6341193,
-    "hash": "36955ded6cb3df81bc5710a606633900"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\public\\icons\\apple-touch-icon.png": {
-    "mtime": 1781539453.654,
-    "hash": "0a4a86264504c7566324c450832d45de"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\public\\icons\\favicon-16x16.png": {
-    "mtime": 1781539453.626,
-    "hash": "cd6ced53194174fe7c6c391671b13f57"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\public\\icons\\favicon-32x32.png": {
-    "mtime": 1781539453.63,
-    "hash": "d3e4eb43cdd24b8d785bc34cb470aa27"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\public\\icons\\favicon-48x48.png": {
-    "mtime": 1781539453.632,
-    "hash": "11f0954b1316aef7a11928d964ecbc09"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\public\\icons\\mstile-150x150.png": {
-    "mtime": 1781539453.656,
-    "hash": "f0a0f03050dcbe533b442dc5067cdeb4"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\public\\icons\\pwa-192x192.png": {
-    "mtime": 1781539453.636,
-    "hash": "436d49d86718a252f056779767a7d6c7"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\public\\icons\\pwa-512x512.png": {
-    "mtime": 1781539453.642,
-    "hash": "053db9583aefe3e348fe4d500a0bf08d"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\public\\splash\\android-splash-1024x1024.png": {
-    "mtime": 1784370312.8226323,
-    "hash": "1cc917c8820f285aca6695954b62a75e"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\public\\splash\\android-splash-512x512.png": {
-    "mtime": 1784370312.8226323,
-    "hash": "d413555d253d2a8d5d82b49604d4ab12"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\public\\splash\\android-splash-maskable-1024x1024.png": {
-    "mtime": 1784370312.8232374,
-    "hash": "1cc917c8820f285aca6695954b62a75e"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\public\\splash\\android-splash-maskable-512x512.png": {
-    "mtime": 1784370312.8238075,
-    "hash": "d413555d253d2a8d5d82b49604d4ab12"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\public\\splash\\apple-splash-1125x2436.png": {
-    "mtime": 1784370312.8244026,
-    "hash": "8d5b8e80f3a4524e3edbdaaa010fb682"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\public\\splash\\apple-splash-1170x2532.png": {
-    "mtime": 1784370312.8249173,
-    "hash": "a599d21015e1803596e0cab56832a0e4"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\public\\splash\\apple-splash-1179x2556.png": {
-    "mtime": 1784370312.8254955,
-    "hash": "19468d7726ecd6b8abb08806463dfc78"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\public\\splash\\apple-splash-1242x2688.png": {
-    "mtime": 1784370312.8266816,
-    "hash": "27e2eb4102ea5cc30b2f064f86c48e4b"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\public\\splash\\apple-splash-1290x2796.png": {
-    "mtime": 1784370312.8278508,
-    "hash": "e88274ba2a64e59f06a66967ed176be8"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\public\\splash\\apple-splash-828x1792.png": {
-    "mtime": 1784370312.8284397,
-    "hash": "3155e2cddc787f73b7364b8ba5b24181"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\public\\splash\\linknbit-splash-2048.png": {
-    "mtime": 1784370312.8295815,
-    "hash": "a48d0dffce8a1d27a86d2f0bb278c364"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\public\\splash\\linknbit-splash.svg": {
-    "mtime": 1784370312.830165,
-    "hash": "0a0120a24ffe841e2afeea199ebcc51c"
-  },
-  "D:\\Projects\\react\\linknbit-portal\\references\\resources\\assets\\linknbit-logo.svg": {
-    "mtime": 1778596599.7735696,
+  "/Users/zainmalik/Documents/projects/linknbit-portal/references/resources/assets/linknbit-logo.svg": {
+    "mtime": 1784712836.8146183,
     "hash": "c2d86e6b8fd1853d289ef4200f833bc9"
   },
-  "D:\\Projects\\react\\linknbit-portal\\scripts\\banner-source.png": {
-    "mtime": 1784370312.8313527,
+  "/Users/zainmalik/Documents/projects/linknbit-portal/public/og-image.png": {
+    "mtime": 1784712836.8014705,
+    "hash": "6e5f97b6708606dbef5f611cb5d9d508"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/public/install-banner.png": {
+    "mtime": 1784712836.8009257,
     "hash": "3440f6c0257414893969320f7a8c544c"
   },
-  "D:\\Projects\\react\\linknbit-portal\\scripts\\banner-source.svg": {
-    "mtime": 1784370312.8313527,
-    "hash": "bbc4f2ba437068e76ca41b8286eb21df"
+  "/Users/zainmalik/Documents/projects/linknbit-portal/public/icons.svg": {
+    "mtime": 1784712836.79906,
+    "hash": "3b4fcfcf393eca4d264dca4a4663bc37"
   },
-  "D:\\Projects\\react\\linknbit-portal\\src\\assets\\hero.png": {
-    "mtime": 1778596599.7780874,
+  "/Users/zainmalik/Documents/projects/linknbit-portal/public/favicon.svg": {
+    "mtime": 1784712836.798835,
+    "hash": "2f764288d84a58cc80eb4c182db6ba53"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/public/splash/apple-splash-828x1792.png": {
+    "mtime": 1784712836.8057997,
+    "hash": "3155e2cddc787f73b7364b8ba5b24181"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/public/splash/linknbit-splash.svg": {
+    "mtime": 1784712836.8065357,
+    "hash": "96eb428ca2354ba06d25b9b529e51f81"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/public/splash/linknbit-splash-2048.png": {
+    "mtime": 1784712836.8062747,
+    "hash": "a48d0dffce8a1d27a86d2f0bb278c364"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/public/splash/apple-splash-1170x2532.png": {
+    "mtime": 1784712836.8041794,
+    "hash": "a599d21015e1803596e0cab56832a0e4"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/public/splash/apple-splash-1242x2688.png": {
+    "mtime": 1784712836.8049972,
+    "hash": "27e2eb4102ea5cc30b2f064f86c48e4b"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/public/splash/apple-splash-1125x2436.png": {
+    "mtime": 1784712836.8037868,
+    "hash": "8d5b8e80f3a4524e3edbdaaa010fb682"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/public/splash/apple-splash-1290x2796.png": {
+    "mtime": 1784712836.805449,
+    "hash": "e88274ba2a64e59f06a66967ed176be8"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/public/splash/apple-splash-1179x2556.png": {
+    "mtime": 1784712836.8045776,
+    "hash": "19468d7726ecd6b8abb08806463dfc78"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/public/brand/linknbit-icon-maskable.svg": {
+    "mtime": 1784712836.7955415,
+    "hash": "c598215aea3fe691acd617f7c88d55f3"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/public/brand/linknbit-portal-banner-black.svg": {
+    "mtime": 1784712836.7965868,
+    "hash": "43649da8637b7f357a5d56e807a0b181"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/public/brand/source-wordmark-light.svg": {
+    "mtime": 1784712836.798149,
+    "hash": "e5a751ced898c5e554e9d389d19b30c9"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/public/brand/source-mark-dark.svg": {
+    "mtime": 1784712836.7975924,
+    "hash": "40bf9b6f75d0cb317a5ea5d64c96bcaa"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/public/brand/linknbit-wordmark-dark.svg": {
+    "mtime": 1784712836.7971976,
+    "hash": "4c913cf20f93d30943dda461ef51fe30"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/public/brand/linknbit-icon.svg": {
+    "mtime": 1784712836.7958117,
+    "hash": "2f764288d84a58cc80eb4c182db6ba53"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/public/brand/linknbit-mark-dark.svg": {
+    "mtime": 1784712836.7960289,
+    "hash": "6a7f2799c68e142edba818cdc7bd6535"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/public/brand/source-wordmark-dark.svg": {
+    "mtime": 1784712836.7979743,
+    "hash": "4c913cf20f93d30943dda461ef51fe30"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/public/brand/linknbit-portal-banner-white.svg": {
+    "mtime": 1784712836.79695,
+    "hash": "556f3c8334d6d39693bb62007033864a"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/public/brand/linknbit-wordmark-light.svg": {
+    "mtime": 1784712836.7973843,
+    "hash": "e5a751ced898c5e554e9d389d19b30c9"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/public/brand/source-mark-light.svg": {
+    "mtime": 1784712836.797793,
+    "hash": "d7a520a353a77a4607eeeb1aafbe4c15"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/public/brand/linknbit-icon-light.svg": {
+    "mtime": 1784712836.7953205,
+    "hash": "c7e991ed7b4ccc1d5a16d51de547115c"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/public/brand/linknbit-mark-light.svg": {
+    "mtime": 1784712836.79623,
+    "hash": "04438d181043e45092c12aa34a72473f"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/public/icons/favicon-16x16.png": {
+    "mtime": 1784712836.7995887,
+    "hash": "cd6ced53194174fe7c6c391671b13f57"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/public/icons/apple-touch-icon.png": {
+    "mtime": 1784712836.7993762,
+    "hash": "0a4a86264504c7566324c450832d45de"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/public/icons/pwa-512x512.png": {
+    "mtime": 1784712836.8005922,
+    "hash": "053db9583aefe3e348fe4d500a0bf08d"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/public/icons/favicon-48x48.png": {
+    "mtime": 1784712836.7999835,
+    "hash": "11f0954b1316aef7a11928d964ecbc09"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/public/icons/pwa-maskable-512x512.png": {
+    "mtime": 1785324268.4081702,
+    "hash": "11e3a37a3a843881d09009c464e71874"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/public/icons/pwa-maskable-1024x1024.png": {
+    "mtime": 1785324268.4076996,
+    "hash": "627aa054bdfab26349b4999caf17a3cf"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/public/icons/mstile-150x150.png": {
+    "mtime": 1784712836.8001697,
+    "hash": "f0a0f03050dcbe533b442dc5067cdeb4"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/public/icons/pwa-192x192.png": {
+    "mtime": 1784712836.800365,
+    "hash": "436d49d86718a252f056779767a7d6c7"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/public/icons/favicon-32x32.png": {
+    "mtime": 1784712836.7998018,
+    "hash": "d3e4eb43cdd24b8d785bc34cb470aa27"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/scripts/banner-source.png": {
+    "mtime": 1784712836.8163352,
+    "hash": "3440f6c0257414893969320f7a8c544c"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/scripts/banner-source.svg": {
+    "mtime": 1784712836.8166466,
+    "hash": "43649da8637b7f357a5d56e807a0b181"
+  },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/assets/hero.png": {
+    "mtime": 1784712836.8237476,
     "hash": "aead493361b27e7510691c5d7072dfc1"
   },
-  "D:\\Projects\\react\\linknbit-portal\\src\\assets\\react.svg": {
-    "mtime": 1778596599.7790935,
-    "hash": "f0402b67b6ce880f65666bb49e841696"
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/assets/vite.svg": {
+    "mtime": 1784712836.8242366,
+    "hash": "9960a24288958394ac50e57ff638b036"
   },
-  "D:\\Projects\\react\\linknbit-portal\\src\\assets\\vite.svg": {
-    "mtime": 1778596599.7790935,
-    "hash": "6d5180a782d64c8cf51ba01c2a2184d8"
+  "/Users/zainmalik/Documents/projects/linknbit-portal/src/assets/react.svg": {
+    "mtime": 1784712836.8239844,
+    "hash": "f0402b67b6ce880f65666bb49e841696"
   }
 }

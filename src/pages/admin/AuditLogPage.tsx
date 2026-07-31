@@ -327,7 +327,7 @@ const AuditLogPage = () => {
           </div>
         </div>
 
-        <p className="mb-4 mt-4 max-w-3xl font-ui text-body-sm/relaxed text-text-3">
+        <p className="my-4 max-w-3xl font-ui text-body-sm/relaxed text-text-3">
           Every flaggable action across attendance, gamification and projects — who did it, for whom, and what
           changed. <span className="text-brand-red">Flagged</span> rows are likely attempts to game the system.
         </p>
