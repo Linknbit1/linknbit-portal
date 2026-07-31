@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import {
   AlignCenter, AlignLeft, AlignRight, Bold, BringToFront, ChevronDown, Italic,
-  Loader2, Maximize2, Minus, Plus, Sparkles, Strikethrough, Trash2,
+  Loader2, Maximize2, Minus, Plus, RotateCcw, Sparkles, Strikethrough, Trash2,
 } from 'lucide-react'
 import { useEditor, useEditorState, EditorContent, type Editor, type JSONContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
@@ -106,8 +106,17 @@ function StaticNoteText({ doc, style }: { doc: JSONContent; style: React.CSSProp
   )
 }
 
-/** Note edge length in board units. */
+/** Default note edge length in board units; per-note `size` overrides it. */
 const NOTE_SIZE = 232
+
+/** Size bounds in board units (must match the DB CHECK). Default 232 = 100%. */
+const NOTE_MIN = 120
+const NOTE_MAX = 360
+
+/** A note's edge length, falling back to the default for older rows. */
+const noteSize = (note: { size?: number | null }) => note.size || NOTE_SIZE
+
+const clampSize = (n: number) => Math.max(NOTE_MIN, Math.min(NOTE_MAX, n))
 
 /** The board is a fixed canvas that the viewport pans across. */
 const BOARD_W = 2600
@@ -639,10 +648,11 @@ interface NoteCardProps {
   onMove: (id: string, posX: number, posY: number, onSettled: () => void) => void
   onChangeContent: (id: string, content: string, onSettled: () => void) => void
   onRaise: (id: string) => void
+  onResize: (id: string, size: number, onSettled: () => void) => void
   onDelete: (id: string) => void
 }
 
-function NoteCard({ note, zoom, isTop, onMove, onChangeContent, onRaise, onDelete }: NoteCardProps) {
+function NoteCard({ note, zoom, isTop, onMove, onChangeContent, onRaise, onResize, onDelete }: NoteCardProps) {
   const [editing, setEditing] = useState(false)
   /**
    * Where this note is drawn, when that differs from the saved row.
@@ -655,6 +665,15 @@ function NoteCard({ note, zoom, isTop, onMove, onChangeContent, onRaise, onDelet
    */
   const [drag, setDrag] = useState<{ x: number; y: number } | null>(null)
   const [dragging, setDragging] = useState(false)
+
+  /**
+   * Live size while the resize grip is being dragged, held until the save
+   * settles — same reason as `drag` above: the optimistic write lands a tick
+   * after pointer-up, so dropping the local value early flicks back one frame.
+   */
+  const [sizeDraft, setSizeDraft] = useState<number | null>(null)
+  const [resizing, setResizing] = useState(false)
+  const resizeOrigin = useRef({ pointerX: 0, size: 0 })
 
   // The TipTap editor for THIS note while it is being written, lifted here so the
   // toolbar — which lives in the un-rotated outer container — can drive it and
@@ -681,6 +700,10 @@ function NoteCard({ note, zoom, isTop, onMove, onChangeContent, onRaise, onDelet
 
   const shape = (note.shape as NoteShape) ?? 'square'
   const color = (note.color as NoteColor) ?? 'pink'
+  // The persisted size, and the size actually drawn (a live grip drag overrides).
+  const savedSize = noteSize(note)
+  const size = sizeDraft ?? savedSize
+  const percent = Math.round((size / NOTE_SIZE) * 100)
   const doc = useMemo(() => toEditorDoc(note.content), [note.content])
   const empty = useMemo(() => !docHasText(doc), [doc])
 
@@ -703,9 +726,9 @@ function NoteCard({ note, zoom, isTop, onMove, onChangeContent, onRaise, onDelet
     // Pointer travel is in screen pixels; the board is scaled, so divide through
     // or the note drifts away from the cursor at any zoom other than 100%.
     setDrag({
-      x: Math.round(Math.min(BOARD_W - NOTE_SIZE, Math.max(0, o.posX + (e.clientX - o.pointerX) / zoom))),
+      x: Math.round(Math.min(BOARD_W - size, Math.max(0, o.posX + (e.clientX - o.pointerX) / zoom))),
       y: Math.round(
-        Math.min(BOARD_H - NOTE_SIZE, Math.max(PIN_HEADROOM, o.posY + (e.clientY - o.pointerY) / zoom)),
+        Math.min(BOARD_H - size, Math.max(PIN_HEADROOM, o.posY + (e.clientY - o.pointerY) / zoom)),
       ),
     })
   }
@@ -725,6 +748,36 @@ function NoteCard({ note, zoom, isTop, onMove, onChangeContent, onRaise, onDelet
     // row — which by then holds either the new position or, if the save failed,
     // the rolled-back one, so a lost move visibly returns to where it really is.
     onMove(note.id, drag.x, drag.y, () => setDrag(null))
+  }
+
+  // ── Resize grip: drag horizontally to scale the note (right = bigger). Board
+  //    is zoomed, so screen travel is divided through, same as the move drag.
+  const handleResizeDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return
+    e.stopPropagation()
+    e.currentTarget.setPointerCapture(e.pointerId)
+    resizeOrigin.current = { pointerX: e.clientX, size: savedSize }
+    setSizeDraft(savedSize)
+    setResizing(true)
+  }
+  const handleResizeMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!resizing) return
+    const delta = (e.clientX - resizeOrigin.current.pointerX) / zoom
+    setSizeDraft(clampSize(Math.round(resizeOrigin.current.size + delta)))
+  }
+  const handleResizeUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!resizing) return
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId)
+    }
+    setResizing(false)
+    const next = sizeDraft
+    if (next == null || next === savedSize) { setSizeDraft(null); return }
+    onResize(note.id, next, () => setSizeDraft(null))
+  }
+  const handleReset = () => {
+    if (savedSize === NOTE_SIZE) return
+    onResize(note.id, NOTE_SIZE, () => setSizeDraft(null))
   }
 
   const anchor = PIN_ANCHOR[shape]
@@ -764,8 +817,10 @@ function NoteCard({ note, zoom, isTop, onMove, onChangeContent, onRaise, onDelet
       style={{
         left: x,
         top: y,
-        width: NOTE_SIZE,
-        height: NOTE_SIZE,
+        width: size,
+        height: size,
+        // Note text stays at its base size; resizing changes the paper, not the
+        // writing — so a bigger note is more room, not bigger handwriting.
         // A sheet you have hold of — or are writing on — floats above the rest so
         // you can see it and its toolbar; the lift is temporary (this state, not a
         // saved z_index), so it drops back to its stacking order the moment you
@@ -903,6 +958,58 @@ function NoteCard({ note, zoom, isTop, onMove, onChangeContent, onRaise, onDelet
           <Trash2 size={13} />
         </button>
       </div>
+
+      {/* Size control — bottom-centre, on hover. Grab the round knob and drag
+          right/left to grow/shrink; the percentage updates live (100% = default),
+          and the reset arrow snaps back to 100%. Hidden while editing, where the
+          formatting toolbar owns this spot. Lives in the un-rotated container so
+          it stays level on a tilted note. */}
+      {!editing && (
+        <div
+          onPointerDown={(e) => e.stopPropagation()}
+          className={cn(
+            'absolute left-1/2 -bottom-3.5 z-30 -translate-x-1/2 flex items-center gap-1.5',
+            'rounded-full border border-border-default bg-surface-1/95 pl-1 pr-1.5 py-1 shadow-lg',
+            // Stay visible mid-drag even if the pointer leaves the hover area.
+            resizing ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 focus-within:opacity-100',
+            'transition-opacity',
+          )}
+        >
+          <button
+            type="button"
+            aria-label="Reset size to 100%"
+            title="Reset to 100%"
+            disabled={savedSize === NOTE_SIZE && sizeDraft === null}
+            onClick={handleReset}
+            className="size-6 rounded-full flex items-center justify-center text-text-3 hover:text-brand-red hover:bg-surface-2 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-text-3"
+          >
+            <RotateCcw size={12} />
+          </button>
+          <span className="font-mono text-caption text-text-2 tabular-nums w-9 text-center select-none">
+            {percent}%
+          </span>
+          {/* The grip. `touch-none` so a touch-drag resizes instead of scrolling
+              the board; ew-resize cursor signals the drag axis. */}
+          <div
+            role="slider"
+            aria-label="Note size"
+            aria-valuemin={Math.round((NOTE_MIN / NOTE_SIZE) * 100)}
+            aria-valuemax={Math.round((NOTE_MAX / NOTE_SIZE) * 100)}
+            aria-valuenow={percent}
+            onPointerDown={handleResizeDown}
+            onPointerMove={handleResizeMove}
+            onPointerUp={handleResizeUp}
+            onPointerCancel={handleResizeUp}
+            className={cn(
+              'size-6 rounded-full touch-none flex items-center justify-center',
+              'bg-surface-3 border border-border-strong shadow-inner',
+              resizing ? 'cursor-ew-resize ring-2 ring-brand-red/50' : 'cursor-ew-resize hover:bg-surface-2',
+            )}
+          >
+            <span className="size-2 rounded-full bg-text-3" />
+          </div>
+        </div>
+      )}
 
       {/* Formatting toolbar — only while writing, so it stays out of the way
           otherwise. Lives in the un-rotated outer container so it reads level no
@@ -1336,6 +1443,10 @@ export default function StickyNotesPage() {
     },
     [updateNote, notes, maxZ, isStrictlyTop],
   )
+  const handleResize = useCallback(
+    (id: string, size: number, onSettled: () => void) => updateNote({ id, size }, { onSettled }),
+    [updateNote],
+  )
   const handleDelete = useCallback((id: string) => deleteNote(id), [deleteNote])
 
   const zoomPercent = useMemo(() => Math.round(zoom * 100), [zoom])
@@ -1480,6 +1591,7 @@ export default function StickyNotesPage() {
                     onMove={handleMove}
                     onChangeContent={handleContent}
                     onRaise={handleRaise}
+                    onResize={handleResize}
                     onDelete={handleDelete}
                   />
                 ))}

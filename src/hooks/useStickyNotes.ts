@@ -58,6 +58,7 @@ export function useUpdateStickyNote() {
                 ...(input.posX === undefined ? {} : { pos_x: input.posX }),
                 ...(input.posY === undefined ? {} : { pos_y: input.posY }),
                 ...(input.zIndex === undefined ? {} : { z_index: input.zIndex }),
+                ...(input.size === undefined ? {} : { size: input.size }),
               }
             : n,
         ) ?? [],

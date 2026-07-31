@@ -3066,6 +3066,7 @@ export type Database = {
           profile_id: string
           rotation: number
           shape: string
+          size: number
           strikethrough: boolean
           text_align: string
           updated_at: string
@@ -3083,6 +3084,7 @@ export type Database = {
           profile_id: string
           rotation?: number
           shape?: string
+          size?: number
           strikethrough?: boolean
           text_align?: string
           updated_at?: string
@@ -3100,6 +3102,7 @@ export type Database = {
           profile_id?: string
           rotation?: number
           shape?: string
+          size?: number
           strikethrough?: boolean
           text_align?: string
           updated_at?: string
