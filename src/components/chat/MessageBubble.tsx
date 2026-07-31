@@ -1,12 +1,12 @@
 import { useRef, useState } from 'react'
 import { Trash2, Pencil, SmilePlus } from 'lucide-react'
 import { Avatar } from '../ui/Avatar'
+import { PersonLink } from '../shared/PersonLink'
 import { RichRenderer } from '../editor/RichRenderer'
 import { ConfirmDialog } from '../ui/ConfirmDialog'
 import { MessageAttachment } from './MessageAttachment'
 import { ReactionBar } from './ReactionBar'
 import { EmojiPicker } from './EmojiPicker'
-import { UserProfileCard } from './UserProfileCard'
 import { cn } from '../../lib/cn'
 import { fromDbDoc } from '../../lib/richText'
 import { isOptimistic } from './chatUtils'
@@ -56,9 +56,7 @@ export function MessageBubble({
 }: MessageBubbleProps) {
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [reactOpen, setReactOpen] = useState(false)
-  const [profileOpen, setProfileOpen] = useState(false)
   const reactBtnRef = useRef<HTMLButtonElement>(null)
-  const authorRef = useRef<HTMLButtonElement>(null)
   const mine = message.author_id === myProfileId
   const pending = isOptimistic(message.id)
 
@@ -78,16 +76,14 @@ export function MessageBubble({
   return (
     <div className={cn('group flex gap-3 px-4 py-0.5 hover:bg-surface-1/40', startsGroup && 'mt-4')}>
       {startsGroup ? (
-        // Opens the mini profile rather than navigating away, so you don't lose
-        // your place in the conversation.
-        <button
-          ref={authorRef}
-          onClick={() => message.author && setProfileOpen((v) => !v)}
-          aria-label={message.author ? `View ${message.author.name}'s profile` : undefined}
-          className="shrink-0 rounded-full transition-opacity hover:opacity-90"
-        >
-          <Avatar name={message.author?.name ?? '?'} src={message.author?.avatar_url ?? undefined} size="lg" />
-        </button>
+        // PersonLink opens the shared profile card, so chat behaves like every
+        // other place a person is shown.
+        <Avatar
+          name={message.author?.name ?? '?'}
+          src={message.author?.avatar_url ?? undefined}
+          size="lg"
+          personId={message.author?.id}
+        />
       ) : (
         <span className="flex w-10 shrink-0 items-start justify-end pt-1">
           <span className="font-mono text-[10px] text-text-4 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100">
@@ -99,12 +95,9 @@ export function MessageBubble({
       <div className="min-w-0 flex-1">
         {startsGroup && (
           <div className="flex flex-wrap items-baseline gap-2">
-            <button
-              onClick={() => message.author && setProfileOpen((v) => !v)}
-              className="font-ui text-[14.5px] font-semibold text-text-1 transition-colors hover:underline"
-            >
+            <PersonLink personId={message.author?.id} className="font-ui text-[14.5px] font-semibold text-text-1">
               {message.author?.name ?? 'Unknown'}
-            </button>
+            </PersonLink>
             <span className="font-mono text-[11px] text-text-4">{timeOf(message.created_at)}</span>
             {message.edited_at && <span className="font-mono text-[11px] text-text-4">(edited)</span>}
           </div>
@@ -161,17 +154,6 @@ export function MessageBubble({
         anchorRef={reactBtnRef}
         onPick={(emoji) => onToggleReaction(message.id, emoji)}
       />
-
-      {message.author && (
-        <UserProfileCard
-          profileId={message.author.id}
-          name={message.author.name}
-          avatarUrl={message.author.avatar_url}
-          open={profileOpen}
-          onClose={() => setProfileOpen(false)}
-          anchorRef={authorRef}
-        />
-      )}
 
       <ConfirmDialog
         open={confirmOpen}

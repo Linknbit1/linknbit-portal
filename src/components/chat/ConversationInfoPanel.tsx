@@ -1,6 +1,6 @@
 import { Hash, Users as UsersIcon } from 'lucide-react'
 import { ChannelFilesPanel } from './ChannelFilesPanel'
-import { UserProfileBody } from './UserProfileBody'
+import { UserProfileBody } from '../shared/UserProfileBody'
 import type { ChannelListItem } from '../../api/channels'
 import type { PersonMini } from '../../api/projects'
 
