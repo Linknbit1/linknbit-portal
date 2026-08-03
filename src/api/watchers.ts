@@ -31,3 +31,50 @@ export async function unwatchProject(projectId: string): Promise<void> {
     .eq('profile_id', auth.user.id)
   if (error) throw error
 }
+
+/**
+ * A task subscription is three-state, because assignees and the task's creator
+ * are subscribed implicitly with no row of their own:
+ *   'on'      — an explicit opt-in row
+ *   'muted'   — an explicit opt-out, which overrides the implicit subscription
+ *   'default' — no row; you get activity only if you're an assignee or creator
+ */
+export type TaskWatchState = 'on' | 'muted' | 'default'
+
+export async function fetchTaskWatchState(taskId: string): Promise<TaskWatchState> {
+  const { data: auth } = await supabase.auth.getUser()
+  if (!auth.user) return 'default'
+  const { data, error } = await supabase
+    .from('task_watchers')
+    .select('muted')
+    .eq('task_id', taskId)
+    .eq('profile_id', auth.user.id)
+    .maybeSingle()
+  if (error) throw error
+  if (!data) return 'default'
+  return data.muted ? 'muted' : 'on'
+}
+
+/** Writes (or clears) the explicit row. `state: 'default'` hands you back to the implicit rule. */
+export async function setTaskWatchState(taskId: string, state: TaskWatchState): Promise<void> {
+  const { data: auth } = await supabase.auth.getUser()
+  if (!auth.user) throw new Error('Not signed in')
+
+  if (state === 'default') {
+    const { error } = await supabase
+      .from('task_watchers')
+      .delete()
+      .eq('task_id', taskId)
+      .eq('profile_id', auth.user.id)
+    if (error) throw error
+    return
+  }
+
+  const { error } = await supabase
+    .from('task_watchers')
+    .upsert(
+      { task_id: taskId, profile_id: auth.user.id, muted: state === 'muted' },
+      { onConflict: 'task_id,profile_id' },
+    )
+  if (error) throw error
+}

@@ -3233,6 +3233,42 @@ export type Database = {
           },
         ]
       }
+      task_watchers: {
+        Row: {
+          created_at: string
+          muted: boolean
+          profile_id: string
+          task_id: string
+        }
+        Insert: {
+          created_at?: string
+          muted?: boolean
+          profile_id: string
+          task_id: string
+        }
+        Update: {
+          created_at?: string
+          muted?: boolean
+          profile_id?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_watchers_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_watchers_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           assignee_id: string | null
@@ -3759,6 +3795,7 @@ export type Database = {
         Returns: string
       }
       fn_exception_label: { Args: { t: string }; Returns: string }
+      fn_extract_mention_ids: { Args: { p_doc: Json }; Returns: string[] }
       fn_fmt_day: { Args: { d: string }; Returns: string }
       fn_get_or_create_dm: {
         Args: { p_other_profile_id: string }
@@ -3838,6 +3875,13 @@ export type Database = {
           id: string
           new_values: Json
           old_values: Json
+        }[]
+      }
+      fn_task_status_label: { Args: { p_status: string }; Returns: string }
+      fn_task_subscribers: {
+        Args: { p_actor: string; p_task_id: string }
+        Returns: {
+          profile_id: string
         }[]
       }
       fn_toggle_reaction: {
