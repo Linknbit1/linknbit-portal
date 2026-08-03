@@ -21,7 +21,7 @@ import { showWipFeatures } from '../../lib/featureFlags'
 import { SETTINGS_ROLES } from '../../constants/roles'
 import { useMyPermissions } from '../../hooks/usePermissions'
 import { ADMINISTRATOR } from '../../api/permissions'
-import { useAuditDangerCount } from '../../hooks/useAuditLog'
+import { useAuditNewCount } from '../../hooks/useAuditLog'
 import { useChatUnreadTotal } from '../../hooks/useChatUnreadCount'
 import { useTeams } from '../../hooks/useTeams'
 import {
@@ -206,7 +206,7 @@ function withChildBadges(item: NavItem, byPath: Record<string, number>): NavItem
 export function useNavItems(): NavItem[] {
   const { profile } = useAuthContext()
   const { data: permissions } = useMyPermissions()
-  const { data: dangerCount } = useAuditDangerCount()
+  const { data: auditNewCount } = useAuditNewCount()
   const chatUnread = useChatUnreadTotal()
   const { data: teams } = useTeams()
   const role = profile?.role
@@ -249,7 +249,7 @@ export function useNavItems(): NavItem[] {
     if (item.label === 'My Team') {
       return myTeamId ? [{ ...item, to: `/teams/${myTeamId}` }] : []
     }
-    if (item.to === '/admin/audit' && dangerCount) return [{ ...item, badge: dangerCount }]
+    if (item.to === '/admin/audit' && auditNewCount) return [{ ...item, badge: auditNewCount }]
     if (item.to === '/chat' && chatUnread) return [{ ...item, badge: chatUnread }]
     if (item.matchPrefix === '/attendance') {
       const withChildren = withChildBadges(item, attendanceByPath)

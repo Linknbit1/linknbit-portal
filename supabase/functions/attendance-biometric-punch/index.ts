@@ -9,18 +9,20 @@
 // and the device keeps its own copy until we confirm. Everything here is
 // therefore idempotent — punches dedupe on punch_uid, and a day's attendance is
 // always *recomputed* from the full punch set rather than incrementally patched.
-// That recompute is what prevents double-counting excluded_minutes against
-// attendance-ooo, which increments the same column.
+//
+// Attendance model: only the morning check-in matters. The FIRST punch of the
+// day is the arrival; the terminal never writes check_out (the day-end cron does
+// that for every row) and never derives out-of-office time from punch patterns
+// (that stays approval-driven). Every punch after the first is recorded raw but
+// does not affect attendance.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import {
   DEFAULT_POLICY,
-  EXC_GRACE_MIN,
   checkDayGates,
   computeStatus,
   localParts,
-  minutesOf,
   resolveCutoffs,
   type PolicySettings,
 } from '../_shared/attendancePolicy.ts'
@@ -121,17 +123,14 @@ async function auditOnce(
 /**
  * Recomputes one member's attendance for one date from the full punch set.
  *
- * Derivation:
- *   first punch            → check_in
- *   last punch             → check_out
- *   middle punches, paired → out/in gaps; gaps >= min_excluded_gap_min are
- *                            deducted as time out of office
+ * The first punch of the day is the check-in; its time sets present/late via the
+ * usual cutoffs. Later punches are recorded raw ('ignored_extra') but change
+ * nothing — the terminal never writes check_out (the day-end cron owns that) and
+ * never infers out-of-office time from punch patterns (approval-driven only).
  *
- * Ownership: the terminal fully owns a row that is absent or machine-written
- * ('system'/'biometric'). When a human record already exists ('self' portal
- * check-in during a relay outage, or an 'admin' correction) the terminal only
- * contributes check_out and excluded_minutes — it never rewrites check_in or
- * status, so a later punch can't turn someone's on-time arrival into a late one.
+ * Ownership: the terminal owns a row that is absent or machine-written
+ * ('system'/'biometric'). A human record ('self' portal check-in, or an 'admin'
+ * correction) wins and is left untouched — a punch never rewrites it.
  */
 async function reconcileDay(
   db: SupabaseClient,
@@ -172,7 +171,7 @@ async function reconcileDay(
 
   // Exempt members (e.g. CEO/COO) never get attendance rows at all.
   if (profile?.attendance_excluded) {
-    await setResolution(allIds, 'ignored_unpaired')
+    await setResolution(allIds, 'ignored_exempt')
     return
   }
 
@@ -203,7 +202,7 @@ async function reconcileDay(
   //    overwrite, since that would silently cancel an approved absence.
   const { data: existing } = await db
     .from('attendance')
-    .select('id, source, status, check_in, check_out')
+    .select('id, source, status')
     .eq('profile_id', profileId)
     .eq('date', date)
     .maybeSingle()
@@ -227,100 +226,19 @@ async function reconcileDay(
     return
   }
 
-  // ── Interpret the punch sequence.
-  // If a human (portal/admin) check-in already exists, every terminal punch is a
-  // post-check-in event: the latest is the check-out, and any earlier ones pair
-  // up as out-of-office gaps. If the terminal owns the day, the first punch is
-  // the check-in instead. This is what makes "check in on the portal, check out
-  // on the finger" work — a lone terminal punch after a portal check-in is a
-  // check-out, not a second check-in.
+  // ── A human self/admin record wins; punches are then redundant. Terminal owns
+  //    only an absent/machine-written row.
   const terminalOwnsRow = !existing || existing.source === 'system' || existing.source === 'biometric'
-  const checkInCovered = !terminalOwnsRow && !!existing?.check_in
-
-  const checkInPunch = checkInCovered ? null : rows[0]
-  const checkOutPunch = checkInCovered || rows.length > 1 ? rows[rows.length - 1] : null
-  const middle = checkInCovered
-    ? rows.slice(0, rows.length - 1)
-    : rows.slice(1, Math.max(1, rows.length - 1))
-
-  const outIds: string[] = []
-  const inIds: string[] = []
-  const belowIds: string[] = []
-  const unpairedIds: string[] = []
-  const pairs: { outAt: string; inAt: string; minutes: number }[] = []
-
-  for (let i = 0; i + 1 < middle.length; i += 2) {
-    const a = middle[i]
-    const b = middle[i + 1]
-    const gap = Math.round(
-      (new Date(b.punched_at).getTime() - new Date(a.punched_at).getTime()) / 60000,
-    )
-    if (gap >= settings.min_excluded_gap_min) {
-      outIds.push(a.id)
-      inIds.push(b.id)
-      pairs.push({ outAt: a.punched_at, inAt: b.punched_at, minutes: gap })
-    } else {
-      // Double-taps and walk-pasts are noise, not an out-and-back.
-      belowIds.push(a.id, b.id)
-    }
+  if (!terminalOwnsRow) {
+    await setResolution(allIds, 'ignored_extra')
+    return
   }
 
-  // An odd number of middle punches means one exit never got a matching return
-  // (or vice versa). Don't guess which — deduct only what pairs cleanly and
-  // raise it for a human to correct.
-  if (middle.length % 2 === 1) unpairedIds.push(middle[middle.length - 1].id)
+  // ── First punch = the arrival. Status from its time (late-arrival exception
+  //    still widens the cutoff; schedule-window-off job types are never late).
+  const first = rows[0]
+  const extraIds = rows.slice(1).map((p) => p.id)
 
-  // ── Fill approved out-of-office exceptions from matching punch pairs, so the
-  //    portal's OOO record and the physical record agree.
-  const { data: exceptions } = await db
-    .from('attendance_exceptions')
-    .select('id, requested_time, actual_departure, actual_return')
-    .eq('profile_id', profileId)
-    .eq('date', date)
-    .eq('exception_type', 'out_of_office')
-    .eq('status', 'approved')
-
-  const excs = exceptions ?? []
-  const matchedPairs = new Set<number>()
-
-  for (let pi = 0; pi < pairs.length; pi++) {
-    const depMinutes = localParts(new Date(pairs[pi].outAt), tz).localMinutes
-    const match = excs.find(
-      (e) => !e.actual_departure &&
-        Math.abs(minutesOf(e.requested_time) - depMinutes) <= EXC_GRACE_MIN,
-    )
-    if (!match) continue
-
-    await db
-      .from('attendance_exceptions')
-      .update({ actual_departure: pairs[pi].outAt, actual_return: pairs[pi].inAt })
-      .eq('id', match.id)
-
-    // Mutate the local copy so a second pair can't claim the same exception,
-    // and so the sum below counts it as exception-derived.
-    match.actual_departure = pairs[pi].outAt
-    match.actual_return = pairs[pi].inAt
-    matchedPairs.add(pi)
-  }
-
-  // Excluded time is the union of two sources, counted once each:
-  //   • completed OOO exceptions (portal-recorded, or just filled above) —
-  //     keeps gaps that the terminal never saw, e.g. someone who left without
-  //     punching out
-  //   • punch pairs with no matching exception — unapproved absences
-  const excludedFromExceptions = excs
-    .filter((e) => e.actual_departure && e.actual_return)
-    .reduce((sum, e) => sum + Math.round(
-      (new Date(e.actual_return!).getTime() - new Date(e.actual_departure!).getTime()) / 60000,
-    ), 0)
-
-  const excludedFromPairs = pairs
-    .filter((_, pi) => !matchedPairs.has(pi))
-    .reduce((sum, p) => sum + p.minutes, 0)
-
-  const excludedMinutes = excludedFromExceptions + excludedFromPairs
-
-  // ── Status from the arrival time.
   const jobType = profile?.job_type ?? 'on_site'
   const { data: policyRow } = await db
     .from('job_type_policies')
@@ -332,91 +250,41 @@ async function reconcileDay(
   const { lateCutoff } = await resolveCutoffs(
     db, profileId, date, settings, profile?.allowed_check_in ?? null,
   )
-  const arrivalMinutes = localParts(new Date((checkInPunch ?? rows[0]).punched_at), tz).localMinutes
+  const arrivalMinutes = localParts(new Date(first.punched_at), tz).localMinutes
   const status = computeStatus(arrivalMinutes, lateCutoff, policy.enforce_schedule_window)
 
-  // ── Write attendance.
+  // ── Write the check-in only. check_out is deliberately never set — the day-end
+  //    cron records the end of day for every row, so biometric rows stay
+  //    consistent with portal/absent ones. Standing at the terminal is stronger
+  //    proof than office WiFi, so the network gate is satisfied by definition.
   if (!existing) {
     await db.from('attendance').insert({
       profile_id: profileId,
       date,
-      check_in: rows[0].punched_at,
-      check_out: checkOutPunch?.punched_at ?? null,
+      check_in: first.punched_at,
       source: 'biometric',
       status,
       device_name: terminalName,
-      // Standing at the terminal is stronger proof of presence than being on the
-      // office WiFi, so the network gate is satisfied by definition.
       wifi_validated: true,
       device_flagged: false,
-      excluded_minutes: excludedMinutes,
     })
-  } else if (terminalOwnsRow) {
+  } else {
     await db
       .from('attendance')
       .update({
-        check_in: rows[0].punched_at,
-        check_out: checkOutPunch?.punched_at ?? existing.check_out,
+        check_in: first.punched_at,
         source: 'biometric',
         status,
         device_name: terminalName,
         wifi_validated: true,
-        excluded_minutes: excludedMinutes,
       })
       .eq('id', existing.id)
-  } else {
-    // A human already recorded the check-in (portal, or an admin correction). The
-    // terminal supplies the check-out — its latest punch, when that is after the
-    // recorded check-in — plus any time out of office. A single terminal punch
-    // counts: "check in on the portal, check out on the finger" is the common case.
-    const checkOut =
-      checkOutPunch &&
-      (!existing.check_in ||
-        new Date(checkOutPunch.punched_at) > new Date(existing.check_in))
-        ? checkOutPunch.punched_at
-        : existing.check_out
-    await db
-      .from('attendance')
-      .update({
-        check_out: checkOut,
-        excluded_minutes: excludedMinutes,
-      })
-      .eq('id', existing.id)
-
-    await auditOnce(db, {
-      action: 'attendance.terminal_punch_alongside_manual_record',
-      severity: 'info',
-      summary: `Terminal supplied the check-out for ${subjectName ?? 'a member'} on ${date}; the existing ${existing.source} check-in was kept.`,
-      flagReason: null,
-      subjectId: profileId,
-      subjectName,
-      date,
-      terminalName,
-      context: { existing_source: existing.source },
-    })
   }
 
-  // ── Record how each punch was interpreted.
-  if (checkInPunch) await setResolution([checkInPunch.id], 'check_in')
-  if (checkOutPunch) await setResolution([checkOutPunch.id], 'check_out')
-  await setResolution(outIds, 'ooo_out')
-  await setResolution(inIds, 'ooo_in')
-  await setResolution(belowIds, 'ignored_below_threshold')
-  await setResolution(unpairedIds, 'ignored_unpaired')
-
-  if (unpairedIds.length > 0) {
-    await auditOnce(db, {
-      action: 'attendance.terminal_unpaired_punch',
-      severity: 'warning',
-      summary: `${subjectName ?? 'A member'} has an unpaired mid-day punch on ${date} at ${terminalName}.`,
-      flagReason: 'An exit or return punch is missing, so that gap was not deducted from worked hours. Verify the day manually.',
-      subjectId: profileId,
-      subjectName,
-      date,
-      terminalName,
-      context: { punch_count: rows.length },
-    })
-  }
+  // ── Record how each punch was interpreted: the first is the check-in, the
+  //    rest are extra scans with no effect.
+  await setResolution([first.id], 'check_in')
+  await setResolution(extraIds, 'ignored_extra')
 }
 
 Deno.serve(async (req: Request) => {

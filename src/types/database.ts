@@ -402,6 +402,7 @@ export type Database = {
           subject_name: string | null
           summary: string
           table_name: string
+          target_name: string | null
         }
         Insert: {
           action: string
@@ -425,6 +426,7 @@ export type Database = {
           subject_name?: string | null
           summary: string
           table_name: string
+          target_name?: string | null
         }
         Update: {
           action?: string
@@ -448,6 +450,7 @@ export type Database = {
           subject_name?: string | null
           summary?: string
           table_name?: string
+          target_name?: string | null
         }
         Relationships: []
       }
@@ -2912,9 +2915,11 @@ export type Database = {
           id: string
           minutes_spent: number
           order_index: number
-          project_id: string
+          project_id: string | null
+          project_name: string | null
           standup_id: string
           task_id: string | null
+          task_name: string | null
           work_done: string
         }
         Insert: {
@@ -2923,9 +2928,11 @@ export type Database = {
           id?: string
           minutes_spent: number
           order_index?: number
-          project_id: string
+          project_id?: string | null
+          project_name?: string | null
           standup_id: string
           task_id?: string | null
+          task_name?: string | null
           work_done: string
         }
         Update: {
@@ -2934,9 +2941,11 @@ export type Database = {
           id?: string
           minutes_spent?: number
           order_index?: number
-          project_id?: string
+          project_id?: string | null
+          project_name?: string | null
           standup_id?: string
           task_id?: string | null
+          task_name?: string | null
           work_done?: string
         }
         Relationships: [
@@ -3718,6 +3727,17 @@ export type Database = {
         Returns: {
           profile_id: string
         }[]
+      }
+      fn_audit_describe: {
+        Args: {
+          p_action: string
+          p_actor: string
+          p_op: string
+          p_row: Json
+          p_subject: string
+          p_table: string
+        }
+        Returns: Record<string, unknown>
       }
       fn_auto_checkout_missing: { Args: never; Returns: undefined }
       fn_award_badges: { Args: { p_profile_id: string }; Returns: undefined }

@@ -32,7 +32,9 @@ const emptyDraft = (): Draft => ({
 const draftsFrom = (standup: StandupDetail): Draft[] =>
   standup.entries.map((e) => ({
     key: e.id,
-    projectId: e.project_id,
+    // Null when the linked project was hard-deleted — reopen empty so the editor
+    // must re-pick a current project (the original stays in the saved snapshot).
+    projectId: e.project_id ?? '',
     taskId: e.task_id ?? '',
     hours: String(Math.floor(e.minutes_spent / 60) || ''),
     minutes: String(e.minutes_spent % 60 || ''),
