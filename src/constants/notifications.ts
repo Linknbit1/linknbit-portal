@@ -53,7 +53,8 @@ export const NOTIFICATION_GROUPS: NotificationGroup[] = [
       { type: 'gamification_badge',    label: 'Badges',      description: 'When you earn a badge' },
       { type: 'gamification_quest',    label: 'Quests',      description: 'When your quest claim is approved or sent back' },
       { type: 'gamification_reward',   label: 'Rewards',     description: 'Redemption and group reward updates' },
-      { type: 'gamification_eotm',     label: 'Employee of the Month', description: 'When you are named Employee of the Month' },
+      { type: 'gamification_eotm',           label: 'Employee of the Month',   description: 'When you are named Employee of the Month' },
+      { type: 'gamification_eotm_announced', label: 'Employee of the Month — announcements', description: 'When someone else is named Employee of the Month' },
     ],
   },
   {

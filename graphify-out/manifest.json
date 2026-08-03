@@ -159,6 +159,10 @@
     "mtime": 1784712836.8820226,
     "hash": "93d8cda46b3042446d049ad883907664"
   },
+  "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260803163822_eotm_announce_to_everyone.sql": {
+    "mtime": 1785757117.6673727,
+    "hash": "795e23a11cc8bcb362391cffecdf6cce"
+  },
   "/Users/zainmalik/Documents/projects/linknbit-portal/supabase/migrations/20260724100300_audit_log_projects_triggers.sql": {
     "mtime": 1785007233.830827,
     "hash": "ef57971f214589c1879155e2feddc11e"
@@ -856,8 +860,8 @@
     "hash": "6bc003cdfba95cbabf2fa17ce46f4e15"
   },
   "/Users/zainmalik/Documents/projects/linknbit-portal/src/constants/notifications.ts": {
-    "mtime": 1785752980.506028,
-    "hash": "bf29f692cf4b3fffdb8721017f882651"
+    "mtime": 1785757213.355668,
+    "hash": "ac2bdb21e50a15a19f34244fe19093a7"
   },
   "/Users/zainmalik/Documents/projects/linknbit-portal/src/constants/roles.ts": {
     "mtime": 1785748481.0072575,
@@ -976,8 +980,8 @@
     "hash": "bd74a4874c10a42ee96f40d54ac99221"
   },
   "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/chat/ConversationListPane.tsx": {
-    "mtime": 1785748480.9546385,
-    "hash": "28923be84af77cd7ce4f50a835b04013"
+    "mtime": 1785757321.1333919,
+    "hash": "29041d482b6014e515885c34eda9fdb2"
   },
   "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/chat/StartDMButton.tsx": {
     "mtime": 1785748480.9685204,
@@ -1836,8 +1840,8 @@
     "hash": "2b7f5b263daae63a645788d4f0230902"
   },
   "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/admin/TaskFormModal.tsx": {
-    "mtime": 1785748481.1368139,
-    "hash": "34b5f2e7101ce39b87af6515a6c39669"
+    "mtime": 1785757207.204178,
+    "hash": "de73fc22fbb845f26743ff2f6b04cef4"
   },
   "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/admin/AttendancePage.tsx": {
     "mtime": 1785748481.1079934,
