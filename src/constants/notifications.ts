@@ -57,10 +57,23 @@ export const NOTIFICATION_GROUPS: NotificationGroup[] = [
     ],
   },
   {
+    key: 'work',
+    label: 'Projects & tasks',
+    items: [
+      { type: 'task_assigned',          label: 'Assigned to you',   description: 'When someone puts you on a task, or takes you off one' },
+      { type: 'task_activity',          label: 'Task updates',      description: 'Status, priority and due-date changes on tasks you follow' },
+      { type: 'mention',                label: 'Mentions',          description: 'When someone @mentions you in a task, comment or project doc' },
+      { type: 'project_task_added',     label: 'New tasks',         description: 'When a task is added to a project you watch' },
+      { type: 'project_comment_added',  label: 'New comments',      description: 'When someone comments in a project you watch' },
+    ],
+  },
+  {
     key: 'chat',
     label: 'Chat',
     items: [
       { type: 'chat_message', label: 'New messages', description: 'When someone messages you or posts in a channel you are in' },
+      { type: 'chat_mention', label: 'Mentions',     description: 'When someone @mentions you in chat — reaches you even in a muted conversation' },
+      { type: 'chat_added',   label: 'Added to a channel', description: 'When someone adds you to a channel or group chat' },
     ],
   },
   {
