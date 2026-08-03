@@ -5,14 +5,37 @@
  * editor looks exactly like the static note text — no prose margins, wrapping
  * that matches, and a placeholder tinted like the old textarea prompt. */
 
-.note-prose {
+/* Both selectors, same declarations, on purpose.
+ *
+ * TipTap injects its own `.ProseMirror` rule into a <style> tag at editor
+ * creation, so it lands after this file and wins every same-specificity tie.
+ * Three of its declarations are visible in a handwriting face and were what made
+ * a note look like it changed font the moment you double-clicked it:
+ *
+ *   font-variant-ligatures: none + font-feature-settings: "liga" 0
+ *       switches off Caveat's connecting forms and contextual alternates, so the
+ *       letterforms — and their widths — change.
+ *   white-space: break-spaces
+ *       stops the space at a line break from hanging, so lines wrap one word
+ *       earlier than the same text does in view mode.
+ *
+ * Matching `.note-prose.ProseMirror` outspecifies that rule and puts the editor
+ * back on the static note's rendering. Keep the two lists identical. */
+.note-prose,
+.note-prose.ProseMirror {
   outline: none;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+  font-variant-ligatures: normal;
+  -webkit-font-variant-ligatures: normal;
+  font-feature-settings: normal;
   height: 100%;
 }
 
-.note-prose p {
+/* Same reason as above, plus the app's global `.ProseMirror p` margin in
+ * editor.css, which would otherwise space a note's lines out while editing. */
+.note-prose p,
+.note-prose.ProseMirror p {
   margin: 0;
 }
 

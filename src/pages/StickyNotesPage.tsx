@@ -580,6 +580,12 @@ interface NoteEditorProps {
   note: StickyNote
   /** Same per-shape inset the static text uses, so editing looks identical. */
   insetStyle: React.CSSProperties
+  /**
+   * Viewport point of the double-click that opened the editor, so the caret can
+   * land there. Null (keyboard entry, or a click that misses the text) means
+   * "end of the note".
+   */
+  caretAt: { x: number; y: number } | null
   onSave: (json: string) => void
   onExit: () => void
   onEditorReady: (editor: Editor | null) => void
@@ -591,7 +597,7 @@ interface NoteEditorProps {
  * is seeded once and never re-synced (autosaves would otherwise clobber typing);
  * changes are debounced to the parent, and blur flushes and exits.
  */
-function NoteEditor({ note, insetStyle, onSave, onExit, onEditorReady }: NoteEditorProps) {
+function NoteEditor({ note, insetStyle, caretAt, onSave, onExit, onEditorReady }: NoteEditorProps) {
   const pending = useRef<string | null>(null)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const editorRef = useRef<Editor | null>(null)
@@ -609,7 +615,9 @@ function NoteEditor({ note, insetStyle, onSave, onExit, onEditorReady }: NoteEdi
   const editor = useEditor({
     extensions: NOTE_EXTENSIONS,
     content: toEditorDoc(note.content),
-    autofocus: 'end',
+    // Focus is placed by hand below, at the point that was double-clicked;
+    // TipTap's own autofocus would jump the caret to the end first.
+    autofocus: false,
     editorProps: {
       attributes: { class: 'note-prose focus:outline-none' },
       handleKeyDown: (_view, event) => {
@@ -631,6 +639,25 @@ function NoteEditor({ note, insetStyle, onSave, onExit, onEditorReady }: NoteEdi
     onEditorReady(editor)
     return () => onEditorReady(null)
   }, [editor, onEditorReady])
+
+  // Put the caret where the note was double-clicked rather than at the end, so
+  // opening a note to fix one word does not send you back to the last line.
+  //
+  // The read-only text and the editor occupy the same inset box in the same
+  // typeface, so the point under the pointer maps to the same character —
+  // `posAtCoords` reads it straight off the freshly mounted view. It is null
+  // when the click landed on blank paper below the text (or on a shape where
+  // that spot is outside the editor), and then the end is the sane answer.
+  // Deliberately runs once per mount: this is where editing *started*.
+  const openedAt = useRef(caretAt)
+  useEffect(() => {
+    if (!editor) return
+    const point = openedAt.current
+    const at = point
+      ? editor.view.posAtCoords({ left: point.x, top: point.y })?.pos
+      : undefined
+    editor.commands.focus(at ?? 'end')
+  }, [editor])
 
   // A note unmounted mid-sentence must not drop the last few characters the timer
   // was still holding.
@@ -663,7 +690,11 @@ interface NoteCardProps {
 }
 
 function NoteCard({ note, zoom, isTop, onMove, onChangeContent, onRaise, onResize, onDelete }: NoteCardProps) {
-  const [editing, setEditing] = useState(false)
+  /**
+   * Null when not editing. Otherwise it carries the viewport point of the
+   * double-click that opened the editor, which seeds the caret position.
+   */
+  const [editing, setEditing] = useState<{ caretAt: { x: number; y: number } | null } | null>(null)
   /**
    * Where this note is drawn, when that differs from the saved row.
    *
@@ -880,7 +911,7 @@ function NoteCard({ note, zoom, isTop, onMove, onChangeContent, onRaise, onResiz
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
             onPointerCancel={handlePointerUp}
-            onDoubleClick={() => setEditing(true)}
+            onDoubleClick={(e) => setEditing({ caretAt: { x: e.clientX, y: e.clientY } })}
             className={cn(
               'absolute inset-0 select-none',
               COLOR_CLASS[color],
@@ -914,8 +945,9 @@ function NoteCard({ note, zoom, isTop, onMove, onChangeContent, onRaise, onResiz
           <NoteEditor
             note={note}
             insetStyle={TEXT_INSET[shape]}
+            caretAt={editing.caretAt}
             onSave={(json) => onChangeContent(note.id, json, () => {})}
-            onExit={() => setEditing(false)}
+            onExit={() => setEditing(null)}
             onEditorReady={setEditor}
           />
         ) : empty ? (
