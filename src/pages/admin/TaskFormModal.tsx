@@ -3,7 +3,7 @@ import { Modal } from '../../components/ui/Modal'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Select } from '../../components/ui/Select'
-import { DatePicker } from '../../components/ui/DatePicker'
+import { DateTimeRangePicker } from '../../components/ui/DateTimeRangePicker'
 import { Toggle } from '../../components/ui/Toggle'
 import { useProjects } from '../../hooks/useProjects'
 import { useServiceStages } from '../../hooks/useStages'
@@ -12,7 +12,7 @@ import { useCreateTask, useUpdateTask } from '../../hooks/useTasks'
 import { MultiSelectPeople } from '../../components/ui/MultiSelectPeople'
 import { useSetTaskAssignees } from '../../hooks/useTaskAssignees'
 import { useToast } from '../../components/ui/toast-context'
-import { fromDateTimeInput, toDateInput, toTimeInput, PRIORITY_LABELS, STATUS_LABELS } from '../../lib/utils'
+import { PRIORITY_LABELS, STATUS_LABELS } from '../../lib/utils'
 import type { TaskListItem } from '../../api/tasks'
 import type { Priority, TaskStatus } from '../../types'
 
@@ -69,7 +69,8 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
   const [assigneeIds, setAssigneeIds] = useState<string[]>(task?.assignees.map((a) => a.id) ?? [])
   const [priority, setPriority] = useState<Priority>(toPriority(task?.priority))
   const [status, setStatus] = useState<TaskStatus>(toStatus(task?.status))
-  const [dueDate, setDueDate] = useState(toDateInput(task?.due_date ?? null))
+  const [startAt, setStartAt] = useState<string | null>(task?.start_date ?? null)
+  const [dueAt, setDueAt] = useState<string | null>(task?.due_date ?? null)
   const [clientVisible, setClientVisible] = useState(task?.client_visible ?? false)
 
   const projectOptions = projects.map((p) => ({ value: p.id, label: p.name }))
@@ -86,9 +87,6 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
     if (!selectedProject) { toast('Choose a project', 'error'); return }
     if (!effectiveService) { toast('Choose a service', 'error'); return }
     if (!title.trim()) { toast('Task title is required', 'error'); return }
-    // This form only picks the day, so carry over whatever time the task detail
-    // panel set rather than silently resetting it to midnight.
-    const due = fromDateTimeInput(dueDate, toTimeInput(task?.due_date))
     const onSuccess = () => { toast(isEdit ? 'Task updated' : 'Task created', 'success'); onClose() }
     const onError = (e: unknown) => toast(e instanceof Error ? e.message : 'Save failed', 'error')
 
@@ -101,7 +99,7 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
             description: description.trim() || null,
             project_service_id: effectiveService,
             stage_id: stageId || null,
-            priority, status, due_date: due, client_visible: clientVisible,
+            priority, status, start_date: startAt, due_date: dueAt, client_visible: clientVisible,
           },
         },
         {
@@ -121,7 +119,7 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
           description: description.trim() || null,
           stage_id: stageId || null,
           assignee_id: assigneeIds[0] ?? null,
-          priority, status, due_date: due, client_visible: clientVisible,
+          priority, status, start_date: startAt, due_date: dueAt, client_visible: clientVisible,
         },
         {
           onSuccess: (row) => {
@@ -197,8 +195,12 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
           </div>
         </div>
         <div className="space-y-1.5">
-          <label className="text-label font-ui font-semibold text-text-2 uppercase tracking-wider">Due date</label>
-          <DatePicker value={dueDate} onChange={setDueDate} />
+          <label className="text-label font-ui font-semibold text-text-2 uppercase tracking-wider">Schedule</label>
+          <DateTimeRangePicker
+            start={startAt}
+            end={dueAt}
+            onChange={({ start, end }) => { setStartAt(start); setDueAt(end) }}
+          />
         </div>
         <label className="flex items-center justify-between gap-3 pt-1">
           <span className="font-ui text-[13px] text-text-2">Visible to client</span>
