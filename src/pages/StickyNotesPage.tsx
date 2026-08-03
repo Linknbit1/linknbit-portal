@@ -92,19 +92,26 @@ function StaticNoteText({ doc, style }: { doc: JSONContent; style: React.CSSProp
   // identical typography (white-space, overflow-wrap, paragraph margins). Any
   // divergence here reflows the text on double-click, which reads as the font
   // "changing a bit" when it is really the line breaks moving.
+  //
+  // Two elements, matching the editor's own structure: `note-prose` carries
+  // `height: 100%`, which on the inset-positioned box would override the height
+  // its top/bottom imply and push the clip edge past the paper — that was
+  // overflowing text below the note in view mode but not while editing.
   return (
     <div
-      className="absolute overflow-hidden font-hand text-note text-note-ink pointer-events-none note-prose"
+      className="absolute overflow-hidden font-hand text-note text-note-ink pointer-events-none"
       style={style}
     >
-      {(doc.content ?? []).map((block, i) => (
-        <p
-          key={i}
-          style={{ textAlign: (block.attrs?.textAlign as React.CSSProperties['textAlign']) ?? 'left' }}
-        >
-          {block.content && block.content.length ? renderInline(block.content) : <br />}
-        </p>
-      ))}
+      <div className="note-prose">
+        {(doc.content ?? []).map((block, i) => (
+          <p
+            key={i}
+            style={{ textAlign: (block.attrs?.textAlign as React.CSSProperties['textAlign']) ?? 'left' }}
+          >
+            {block.content && block.content.length ? renderInline(block.content) : <br />}
+          </p>
+        ))}
+      </div>
     </div>
   )
 }
