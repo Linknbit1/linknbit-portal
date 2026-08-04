@@ -70,7 +70,11 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
   }
 
   return (
-    <div className="flex gap-3 overflow-x-auto pb-2">
+    // flex-1 takes whatever height the parent leaves so each column scrolls its own
+    // cards; the min-height floor keeps the board usable on short viewports (the
+    // page scrolls again below it). Falls back to content height when the parent
+    // chain isn't height-constrained.
+    <div className="flex min-h-80 flex-1 gap-3 overflow-x-auto pb-2">
       {COLUMNS.map((col) => {
         const items = tasks.filter((t) => (col.statuses as string[]).includes(statusOf(t)))
         return (
@@ -80,15 +84,16 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
             onDragLeave={() => setDragOver((c) => (c === col.key ? null : c))}
             onDrop={() => handleDrop(col)}
             className={cn(
-              'flex-1 min-w-[220px] rounded-lg border p-2.5 transition-colors',
+              'flex h-full flex-1 min-w-[220px] flex-col rounded-lg border p-2.5 transition-colors',
               dragOver === col.key ? 'border-brand-red bg-brand-red/5' : 'border-border-default bg-surface-1/60',
             )}
           >
-            <div className="flex items-center justify-between px-1 pb-2">
+            <div className="flex shrink-0 items-center justify-between px-1 pb-2">
               <span className="font-ui font-semibold text-[12px] text-text-2">{col.label}</span>
               <span className="font-mono text-[10.5px] text-text-4">{items.length}</span>
             </div>
-            <div className="space-y-2 min-h-2">
+            {/* overscroll-contain keeps a column's scroll from chaining to the page. */}
+            <div className="flex-1 space-y-2 min-h-2 overflow-y-auto overscroll-contain">
               {items.map((t) => (
                 <div
                   key={t.id}

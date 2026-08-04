@@ -14,6 +14,7 @@ import { Select } from '../../components/ui/Select'
 import { Toggle } from '../../components/ui/Toggle'
 import { TimePicker } from '../../components/ui/TimePicker'
 import { Drawer } from '../../components/ui/Drawer'
+import { ViewToggle, type ViewToggleOption } from '../../components/ui/ViewToggle'
 import { Popover } from '../../components/ui/Popover'
 import { ProfileRoles } from '../../components/shared/ProfileRoles'
 import { SalaryCard } from '../../components/shared/SalaryCard'
@@ -388,40 +389,14 @@ function ChangePasswordModal({ person, onClose }: { person: Person; onClose: () 
 
 // ── People list views ─────────────────────────────────────────────────────────────
 
-type ViewMode = 'table' | 'cards'
+type ViewMode = 'cards' | 'table'
 
 const GRID_COLS = 'grid-cols-[minmax(260px,1.5fr)_150px_minmax(140px,1fr)_140px_120px_124px]'
 
-function PeopleViewToggle({ value, onChange }: { value: ViewMode; onChange: (value: ViewMode) => void }) {
-  const options: Array<{ value: ViewMode; label: string; icon: typeof Table2 }> = [
-    { value: 'table', label: 'Table', icon: Table2 },
-    { value: 'cards', label: 'Cards', icon: LayoutGrid },
-  ]
-
-  return (
-    <div className="hidden lg:flex items-center rounded-md border border-border-default bg-surface-inset p-1">
-      {options.map((opt) => {
-        const Icon = opt.icon
-        const active = value === opt.value
-        return (
-          <button
-            key={opt.value}
-            type="button"
-            onClick={() => onChange(opt.value)}
-            className={cn(
-              'inline-flex h-8 items-center gap-2 rounded-sm px-3 font-ui text-[12px] font-semibold transition-colors',
-              active ? 'bg-surface-2 text-text-1 shadow-sm' : 'text-text-3 hover:text-text-1',
-            )}
-            aria-pressed={active}
-          >
-            <Icon size={14} />
-            {opt.label}
-          </button>
-        )
-      })}
-    </div>
-  )
-}
+const PEOPLE_VIEWS: ViewToggleOption<ViewMode>[] = [
+  { value: 'cards', label: 'Cards', icon: LayoutGrid },
+  { value: 'table', label: 'Table', icon: Table2 },
+]
 
 function TeamsCell({ labels }: { labels: string[] }) {
   if (labels.length === 0) {
@@ -803,7 +778,7 @@ export default function PeoplePage() {
 
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState('')
-  const [viewMode, setViewMode] = useState<ViewMode>('table')
+  const [viewMode, setViewMode] = useState<ViewMode>('cards')
   const [inviteOpen, setInviteOpen] = useState(false)
   const [editing, setEditing] = useState<Person | null>(null)
   const [passwordFor, setPasswordFor] = useState<Person | null>(null)
@@ -878,7 +853,7 @@ export default function PeoplePage() {
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex-1 sm:flex-none sm:w-44"><Select value={roleFilter} onChange={setRoleFilter} options={roleFilterOptions} /></div>
-            <PeopleViewToggle value={viewMode} onChange={setViewMode} />
+            <ViewToggle value={viewMode} onChange={setViewMode} options={PEOPLE_VIEWS} className="hidden lg:flex" />
             {canInvite && <Button size="sm" className="shrink-0" onClick={() => setInviteOpen(true)}><Plus size={13} /> Invite</Button>}
           </div>
         </div>

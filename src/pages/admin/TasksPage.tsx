@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react'
-import { Search, Plus, CheckSquare, ListTodo, AlertOctagon, Clock, LayoutList, Columns, SlidersHorizontal, Trash2 } from 'lucide-react'
+import { Search, LayoutList, Columns, SlidersHorizontal, Trash2, LayoutGrid } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
-import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Select } from '../../components/ui/Select'
 import { DatePicker } from '../../components/ui/DatePicker'
@@ -18,8 +17,9 @@ import { formatDate, isOverdue, STATUS_LABELS, PRIORITY_LABELS } from '../../lib
 import { useDeleteTask, useTaskDeleteImpact, useTasks } from '../../hooks/useTasks'
 import { useServices } from '../../hooks/useServices'
 import { useToast } from '../../components/ui/toast-context'
+import { ViewToggle, type ViewToggleOption } from '../../components/ui/ViewToggle'
 import { TaskBoard } from '../../components/shared/TaskBoard'
-import { TaskFormModal } from './TaskFormModal'
+import { TaskCard } from '../../components/shared/TaskCard'
 import { TaskDetailDrawer } from './TaskDetailDrawer'
 import type { Priority, TaskStatus } from '../../types'
 import type { TaskListItem } from '../../api/tasks'
@@ -32,6 +32,14 @@ const SORT_OPTIONS = [
   { value: 'due_asc', label: 'Due date' },
   { value: 'priority', label: 'Priority' },
   { value: 'title', label: 'Title A–Z' },
+]
+
+type TaskView = 'cards' | 'table' | 'board'
+
+const TASK_VIEWS: ViewToggleOption<TaskView>[] = [
+  { value: 'cards', label: 'Cards', icon: LayoutGrid },
+  { value: 'table', label: 'Table', icon: LayoutList },
+  { value: 'board', label: 'Board', icon: Columns },
 ]
 
 function sortTasks(list: TaskListItem[], sort: string): TaskListItem[] {
@@ -61,18 +69,10 @@ export default function TasksPage() {
   const [dueTo, setDueTo] = useState('')
   const [sortBy, setSortBy] = useState('recent')
   const [showAdv, setShowAdv] = useState(false)
-  const [showForm, setShowForm] = useState(false)
   const [openTaskId, setOpenTaskId] = useState<string | null>(null)
   const [pendingDelete, setPendingDelete] = useState<TaskListItem | null>(null)
-  const [view, setView] = useState<'table' | 'board'>('table')
+  const [view, setView] = useState<TaskView>('cards')
   const { data: deleteImpact, isLoading: deleteImpactLoading } = useTaskDeleteImpact(pendingDelete?.id)
-
-  const stats = useMemo(() => ({
-    total: tasks.length,
-    inProgress: tasks.filter((t) => t.status === 'in_progress').length,
-    blocked: tasks.filter((t) => t.status === 'blocked').length,
-    overdue: tasks.filter((t) => t.due_date && isOverdue(t.due_date) && t.status !== 'completed').length,
-  }), [tasks])
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -93,20 +93,13 @@ export default function TasksPage() {
   const assigneeOptions = [{ value: '', label: 'All assignees' }, ...people.filter((p) => p.is_active).map((p) => ({ value: p.id, label: p.name, avatar: { name: p.name, url: p.avatar_url } }))]
 
   return (
-    <div className="flex flex-col flex-1">
+    <div className={cn('flex flex-col flex-1', view === 'board' && 'min-h-0')}>
       <Topbar title="Tasks" />
-      <div className="p-4 lg:px-8 lg:py-7 flex flex-col gap-5">
+      {/* On the board view the page stops scrolling and hands its remaining height
+          to the board, so each column scrolls its own cards under a fixed header. */}
+      <div className={cn('p-4 lg:px-8 lg:py-7 flex flex-col gap-5', view === 'board' && 'min-h-0 flex-1')}>
         <div className="flex flex-wrap items-center gap-3">
           <h2 className="font-display font-bold text-[22px] text-text-1">Tasks</h2>
-          <Button size="sm" className="ml-auto" iconLeft={<Plus size={15} />} onClick={() => setShowForm(true)}>New Task</Button>
-        </div>
-
-        {/* KPI strip */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <Kpi icon={CheckSquare} label="Total" value={stats.total} />
-          <Kpi icon={ListTodo} label="In Progress" value={stats.inProgress} />
-          <Kpi icon={AlertOctagon} label="Blocked" value={stats.blocked} tone={stats.blocked ? 'error' : undefined} />
-          <Kpi icon={Clock} label="Overdue" value={stats.overdue} tone={stats.overdue ? 'warning' : undefined} />
         </div>
 
         {/* Filters */}
@@ -122,20 +115,7 @@ export default function TasksPage() {
           >
             <SlidersHorizontal size={13} /> Filters
           </button>
-          <div className="ml-auto flex items-center gap-1 bg-surface-1 border border-border-default rounded-lg p-1">
-            {(['table', 'board'] as const).map((v) => (
-              <button
-                key={v}
-                onClick={() => setView(v)}
-                className={cn(
-                  'flex items-center gap-1.5 px-3 h-8 rounded-md font-ui font-medium text-[12.5px] capitalize transition-colors',
-                  view === v ? 'bg-surface-3 text-text-1 shadow-sm' : 'text-text-3 hover:text-text-1',
-                )}
-              >
-                {v === 'table' ? <LayoutList size={13} /> : <Columns size={13} />} {v}
-              </button>
-            ))}
-          </div>
+          <ViewToggle value={view} onChange={setView} options={TASK_VIEWS} className="ml-auto" />
         </div>
 
         {showAdv && (
@@ -151,11 +131,19 @@ export default function TasksPage() {
         )}
 
         {isLoading ? (
-          <div className="space-y-2">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-14" />)}</div>
+          <div className={cn(view === 'cards' ? 'grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-3' : 'space-y-2')}>
+            {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className={view === 'cards' ? 'h-44 rounded-lg' : 'h-14'} />)}
+          </div>
         ) : filtered.length === 0 ? (
           <div className="py-16 text-center font-ui text-[13px] text-text-4">No tasks match your filters.</div>
         ) : view === 'board' ? (
           <TaskBoard tasks={filtered} onOpenTask={setOpenTaskId} showProject />
+        ) : view === 'cards' ? (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-3">
+            {filtered.map((t) => (
+              <TaskCard key={t.id} task={t} onOpen={setOpenTaskId} onDelete={setPendingDelete} />
+            ))}
+          </div>
         ) : (
           <div className="bg-surface-1 border border-border-default rounded-md overflow-x-auto">
             <table className="w-full text-left min-w-[760px]">
@@ -211,7 +199,6 @@ export default function TasksPage() {
         )}
       </div>
 
-      {showForm && <TaskFormModal onClose={() => setShowForm(false)} />}
       <TaskDetailDrawer taskId={openTaskId} open={!!openTaskId} onClose={() => setOpenTaskId(null)} />
       <ConfirmDialog
         open={!!pendingDelete}
@@ -267,18 +254,6 @@ function DeleteImpactMessage({
         </div>
       )}
       <p className="text-text-3">Comments, attachments, subtasks, and assignee links will be removed before the task leaves active lists.</p>
-    </div>
-  )
-}
-
-function Kpi({ icon: Icon, label, value, tone }: { icon: typeof CheckSquare; label: string; value: number; tone?: 'error' | 'warning' }) {
-  return (
-    <div className="bg-surface-1 border border-border-default rounded-xl px-5 py-4">
-      <div className="flex items-center gap-2 text-text-3 mb-1.5">
-        <Icon size={14} className={cn(tone === 'error' && 'text-error', tone === 'warning' && 'text-warning')} />
-        <span className="font-mono text-[10.5px] uppercase tracking-wider">{label}</span>
-      </div>
-      <p className={cn('font-display font-bold text-[24px]', tone === 'error' ? 'text-error' : tone === 'warning' ? 'text-warning' : 'text-text-1')}>{value}</p>
     </div>
   )
 }
