@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Search, LayoutList, Columns, SlidersHorizontal, Trash2, LayoutGrid } from 'lucide-react'
+import { Search, LayoutList, Columns, SlidersHorizontal, Trash2 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Input } from '../../components/ui/Input'
 import { Select } from '../../components/ui/Select'
@@ -19,7 +19,6 @@ import { useServices } from '../../hooks/useServices'
 import { useToast } from '../../components/ui/toast-context'
 import { ViewToggle, type ViewToggleOption } from '../../components/ui/ViewToggle'
 import { TaskBoard } from '../../components/shared/TaskBoard'
-import { TaskCard } from '../../components/shared/TaskCard'
 import { TaskDetailDrawer } from './TaskDetailDrawer'
 import type { Priority, TaskStatus } from '../../types'
 import type { TaskListItem } from '../../api/tasks'
@@ -34,12 +33,11 @@ const SORT_OPTIONS = [
   { value: 'title', label: 'Title A–Z' },
 ]
 
-type TaskView = 'cards' | 'table' | 'board'
+type TaskView = 'board' | 'table'
 
 const TASK_VIEWS: ViewToggleOption<TaskView>[] = [
-  { value: 'cards', label: 'Cards', icon: LayoutGrid },
-  { value: 'table', label: 'Table', icon: LayoutList },
   { value: 'board', label: 'Board', icon: Columns },
+  { value: 'table', label: 'List', icon: LayoutList },
 ]
 
 function sortTasks(list: TaskListItem[], sort: string): TaskListItem[] {
@@ -71,7 +69,7 @@ export default function TasksPage() {
   const [showAdv, setShowAdv] = useState(false)
   const [openTaskId, setOpenTaskId] = useState<string | null>(null)
   const [pendingDelete, setPendingDelete] = useState<TaskListItem | null>(null)
-  const [view, setView] = useState<TaskView>('cards')
+  const [view, setView] = useState<TaskView>('board')
   const { data: deleteImpact, isLoading: deleteImpactLoading } = useTaskDeleteImpact(pendingDelete?.id)
 
   const filtered = useMemo(() => {
@@ -104,7 +102,7 @@ export default function TasksPage() {
 
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-2">
-          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search tasks…" iconLeft={<Search size={14} />} className="w-56" />
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search tasks…" iconLeft={<Search size={14} />} className="w-full sm:w-56" />
           <Select value={statusFilter} onChange={setStatusFilter} options={statusOptions} size="sm" />
           <Select value={priorityFilter} onChange={setPriorityFilter} options={priorityOptions} size="sm" />
           <Select value={serviceFilter} onChange={setServiceFilter} options={serviceOptions} size="sm" />
@@ -121,8 +119,8 @@ export default function TasksPage() {
         {showAdv && (
           <div className="flex flex-wrap items-center gap-2 bg-surface-1 border border-border-default rounded-lg p-2.5">
             <span className="font-mono text-[10px] uppercase tracking-wider text-text-4 self-center">Due between</span>
-            <DatePicker value={dueFrom} onChange={setDueFrom} placeholder="From" className="w-40" />
-            <DatePicker value={dueTo} onChange={setDueTo} placeholder="To" minDate={dueFrom || undefined} className="w-40" />
+            <DatePicker value={dueFrom} onChange={setDueFrom} placeholder="From" className="w-full sm:w-40" />
+            <DatePicker value={dueTo} onChange={setDueTo} placeholder="To" minDate={dueFrom || undefined} className="w-full sm:w-40" />
             <Select value={assigneeFilter} onChange={setAssigneeFilter} options={assigneeOptions} size="sm" />
             {(dueFrom || dueTo || assigneeFilter) && (
               <button onClick={() => { setDueFrom(''); setDueTo(''); setAssigneeFilter('') }} className="h-8 px-2.5 rounded-sm text-[11.5px] text-text-3 hover:text-error transition-colors">Clear</button>
@@ -131,19 +129,13 @@ export default function TasksPage() {
         )}
 
         {isLoading ? (
-          <div className={cn(view === 'cards' ? 'grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-3' : 'space-y-2')}>
-            {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className={view === 'cards' ? 'h-44 rounded-lg' : 'h-14'} />)}
+          <div className="space-y-2">
+            {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-14" />)}
           </div>
         ) : filtered.length === 0 ? (
           <div className="py-16 text-center font-ui text-[13px] text-text-4">No tasks match your filters.</div>
         ) : view === 'board' ? (
           <TaskBoard tasks={filtered} onOpenTask={setOpenTaskId} showProject />
-        ) : view === 'cards' ? (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-3">
-            {filtered.map((t) => (
-              <TaskCard key={t.id} task={t} onOpen={setOpenTaskId} onDelete={setPendingDelete} />
-            ))}
-          </div>
         ) : (
           <div className="bg-surface-1 border border-border-default rounded-md overflow-x-auto">
             <table className="w-full text-left min-w-[760px]">

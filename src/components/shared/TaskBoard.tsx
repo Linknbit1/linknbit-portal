@@ -74,7 +74,9 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
     // cards; the min-height floor keeps the board usable on short viewports (the
     // page scrolls again below it). Falls back to content height when the parent
     // chain isn't height-constrained.
-    <div className="flex min-h-80 flex-1 gap-3 overflow-x-auto pb-2">
+    // Snap points make the mobile board swipe column-by-column instead of
+    // drifting between two half-visible ones.
+    <div className="flex min-h-80 flex-1 snap-x snap-mandatory gap-2.5 overflow-x-auto pb-2 lg:snap-none lg:gap-3">
       {COLUMNS.map((col) => {
         const items = tasks.filter((t) => (col.statuses as string[]).includes(statusOf(t)))
         return (
@@ -84,7 +86,10 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
             onDragLeave={() => setDragOver((c) => (c === col.key ? null : c))}
             onDrop={() => handleDrop(col)}
             className={cn(
-              'flex h-full flex-1 min-w-[220px] flex-col rounded-lg border p-2.5 transition-colors',
+              'flex h-full snap-start flex-col rounded-lg border p-2.5 transition-colors',
+              // Near-full width on a phone so cards stay readable, a fixed lane on
+              // tablets, and only elastic once all five can share the row.
+              'w-[86vw] shrink-0 sm:w-72 lg:w-auto lg:min-w-[220px] lg:flex-1',
               dragOver === col.key ? 'border-brand-red bg-brand-red/5' : 'border-border-default bg-surface-1/60',
             )}
           >

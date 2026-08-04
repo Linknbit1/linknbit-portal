@@ -9,6 +9,7 @@ import { useRealtimeNotifications } from '../../hooks/realtime/useRealtimeNotifi
 import { useRealtimeChannelList } from '../../hooks/realtime/useRealtimeChannelList'
 import { FileViewerProvider } from '../shared/FileViewer'
 import { ImpersonationBanner } from './ImpersonationBanner'
+import { RunningTimerWidget } from '../shared/RunningTimerWidget'
 
 export function AppShell() {
   const location = useLocation()
@@ -82,6 +83,8 @@ export function AppShell() {
             </main>
             <BottomTabBar />
           </div>
+          {/* Outside <main> so it stays put while the page scrolls. */}
+          <RunningTimerWidget />
         </div>
       </FileViewerProvider>
     </NavChromeContext.Provider>

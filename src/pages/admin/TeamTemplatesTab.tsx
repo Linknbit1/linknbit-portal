@@ -20,18 +20,14 @@ import {
 } from '../../hooks/useTemplates'
 import { cn } from '../../lib/cn'
 import { PRIORITY_LABELS } from '../../lib/utils'
+import { formatEstimate } from '../../lib/duration'
 import type { TemplateDetail, TemplateStageDetail } from '../../api/templates'
 import type { Priority } from '../../types'
 
 const PRIORITY_ORDER: Priority[] = ['critical', 'high', 'medium', 'low']
 const isPriority = (v: string): v is Priority => (PRIORITY_ORDER as string[]).includes(v)
 
-const fmtEstimate = (mins: number | null): string | null => {
-  if (!mins) return null
-  const h = Math.floor(mins / 60)
-  const m = mins % 60
-  return h > 0 ? `${h}h${m ? ` ${m}m` : ''}` : `${m}m`
-}
+const fmtEstimate = formatEstimate
 
 interface TeamTemplatesTabProps {
   teamId: string
