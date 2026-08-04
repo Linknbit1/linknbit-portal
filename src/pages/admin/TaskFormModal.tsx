@@ -1,15 +1,17 @@
 import { useState } from 'react'
-import { Modal } from '../../components/ui/Modal'
+import { Drawer } from '../../components/ui/Drawer'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Select } from '../../components/ui/Select'
 import { DateTimeRangePicker } from '../../components/ui/DateTimeRangePicker'
+import { DurationInput } from '../../components/ui/DurationInput'
 import { Toggle } from '../../components/ui/Toggle'
 import { useProjects } from '../../hooks/useProjects'
 import { useServiceStages } from '../../hooks/useStages'
 import { useProjectServices, useProjectServiceMembers } from '../../hooks/useProjectServices'
 import { useCreateTask, useUpdateTask } from '../../hooks/useTasks'
 import { MultiSelectPeople } from '../../components/ui/MultiSelectPeople'
+import { TaskTimeTracker } from '../../components/shared/TaskTimeTracker'
 import { useSetTaskAssignees } from '../../hooks/useTaskAssignees'
 import { useToast } from '../../components/ui/toast-context'
 import { PRIORITY_LABELS, STATUS_LABELS } from '../../lib/utils'
@@ -72,6 +74,10 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
   const [startAt, setStartAt] = useState<string | null>(task?.start_date ?? null)
   const [dueAt, setDueAt] = useState<string | null>(task?.due_date ?? null)
   const [clientVisible, setClientVisible] = useState(task?.client_visible ?? false)
+  const [estimatedMinutes, setEstimatedMinutes] = useState<number | null>(task?.estimated_minutes ?? null)
+  // Drives the slide-out; the real `onClose` runs once the animation finishes.
+  const [visible, setVisible] = useState(true)
+  const dismiss = () => setVisible(false)
 
   const projectOptions = projects.map((p) => ({ value: p.id, label: p.name }))
   const serviceOptions = services.flatMap((s) =>
@@ -87,7 +93,7 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
     if (!selectedProject) { toast('Choose a project', 'error'); return }
     if (!effectiveService) { toast('Choose a service', 'error'); return }
     if (!title.trim()) { toast('Task title is required', 'error'); return }
-    const onSuccess = () => { toast(isEdit ? 'Task updated' : 'Task created', 'success'); onClose() }
+    const onSuccess = () => { toast(isEdit ? 'Task updated' : 'Task created', 'success'); dismiss() }
     const onError = (e: unknown) => toast(e instanceof Error ? e.message : 'Save failed', 'error')
 
     if (isEdit) {
@@ -100,6 +106,7 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
             project_service_id: effectiveService,
             stage_id: stageId || null,
             priority, status, start_date: startAt, due_date: dueAt, client_visible: clientVisible,
+            estimated_minutes: estimatedMinutes,
           },
         },
         {
@@ -120,6 +127,7 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
           stage_id: stageId || null,
           assignee_id: assigneeIds[0] ?? null,
           priority, status, start_date: startAt, due_date: dueAt, client_visible: clientVisible,
+          estimated_minutes: estimatedMinutes,
         },
         {
           onSuccess: (row) => {
@@ -134,15 +142,19 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
   }
 
   return (
-    <Modal
-      open
-      onClose={onClose}
-      title={isEdit ? 'Edit task' : 'New task'}
-      size="md"
-      busy={pending}
+    <Drawer
+      open={visible}
+      // Saving must not be interrupted by Escape or a backdrop click, which is
+      // what Modal's `busy` prop used to guard.
+      onClose={pending ? () => {} : dismiss}
+      // The parent mounts this conditionally, so unmounting is deferred until the
+      // slide-out has played.
+      onExitComplete={onClose}
+      width={560}
+      title={<h2 className="font-display font-bold text-[16px] text-text-1 min-w-0 truncate">{isEdit ? 'Edit task' : 'New task'}</h2>}
       footer={
         <div className="flex gap-2.5">
-          <Button variant="ghost" size="sm" className="flex-1" onClick={onClose} disabled={pending}>Cancel</Button>
+          <Button variant="ghost" size="sm" className="flex-1" onClick={dismiss} disabled={pending}>Cancel</Button>
           <Button size="sm" className="flex-1" onClick={handleSubmit} loading={pending}>{isEdit ? 'Save changes' : 'Create task'}</Button>
         </div>
       }
@@ -202,11 +214,29 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
             onChange={({ start, end }) => { setStartAt(start); setDueAt(end) }}
           />
         </div>
+        <div className="space-y-1.5">
+          <label className="text-label font-ui font-semibold text-text-2 uppercase tracking-wider">Time estimate</label>
+          <DurationInput value={estimatedMinutes} onChange={setEstimatedMinutes} />
+          <p className="font-ui text-[11px] text-text-4">How much work this is — separate from when it&rsquo;s scheduled.</p>
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-label font-ui font-semibold text-text-2 uppercase tracking-wider">Track time</label>
+          {isEdit ? (
+            <TaskTimeTracker taskId={task.id} estimatedMinutes={estimatedMinutes} />
+          ) : (
+            // Time is logged against a task that exists, so there is nothing to
+            // attach an entry to until this form is saved.
+            <p className="rounded-md border border-dashed border-border-default bg-surface-inset px-3 py-2.5 font-ui text-[12px] text-text-4">
+              Available once the task is created — open it to start a timer or log time.
+            </p>
+          )}
+        </div>
         <label className="flex items-center justify-between gap-3 pt-1">
           <span className="font-ui text-[13px] text-text-2">Visible to client</span>
           <Toggle checked={clientVisible} onChange={setClientVisible} />
         </label>
       </div>
-    </Modal>
+    </Drawer>
   )
 }

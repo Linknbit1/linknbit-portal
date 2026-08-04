@@ -13,9 +13,14 @@ interface DrawerProps {
   /** Desktop width for a right-side drawer (px number or any CSS width; ignored on mobile / bottom). */
   width?: number | string
   side?: 'right' | 'bottom'
+  /**
+   * Fires once the close animation has finished. Lets a conditionally-mounted
+   * drawer play its slide-out before the parent unmounts it.
+   */
+  onExitComplete?: () => void
 }
 
-export function Drawer({ open, onClose, title, children, footer, width = 520, side = 'right' }: DrawerProps) {
+export function Drawer({ open, onClose, title, children, footer, width = 520, side = 'right', onExitComplete }: DrawerProps) {
   const isDesktop = useIsDesktop()
   // A bottom drawer is always a bottom sheet; a right drawer becomes a full-screen
   // sheet on mobile and a fixed-width side panel on desktop.
@@ -39,7 +44,7 @@ export function Drawer({ open, onClose, title, children, footer, width = 520, si
     : { initial: { x: '100%' }, animate: { x: 0 }, exit: { x: '100%' } }
 
   return (
-    <AnimatePresence>
+    <AnimatePresence onExitComplete={onExitComplete}>
       {open && (
         <div className={cn('fixed inset-0 z-50 flex', asBottom ? 'items-end' : 'justify-end')}>
           {/* Backdrop */}

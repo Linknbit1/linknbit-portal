@@ -189,11 +189,11 @@ export default function ProjectDetailPage() {
           to the board, so each column scrolls its own cards under a fixed header. */}
       <div className={cn('flex flex-col gap-5 p-4 lg:px-8 lg:py-7', projectView === 'board' && 'min-h-0 flex-1')}>
         {/* Summary header */}
-        <div className="bg-surface-1 border border-border-default rounded-xl p-5">
+        <div className="bg-surface-1 border border-border-default rounded-xl p-4 sm:p-5">
           <div className="flex flex-wrap items-start gap-3">
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="font-display font-bold text-[22px] text-text-1">{project.name}</h1>
+                <h1 className="font-display font-bold text-[19px] sm:text-[22px] text-text-1 wrap-break-word">{project.name}</h1>
                 {services.map((s) => s.service && <ServiceChip key={s.id} service={s.service.slug} />)}
                 <StatusChip status={project.status} type="project" />
                 <ClientVisibility visible={project.client_visible} showLabel />
@@ -201,7 +201,7 @@ export default function ProjectDetailPage() {
               {project.client?.name && <p className="font-ui text-[13px] text-text-3 mt-1">{project.client.name}</p>}
               {project.description && <p className="font-ui text-[13px] text-text-2 mt-2 max-w-2xl">{project.description}</p>}
             </div>
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
               <Button
                 size="sm"
                 variant={watch.isWatching ? 'primary' : 'secondary'}
@@ -372,7 +372,7 @@ export default function ProjectDetailPage() {
         )}
 
         {projectView === 'overview' && (
-          <div className="bg-surface-1 border border-border-default rounded-xl p-5">
+          <div className="bg-surface-1 border border-border-default rounded-xl p-4 sm:p-5">
             <DocEditor
               key={id}
               value={project.doc}
@@ -386,7 +386,7 @@ export default function ProjectDetailPage() {
         )}
 
         {projectView === 'files' && (
-          <div className="bg-surface-1 border border-border-default rounded-xl p-4 max-w-3xl">
+          <div className="bg-surface-1 border border-border-default rounded-xl p-3 sm:p-4 max-w-3xl">
             <ProjectFilesTab projectId={id} canManage={canManage} onOpenTask={setOpenTaskId} />
           </div>
         )}

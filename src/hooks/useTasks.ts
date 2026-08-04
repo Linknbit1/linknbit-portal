@@ -5,6 +5,7 @@ import {
 } from '../api/tasks'
 import { deleteTaskCascade, fetchTaskDeleteImpact } from '../api/deleteCascade'
 import { PROJECT_KEYS } from './useProjects'
+import { AUDIT_KEYS } from './useAuditLog'
 import type { TablesInsert, TablesUpdate } from '../types/database'
 
 export const TASK_KEYS = {
@@ -51,6 +52,8 @@ export function useUpdateTask() {
     mutationFn: ({ id, updates }: { id: string; updates: TablesUpdate<'tasks'> }) => updateTask(id, updates),
     onSuccess: (row) => {
       qc.invalidateQueries({ queryKey: TASK_KEYS.detail(row.id) })
+      // Every audited field edit adds a line to the task's activity feed.
+      qc.invalidateQueries({ queryKey: AUDIT_KEYS.task(row.id) })
       invalidateTasks(qc, row.project_id)
     },
   })
@@ -63,6 +66,7 @@ export function useUpdateTaskStatus() {
       updateTaskStatus(id, status, boardOrder),
     onSuccess: (row) => {
       qc.invalidateQueries({ queryKey: TASK_KEYS.detail(row.id) })
+      qc.invalidateQueries({ queryKey: AUDIT_KEYS.task(row.id) })
       invalidateTasks(qc, row.project_id)
     },
   })

@@ -63,7 +63,7 @@ export default function ClientsPage() {
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search clients…"
               iconLeft={<Search size={14} />}
-              className="w-56"
+              className="w-full sm:w-56"
             />
             <ViewToggle value={viewMode} onChange={setViewMode} options={CLIENT_VIEWS} className="hidden lg:flex" />
             <Button size="sm" iconLeft={<Plus size={15} />} onClick={openNew}>New Client</Button>

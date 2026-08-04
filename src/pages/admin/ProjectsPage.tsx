@@ -125,7 +125,7 @@ export default function ProjectsPage() {
 
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-2">
-          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search projects…" iconLeft={<Search size={14} />} className="w-56" />
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search projects…" iconLeft={<Search size={14} />} className="w-full sm:w-56" />
           <Select value={serviceFilter} onChange={setServiceFilter} options={serviceOptions} size="sm" />
           <Select value={statusFilter} onChange={setStatusFilter} options={statusOptions} size="sm" />
           <Select value={sortBy} onChange={setSortBy} options={PROJECT_SORT} size="sm" label="Sort" />
@@ -140,8 +140,8 @@ export default function ProjectsPage() {
         {showAdv && (
           <div className="flex flex-wrap items-center gap-2 bg-surface-1 border border-border-default rounded-lg p-2.5">
             <span className="font-mono text-[10px] uppercase tracking-wider text-text-4 self-center">Deadline between</span>
-            <DatePicker value={deadlineFrom} onChange={setDeadlineFrom} placeholder="From" className="w-40" />
-            <DatePicker value={deadlineTo} onChange={setDeadlineTo} placeholder="To" minDate={deadlineFrom || undefined} className="w-40" />
+            <DatePicker value={deadlineFrom} onChange={setDeadlineFrom} placeholder="From" className="w-full sm:w-40" />
+            <DatePicker value={deadlineTo} onChange={setDeadlineTo} placeholder="To" minDate={deadlineFrom || undefined} className="w-full sm:w-40" />
             <Select value={managerFilter} onChange={setManagerFilter} options={managerOptions} size="sm" />
             {(deadlineFrom || deadlineTo || managerFilter) && (
               <button onClick={() => { setDeadlineFrom(''); setDeadlineTo(''); setManagerFilter('') }} className="h-8 px-2.5 rounded-sm text-[11.5px] text-text-3 hover:text-error transition-colors">Clear</button>
