@@ -9,7 +9,7 @@ import { cn } from '../../lib/cn'
 import { DocEditor } from '../../components/editor/DocEditor'
 import { RichEditor } from '../../components/editor/RichEditor'
 import { RichRenderer } from '../../components/editor/RichRenderer'
-import { docToPlainText, extractMentionIds, toDbDoc, fromDbDoc } from '../../lib/richText'
+import { docToPlainText, extractMentionIds, toDbDoc, fromDbDoc, plainTextToDoc } from '../../lib/richText'
 import { useSyncMentions } from '../../hooks/useMentions'
 import { Button } from '../../components/ui/Button'
 import { Select } from '../../components/ui/Select'
@@ -333,8 +333,14 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
       <div className="-mx-3 rounded-md border border-transparent px-3 py-2 transition-colors hover:border-border-default focus-within:border-border-focus focus-within:bg-surface-inset">
         <DocEditor
           key={task.id}
-          value={task.doc}
-          onSave={(doc) => patch({ doc })}
+          // Descriptions typed in the task form only ever wrote `description`,
+          // so fall back to it when there is no rich doc yet — otherwise this
+          // editor looks empty on a task that plainly has a description.
+          value={task.doc ?? toDbDoc(plainTextToDoc(task.description ?? ''))}
+          // `description` is the plain-text mirror of `doc` — it feeds the task
+          // form, board card excerpts and the activity feed, none of which can
+          // read ProseMirror JSON. Writing only `doc` left all three blank.
+          onSave={(doc) => patch({ doc, description: docToPlainText(fromDbDoc(doc)) || null })}
           mentionItems={members}
           fileItems={fileItems}
           source={{ type: 'task', id: task.id, projectId: task.project_id }}

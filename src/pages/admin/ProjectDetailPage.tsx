@@ -1,8 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   Plus, Users, Layers, Paperclip, Calendar, Wallet, UserCircle,
-  Pencil, Trash2, Flag, X, CheckCircle2, Columns, FileText, Bell,
+  Pencil, Trash2, Flag, X, CheckCircle2, Columns, FileText, Bell, BellOff, MoreVertical,
 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Button } from '../../components/ui/Button'
@@ -11,6 +11,7 @@ import { Avatar, AvatarGroup } from '../../components/ui/Avatar'
 import { PersonLink } from '../../components/shared/PersonLink'
 import { Skeleton } from '../../components/ui/Skeleton'
 import { Select } from '../../components/ui/Select'
+import { Popover } from '../../components/ui/Popover'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { ServiceChip } from '../../components/shared/ServiceChip'
 import { StatusChip } from '../../components/shared/StatusChip'
@@ -58,6 +59,61 @@ const TABS = [
   { key: 'team', label: 'Team', icon: Users },
 ] as const
 type ProjectTab = typeof TABS[number]['key']
+
+/** Header overflow menu — keeps Notify/Edit/Delete out of the title row. */
+function ProjectActionsMenu({
+  isWatching, watchPending, canEdit, canDelete, onToggleWatch, onEdit, onDelete,
+}: {
+  isWatching: boolean
+  watchPending: boolean
+  canEdit: boolean
+  canDelete: boolean
+  onToggleWatch: () => void
+  onEdit: () => void
+  onDelete: () => void
+}) {
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const [open, setOpen] = useState(false)
+  const run = (fn: () => void) => { setOpen(false); fn() }
+
+  const itemClass = 'flex w-full items-center gap-2.5 px-3 py-2 text-left font-ui text-[12.5px] text-text-1 transition-colors hover:bg-surface-3'
+
+  return (
+    <>
+      <button
+        ref={triggerRef}
+        onClick={() => setOpen((v) => !v)}
+        aria-label="Project actions"
+        aria-expanded={open}
+        className="flex size-8 shrink-0 items-center justify-center rounded-md border border-border-default bg-surface-2 text-text-3 transition-colors hover:text-text-1"
+      >
+        <MoreVertical size={15} />
+      </button>
+      {/* Popover only positions — the surface is the caller's, same as PersonActionsMenu. */}
+      <Popover
+        anchorRef={triggerRef}
+        open={open}
+        onClose={() => setOpen(false)}
+        className="w-48 overflow-hidden rounded-lg border border-border-default bg-surface-2 py-1 shadow-2xl"
+      >
+        <button className={itemClass} onClick={() => run(onToggleWatch)} disabled={watchPending}>
+          {isWatching ? <BellOff size={14} className="text-text-4" /> : <Bell size={14} className="text-text-4" />}
+          {isWatching ? 'Stop watching' : 'Notify me'}
+        </button>
+        {canEdit && (
+          <button className={itemClass} onClick={() => run(onEdit)}>
+            <Pencil size={14} className="text-text-4" /> Edit project
+          </button>
+        )}
+        {canDelete && (
+          <button className={cn(itemClass, 'text-error hover:bg-error/10')} onClick={() => run(onDelete)}>
+            <Trash2 size={14} /> Delete project
+          </button>
+        )}
+      </Popover>
+    </>
+  )
+}
 
 export default function ProjectDetailPage() {
   const { id = '' } = useParams()
@@ -201,25 +257,15 @@ export default function ProjectDetailPage() {
               {project.client?.name && <p className="font-ui text-[13px] text-text-3 mt-1">{project.client.name}</p>}
               {project.description && <p className="font-ui text-[13px] text-text-2 mt-2 max-w-2xl">{project.description}</p>}
             </div>
-            <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
-              <Button
-                size="sm"
-                variant={watch.isWatching ? 'primary' : 'secondary'}
-                iconLeft={<Bell size={13} />}
-                loading={watch.toggle.isPending}
-                onClick={() => watch.toggle.mutate({ watching: watch.isWatching }, { onError: (e) => toast(e instanceof Error ? e.message : 'Failed', 'error') })}
-              >
-                {watch.isWatching ? 'Watching' : 'Notify'}
-              </Button>
-              {canManage && (
-                <>
-                  <Button size="sm" variant="secondary" iconLeft={<Pencil size={13} />} onClick={() => setShowEdit(true)}>Edit</Button>
-                  {canManageProjects && (
-                    <Button size="sm" variant="danger" iconLeft={<Trash2 size={13} />} onClick={() => setConfirmProjectDelete(true)}>Delete</Button>
-                  )}
-                </>
-              )}
-            </div>
+            <ProjectActionsMenu
+              isWatching={watch.isWatching}
+              watchPending={watch.toggle.isPending}
+              canEdit={canManage}
+              canDelete={canManage && canManageProjects}
+              onToggleWatch={() => watch.toggle.mutate({ watching: watch.isWatching }, { onError: (e) => toast(e instanceof Error ? e.message : 'Failed', 'error') })}
+              onEdit={() => setShowEdit(true)}
+              onDelete={() => setConfirmProjectDelete(true)}
+            />
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-5">
             <Meta icon={UserCircle} label="Manager" value={project.manager?.name ?? '—'} />
