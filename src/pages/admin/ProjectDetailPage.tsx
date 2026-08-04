@@ -51,8 +51,8 @@ import type { ApprovalStatus } from '../../api/approvals'
 import type { UserRole } from '../../types'
 
 const TABS = [
-  { key: 'pipeline', label: 'Pipeline', icon: Layers },
   { key: 'board', label: 'Board', icon: Columns },
+  { key: 'pipeline', label: 'Pipeline', icon: Layers },
   { key: 'overview', label: 'Overview', icon: FileText },
   { key: 'files', label: 'Files', icon: Paperclip },
   { key: 'team', label: 'Team', icon: Users },
@@ -100,7 +100,7 @@ export default function ProjectDetailPage() {
   // Delete is enforced by delete_project_cascade via the flag; showing it to anyone
   // else produced a button that always errored.
   const canManageProjects = useCanAccess('can_manage_projects')
-  const [projectView, setProjectView] = useState<ProjectTab>('pipeline')
+  const [projectView, setProjectView] = useState<ProjectTab>('board')
   const [showEdit, setShowEdit] = useState(false)
   // Which service the "add member" modal is filling — the picker is per service now.
   const [addMemberFor, setAddMemberFor] = useState<string | null>(null)
@@ -183,9 +183,11 @@ export default function ProjectDetailPage() {
   }
 
   return (
-    <div className="flex flex-col flex-1">
+    <div className={cn('flex flex-col flex-1', projectView === 'board' && 'min-h-0')}>
       <Topbar title={project.name} back="/admin/projects" />
-      <div className="p-4 lg:px-8 lg:py-7 space-y-5">
+      {/* On the board tab the page stops scrolling and hands its remaining height
+          to the board, so each column scrolls its own cards under a fixed header. */}
+      <div className={cn('flex flex-col gap-5 p-4 lg:px-8 lg:py-7', projectView === 'board' && 'min-h-0 flex-1')}>
         {/* Summary header */}
         <div className="bg-surface-1 border border-border-default rounded-xl p-5">
           <div className="flex flex-wrap items-start gap-3">
