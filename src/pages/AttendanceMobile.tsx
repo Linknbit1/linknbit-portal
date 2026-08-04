@@ -26,7 +26,7 @@ import {
 // Employee section components
 import {
   WfhSection, LeaveSection, MyExceptionsSection, OvertimeSection, UpcomingScheduleSection,
-  OooSection, SummaryStats, HistoryTable,
+  OooSection, SummaryStats, HistoryTable, MyAttendanceSections,
 } from './employee/AttendancePage'
 import { AttendanceCheckInCard } from '../components/shared/AttendanceCheckInCard'
 import { BiometricTerminalsTab } from '../components/shared/BiometricTerminalsTab'
@@ -154,6 +154,8 @@ function AdminAttendanceHub() {
   const pendingDevices = devices.filter((d) => !d.approved_by && d.is_active).length
 
   const items: HubRowItem[] = [
+    // Managers file their own requests too — this is their self-service view.
+    { to: '/attendance/me',         label: 'My Attendance',    icon: CalendarClock },
     { to: '/attendance/records',    label: 'Daily Records',    icon: Users },
     { to: '/attendance/wfh',        label: 'WFH Requests',     icon: Home,        badge: pendingWfh.length },
     { to: '/attendance/leave',      label: 'Leave',            icon: Plane,       badge: pendingLeave.length },
@@ -213,6 +215,17 @@ export function AttendanceSectionScreen() {
   const { section } = useParams()
 
   const isMgmtRole = MGMT_ROLES.includes(profile?.role ?? '')
+
+  // Self-service view for the roles whose /attendance is the management landing.
+  // Same on both breakpoints — only the back affordance differs.
+  if (section === 'me') {
+    return (
+      <div className="flex flex-col flex-1">
+        <Topbar title="My Attendance" back={isDesktop ? false : '/attendance'} />
+        <MyAttendanceSections />
+      </div>
+    )
+  }
 
   // Desktop: each section is a full page of its own (the sidebar dropdown
   // navigates here rather than switching an in-page tab).

@@ -905,7 +905,8 @@ function GrantWfhModal({
             onChange={setProfileId}
             placeholder="Select employee…"
             options={people
-              .filter((p) => !p.attendance_excluded)
+              // Granting yourself WFH would be a self-approval — request it instead.
+              .filter((p) => !p.attendance_excluded && p.id !== profile?.id)
               .map((p) => ({
                 value: p.id,
                 label: p.name,
@@ -946,6 +947,19 @@ function GrantWfhModal({
         </Button>
       </div>
     </ModalShell>
+  );
+}
+
+/**
+ * Shown in place of Approve/Reject on a reviewer's own request. Reviewers file
+ * requests like everyone else (HR especially), and nobody signs off on their
+ * own — RLS refuses the update, so the actions must not be offered either.
+ */
+function OwnRequestChip() {
+  return (
+    <span className="inline-flex items-center px-2 py-0.5 rounded-xs border border-warning/25 bg-warning/10 text-warning text-[11px] font-mono font-semibold shrink-0 whitespace-nowrap">
+      Awaiting admin
+    </span>
   );
 }
 
@@ -1148,6 +1162,9 @@ export function WFHRequestsTab() {
                           </div>
                           <WFHStatusChip status={req.status} />
                           {req.status === "pending" ? (
+                            req.profile_id === profile?.id ? (
+                              <OwnRequestChip />
+                            ) : (
                             <div className="flex items-center gap-1.5 ml-1">
                               <button
                                 onClick={() => approve(req.id)}
@@ -1162,6 +1179,7 @@ export function WFHRequestsTab() {
                                 <ThumbsDown size={12} /> Reject
                               </button>
                             </div>
+                            )
                           ) : (
                             <button
                               onClick={() =>
@@ -1569,7 +1587,8 @@ function AddLeaveModal({
             onChange={setProfileId}
             placeholder="Select employee…"
             options={people
-              .filter((p) => !p.attendance_excluded)
+              // Entering your own leave here would bypass review — use My Attendance.
+              .filter((p) => !p.attendance_excluded && p.id !== profile?.id)
               .map((p) => ({
                 value: p.id,
                 label: p.name,
@@ -1834,8 +1853,9 @@ export function LeaveTab() {
                         )}
                       </div>
                       {req.status === "pending" ? (
-                        // On-behalf (entered_by) entries can only be approved by an admin/super_admin.
-                        req.entered_by && !isAdmin ? (
+                        // On-behalf (entered_by) entries can only be approved by an
+                        // admin/super_admin — and nobody reviews their own request.
+                        (req.entered_by && !isAdmin) || req.profile_id === profile?.id ? (
                           <span className="inline-flex items-center px-2 py-0.5 rounded-xs border border-warning/25 bg-warning/10 text-warning text-[11px] font-mono font-semibold shrink-0 mt-0.5 whitespace-nowrap">
                             Awaiting admin
                           </span>
@@ -2695,6 +2715,9 @@ export function ExceptionsTab() {
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-1.5">
                             {exc.status === "pending" ? (
+                              exc.profile_id === profile?.id ? (
+                                <OwnRequestChip />
+                              ) : (
                               <>
                                 <button
                                   onClick={() => handleApprove(exc.id)}
@@ -2711,6 +2734,7 @@ export function ExceptionsTab() {
                                   <ThumbsDown size={12} /> Reject
                                 </button>
                               </>
+                              )
                             ) : (
                               <span className="font-mono text-[11px] text-text-4">
                                 {exc.reviewed_at
@@ -4129,6 +4153,9 @@ export function OvertimeTab() {
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-1.5">
                             {req.status === "pending" ? (
+                              req.profile_id === profile?.id ? (
+                                <OwnRequestChip />
+                              ) : (
                               <>
                                 <button
                                   onClick={() => handleApprove(req.id)}
@@ -4145,6 +4172,7 @@ export function OvertimeTab() {
                                   <ThumbsDown size={12} /> Reject
                                 </button>
                               </>
+                              )
                             ) : (
                               <span className="font-mono text-[11px] text-text-4">
                                 {req.reviewed_at
@@ -4239,6 +4267,9 @@ export function OvertimeTab() {
                     )}
                     <div className="flex items-center gap-1.5 pl-10.5">
                       {req.status === "pending" ? (
+                        req.profile_id === profile?.id ? (
+                          <OwnRequestChip />
+                        ) : (
                         <>
                           <button
                             onClick={() => handleApprove(req.id)}
@@ -4255,6 +4286,7 @@ export function OvertimeTab() {
                             <ThumbsDown size={12} /> Reject
                           </button>
                         </>
+                        )
                       ) : (
                         <span className="font-mono text-[11px] text-text-4">
                           Reviewed{" "}

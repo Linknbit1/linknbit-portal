@@ -18,7 +18,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { showWipFeatures } from '../../lib/featureFlags'
-import { SETTINGS_ROLES } from '../../constants/roles'
+import { SETTINGS_ROLES, ATTENDANCE_ADMIN_LANDING_ROLES } from '../../constants/roles'
 import { useMyPermissions } from '../../hooks/usePermissions'
 import { ADMINISTRATOR } from '../../api/permissions'
 import { useAuditNewCount } from '../../hooks/useAuditLog'
@@ -83,6 +83,9 @@ export interface NavItem {
 
 /** Attendance sub-pages — the management views at /attendance/:section. */
 const ATTENDANCE_CHILDREN: NavItem[] = [
+  // Managers are staff too: their own check-ins, requests and history live here,
+  // since the parent link takes them to the management side.
+  { label: 'My Attendance',    icon: CalendarCheck, to: '/attendance/me',         feature: 'can_manage_attendance' },
   { label: 'Daily Records',    icon: CalendarCheck, to: '/attendance/records',    feature: 'can_manage_attendance' },
   { label: 'Leave',            icon: CalendarCheck, to: '/attendance/leave',      feature: 'can_manage_attendance' },
   { label: 'WFH Requests',     icon: CalendarCheck, to: '/attendance/wfh',        feature: 'can_manage_attendance' },
@@ -180,12 +183,13 @@ export function filterNavItems(role: string | null | undefined, can: CanFn): Nav
 
   return NAV_ITEMS.filter(allowed).map((item) => {
     const children = item.children?.filter(allowed)
-    // Send non-managers to their own attendance view rather than an admin URL.
-    const to = item.matchPrefix === '/attendance' && !can('can_manage_attendance')
-      ? '/attendance'
-      : item.matchPrefix === '/attendance'
-        ? '/attendance/records'
-        : item.to
+    // Send non-managers — and HR, who manages attendance but is a tracked
+    // employee — to their own attendance view rather than an admin URL.
+    const landsOnAdminView =
+      can('can_manage_attendance') && ATTENDANCE_ADMIN_LANDING_ROLES.includes(role ?? '')
+    const to = item.matchPrefix === '/attendance'
+      ? (landsOnAdminView ? '/attendance/records' : '/attendance')
+      : item.to
     return { ...item, to, children: children && children.length > 0 ? children : undefined }
   })
 }

@@ -1160,7 +1160,13 @@ const MONTH_NAMES = [
   'July', 'August', 'September', 'October', 'November', 'December',
 ]
 
-export default function EmployeeAttendancePage() {
+/**
+ * Everything a person can do about their own attendance: check in/out, devices,
+ * the four request types, the schedule ahead and their own month history.
+ * Exported without a Topbar so managers can open it as /attendance/me — HR and
+ * admins file the same requests employees do, they just don't land here.
+ */
+export function MyAttendanceSections() {
   const now = new Date()
   const [year, setYear] = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth() + 1) // 1-indexed
@@ -1181,9 +1187,6 @@ export default function EmployeeAttendancePage() {
   const periodLabel = `${MONTH_NAMES[month - 1]} ${year}`
 
   return (
-    <div className="flex flex-col flex-1">
-      <Topbar title="My Attendance" />
-
       <div className="px-4 py-6 lg:px-8 lg:py-7 flex flex-col gap-6">
         <AttendanceCheckInCard />
 
@@ -1256,6 +1259,14 @@ export default function EmployeeAttendancePage() {
           <HistoryTable records={history} periodLabel={periodLabel} />
         )}
       </div>
+  )
+}
+
+export default function EmployeeAttendancePage() {
+  return (
+    <div className="flex flex-col flex-1">
+      <Topbar title="My Attendance" />
+      <MyAttendanceSections />
     </div>
   )
 }
