@@ -94,9 +94,9 @@ export default function ProjectsPage() {
   const managerOptions = [{ value: '', label: 'All managers' }, ...people.filter((p) => p.is_active).map((p) => ({ value: p.id, label: p.name, avatar: { name: p.name, url: p.avatar_url } }))]
 
   return (
-    <div className="flex flex-col flex-1">
+    <div className={cn('flex flex-col flex-1', view === 'kanban' && 'min-h-0')}>
       <Topbar title="Projects" />
-      <div className="p-4 lg:px-8 lg:py-7 flex flex-col gap-5">
+      <div className={cn('p-4 lg:px-8 lg:py-7 flex flex-col gap-5', view === 'kanban' && 'min-h-0 flex-1')}>
         <div className="flex flex-wrap items-center gap-3">
           <div>
             <h2 className="font-display font-bold text-[22px] text-text-1">Projects</h2>
@@ -419,7 +419,7 @@ function KanbanView({ projects, onOpen }: { projects: ProjectListItem[]; onOpen:
   }
 
   return (
-    <div className="flex gap-3 overflow-x-auto pb-2">
+    <div className="flex min-h-80 flex-1 snap-x snap-mandatory gap-2.5 overflow-x-auto pb-2 lg:snap-none lg:gap-3">
       {KANBAN_COLUMNS.map((status) => {
         const items = byStatus(status)
         return (
@@ -429,44 +429,52 @@ function KanbanView({ projects, onOpen }: { projects: ProjectListItem[]; onOpen:
             onDragLeave={() => setDragOver((s) => (s === status ? null : s))}
             onDrop={() => handleDrop(status)}
             className={cn(
-              'w-72 shrink-0 rounded-lg border p-2.5 transition-colors',
+              'flex h-full snap-start flex-col rounded-lg border p-2.5 transition-colors',
+              'w-[86vw] shrink-0 sm:w-72 lg:w-auto lg:min-w-[220px] lg:flex-1',
               dragOver === status ? 'border-brand-red bg-brand-red/5' : 'border-border-default bg-surface-1/60',
             )}
           >
-            <div className="flex items-center justify-between px-1 pb-2">
+            <div className="flex shrink-0 items-center justify-between px-1 pb-2">
               <span className="font-ui font-semibold text-[12px] text-text-2">{PROJECT_STATUS_LABELS[status]}</span>
               <span className="font-mono text-[10.5px] text-text-4">{items.length}</span>
             </div>
-            <div className="space-y-2">
-              {items.map((p) => (
-                <div
-                  key={p.id}
-                  draggable
-                  onDragStart={() => setDragId(p.id)}
-                  onDragEnd={() => { setDragId(null); setDragOver(null) }}
-                  onClick={() => onOpen(p.id)}
-                  className={cn(
-                    'bg-surface-1 border border-border-default rounded-md p-3 cursor-pointer hover:border-border-strong transition-colors',
-                    dragId === p.id && 'opacity-50',
-                  )}
-                >
-                  <div className="flex items-center justify-between gap-2 mb-2">
-                    <div className="flex flex-wrap items-center gap-1 min-w-0">
-                      {p.services.map((s) => <ServiceChip key={s.id} service={s.slug} showDot={false} />)}
+            <div className="min-h-2 flex-1 space-y-2 overflow-y-auto overscroll-contain">
+              {items.map((p) => {
+                const overdue = !!p.deadline && isOverdue(p.deadline) && p.status !== 'completed'
+                return (
+                  <div
+                    key={p.id}
+                    draggable
+                    onDragStart={() => setDragId(p.id)}
+                    onDragEnd={() => { setDragId(null); setDragOver(null) }}
+                    onClick={() => onOpen(p.id)}
+                    className={cn(
+                      'bg-surface-1 border border-border-default rounded-md p-3 cursor-pointer hover:border-border-strong transition-colors',
+                      dragId === p.id && 'opacity-50',
+                    )}
+                  >
+                    <div className="mb-2 flex items-center gap-2">
+                      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
+                        {p.services.map((s) => <ServiceChip key={s.id} service={s.slug} showDot={false} />)}
+                      </div>
+                      {overdue && (
+                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-error/30 bg-error/10 px-2 py-0.5 font-mono text-[9.5px] font-semibold uppercase tracking-wider text-error">
+                          <AlertCircle size={10} className="shrink-0" /> Overdue
+                        </span>
+                      )}
                     </div>
-                    {p.deadline && isOverdue(p.deadline) && p.status !== 'completed' && <AlertCircle size={13} className="text-error shrink-0" />}
+                    <p className="font-ui font-semibold text-body-sm/snug text-text-1">{p.name}</p>
+                    {p.client?.name && <p className="font-ui text-[11.5px] text-text-3 mt-0.5">{p.client.name}</p>}
+                    <ProgressBar value={p.progress} className="mt-2.5" />
+                    <div className="flex items-center justify-between mt-2.5">
+                      {p.members.length > 0
+                        ? <AvatarGroup users={p.members.map((m) => ({ id: m.id, name: m.name, avatarUrl: m.avatar_url ?? undefined }))} max={3} size="xs" linkToProfile />
+                        : <span />}
+                      <span className="font-mono text-[10.5px] text-text-4">{p.progress}%</span>
+                    </div>
                   </div>
-                  <p className="font-ui font-semibold text-body-sm/snug text-text-1">{p.name}</p>
-                  {p.client?.name && <p className="font-ui text-[11.5px] text-text-3 mt-0.5">{p.client.name}</p>}
-                  <ProgressBar value={p.progress} className="mt-2.5" />
-                  <div className="flex items-center justify-between mt-2.5">
-                    {p.members.length > 0
-                      ? <AvatarGroup users={p.members.map((m) => ({ id: m.id, name: m.name, avatarUrl: m.avatar_url ?? undefined }))} max={3} size="xs" linkToProfile />
-                      : <span />}
-                    <span className="font-mono text-[10.5px] text-text-4">{p.progress}%</span>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
               {items.length === 0 && <p className="text-center text-[11.5px] text-text-4 py-4">Empty</p>}
             </div>
           </div>
