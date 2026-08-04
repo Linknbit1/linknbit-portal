@@ -16,6 +16,8 @@ export interface TaskListItem extends TaskRow {
   assignees: PersonMini[]
   stage: { id: string; name: string } | null
   subtask_count: number
+  /** How many of those subtasks are ticked — drives the board card's progress bar. */
+  subtask_done: number
   comment_count: number
   attachment_count: number
 }
@@ -33,7 +35,7 @@ export interface TaskFilters {
 }
 
 const TASK_SELECT =
-  '*, project:projects(id,name), project_service:project_services(id, service:services(id,name,slug,color)), assignee:profiles!tasks_assignee_id_fkey(id,name,avatar_url), assignees:task_assignees(profile:profiles(id,name,avatar_url)), stage:stages(id,name), subtask_count:subtasks(count), comment_count:comments(count), attachment_count:attachments(count)'
+  '*, project:projects(id,name), project_service:project_services(id, service:services(id,name,slug,color)), assignee:profiles!tasks_assignee_id_fkey(id,name,avatar_url), assignees:task_assignees(profile:profiles(id,name,avatar_url)), stage:stages(id,name), subtasks(completed), comment_count:comments(count), attachment_count:attachments(count)'
 
 export async function fetchTasks(filters: TaskFilters = {}): Promise<TaskListItem[]> {
   let query = supabase
@@ -53,10 +55,11 @@ export async function fetchTasks(filters: TaskFilters = {}): Promise<TaskListIte
 
   const { data, error } = await query
   if (error) throw error
-  const shaped = data.map(({ subtask_count, comment_count, attachment_count, assignees, ...rest }) => ({
+  const shaped = data.map(({ subtasks, comment_count, attachment_count, assignees, ...rest }) => ({
     ...rest,
     assignees: assignees.flatMap((a) => (a.profile ? [a.profile] : [])),
-    subtask_count: subtask_count[0]?.count ?? 0,
+    subtask_count: subtasks.length,
+    subtask_done: subtasks.filter((s) => s.completed).length,
     comment_count: comment_count[0]?.count ?? 0,
     attachment_count: attachment_count[0]?.count ?? 0,
   }))
@@ -75,11 +78,12 @@ export async function fetchTask(id: string): Promise<TaskListItem | null> {
   const { data, error } = await supabase.from('tasks').select(TASK_SELECT).eq('id', id).maybeSingle()
   if (error) throw error
   if (!data) return null
-  const { subtask_count, comment_count, attachment_count, assignees, ...rest } = data
+  const { subtasks, comment_count, attachment_count, assignees, ...rest } = data
   return {
     ...rest,
     assignees: assignees.flatMap((a) => (a.profile ? [a.profile] : [])),
-    subtask_count: subtask_count[0]?.count ?? 0,
+    subtask_count: subtasks.length,
+    subtask_done: subtasks.filter((s) => s.completed).length,
     comment_count: comment_count[0]?.count ?? 0,
     attachment_count: attachment_count[0]?.count ?? 0,
   }

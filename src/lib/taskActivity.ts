@@ -144,6 +144,18 @@ export function describeTaskActivity(rows: TaskActivityRow[], names: Map<string,
         continue
       }
 
+      // A description can be paragraphs long — say what happened, not what it says.
+      if (field === 'description') {
+        const had = !!asString(before)
+        const has = !!asString(after)
+        entries.push({
+          ...base,
+          id,
+          text: !has ? 'cleared the description' : had ? 'updated the description' : 'added a description',
+        })
+        continue
+      }
+
       const noun = FIELD_NOUN[field] ?? field.replace(/_/g, ' ')
       const from = labelFor(field, before, names)
       const to = labelFor(field, after, names)

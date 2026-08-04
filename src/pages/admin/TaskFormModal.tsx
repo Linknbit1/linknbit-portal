@@ -14,6 +14,7 @@ import { MultiSelectPeople } from '../../components/ui/MultiSelectPeople'
 import { TaskTimeTracker } from '../../components/shared/TaskTimeTracker'
 import { useSetTaskAssignees } from '../../hooks/useTaskAssignees'
 import { useToast } from '../../components/ui/toast-context'
+import { docToPlainText, fromDbDoc, plainTextToDoc, toDbDoc } from '../../lib/richText'
 import { PRIORITY_LABELS, STATUS_LABELS } from '../../lib/utils'
 import type { TaskListItem } from '../../api/tasks'
 import type { Priority, TaskStatus } from '../../types'
@@ -66,7 +67,11 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
   const members = allMembers.filter((m) => m.project_service_id === effectiveService)
 
   const [title, setTitle] = useState(task?.title ?? '')
-  const [description, setDescription] = useState(task?.description ?? '')
+  // Tasks written before `description` was mirrored only have the rich `doc`,
+  // so fall back to flattening that rather than showing an empty box.
+  const [description, setDescription] = useState(
+    task?.description ?? docToPlainText(fromDbDoc(task?.doc)),
+  )
   const [stageId, setStageId] = useState(task?.stage_id ?? defaultStageId ?? '')
   const [assigneeIds, setAssigneeIds] = useState<string[]>(task?.assignees.map((a) => a.id) ?? [])
   const [priority, setPriority] = useState<Priority>(toPriority(task?.priority))
@@ -102,7 +107,10 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
           id: task.id,
           updates: {
             title: title.trim(),
+            // Both halves together: editing the plain mirror here would otherwise
+            // leave the rich doc stale and the task view showing the old text.
             description: description.trim() || null,
+            doc: toDbDoc(plainTextToDoc(description)),
             project_service_id: effectiveService,
             stage_id: stageId || null,
             priority, status, start_date: startAt, due_date: dueAt, client_visible: clientVisible,
@@ -124,6 +132,7 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
           project_service_id: effectiveService,
           title: title.trim(),
           description: description.trim() || null,
+          doc: toDbDoc(plainTextToDoc(description)),
           stage_id: stageId || null,
           assignee_id: assigneeIds[0] ?? null,
           priority, status, start_date: startAt, due_date: dueAt, client_visible: clientVisible,

@@ -37,7 +37,9 @@ export function ConversationListPane({ activeChannelId, onSelect, onNewChannel, 
   const { data: channels = [], isLoading } = useChannels()
   const unreadMap = useChatUnreadMap()
   const canCreateChannels = useCanAccess('can_create_channels')
-  const [filter, setFilter] = useState<Filter>('channels')
+  // DMs first: direct conversations are what people open chat for, and the tab
+  // order already leads with them.
+  const [filter, setFilter] = useState<Filter>('dms')
   const [search, setSearch] = useState('')
   const [newOpen, setNewOpen] = useState(false)
   const newBtnRef = useRef<HTMLButtonElement>(null)
