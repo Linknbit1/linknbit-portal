@@ -83,9 +83,10 @@ export interface NavItem {
 
 /** Attendance sub-pages — the management views at /attendance/:section. */
 const ATTENDANCE_CHILDREN: NavItem[] = [
-  // Managers are staff too: their own check-ins, requests and history live here,
-  // since the parent link takes them to the management side.
-  { label: 'My Attendance',    icon: CalendarCheck, to: '/attendance/me',         feature: 'can_manage_attendance' },
+  // Only for the roles whose parent link goes to the management side — HR's
+  // "Attendance" already lands on this exact page, so offering it twice is noise.
+  { label: 'My Attendance',    icon: CalendarCheck, to: '/attendance/me',         feature: 'can_manage_attendance',
+    roles: ATTENDANCE_ADMIN_LANDING_ROLES },
   { label: 'Daily Records',    icon: CalendarCheck, to: '/attendance/records',    feature: 'can_manage_attendance' },
   { label: 'Leave',            icon: CalendarCheck, to: '/attendance/leave',      feature: 'can_manage_attendance' },
   { label: 'WFH Requests',     icon: CalendarCheck, to: '/attendance/wfh',        feature: 'can_manage_attendance' },
