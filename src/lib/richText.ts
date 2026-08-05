@@ -45,6 +45,24 @@ export function docToPlainText(doc: JSONContent | null | undefined): string {
   return parts.join('').replace(/\n{2,}/g, '\n').trim()
 }
 
+/**
+ * Inverse of docToPlainText, for surfaces that edit the mirror rather than the
+ * rich doc (the task form's plain textarea). Each line becomes a paragraph, so
+ * the rich editor shows the same text instead of going stale.
+ */
+export function plainTextToDoc(text: string): JSONContent | null {
+  const trimmed = text.trim()
+  if (!trimmed) return null
+  return {
+    type: 'doc',
+    content: trimmed.split('\n').map((line) =>
+      line.length > 0
+        ? { type: 'paragraph', content: [{ type: 'text', text: line }] }
+        : { type: 'paragraph' },
+    ),
+  }
+}
+
 /** Collect the profile ids of every @mention in a doc (deduped). */
 export function extractMentionIds(doc: JSONContent | null | undefined): string[] {
   const ids = new Set<string>()

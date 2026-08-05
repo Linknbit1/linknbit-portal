@@ -2,36 +2,33 @@ import { useMemo, useState, type ReactNode } from 'react'
 import type { JSONContent } from '@tiptap/react'
 import {
   Plus, Trash2, Send, CheckCircle2, MessageSquare, ListChecks, RotateCcw, Pencil,
-  CircleDot, UserRound, CalendarDays, Clock, Flag, Layers, Eye, Paperclip, type LucideIcon,
+  CircleDot, UserRound, CalendarDays, Flag, Layers, Eye, Paperclip, Bell, BellOff, Timer, Clock,
+  type LucideIcon,
 } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { DocEditor } from '../../components/editor/DocEditor'
 import { RichEditor } from '../../components/editor/RichEditor'
 import { RichRenderer } from '../../components/editor/RichRenderer'
-import { docToPlainText, extractMentionIds, toDbDoc, fromDbDoc } from '../../lib/richText'
+import { docToPlainText, extractMentionIds, toDbDoc, fromDbDoc, plainTextToDoc } from '../../lib/richText'
 import { useSyncMentions } from '../../hooks/useMentions'
 import { Button } from '../../components/ui/Button'
 import { Select } from '../../components/ui/Select'
 import { MultiSelectPeople } from '../../components/ui/MultiSelectPeople'
 import { useSetTaskAssignees } from '../../hooks/useTaskAssignees'
-import { DatePicker } from '../../components/ui/DatePicker'
-import { TimePicker } from '../../components/ui/TimePicker'
+import { DateTimeRangePicker } from '../../components/ui/DateTimeRangePicker'
+import { DurationInput } from '../../components/ui/DurationInput'
+import { TaskTimeTracker } from '../../components/shared/TaskTimeTracker'
 import { Toggle } from '../../components/ui/Toggle'
 import { Avatar } from '../../components/ui/Avatar'
 import { PersonLink } from '../../components/shared/PersonLink'
 import { Skeleton } from '../../components/ui/Skeleton'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { ServiceChip } from '../../components/shared/ServiceChip'
-import { StatusChip } from '../../components/shared/StatusChip'
-import { PriorityChip } from '../../components/shared/PriorityChip'
 import { SaveIndicator } from '../../components/shared/SaveIndicator'
 import { AttachmentUploader } from '../../components/shared/AttachmentUploader'
 import { useToast } from '../../components/ui/toast-context'
 import { useSaveStatus } from '../../hooks/useSaveStatus'
-import {
-  formatRelativeTime, fromDateTimeInput, toDateInput, toTimeInput,
-  PRIORITY_LABELS, STATUS_LABELS,
-} from '../../lib/utils'
+import { formatRelativeTime, PRIORITY_LABELS, STATUS_LABELS } from '../../lib/utils'
 import { useTask, useUpdateTask, useDeleteTask, useTaskDeleteImpact } from '../../hooks/useTasks'
 import { useStages } from '../../hooks/useStages'
 import { useProjectServiceMembers } from '../../hooks/useProjectServices'
@@ -40,7 +37,10 @@ import { fileKind } from '../../lib/attachment'
 import { useSubtasks, useCreateSubtask, useToggleSubtask, useDeleteSubtask } from '../../hooks/useSubtasks'
 import { useComments, useCreateComment } from '../../hooks/useComments'
 import { useRealtimeComments } from '../../hooks/realtime/useRealtimeComments'
+import { useRealtimeTaskActivity } from '../../hooks/realtime/useRealtimeTaskActivity'
 import { useTaskActivity } from '../../hooks/useAuditLog'
+import { useTaskWatch } from '../../hooks/useWatchers'
+import { useAuthContext } from '../../context/AuthContext'
 import { describeTaskActivity } from '../../lib/taskActivity'
 import type { Priority, TaskStatus } from '../../types'
 
@@ -142,6 +142,7 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
   const [confirmDelete, setConfirmDelete] = useState(false)
   const { data: deleteImpact, isLoading: deleteImpactLoading } = useTaskDeleteImpact(confirmDelete ? taskId : undefined)
   useRealtimeComments(taskId)
+  useRealtimeTaskActivity(taskId)
 
   const projectId = task?.project_id
   const { data: stages = [] } = useStages(projectId)
@@ -163,6 +164,13 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
   const createComment = useCreateComment()
   const syncMentions = useSyncMentions()
   const setAssignees = useSetTaskAssignees()
+
+  // Assignees and the creator are subscribed server-side without a row, so the
+  // bell has to reflect that before the user has ever touched it.
+  const { profile } = useAuthContext()
+  const implicitlySubscribed = !!profile
+    && (task?.assignees.some((a) => a.id === profile.id) || task?.created_by === profile.id)
+  const watch = useTaskWatch(taskId, !!implicitlySubscribed)
 
   const [newSubtask, setNewSubtask] = useState('')
   const [commentDoc, setCommentDoc] = useState<JSONContent | null>(null)
@@ -209,13 +217,6 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
     })
   }
 
-  // start_date / due_date are timestamptz, so each is edited as a date + a time
-  // that recombine into the one column.
-  const startDate = toDateInput(task.start_date)
-  const startTime = toTimeInput(task.start_date)
-  const dueDate = toDateInput(task.due_date)
-  const dueTime = toTimeInput(task.due_date)
-
   const stageOptions = [{ value: '', label: 'No stage' }, ...stages.map((s) => ({ value: s.id, label: s.name }))]
   const statusOptions = STATUS_ORDER.map((s) => ({ value: s, label: STATUS_LABELS[s] }))
   const priorityOptions = PRIORITY_ORDER.map((p) => ({ value: p, label: PRIORITY_LABELS[p], dot: PRIORITY_DOTS[p] }))
@@ -256,9 +257,12 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
   }
 
   return (
-    <div className={cn('flex flex-col lg:flex-row', fill && 'h-full min-h-0')}>
+    // Two independently scrolling panes only make sense side by side. Stacked on
+    // mobile the whole thing scrolls as one column — otherwise the shrink-0
+    // activity rail claims the full height and collapses the fields above it.
+    <div className={cn('flex flex-col lg:flex-row', fill && 'h-full min-h-0 overflow-y-auto lg:overflow-hidden')}>
       {/* ── Main column ───────────────────────────────────────────────── */}
-      <div className={cn('min-w-0 flex-1 space-y-5 p-5 lg:p-6', fill && 'overflow-y-auto')}>
+      <div className={cn('min-w-0 flex-1 space-y-5 p-4 sm:p-5 lg:p-6', fill && 'lg:overflow-y-auto')}>
       {/* Header */}
       <div className="space-y-2">
         <div className="flex min-h-5 items-center gap-2 flex-wrap">
@@ -291,28 +295,18 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
             size="sm"
           />
         </PropertyRow>
-        <PropertyRow icon={CalendarDays} label="Start date">
-          <DatePicker value={startDate} onChange={(v) => patch({ start_date: fromDateTimeInput(v, startTime) })} />
-        </PropertyRow>
-        <PropertyRow icon={Clock} label="Start time">
-          <TimePicker
-            value={startTime}
-            onChange={(v) => patch({ start_date: fromDateTimeInput(startDate, v) })}
-            step={5}
-            disabled={!startDate}
-            placeholder={startDate ? 'Select time…' : 'Set a start date first'}
+        <PropertyRow icon={CalendarDays} label="Schedule">
+          <DateTimeRangePicker
+            start={task.start_date}
+            end={task.due_date}
+            // Both halves in one patch, so the activity log records a single edit.
+            onChange={({ start, end }) => patch({ start_date: start, due_date: end })}
           />
         </PropertyRow>
-        <PropertyRow icon={CalendarDays} label="Due date">
-          <DatePicker value={dueDate} onChange={(v) => patch({ due_date: fromDateTimeInput(v, dueTime) })} />
-        </PropertyRow>
-        <PropertyRow icon={Clock} label="Due time">
-          <TimePicker
-            value={dueTime}
-            onChange={(v) => patch({ due_date: fromDateTimeInput(dueDate, v) })}
-            step={5}
-            disabled={!dueDate}
-            placeholder={dueDate ? 'Select time…' : 'Set a due date first'}
+        <PropertyRow icon={Timer} label="Time estimate">
+          <DurationInput
+            value={task.estimated_minutes}
+            onChange={(minutes) => patch({ estimated_minutes: minutes })}
           />
         </PropertyRow>
         <PropertyRow icon={Flag} label="Priority">
@@ -326,12 +320,27 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
         </PropertyRow>
       </div>
 
+      {/* Time tracking — a widget, not a property, so it gets its own full-width
+          block rather than being squeezed into a label/control row. */}
+      <section className="space-y-2.5 rounded-lg border border-border-default bg-surface-2/25 p-4">
+        <label className="text-label font-ui font-semibold text-text-2 uppercase tracking-wider flex items-center gap-1.5">
+          <Clock size={13} /> Time tracking
+        </label>
+        <TaskTimeTracker taskId={task.id} estimatedMinutes={task.estimated_minutes} />
+      </section>
+
       {/* Description — chromeless until hovered/focused, like ClickUp */}
       <div className="-mx-3 rounded-md border border-transparent px-3 py-2 transition-colors hover:border-border-default focus-within:border-border-focus focus-within:bg-surface-inset">
         <DocEditor
           key={task.id}
-          value={task.doc}
-          onSave={(doc) => patch({ doc })}
+          // Descriptions typed in the task form only ever wrote `description`,
+          // so fall back to it when there is no rich doc yet — otherwise this
+          // editor looks empty on a task that plainly has a description.
+          value={task.doc ?? toDbDoc(plainTextToDoc(task.description ?? ''))}
+          // `description` is the plain-text mirror of `doc` — it feeds the task
+          // form, board card excerpts and the activity feed, none of which can
+          // read ProseMirror JSON. Writing only `doc` left all three blank.
+          onSave={(doc) => patch({ doc, description: docToPlainText(fromDbDoc(doc)) || null })}
           mentionItems={members}
           fileItems={fileItems}
           source={{ type: 'task', id: task.id, projectId: task.project_id }}
@@ -388,23 +397,35 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
       {/* Actions */}
       <div className="flex items-center gap-2 border-t border-border-subtle pt-4">
         <Button size="sm" variant={isDone ? 'secondary' : 'primary'} iconLeft={isDone ? <RotateCcw size={14} /> : <CheckCircle2 size={14} />} onClick={toggleComplete}>{isDone ? 'Reopen' : 'Mark complete'}</Button>
+        <Button
+          size="sm"
+          variant={watch.isSubscribed ? 'primary' : 'secondary'}
+          iconLeft={watch.isSubscribed ? <Bell size={14} /> : <BellOff size={14} />}
+          loading={watch.isPending}
+          onClick={() => watch.toggle()}
+          title={watch.isSubscribed
+            ? 'You get status, priority and due-date updates for this task'
+            : 'Muted — only @mentions will reach you'}
+        >
+          {watch.isSubscribed ? 'Notifying' : 'Muted'}
+        </Button>
         <Button size="sm" variant="danger" iconLeft={<Trash2 size={14} />} onClick={() => setConfirmDelete(true)} loading={deleteTask.isPending}>Delete</Button>
-        <div className="ml-auto"><StatusChip status={task.status} /></div>
-        <PriorityChip priority={task.priority} />
       </div>
       </div>
 
       {/* ── Activity rail ─────────────────────────────────────────────── */}
       <aside className={cn(
-        'flex w-full shrink-0 flex-col border-t border-border-default bg-bg-base/40 lg:w-96 xl:w-105 lg:border-l lg:border-t-0',
-        fill && 'min-h-0',
+        // shrink-0 only from lg, where the rail is a fixed-width sibling. Keeping
+        // it on mobile is what let a long feed squeeze the main column to nothing.
+        'flex w-full flex-col border-t border-border-default bg-bg-base/40 lg:w-96 lg:shrink-0 xl:w-105 lg:border-l lg:border-t-0',
+        fill && 'lg:min-h-0',
       )}>
         <div className="flex shrink-0 items-center gap-2 border-b border-border-default px-4 py-3">
           <MessageSquare size={14} className="text-text-3" />
           <h3 className="font-display text-[14px] font-bold text-text-1">Activity</h3>
         </div>
 
-        <div className={cn('flex-1 space-y-4 p-4', fill && 'overflow-y-auto')}>
+        <div className={cn('flex-1 space-y-4 p-4', fill && 'lg:overflow-y-auto')}>
           {feed.length === 0 && (
             <p className="py-8 text-center font-ui text-[12.5px] text-text-4">No activity yet.</p>
           )}

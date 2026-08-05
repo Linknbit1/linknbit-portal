@@ -1,8 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   Plus, Users, Layers, Paperclip, Calendar, Wallet, UserCircle,
-  Pencil, Trash2, Flag, X, CheckCircle2, Columns, FileText, Bell,
+  Pencil, Trash2, Flag, X, CheckCircle2, Columns, FileText, Bell, BellOff, MoreVertical,
 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Button } from '../../components/ui/Button'
@@ -11,6 +11,7 @@ import { Avatar, AvatarGroup } from '../../components/ui/Avatar'
 import { PersonLink } from '../../components/shared/PersonLink'
 import { Skeleton } from '../../components/ui/Skeleton'
 import { Select } from '../../components/ui/Select'
+import { Popover } from '../../components/ui/Popover'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { ServiceChip } from '../../components/shared/ServiceChip'
 import { StatusChip } from '../../components/shared/StatusChip'
@@ -51,13 +52,68 @@ import type { ApprovalStatus } from '../../api/approvals'
 import type { UserRole } from '../../types'
 
 const TABS = [
-  { key: 'pipeline', label: 'Pipeline', icon: Layers },
   { key: 'board', label: 'Board', icon: Columns },
+  { key: 'pipeline', label: 'Pipeline', icon: Layers },
   { key: 'overview', label: 'Overview', icon: FileText },
   { key: 'files', label: 'Files', icon: Paperclip },
   { key: 'team', label: 'Team', icon: Users },
 ] as const
 type ProjectTab = typeof TABS[number]['key']
+
+/** Header overflow menu — keeps Notify/Edit/Delete out of the title row. */
+function ProjectActionsMenu({
+  isWatching, watchPending, canEdit, canDelete, onToggleWatch, onEdit, onDelete,
+}: {
+  isWatching: boolean
+  watchPending: boolean
+  canEdit: boolean
+  canDelete: boolean
+  onToggleWatch: () => void
+  onEdit: () => void
+  onDelete: () => void
+}) {
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const [open, setOpen] = useState(false)
+  const run = (fn: () => void) => { setOpen(false); fn() }
+
+  const itemClass = 'flex w-full items-center gap-2.5 px-3 py-2 text-left font-ui text-[12.5px] text-text-1 transition-colors hover:bg-surface-3'
+
+  return (
+    <>
+      <button
+        ref={triggerRef}
+        onClick={() => setOpen((v) => !v)}
+        aria-label="Project actions"
+        aria-expanded={open}
+        className="flex size-8 shrink-0 items-center justify-center rounded-md border border-border-default bg-surface-2 text-text-3 transition-colors hover:text-text-1"
+      >
+        <MoreVertical size={15} />
+      </button>
+      {/* Popover only positions — the surface is the caller's, same as PersonActionsMenu. */}
+      <Popover
+        anchorRef={triggerRef}
+        open={open}
+        onClose={() => setOpen(false)}
+        className="w-48 overflow-hidden rounded-lg border border-border-default bg-surface-2 py-1 shadow-2xl"
+      >
+        <button className={itemClass} onClick={() => run(onToggleWatch)} disabled={watchPending}>
+          {isWatching ? <BellOff size={14} className="text-text-4" /> : <Bell size={14} className="text-text-4" />}
+          {isWatching ? 'Stop watching' : 'Notify me'}
+        </button>
+        {canEdit && (
+          <button className={itemClass} onClick={() => run(onEdit)}>
+            <Pencil size={14} className="text-text-4" /> Edit project
+          </button>
+        )}
+        {canDelete && (
+          <button className={cn(itemClass, 'text-error hover:bg-error/10')} onClick={() => run(onDelete)}>
+            <Trash2 size={14} /> Delete project
+          </button>
+        )}
+      </Popover>
+    </>
+  )
+}
 
 export default function ProjectDetailPage() {
   const { id = '' } = useParams()
@@ -100,7 +156,7 @@ export default function ProjectDetailPage() {
   // Delete is enforced by delete_project_cascade via the flag; showing it to anyone
   // else produced a button that always errored.
   const canManageProjects = useCanAccess('can_manage_projects')
-  const [projectView, setProjectView] = useState<ProjectTab>('pipeline')
+  const [projectView, setProjectView] = useState<ProjectTab>('board')
   const [showEdit, setShowEdit] = useState(false)
   // Which service the "add member" modal is filling — the picker is per service now.
   const [addMemberFor, setAddMemberFor] = useState<string | null>(null)
@@ -183,15 +239,17 @@ export default function ProjectDetailPage() {
   }
 
   return (
-    <div className="flex flex-col flex-1">
+    <div className={cn('flex flex-col flex-1', projectView === 'board' && 'min-h-0')}>
       <Topbar title={project.name} back="/admin/projects" />
-      <div className="p-4 lg:px-8 lg:py-7 space-y-5">
+      {/* On the board tab the page stops scrolling and hands its remaining height
+          to the board, so each column scrolls its own cards under a fixed header. */}
+      <div className={cn('flex flex-col gap-5 p-4 lg:px-8 lg:py-7', projectView === 'board' && 'min-h-0 flex-1')}>
         {/* Summary header */}
-        <div className="bg-surface-1 border border-border-default rounded-xl p-5">
+        <div className="bg-surface-1 border border-border-default rounded-xl p-4 sm:p-5">
           <div className="flex flex-wrap items-start gap-3">
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="font-display font-bold text-[22px] text-text-1">{project.name}</h1>
+                <h1 className="font-display font-bold text-[19px] sm:text-[22px] text-text-1 wrap-break-word">{project.name}</h1>
                 {services.map((s) => s.service && <ServiceChip key={s.id} service={s.service.slug} />)}
                 <StatusChip status={project.status} type="project" />
                 <ClientVisibility visible={project.client_visible} showLabel />
@@ -199,25 +257,15 @@ export default function ProjectDetailPage() {
               {project.client?.name && <p className="font-ui text-[13px] text-text-3 mt-1">{project.client.name}</p>}
               {project.description && <p className="font-ui text-[13px] text-text-2 mt-2 max-w-2xl">{project.description}</p>}
             </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <Button
-                size="sm"
-                variant={watch.isWatching ? 'primary' : 'secondary'}
-                iconLeft={<Bell size={13} />}
-                loading={watch.toggle.isPending}
-                onClick={() => watch.toggle.mutate({ watching: watch.isWatching }, { onError: (e) => toast(e instanceof Error ? e.message : 'Failed', 'error') })}
-              >
-                {watch.isWatching ? 'Watching' : 'Notify'}
-              </Button>
-              {canManage && (
-                <>
-                  <Button size="sm" variant="secondary" iconLeft={<Pencil size={13} />} onClick={() => setShowEdit(true)}>Edit</Button>
-                  {canManageProjects && (
-                    <Button size="sm" variant="danger" iconLeft={<Trash2 size={13} />} onClick={() => setConfirmProjectDelete(true)}>Delete</Button>
-                  )}
-                </>
-              )}
-            </div>
+            <ProjectActionsMenu
+              isWatching={watch.isWatching}
+              watchPending={watch.toggle.isPending}
+              canEdit={canManage}
+              canDelete={canManage && canManageProjects}
+              onToggleWatch={() => watch.toggle.mutate({ watching: watch.isWatching }, { onError: (e) => toast(e instanceof Error ? e.message : 'Failed', 'error') })}
+              onEdit={() => setShowEdit(true)}
+              onDelete={() => setConfirmProjectDelete(true)}
+            />
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-5">
             <Meta icon={UserCircle} label="Manager" value={project.manager?.name ?? '—'} />
@@ -370,7 +418,7 @@ export default function ProjectDetailPage() {
         )}
 
         {projectView === 'overview' && (
-          <div className="bg-surface-1 border border-border-default rounded-xl p-5">
+          <div className="bg-surface-1 border border-border-default rounded-xl p-4 sm:p-5">
             <DocEditor
               key={id}
               value={project.doc}
@@ -384,7 +432,7 @@ export default function ProjectDetailPage() {
         )}
 
         {projectView === 'files' && (
-          <div className="bg-surface-1 border border-border-default rounded-xl p-4 max-w-3xl">
+          <div className="bg-surface-1 border border-border-default rounded-xl p-3 sm:p-4 max-w-3xl">
             <ProjectFilesTab projectId={id} canManage={canManage} onOpenTask={setOpenTaskId} />
           </div>
         )}

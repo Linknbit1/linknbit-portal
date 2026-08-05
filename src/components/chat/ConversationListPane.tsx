@@ -37,7 +37,9 @@ export function ConversationListPane({ activeChannelId, onSelect, onNewChannel, 
   const { data: channels = [], isLoading } = useChannels()
   const unreadMap = useChatUnreadMap()
   const canCreateChannels = useCanAccess('can_create_channels')
-  const [filter, setFilter] = useState<Filter>('channels')
+  // DMs first: direct conversations are what people open chat for, and the tab
+  // order already leads with them.
+  const [filter, setFilter] = useState<Filter>('dms')
   const [search, setSearch] = useState('')
   const [newOpen, setNewOpen] = useState(false)
   const newBtnRef = useRef<HTMLButtonElement>(null)
@@ -58,6 +60,13 @@ export function ConversationListPane({ activeChannelId, onSelect, onNewChannel, 
       return title.includes(q) || memberNames.some((n) => n.includes(q))
     })
   }, [channels, filter, query, profile?.id])
+
+  // Totals for the tab labels — deliberately unfiltered by the search box, so
+  // the counts read as "how many I have", not "how many match".
+  const counts = useMemo(() => ({
+    dms: channels.filter((c) => c.kind !== 'channel').length,
+    channels: channels.filter((c) => c.kind === 'channel').length,
+  }), [channels])
 
   // Message hits are grouped per conversation so one busy thread can't flood
   // the results, and rows for conversations already listed above are dropped.
@@ -114,17 +123,29 @@ export function ConversationListPane({ activeChannelId, onSelect, onNewChannel, 
           <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search" className="pl-8 h-8 text-[12.5px]" />
         </div>
 
-        <div className="flex items-center gap-1">
-          {(['channels', 'dms'] as const).map((f) => (
+        {/* Segmented control — each half claims equal width so the counts line up. */}
+        <div className="flex items-center gap-0.5 rounded-md bg-surface-inset p-0.5">
+          {(['dms', 'channels'] as const).map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
+              aria-pressed={filter === f}
               className={cn(
-                'px-2.5 h-6 rounded-sm font-ui font-medium text-[11.5px] capitalize transition-colors',
-                filter === f ? 'bg-surface-3 text-text-1' : 'text-text-3 hover:text-text-1',
+                'flex h-7 flex-1 items-center justify-center gap-1.5 rounded-sm font-ui font-medium text-[12px] transition-colors',
+                filter === f
+                  ? 'bg-surface-3 text-text-1'
+                  : 'text-text-3 hover:bg-surface-2/60 hover:text-text-1',
               )}
             >
-              {f === 'dms' ? 'DMs' : f}
+              {f === 'dms' ? 'DMs' : 'Channels'}
+              <span
+                className={cn(
+                  'rounded-full px-1.5 font-mono text-[10px] tabular-nums transition-colors',
+                  filter === f ? 'bg-brand-red/20 text-brand-red' : 'bg-surface-2 text-text-4',
+                )}
+              >
+                {counts[f]}
+              </span>
             </button>
           ))}
         </div>

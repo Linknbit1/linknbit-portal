@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCanManageProjects } from '../../hooks/useRoleFlags'
 import {
-  List, Columns, Calendar, Flag, Plus, Search, ChevronRight, AlertCircle, SlidersHorizontal, Trash2,
+  List, Columns, Calendar, Plus, Search, ChevronRight, AlertCircle, SlidersHorizontal, Trash2,
+  LayoutGrid, CheckSquare, Users,
 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Button } from '../../components/ui/Button'
@@ -20,19 +21,17 @@ import { cn } from '../../lib/cn'
 import { formatDate, isOverdue, PROJECT_STATUS_LABELS } from '../../lib/utils'
 import { useDeleteProject, useProjectDeleteImpact, useProjects, useUpdateProjectStatus } from '../../hooks/useProjects'
 import { useServices } from '../../hooks/useServices'
-import { useApprovals } from '../../hooks/useApprovals'
 import { useToast } from '../../components/ui/toast-context'
 import { ProjectFormModal } from './ProjectFormModal'
 import type { ProjectListItem, ProjectStatus } from '../../api/projects'
 import type { ProjectStatus as AppProjectStatus } from '../../types'
 
-type ViewMode = 'list' | 'kanban' | 'timeline' | 'milestones'
+type ViewMode = 'cards' | 'list' | 'kanban'
 
 const VIEWS: { key: ViewMode; label: string; icon: typeof List }[] = [
-  { key: 'list', label: 'List', icon: List },
+  { key: 'cards', label: 'Cards', icon: LayoutGrid },
+  { key: 'list', label: 'Table', icon: List },
   { key: 'kanban', label: 'Board', icon: Columns },
-  { key: 'timeline', label: 'Timeline', icon: Calendar },
-  { key: 'milestones', label: 'Milestones', icon: Flag },
 ]
 
 const KANBAN_COLUMNS: AppProjectStatus[] = ['in_progress', 'ongoing', 'awaiting_client', 'blocked', 'on_hold', 'completed']
@@ -57,7 +56,7 @@ function sortProjects(list: ProjectListItem[], sort: string): ProjectListItem[] 
 export default function ProjectsPage() {
   const navigate = useNavigate()
   const { data: services = [] } = useServices()
-  const [view, setView] = useState<ViewMode>('list')
+  const [view, setView] = useState<ViewMode>('cards')
   const [search, setSearch] = useState('')
   const [serviceFilter, setServiceFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
@@ -95,9 +94,9 @@ export default function ProjectsPage() {
   const managerOptions = [{ value: '', label: 'All managers' }, ...people.filter((p) => p.is_active).map((p) => ({ value: p.id, label: p.name, avatar: { name: p.name, url: p.avatar_url } }))]
 
   return (
-    <div className="flex flex-col flex-1">
+    <div className={cn('flex flex-col flex-1', view === 'kanban' && 'min-h-0')}>
       <Topbar title="Projects" />
-      <div className="p-4 lg:px-8 lg:py-7 flex flex-col gap-5">
+      <div className={cn('p-4 lg:px-8 lg:py-7 flex flex-col gap-5', view === 'kanban' && 'min-h-0 flex-1')}>
         <div className="flex flex-wrap items-center gap-3">
           <div>
             <h2 className="font-display font-bold text-[22px] text-text-1">Projects</h2>
@@ -126,7 +125,7 @@ export default function ProjectsPage() {
 
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-2">
-          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search projects…" iconLeft={<Search size={14} />} className="w-56" />
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search projects…" iconLeft={<Search size={14} />} className="w-full sm:w-56" />
           <Select value={serviceFilter} onChange={setServiceFilter} options={serviceOptions} size="sm" />
           <Select value={statusFilter} onChange={setStatusFilter} options={statusOptions} size="sm" />
           <Select value={sortBy} onChange={setSortBy} options={PROJECT_SORT} size="sm" label="Sort" />
@@ -141,8 +140,8 @@ export default function ProjectsPage() {
         {showAdv && (
           <div className="flex flex-wrap items-center gap-2 bg-surface-1 border border-border-default rounded-lg p-2.5">
             <span className="font-mono text-[10px] uppercase tracking-wider text-text-4 self-center">Deadline between</span>
-            <DatePicker value={deadlineFrom} onChange={setDeadlineFrom} placeholder="From" className="w-40" />
-            <DatePicker value={deadlineTo} onChange={setDeadlineTo} placeholder="To" minDate={deadlineFrom || undefined} className="w-40" />
+            <DatePicker value={deadlineFrom} onChange={setDeadlineFrom} placeholder="From" className="w-full sm:w-40" />
+            <DatePicker value={deadlineTo} onChange={setDeadlineTo} placeholder="To" minDate={deadlineFrom || undefined} className="w-full sm:w-40" />
             <Select value={managerFilter} onChange={setManagerFilter} options={managerOptions} size="sm" />
             {(deadlineFrom || deadlineTo || managerFilter) && (
               <button onClick={() => { setDeadlineFrom(''); setDeadlineTo(''); setManagerFilter('') }} className="h-8 px-2.5 rounded-sm text-[11.5px] text-text-3 hover:text-error transition-colors">Clear</button>
@@ -151,15 +150,16 @@ export default function ProjectsPage() {
         )}
 
         {isLoading ? (
-          <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-16" />)}</div>
+          <div className={cn(view === 'cards' ? 'grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-3' : 'space-y-2')}>
+            {Array.from({ length: view === 'cards' ? 6 : 5 }).map((_, i) => <Skeleton key={i} className={view === 'cards' ? 'h-52 rounded-lg' : 'h-16'} />)}
+          </div>
         ) : projects.length === 0 ? (
           <EmptyState onNew={() => setShowNew(true)} canCreate={canManageProjects} />
         ) : (
           <>
+            {view === 'cards' && <CardsView projects={filtered} onOpen={(id) => navigate(`/admin/projects/${id}`)} onDelete={setPendingDelete} canDelete={canManageProjects} />}
             {view === 'list' && <ListView projects={filtered} onOpen={(id) => navigate(`/admin/projects/${id}`)} onDelete={setPendingDelete} canDelete={canManageProjects} />}
             {view === 'kanban' && <KanbanView projects={filtered} onOpen={(id) => navigate(`/admin/projects/${id}`)} />}
-            {view === 'timeline' && <TimelineView projects={filtered} onOpen={(id) => navigate(`/admin/projects/${id}`)} />}
-            {view === 'milestones' && <MilestonesView onOpen={(id) => navigate(`/admin/projects/${id}`)} />}
           </>
         )}
       </div>
@@ -206,6 +206,100 @@ function EmptyState({ onNew, canCreate }: { onNew: () => void; canCreate: boolea
         <Button size="sm" variant="secondary" iconLeft={<Plus size={15} />} onClick={onNew}>Create your first project</Button>
       )}
     </div>
+  )
+}
+
+// ── Cards view (default) ─────────────────────────────────────────────
+function CardsView({ projects, onOpen, onDelete, canDelete }: { projects: ProjectListItem[]; onOpen: (id: string) => void; onDelete: (project: ProjectListItem) => void; canDelete: boolean }) {
+  if (projects.length === 0) {
+    return <div className="py-16 text-center font-ui text-[13px] text-text-4">No projects match your filters.</div>
+  }
+
+  return (
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-3">
+      {projects.map((p) => (
+        <ProjectCard key={p.id} project={p} onOpen={onOpen} onDelete={onDelete} canDelete={canDelete} />
+      ))}
+    </div>
+  )
+}
+
+function ProjectCard({ project: p, onOpen, onDelete, canDelete }: { project: ProjectListItem; onOpen: (id: string) => void; onDelete: (project: ProjectListItem) => void; canDelete: boolean }) {
+  const overdue = !!p.deadline && isOverdue(p.deadline) && p.status !== 'completed'
+
+  return (
+    <article
+      onClick={() => onOpen(p.id)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(p.id) } }}
+      aria-label={p.name}
+      className="group flex cursor-pointer flex-col overflow-hidden rounded-lg border border-border-default bg-surface-1 shadow-sm transition-colors hover:border-border-strong focus:outline-none focus-visible:border-border-focus"
+    >
+      <div className="border-b border-border-subtle bg-[linear-gradient(135deg,rgba(238,39,55,0.055),rgba(34,211,238,0.045)_58%,rgba(20,29,42,0)_100%)] p-4">
+        {/* items-center so the overdue pill and the delete button share a baseline
+            — the pill used to sit half a step lower than the button. */}
+        <div className="flex items-center gap-2">
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
+            {p.services.map((s) => <ServiceChip key={s.id} service={s.slug} />)}
+          </div>
+          {overdue && (
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-error/30 bg-error/10 px-2 py-0.5 font-mono text-[9.5px] font-semibold uppercase tracking-wider text-error">
+              <AlertCircle size={10} className="shrink-0" /> Overdue
+            </span>
+          )}
+          {canDelete && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete(p) }}
+              className="-mr-1 size-7 shrink-0 rounded-sm inline-flex items-center justify-center text-text-4 opacity-0 transition-opacity hover:bg-error/10 hover:text-error focus-visible:opacity-100 group-hover:opacity-100"
+              aria-label={`Delete ${p.name}`}
+            >
+              <Trash2 size={13} />
+            </button>
+          )}
+        </div>
+        <p className="mt-2.5 font-display text-[15px] font-bold leading-snug text-text-1 line-clamp-2">{p.name}</p>
+        <p className="mt-1 truncate font-ui text-[12px] text-text-3">{p.client?.name ?? 'No client'}</p>
+      </div>
+
+      <div className="flex flex-1 flex-col gap-3 p-4">
+        <div className="flex items-center justify-between gap-2">
+          <StatusChip status={p.status} type="project" />
+          <span className="font-mono text-[11px] text-text-3">{p.progress}%</span>
+        </div>
+        <ProgressBar value={p.progress} />
+
+        <div className="grid grid-cols-2 gap-2">
+          <div className="flex items-center gap-2.5 rounded-md border border-border-subtle bg-surface-2/35 px-3 py-2">
+            <CheckSquare size={14} className="shrink-0 text-text-4" />
+            <div className="min-w-0">
+              <p className="font-mono text-[9.5px] font-semibold uppercase tracking-wider text-text-4">Tasks</p>
+              <p className="font-ui text-[12.5px] font-semibold text-text-1">{p.task_count}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2.5 rounded-md border border-border-subtle bg-surface-2/35 px-3 py-2">
+            <Calendar size={14} className="shrink-0 text-text-4" />
+            <div className="min-w-0">
+              <p className="font-mono text-[9.5px] font-semibold uppercase tracking-wider text-text-4">Deadline</p>
+              <p className={cn('truncate font-ui text-[12.5px] font-semibold', overdue ? 'text-error' : 'text-text-1')}>
+                {p.deadline ? formatDate(p.deadline) : '—'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-auto flex items-center justify-between gap-2 border-t border-border-subtle pt-3">
+          {p.members.length > 0 ? (
+            <div onClick={(e) => e.stopPropagation()}>
+              <AvatarGroup users={p.members.map((m) => ({ id: m.id, name: m.name, avatarUrl: m.avatar_url ?? undefined }))} max={4} size="xs" linkToProfile />
+            </div>
+          ) : (
+            <span className="flex items-center gap-1.5 font-ui text-[11.5px] text-text-4"><Users size={12} /> No members</span>
+          )}
+          <ChevronRight size={15} className="shrink-0 text-text-4 transition-transform group-hover:translate-x-0.5" />
+        </div>
+      </div>
+    </article>
   )
 }
 
@@ -325,7 +419,7 @@ function KanbanView({ projects, onOpen }: { projects: ProjectListItem[]; onOpen:
   }
 
   return (
-    <div className="flex gap-3 overflow-x-auto pb-2">
+    <div className="flex min-h-80 flex-1 snap-x snap-mandatory gap-2.5 overflow-x-auto pb-2 lg:snap-none lg:gap-3">
       {KANBAN_COLUMNS.map((status) => {
         const items = byStatus(status)
         return (
@@ -335,131 +429,57 @@ function KanbanView({ projects, onOpen }: { projects: ProjectListItem[]; onOpen:
             onDragLeave={() => setDragOver((s) => (s === status ? null : s))}
             onDrop={() => handleDrop(status)}
             className={cn(
-              'w-72 shrink-0 rounded-lg border p-2.5 transition-colors',
+              'flex h-full snap-start flex-col rounded-lg border p-2.5 transition-colors',
+              'w-[86vw] shrink-0 sm:w-72 lg:w-auto lg:min-w-[220px] lg:flex-1',
               dragOver === status ? 'border-brand-red bg-brand-red/5' : 'border-border-default bg-surface-1/60',
             )}
           >
-            <div className="flex items-center justify-between px-1 pb-2">
+            <div className="flex shrink-0 items-center justify-between px-1 pb-2">
               <span className="font-ui font-semibold text-[12px] text-text-2">{PROJECT_STATUS_LABELS[status]}</span>
               <span className="font-mono text-[10.5px] text-text-4">{items.length}</span>
             </div>
-            <div className="space-y-2">
-              {items.map((p) => (
-                <div
-                  key={p.id}
-                  draggable
-                  onDragStart={() => setDragId(p.id)}
-                  onDragEnd={() => { setDragId(null); setDragOver(null) }}
-                  onClick={() => onOpen(p.id)}
-                  className={cn(
-                    'bg-surface-1 border border-border-default rounded-md p-3 cursor-pointer hover:border-border-strong transition-colors',
-                    dragId === p.id && 'opacity-50',
-                  )}
-                >
-                  <div className="flex items-center justify-between gap-2 mb-2">
-                    <div className="flex flex-wrap items-center gap-1 min-w-0">
-                      {p.services.map((s) => <ServiceChip key={s.id} service={s.slug} showDot={false} />)}
+            <div className="min-h-2 flex-1 space-y-2 overflow-y-auto overscroll-contain">
+              {items.map((p) => {
+                const overdue = !!p.deadline && isOverdue(p.deadline) && p.status !== 'completed'
+                return (
+                  <div
+                    key={p.id}
+                    draggable
+                    onDragStart={() => setDragId(p.id)}
+                    onDragEnd={() => { setDragId(null); setDragOver(null) }}
+                    onClick={() => onOpen(p.id)}
+                    className={cn(
+                      'bg-surface-1 border border-border-default rounded-md p-3 cursor-pointer hover:border-border-strong transition-colors',
+                      dragId === p.id && 'opacity-50',
+                    )}
+                  >
+                    <div className="mb-2 flex items-center gap-2">
+                      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
+                        {p.services.map((s) => <ServiceChip key={s.id} service={s.slug} showDot={false} />)}
+                      </div>
+                      {overdue && (
+                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-error/30 bg-error/10 px-2 py-0.5 font-mono text-[9.5px] font-semibold uppercase tracking-wider text-error">
+                          <AlertCircle size={10} className="shrink-0" /> Overdue
+                        </span>
+                      )}
                     </div>
-                    {p.deadline && isOverdue(p.deadline) && p.status !== 'completed' && <AlertCircle size={13} className="text-error shrink-0" />}
+                    <p className="font-ui font-semibold text-body-sm/snug text-text-1">{p.name}</p>
+                    {p.client?.name && <p className="font-ui text-[11.5px] text-text-3 mt-0.5">{p.client.name}</p>}
+                    <ProgressBar value={p.progress} className="mt-2.5" />
+                    <div className="flex items-center justify-between mt-2.5">
+                      {p.members.length > 0
+                        ? <AvatarGroup users={p.members.map((m) => ({ id: m.id, name: m.name, avatarUrl: m.avatar_url ?? undefined }))} max={3} size="xs" linkToProfile />
+                        : <span />}
+                      <span className="font-mono text-[10.5px] text-text-4">{p.progress}%</span>
+                    </div>
                   </div>
-                  <p className="font-ui font-semibold text-body-sm/snug text-text-1">{p.name}</p>
-                  {p.client?.name && <p className="font-ui text-[11.5px] text-text-3 mt-0.5">{p.client.name}</p>}
-                  <ProgressBar value={p.progress} className="mt-2.5" />
-                  <div className="flex items-center justify-between mt-2.5">
-                    {p.members.length > 0
-                      ? <AvatarGroup users={p.members.map((m) => ({ id: m.id, name: m.name, avatarUrl: m.avatar_url ?? undefined }))} max={3} size="xs" linkToProfile />
-                      : <span />}
-                    <span className="font-mono text-[10.5px] text-text-4">{p.progress}%</span>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
               {items.length === 0 && <p className="text-center text-[11.5px] text-text-4 py-4">Empty</p>}
             </div>
           </div>
         )
       })}
-    </div>
-  )
-}
-
-// ── Timeline view ────────────────────────────────────────────────────
-function TimelineView({ projects, onOpen }: { projects: ProjectListItem[]; onOpen: (id: string) => void }) {
-  const [now] = useState(() => Date.now())
-  const withDates = projects.filter((p) => p.start_date && p.deadline)
-  if (withDates.length === 0) {
-    return <div className="py-12 text-center font-ui text-[13px] text-text-4">No projects have a start date and deadline set.</div>
-  }
-
-  const times = withDates.flatMap((p) => [new Date(p.start_date!).getTime(), new Date(p.deadline!).getTime()])
-  const min = Math.min(...times)
-  const max = Math.max(...times)
-  const span = Math.max(max - min, 1)
-  const todayPct = ((now - min) / span) * 100
-
-  return (
-    <div className="bg-surface-1 border border-border-default rounded-md p-4 space-y-2.5 overflow-hidden">
-      <div className="flex items-center justify-between font-mono text-[10.5px] text-text-4 px-1">
-        <span>{formatDate(new Date(min).toISOString())}</span>
-        <span>{formatDate(new Date(max).toISOString())}</span>
-      </div>
-      <div className="relative space-y-2">
-        {todayPct >= 0 && todayPct <= 100 && (
-          <div className="absolute inset-y-0 w-px bg-brand-red/60 z-10" style={{ left: `${todayPct}%` }} />
-        )}
-        {withDates.map((p) => {
-          const start = new Date(p.start_date!).getTime()
-          const end = new Date(p.deadline!).getTime()
-          const left = ((start - min) / span) * 100
-          const width = Math.max(((end - start) / span) * 100, 2)
-          // A bar is one row, so it takes the colour of the project's first service.
-          const color = p.services[0]?.color ?? serviceColor('')
-          return (
-            <div key={p.id} onClick={() => onOpen(p.id)} className="relative h-9 cursor-pointer group">
-              <div className="absolute inset-0 rounded bg-surface-2/40" />
-              <div
-                className="absolute inset-y-1 rounded flex items-center px-2 gap-2 overflow-hidden group-hover:brightness-110 transition-all"
-                style={{ left: `${left}%`, width: `${width}%`, backgroundColor: `${color}2A`, border: `1px solid ${color}66` }}
-              >
-                <span className="size-1.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
-                <span className="font-ui font-semibold text-[11.5px] text-text-1 truncate">{p.name}</span>
-              </div>
-            </div>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
-// Resolve a service colour for the timeline bars (fallbacks match ServiceChip).
-const SERVICE_COLORS: Record<string, string> = { design: '#A78BFA', development: '#22D3EE', marketing: '#FBBF24' }
-function serviceColor(slug: string): string { return SERVICE_COLORS[slug] ?? '#8A93A3' }
-
-// ── Milestones view (approvals across projects) ──────────────────────
-function MilestonesView({ onOpen }: { onOpen: (id: string) => void }) {
-  const { data: approvals = [], isLoading } = useApprovals()
-
-  if (isLoading) return <div className="space-y-2">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-14" />)}</div>
-  if (approvals.length === 0) {
-    return <div className="py-12 text-center font-ui text-[13px] text-text-4">No approval milestones yet. Request client approval on a stage to see it here.</div>
-  }
-
-  return (
-    <div className="space-y-2">
-      {approvals.map((a) => (
-        <div
-          key={a.id}
-          onClick={() => onOpen(a.project_id)}
-          className="flex items-center gap-3 bg-surface-1 border border-border-default rounded-md px-4 py-3 cursor-pointer hover:border-border-strong transition-colors"
-        >
-          <span className="size-9 rounded-lg bg-surface-2 flex items-center justify-center text-text-3 shrink-0"><Flag size={16} /></span>
-          <div className="flex-1 min-w-0">
-            <p className="font-ui font-semibold text-[13px] text-text-1 truncate">{a.project?.name ?? 'Project'}</p>
-            <p className="font-ui text-[11.5px] text-text-3 capitalize">{a.type} approval{a.submitted_by_profile ? ` · by ${a.submitted_by_profile.name}` : ''}</p>
-          </div>
-          <StatusChip status={a.status} type="approval" />
-        </div>
-      ))}
     </div>
   )
 }

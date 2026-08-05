@@ -12,6 +12,8 @@ interface ConfirmDialogProps {
   /** Styles the confirm button as destructive (default true). */
   danger?: boolean
   isPending?: boolean
+  /** Busy-state label. Defaults to the delete wording this dialog started with. */
+  pendingLabel?: string
   onConfirm: () => void
   onClose: () => void
 }
@@ -22,7 +24,7 @@ interface ConfirmDialogProps {
  */
 export function ConfirmDialog({
   open, title, message, confirmLabel = 'Delete', cancelLabel = 'Cancel',
-  danger = true, isPending = false, onConfirm, onClose,
+  danger = true, isPending = false, pendingLabel = 'Deleting…', onConfirm, onClose,
 }: ConfirmDialogProps) {
   if (!open) return null
   return (
@@ -44,7 +46,7 @@ export function ConfirmDialog({
       <div className="flex gap-2.5">
         <Button variant="ghost" size="sm" className="flex-1" onClick={onClose} disabled={isPending}>{cancelLabel}</Button>
         <Button variant={danger ? 'danger' : 'primary'} size="sm" className="flex-1" onClick={onConfirm} disabled={isPending}>
-          {isPending ? 'Deleting…' : confirmLabel}
+          {isPending ? pendingLabel : confirmLabel}
         </Button>
       </div>
     </ModalShell>

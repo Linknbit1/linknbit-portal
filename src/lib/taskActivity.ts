@@ -1,4 +1,5 @@
 import { PRIORITY_LABELS, STATUS_LABELS } from './utils'
+import { formatMinutes, secondsBetween } from './duration'
 import type { TaskActivityRow } from '../api/auditLog'
 
 /** One rendered line in the activity feed. */
@@ -52,6 +53,38 @@ function labelFor(field: string, raw: unknown, names: Map<string, string>): stri
   }
 }
 
+/** Minutes covered by a time entry snapshot, or null while a timer is still running. */
+function entryMinutes(values: Values): number | null {
+  const started = asString(read(values, 'started_at'))
+  const ended = asString(read(values, 'ended_at'))
+  if (!started || !ended) return null
+  return Math.round(secondsBetween(started, ended) / 60)
+}
+
+/** Sentence fragment for a time-tracking event. */
+function describeTimeEvent(action: string, values: Values): string {
+  const minutes = entryMinutes(values)
+  const amount = minutes === null ? 'time' : formatMinutes(minutes)
+  const note = asString(read(values, 'note'))
+  const billable = String(read(values, 'billable')) === 'true'
+  const tail = `${billable ? ' (billable)' : ''}${note ? ` — “${note}”` : ''}`
+
+  switch (action) {
+    case 'time.logged_manually':
+      return `logged ${amount} by hand${tail}`
+    case 'time.timer_started':
+      return 'started a timer'
+    case 'time.timer_stopped':
+      return `tracked ${amount}${tail}`
+    case 'time.deleted':
+      return `deleted a ${amount} entry`
+    case 'time.edited':
+      return 'edited a time entry'
+    default:
+      return 'updated tracked time'
+  }
+}
+
 const FIELD_NOUN: Record<string, string> = {
   status: 'status',
   priority: 'priority',
@@ -78,6 +111,14 @@ export function describeTaskActivity(rows: TaskActivityRow[], names: Map<string,
     const oldValues = row.old_values as Values
     const newValues = row.new_values as Values
 
+    // Must precede the .created/.deleted checks — "time.deleted" would otherwise
+    // read as the task itself being deleted.
+    if (row.action.startsWith('time.')) {
+      const source = row.action === 'time.deleted' ? oldValues : newValues
+      entries.push({ ...base, id: row.id, text: describeTimeEvent(row.action, source) })
+      continue
+    }
+
     if (row.action.endsWith('.created')) {
       entries.push({ ...base, id: row.id, text: 'created this task' })
       continue
@@ -100,6 +141,18 @@ export function describeTaskActivity(rows: TaskActivityRow[], names: Map<string,
 
       if (field === 'client_visible') {
         entries.push({ ...base, id, text: `made this task ${labelFor(field, after, names)}` })
+        continue
+      }
+
+      // A description can be paragraphs long — say what happened, not what it says.
+      if (field === 'description') {
+        const had = !!asString(before)
+        const has = !!asString(after)
+        entries.push({
+          ...base,
+          id,
+          text: !has ? 'cleared the description' : had ? 'updated the description' : 'added a description',
+        })
         continue
       }
 
