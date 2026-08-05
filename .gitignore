@@ -32,3 +32,5 @@ script/*.sqlite3
 .vercel
 
 .mcp.json
+# graphify knowledge-graph artifacts (generated, not tracked)
+graphify-out/
