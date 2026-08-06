@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react'
-import { AlertCircle, GitBranch, MessageSquare, Paperclip, Layers, Timer, Trash2 } from 'lucide-react'
+import {
+  AlertCircle, Ban, BadgeCheck, CheckCircle2, Circle, CircleDashed, CircleDotDashed, Eye,
+  GitBranch, Layers, MessageSquare, Paperclip, Timer, Trash2, type LucideIcon,
+} from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { Avatar, AvatarGroup } from '../ui/Avatar'
 import { PriorityChip } from './PriorityChip'
 import { ServiceChip } from './ServiceChip'
 import { useDeleteTask, useUpdateTaskStatus } from '../../hooks/useTasks'
+import { useDragScroll } from '../../hooks/useDragScroll'
 import { useToast } from '../ui/toast-context'
 import { ConfirmDialog } from '../ui/ConfirmDialog'
 import { ProgressBar } from '../ui/ProgressBar'
@@ -14,18 +18,60 @@ import type { TaskListItem } from '../../api/tasks'
 import type { TaskStatus } from '../../types'
 
 interface Column {
-  key: string
+  status: TaskStatus
   label: string
-  statuses: TaskStatus[]
-  set: TaskStatus
+  icon: LucideIcon
+  /** Header tint, text and border — one hue per column so the board reads at a glance. */
+  header: string
+  /** Border used while a card is dragged over this column. */
+  dropBorder: string
 }
 
+/**
+ * One column per status, in workflow order. Previously Backlog was folded into
+ * To Do and Approved into Done, which meant two statuses could not be reached by
+ * dragging at all.
+ *
+ * The palette runs cool → active → done rather than reusing StatusChip's colours:
+ * the chips give in_progress and approved the same green, which would leave two
+ * adjacent headers indistinguishable.
+ */
 const COLUMNS: Column[] = [
-  { key: 'todo', label: 'To Do', statuses: ['backlog', 'todo'], set: 'todo' },
-  { key: 'in_progress', label: 'In Progress', statuses: ['in_progress'], set: 'in_progress' },
-  { key: 'review', label: 'Review', statuses: ['review'], set: 'review' },
-  { key: 'done', label: 'Done', statuses: ['approved', 'completed'], set: 'completed' },
-  { key: 'blocked', label: 'Blocked', statuses: ['blocked'], set: 'blocked' },
+  {
+    status: 'backlog', label: 'Backlog', icon: CircleDashed,
+    header: 'bg-[rgba(138,147,163,0.14)] text-[#8A93A3] border-[rgba(138,147,163,0.28)]',
+    dropBorder: 'border-[#8A93A3]',
+  },
+  {
+    status: 'todo', label: 'To Do', icon: Circle,
+    header: 'bg-[rgba(96,165,250,0.13)] text-[#60A5FA] border-[rgba(96,165,250,0.3)]',
+    dropBorder: 'border-[#60A5FA]',
+  },
+  {
+    status: 'in_progress', label: 'In Progress', icon: CircleDotDashed,
+    header: 'bg-[rgba(245,158,11,0.14)] text-[#F59E0B] border-[rgba(245,158,11,0.3)]',
+    dropBorder: 'border-[#F59E0B]',
+  },
+  {
+    status: 'review', label: 'Review', icon: Eye,
+    header: 'bg-[rgba(167,139,250,0.14)] text-[#A78BFA] border-[rgba(167,139,250,0.3)]',
+    dropBorder: 'border-[#A78BFA]',
+  },
+  {
+    status: 'approved', label: 'Approved', icon: BadgeCheck,
+    header: 'bg-[rgba(34,197,94,0.13)] text-[#22C55E] border-[rgba(34,197,94,0.3)]',
+    dropBorder: 'border-[#22C55E]',
+  },
+  {
+    status: 'completed', label: 'Completed', icon: CheckCircle2,
+    header: 'bg-[rgba(45,212,191,0.13)] text-[#2DD4BF] border-[rgba(45,212,191,0.3)]',
+    dropBorder: 'border-[#2DD4BF]',
+  },
+  {
+    status: 'blocked', label: 'Blocked', icon: Ban,
+    header: 'bg-[rgba(244,54,76,0.12)] text-[#F4364C] border-[rgba(244,54,76,0.3)]',
+    dropBorder: 'border-[#F4364C]',
+  },
 ]
 
 /** "04 Aug, 09:00 AM" — matches how DateTimeRangePicker labels the same values. */
@@ -44,12 +90,20 @@ function ScheduleLine({ task, overdue }: { task: TaskListItem; overdue: boolean 
 
   return (
     <span className={cn('flex min-w-0 items-center gap-1 font-mono text-[10px]', overdue ? 'text-error' : 'text-text-4')}>
-      {overdue && <AlertCircle size={10} className="shrink-0" />}
       <span className="truncate">
         {task.start_date && stamp(task.start_date)}
         {task.start_date && task.due_date && ' → '}
         {task.due_date && stamp(task.due_date)}
       </span>
+    </span>
+  )
+}
+
+/** Labelled overdue flag — same treatment as the project cards. */
+function OverduePill() {
+  return (
+    <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-error/30 bg-error/10 px-2 py-0.5 font-mono text-[9.5px] font-semibold uppercase tracking-wider text-error">
+      <AlertCircle size={10} className="shrink-0" /> Overdue
     </span>
   )
 }
@@ -123,6 +177,7 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
   const [dragId, setDragId] = useState<string | null>(null)
   const [dragOver, setDragOver] = useState<string | null>(null)
   const [pendingDelete, setPendingDelete] = useState<TaskListItem | null>(null)
+  const boardRef = useDragScroll<HTMLDivElement>()
   // Optimistic status overrides so a dropped card moves instantly (no refetch flicker).
   const [optimistic, setOptimistic] = useState<Record<string, TaskStatus>>({})
 
@@ -148,10 +203,10 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
     setDragId(null)
     if (!id) return
     const task = tasks.find((t) => t.id === id)
-    if (!task || statusOf(task) === col.set) return
-    setOptimistic((o) => ({ ...o, [id]: col.set }))
+    if (!task || statusOf(task) === col.status) return
+    setOptimistic((o) => ({ ...o, [id]: col.status }))
     updateStatus.mutate(
-      { id, status: col.set, projectId: task.project_id },
+      { id, status: col.status, projectId: task.project_id },
       { onError: (e) => { setOptimistic((o) => { const n = { ...o }; delete n[id]; return n }); toast(e instanceof Error ? e.message : 'Could not move task', 'error') } },
     )
   }
@@ -163,33 +218,45 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
     // chain isn't height-constrained.
     // Snap points make the mobile board swipe column-by-column instead of
     // drifting between two half-visible ones.
-    <div className="flex min-h-80 flex-1 snap-x snap-mandatory gap-2.5 overflow-x-auto pb-2 lg:snap-none lg:gap-3">
+    // boardRef adds click-and-hold panning: grab any empty part of the board —
+    // gutters, column background, below the last card — and drag sideways.
+    <div ref={boardRef} className="flex min-h-80 flex-1 snap-x snap-mandatory gap-2.5 overflow-x-auto pb-2 lg:snap-none lg:gap-3">
       {COLUMNS.map((col) => {
-        const items = tasks.filter((t) => (col.statuses as string[]).includes(statusOf(t)))
+        const items = tasks.filter((t) => statusOf(t) === col.status)
+        const Icon = col.icon
         return (
           <div
-            key={col.key}
-            onDragOver={(e) => { e.preventDefault(); setDragOver(col.key) }}
-            onDragLeave={() => setDragOver((c) => (c === col.key ? null : c))}
+            key={col.status}
+            onDragOver={(e) => { e.preventDefault(); setDragOver(col.status) }}
+            onDragLeave={() => setDragOver((c) => (c === col.status ? null : c))}
             onDrop={() => handleDrop(col)}
             className={cn(
               'flex h-full snap-start flex-col rounded-lg border p-2.5 transition-colors',
-              // Near-full width on a phone so cards stay readable, a fixed lane on
-              // tablets, and only elastic once all five can share the row.
-              'w-[86vw] shrink-0 sm:w-72 lg:w-auto lg:min-w-[220px] lg:flex-1',
-              dragOver === col.key ? 'border-brand-red bg-brand-red/5' : 'border-border-default bg-surface-1/60',
+              // Near-full width on a phone so cards stay readable, then a roomy
+              // fixed lane. Seven columns will not fit a laptop, so the board
+              // scrolls sideways rather than squeezing every card thin.
+              'w-[86vw] shrink-0 sm:w-87.5 lg:w-auto lg:min-w-87.5 lg:flex-1',
+              dragOver === col.status ? cn(col.dropBorder, 'bg-surface-2/40') : 'border-border-default bg-surface-1/60',
             )}
           >
-            <div className="flex shrink-0 items-center justify-between px-1 pb-2">
-              <span className="font-ui font-semibold text-[12px] text-text-2">{col.label}</span>
-              <span className="font-mono text-[10.5px] text-text-4">{items.length}</span>
+            {/* Coloured, iconed header — the column's identity, ClickUp style. */}
+            <div className={cn('mb-2 flex shrink-0 items-center gap-2 rounded-md border px-2.5 py-2', col.header)}>
+              <Icon size={14} className="shrink-0" />
+              <span className="min-w-0 flex-1 truncate font-ui text-[11.5px] font-bold uppercase tracking-wider">
+                {col.label}
+              </span>
+              <span className="shrink-0 font-mono text-[11px] font-bold tabular-nums">{items.length}</span>
             </div>
-            {/* overscroll-contain keeps a column's scroll from chaining to the page. */}
-            <div className="flex-1 space-y-2 min-h-2 overflow-y-auto overscroll-contain">
+            {/* overscroll-y-contain, not overscroll-contain: the vertical axis
+                must not chain to the page when a column bottoms out, but the
+                horizontal axis has to reach the board — otherwise a sideways
+                gesture over a column scrolls nothing at all. */}
+            <div className="flex-1 space-y-2 min-h-2 overflow-y-auto overscroll-y-contain">
               {items.map((t) => (
                 <div
                   key={t.id}
                   draggable
+                  data-no-pan
                   onDragStart={() => setDragId(t.id)}
                   onDragEnd={() => { setDragId(null); setDragOver(null) }}
                   onClick={() => onOpenTask(t.id)}
@@ -198,13 +265,18 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
                     dragId === t.id ? 'opacity-40 scale-[0.98]' : 'opacity-100',
                   )}
                 >
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setPendingDelete(t) }}
-                    aria-label={`Delete ${t.title}`}
-                    className="float-right -mr-1 -mt-1 ml-1 flex size-6 items-center justify-center rounded-sm text-text-4 opacity-0 transition-opacity hover:bg-error/10 hover:text-error focus-visible:opacity-100 group-hover/card:opacity-100"
-                  >
-                    <Trash2 size={12} />
-                  </button>
+                  {/* Floated together so the pill and the delete button share a
+                      line and the title text wraps around them. */}
+                  <div className="float-right -mr-1 -mt-0.5 ml-1.5 flex items-center gap-1.5">
+                    {!!t.due_date && isOverdue(t.due_date) && statusOf(t) !== 'completed' && statusOf(t) !== 'approved' && <OverduePill />}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setPendingDelete(t) }}
+                      aria-label={`Delete ${t.title}`}
+                      className="flex size-6 shrink-0 items-center justify-center rounded-sm text-text-4 opacity-0 transition-opacity hover:bg-error/10 hover:text-error focus-visible:opacity-100 group-hover/card:opacity-100"
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
                   {/* Inside a project the project/service row is hidden, so the
                       stage is what gives this row something to say. */}
                   {((showProject && t.project) || t.stage) && (
@@ -227,7 +299,7 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
                   )}
                   {(t.start_date || t.due_date) && (
                     <div className="mt-2 min-w-0">
-                      <ScheduleLine task={t} overdue={!!t.due_date && isOverdue(t.due_date) && statusOf(t) !== 'completed'} />
+                      <ScheduleLine task={t} overdue={!!t.due_date && isOverdue(t.due_date) && statusOf(t) !== 'completed' && statusOf(t) !== 'approved'} />
                     </div>
                   )}
                   <div className="flex items-center justify-between mt-2.5 gap-2">

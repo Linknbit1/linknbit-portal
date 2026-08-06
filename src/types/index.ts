@@ -39,7 +39,7 @@ export type ApprovalStatus = 'pending' | 'approved' | 'revision_requested' | 're
 export type ClickUpSyncStatus = 'synced' | 'pending' | 'error'
 
 // ── Audit log ─────────────────────────────────────────────────────────────────
-export type AuditModule = 'attendance' | 'standup' | 'gamification' | 'projects' | 'access'
+export type AuditModule = 'attendance' | 'standup' | 'gamification' | 'projects' | 'chat' | 'access'
 export type AuditSeverity = 'info' | 'warning' | 'danger'
 
 export interface AuditLogFilters {

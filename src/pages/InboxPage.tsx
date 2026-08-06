@@ -6,8 +6,9 @@ import {
 import { Topbar } from '../components/layout/Topbar'
 import { Skeleton } from '../components/ui/Skeleton'
 import { useAuthContext } from '../context/AuthContext'
-import { useNotifications, useMarkRead, useMarkAllRead } from '../hooks/useNotifications'
+import { useNotifications, useMarkGroupRead, useMarkAllRead } from '../hooks/useNotifications'
 import { notificationHref } from '../constants/notifications'
+import { groupNotifications, groupTitle, type NotificationGroup } from '../lib/notificationGroups'
 import { formatRelativeTime } from '../lib/utils'
 import { cn } from '../lib/cn'
 import type { NotificationRow } from '../api/notifications'
@@ -29,19 +30,21 @@ export default function InboxPage() {
   const { profile } = useAuthContext()
   const profileId = profile?.id ?? ''
   const { data: notifications = [], isLoading } = useNotifications(profileId)
-  const { mutate: markRead } = useMarkRead(profileId)
+  const { mutate: markGroupRead } = useMarkGroupRead(profileId)
   const { mutate: markAllRead } = useMarkAllRead(profileId)
   const [tab, setTab] = useState<'all' | 'unread'>('all')
 
   const unread = notifications.filter((n) => !n.read).length
+  // Group after filtering, so the unread tab counts only what it is showing.
   const shown = useMemo(
-    () => (tab === 'unread' ? notifications.filter((n) => !n.read) : notifications),
+    () => groupNotifications(tab === 'unread' ? notifications.filter((n) => !n.read) : notifications),
     [notifications, tab],
   )
 
-  const open = (n: NotificationRow) => {
-    if (!n.read) markRead(n.id)
-    const href = notificationHref(n.resource_type, n.resource_id)
+  const open = (group: NotificationGroup) => {
+    // One write for the whole run; re-marking an already-read id is a no-op.
+    if (group.unreadCount > 0) markGroupRead(group.ids)
+    const href = notificationHref(group.latest.resource_type, group.latest.resource_id)
     if (href) navigate(href)
   }
 
@@ -81,25 +84,30 @@ export default function InboxPage() {
           </div>
         ) : (
           <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
-            {shown.map((n) => {
+            {shown.map((group) => {
+              const n = group.latest
               const Icon = iconFor(n)
               const href = notificationHref(n.resource_type, n.resource_id)
+              const isUnread = group.unreadCount > 0
               return (
                 <button
-                  key={n.id}
-                  onClick={() => open(n)}
+                  key={group.key}
+                  onClick={() => open(group)}
                   className={cn(
                     'w-full text-left px-4 py-3.5 border-b border-border-subtle last:border-0 flex gap-3 items-start transition-colors hover:bg-surface-2/50',
-                    !n.read && 'bg-brand-red/4',
+                    isUnread && 'bg-brand-red/4',
                   )}
                 >
                   <span className="size-8 rounded-lg bg-surface-2 flex items-center justify-center text-text-3 shrink-0"><Icon size={15} /></span>
                   <span className="flex-1 min-w-0">
                     <span className="flex items-center gap-2">
-                      <span className={cn('font-ui text-[13px]', n.read ? 'text-text-2' : 'text-text-1 font-semibold')}>{n.title}</span>
-                      {!n.read && <span className="size-1.5 rounded-full bg-brand-red shrink-0" />}
+                      <span className={cn('font-ui text-[13px]', isUnread ? 'text-text-1 font-semibold' : 'text-text-2')}>{groupTitle(group)}</span>
+                      {group.count > 1 && (
+                        <span className="shrink-0 rounded-full bg-surface-3 px-1.5 font-mono text-[10px] text-text-3">{group.count}</span>
+                      )}
+                      {isUnread && <span className="size-1.5 rounded-full bg-brand-red shrink-0" />}
                     </span>
-                    {n.body && <span className="block font-ui text-[12px] text-text-3 mt-0.5">{n.body}</span>}
+                    {n.body && <span className="block font-ui text-[12px] text-text-3 mt-0.5 line-clamp-2">{n.body}</span>}
                     <span className="block font-mono text-[10px] text-text-4 mt-1">{formatRelativeTime(n.created_at)}{href ? ' · click to open' : ''}</span>
                   </span>
                 </button>

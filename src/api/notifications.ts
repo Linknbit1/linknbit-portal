@@ -24,6 +24,16 @@ export async function markNotificationRead(id: string): Promise<void> {
   if (error) throw error
 }
 
+/** Clears a grouped row's whole run in one round trip. */
+export async function markNotificationsRead(ids: string[]): Promise<void> {
+  if (ids.length === 0) return
+  const { error } = await supabase
+    .from('notifications')
+    .update({ read: true })
+    .in('id', ids)
+  if (error) throw error
+}
+
 export async function markAllRead(profileId: string): Promise<void> {
   const { error } = await supabase
     .from('notifications')

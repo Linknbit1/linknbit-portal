@@ -60,26 +60,26 @@ All design tokens are defined in `tailwind.config.js`. Never hardcode hex values
 
 ### Color Naming Convention
 
-| Token | Usage |
-|-------|-------|
-| `bg-base` | Page background (`#0B1018`) |
-| `bg-canvas` | Content canvas (`#0F1620`) |
-| `surface-1/2/3` | Cards, elevated cards, overlays |
-| `surface-inset` | Inputs, code blocks |
-| `border-default/subtle/strong/focus` | All borders |
-| `text-1/2/3/4` | Text hierarchy (primary → disabled) |
-| `brand-red` | Primary brand color (`#EE2737`) |
-| `service-design` | Violet (`#A78BFA`) |
-| `service-dev` | Cyan (`#22D3EE`) |
-| `service-mkt` | Amber (`#FBBF24`) |
+| Token                                | Usage                               |
+| ------------------------------------ | ----------------------------------- |
+| `bg-base`                            | Page background (`#0B1018`)         |
+| `bg-canvas`                          | Content canvas (`#0F1620`)          |
+| `surface-1/2/3`                      | Cards, elevated cards, overlays     |
+| `surface-inset`                      | Inputs, code blocks                 |
+| `border-default/subtle/strong/focus` | All borders                         |
+| `text-1/2/3/4`                       | Text hierarchy (primary → disabled) |
+| `brand-red`                          | Primary brand color (`#EE2737`)     |
+| `service-design`                     | Violet (`#A78BFA`)                  |
+| `service-dev`                        | Cyan (`#22D3EE`)                    |
+| `service-mkt`                        | Amber (`#FBBF24`)                   |
 
 ### Typography
 
-| Font | Variable | Usage |
-|------|----------|-------|
-| Space Grotesk | `font-display` | Headings, brand text |
-| IBM Plex Sans | `font-ui` | Body, labels, UI text |
-| JetBrains Mono | `font-mono` | Code, metadata, timestamps |
+| Font           | Variable       | Usage                      |
+| -------------- | -------------- | -------------------------- |
+| Space Grotesk  | `font-display` | Headings, brand text       |
+| IBM Plex Sans  | `font-ui`      | Body, labels, UI text      |
+| JetBrains Mono | `font-mono`    | Code, metadata, timestamps |
 
 ### Border Radius
 
@@ -229,17 +229,17 @@ Show notification count badges on: Projects (blocked count), Tasks (overdue coun
 
 ## Key Reusable Components Reference
 
-| Component | Props | Notes |
-|-----------|-------|-------|
-| `ServiceChip` | `service: 'design' \| 'development' \| 'marketing'` | Always shows on project context |
-| `StatusChip` | `status: TaskStatus` | Backlog/ToDo/InProgress/Review/Approved/Completed/Blocked |
-| `PriorityChip` | `priority: Priority` | Critical/High/Medium/Low |
-| `RoleBadge` | `role: UserRole` | All 7 roles with distinct colors |
-| `ClickUpStatus` | `status: 'synced' \| 'pending' \| 'error'` | Inline indicator |
-| `XPBar` | `current, max, level` | Gamified progress bar |
-| `ClientVisibility` | `visible: boolean` | Lock/eye icon with visual treatment |
-| `Avatar` | `name, size, online?` | Initials fallback, online indicator |
-| `AvatarGroup` | `users[], max` | Stacked overlap with +N |
+| Component          | Props                                               | Notes                                                     |
+| ------------------ | --------------------------------------------------- | --------------------------------------------------------- |
+| `ServiceChip`      | `service: 'design' \| 'development' \| 'marketing'` | Always shows on project context                           |
+| `StatusChip`       | `status: TaskStatus`                                | Backlog/ToDo/InProgress/Review/Approved/Completed/Blocked |
+| `PriorityChip`     | `priority: Priority`                                | Critical/High/Medium/Low                                  |
+| `RoleBadge`        | `role: UserRole`                                    | All 7 roles with distinct colors                          |
+| `ClickUpStatus`    | `status: 'synced' \| 'pending' \| 'error'`          | Inline indicator                                          |
+| `XPBar`            | `current, max, level`                               | Gamified progress bar                                     |
+| `ClientVisibility` | `visible: boolean`                                  | Lock/eye icon with visual treatment                       |
+| `Avatar`           | `name, size, online?`                               | Initials fallback, online indicator                       |
+| `AvatarGroup`      | `users[], max`                                      | Stacked overlap with +N                                   |
 
 ---
 
@@ -264,15 +264,17 @@ Show `Retry Sync` link on error state.
 ## Client Visibility
 
 Each task/file has a `clientVisible: boolean` toggle.
+
 - `visible=true` → eye icon, normal appearance
 - `visible=false` → lock icon, slightly dimmed row/card
-Use the `ClientVisibility` toggle component consistently.
+  Use the `ClientVisibility` toggle component consistently.
 
 ---
 
 ## Approval Flow States
 
 `pending` → `approved` | `revision_requested` | `rejected`
+
 - Approved: success green, optional confetti
 - Revision: constructive amber, not alarming
 - Rejected: danger red with confirmation requirement
@@ -295,6 +297,7 @@ Use the `ClientVisibility` toggle component consistently.
 ## Mock Data Guidelines
 
 Use realistic data throughout:
+
 - **Pakistani names:** Ahmad Karimi, Zain Malik, Sara Qureshi, Usman Tariq, Bilal Ahmed, Hina Rizvi
 - **Client names:** Cricket Sansar, Rahim Gul GLT, VPNGuider, Starr Luxury Cars, Irene Teo Coaching, Offsite Pro, MediGrow, Linknbit (internal)
 - **Project names:** Cricket Sansar App, Linknbit Brand Identity, VPNGuider SEO Campaign, Rahim Gul Transport Website, Starr Luxury Cars Portal, etc.
@@ -334,6 +337,7 @@ supabase migration new <descriptive_name>
 ```
 
 This creates a timestamped SQL file in `supabase/migrations/`. Write the **complete SQL** for that change in that file:
+
 - `CREATE TABLE` / `ALTER TABLE` statements
 - RLS: `ALTER TABLE ... ENABLE ROW LEVEL SECURITY` + all policies
 - Triggers and functions required by this change
@@ -391,13 +395,13 @@ Never skip a layer. No Supabase calls inside components. No TanStack Query logic
 // src/api/tasks.ts — correct pattern
 export async function fetchTasks(projectId: string): Promise<Task[]> {
   const { data, error } = await supabase
-    .from('tasks')
-    .select('*')
-    .eq('project_id', projectId)
-    .is('deleted_at', null)
+    .from("tasks")
+    .select("*")
+    .eq("project_id", projectId)
+    .is("deleted_at", null);
 
-  if (error) throw error
-  return data
+  if (error) throw error;
+  return data;
 }
 ```
 
@@ -412,25 +416,27 @@ export async function fetchTasks(projectId: string): Promise<Task[]> {
 ```typescript
 // src/hooks/useTasks.ts — correct pattern
 export const TASK_KEYS = {
-  all: ['tasks'] as const,
-  byProject: (projectId: string) => ['tasks', projectId] as const,
-}
+  all: ["tasks"] as const,
+  byProject: (projectId: string) => ["tasks", projectId] as const,
+};
 
 export function useTasks(projectId: string) {
   return useQuery({
     queryKey: TASK_KEYS.byProject(projectId),
     queryFn: () => fetchTasks(projectId),
-  })
+  });
 }
 
 export function useUpdateTask() {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: updateTask,
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: TASK_KEYS.byProject(variables.projectId) })
+      queryClient.invalidateQueries({
+        queryKey: TASK_KEYS.byProject(variables.projectId),
+      });
     },
-  })
+  });
 }
 ```
 
@@ -443,21 +449,31 @@ export function useUpdateTask() {
 ```typescript
 // src/hooks/realtime/useRealtimeComments.ts — correct pattern
 export function useRealtimeComments(taskId: string) {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const channel = supabase
       .channel(`comments:${taskId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'comments',
-          filter: `task_id=eq.${taskId}` },
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "comments",
+          filter: `task_id=eq.${taskId}`,
+        },
         () => {
-          queryClient.invalidateQueries({ queryKey: COMMENT_KEYS.byTask(taskId) })
-        }
+          queryClient.invalidateQueries({
+            queryKey: COMMENT_KEYS.byTask(taskId),
+          });
+        },
       )
-      .subscribe()
+      .subscribe();
 
-    return () => { supabase.removeChannel(channel) }
-  }, [taskId, queryClient])
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [taskId, queryClient]);
 }
 ```
 
@@ -509,6 +525,7 @@ These extend the existing "Code Style" rules and take precedence.
 ## What NOT to Do
 
 **UI / Design**
+
 - No pure-black backgrounds (`#000000`) — use `bg-base` (`#0B1018`)
 - No Inter + purple gradient combos
 - No Notion-clone card layouts
@@ -517,6 +534,7 @@ These extend the existing "Code Style" rules and take precedence.
 - No inline `style` attributes unless for dynamic values that can't be expressed in Tailwind (e.g., CSS custom properties for dynamic widths)
 
 **Components & TypeScript**
+
 - No default exports for components (only pages)
 - No `any` types
 - No `as` type assertions without a justifying comment
@@ -525,6 +543,7 @@ These extend the existing "Code Style" rules and take precedence.
 - No native `<select>` / `<input type="date|time">` / raw form controls when a custom component exists in `src/components/ui/` — use `Select`, `DatePicker`, `TimePicker`, `Toggle`, etc.
 
 **Data & State**
+
 - No Supabase calls directly inside components — always go through `src/api/`
 - No TanStack Query logic (`useQuery`, `useMutation`) inside `src/api/` functions
 - No copying TanStack Query data into `useState`
@@ -532,12 +551,14 @@ These extend the existing "Code Style" rules and take precedence.
 - No prop drilling beyond 2 component levels
 
 **Security**
+
 - No sensitive data in `localStorage` or `sessionStorage` — no exceptions
 - No Supabase service role key anywhere under `src/`
 - No hardcoded secrets, API keys, or credentials in source files
 - No `console.log` of user objects, tokens, or API responses
 
 **Migrations & Schema**
+
 - No SQL applied directly in the Supabase dashboard SQL editor
 - No edits to existing migration files — create a new migration instead
 - No hand-edits to `src/types/database.ts` — regenerate it with `supabase gen types typescript`
@@ -548,7 +569,12 @@ These extend the existing "Code Style" rules and take precedence.
 This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
 
 Rules:
+
 - ALWAYS read graphify-out/GRAPH_REPORT.md before reading any source files, running grep/glob searches, or answering codebase questions. The graph is your primary map of the codebase.
 - IF graphify-out/wiki/index.md EXISTS, navigate it instead of reading raw files
 - For cross-module "how does X relate to Y" questions, prefer `graphify query "<question>"`, `graphify path "<A>" "<B>"`, or `graphify explain "<concept>"` over grep — these traverse the graph's EXTRACTED + INFERRED edges instead of scanning files
 - After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
+
+if you look into status we have backlog todo in progress review approved completed and blocked
+i want to have all these in in boards columns also and also increase the width of the cards in board for tasks in projects as it seems very low in width and also if you look at the clickup how there header seeims colorfull for completed to do and everyhting and also they have icons svgs before them to show completed todo in rpgress stuff like that i want to have that also
+and also if you go in projects in teams tab then it seems very not good Ui insense of. cards shwoing teams dont seems well fix Ui of it as well as whole screen is blank just showing on half left side the card for teams user

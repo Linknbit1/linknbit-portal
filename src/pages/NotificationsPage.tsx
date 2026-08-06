@@ -1,10 +1,12 @@
+import { useMemo } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { Bell, Check, CheckCheck } from 'lucide-react'
 import { StackScreen } from '../components/layout/StackScreen'
 import { useAuthContext } from '../context/AuthContext'
 import { useIsDesktop } from '../hooks/useMediaQuery'
-import { useNotifications, useMarkRead, useMarkAllRead } from '../hooks/useNotifications'
+import { useNotifications, useMarkGroupRead, useMarkAllRead } from '../hooks/useNotifications'
 import { notificationHref } from '../constants/notifications'
+import { groupNotifications, groupTitle } from '../lib/notificationGroups'
 import { formatRelativeTime } from '../lib/utils'
 import { cn } from '../lib/cn'
 
@@ -19,7 +21,8 @@ export default function NotificationsPage() {
   const profileId = profile?.id ?? ''
 
   const { data: notifications = [], isLoading } = useNotifications(profileId)
-  const { mutate: markRead } = useMarkRead(profileId)
+  const groups = useMemo(() => groupNotifications(notifications), [notifications])
+  const { mutate: markGroupRead } = useMarkGroupRead(profileId)
   const { mutate: markAllRead } = useMarkAllRead(profileId)
 
   if (isDesktop) return <Navigate to="/dashboard" replace />
@@ -56,34 +59,40 @@ export default function NotificationsPage() {
           </div>
         ) : (
           <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
-            {notifications.map((notif) => (
-              <button
-                key={notif.id}
-                onClick={() => {
-                  if (!notif.read) markRead(notif.id)
-                  const href = notificationHref(notif.resource_type, notif.resource_id)
-                  if (href) navigate(href)
-                }}
-                className={cn(
-                  'w-full text-left px-4 py-3 border-b border-border-subtle last:border-0 flex gap-3 items-start transition-colors active:bg-surface-2/60',
-                  !notif.read && 'bg-brand-red/4',
-                )}
-              >
-                <span className={cn('size-1.5 rounded-full mt-1.5 shrink-0', notif.read ? 'bg-transparent' : 'bg-brand-red')} />
-                <span className="flex-1 min-w-0">
-                  <span className={cn('block font-ui text-body-sm/snug', notif.read ? 'text-text-3' : 'text-text-1 font-semibold')}>
-                    {notif.title}
-                  </span>
-                  {notif.body && (
-                    <span className="block font-ui text-caption/snug text-text-3 mt-0.5">{notif.body}</span>
+            {groups.map((group) => {
+              const notif = group.latest
+              const isUnread = group.unreadCount > 0
+              return (
+                <button
+                  key={group.key}
+                  onClick={() => {
+                    if (isUnread) markGroupRead(group.ids)
+                    const href = notificationHref(notif.resource_type, notif.resource_id)
+                    if (href) navigate(href)
+                  }}
+                  className={cn(
+                    'w-full text-left px-4 py-3 border-b border-border-subtle last:border-0 flex gap-3 items-start transition-colors active:bg-surface-2/60',
+                    isUnread && 'bg-brand-red/4',
                   )}
-                  <span className="block font-mono text-[10px] text-text-4 mt-1">
-                    {formatRelativeTime(notif.created_at)}
+                >
+                  <span className={cn('size-1.5 rounded-full mt-1.5 shrink-0', isUnread ? 'bg-brand-red' : 'bg-transparent')} />
+                  <span className="flex-1 min-w-0">
+                    <span className={cn('block font-ui text-body-sm/snug', isUnread ? 'text-text-1 font-semibold' : 'text-text-3')}>
+                      {groupTitle(group)}
+                    </span>
+                    {notif.body && (
+                      <span className="block font-ui text-caption/snug text-text-3 mt-0.5 line-clamp-2">{notif.body}</span>
+                    )}
+                    <span className="block font-mono text-[10px] text-text-4 mt-1">
+                      {formatRelativeTime(notif.created_at)}
+                    </span>
                   </span>
-                </span>
-                {notif.read && <Check size={12} className="text-text-4 shrink-0 mt-1" />}
-              </button>
-            ))}
+                  {group.count > 1
+                    ? <span className="shrink-0 mt-0.5 rounded-full bg-surface-3 px-1.5 font-mono text-[10px] text-text-3">{group.count}</span>
+                    : !isUnread && <Check size={12} className="text-text-4 shrink-0 mt-1" />}
+                </button>
+              )
+            })}
           </div>
         )}
       </div>

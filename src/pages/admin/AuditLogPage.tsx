@@ -27,6 +27,7 @@ const MODULE_OPTIONS = [
   { value: 'standup', label: 'Standup' },
   { value: 'gamification', label: 'Gamification' },
   { value: 'projects', label: 'Projects' },
+  { value: 'chat', label: 'Chat' },
   { value: 'access', label: 'Access' },
 ]
 
@@ -42,11 +43,12 @@ const MODULE_CHIP: Record<string, string> = {
   standup:      'text-success border-success/25 bg-success/10',
   gamification: 'text-service-design border-[rgba(167,139,250,0.22)] bg-[rgba(167,139,250,0.1)]',
   projects:     'text-service-mkt border-[rgba(251,191,36,0.22)] bg-[rgba(251,191,36,0.1)]',
+  chat:         'text-info border-info/25 bg-info/10',
   access:       'text-brand-red border-[rgba(238,39,55,0.22)] bg-[rgba(238,39,55,0.1)]',
 }
 const MODULE_LABEL: Record<string, string> = {
   attendance: 'Attendance', standup: 'Standup', gamification: 'Gamification',
-  projects: 'Projects', access: 'Access',
+  projects: 'Projects', chat: 'Chat', access: 'Access',
 }
 
 const SEVERITY_ICON: Record<string, typeof Info> = { danger: ShieldAlert, warning: AlertTriangle, info: Info }
@@ -341,7 +343,7 @@ const AuditLogPage = () => {
         </div>
 
         <p className="my-4 max-w-3xl font-ui text-body-sm/relaxed text-text-3">
-          Every action people take across attendance, gamification and projects — who did it, what happened, and
+          Every action people take across attendance, gamification, projects and chat — who did it, what happened, and
           for whom. Automated system actions aren't logged. <span className="text-brand-red">Flagged</span> rows are
           likely attempts to game the system.
         </p>

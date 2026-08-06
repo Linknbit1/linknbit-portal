@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Bell, Search, Check, CheckCheck, ChevronDown, UserCircle, LogOut, ChevronLeft } from 'lucide-react'
 import { cn } from '../../lib/cn'
@@ -7,8 +7,9 @@ import { Avatar } from '../ui/Avatar'
 import { ProfileRoles } from '../shared/ProfileRoles'
 import { useAuthContext } from '../../context/AuthContext'
 import { useNavChrome } from './MobileNavContext'
-import { useNotifications, useMarkRead, useMarkAllRead } from '../../hooks/useNotifications'
+import { useNotifications, useMarkGroupRead, useMarkAllRead } from '../../hooks/useNotifications'
 import { notificationHref } from '../../constants/notifications'
+import { groupNotifications, groupTitle } from '../../lib/notificationGroups'
 import { formatRelativeTime } from '../../lib/utils'
 import { isUserRole } from '../../lib/peopleAccess'
 
@@ -39,7 +40,8 @@ export function Topbar({ title, breadcrumb, className, back, actions }: TopbarPr
   }, [back, setHasBack])
 
   const { data: notifications = [] } = useNotifications(profileId)
-  const { mutate: markRead } = useMarkRead(profileId)
+  const notificationGroups = useMemo(() => groupNotifications(notifications), [notifications])
+  const { mutate: markGroupRead } = useMarkGroupRead(profileId)
   const { mutate: markAllRead } = useMarkAllRead(profileId)
 
   const unreadCount = notifications.filter((n) => !n.read).length
@@ -174,40 +176,46 @@ export function Topbar({ title, breadcrumb, className, back, actions }: TopbarPr
                     No notifications yet
                   </div>
                 ) : (
-                  notifications.map((notif) => (
-                    <button
-                      key={notif.id}
-                      onClick={() => {
-                        if (!notif.read) markRead(notif.id)
-                        // Take them to where the thing actually is, when we know.
-                        const href = notificationHref(notif.resource_type, notif.resource_id)
-                        if (href) { setBellOpen(false); navigate(href) }
-                      }}
-                      className={cn(
-                        'w-full text-left px-4 py-3 border-b border-border-subtle last:border-0 hover:bg-surface-2/60 transition-colors flex gap-3 items-start',
-                        !notif.read && 'bg-brand-red/4',
-                      )}
-                    >
-                      <div className={cn(
-                        'size-1.5 rounded-full mt-1.5 shrink-0',
-                        notif.read ? 'bg-transparent' : 'bg-brand-red',
-                      )} />
-                      <div className="flex-1 min-w-0">
-                        <p className={cn('font-ui text-[12.5px] leading-snug', notif.read ? 'text-text-3' : 'text-text-1 font-semibold')}>
-                          {notif.title}
-                        </p>
-                        {notif.body && (
-                          <p className="font-ui text-[11.5px] text-text-3 mt-0.5 leading-snug line-clamp-2">
-                            {notif.body}
-                          </p>
+                  notificationGroups.map((group) => {
+                    const notif = group.latest
+                    const isUnread = group.unreadCount > 0
+                    return (
+                      <button
+                        key={group.key}
+                        onClick={() => {
+                          if (isUnread) markGroupRead(group.ids)
+                          // Take them to where the thing actually is, when we know.
+                          const href = notificationHref(notif.resource_type, notif.resource_id)
+                          if (href) { setBellOpen(false); navigate(href) }
+                        }}
+                        className={cn(
+                          'w-full text-left px-4 py-3 border-b border-border-subtle last:border-0 hover:bg-surface-2/60 transition-colors flex gap-3 items-start',
+                          isUnread && 'bg-brand-red/4',
                         )}
-                        <p className="font-mono text-[10px] text-text-4 mt-1">
-                          {formatRelativeTime(notif.created_at)}
-                        </p>
-                      </div>
-                      {notif.read && <Check size={12} className="text-text-4 shrink-0 mt-1" />}
-                    </button>
-                  ))
+                      >
+                        <div className={cn(
+                          'size-1.5 rounded-full mt-1.5 shrink-0',
+                          isUnread ? 'bg-brand-red' : 'bg-transparent',
+                        )} />
+                        <div className="flex-1 min-w-0">
+                          <p className={cn('font-ui text-[12.5px] leading-snug', isUnread ? 'text-text-1 font-semibold' : 'text-text-3')}>
+                            {groupTitle(group)}
+                          </p>
+                          {notif.body && (
+                            <p className="font-ui text-[11.5px] text-text-3 mt-0.5 leading-snug line-clamp-2">
+                              {notif.body}
+                            </p>
+                          )}
+                          <p className="font-mono text-[10px] text-text-4 mt-1">
+                            {formatRelativeTime(notif.created_at)}
+                          </p>
+                        </div>
+                        {group.count > 1
+                          ? <span className="shrink-0 mt-0.5 rounded-full bg-surface-3 px-1.5 font-mono text-[10px] text-text-3">{group.count}</span>
+                          : !isUnread && <Check size={12} className="text-text-4 shrink-0 mt-1" />}
+                      </button>
+                    )
+                  })
                 )}
               </div>
             </div>

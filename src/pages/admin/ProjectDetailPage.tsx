@@ -16,7 +16,6 @@ import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { ServiceChip } from '../../components/shared/ServiceChip'
 import { StatusChip } from '../../components/shared/StatusChip'
 import { PriorityChip } from '../../components/shared/PriorityChip'
-import { ClientVisibility } from '../../components/shared/ClientVisibility'
 import { TaskBoard } from '../../components/shared/TaskBoard'
 import { DocEditor } from '../../components/editor/DocEditor'
 import { ProjectFilesTab } from './ProjectFilesTab'
@@ -242,18 +241,15 @@ export default function ProjectDetailPage() {
     <div className={cn('flex flex-col flex-1', projectView === 'board' && 'min-h-0')}>
       <Topbar title={project.name} back="/admin/projects" />
       {/* On the board tab the page stops scrolling and hands its remaining height
-          to the board, so each column scrolls its own cards under a fixed header. */}
-      <div className={cn('flex flex-col gap-5 p-4 lg:px-8 lg:py-7', projectView === 'board' && 'min-h-0 flex-1')}>
+          to the board, so each column scrolls its own cards under a fixed header.
+          overflow-hidden is what makes that binding: without it the tall summary
+          header pushes the board past the viewport and <main> scrolls instead. */}
+      <div className={cn('flex flex-col gap-5 p-4 lg:px-8 lg:py-7', projectView === 'board' && 'min-h-0 flex-1 overflow-hidden')}>
         {/* Summary header */}
-        <div className="bg-surface-1 border border-border-default rounded-xl p-4 sm:p-5">
+        <div className="shrink-0 bg-surface-1 border border-border-default rounded-xl p-4 sm:p-5">
           <div className="flex flex-wrap items-start gap-3">
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="font-display font-bold text-[19px] sm:text-[22px] text-text-1 wrap-break-word">{project.name}</h1>
-                {services.map((s) => s.service && <ServiceChip key={s.id} service={s.service.slug} />)}
-                <StatusChip status={project.status} type="project" />
-                <ClientVisibility visible={project.client_visible} showLabel />
-              </div>
+              <h1 className="font-display font-bold text-[19px] sm:text-[22px] text-text-1 wrap-break-word">{project.name}</h1>
               {project.client?.name && <p className="font-ui text-[13px] text-text-3 mt-1">{project.client.name}</p>}
               {project.description && <p className="font-ui text-[13px] text-text-2 mt-2 max-w-2xl">{project.description}</p>}
             </div>
@@ -282,7 +278,7 @@ export default function ProjectDetailPage() {
         </div>
 
         {/* Service switcher — the layer between the project and its pipeline */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="shrink-0 flex flex-wrap items-center gap-2">
           <span className="font-mono text-[10px] uppercase tracking-wider text-text-4 mr-0.5">Service</span>
           {services.map((s) => {
             const active = s.id === activeServiceId
@@ -329,7 +325,7 @@ export default function ProjectDetailPage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="shrink-0 flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-1 bg-surface-1 border border-border-default rounded-lg p-1 overflow-x-auto no-scrollbar">
             {TABS.map((t) => (
               <button
@@ -439,18 +435,23 @@ export default function ProjectDetailPage() {
 
         {/* People belong to a service, so the team reads as one block per service. */}
         {projectView === 'team' && (
-          <div className="max-w-3xl space-y-3">
+          // Wrapping flex rather than a fixed grid: cards share the row when
+          // there are several services and one card stretches the full width when
+          // there is only one, instead of being stranded in a half-width column.
+          // items-start keeps a one-person service from being padded out to match
+          // the tallest card in its row.
+          <div className="flex flex-wrap items-start gap-4">
             {services.map((s) => {
               const roster = members.filter((m) => m.project_service_id === s.id)
               return (
-                <div key={s.id} className="overflow-hidden rounded-xl border border-border-default bg-surface-1">
-                  <div className="flex items-center justify-between gap-2 border-b border-border-subtle px-5 py-3">
-                    <h3 className="flex items-center gap-2 font-display text-[14px] font-bold text-text-1">
-                      {s.service && <ServiceChip service={s.service.slug} />}
-                      <span className="font-mono text-[11px] font-normal text-text-4">{roster.length}</span>
-                    </h3>
+                <div key={s.id} className="flex min-w-0 flex-1 basis-96 flex-col overflow-hidden rounded-xl border border-border-default bg-surface-1">
+                  <div className="flex flex-wrap items-center gap-2 border-b border-border-subtle bg-surface-2/30 px-4 py-3">
+                    {s.service && <ServiceChip service={s.service.slug} />}
+                    <span className="rounded-full bg-surface-2 px-2 py-0.5 font-mono text-[10px] text-text-3">
+                      {roster.length} {roster.length === 1 ? 'member' : 'members'}
+                    </span>
                     {canManage && (
-                      <Button size="sm" variant="secondary" iconLeft={<Plus size={13} />} onClick={() => setAddMemberFor(s.id)}>
+                      <Button size="sm" variant="secondary" className="ml-auto" iconLeft={<Plus size={13} />} onClick={() => setAddMemberFor(s.id)}>
                         Add members
                       </Button>
                     )}
@@ -462,7 +463,10 @@ export default function ProjectDetailPage() {
                       <p className="font-ui text-[11.5px] text-text-4">Add people individually or pull in a whole team at once.</p>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 gap-2 p-4 sm:grid-cols-2">
+                    // auto-fill rather than a fixed column count: the same card
+                    // reads well whether it is sharing the row with two others or
+                    // spanning the screen alone.
+                    <div className="grid gap-2 p-4 grid-cols-[repeat(auto-fill,minmax(200px,1fr))]">
                       {roster.map((m) => (
                         <div
                           key={m.id}

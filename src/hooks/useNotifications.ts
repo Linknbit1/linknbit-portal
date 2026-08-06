@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   fetchNotifications,
   markNotificationRead,
+  markNotificationsRead,
   markAllRead,
   fetchNotificationPreferences,
   setNotificationPreference,
@@ -38,6 +39,17 @@ export function useMarkRead(profileId: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (notificationId: string) => markNotificationRead(notificationId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: NOTIFICATION_KEYS.all(profileId) })
+    },
+  })
+}
+
+/** Clears every notification behind one grouped row. */
+export function useMarkGroupRead(profileId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (ids: string[]) => markNotificationsRead(ids),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: NOTIFICATION_KEYS.all(profileId) })
     },
