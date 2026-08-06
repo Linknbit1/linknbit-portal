@@ -6,10 +6,30 @@ export type AuditLogRow = Tables<'audit_log'>
 
 const PAGE_SIZE = 200
 
+/**
+ * The whole `projects` module is hidden from the audit log — task edits, project
+ * edits, service and member churn, delete records. It is ordinary delivery work,
+ * and at several hundred rows a week it buried attendance and gamification, which
+ * is what this page exists to watch.
+ *
+ * One exception survives: `time.logged_manually`. Timed work is measured, but time
+ * typed in by hand is self-reported, so it stays visible as a warning.
+ *
+ * Expressed per module rather than per table on purpose — a new project-side table
+ * is then covered without anyone remembering to add it here.
+ *
+ * Nothing stops being *written*. fn_task_activity() reads these same rows to build
+ * each task's Activity feed, so this is strictly a read-side filter for this page.
+ * The action value is quoted because it contains a dot, which PostgREST would
+ * otherwise read as part of its own filter grammar.
+ */
+const PROJECTS_EXCEPT_MANUAL_TIME = 'module.neq.projects,action.eq."time.logged_manually"'
+
 export async function fetchAuditLog(filters: AuditLogFilters = {}): Promise<AuditLogRow[]> {
   let query = supabase
     .from('audit_log')
     .select('*')
+    .or(PROJECTS_EXCEPT_MANUAL_TIME)
     .order('created_at', { ascending: false })
     .limit(PAGE_SIZE)
 
@@ -50,6 +70,8 @@ export async function fetchAuditNewCount(since: string): Promise<number> {
   const { count, error } = await supabase
     .from('audit_log')
     .select('*', { count: 'exact', head: true })
+    // Same exclusion as the list, or the badge counts rows you cannot open.
+    .or(PROJECTS_EXCEPT_MANUAL_TIME)
     .gt('created_at', since)
     .limit(NEW_COUNT_MAX + 1)
   if (error) throw error

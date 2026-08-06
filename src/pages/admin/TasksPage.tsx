@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Search, LayoutList, Columns, SlidersHorizontal, Trash2 } from 'lucide-react'
+import { Search, LayoutList, Columns, SlidersHorizontal, Trash2, History } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Input } from '../../components/ui/Input'
 import { Select } from '../../components/ui/Select'
@@ -16,9 +16,11 @@ import { cn } from '../../lib/cn'
 import { formatDate, isOverdue, STATUS_LABELS, PRIORITY_LABELS } from '../../lib/utils'
 import { useDeleteTask, useTaskDeleteImpact, useTasks } from '../../hooks/useTasks'
 import { useServices } from '../../hooks/useServices'
+import { useCanAccess } from '../../hooks/useRoleFlags'
 import { useToast } from '../../components/ui/toast-context'
 import { ViewToggle, type ViewToggleOption } from '../../components/ui/ViewToggle'
 import { TaskBoard } from '../../components/shared/TaskBoard'
+import { TimeBacklog } from '../../components/shared/TimeBacklog'
 import { TaskDetailDrawer } from './TaskDetailDrawer'
 import type { Priority, TaskStatus } from '../../types'
 import type { TaskListItem } from '../../api/tasks'
@@ -33,11 +35,12 @@ const SORT_OPTIONS = [
   { value: 'title', label: 'Title A–Z' },
 ]
 
-type TaskView = 'board' | 'table'
+type TaskView = 'board' | 'table' | 'backlog'
 
 const TASK_VIEWS: ViewToggleOption<TaskView>[] = [
   { value: 'board', label: 'Board', icon: Columns },
   { value: 'table', label: 'List', icon: LayoutList },
+  { value: 'backlog', label: 'Backlog', icon: History },
 ]
 
 function sortTasks(list: TaskListItem[], sort: string): TaskListItem[] {
@@ -56,6 +59,7 @@ export default function TasksPage() {
   const { data: services = [] } = useServices()
   const { data: people = [] } = usePeople()
   const { data: tasks = [], isLoading } = useTasks()
+  const canViewBacklog = useCanAccess('can_view_backlog')
   const deleteTask = useDeleteTask()
 
   const [search, setSearch] = useState('')
@@ -113,7 +117,12 @@ export default function TasksPage() {
           >
             <SlidersHorizontal size={13} /> Filters
           </button>
-          <ViewToggle value={view} onChange={setView} options={TASK_VIEWS} className="ml-auto" />
+          <ViewToggle
+            value={view}
+            onChange={setView}
+            options={TASK_VIEWS.filter((v) => v.value !== 'backlog' || canViewBacklog)}
+            className="ml-auto"
+          />
         </div>
 
         {showAdv && (
@@ -134,6 +143,9 @@ export default function TasksPage() {
           </div>
         ) : filtered.length === 0 ? (
           <div className="py-16 text-center font-ui text-[13px] text-text-4">No tasks match your filters.</div>
+        ) : view === 'backlog' && canViewBacklog ? (
+          /* Every logged session, grouped per task — start, stop, resume. */
+          <TimeBacklog groupBy="task" />
         ) : view === 'board' ? (
           <TaskBoard tasks={filtered} onOpenTask={setOpenTaskId} showProject />
         ) : (

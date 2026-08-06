@@ -8,7 +8,8 @@ import { DurationInput } from '../../components/ui/DurationInput'
 import { Toggle } from '../../components/ui/Toggle'
 import { useProjects } from '../../hooks/useProjects'
 import { useServiceStages } from '../../hooks/useStages'
-import { useProjectServices, useProjectServiceMembers } from '../../hooks/useProjectServices'
+import { useAddProjectService, useProjectServices, useProjectServiceMembers } from '../../hooks/useProjectServices'
+import { useServices } from '../../hooks/useServices'
 import { useCreateTask, useUpdateTask } from '../../hooks/useTasks'
 import { MultiSelectPeople } from '../../components/ui/MultiSelectPeople'
 import { TaskTimeTracker } from '../../components/shared/TaskTimeTracker'
@@ -22,12 +23,19 @@ import type { Priority, TaskStatus } from '../../types'
 interface TaskFormModalProps {
   /** Locks the task to this project (project detail view). Omit for the global picker. */
   projectId?: string
-  /** Locks it to one service block. Omit to let the form pick one. */
+  /**
+   * Pre-selects a service block — the one currently on screen. Still switchable:
+   * a task belongs to Design or Development, and that call is made here rather
+   * than by whichever tab happened to be open.
+   */
   projectServiceId?: string
   task?: TaskListItem
   defaultStageId?: string
   onClose: () => void
 }
+
+/** Marks a dropdown value as "service the project does not have yet". */
+const NEW_SERVICE = 'new:'
 
 const PRIORITY_DOTS: Record<Priority, string> = {
   critical: '#F4364C', high: '#F59E0B', medium: '#60A5FA', low: '#7A8597',
@@ -56,15 +64,38 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
   // A task hangs off a service, so that is picked before stage and assignees.
   const [selectedService, setSelectedService] = useState(lockedServiceId ?? '')
   const { data: services = [] } = useProjectServices(selectedProject || undefined)
-  const { data: stages = [] } = useServiceStages(selectedService || undefined)
+  const { data: catalog = [] } = useServices()
   const { data: allMembers = [] } = useProjectServiceMembers(selectedProject || undefined)
+  const addService = useAddProjectService()
 
-  // Switching project invalidates the service; fall back to its first one.
-  const effectiveService = services.some((s) => s.id === selectedService)
+  /**
+   * The dropdown offers the whole service catalogue, not just the blocks this
+   * project already has — otherwise a project set up as Development-only can
+   * never receive a Design task. Services the project lacks carry a `new:` value
+   * and their block is created on save.
+   */
+  const serviceOptions = catalog
+    .filter((s) => s.is_active)
+    .map((s) => {
+      const block = services.find((ps) => ps.service_id === s.id)
+      return {
+        value: block ? block.id : `${NEW_SERVICE}${s.id}`,
+        label: block ? s.name : `${s.name} — add to project`,
+        dot: s.color,
+      }
+    })
+
+  // Switching project invalidates the service; fall back to the first option.
+  const effectiveService = serviceOptions.some((o) => o.value === selectedService)
     ? selectedService
-    : services[0]?.id ?? ''
+    : serviceOptions[0]?.value ?? ''
+  const pendingNewService = effectiveService.startsWith(NEW_SERVICE)
+
+  // A service the project does not have yet has no stages and nobody staffed, so
+  // don't query with a sentinel that isn't a uuid.
+  const { data: stages = [] } = useServiceStages(pendingNewService ? undefined : effectiveService || undefined)
   // Only people staffed on this service can be assigned its work.
-  const members = allMembers.filter((m) => m.project_service_id === effectiveService)
+  const members = pendingNewService ? [] : allMembers.filter((m) => m.project_service_id === effectiveService)
 
   const [title, setTitle] = useState(task?.title ?? '')
   // Tasks written before `description` was mirrored only have the rich `doc`,
@@ -85,21 +116,35 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
   const dismiss = () => setVisible(false)
 
   const projectOptions = projects.map((p) => ({ value: p.id, label: p.name }))
-  const serviceOptions = services.flatMap((s) =>
-    s.service ? [{ value: s.id, label: s.service.name, dot: s.service.color }] : [])
   const stageOptions = [{ value: '', label: 'No stage' }, ...stages.map((s) => ({ value: s.id, label: s.name }))]
   const memberPeople = members.map((m) => ({ id: m.id, name: m.name, avatar_url: m.avatar_url }))
   const priorityOptions = PRIORITY_ORDER.map((p) => ({ value: p, label: PRIORITY_LABELS[p], dot: PRIORITY_DOTS[p] }))
   const statusOptions = STATUS_ORDER.map((s) => ({ value: s, label: STATUS_LABELS[s] }))
 
-  const pending = createTask.isPending || updateTask.isPending
+  const pending = createTask.isPending || updateTask.isPending || addService.isPending
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!selectedProject) { toast('Choose a project', 'error'); return }
     if (!effectiveService) { toast('Choose a service', 'error'); return }
     if (!title.trim()) { toast('Task title is required', 'error'); return }
     const onSuccess = () => { toast(isEdit ? 'Task updated' : 'Task created', 'success'); dismiss() }
     const onError = (e: unknown) => toast(e instanceof Error ? e.message : 'Save failed', 'error')
+
+    // A task must hang off a real project_service row, so a service the project
+    // does not have yet is added first and the task points at the new block.
+    let serviceBlockId = effectiveService
+    if (pendingNewService) {
+      try {
+        const block = await addService.mutateAsync({
+          projectId: selectedProject,
+          serviceId: effectiveService.slice(NEW_SERVICE.length),
+        })
+        serviceBlockId = block.id
+      } catch (e) {
+        onError(e)
+        return
+      }
+    }
 
     if (isEdit) {
       updateTask.mutate(
@@ -111,7 +156,7 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
             // leave the rich doc stale and the task view showing the old text.
             description: description.trim() || null,
             doc: toDbDoc(plainTextToDoc(description)),
-            project_service_id: effectiveService,
+            project_service_id: serviceBlockId,
             stage_id: stageId || null,
             priority, status, start_date: startAt, due_date: dueAt, client_visible: clientVisible,
             estimated_minutes: estimatedMinutes,
@@ -129,7 +174,7 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
       createTask.mutate(
         {
           project_id: selectedProject,
-          project_service_id: effectiveService,
+          project_service_id: serviceBlockId,
           title: title.trim(),
           description: description.trim() || null,
           doc: toDbDoc(plainTextToDoc(description)),
@@ -175,7 +220,9 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
             <Select value={selectedProject} onChange={(v) => { setSelectedProject(v); setSelectedService(''); setStageId(''); setAssigneeIds([]) }} options={projectOptions} placeholder="Select a project…" />
           </div>
         )}
-        {!projectServiceId && serviceOptions.length > 0 && (
+        {/* Always offered, even inside a project: stages and assignable people are
+            per service, so this is the field that decides both. */}
+        {serviceOptions.length > 0 && (
           <div className="space-y-1.5">
             <label className="text-label font-ui font-semibold text-text-2 uppercase tracking-wider">Service</label>
             <Select

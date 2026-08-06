@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useCanManageProjects } from '../../hooks/useRoleFlags'
+import { useCanAccess, useCanManageProjects } from '../../hooks/useRoleFlags'
 import {
   List, Columns, Calendar, Plus, Search, ChevronRight, AlertCircle, SlidersHorizontal, Trash2,
-  LayoutGrid, CheckSquare, Users,
+  LayoutGrid, CheckSquare, Users, History,
 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Button } from '../../components/ui/Button'
@@ -22,17 +22,23 @@ import { formatDate, isOverdue, PROJECT_STATUS_LABELS } from '../../lib/utils'
 import { useDeleteProject, useProjectDeleteImpact, useProjects, useUpdateProjectStatus } from '../../hooks/useProjects'
 import { useServices } from '../../hooks/useServices'
 import { useToast } from '../../components/ui/toast-context'
+import { TimeBacklog } from '../../components/shared/TimeBacklog'
 import { ProjectFormModal } from './ProjectFormModal'
 import type { ProjectListItem, ProjectStatus } from '../../api/projects'
 import type { ProjectStatus as AppProjectStatus } from '../../types'
 
-type ViewMode = 'cards' | 'list' | 'kanban'
+type ViewMode = 'cards' | 'list' | 'kanban' | 'backlog'
 
 const VIEWS: { key: ViewMode; label: string; icon: typeof List }[] = [
   { key: 'cards', label: 'Cards', icon: LayoutGrid },
   { key: 'list', label: 'Table', icon: List },
   { key: 'kanban', label: 'Board', icon: Columns },
+  { key: 'backlog', label: 'Backlog', icon: History },
 ]
+
+/** Backlog is a management lens, so it only appears for roles granted it. */
+const backlogVisible = (canViewBacklog: boolean) =>
+  VIEWS.filter((v) => v.key !== 'backlog' || canViewBacklog)
 
 const KANBAN_COLUMNS: AppProjectStatus[] = ['in_progress', 'ongoing', 'awaiting_client', 'blocked', 'on_hold', 'completed']
 const PROJECT_SORT = [
@@ -70,6 +76,7 @@ export default function ProjectsPage() {
 
   // Mirrors p_projects_insert and delete_project_cascade, which read the same flag.
   const canManageProjects = useCanManageProjects()
+  const canViewBacklog = useCanAccess('can_view_backlog')
 
   const { data: projects = [], isLoading } = useProjects()
   const { data: people = [] } = usePeople()
@@ -109,7 +116,7 @@ export default function ProjectsPage() {
 
         {/* View switcher */}
         <div className="flex items-center gap-1 bg-surface-1 border border-border-default rounded-lg p-1 w-fit overflow-x-auto no-scrollbar">
-          {VIEWS.map((v) => (
+          {backlogVisible(canViewBacklog).map((v) => (
             <button
               key={v.key}
               onClick={() => setView(v.key)}
@@ -153,6 +160,10 @@ export default function ProjectsPage() {
           <div className={cn(view === 'cards' ? 'grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-3' : 'space-y-2')}>
             {Array.from({ length: view === 'cards' ? 6 : 5 }).map((_, i) => <Skeleton key={i} className={view === 'cards' ? 'h-52 rounded-lg' : 'h-16'} />)}
           </div>
+        ) : view === 'backlog' && canViewBacklog ? (
+          /* Time history across every project the viewer can see. Rendered ahead
+             of the empty state because it is about logged time, not projects. */
+          <TimeBacklog groupBy="project" />
         ) : projects.length === 0 ? (
           <EmptyState onNew={() => setShowNew(true)} canCreate={canManageProjects} />
         ) : (

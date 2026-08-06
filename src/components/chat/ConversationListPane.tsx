@@ -61,12 +61,19 @@ export function ConversationListPane({ activeChannelId, onSelect, onNewChannel, 
     })
   }, [channels, filter, query, profile?.id])
 
-  // Totals for the tab labels — deliberately unfiltered by the search box, so
-  // the counts read as "how many I have", not "how many match".
-  const counts = useMemo(() => ({
-    dms: channels.filter((c) => c.kind !== 'channel').length,
-    channels: channels.filter((c) => c.kind === 'channel').length,
-  }), [channels])
+  // Unread messages per side, Discord-style: the badge means "waiting for you",
+  // not "how many conversations exist". Unfiltered by the search box on purpose.
+  const counts = useMemo(() => {
+    let dms = 0
+    let channelMsgs = 0
+    for (const c of channels) {
+      const n = unreadMap.get(c.id) ?? 0
+      if (n === 0) continue
+      if (c.kind === 'channel') channelMsgs += n
+      else dms += n
+    }
+    return { dms, channels: channelMsgs }
+  }, [channels, unreadMap])
 
   // Message hits are grouped per conversation so one busy thread can't flood
   // the results, and rows for conversations already listed above are dropped.
@@ -138,14 +145,12 @@ export function ConversationListPane({ activeChannelId, onSelect, onNewChannel, 
               )}
             >
               {f === 'dms' ? 'DMs' : 'Channels'}
-              <span
-                className={cn(
-                  'rounded-full px-1.5 font-mono text-[10px] tabular-nums transition-colors',
-                  filter === f ? 'bg-brand-red/20 text-brand-red' : 'bg-surface-2 text-text-4',
-                )}
-              >
-                {counts[f]}
-              </span>
+              {/* Nothing unread, no badge — a "0" is noise, not information. */}
+              {counts[f] > 0 && (
+                <span className="rounded-full bg-brand-red px-1.5 font-mono text-[10px] font-bold tabular-nums text-white">
+                  {counts[f] > 99 ? '99+' : counts[f]}
+                </span>
+              )}
             </button>
           ))}
         </div>

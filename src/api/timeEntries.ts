@@ -12,9 +12,46 @@ export interface RunningTimeEntry extends TimeEntryRow {
   task: { id: string; title: string; project: { id: string; name: string } | null } | null
 }
 
+export interface TimeEntryDetail extends TimeEntryRow {
+  profile: PersonMini | null
+  task: {
+    id: string
+    title: string
+    status: string
+    project: { id: string; name: string } | null
+  } | null
+}
+
 const SELECT = '*, profile:profiles(id,name,avatar_url)'
 /** The floating timer names what is being worked on, so it needs task + project. */
 const RUNNING_SELECT = '*, task:tasks(id, title, project:projects(id, name))'
+/** The backlog needs who, which task, and which project on every segment. */
+const DETAIL_SELECT =
+  '*, profile:profiles(id,name,avatar_url), task:tasks!inner(id, title, status, project_id, project:projects(id, name))'
+
+/**
+ * Every time segment the caller may see, newest first — the raw material for the
+ * backlog. One row per start→stop, so a task paused and resumed three times
+ * yields three rows; the grouping in lib/timeBacklog turns that into a history.
+ *
+ * RLS scopes this to your own time, your team's, and everything for management,
+ * so two people can legitimately see different backlogs for the same project.
+ */
+export async function fetchTimeEntries(filters: { projectId?: string } = {}): Promise<TimeEntryDetail[]> {
+  let query = supabase
+    .from('task_time_entries')
+    .select(DETAIL_SELECT)
+    .order('started_at', { ascending: false })
+    .limit(500)
+
+  // !inner on the task embed makes this drop non-matching rows rather than
+  // returning them with a null task.
+  if (filters.projectId) query = query.eq('task.project_id', filters.projectId)
+
+  const { data, error } = await query
+  if (error) throw error
+  return data
+}
 
 /** Entries on one task, newest first. RLS decides whose are visible. */
 export async function fetchTaskTimeEntries(taskId: string): Promise<TimeEntry[]> {

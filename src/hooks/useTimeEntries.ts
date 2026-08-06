@@ -3,6 +3,7 @@ import {
   deleteTimeEntry,
   fetchRunningTimeEntry,
   fetchTaskTimeEntries,
+  fetchTimeEntries,
   logTime,
   startTimer,
   stopRunningTimer,
@@ -15,6 +16,8 @@ import type { TablesUpdate } from '../types/database'
 export const TIME_ENTRY_KEYS = {
   all: ['time-entries'] as const,
   byTask: (taskId: string) => ['time-entries', taskId] as const,
+  /** Cross-task backlog; undefined projectId means "everything visible". */
+  backlog: (projectId?: string) => ['time-entries', 'backlog', projectId ?? 'all'] as const,
   /** The caller's own running timer — at most one across the whole workspace. */
   running: ['time-entries', 'running'] as const,
 }
@@ -24,6 +27,18 @@ export function useTaskTimeEntries(taskId: string | null | undefined) {
     queryKey: TIME_ENTRY_KEYS.byTask(taskId ?? ''),
     queryFn: () => fetchTaskTimeEntries(taskId ?? ''),
     enabled: !!taskId,
+  })
+}
+
+/**
+ * Every visible time segment, optionally narrowed to one project — the backlog's
+ * data source. Kept out of TIME_ENTRY_KEYS.byTask so a task drawer and a backlog
+ * view don't fight over the same cache entry.
+ */
+export function useTimeEntries(filters: { projectId?: string } = {}) {
+  return useQuery({
+    queryKey: TIME_ENTRY_KEYS.backlog(filters.projectId),
+    queryFn: () => fetchTimeEntries(filters),
   })
 }
 
