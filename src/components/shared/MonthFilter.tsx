@@ -43,11 +43,15 @@ export function MonthStepper({ filter, hideAllMonths = false }: { filter: MonthF
   )
 }
 
-/** Sticky day heading above a group of requests. `count` shows how many fall on it. */
-export function DateGroupHeading({ date, count }: { date: string; count: number }) {
+/**
+ * Sticky day heading above a group of requests. `count` shows how many fall on it.
+ * `className` exists for callers that stack it under other sticky layers — pass a
+ * `top-*` to override the default, which tailwind-merge resolves.
+ */
+export function DateGroupHeading({ date, count, className }: { date: string; count: number; className?: string }) {
   const { label, relative } = formatDayHeading(date)
   return (
-    <div className="sticky top-0 z-10 flex items-center gap-2 px-5 py-2 bg-surface-2/95 backdrop-blur-sm border-y border-border-subtle">
+    <div className={cn('sticky top-0 z-10 flex items-center gap-2 px-5 py-2 bg-surface-2/95 backdrop-blur-sm border-y border-border-subtle', className)}>
       <span className="font-display font-semibold text-[12.5px] text-text-1">{label}</span>
       {relative && (
         <span className="px-1.5 py-0.5 rounded-xs bg-brand-red/10 border border-brand-red/20 text-brand-red text-[10px] font-mono font-semibold uppercase tracking-wide">
