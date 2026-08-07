@@ -14,7 +14,29 @@ export const PEOPLE_KEYS = {
   salary: (profileId: string) => ['salary', profileId] as const,
 }
 
+/**
+ * Everyone still with the company. Deactivated people have left, so they must not
+ * turn up in a picker, a roster, a filter dropdown or an @-mention anywhere.
+ *
+ * Filtering here rather than in `fetchPeople` keeps it to one choke point for the
+ * ~15 callers while `useAllPeople` still reads the same cache entry — `select`
+ * transforms the result per-hook without a second request.
+ */
 export function usePeople() {
+  return useQuery({
+    queryKey: PEOPLE_KEYS.all,
+    queryFn: fetchPeople,
+    staleTime: 30_000,
+    select: (people) => people.filter((p) => p.is_active),
+  })
+}
+
+/**
+ * Active AND departed. Only for the two places that must show people who have
+ * left: the People page's Inactive tab, and the audit log's actor filter (you
+ * still need to investigate what someone did before they left).
+ */
+export function useAllPeople() {
   return useQuery({ queryKey: PEOPLE_KEYS.all, queryFn: fetchPeople, staleTime: 30_000 })
 }
 

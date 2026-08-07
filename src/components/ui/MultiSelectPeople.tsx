@@ -8,6 +8,13 @@ export interface PersonOption {
   id: string
   name: string
   avatar_url?: string | null
+  /**
+   * Someone who has left the company but is still attached to this record. They
+   * are never offered as a new choice — only shown, flagged, when already
+   * selected, so the work reads as needing reassignment instead of quietly
+   * looking unassigned.
+   */
+  departed?: boolean
 }
 
 interface MultiSelectPeopleProps {
@@ -26,6 +33,10 @@ export function MultiSelectPeople({
   const [open, setOpen] = useState(false)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const selected = options.filter((o) => value.includes(o.id))
+  const departedSelected = selected.filter((o) => o.departed)
+  // A leaver stays listed only while still assigned, so they can be removed —
+  // never as a fresh choice.
+  const choosable = options.filter((o) => !o.departed || value.includes(o.id))
 
   const toggle = (id: string) =>
     onChange(value.includes(id) ? value.filter((v) => v !== id) : [...value, id])
@@ -55,6 +66,11 @@ export function MultiSelectPeople({
               <span className="font-ui text-[11.5px] text-text-2 truncate">
                 {selected.length === 1 ? selected[0].name : `${selected.length} assigned`}
               </span>
+              {departedSelected.length > 0 && (
+                <span className="shrink-0 rounded-xs bg-[rgba(238,39,55,0.12)] px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-brand-red">
+                  Reassign
+                </span>
+              )}
             </>
           )}
         </span>
@@ -68,8 +84,8 @@ export function MultiSelectPeople({
         matchAnchorWidth
         className="max-w-[calc(100vw-2rem)] bg-surface-2 border border-border-strong rounded-md shadow-lg overflow-hidden max-h-[50vh] overflow-y-auto"
       >
-        {options.length === 0 && <div className="px-3 py-2 text-[12px] text-text-4">No people available</div>}
-        {options.map((o) => {
+        {choosable.length === 0 && <div className="px-3 py-2 text-[12px] text-text-4">No people available</div>}
+        {choosable.map((o) => {
           const on = value.includes(o.id)
           return (
             <button
@@ -79,7 +95,12 @@ export function MultiSelectPeople({
               className={cn('w-full flex items-center gap-2.5 px-3 py-2 text-left text-[13px] font-ui text-text-1 hover:bg-surface-3 transition-colors', on && 'bg-surface-3/60')}
             >
               <Avatar name={o.name} src={o.avatar_url ?? undefined} size="xs" />
-              <span className="flex-1 min-w-0 truncate">{o.name}</span>
+              <span className={cn('flex-1 min-w-0 truncate', o.departed && 'text-text-3')}>{o.name}</span>
+              {o.departed && (
+                <span className="shrink-0 rounded-xs bg-[rgba(238,39,55,0.12)] px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-brand-red">
+                  Left
+                </span>
+              )}
               {on && <Check size={13} className="text-brand-red shrink-0" />}
             </button>
           )

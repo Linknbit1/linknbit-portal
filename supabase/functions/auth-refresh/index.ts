@@ -56,10 +56,47 @@ Deno.serve(async (req: Request) => {
     { auth: { persistSession: false, autoRefreshToken: false } },
   )
 
+  // Deactivation means the person has left. auth-signin turns them away at the
+  // password screen, but this is the door that kept an ALREADY-OPEN session
+  // alive: the refresh cookie lives 30 days and renews itself, so without this
+  // check a deactivated employee simply kept working until it expired.
+  //
+  // Read as the user against their own freshly-minted token, so the answer comes
+  // from the database rather than from anything the client sent. The own-profile
+  // RLS policy (id = auth.uid()) is deliberately not gated on is_active, which is
+  // what makes this readable at all.
+  //
+  // Fail OPEN on a null profile or a query error: a transient database blip must
+  // not sign the whole company out. is_active is only honoured when it is
+  // explicitly false, which is the same rule auth-signin applies.
+  async function isDeactivated(accessToken: string, userId: string): Promise<boolean> {
+    const asUser = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!,
+      {
+        auth: { persistSession: false, autoRefreshToken: false },
+        global: { headers: { Authorization: `Bearer ${accessToken}` } },
+      },
+    )
+    const { data } = await asUser.from('profiles').select('is_active').eq('id', userId).maybeSingle()
+    return data?.is_active === false
+  }
+
   // While impersonating, the member's session is the live one — refreshing the
   // admin's here is exactly what used to snap the page back on reload.
   if (impersonation) {
     const { data, error } = await supabase.auth.refreshSession({ refresh_token: impersonation.rt })
+
+    // An admin viewing as someone who has since been deactivated is dropped back
+    // to their own account rather than logged out — the admin did nothing wrong.
+    if (!error && data.session && await isDeactivated(data.session.access_token, data.user!.id)) {
+      const headers = new Headers({ 'Content-Type': 'application/json' })
+      headers.append('Set-Cookie', clearCookie(IMPERSONATION_COOKIE, secure))
+      if (!refreshToken) {
+        return new Response(JSON.stringify({ error: 'Session expired' }), { status: 401, headers })
+      }
+      return await refreshOwnSession(headers)
+    }
 
     if (!error && data.session) {
       const headers = new Headers({ 'Content-Type': 'application/json' })
@@ -92,31 +129,48 @@ Deno.serve(async (req: Request) => {
     }
   }
 
-  const { data, error } = await supabase.auth.refreshSession({ refresh_token: refreshToken! })
+  return await refreshOwnSession(new Headers({ 'Content-Type': 'application/json' }))
 
-  if (error || !data.session) {
-    const headers = new Headers({ 'Content-Type': 'application/json' })
-    headers.append('Set-Cookie', clearCookie(REFRESH_COOKIE, secure))
+  // Renews the caller's own (non-impersonated) session. Takes the headers so the
+  // impersonation-exit path above can hand over the Set-Cookie it already staged.
+  async function refreshOwnSession(headers: Headers): Promise<Response> {
+    const { data, error } = await supabase.auth.refreshSession({ refresh_token: refreshToken! })
+
+    if (error || !data.session) {
+      headers.append('Set-Cookie', clearCookie(REFRESH_COOKIE, secure))
+      headers.append('Set-Cookie', clearCookie(IMPERSONATION_COOKIE, secure))
+      return new Response(JSON.stringify({ error: 'Session expired' }), { status: 401, headers })
+    }
+
+    const { session, user } = data
+
+    // The account was deactivated while this session was live. Burn both cookies
+    // so the next reload cannot renew it either, and send the same wording as
+    // auth-signin so the person is told why rather than just bounced.
+    if (await isDeactivated(session.access_token, user!.id)) {
+      headers.append('Set-Cookie', clearCookie(REFRESH_COOKIE, secure))
+      headers.append('Set-Cookie', clearCookie(IMPERSONATION_COOKIE, secure))
+      return new Response(
+        JSON.stringify({ error: 'Your account has been deactivated. Please contact your administrator.' }),
+        { status: 403, headers },
+      )
+    }
+
+    headers.append('Set-Cookie', setCookie(REFRESH_COOKIE, session.refresh_token, COOKIE_MAX_AGE, secure))
+    // Reached either by stopping deliberately or by the member's session failing;
+    // either way no impersonation is in effect any more.
     headers.append('Set-Cookie', clearCookie(IMPERSONATION_COOKIE, secure))
-    return new Response(JSON.stringify({ error: 'Session expired' }), { status: 401, headers })
+
+    return new Response(
+      JSON.stringify({
+        access_token: session.access_token,
+        refresh_token: session.refresh_token,
+        expires_at: session.expires_at,
+        user: { id: user!.id, email: user!.email },
+      }),
+      { headers },
+    )
   }
-
-  const { session, user } = data
-  const headers = new Headers({ 'Content-Type': 'application/json' })
-  headers.append('Set-Cookie', setCookie(REFRESH_COOKIE, session.refresh_token, COOKIE_MAX_AGE, secure))
-  // Reached either by stopping deliberately or by the member's session failing;
-  // either way no impersonation is in effect any more.
-  headers.append('Set-Cookie', clearCookie(IMPERSONATION_COOKIE, secure))
-
-  return new Response(
-    JSON.stringify({
-      access_token: session.access_token,
-      refresh_token: session.refresh_token,
-      expires_at: session.expires_at,
-      user: { id: user!.id, email: user!.email },
-    }),
-    { headers },
-  )
 })
 
 interface Impersonation { rt: string; targetName: string; adminName: string }

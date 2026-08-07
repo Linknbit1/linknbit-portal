@@ -24,7 +24,7 @@ import { useTeams } from '../../hooks/useTeams'
 import { useDesignations } from '../../hooks/useDesignations'
 import { useTeamMembers, useSetProfileTeams } from '../../hooks/useTeamMembers'
 import {
-  usePeople, useInviteUser, useUpdatePersonRole, useUpdatePersonDetails, useSetPersonActive, useDeletePerson,
+  useAllPeople, useInviteUser, useUpdatePersonRole, useUpdatePersonDetails, useSetPersonActive, useDeletePerson,
   useResendInvite, useSetUserPassword,
 } from '../../hooks/usePeople'
 import type { Person, InviteResult } from '../../api/people'
@@ -763,7 +763,9 @@ export default function PeoplePage() {
   // Inviting is the same capability as managing people (was canInvite = canManagePeople).
   const canInvite = useCanManagePeople()
 
-  const { data: people = [], isLoading } = usePeople()
+  // The only screen that shows people who have left, split across the two tabs
+  // below. Everywhere else uses usePeople(), which is active-only.
+  const { data: people = [], isLoading } = useAllPeople()
   const { data: teams = [] } = useTeams()
   const { data: designations = [] } = useDesignations()
   const { data: teamMembers = [] } = useTeamMembers()
@@ -778,6 +780,8 @@ export default function PeoplePage() {
 
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState('')
+  /** Active is the working set; Inactive is the archive of people who have left. */
+  const [statusTab, setStatusTab] = useState<'active' | 'inactive'>('active')
   const [viewMode, setViewMode] = useState<ViewMode>('cards')
   const [inviteOpen, setInviteOpen] = useState(false)
   const [editing, setEditing] = useState<Person | null>(null)
@@ -804,11 +808,15 @@ export default function PeoplePage() {
     return m
   }, [teamIdsByProfile, teamName])
 
+  const activeCount = people.filter((p) => p.is_active).length
+  const inactiveCount = people.length - activeCount
+
   const filtered = people.filter((p) => {
     const q = search.toLowerCase()
     const matchesText = !q || p.name.toLowerCase().includes(q) || p.email.toLowerCase().includes(q)
     const matchesRole = !roleFilter || p.role === roleFilter
-    return matchesText && matchesRole
+    const matchesStatus = statusTab === 'active' ? p.is_active : !p.is_active
+    return matchesText && matchesRole && matchesStatus
   })
 
   const toggleActive = (p: Person) => {
@@ -852,6 +860,35 @@ export default function PeoplePage() {
             />
           </div>
           <div className="flex flex-wrap items-center gap-3">
+            {/* Active / Inactive. Deactivated people have left the company, so they
+                are archived here and appear nowhere else in the portal. */}
+            <div className="inline-flex items-center rounded-md border border-border-default bg-surface-inset p-0.5">
+              {([
+                { value: 'active', label: 'Active', count: activeCount },
+                { value: 'inactive', label: 'Inactive', count: inactiveCount },
+              ] as const).map((t) => {
+                const on = statusTab === t.value
+                return (
+                  <button
+                    key={t.value}
+                    type="button"
+                    aria-pressed={on}
+                    onClick={() => setStatusTab(t.value)}
+                    className={cn(
+                      'flex items-center gap-1.5 rounded-sm px-2.5 py-1 font-ui text-[12px] font-medium transition-colors motion-reduce:transition-none',
+                      on
+                        ? t.value === 'inactive'
+                          ? 'bg-[rgba(238,39,55,0.14)] text-brand-red'
+                          : 'bg-surface-3 text-text-1'
+                        : 'text-text-3 hover:text-text-1',
+                    )}
+                  >
+                    {t.label}
+                    <span className="font-mono text-[10px] tabular-nums text-text-4">{t.count}</span>
+                  </button>
+                )
+              })}
+            </div>
             <div className="flex-1 sm:flex-none sm:w-44"><Select value={roleFilter} onChange={setRoleFilter} options={roleFilterOptions} /></div>
             <ViewToggle value={viewMode} onChange={setViewMode} options={PEOPLE_VIEWS} className="hidden lg:flex" />
             {canInvite && <Button size="sm" className="shrink-0" onClick={() => setInviteOpen(true)}><Plus size={13} /> Invite</Button>}

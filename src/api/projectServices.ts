@@ -71,12 +71,20 @@ export async function removeProjectService(projectServiceId: string): Promise<vo
 
 /* ── Members ────────────────────────────────────────────────────────────────── */
 
-/** Everyone staffed on any service of a project, tagged with which service. */
+/**
+ * Everyone staffed on any service of a project, tagged with which service.
+ *
+ * People who have left are dropped from the roster — this answers "who is working
+ * on this project", and a departed employee is not. Their `service_members` row is
+ * deliberately left in place rather than deleted, so reactivating someone restores
+ * their staffing instead of silently losing it.
+ */
 export async function fetchProjectServiceMembers(projectId: string): Promise<ServiceMember[]> {
   const { data, error } = await supabase
     .from('service_members')
-    .select('project_service_id, role_in_service, project_service:project_services!inner(project_id), profile:profiles(id,name,avatar_url,role)')
+    .select('project_service_id, role_in_service, project_service:project_services!inner(project_id), profile:profiles!inner(id,name,avatar_url,role,is_active)')
     .eq('project_service.project_id', projectId)
+    .eq('profile.is_active', true)
   if (error) throw error
   return data.flatMap((m) =>
     m.profile

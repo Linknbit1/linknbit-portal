@@ -9,6 +9,12 @@ export interface PersonMini {
   id: string
   name: string
   avatar_url: string | null
+  /**
+   * Present only where a departed person still has to be shown — a task they were
+   * assigned before leaving. Optional because most selects have no reason to ask
+   * for it: the rosters and pickers exclude leavers outright.
+   */
+  is_active?: boolean
 }
 
 /** The services a project runs, flattened for chips and filters. */

@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState, type ReactNode 
 import { useQueryClient } from '@tanstack/react-query'
 import type { User } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
+import { useRealtimeOwnProfile } from '../hooks/realtime/useRealtimeOwnProfile'
 import {
   bffSignIn,
   bffRefreshSession,
@@ -231,6 +232,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current)
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Deactivation means the person has left the company, so the portal closes on
+  // them within seconds instead of whenever their token happens to expire.
+  //
+  // A hard location.replace rather than clearAll(): this is a revocation, and a
+  // full document reload is the only way to guarantee nothing survives in memory
+  // — no rendered page holding data it already fetched, no in-flight request
+  // landing afterwards. The query string is what tells the login screen to
+  // explain itself rather than just appearing for no reason.
+  //
+  // Not fired while impersonating: the deactivated row would be the member's, and
+  // throwing the ADMIN out of the portal for it would be wrong. auth-refresh
+  // already drops that impersonation back to the admin's own session.
+  useRealtimeOwnProfile(profile?.id, () => {
+    if (impersonatingRef.current) return
+    void bffSignOut(accessTokenRef.current ?? '').catch(() => {}).finally(() => {
+      window.location.replace('/login?deactivated=1')
+    })
+  })
 
   // Mobile browsers throttle/suspend background timers, so the scheduled refresh
   // can fire late (or not at all) while the app is backgrounded. When the app

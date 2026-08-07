@@ -14,7 +14,7 @@ import { useAuditLog, useMarkAuditSeen } from '../../hooks/useAuditLog'
 import { useRealtimeAuditLog } from '../../hooks/realtime/useRealtimeAuditLog'
 import { useFeatureAccess } from '../../hooks/useRoleFlags'
 import { useElementHeight } from '../../hooks/useElementHeight'
-import { usePeople } from '../../hooks/usePeople'
+import { useAllPeople } from '../../hooks/usePeople'
 import { cn } from '../../lib/cn'
 import { groupByDate, isoDayKey } from '../../lib/dateGroups'
 import { scrollAncestorToTop } from '../../lib/scroll'
@@ -293,7 +293,9 @@ const AuditLogPage = () => {
   const {
     data, isLoading, refetch, fetchNextPage, hasNextPage, isFetchingNextPage,
   } = useAuditLog(filters)
-  const { data: people } = usePeople()
+  // Departed staff included on purpose: investigating what someone did before
+  // they left is exactly what this filter is for.
+  const { data: people } = useAllPeople()
 
   const actorOptions = useMemo(
     () => [{ value: '', label: 'All actors' }, ...(people ?? []).map((p) => ({ value: p.id, label: p.name ?? p.email ?? p.id }))],
