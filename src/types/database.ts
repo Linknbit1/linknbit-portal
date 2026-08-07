@@ -305,7 +305,10 @@ export type Database = {
           early_checkin_min: number
           grace_period_min: number
           min_excluded_gap_min: number
+          office_ip_auto_update: boolean
           office_ip_cidr: string | null
+          office_ip_last_observed: string | null
+          office_ip_updated_at: string | null
           saturday_working: boolean
           singleton: boolean
           terminal_stale_min: number
@@ -322,7 +325,10 @@ export type Database = {
           early_checkin_min?: number
           grace_period_min?: number
           min_excluded_gap_min?: number
+          office_ip_auto_update?: boolean
           office_ip_cidr?: string | null
+          office_ip_last_observed?: string | null
+          office_ip_updated_at?: string | null
           saturday_working?: boolean
           singleton?: boolean
           terminal_stale_min?: number
@@ -339,7 +345,10 @@ export type Database = {
           early_checkin_min?: number
           grace_period_min?: number
           min_excluded_gap_min?: number
+          office_ip_auto_update?: boolean
           office_ip_cidr?: string | null
+          office_ip_last_observed?: string | null
+          office_ip_updated_at?: string | null
           saturday_working?: boolean
           singleton?: boolean
           terminal_stale_min?: number
@@ -3926,6 +3935,14 @@ export type Database = {
         Returns: {
           profile_id: string
         }[]
+      }
+      fn_terminal_sync_office_ip: {
+        Args: {
+          p_observed_ip: string
+          p_reported_ip?: string
+          p_terminal_name: string
+        }
+        Returns: Json
       }
       fn_toggle_reaction: {
         Args: { p_emoji: string; p_message_id: string }

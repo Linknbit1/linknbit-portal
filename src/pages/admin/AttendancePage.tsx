@@ -42,6 +42,7 @@ import { Select } from "../../components/ui/Select";
 import { TimezoneSelect } from "../../components/ui/TimezoneSelect";
 import { DatePicker } from "../../components/ui/DatePicker";
 import { TimePicker } from "../../components/ui/TimePicker";
+import { Toggle } from "../../components/ui/Toggle";
 import { SectionToolbar } from "../../components/ui/SectionToolbar";
 import { PeriodStepper } from "../../components/ui/PeriodStepper";
 import {
@@ -55,6 +56,7 @@ import {
   formatRequestedAt,
   formatDayHeading,
 } from "../../lib/dateGroups";
+import { ipInCidr } from "../../lib/officeIp";
 import { useToast } from "../../components/ui/toast-context";
 import { useAuthContext } from "../../context/AuthContext";
 import {
@@ -5404,6 +5406,91 @@ export function SettingsTab() {
   );
 }
 
+interface OfficeIpAutoUpdateProps {
+  settings: AttendanceSettings;
+  enabled: boolean;
+  onToggle: (enabled: boolean) => void;
+  /** The CIDR currently typed in the field above, not the saved one. */
+  cidr: string;
+  onUseObserved: (cidr: string) => void;
+}
+
+/**
+ * The office IP is an ISP lease: it changes whenever the router reboots, and
+ * until the range is corrected every on-site check-in is rejected. The biometric
+ * terminal heartbeats from inside the office every minute, so the server sees
+ * the office's real public IP continuously and can keep this range in step by
+ * itself. This panel is where that is switched on and where the terminal's
+ * current view is visible.
+ */
+function OfficeIpAutoUpdate({
+  settings,
+  enabled,
+  onToggle,
+  cidr,
+  onUseObserved,
+}: OfficeIpAutoUpdateProps) {
+  const observed = settings.office_ip_last_observed;
+  const trimmed = cidr.trim();
+  const covered = !!observed && !!trimmed && ipInCidr(observed, trimmed);
+
+  return (
+    <div className="px-4 py-3 bg-surface-inset border border-border-default rounded-md space-y-3">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="font-ui font-semibold text-[13px] text-text-1">
+            Auto-Update from Terminal
+          </p>
+          <p className="font-ui text-[11px] text-text-4 mt-0.5">
+            {enabled
+              ? "The terminal's heartbeat keeps this range correct when the ISP changes the office IP — the prefix you chose is kept."
+              : "The range changes only when someone edits it here. A router restart will block check-in until it is corrected."}
+          </p>
+        </div>
+        <Toggle checked={enabled} onChange={onToggle} label="Auto-update office IP" />
+      </div>
+
+      {observed ? (
+        <div className="flex items-center justify-between gap-3 pt-3 border-t border-border-subtle">
+          <div className="min-w-0">
+            <p className="text-[10px] font-mono font-semibold text-text-4 uppercase tracking-wider">
+              Terminal last seen from
+            </p>
+            <p className="font-mono text-[13px] text-text-1 truncate">
+              {observed}
+            </p>
+          </div>
+          {covered ? (
+            <span className="shrink-0 inline-flex items-center gap-1.5 text-[11px] font-ui text-success">
+              <Check size={13} />
+              In range
+            </span>
+          ) : (
+            <button
+              type="button"
+              onClick={() => onUseObserved(observed)}
+              className="shrink-0 text-[11px] font-ui font-semibold text-brand-red hover:underline"
+            >
+              Use this IP
+            </button>
+          )}
+        </div>
+      ) : (
+        <p className="pt-3 border-t border-border-subtle text-[11px] font-ui text-text-4">
+          No terminal has reported yet — nothing to compare against.
+        </p>
+      )}
+
+      {settings.office_ip_updated_at && (
+        <p className="text-[11px] font-ui text-text-4">
+          Last updated automatically on{" "}
+          {formatRequestedAt(settings.office_ip_updated_at)}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function SettingsForm({ settings }: { settings: AttendanceSettings }) {
   const toast = useToast();
   const updateMutation = useUpdateAttendanceSettings();
@@ -5421,6 +5508,7 @@ function SettingsForm({ settings }: { settings: AttendanceSettings }) {
   const [tz, setTz] = useState(() => settings.timezone);
   const [xp, setXp] = useState(() => String(settings.xp_on_time_checkin));
   const [ipCidr, setIpCidr] = useState(() => settings.office_ip_cidr ?? "");
+  const [autoIp, setAutoIp] = useState(() => settings.office_ip_auto_update);
   const [saturdayWorking, setSaturdayWorking] = useState(
     () => settings.saturday_working,
   );
@@ -5438,6 +5526,7 @@ function SettingsForm({ settings }: { settings: AttendanceSettings }) {
         timezone: tz,
         xp_on_time_checkin: parseInt(xp, 10),
         office_ip_cidr: ipCidr.trim() || null,
+        office_ip_auto_update: autoIp,
         saturday_working: saturdayWorking,
         auto_checkout: autoCheckout,
       });
@@ -5643,6 +5732,14 @@ function SettingsForm({ settings }: { settings: AttendanceSettings }) {
                 : "WiFi enforcement is disabled."}
             </p>
           </div>
+
+          <OfficeIpAutoUpdate
+            settings={settings}
+            enabled={autoIp}
+            onToggle={setAutoIp}
+            cidr={ipCidr}
+            onUseObserved={setIpCidr}
+          />
         </div>
       </div>
 

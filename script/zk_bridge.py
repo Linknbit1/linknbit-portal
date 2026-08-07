@@ -9,6 +9,12 @@ Cycle:
     connect → push Pi clock to device → read attendance log → spool it
     → flush unacked batches to the server → optionally clear the device log
 
+Alongside that, and on its own clock so a failing cycle cannot stop it, a
+heartbeat goes out every minute. It reports terminal health and — because the
+request leaves the office network — it is also how the server keeps the office
+public IP current, so a router reboot no longer breaks WiFi check-in. See
+public_ip.py and the office-IP section of README.md.
+
 Usage:
     python zk_bridge.py                 # run forever (what systemd runs)
     python zk_bridge.py --once          # single cycle, then exit
@@ -27,9 +33,10 @@ from datetime import datetime, timezone
 from typing import Callable
 
 import config
+import public_ip
 from spool import Punch, Spool, punch_uid
 from uploader import Ingest, IngestError
-from zk_client import FakeZKDevice, ZKDevice
+from zk_client import DeviceInfo, FakeZKDevice, ZKDevice
 
 log = logging.getLogger("zk.bridge")
 
@@ -125,24 +132,57 @@ def run(cfg: config.Config, *, once: bool, dry_run: bool, fake: bool) -> int:
         return ZKDevice(cfg.device_ip, cfg.device_port, cfg.device_password,
                         cfg.device_timeout, cfg.timezone)
 
-    last_heartbeat = 0.0
+    heartbeat_due_at = 0.0  # monotonic deadline; 0 => send one immediately
     last_roster = 0.0
     failures = 0
+    last_info: DeviceInfo | None = None
+
+    def maybe_heartbeat() -> None:
+        """Send a heartbeat if one is due. Self-throttling, so it is safe to call
+        from anywhere in the loop.
+
+        Deliberately independent of whether the device read succeeded. Two things
+        ride on the heartbeat and both matter most when something is broken:
+        it is the signal attendance-checkin uses to decide whether portal
+        check-in stays open for terminal-gated staff, and its source address is
+        how the server keeps office_ip_cidr pointed at the office's real public
+        IP. A router reboot changes that IP and breaks the WAN at the same
+        moment, which is exactly when the poll cycle is failing and backing off —
+        so the heartbeat gets its own clock, checked once a second.
+
+        A failure here is logged and dropped: it must never stall punch delivery.
+        """
+        nonlocal heartbeat_due_at
+        if dry_run or _shutdown:
+            return
+        if time.monotonic() < heartbeat_due_at:
+            return
+        try:
+            ip = public_ip.detect() if cfg.public_ip_check else None
+            resp = ingest.send_heartbeat(
+                last_info, cfg.device_ip, spool.get_meta("last_poll_at"), ip
+            )
+            heartbeat_due_at = time.monotonic() + cfg.heartbeat_interval_sec
+            office = resp.get("office_ip") if isinstance(resp, dict) else None
+            if isinstance(office, dict) and office.get("status") not in (None, "unchanged"):
+                log.info("office IP check: %s", office)
+        except Exception as exc:  # noqa: BLE001 - health reporting is best-effort
+            # Retry sooner than a full interval — a heartbeat only fails when the
+            # WAN is down, which is the same event that changes the office IP —
+            # but not immediately: Ingest already retried four times internally,
+            # and a 1s loop tick would turn that into a busy-wait.
+            heartbeat_due_at = time.monotonic() + max(10, cfg.heartbeat_interval_sec // 3)
+            log.warning("heartbeat failed: %s", exc)
 
     try:
         while True:
             cycle_started = time.monotonic()
             try:
                 result = collect(cfg, spool, device_factory)
+                last_info = result["info"]
                 spool.set_meta("last_poll_at", _now_iso())
                 flush(cfg, spool, ingest, dry_run)
                 failures = 0
-
-                if not dry_run and cycle_started - last_heartbeat >= cfg.heartbeat_interval_sec:
-                    ingest.send_heartbeat(
-                        result["info"], cfg.device_ip, spool.get_meta("last_poll_at")
-                    )
-                    last_heartbeat = cycle_started
 
                 if not dry_run and cycle_started - last_roster >= cfg.roster_interval_sec:
                     with device_factory() as dev:  # type: ignore[attr-defined]
@@ -160,6 +200,8 @@ def run(cfg: config.Config, *, once: bool, dry_run: bool, fake: bool) -> int:
                 failures += 1
                 log.error("cycle failed (%d consecutive): %s", failures, exc)
 
+            maybe_heartbeat()
+
             if once or _shutdown:
                 break
 
@@ -169,11 +211,15 @@ def run(cfg: config.Config, *, once: bool, dry_run: bool, fake: bool) -> int:
             if failures:
                 interval = min(cfg.poll_interval_sec * (2 ** min(failures, 4)), 300)
 
+            # The backoff throttles the device poll, not the heartbeat: with the
+            # WAN down, `interval` grows to 5 minutes, and the office IP must not
+            # go that long without a refresh right after a router reboot.
             elapsed = time.monotonic() - cycle_started
             for _ in range(int(max(0.0, interval - elapsed))):
                 if _shutdown:
                     break
                 time.sleep(1)
+                maybe_heartbeat()
 
         spool.prune_acked()
         return 0 if failures == 0 else 1

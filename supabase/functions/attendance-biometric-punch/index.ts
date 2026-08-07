@@ -306,6 +306,55 @@ async function reconcileDay(
   await setResolution(extraIds, 'ignored_extra')
 }
 
+/**
+ * Keeps attendance_settings.office_ip_cidr pointed at the office's real public IP.
+ *
+ * The office IP is an ISP lease: it changes whenever the router reboots, and
+ * until someone retypes the CIDR by hand every on-site check-in is rejected as
+ * 'wrong_network'. The fix costs nothing extra, because the Pi already
+ * heartbeats from inside the office every minute — so THIS request's source
+ * address IS the office's public IP, observed through exactly the same proxy
+ * that stamps X-Forwarded-For on an employee's check-in. That is strictly
+ * better than asking api.ipify.org: no third party, no outage surface, and the
+ * value is measured by the same mechanism it will later be compared against.
+ *
+ * The Pi still resolves its own public IP independently and sends it as
+ * `public_ip`; the SQL side treats a disagreement as "this terminal is reaching
+ * us over some other network" and refuses to write, rather than risking locking
+ * the office out. All of the decision (validation, prefix preservation, audit)
+ * lives in fn_terminal_sync_office_ip — the CIDR maths is native to Postgres'
+ * inet type, and the audit-suppression GUC only works in the same transaction
+ * as the UPDATE.
+ */
+async function maintainOfficeIp(
+  db: SupabaseClient,
+  req: Request,
+  terminalName: string,
+  body: Record<string, unknown>,
+): Promise<unknown> {
+  // Left-most X-Forwarded-For entry = the original client, i.e. the office's
+  // WAN address. Read exactly as attendance-checkin reads it, so the two can
+  // never disagree about what "the office IP" means.
+  const forwarded = req.headers.get('X-Forwarded-For')
+  const observedIp = forwarded ? forwarded.split(',')[0].trim() : ''
+  if (!observedIp) return { status: 'no_client_ip' }
+
+  const reportedIp = typeof body.public_ip === 'string' && body.public_ip.trim()
+    ? body.public_ip.trim()
+    : null
+
+  const { data, error } = await db.rpc('fn_terminal_sync_office_ip', {
+    p_terminal_name: terminalName,
+    p_observed_ip: observedIp,
+    p_reported_ip: reportedIp,
+  })
+
+  // A failure here must never fail the heartbeat: the heartbeat is what keeps
+  // terminal-gated portal check-in open.
+  if (error) return { status: 'error', message: error.message }
+  return data
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS_HEADERS })
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405)
@@ -350,22 +399,27 @@ Deno.serve(async (req: Request) => {
 
   // ── Heartbeat: terminal health, and the signal attendance-checkin uses to
   //    decide whether portal check-in stays closed for terminal-gated staff.
+  //    It also carries the office's public IP for free — see maintainOfficeIp.
   if (action === 'heartbeat') {
-    await db
-      .from('biometric_terminals')
-      .update({
-        last_heartbeat_at: nowIso,
-        last_poll_at: typeof body.last_poll_at === 'string' ? body.last_poll_at : nowIso,
-        firmware: typeof body.firmware === 'string' ? body.firmware : null,
-        serial_number: typeof body.serial_number === 'string' ? body.serial_number : null,
-        device_ip: typeof body.device_ip === 'string' ? body.device_ip : null,
-        device_log_count: typeof body.device_log_count === 'number' ? body.device_log_count : null,
-        clock_skew_sec: typeof body.clock_skew_sec === 'number' ? body.clock_skew_sec : null,
-        updated_at: nowIso,
-      })
-      .eq('id', terminal.id)
+    // The Pi's device_ip is its LAN address (192.168.x) and is only ever a
+    // health detail. A heartbeat that could not reach the device omits it
+    // entirely, so absent fields must not clobber the last known good values.
+    const health: Record<string, unknown> = {
+      last_heartbeat_at: nowIso,
+      last_poll_at: typeof body.last_poll_at === 'string' ? body.last_poll_at : nowIso,
+      updated_at: nowIso,
+    }
+    if (typeof body.firmware === 'string') health.firmware = body.firmware
+    if (typeof body.serial_number === 'string') health.serial_number = body.serial_number
+    if (typeof body.device_ip === 'string') health.device_ip = body.device_ip
+    if (typeof body.device_log_count === 'number') health.device_log_count = body.device_log_count
+    if (typeof body.clock_skew_sec === 'number') health.clock_skew_sec = body.clock_skew_sec
 
-    return json({ ok: true }, 200)
+    await db.from('biometric_terminals').update(health).eq('id', terminal.id)
+
+    const officeIp = await maintainOfficeIp(db, req, terminal.name, body)
+
+    return json({ ok: true, office_ip: officeIp }, 200)
   }
 
   // ── Roster: the device's enrolled users, so admins can link enroll numbers to
