@@ -67,7 +67,6 @@ import {
   useReviewException,
   useDeleteException,
   useMonthlyAttendance,
-  useMonthlyHalfDayLeaves,
   useMonthlyOvertime,
   useHolidays,
   useCreateHoliday,
@@ -115,6 +114,7 @@ import { downloadCsv } from "../../lib/csv";
 import { cn } from "../../lib/cn";
 import { zonedWallTimeToIso, isoToZonedMinutes } from "../../lib/timezone";
 import { computeEmployeeHours } from "../../lib/attendanceHours";
+import { AttendanceChips } from "../../components/shared/AttendanceChips";
 import { ModalShell } from "../../components/ui/ModalShell";
 import { ConfirmDialog } from "../../components/ui/ConfirmDialog";
 
@@ -123,6 +123,22 @@ function localToday(): string {
 }
 
 /* ── Status chip meta ─────────────────────────────────────────────────────── */
+/**
+ * The records filter spans BOTH axes now, because a single day can be a half-day
+ * leave AND a late arrival. Each option carries its own predicate rather than
+ * being compared to one column, so picking "Half Day" and picking "Late" can
+ * legitimately return the same row.
+ */
+const RECORD_FILTERS: { value: string; label: string; match: (r: { status: string | null; day_type: string; day_part: string }) => boolean }[] = [
+  { value: "present",  label: "Present",   match: (r) => r.status === "present" },
+  { value: "late",     label: "Late",      match: (r) => r.status === "late" },
+  { value: "absent",   label: "Absent",    match: (r) => r.status === "absent" },
+  { value: "half_day", label: "Half Day",  match: (r) => r.day_type === "leave" && r.day_part !== "full" },
+  { value: "leave",    label: "Leave",     match: (r) => r.day_type === "leave" && r.day_part === "full" },
+  { value: "wfh",      label: "WFH",       match: (r) => r.day_type === "wfh" },
+  { value: "holiday",  label: "Holiday",   match: (r) => r.day_type === "holiday" },
+];
+
 const STATUS_META: Record<string, { label: string; cls: string; dot: string }> =
   {
     present: {
@@ -180,20 +196,6 @@ const WFH_META: Record<string, { label: string; cls: string; dot: string }> = {
   },
 };
 
-function StatusChip({ status }: { status: string }) {
-  const m = STATUS_META[status] ?? STATUS_META["absent"];
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-ui font-semibold border",
-        m.cls,
-      )}
-    >
-      <span className="size-1.5 rounded-full" style={{ background: m.dot }} />
-      {m.label}
-    </span>
-  );
-}
 
 function WFHStatusChip({ status }: { status: string }) {
   const m = WFH_META[status] ?? WFH_META.pending;
@@ -236,8 +238,11 @@ const hhmmToMinutes = (hhmm: string): number | null => {
   return Number.isFinite(h) && Number.isFinite(m) ? h * 60 + m : null;
 };
 
-// Statuses that carry a clocked check-in/out time.
-const CLOCKED_STATUSES = new Set(["present", "late", "half_day"]);
+// Statuses that carry a clocked check-in/out time. "half_day" is gone from
+// this set because it is no longer a status at all — a half day is
+// day_type=leave/day_part<>full, and whether times apply depends purely on
+// whether an arrival is being recorded.
+const CLOCKED_STATUSES = new Set(["present", "late"]);
 
 function MarkModal({ onClose, dateFilter, editRecord = null }: MarkModalProps) {
   const toast = useToast();
@@ -457,20 +462,41 @@ export function DailyRecordsTab() {
   const { data: records = [], isLoading } = useAllAttendance(dateFilter);
 
   const filtered = records.filter((r) => {
-    if (statusFilter !== "all" && r.status !== statusFilter) return false;
+    if (statusFilter !== "all") {
+      const f = RECORD_FILTERS.find((x) => x.value === statusFilter);
+      if (f && !f.match(r)) return false;
+    }
     const name = r.profiles?.name ?? "";
     if (search && !name.toLowerCase().includes(search.toLowerCase()))
       return false;
     return true;
   });
 
-  const stats = {
-    present: records.filter((r) => r.status === "present").length,
-    late: records.filter((r) => r.status === "late").length,
-    absent: records.filter((r) => r.status === "absent").length,
-    half_day: records.filter((r) => r.status === "half_day").length,
-    leave: records.filter((r) => r.status === "leave").length,
-  };
+  // Counted in DAYS, not rows, so the tiles still sum to the number of working
+  // days covered. A half-day leave that was worked contributes 0.5 to Half Day
+  // and 0.5 to whichever attendance bucket it earned — it is genuinely half of
+  // each, and counting it as a whole in both would inflate the totals.
+  const stats = (() => {
+    const s = { present: 0, late: 0, absent: 0, half_day: 0, leave: 0 };
+    for (const r of records) {
+      const isLeave = r.day_type === "leave";
+      const isHalf = isLeave && r.day_part !== "full";
+
+      if (isHalf) s.half_day += 0.5;
+      else if (isLeave) s.leave += 1;
+
+      // Weight the attendance half of a half day, and skip rows with no
+      // attendance fact at all (full leave, holiday, nothing recorded yet).
+      const weight = isHalf ? 0.5 : 1;
+      if (r.status === "present") s.present += weight;
+      else if (r.status === "late") s.late += weight;
+      else if (r.status === "absent") s.absent += weight;
+    }
+    return s;
+  })();
+
+  /** Drops a trailing .0 so whole days read "18" and halves read "18.5". */
+  const fmtDays = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1));
 
   // Duration counts check-in → day-end. Check-out is no longer a user action; the
   // day-end cron fills check_out to work_end, so this shows "—" until then.
@@ -500,7 +526,10 @@ export function DailyRecordsTab() {
       [
         "Name",
         "Date",
-        "Status",
+        // Two columns, matching the two chips: exporting one merged "Status"
+        // would reintroduce exactly the ambiguity this change removed.
+        "Day",
+        "Attendance",
         "Check In",
         "Duration",
         "Source",
@@ -510,7 +539,14 @@ export function DailyRecordsTab() {
       filtered.map((r) => [
         r.profiles?.name ?? r.profile_id,
         r.date,
-        r.status,
+        r.day_type === "leave"
+          ? r.day_part === "full" ? "Leave"
+          : r.day_part === "first_half" ? "Half Day (1st)"
+          : "Half Day (2nd)"
+          : r.day_type === "wfh" ? "WFH"
+          : r.day_type === "holiday" ? "Holiday"
+          : "Work",
+        r.status ?? "",
         fmtTime(r.check_in),
         durationLabel(r),
         r.source,
@@ -527,35 +563,35 @@ export function DailyRecordsTab() {
         {[
           {
             label: "Present",
-            value: stats.present,
+            value: fmtDays(stats.present),
             icon: CheckCircle2,
             color: "text-success",
             bg: "bg-success/10 border-success/20",
           },
           {
             label: "Late",
-            value: stats.late,
+            value: fmtDays(stats.late),
             icon: Clock,
             color: "text-warning",
             bg: "bg-warning/10 border-warning/20",
           },
           {
             label: "Absent",
-            value: stats.absent,
+            value: fmtDays(stats.absent),
             icon: AlertTriangle,
             color: "text-error",
             bg: "bg-error/10 border-error/20",
           },
           {
             label: "Half Day",
-            value: stats.half_day,
+            value: fmtDays(stats.half_day),
             icon: Monitor,
             color: "text-service-design",
             bg: "bg-service-design/10 border-service-design/20",
           },
           {
             label: "Leave",
-            value: stats.leave,
+            value: fmtDays(stats.leave),
             icon: Wifi,
             color: "text-service-dev",
             bg: "bg-service-dev/10 border-service-dev/20",
@@ -616,10 +652,7 @@ export function DailyRecordsTab() {
             onChange={(v) => setStatusFilter(v)}
             options={[
               { value: "all", label: "All Status" },
-              ...Object.entries(STATUS_META).map(([k, v]) => ({
-                value: k,
-                label: v.label,
-              })),
+              ...RECORD_FILTERS.map((f) => ({ value: f.value, label: f.label })),
             ]}
           />
           <div className="ml-auto flex items-center gap-2">
@@ -693,7 +726,7 @@ export function DailyRecordsTab() {
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <StatusChip status={rec.status} />
+                    <AttendanceChips facts={rec} />
                   </td>
                   <td className="px-4 py-3 font-mono text-[12.5px] text-text-1">
                     {fmtTime(rec.check_in)}
@@ -790,7 +823,7 @@ export function DailyRecordsTab() {
                     )}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <StatusChip status={rec.status} />
+                    <AttendanceChips facts={rec} />
                     <button
                       onClick={() => setEditRec(rec)}
                       className="text-text-4 hover:text-text-1 transition-colors"
@@ -4495,7 +4528,6 @@ export function ReportsTab() {
   const { data: activeProfiles = [] } = useActiveProfiles();
   const { data: holidays = [] } = useHolidays(year);
   const { data: workingSaturdays = [] } = useWorkingSaturdays(year);
-  const { data: halfDayLeaves = [] } = useMonthlyHalfDayLeaves(year, month);
   const { data: monthlyOvertime = [] } = useMonthlyOvertime(year, month);
 
   const hhmmToMin = (t: string) => {
@@ -4509,17 +4541,6 @@ export function ReportsTab() {
   const todayStr = new Intl.DateTimeFormat("en-CA", { timeZone: tz }).format(
     now,
   );
-
-  // Half-day leave dates grouped by employee (forces half credit even when the
-  // attendance row stayed 'present' because the employee checked in pre-approval).
-  const halfDayByProfile = (() => {
-    const map = new Map<string, Set<string>>();
-    for (const h of halfDayLeaves) {
-      if (!map.has(h.profileId)) map.set(h.profileId, new Set());
-      map.get(h.profileId)!.add(h.date);
-    }
-    return map;
-  })();
 
   // Reusable working-day test for the hours engine.
   const isWorkingDay = (() => {
@@ -4702,11 +4723,12 @@ export function ReportsTab() {
     recordsByProfile.get(rec.profile_id)!.push(rec);
   }
   const toLocalMinutes = (iso: string) => isoToZonedMinutes(iso, tz);
-  const emptyDates = new Set<string>();
   for (const [profileId, s] of statsMap) {
     const empRecords = (recordsByProfile.get(profileId) ?? []).map((r) => ({
       date: r.date,
       status: r.status,
+      day_type: r.day_type,
+      day_part: r.day_part,
       check_in: r.check_in,
       excluded_minutes: r.excluded_minutes,
     }));
@@ -4716,7 +4738,6 @@ export function ReportsTab() {
       month,
       settings: { workStartMin, workEndMin },
       isWorkingDay,
-      halfDayDates: halfDayByProfile.get(profileId) ?? emptyDates,
       todayStr,
       toLocalMinutes,
     });
@@ -5245,26 +5266,24 @@ export function ReportsTab() {
                                 const isEarly =
                                   checkinMin !== null &&
                                   checkinMin < workStartMin;
-                                const isOnTime =
-                                  checkinMin !== null &&
-                                  !isEarly &&
-                                  checkinMin <= workStartMin + graceMin;
                                 const statusCls =
-                                  r.status === "present"
-                                    ? isEarly
-                                      ? "bg-success/20 border-success/40 text-success"
-                                      : isOnTime
-                                        ? "bg-success/10 border-success/25 text-success"
-                                        : "bg-success/10 border-success/25 text-success"
-                                    : r.status === "late"
-                                      ? "bg-warning/15 border-warning/35 text-warning"
-                                      : r.status === "absent"
-                                        ? "bg-error/10 border-error/25 text-error"
-                                        : r.status === "half_day"
-                                          ? "bg-service-design/10 border-service-design/25 text-service-design"
-                                          : r.status === "leave"
-                                            ? "bg-service-dev/10 border-service-dev/25 text-service-dev"
-                                            : "bg-surface-3 border-border-default text-text-4";
+                                  r.day_type === "leave" && r.day_part !== "full"
+                                    ? "bg-service-design/10 border-service-design/25 text-service-design"
+                                    : r.day_type === "leave"
+                                      ? "bg-service-dev/10 border-service-dev/25 text-service-dev"
+                                      : r.day_type === "wfh"
+                                        ? "bg-service-dev/10 border-service-dev/25 text-service-dev"
+                                        : r.day_type === "holiday"
+                                          ? "bg-surface-3 border-border-default text-text-4"
+                                          : r.status === "present"
+                                            ? isEarly
+                                              ? "bg-success/20 border-success/40 text-success"
+                                              : "bg-success/10 border-success/25 text-success"
+                                            : r.status === "late"
+                                              ? "bg-warning/15 border-warning/35 text-warning"
+                                              : r.status === "absent"
+                                                ? "bg-error/10 border-error/25 text-error"
+                                                : "bg-surface-3 border-border-default text-text-4";
                                 const checkinLabel = r.check_in
                                   ? new Date(r.check_in).toLocaleTimeString(
                                       "en-US",
@@ -5275,20 +5294,30 @@ export function ReportsTab() {
                                       },
                                     )
                                   : null;
-                                const statusLabel =
+                                // Both facts, joined — "Half Day · 1st + Late"
+                                // rather than whichever one happened to win.
+                                const dayLabel =
+                                  r.day_type === "leave"
+                                    ? r.day_part === "first_half"
+                                      ? "Half Day · 1st"
+                                      : r.day_part === "second_half"
+                                        ? "Half Day · 2nd"
+                                        : "Leave"
+                                    : r.day_type === "wfh"
+                                      ? "WFH"
+                                      : r.day_type === "holiday"
+                                        ? "Holiday"
+                                        : null;
+                                const attLabel =
                                   r.status === "present"
                                     ? "Present"
                                     : r.status === "late"
                                       ? "Late"
                                       : r.status === "absent"
                                         ? "Absent"
-                                        : r.status === "half_day"
-                                          ? "Half Day"
-                                          : r.status === "leave"
-                                            ? "Leave"
-                                            : r.status === "holiday"
-                                              ? "Holiday"
-                                              : r.status;
+                                        : null;
+                                const statusLabel =
+                                  [dayLabel, attLabel].filter(Boolean).join(" + ") || "—";
 
                                 return (
                                   <div key={r.id} className="relative group">

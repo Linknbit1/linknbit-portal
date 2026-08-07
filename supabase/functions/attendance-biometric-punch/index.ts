@@ -198,17 +198,27 @@ async function reconcileDay(
     return
   }
 
-  // ── Approved leave / WFH already own the day. Record and flag; never
-  //    overwrite, since that would silently cancel an approved absence.
+  // ── A whole day off already owns the date. Record and flag; never overwrite,
+  //    since that would silently cancel an approved absence.
+  //
+  //    Keyed off day_type, and only when day_part = 'full'. Previously this tested
+  //    status === 'leave' || 'wfh', which meant a HALF-day leave (then status
+  //    'half_day') matched neither branch, fell through, and had its status
+  //    overwritten with present/late by the update below — the terminal silently
+  //    cancelled the approved half day. A half day is now workable by design: the
+  //    punch records the arrival and leaves day_type/day_part alone.
   const { data: existing } = await db
     .from('attendance')
-    .select('id, source, status')
+    .select('id, source, status, day_type, day_part, check_in')
     .eq('profile_id', profileId)
     .eq('date', date)
     .maybeSingle()
 
-  if (existing?.source === 'system' && (existing.status === 'leave' || existing.status === 'wfh')) {
-    const onLeave = existing.status === 'leave'
+  const fullDayOff = existing?.day_part === 'full'
+    && (existing.day_type === 'leave' || existing.day_type === 'wfh')
+
+  if (fullDayOff) {
+    const onLeave = existing!.day_type === 'leave'
     await setResolution(allIds, onLeave ? 'ignored_leave' : 'ignored_wfh')
     await auditOnce(db, {
       action: onLeave ? 'attendance.terminal_punch_while_on_leave' : 'attendance.terminal_punch_while_wfh',
@@ -228,6 +238,11 @@ async function reconcileDay(
 
   // ── A human self/admin record wins; punches are then redundant. Terminal owns
   //    only an absent/machine-written row.
+  //
+  //    A leave sync now stamps day_type on a row without changing its source, so
+  //    source still answers "who last recorded an arrival here" and stays the right
+  //    test. A half-day leave row written by the sync is source='system', which the
+  //    terminal owns — correct, since the punch is the arrival for the worked half.
   const terminalOwnsRow = !existing || existing.source === 'system' || existing.source === 'biometric'
   if (!terminalOwnsRow) {
     await setResolution(allIds, 'ignored_extra')
@@ -257,6 +272,10 @@ async function reconcileDay(
   //    cron records the end of day for every row, so biometric rows stay
   //    consistent with portal/absent ones. Standing at the terminal is stronger
   //    proof than office WiFi, so the network gate is satisfied by definition.
+  //    day_type/day_part are absent from both payloads on purpose: a punch is
+  //    evidence of an arrival and says nothing about what kind of day it is. On a
+  //    half-day-leave row the sync's day_type='leave'/day_part survives untouched
+  //    alongside the arrival this records.
   if (!existing) {
     await db.from('attendance').insert({
       profile_id: profileId,

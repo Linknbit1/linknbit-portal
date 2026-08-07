@@ -5,7 +5,6 @@ import {
   fetchMyTodayAttendance,
   fetchAllAttendance,
   fetchMonthlyAttendance,
-  fetchHalfDayLeaveDates,
   checkIn,
   markAttendance,
   updateAttendanceRecord,
@@ -80,8 +79,6 @@ export const ATTENDANCE_KEYS = {
   myToday: ['attendance', 'my', 'today'] as const,
   allByDate: (date: string) => ['attendance', 'all', date] as const,
   monthly: (year: number, month: number) => ['attendance', 'monthly', year, month] as const,
-  monthlyHalfDayLeaves: (year: number, month: number) =>
-    ['attendance', 'monthly', 'half-day-leaves', year, month] as const,
   settings: ['attendance', 'settings'] as const,
   exceptions: (filters: FetchExceptionsFilters) => ['attendance', 'exceptions', filters] as const,
   myExceptions: ['attendance', 'exceptions', 'my'] as const,
@@ -145,13 +142,6 @@ export function useMonthlyAttendance(year: number, month: number) {
   })
 }
 
-export function useMonthlyHalfDayLeaves(year: number, month: number) {
-  return useQuery({
-    queryKey: ATTENDANCE_KEYS.monthlyHalfDayLeaves(year, month),
-    queryFn: () => fetchHalfDayLeaveDates(year, month),
-    staleTime: 1000 * 60 * 5,
-  })
-}
 
 export function useCheckIn() {
   const qc = useQueryClient()

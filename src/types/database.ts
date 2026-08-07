@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       approvals: {
@@ -182,6 +157,8 @@ export type Database = {
           check_out: string | null
           created_at: string
           date: string
+          day_part: string
+          day_type: string
           device_fingerprint: string | null
           device_flagged: boolean
           device_name: string | null
@@ -192,7 +169,7 @@ export type Database = {
           note: string | null
           profile_id: string
           source: string
-          status: string
+          status: string | null
           updated_at: string
           wifi_validated: boolean
         }
@@ -201,6 +178,8 @@ export type Database = {
           check_out?: string | null
           created_at?: string
           date: string
+          day_part?: string
+          day_type?: string
           device_fingerprint?: string | null
           device_flagged?: boolean
           device_name?: string | null
@@ -211,7 +190,7 @@ export type Database = {
           note?: string | null
           profile_id: string
           source?: string
-          status?: string
+          status?: string | null
           updated_at?: string
           wifi_validated?: boolean
         }
@@ -220,6 +199,8 @@ export type Database = {
           check_out?: string | null
           created_at?: string
           date?: string
+          day_part?: string
+          day_type?: string
           device_fingerprint?: string | null
           device_flagged?: boolean
           device_name?: string | null
@@ -230,7 +211,7 @@ export type Database = {
           note?: string | null
           profile_id?: string
           source?: string
-          status?: string
+          status?: string | null
           updated_at?: string
           wifi_validated?: boolean
         }
@@ -3875,6 +3856,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      fn_recalc_project_progress: {
+        Args: { p_project: string }
+        Returns: undefined
+      }
       fn_remove_channel_role: {
         Args: { p_channel_id: string; p_role: string }
         Returns: undefined
@@ -3930,6 +3915,12 @@ export type Database = {
         }[]
       }
       fn_task_status_label: { Args: { p_status: string }; Returns: string }
+      fn_task_status_recipients: {
+        Args: { p_actor: string; p_task_id: string }
+        Returns: {
+          profile_id: string
+        }[]
+      }
       fn_task_subscribers: {
         Args: { p_actor: string; p_task_id: string }
         Returns: {
@@ -4240,9 +4231,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       queue_status: ["pending", "processing", "done", "failed"],

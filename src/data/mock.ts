@@ -490,7 +490,7 @@ export const ATTENDANCE_RECORDS: AttendanceRecord[] = [
   { id: 'a3', userId: 'u4', userName: 'Zain Malik', date: '2026-05-16', checkIn: '08:55', checkOut: '17:58', status: 'present', method: 'office' },
   { id: 'a4', userId: 'u5', userName: 'Usman Tariq', date: '2026-05-16', checkIn: '09:10', checkOut: undefined, status: 'present', method: 'office' },
   { id: 'a5', userId: 'u6', userName: 'Bilal Ahmed', date: '2026-05-16', status: 'absent', method: 'admin', note: 'Sick leave' },
-  { id: 'a6', userId: 'u7', userName: 'Hina Rizvi', date: '2026-05-16', checkIn: '10:30', checkOut: '14:30', status: 'half_day', method: 'office' },
+  { id: 'a6', userId: 'u7', userName: 'Hina Rizvi', date: '2026-05-16', checkIn: '10:30', checkOut: '14:30', status: 'present', method: 'office' },
   { id: 'a7', userId: 'u8', userName: 'Kamran Ali', date: '2026-05-16', checkIn: '09:05', checkOut: undefined, status: 'present', method: 'office' },
   // Yesterday
   { id: 'a8', userId: 'u2', userName: 'Ahmad Karimi', date: '2026-05-15', checkIn: '09:00', checkOut: '18:30', status: 'present', method: 'office' },

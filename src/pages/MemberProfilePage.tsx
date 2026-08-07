@@ -31,6 +31,7 @@ import {
 } from '../hooks/useGamification'
 import { formatRelativeTime } from '../lib/utils'
 import { cn } from '../lib/cn'
+import { AttendanceChips } from '../components/shared/AttendanceChips'
 import type { Person, PersonTeam, PersonProject } from '../api/people'
 import type { TaskListItem } from '../api/tasks'
 import type { LeaveRequestWithType, WfhRequest } from '../api/attendance'
@@ -416,9 +417,28 @@ function AttendanceTab({ personId, leave, wfh }: {
   const mf = useMonthFilter()
   const { data: records = [] } = useAttendanceByProfileMonth(personId, mf.year, mf.month)
 
-  const count = (s: string) => records.filter((r) => r.status === s).length
-  const attended = count('present') + count('late') + count('wfh') + count('half_day')
-  const expected = attended + count('absent')
+  // Counted in days. A half-day leave that was worked is half an attendance and
+  // half a leave, so it contributes 0.5 to each rather than a whole day to both.
+  const tally = (() => {
+    const t = { present: 0, late: 0, absent: 0, leave: 0, wfh: 0, half_day: 0 }
+    for (const r of records) {
+      const isLeave = r.day_type === 'leave'
+      const isHalf = isLeave && r.day_part !== 'full'
+      if (isHalf) t.half_day += 0.5
+      else if (isLeave) t.leave += 1
+      else if (r.day_type === 'wfh') t.wfh += 1
+
+      const w = isHalf ? 0.5 : 1
+      if (r.status === 'present') t.present += w
+      else if (r.status === 'late') t.late += w
+      else if (r.status === 'absent') t.absent += w
+    }
+    return t
+  })()
+  const fmtDays = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1))
+
+  const attended = tally.present + tally.late + tally.wfh
+  const expected = attended + tally.absent
   const rate = expected > 0 ? Math.round((attended / expected) * 100) : null
 
   const { data: balances = [] } = useLeaveBalancesByProfile(personId)
@@ -426,12 +446,12 @@ function AttendanceTab({ personId, leave, wfh }: {
   const totalAllowed = balances.reduce((s, b) => s + b.type.days_allowed, 0)
 
   const summary = [
-    { label: 'Present',  value: count('present'),  dot: 'bg-success',        text: 'text-success' },
-    { label: 'Late',     value: count('late'),     dot: 'bg-warning',        text: 'text-warning' },
-    { label: 'Absent',   value: count('absent'),   dot: 'bg-error',          text: 'text-error' },
-    { label: 'Leave',    value: count('leave'),    dot: 'bg-service-dev',    text: 'text-service-dev' },
-    { label: 'WFH',      value: count('wfh'),      dot: 'bg-service-dev',    text: 'text-service-dev' },
-    { label: 'Half day', value: count('half_day'), dot: 'bg-service-design', text: 'text-service-design' },
+    { label: 'Present',  value: fmtDays(tally.present),  dot: 'bg-success',        text: 'text-success' },
+    { label: 'Late',     value: fmtDays(tally.late),     dot: 'bg-warning',        text: 'text-warning' },
+    { label: 'Absent',   value: fmtDays(tally.absent),   dot: 'bg-error',          text: 'text-error' },
+    { label: 'Leave',    value: fmtDays(tally.leave),    dot: 'bg-service-dev',    text: 'text-service-dev' },
+    { label: 'WFH',      value: fmtDays(tally.wfh),      dot: 'bg-service-dev',    text: 'text-service-dev' },
+    { label: 'Half day', value: fmtDays(tally.half_day), dot: 'bg-service-design', text: 'text-service-design' },
   ]
 
   const { data: exceptions = [] } = useExceptionsByProfile(personId)
@@ -481,14 +501,12 @@ function AttendanceTab({ personId, leave, wfh }: {
           {records.length === 0 ? <Empty label="This month's clock-ins are missing, presumed on holiday somewhere warm." /> : (
             <div className="-mx-5 -mb-5 divide-y divide-border-subtle border-t border-border-subtle">
               {records.map((r) => {
-                const meta = ATT_STATUS[r.status]
+                const meta = r.status ? ATT_STATUS[r.status] : undefined
                 return (
                   <div key={r.id} className="flex items-center gap-3 px-5 py-2.5 transition-colors hover:bg-surface-2/40">
                     <span className={cn('size-2 shrink-0 rounded-full', meta?.dot ?? 'bg-text-4')} />
                     <span className="w-32 shrink-0 font-ui text-[12.5px] font-medium text-text-1">{fmtShort(r.date)}</span>
-                    <span className={cn('shrink-0 rounded-xs border px-2 py-0.5 font-mono text-[10px] font-semibold', meta?.cls ?? 'border-border-default text-text-3')}>
-                      {meta?.label ?? r.status}
-                    </span>
+                    <AttendanceChips facts={r} />
                     <span className="ml-auto font-mono text-[11.5px] text-text-3">
                       {fmtTime(r.check_in)}
                     </span>
