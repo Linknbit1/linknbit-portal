@@ -26,6 +26,8 @@ export interface EnrollmentLink {
   name: string
   avatar_url: string | null
   zk_user_id: string | null
+  /** False for someone who has left while their enroll number was still linked. */
+  is_active: boolean
 }
 
 export interface LinkEnrollmentResult {
@@ -169,11 +171,23 @@ export async function fetchPunchesByProfileDate(
 
 // ── Enroll-number links ───────────────────────────────────────────────────────
 
+/**
+ * Who a terminal enroll number can be linked to, plus who currently holds one.
+ *
+ * Deactivating someone does NOT clear profiles.zk_user_id — their punches keep
+ * their attribution and the finger is usually still enrolled on the device. So
+ * this deliberately reaches past `is_active` for anyone still holding a link:
+ * filtering them out made the portal report their ID as unlinked and offer it to
+ * another member, which the link RPC then rejects as already taken.
+ *
+ * Callers must gate on `is_active` themselves: leavers belong in the linked list
+ * (flagged, so the ID can be freed) but never in the "link to member…" picker.
+ */
 export async function fetchEnrollmentLinks(): Promise<EnrollmentLink[]> {
   const { data, error } = await supabase
     .from('profiles')
-    .select('id,name,avatar_url,zk_user_id')
-    .eq('is_active', true)
+    .select('id,name,avatar_url,zk_user_id,is_active')
+    .or('is_active.eq.true,zk_user_id.not.is.null')
     .order('name')
 
   if (error) throw error

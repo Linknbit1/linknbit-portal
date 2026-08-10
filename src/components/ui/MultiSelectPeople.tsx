@@ -3,6 +3,7 @@ import { ChevronDown, Check } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { Popover } from './Popover'
 import { Avatar, AvatarGroup } from './Avatar'
+import { DepartedBadge } from './DepartedBadge'
 
 export interface PersonOption {
   id: string
@@ -66,11 +67,7 @@ export function MultiSelectPeople({
               <span className="font-ui text-[11.5px] text-text-2 truncate">
                 {selected.length === 1 ? selected[0].name : `${selected.length} assigned`}
               </span>
-              {departedSelected.length > 0 && (
-                <span className="shrink-0 rounded-xs bg-[rgba(238,39,55,0.12)] px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-brand-red">
-                  Reassign
-                </span>
-              )}
+              {departedSelected.length > 0 && <DepartedBadge label="Reassign" />}
             </>
           )}
         </span>
@@ -96,11 +93,7 @@ export function MultiSelectPeople({
             >
               <Avatar name={o.name} src={o.avatar_url ?? undefined} size="xs" />
               <span className={cn('flex-1 min-w-0 truncate', o.departed && 'text-text-3')}>{o.name}</span>
-              {o.departed && (
-                <span className="shrink-0 rounded-xs bg-[rgba(238,39,55,0.12)] px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-brand-red">
-                  Left
-                </span>
-              )}
+              {o.departed && <DepartedBadge />}
               {on && <Check size={13} className="text-brand-red shrink-0" />}
             </button>
           )

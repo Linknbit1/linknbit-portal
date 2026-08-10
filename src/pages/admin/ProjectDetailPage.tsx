@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useMemo, useRef, useState, type ReactNode } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   Plus, Users, Layers, Paperclip, Calendar, Wallet, UserCircle,
@@ -11,6 +11,7 @@ import { Avatar, AvatarGroup } from '../../components/ui/Avatar'
 import { PersonLink } from '../../components/shared/PersonLink'
 import { Skeleton } from '../../components/ui/Skeleton'
 import { Select } from '../../components/ui/Select'
+import { DepartedBadge } from '../../components/ui/DepartedBadge'
 import { Popover } from '../../components/ui/Popover'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { ServiceChip } from '../../components/shared/ServiceChip'
@@ -264,7 +265,12 @@ export default function ProjectDetailPage() {
             />
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-5">
-            <Meta icon={UserCircle} label="Manager" value={project.manager?.name ?? '—'} />
+            <Meta
+              icon={UserCircle}
+              label="Manager"
+              value={project.manager?.name ?? '—'}
+              badge={project.manager?.is_active === false ? <DepartedBadge /> : undefined}
+            />
             <Meta icon={Calendar} label="Deadline" value={project.deadline ? formatDate(project.deadline) : '—'} danger={!!project.deadline && isOverdue(project.deadline) && project.status !== 'completed'} />
             {canViewBudget && <Meta icon={Wallet} label="Budget" value={project.budget ? formatCurrency(project.budget) : '—'} />}
             <div>
@@ -642,11 +648,14 @@ function DeleteImpactMessage({
   )
 }
 
-function Meta({ icon: Icon, label, value, danger }: { icon: typeof Calendar; label: string; value: string; danger?: boolean }) {
+function Meta({ icon: Icon, label, value, danger, badge }: { icon: typeof Calendar; label: string; value: string; danger?: boolean; badge?: ReactNode }) {
   return (
     <div>
       <p className="font-mono text-[10px] uppercase tracking-wider text-text-4 mb-1.5 flex items-center gap-1"><Icon size={11} /> {label}</p>
-      <p className={cn('font-ui text-[13px] font-medium', danger ? 'text-error' : 'text-text-1')}>{value}</p>
+      <p className={cn('font-ui text-[13px] font-medium flex items-center gap-1.5 min-w-0', danger ? 'text-error' : 'text-text-1')}>
+        <span className="truncate">{value}</span>
+        {badge}
+      </p>
     </div>
   )
 }
