@@ -5,7 +5,7 @@ import { HubRow } from '../components/layout/MobileHub'
 import { InstallAppButton } from '../components/pwa/InstallAppButton'
 import { Avatar } from '../components/ui/Avatar'
 import { ProfileRoles } from '../components/shared/ProfileRoles'
-import { useMoreNavGroups } from '../components/layout/navItems'
+import { useMoreNavGroups, BRAND_MENU_LINKS } from '../components/layout/navItems'
 import { useAuthContext } from '../context/AuthContext'
 import { useIsDesktop } from '../hooks/useMediaQuery'
 
@@ -55,6 +55,17 @@ export default function MorePage() {
             ))}
           </section>
         ))}
+
+        {/* The desktop equivalent lives behind the arrow beside the logo, which
+            the mobile layout has no sidebar to show. */}
+        <section className="flex flex-col gap-2.5">
+          <h2 className="text-[10px] font-ui font-semibold text-text-4 uppercase tracking-widest px-1">
+            About the portal
+          </h2>
+          {BRAND_MENU_LINKS.map((link) => (
+            <HubRow key={link.to} to={link.to} label={link.label} icon={link.icon} />
+          ))}
+        </section>
 
         {/* PWA install — self-gates to null when not installable / already installed. */}
         <InstallAppButton />

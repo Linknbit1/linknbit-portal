@@ -325,6 +325,49 @@ Use realistic data throughout:
 
 ---
 
+## Documentation Rules
+
+The portal documents itself. `/docs` is the staff handbook and `/docs/changelog` is the release history, both rendered from data:
+
+| File                              | Holds                                                          |
+| --------------------------------- | -------------------------------------------------------------- |
+| `src/pages/docs/docsContent.ts`   | `DOC_CHAPTERS` — every user-facing feature, gated by role/capability |
+| `src/pages/docs/changelogData.ts` | `RELEASES` — newest first; `RELEASES[0]` is the "What's new" callout |
+
+**A user-facing functionality change is not done until both are updated in the same change.** Not a follow-up commit, not a TODO — the same PR that ships the feature.
+
+### On every functionality change
+
+1. **Handbook** — add or edit the `DocTopic` in `docsContent.ts`. If behaviour changed, fix the affected `procedures[].steps` too; stale steps are worse than none.
+2. **Changelog** — add a `ChangelogEntry` to the top release (`added` / `improved` / `fixed`). Start a new release entry when shipping a milestone rather than a single change, and move `highlight` onto it — only the newest release should carry one.
+3. **Gate it** — set `roles` / `feature` to the *same* keys the nav item and route guard use. A reader must never be shown instructions for a screen they cannot open.
+
+### What does NOT go in the handbook
+
+Governance and plumbing: the audit log, the role/permission editor, impersonation, terminal provisioning, migrations, RLS. The handbook is read by all seven roles; internal machinery reads as noise and invites people to go looking for screens they have no access to.
+
+### Undocumented modules
+
+Some modules are deliberately invisible: they exist for the people explicitly granted them and are not part of the portal anyone else is told about.
+
+**My Notes / sticky notes (`can_use_sticky_notes`) is one of these.**
+
+- **Who may see it:** super admins (through `administrator`), and anyone holding the permission — granted only via the dedicated `Sticky Notes` role. Nobody else, in any role, at any rank.
+- The permission is `is_hidden` in the catalogue on purpose, so it does not even appear as something to ask for.
+- **It is never documented.** No handbook topic, no changelog entry, no release note, no What's-new callout — not even a gated one. A gated topic still tells the reader the module exists.
+- **This holds for every future change to it.** Shipping a fix or a feature there means shipping it silently: the "update the docs with every change" rule above does not apply, and the change must not be mentioned anywhere user-facing.
+
+Treat any module marked this way the same. If a new one is added, list it here.
+
+### Writing rules
+
+- Write procedures as **instructions** ("Press Start", "Choose a replacement"), never as descriptions of the UI.
+- Put the surprising-but-true things in `notes` — the questions support gets asked twice.
+- `where` is the nav trail (`"Workspace → Standup"`), so a reader can find the screen without hunting.
+- No screenshots. They rot silently; this file does not.
+
+---
+
 ## Migration Rules
 
 Every schema change follows this exact sequence — no shortcuts.
@@ -563,6 +606,14 @@ These extend the existing "Code Style" rules and take precedence.
 - No edits to existing migration files — create a new migration instead
 - No hand-edits to `src/types/database.ts` — regenerate it with `supabase gen types typescript`
 - No new top-level folders under `src/` without prior discussion
+
+**Documentation**
+
+- No shipping a user-facing change without updating `docsContent.ts` and `changelogData.ts` in the same change
+- No documenting a screen the reader's role can't open — gate the topic with the same key as the route guard
+- No governance internals in the handbook (audit log, permissions editor, impersonation, terminals)
+- No mention of My Notes / sticky notes anywhere user-facing — not in the handbook, not in the changelog, not even gated
+- No screenshots in the docs
 
 ## graphify
 

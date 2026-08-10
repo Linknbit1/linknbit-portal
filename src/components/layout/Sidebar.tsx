@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { ChevronRight, ChevronDown } from 'lucide-react'
 import { cn } from '../../lib/cn'
-import { useNavGroups, activeNavPath, type NavItem } from './navItems'
+import { useNavGroups, activeNavPath, BRAND_MENU_LINKS, type NavItem } from './navItems'
 import { LinknbitMark } from '../brand/LinknbitLogo'
 import { InstallAppButton } from '../pwa/InstallAppButton'
+import { Popover } from '../ui/Popover'
 
 export function Sidebar() {
   const location = useLocation()
@@ -21,9 +22,7 @@ export function Sidebar() {
           <p className="font-display font-bold text-body-sm/tight text-text-1">Linknbit</p>
           <p className="font-mono text-[9px] text-text-4 uppercase tracking-wider mt-0.5">Operations Portal</p>
         </div>
-        <button className="size-5 rounded flex items-center justify-center text-text-4 hover:text-text-2 hover:bg-surface-2 transition-colors">
-          <ChevronRight size={12} />
-        </button>
+        <BrandMenu />
       </div>
 
       {/* Nav — one section per kind of work; empty sections drop out per role. */}
@@ -45,6 +44,56 @@ export function Sidebar() {
         <InstallAppButton />
       </div>
     </aside>
+  )
+}
+
+/**
+ * The arrow beside the logo. It sat inert since the first build; it now opens the
+ * things that describe the portal itself rather than a destination inside it —
+ * which is why they are here and not another sidebar row.
+ */
+function BrandMenu() {
+  const [open, setOpen] = useState(false)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+
+  return (
+    <>
+      <button
+        ref={triggerRef}
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label="Portal documentation"
+        className={cn(
+          'size-5 rounded flex items-center justify-center transition-colors hover:bg-surface-2 hover:text-text-2',
+          open ? 'text-text-2 bg-surface-2' : 'text-text-4',
+        )}
+      >
+        <ChevronRight size={12} className={cn('transition-transform', open && 'rotate-90')} />
+      </button>
+
+      <Popover
+        anchorRef={triggerRef}
+        open={open}
+        onClose={() => setOpen(false)}
+        className="w-60 overflow-hidden rounded-md border border-border-strong bg-surface-2 shadow-lg"
+      >
+        {BRAND_MENU_LINKS.map((link) => (
+          <NavLink
+            key={link.to}
+            to={link.to}
+            onClick={() => setOpen(false)}
+            className="flex items-start gap-2.5 px-3 py-2.5 transition-colors hover:bg-surface-3"
+          >
+            <link.icon size={14} className="mt-0.5 shrink-0 text-text-3" />
+            <span className="min-w-0">
+              <span className="block font-ui text-[13px] font-medium text-text-1">{link.label}</span>
+              <span className="block font-ui text-[11.5px] text-text-4">{link.hint}</span>
+            </span>
+          </NavLink>
+        ))}
+      </Popover>
+    </>
   )
 }
 

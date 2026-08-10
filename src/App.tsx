@@ -38,6 +38,8 @@ import ReportsPage from './pages/admin/ReportsPage'
 import AuditLogPage from './pages/admin/AuditLogPage'
 import SettingsPage, { SettingsSectionScreen } from './pages/admin/SettingsPage'
 import AttendancePage from './pages/AttendancePage'
+import DocumentationPage from './pages/docs/DocumentationPage'
+import ChangelogPage from './pages/docs/ChangelogPage'
 
 import ClientDashboardPage from './pages/client/DashboardPage'
 import ClientProjectsPage from './pages/client/ProjectsPage'
@@ -74,6 +76,10 @@ export default function App() {
                 {/* Public (to all internal staff) member profile — tiered sections gated by role/RLS */}
                 <Route path="/members/:id" element={<RoleGuard allowedRoles={SETTINGS_ROLES}><MemberProfilePage /></RoleGuard>} />
                 <Route path="/more" element={<MorePage />} />
+                {/* Handbook + changelog. Inside PrivateRoute, so both are staff-only;
+                    the handbook filters its own chapters by role and capability. */}
+                <Route path="/docs" element={<DocumentationPage />} />
+                <Route path="/docs/changelog" element={<ChangelogPage />} />
                 {/* Mobile-only list; redirects to /dashboard on desktop (bell dropdown). */}
                 <Route path="/notifications" element={<NotificationsPage />} />
                 <Route path="/inbox" element={<InboxPage />} />
