@@ -1,8 +1,9 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { ChevronLeft, ChevronRight, CalendarClock, ChevronDown } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { Popover } from './Popover'
-import { toDateInput, toTimeInput, fromDateTimeInput } from '../../lib/utils'
+import { TimeWheel } from './TimeWheel'
+import { toDateInput, toTimeInput, fromDateTimeInput, formatClockLabel } from '../../lib/utils'
 
 export interface DateTimeRange {
   start: string | null
@@ -37,12 +38,6 @@ function parseStr(s: string): Date | null {
   return new Date(y, m - 1, d)
 }
 
-function toAmPm(h: number, m: number): string {
-  const suffix = h >= 12 ? 'PM' : 'AM'
-  const h12 = h % 12 === 0 ? 12 : h % 12
-  return `${fmt2(h12)}:${fmt2(m)} ${suffix}`
-}
-
 /** "12 Aug, 09:00 AM" — the compact form used in the trigger and footer. */
 function label(day: string, h: number, m: number, withYear = false): string {
   const d = parseStr(day)
@@ -50,42 +45,7 @@ function label(day: string, h: number, m: number, withYear = false): string {
   const opts: Intl.DateTimeFormatOptions = withYear
     ? { day: '2-digit', month: 'short', year: 'numeric' }
     : { day: '2-digit', month: 'short' }
-  return `${d.toLocaleDateString('en-GB', opts)}, ${toAmPm(h, m)}`
-}
-
-/** A scrollable hour or minute column. */
-function TimeColumn({
-  heading, values, active, onSelect, listRef,
-}: {
-  heading: string
-  values: number[]
-  active: number
-  onSelect: (v: number) => void
-  listRef: React.RefObject<HTMLUListElement | null>
-}) {
-  return (
-    <div className="flex-1 flex flex-col min-w-0">
-      <div className="text-center font-mono text-[10px] text-text-4 uppercase tracking-wider py-1 border-b border-border-subtle bg-surface-2/40">
-        {heading}
-      </div>
-      <ul ref={listRef} className="h-24 overflow-y-auto py-1">
-        {values.map((v) => (
-          <li
-            key={v}
-            onClick={() => onSelect(v)}
-            className={cn(
-              'py-1 font-mono text-[12.5px] text-center select-none transition-colors cursor-pointer',
-              v === active
-                ? 'bg-brand-red text-white font-semibold'
-                : 'text-text-2 hover:bg-surface-2 hover:text-text-1',
-            )}
-          >
-            {fmt2(v)}
-          </li>
-        ))}
-      </ul>
-    </div>
-  )
+  return `${d.toLocaleDateString('en-GB', opts)}, ${formatClockLabel(h, m)}`
 }
 
 /**
@@ -119,15 +79,11 @@ export function DateTimeRangePicker({
   const [eM, setEM] = useState(0)
   const [displayYear, setDisplayYear] = useState(new Date().getFullYear())
   const [displayMonth, setDisplayMonth] = useState(new Date().getMonth())
+  // Which end the single time wheel is editing. One roomy wheel beats two
+  // half-height ones fighting for the same column.
+  const [timeSide, setTimeSide] = useState<'start' | 'end'>('start')
 
   const triggerRef = useRef<HTMLButtonElement>(null)
-  const sHourRef = useRef<HTMLUListElement>(null)
-  const sMinRef = useRef<HTMLUListElement>(null)
-  const eHourRef = useRef<HTMLUListElement>(null)
-  const eMinRef = useRef<HTMLUListElement>(null)
-
-  const HOURS = Array.from({ length: 24 }, (_, i) => i)
-  const MINUTES = Array.from({ length: Math.ceil(60 / step) }, (_, i) => i * step)
 
   const snap = (m: number) => {
     const s = Math.round(m / step) * step
@@ -141,6 +97,7 @@ export function DateTimeRangePicker({
       setPStart(startDay)
       setPEnd(endDay)
       setPhase('start')
+      setTimeSide('start')
       const [shh, smm] = startClock ? startClock.split(':').map(Number) : [9, 0]
       const [ehh, emm] = endClock ? endClock.split(':').map(Number) : [17, 0]
       setSH(shh); setSM(snap(smm))
@@ -151,21 +108,6 @@ export function DateTimeRangePicker({
     }
     setOpen(next)
   }
-
-  useEffect(() => {
-    if (!open) return
-    const id = setTimeout(() => {
-      const scroll = (ref: React.RefObject<HTMLUListElement | null>, idx: number) => {
-        const el = ref.current?.children[idx] as HTMLElement | undefined
-        el?.scrollIntoView({ block: 'center', behavior: 'instant' })
-      }
-      scroll(sHourRef, HOURS.indexOf(sH))
-      scroll(sMinRef, MINUTES.indexOf(sM))
-      scroll(eHourRef, HOURS.indexOf(eH))
-      scroll(eMinRef, MINUTES.indexOf(eM))
-    }, 40)
-    return () => clearTimeout(id)
-  }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const prevMonth = () => {
     if (displayMonth === 0) { setDisplayMonth(11); setDisplayYear((y) => y - 1) }
@@ -246,7 +188,7 @@ export function DateTimeRangePicker({
         anchorRef={triggerRef}
         open={open}
         onClose={() => setOpen(false)}
-        className="bg-surface-1 border border-border-default rounded-xl shadow-2xl overflow-hidden w-108 max-w-[calc(100vw-2rem)]"
+        className="bg-surface-1 border border-border-default rounded-xl shadow-2xl overflow-hidden w-120 max-w-[calc(100vw-2rem)]"
       >
         <div className="flex flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x divide-border-subtle">
           {/* Calendar — left */}
@@ -311,22 +253,39 @@ export function DateTimeRangePicker({
             </p>
           </div>
 
-          {/* Times — right */}
+          {/* Times — right. The pair of buttons both picks which end you are
+              setting and shows what each one currently reads. */}
           <div className="flex-1 min-w-0 flex flex-col">
-            <div className="px-3 py-1.5 border-b border-border-subtle">
-              <p className="font-mono text-[10px] text-text-4 uppercase tracking-wider">Start time</p>
+            <div className="flex gap-1 border-b border-border-subtle p-1.5">
+              {([
+                { side: 'start', title: 'Start time', h: sH, m: sM },
+                { side: 'end', title: 'End time', h: eH, m: eM },
+              ] as const).map(({ side, title, h, m }) => (
+                <button
+                  key={side}
+                  type="button"
+                  onClick={() => setTimeSide(side)}
+                  aria-pressed={timeSide === side}
+                  className={cn(
+                    'flex-1 rounded-sm px-2 py-1.5 transition-colors',
+                    timeSide === side ? 'bg-surface-3' : 'hover:bg-surface-2',
+                  )}
+                >
+                  <span className="block font-mono text-[9.5px] uppercase tracking-wider text-text-4">{title}</span>
+                  <span className={cn('block font-mono text-[12px] font-semibold', timeSide === side ? 'text-text-1' : 'text-text-3')}>
+                    {formatClockLabel(h, m)}
+                  </span>
+                </button>
+              ))}
             </div>
-            <div className="flex divide-x divide-border-subtle border-b border-border-subtle">
-              <TimeColumn heading="Hr" values={HOURS} active={sH} onSelect={setSH} listRef={sHourRef} />
-              <TimeColumn heading="Min" values={MINUTES} active={sM} onSelect={setSM} listRef={sMinRef} />
-            </div>
-            <div className="px-3 py-1.5 border-b border-border-subtle">
-              <p className="font-mono text-[10px] text-text-4 uppercase tracking-wider">End time</p>
-            </div>
-            <div className="flex divide-x divide-border-subtle">
-              <TimeColumn heading="Hr" values={HOURS} active={eH} onSelect={setEH} listRef={eHourRef} />
-              <TimeColumn heading="Min" values={MINUTES} active={eM} onSelect={setEM} listRef={eMinRef} />
-            </div>
+            <TimeWheel
+              hour={timeSide === 'start' ? sH : eH}
+              minute={timeSide === 'start' ? sM : eM}
+              step={step}
+              onChange={(h, m) => {
+                if (timeSide === 'start') { setSH(h); setSM(m) } else { setEH(h); setEM(m) }
+              }}
+            />
           </div>
         </div>
 

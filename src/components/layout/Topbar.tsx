@@ -1,17 +1,46 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Bell, Search, Check, CheckCheck, ChevronDown, UserCircle, LogOut, ChevronLeft } from 'lucide-react'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { Bell, Search, Check, CheckCheck, ChevronDown, UserCircle, LogOut, ChevronLeft, UserRound } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { showWipFeatures } from '../../lib/featureFlags'
 import { Avatar } from '../ui/Avatar'
 import { ProfileRoles } from '../shared/ProfileRoles'
 import { useAuthContext } from '../../context/AuthContext'
 import { useNavChrome } from './MobileNavContext'
+import { useMeMode } from '../../context/MeModeContext'
 import { useNotifications, useMarkGroupRead, useMarkAllRead } from '../../hooks/useNotifications'
 import { notificationHref } from '../../constants/notifications'
 import { groupNotifications, groupTitle } from '../../lib/notificationGroups'
 import { formatRelativeTime } from '../../lib/utils'
 import { isUserRole } from '../../lib/peopleAccess'
+
+/**
+ * Me Mode — narrows task views to what you are assigned to or tagged in. Lives in
+ * the Topbar rather than per page so the lens holds across navigation, and turns
+ * brand-red when active: a filter you have forgotten about is worse than no filter.
+ */
+function MeModeButton({ meMode, compact }: { meMode: ReturnType<typeof useMeMode>; compact?: boolean }) {
+  return (
+    <button
+      onClick={meMode.toggle}
+      aria-pressed={meMode.enabled}
+      aria-label="Me Mode — only my tasks"
+      title={meMode.enabled
+        ? 'Me Mode on — showing only tasks assigned to or tagging you. Click to show everyone.'
+        : 'Me Mode — show only tasks assigned to or tagging you'}
+      className={cn(
+        'flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-sm border font-ui text-[12px] font-semibold transition-colors',
+        compact ? 'w-9' : 'px-2.5',
+        meMode.enabled
+          ? 'border-brand-red/40 bg-brand-red/12 text-brand-red'
+          : 'border-border-default bg-surface-1 text-text-3 hover:text-text-1',
+      )}
+    >
+      <UserRound size={15} />
+      {!compact && 'Me'}
+    </button>
+  )
+}
 
 interface TopbarProps {
   title?: string
@@ -27,6 +56,11 @@ interface TopbarProps {
 export function Topbar({ title, breadcrumb, className, back, actions }: TopbarProps) {
   const navigate = useNavigate()
   const { profile, signOut } = useAuthContext()
+  const meMode = useMeMode()
+  // Me Mode only filters task views, so it only appears on the pages it affects —
+  // a toggle on Attendance or Settings would do nothing and just raise questions.
+  const { pathname } = useLocation()
+  const meModeRelevant = /^\/admin\/(projects|tasks)(\/|$)/.test(pathname)
   const profileId = profile?.id ?? ''
 
   // Report this screen's back affordance to the shell so the mobile bottom tab
@@ -120,25 +154,30 @@ export function Topbar({ title, breadcrumb, className, back, actions }: TopbarPr
           bell is hidden (drill-in screens). */}
       {actions && <div className="ml-auto flex shrink-0 items-center gap-1">{actions}</div>}
 
-      {/* Mobile bell — the dropdown needs room, so phones get a dedicated screen.
-          Hidden on drill-in screens so it never sits beside a back button. */}
-      {!back && (
-        <button
-          onClick={() => navigate('/notifications')}
-          aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Notifications'}
-          className="ml-auto lg:hidden relative size-9 rounded-sm bg-surface-1 border border-border-default text-text-2 flex items-center justify-center shrink-0 transition-colors active:bg-surface-2"
-        >
-          <Bell size={16} />
-          {unreadCount > 0 && (
-            <span className="absolute top-1 right-1 min-w-4 h-4 bg-brand-red text-white text-[9.5px] font-ui font-bold rounded-full flex items-center justify-center px-1 leading-none border-2 border-bg-base">
-              {unreadCount > 99 ? '99+' : unreadCount}
-            </span>
-          )}
-        </button>
-      )}
+      {/* Me Mode + mobile bell. Me Mode sits outside the desktop-only block so it
+          exists at every width — hidden below lg is exactly how it went missing. */}
+      <div className={cn('flex shrink-0 items-center gap-2 lg:hidden', !actions && 'ml-auto')}>
+        {meModeRelevant && <MeModeButton meMode={meMode} compact />}
+        {!back && (
+          <button
+            onClick={() => navigate('/notifications')}
+            aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Notifications'}
+            className="relative size-9 rounded-sm bg-surface-1 border border-border-default text-text-2 flex items-center justify-center shrink-0 transition-colors active:bg-surface-2"
+          >
+            <Bell size={16} />
+            {unreadCount > 0 && (
+              <span className="absolute top-1 right-1 min-w-4 h-4 bg-brand-red text-white text-[9.5px] font-ui font-bold rounded-full flex items-center justify-center px-1 leading-none border-2 border-bg-base">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
+          </button>
+        )}
+      </div>
 
       {/* Actions — desktop only; mobile uses the bell above + bottom tabs */}
       <div className="ml-auto hidden lg:flex items-center gap-3.5">
+        {meModeRelevant && <MeModeButton meMode={meMode} />}
+
         {/* Notification bell — live: reads the real notifications table. */}
         <div ref={bellRef} className="relative">
           <button

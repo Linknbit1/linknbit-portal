@@ -142,22 +142,28 @@ export async function stopRunningTimer(): Promise<TimeEntryRow | null> {
 
 export interface LogTimeInput {
   taskId: string
-  /** Whole minutes of work to record. */
+  /** Whole minutes of work to record. Ignored when `startedAt` is given. */
   minutes: number
   /** When the work ended; defaults to now, so the entry lands on today. */
   endedAt?: Date
+  /**
+   * Exact start of the stretch. When the caller picked a real window, store its
+   * endpoints rather than back-computing one from a duration — the entry then
+   * says when the work happened, not just how long it took.
+   */
+  startedAt?: Date
   note?: string | null
   billable?: boolean
 }
 
 /** Records a completed stretch of work without running a timer. */
-export async function logTime({ taskId, minutes, endedAt, note, billable }: LogTimeInput): Promise<TimeEntryRow> {
+export async function logTime({ taskId, minutes, endedAt, startedAt, note, billable }: LogTimeInput): Promise<TimeEntryRow> {
   const { data: auth } = await supabase.auth.getUser()
   const userId = auth.user?.id
   if (!userId) throw new Error('Not signed in')
 
   const end = endedAt ?? new Date()
-  const start = new Date(end.getTime() - minutes * 60_000)
+  const start = startedAt ?? new Date(end.getTime() - minutes * 60_000)
 
   const { data, error } = await supabase
     .from('task_time_entries')

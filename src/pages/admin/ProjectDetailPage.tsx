@@ -17,6 +17,7 @@ import { ServiceChip } from '../../components/shared/ServiceChip'
 import { StatusChip } from '../../components/shared/StatusChip'
 import { PriorityChip } from '../../components/shared/PriorityChip'
 import { TaskBoard } from '../../components/shared/TaskBoard'
+import { MeModeNotice } from '../../components/shared/MeModeNotice'
 import { DocEditor } from '../../components/editor/DocEditor'
 import { ProjectFilesTab } from './ProjectFilesTab'
 import { ProjectFormModal } from './ProjectFormModal'
@@ -39,6 +40,7 @@ import { useServices } from '../../hooks/useServices'
 import { useUsableTemplates, useApplyTemplate } from '../../hooks/useTemplates'
 import { useApprovals, useRequestApproval, useReviewApproval } from '../../hooks/useApprovals'
 import { useRealtimeTasks } from '../../hooks/realtime/useRealtimeTasks'
+import { useMyTasksFilter } from '../../hooks/useMeMode'
 import { StageFormModal } from './StageFormModal'
 import { TaskFormModal } from './TaskFormModal'
 import { AddProjectMemberModal } from './AddProjectMemberModal'
@@ -130,7 +132,24 @@ export default function ProjectDetailPage() {
   const activeServiceId = activeService?.id
 
   const { data: stages = [] } = useServiceStages(activeServiceId)
-  const { data: tasks = [] } = useTasks({ projectId: id, projectServiceId: activeServiceId })
+  // Every task in the project, not just the active service's. Switching service
+  // becomes instant instead of refetching, and it makes a real per-service task
+  // count available for the switcher.
+  const { data: projectTasks = [] } = useTasks({ projectId: id })
+  const allTasks = useMemo(
+    () => projectTasks.filter((t) => t.project_service_id === activeServiceId),
+    [projectTasks, activeServiceId],
+  )
+  // Me Mode applies here too, so the lens holds when you drill into a project.
+  const tasks = useMyTasksFilter(allTasks)
+
+  const taskCountByService = useMemo(() => {
+    const map = new Map<string, number>()
+    for (const t of projectTasks) {
+      map.set(t.project_service_id, (map.get(t.project_service_id) ?? 0) + 1)
+    }
+    return map
+  }, [projectTasks])
   const { data: members = [] } = useProjectServiceMembers(id)
   const { data: approvals = [] } = useApprovals({ projectId: id })
   const { data: projectFiles = [] } = useProjectFiles(id)
@@ -277,51 +296,68 @@ export default function ProjectDetailPage() {
           </div>
         </div>
 
-        {/* Service switcher — the layer between the project and its pipeline */}
-        <div className="shrink-0 flex flex-wrap items-center gap-2">
-          <span className="font-mono text-[10px] uppercase tracking-wider text-text-4 mr-0.5">Service</span>
-          {services.map((s) => {
-            const active = s.id === activeServiceId
-            const count = members.filter((m) => m.project_service_id === s.id).length
-            return (
-              <button
-                key={s.id}
-                onClick={() => setPickedServiceId(s.id)}
-                aria-current={active}
-                className={cn(
-                  'group flex items-center gap-2 rounded-full border pl-1 pr-3 py-1 transition-colors',
-                  active
-                    ? 'border-border-strong bg-surface-3 text-text-1'
-                    : 'border-border-default bg-surface-1 text-text-3 hover:text-text-1',
-                )}
-              >
-                <span
-                  className="size-2 rounded-full ml-1.5 shrink-0"
-                  // Per-service colour from the catalog — not expressible as a token.
-                  style={{ background: s.service?.color ?? '#8A93A3' }}
-                />
-                <span className="font-ui font-semibold text-[12.5px]">{s.service?.name ?? 'Service'}</span>
-                <span className="font-mono text-[10px] text-text-4">{count}</span>
-                {canManage && services.length > 1 && (
-                  <span
-                    role="button"
-                    tabIndex={0}
-                    aria-label={`Remove ${s.service?.name ?? 'service'} from this project`}
-                    onClick={(e) => { e.stopPropagation(); setPendingServiceRemoval(s.id) }}
-                    onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); setPendingServiceRemoval(s.id) } }}
-                    className="-mr-1 flex size-4 items-center justify-center rounded-full text-text-4 opacity-0 transition-opacity hover:bg-error/10 hover:text-error group-hover:opacity-100"
+        {/* Which service block is on screen. Framed as its own labelled selector so
+            it does not read as a second row of tabs — everything below it (Board,
+            Pipeline, Team) shows only the service picked here. */}
+        <div className="shrink-0 rounded-lg border border-border-default bg-surface-1 p-2.5">
+          <p className="mb-2 px-0.5 font-mono text-[10px] uppercase tracking-wider text-text-4">
+            Viewing service block
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            {services.map((s) => {
+              const active = s.id === activeServiceId
+              const colour = s.service?.color ?? '#8A93A3'
+              const taskCount = taskCountByService.get(s.id) ?? 0
+              const memberCount = members.filter((m) => m.project_service_id === s.id).length
+              return (
+                <div
+                  key={s.id}
+                  className={cn(
+                    'group flex items-center gap-2 rounded-md border py-1.5 pl-2.5 pr-2 transition-colors',
+                    active ? 'bg-surface-3' : 'border-border-default bg-surface-2/40 hover:bg-surface-2',
+                  )}
+                  // Active block wears its service colour, so which one you are in
+                  // is readable without comparing against the others.
+                  style={active ? { borderColor: colour, background: `${colour}14` } : undefined}
+                >
+                  <button
+                    onClick={() => setPickedServiceId(s.id)}
+                    aria-current={active}
+                    className="flex items-center gap-2 text-left"
                   >
-                    <X size={11} />
-                  </span>
-                )}
-              </button>
-            )
-          })}
-          {canManage && unusedServices.length > 0 && (
-            <Button size="sm" variant="secondary" iconLeft={<Plus size={13} />} onClick={() => setShowAddService(true)}>
-              Add service
-            </Button>
-          )}
+                    <span className="size-2.5 shrink-0 rounded-full" style={{ background: colour }} />
+                    <span className={cn('font-ui text-[12.5px] font-semibold', active ? 'text-text-1' : 'text-text-3')}>
+                      {s.service?.name ?? 'Service'}
+                    </span>
+                    {/* Both numbers labelled — an unlabelled "0" read as "no tasks"
+                        when it actually meant "nobody staffed". */}
+                    <span className="flex items-center gap-2 font-mono text-[10px] text-text-4">
+                      <span className="flex items-center gap-0.5" title={`${taskCount} task${taskCount === 1 ? '' : 's'}`}>
+                        <CheckCircle2 size={10} /> {taskCount}
+                      </span>
+                      <span className="flex items-center gap-0.5" title={`${memberCount} member${memberCount === 1 ? '' : 's'}`}>
+                        <Users size={10} /> {memberCount}
+                      </span>
+                    </span>
+                  </button>
+                  {canManage && services.length > 1 && (
+                    <button
+                      aria-label={`Remove ${s.service?.name ?? 'service'} from this project`}
+                      onClick={() => setPendingServiceRemoval(s.id)}
+                      className="flex size-5 shrink-0 items-center justify-center rounded-sm text-text-4 opacity-0 transition-opacity hover:bg-error/10 hover:text-error focus-visible:opacity-100 group-hover:opacity-100"
+                    >
+                      <X size={11} />
+                    </button>
+                  )}
+                </div>
+              )
+            })}
+            {canManage && unusedServices.length > 0 && (
+              <Button size="sm" variant="secondary" iconLeft={<Plus size={13} />} onClick={() => setShowAddService(true)}>
+                Add service
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Tabs */}
@@ -405,6 +441,10 @@ export default function ProjectDetailPage() {
               )}
             </div>
           )
+        )}
+
+        {(projectView === 'board' || projectView === 'pipeline') && (
+          <MeModeNotice shown={tasks.length} total={allTasks.length} />
         )}
 
         {projectView === 'board' && (

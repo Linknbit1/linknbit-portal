@@ -12,7 +12,7 @@ import { useDragScroll } from '../../hooks/useDragScroll'
 import { useToast } from '../ui/toast-context'
 import { ConfirmDialog } from '../ui/ConfirmDialog'
 import { ProgressBar } from '../ui/ProgressBar'
-import { isOverdue } from '../../lib/utils'
+import { isOverdue, formatStamp } from '../../lib/utils'
 import { formatEstimate } from '../../lib/duration'
 import type { TaskListItem } from '../../api/tasks'
 import type { TaskStatus } from '../../types'
@@ -74,13 +74,6 @@ const COLUMNS: Column[] = [
   },
 ]
 
-/** "04 Aug, 09:00 AM" — matches how DateTimeRangePicker labels the same values. */
-function stamp(iso: string): string {
-  const d = new Date(iso)
-  const day = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
-  return `${day}, ${d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true })}`
-}
-
 /**
  * The scheduled window. Falls back to a single stamp when only one end is set,
  * so a task with just a due date still reads correctly.
@@ -91,9 +84,9 @@ function ScheduleLine({ task, overdue }: { task: TaskListItem; overdue: boolean 
   return (
     <span className={cn('flex min-w-0 items-center gap-1 font-mono text-[10px]', overdue ? 'text-error' : 'text-text-4')}>
       <span className="truncate">
-        {task.start_date && stamp(task.start_date)}
+        {task.start_date && formatStamp(task.start_date)}
         {task.start_date && task.due_date && ' → '}
-        {task.due_date && stamp(task.due_date)}
+        {task.due_date && formatStamp(task.due_date)}
       </span>
     </span>
   )

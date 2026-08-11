@@ -40,7 +40,7 @@ function localToday(): string {
 }
 
 const fmtTime = (ts: string | null): string =>
-  ts ? new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'
+  ts ? new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : '—'
 
 const monthLabel = (year: number, month: number): string =>
   new Date(year, month - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })

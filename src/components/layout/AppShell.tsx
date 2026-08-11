@@ -9,6 +9,7 @@ import { useRealtimeNotifications } from '../../hooks/realtime/useRealtimeNotifi
 import { useRealtimeChannelList } from '../../hooks/realtime/useRealtimeChannelList'
 import { FileViewerProvider } from '../shared/FileViewer'
 import { ImpersonationBanner } from './ImpersonationBanner'
+import { MeModeProvider } from '../../context/MeModeContext'
 import { RunningTimerWidget } from '../shared/RunningTimerWidget'
 
 export function AppShell() {
@@ -59,6 +60,7 @@ export function AppShell() {
 
   return (
     <NavChromeContext.Provider value={{ hasBack, setHasBack }}>
+      <MeModeProvider>
       <FileViewerProvider>
         {/* Fixed viewport height, not min-height: `main` is the scroll container,
             so a page can hand its own scrolling to an inner element (the chat
@@ -87,6 +89,7 @@ export function AppShell() {
           <RunningTimerWidget />
         </div>
       </FileViewerProvider>
+      </MeModeProvider>
     </NavChromeContext.Provider>
   )
 }

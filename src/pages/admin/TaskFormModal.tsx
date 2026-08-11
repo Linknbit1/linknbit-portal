@@ -251,7 +251,7 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
           </div>
           <div className="space-y-1.5">
             <label className="text-label font-ui font-semibold text-text-2 uppercase tracking-wider">Assignees</label>
-            <MultiSelectPeople value={assigneeIds} onChange={setAssigneeIds} options={memberPeople} />
+            <MultiSelectPeople value={assigneeIds} onChange={setAssigneeIds} options={memberPeople} closeOnSelect />
           </div>
           <div className="space-y-1.5">
             <label className="text-label font-ui font-semibold text-text-2 uppercase tracking-wider">Priority</label>

@@ -9,8 +9,10 @@ import {
   stopRunningTimer,
   updateTimeEntry,
   type LogTimeInput,
+  type TimeEntry,
 } from '../api/timeEntries'
 import { AUDIT_KEYS } from './useAuditLog'
+import { useAuthContext } from '../context/AuthContext'
 import type { TablesUpdate } from '../types/database'
 
 export const TIME_ENTRY_KEYS = {
@@ -80,27 +82,105 @@ export function useStopTimer() {
   })
 }
 
+/**
+ * Logs a stretch of work, showing it in the list straight away.
+ *
+ * The optimistic row carries a temporary id and is replaced when the refetch in
+ * onSettled lands. Logging time is a form submit, so waiting on the round-trip
+ * before anything appears makes a fast write feel slow.
+ */
 export function useLogTime() {
+  const qc = useQueryClient()
   const invalidate = useInvalidateTime()
+  const { profile } = useAuthContext()
+
   return useMutation({
     mutationFn: (input: LogTimeInput) => logTime(input),
-    onSuccess: invalidate,
+
+    onMutate: async (input) => {
+      if (!profile) return undefined
+      const key = TIME_ENTRY_KEYS.byTask(input.taskId)
+      await qc.cancelQueries({ queryKey: key })
+      const previous = qc.getQueryData<TimeEntry[]>(key)
+
+      const end = input.endedAt ?? new Date()
+      const start = input.startedAt ?? new Date(end.getTime() - input.minutes * 60_000)
+      const optimistic: TimeEntry = {
+        // Prefixed so a stray reference to it is obvious rather than mistaken
+        // for a real row id.
+        id: `optimistic:${crypto.randomUUID()}`,
+        task_id: input.taskId,
+        profile_id: profile.id,
+        started_at: start.toISOString(),
+        ended_at: end.toISOString(),
+        note: input.note ?? null,
+        billable: input.billable ?? false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        profile: { id: profile.id, name: profile.name, avatar_url: profile.avatar_url },
+      }
+
+      // Newest first, matching the server ordering.
+      qc.setQueryData<TimeEntry[]>(key, (old) => [optimistic, ...(old ?? [])])
+      return { previous, key }
+    },
+
+    onError: (_error, _input, context) => {
+      if (context?.previous) qc.setQueryData(context.key, context.previous)
+    },
+
+    onSettled: invalidate,
   })
 }
 
+/** Applies the correction to the row on screen before the write returns. */
 export function useUpdateTimeEntry() {
+  const qc = useQueryClient()
   const invalidate = useInvalidateTime()
+
   return useMutation({
-    mutationFn: ({ id, updates }: { id: string; updates: TablesUpdate<'task_time_entries'> }) =>
+    mutationFn: ({ id, updates }: { id: string; updates: TablesUpdate<'task_time_entries'>; taskId?: string }) =>
       updateTimeEntry(id, updates),
-    onSuccess: invalidate,
+
+    onMutate: async ({ id, updates, taskId }) => {
+      if (!taskId) return undefined
+      const key = TIME_ENTRY_KEYS.byTask(taskId)
+      await qc.cancelQueries({ queryKey: key })
+      const previous = qc.getQueryData<TimeEntry[]>(key)
+      qc.setQueryData<TimeEntry[]>(key, (old) =>
+        old?.map((e) => (e.id === id ? { ...e, ...updates } : e)) ?? old)
+      return { previous, key }
+    },
+
+    onError: (_error, _vars, context) => {
+      if (context?.previous) qc.setQueryData(context.key, context.previous)
+    },
+
+    onSettled: invalidate,
   })
 }
 
+/** Drops the row immediately — a deleted entry lingering reads as a failed click. */
 export function useDeleteTimeEntry() {
+  const qc = useQueryClient()
   const invalidate = useInvalidateTime()
+
   return useMutation({
-    mutationFn: (id: string) => deleteTimeEntry(id),
-    onSuccess: invalidate,
+    mutationFn: ({ id }: { id: string; taskId?: string }) => deleteTimeEntry(id),
+
+    onMutate: async ({ id, taskId }) => {
+      if (!taskId) return undefined
+      const key = TIME_ENTRY_KEYS.byTask(taskId)
+      await qc.cancelQueries({ queryKey: key })
+      const previous = qc.getQueryData<TimeEntry[]>(key)
+      qc.setQueryData<TimeEntry[]>(key, (old) => old?.filter((e) => e.id !== id) ?? old)
+      return { previous, key }
+    },
+
+    onError: (_error, _vars, context) => {
+      if (context?.previous) qc.setQueryData(context.key, context.previous)
+    },
+
+    onSettled: invalidate,
   })
 }

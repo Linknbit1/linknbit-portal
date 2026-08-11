@@ -292,7 +292,17 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
             onChange={(ids) => {
               markSaving()
               setAssignees.mutate(
-                { taskId: task.id, profileIds: ids, projectId: task.project_id },
+                {
+                  taskId: task.id,
+                  profileIds: ids,
+                  projectId: task.project_id,
+                  // Resolved here so the picker updates on click; the save then
+                  // catches up in the background.
+                  people: ids.flatMap((id) => {
+                    const m = members.find((p) => p.id === id)
+                    return m ? [{ id: m.id, name: m.name, avatar_url: m.avatar_url }] : []
+                  }),
+                },
                 {
                   onSuccess: () => markSaved(),
                   onError: (e) => { markFailed(); toast(e instanceof Error ? e.message : 'Failed', 'error') },
@@ -301,6 +311,7 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
             }}
             options={members.map((m) => ({ id: m.id, name: m.name, avatar_url: m.avatar_url }))}
             size="sm"
+            closeOnSelect
           />
         </PropertyRow>
         <PropertyRow icon={CalendarDays} label="Schedule">

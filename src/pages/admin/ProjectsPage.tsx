@@ -22,7 +22,9 @@ import { formatDate, isOverdue, PROJECT_STATUS_LABELS } from '../../lib/utils'
 import { useDeleteProject, useProjectDeleteImpact, useProjects, useUpdateProjectStatus } from '../../hooks/useProjects'
 import { useServices } from '../../hooks/useServices'
 import { useToast } from '../../components/ui/toast-context'
+import { useMyProjectsFilter } from '../../hooks/useMeMode'
 import { TimeBacklog } from '../../components/shared/TimeBacklog'
+import { MeModeNotice } from '../../components/shared/MeModeNotice'
 import { ProjectFormModal } from './ProjectFormModal'
 import type { ProjectListItem, ProjectStatus } from '../../api/projects'
 import type { ProjectStatus as AppProjectStatus } from '../../types'
@@ -96,6 +98,9 @@ export default function ProjectsPage() {
     return sortProjects(list, sortBy)
   }, [projects, search, serviceFilter, statusFilter, managerFilter, deadlineFrom, deadlineTo, sortBy])
 
+  // Me Mode narrows to projects you are staffed on or manage.
+  const shown = useMyProjectsFilter(filtered)
+
   const serviceOptions = [{ value: '', label: 'All services' }, ...services.map((s) => ({ value: s.slug, label: s.name, dot: s.color }))]
   const statusOptions = [{ value: '', label: 'All statuses' }, ...KANBAN_COLUMNS.map((s) => ({ value: s, label: PROJECT_STATUS_LABELS[s] }))]
   const managerOptions = [{ value: '', label: 'All managers' }, ...people.filter((p) => p.is_active).map((p) => ({ value: p.id, label: p.name, avatar: { name: p.name, url: p.avatar_url } }))]
@@ -107,7 +112,7 @@ export default function ProjectsPage() {
         <div className="flex flex-wrap items-center gap-3">
           <div>
             <h2 className="font-display font-bold text-[22px] text-text-1">Projects</h2>
-            <p className="font-ui text-[13px] text-text-3">{filtered.length} of {projects.length} project{projects.length !== 1 ? 's' : ''}</p>
+            <p className="font-ui text-[13px] text-text-3">{shown.length} of {projects.length} project{projects.length !== 1 ? 's' : ''}</p>
           </div>
           {canManageProjects && (
             <Button size="sm" className="ml-auto" iconLeft={<Plus size={15} />} onClick={() => setShowNew(true)}>New Project</Button>
@@ -144,6 +149,8 @@ export default function ProjectsPage() {
           </button>
         </div>
 
+        <MeModeNotice shown={shown.length} total={filtered.length} />
+
         {showAdv && (
           <div className="flex flex-wrap items-center gap-2 bg-surface-1 border border-border-default rounded-lg p-2.5">
             <span className="font-mono text-[10px] uppercase tracking-wider text-text-4 self-center">Deadline between</span>
@@ -168,9 +175,9 @@ export default function ProjectsPage() {
           <EmptyState onNew={() => setShowNew(true)} canCreate={canManageProjects} />
         ) : (
           <>
-            {view === 'cards' && <CardsView projects={filtered} onOpen={(id) => navigate(`/admin/projects/${id}`)} onDelete={setPendingDelete} canDelete={canManageProjects} />}
-            {view === 'list' && <ListView projects={filtered} onOpen={(id) => navigate(`/admin/projects/${id}`)} onDelete={setPendingDelete} canDelete={canManageProjects} />}
-            {view === 'kanban' && <KanbanView projects={filtered} onOpen={(id) => navigate(`/admin/projects/${id}`)} />}
+            {view === 'cards' && <CardsView projects={shown} onOpen={(id) => navigate(`/admin/projects/${id}`)} onDelete={setPendingDelete} canDelete={canManageProjects} />}
+            {view === 'list' && <ListView projects={shown} onOpen={(id) => navigate(`/admin/projects/${id}`)} onDelete={setPendingDelete} canDelete={canManageProjects} />}
+            {view === 'kanban' && <KanbanView projects={shown} onOpen={(id) => navigate(`/admin/projects/${id}`)} />}
           </>
         )}
       </div>
