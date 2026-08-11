@@ -391,3 +391,171 @@ export interface ChangelogRelease {
   highlight?: string
   entries: ChangelogEntry[]
 }
+
+/* =========================================================
+   BUSINESS DEVELOPMENT
+   ========================================================= */
+
+/** Pipeline stages, in order. `won` and `lost` are the two terminal stages. */
+export type LeadStage =
+  | 'new'
+  | 'contacted'
+  | 'qualified'
+  | 'proposal_sent'
+  | 'negotiation'
+  | 'won'
+  | 'lost'
+
+/** Where a lead came from. Drives the per-channel reporting in Outreach. */
+export type BdChannel =
+  | 'upwork'
+  | 'fiverr'
+  | 'linkedin'
+  | 'email'
+  | 'cold_call'
+  | 'inbound'
+  | 'referral'
+
+/** How warm the lead is — the BD equivalent of task priority. */
+export type LeadTemperature = 'hot' | 'warm' | 'cold'
+
+/** Whether the prospect fits the ideal customer profile. */
+export type IcpFit = 'strong' | 'partial' | 'none'
+
+export interface Lead {
+  id: string
+  company: string
+  contactName: string
+  contactTitle: string
+  email: string
+  channel: BdChannel
+  /** Service slugs the prospect is interested in — finer-grained than delivery's three. */
+  services: string[]
+  industry: string
+  icpFit: IcpFit
+  /** Estimated deal value in PKR. */
+  value: number
+  stage: LeadStage
+  temperature: LeadTemperature
+  ownerId: string
+  ownerName: string
+  addedOn: string
+  lastContacted: string
+  nextFollowUp: string | null
+  /** Only set once the lead reaches `lost`. */
+  lostReason?: string
+  activityCount: number
+}
+
+export type MeetingType = 'discovery' | 'proposal' | 'negotiation' | 'kickoff' | 'other'
+export type MeetingPlatform = 'zoom' | 'meet' | 'phone' | 'in_person'
+
+export interface BdMeeting {
+  id: string
+  leadId: string
+  company: string
+  /** ISO datetime. */
+  scheduledAt: string
+  durationMinutes: number
+  type: MeetingType
+  hostId: string
+  hostName: string
+  internalAttendees: string[]
+  clientAttendees: string
+  platform: MeetingPlatform
+  /** Absent until the meeting has happened. */
+  outcome?: string
+  nextStep?: string
+}
+
+/** Aggregate outreach for one channel over the selected period. */
+export interface ChannelStats {
+  channel: BdChannel
+  /** Proposals, messages, emails or calls — whichever the channel counts. */
+  sent: number
+  responses: number
+  meetings: number
+  leads: number
+  won: number
+  /** Revenue attributed to the channel, in PKR. */
+  revenue: number
+  /** Percentage change in `sent` against the previous period. */
+  trend: number
+}
+
+/** One rep's written check-in for a day. */
+export interface BdDailyUpdate {
+  id: string
+  repId: string
+  repName: string
+  date: string
+  submittedAt: string | null
+  platforms: BdChannel[]
+  summary: string
+  proposalsSent: number
+  callsMade: number
+  meetingsHeld: number
+  leadsAdded: number
+}
+
+/** A rep's revenue and activity quota for a period. */
+export interface BdTarget {
+  repId: string
+  repName: string
+  /** Revenue target and actual, in PKR. */
+  revenueTarget: number
+  revenueActual: number
+  outreachTarget: number
+  outreachActual: number
+  meetingsTarget: number
+  meetingsActual: number
+  wins: number
+  losses: number
+}
+
+/** A single logged touchpoint on a lead. Typed, so it can be counted and reported on. */
+export type BdActivityType = 'call' | 'email' | 'linkedin' | 'meeting' | 'proposal' | 'note' | 'stage_change'
+
+export type BdActivityOutcome =
+  | 'connected'
+  | 'no_response'
+  | 'follow_up'
+  | 'meeting_booked'
+  | 'not_interested'
+
+export interface BdActivity {
+  id: string
+  leadId: string
+  type: BdActivityType
+  /** ISO datetime. */
+  at: string
+  outcome?: BdActivityOutcome
+  note: string
+  byId: string
+  byName: string
+}
+
+/** BD task board columns. A deliberate subset of the delivery board's seven. */
+export type BdTaskStatus = 'todo' | 'in_progress' | 'blocked' | 'done'
+
+export type BdTaskPriority = 'high' | 'medium' | 'low'
+
+export type BdTaskRecurrence = 'once' | 'daily' | 'weekly' | 'monthly'
+
+export interface BdTask {
+  id: string
+  title: string
+  description?: string
+  assigneeId: string
+  assigneeName: string
+  status: BdTaskStatus
+  priority: BdTaskPriority
+  dueDate: string | null
+  /** Optional link back to the lead this work is for. */
+  leadId?: string
+  leadCompany?: string
+  channel?: BdChannel
+  recurrence: BdTaskRecurrence
+  createdBy: string
+  checklist: { id: string; label: string; done: boolean }[]
+}
