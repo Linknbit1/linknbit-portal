@@ -1,4 +1,4 @@
-import { useQueryClient, useQuery } from '@tanstack/react-query'
+import { useQueryClient, useQuery, useInfiniteQuery } from '@tanstack/react-query'
 import { useCallback } from 'react'
 import { fetchAuditLog, fetchAuditNewCount, getAuditLastSeen, markAuditSeen, fetchTaskActivity } from '../api/auditLog'
 import type { AuditLogFilters } from '../types'
@@ -12,13 +12,28 @@ export const AUDIT_KEYS = {
   task: (taskId: string) => ['audit_log', 'task', taskId] as const,
 }
 
-/** The audit trail, filtered. Only runs for users who pass can_view_audit_log. */
+/**
+ * The audit trail, filtered and paged newest-first. Only runs for users who pass
+ * can_view_audit_log.
+ *
+ * The exact match count rides on the first page, so once it is known the "load
+ * more" affordance is driven by rows-loaded vs total rather than by guessing
+ * from a full page — no trailing empty fetch when the total lands on a page
+ * boundary. `hasMore` is the fallback for the (unexpected) case of no count.
+ */
 export function useAuditLog(filters: AuditLogFilters) {
   const { accessToken } = useAuthContext()
   const { allowed } = useFeatureAccess('can_view_audit_log')
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: AUDIT_KEYS.list(filters),
-    queryFn: () => fetchAuditLog(filters),
+    queryFn: ({ pageParam }) => fetchAuditLog(filters, pageParam),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) => {
+      const total = allPages[0]?.total
+      if (total === null || total === undefined) return lastPage.hasMore ? allPages.length : undefined
+      const loaded = allPages.reduce((n, p) => n + p.rows.length, 0)
+      return loaded < total ? allPages.length : undefined
+    },
     enabled: !!accessToken && allowed,
     staleTime: 15_000,
   })

@@ -155,7 +155,7 @@ Deno.serve(async (req: Request) => {
   // 5. Existing-row handling.
   const { data: existing } = await supabase
     .from('attendance')
-    .select('id, source, status')
+    .select('id, source, status, day_type, day_part, check_in')
     .eq('profile_id', profileId)
     .eq('date', today)
     .maybeSingle()
@@ -251,33 +251,17 @@ Deno.serve(async (req: Request) => {
   // 8. Write attendance.
   const checkInTime = new Date().toISOString()
 
-  // 8a. WFH override — keep status 'wfh' and source 'system' (so the BEFORE-UPDATE status
-  //     trigger, which only acts on source='self', won't overwrite it) and record hours.
-  //     No LP: the on-time LP trigger is AFTER INSERT only, and WFH is not an arrival.
-  if (wfhOverride && existing) {
-    const { data: updated, error: updErr } = await supabase
-      .from('attendance')
-      .update({
-        check_in: checkInTime,
-        device_name: deviceName,
-        device_fingerprint: deviceFingerprint,
-        wifi_validated: false,
-        device_flagged: deviceFlagged,
-      })
-      .eq('id', existing.id)
-      .select()
-      .single()
-    if (updErr) return json({ error: updErr.message }, 500)
-    return json({
-      status: updated.status,
-      check_in: updated.check_in,
-      device_flagged: updated.device_flagged,
-    }, 200)
-  }
-
   const attendanceStatus = computeStatus(localMinutes, lateCutoff, policy.enforce_schedule_window)
 
-  // 8b. Override a non-blocking system row (e.g. 'absent') with a real self check-in.
+  // 8a/8b. One update path for every existing row — WFH, half-day leave, holiday or
+  //        an absence placeholder. There used to be a separate WFH branch that
+  //        deliberately withheld `status` to stop it clobbering the literal string
+  //        'wfh' in the same column. day_type owns that fact now, so the arrival can
+  //        always be recorded and WFH differs only in waiving the network check.
+  //
+  //        day_type and day_part are pointedly NOT in this payload: an arrival states
+  //        who turned up and when, and nothing about what kind of day it is. That is
+  //        what stops a check-in erasing an approved half day.
   if (existing) {
     const { data: updated, error: updErr } = await supabase
       .from('attendance')
@@ -287,7 +271,7 @@ Deno.serve(async (req: Request) => {
         status: attendanceStatus,
         device_name: deviceName,
         device_fingerprint: deviceFingerprint,
-        wifi_validated: wifiValidated,
+        wifi_validated: wfhOverride ? false : wifiValidated,
         device_flagged: deviceFlagged,
       })
       .eq('id', existing.id)
@@ -296,6 +280,8 @@ Deno.serve(async (req: Request) => {
     if (updErr) return json({ error: updErr.message }, 500)
     return json({
       status: updated.status,
+      day_type: updated.day_type,
+      day_part: updated.day_part,
       check_in: updated.check_in,
       device_flagged: updated.device_flagged,
     }, 200)
@@ -322,6 +308,8 @@ Deno.serve(async (req: Request) => {
 
   return json({
     status: inserted.status,
+    day_type: inserted.day_type,
+    day_part: inserted.day_part,
     check_in: inserted.check_in,
     device_flagged: inserted.device_flagged,
   }, 200)

@@ -4,7 +4,14 @@ import type { AuditLogFilters } from '../types'
 
 export type AuditLogRow = Tables<'audit_log'>
 
-const PAGE_SIZE = 200
+export const AUDIT_PAGE_SIZE = 100
+
+export interface AuditLogPage {
+  rows: AuditLogRow[]
+  /** Exact match count for the active filters. Requested on the first page only. */
+  total: number | null
+  hasMore: boolean
+}
 
 /**
  * The whole `projects` module is hidden from the audit log — task edits, project
@@ -25,13 +32,22 @@ const PAGE_SIZE = 200
  */
 const PROJECTS_EXCEPT_MANUAL_TIME = 'module.neq.projects,action.eq."time.logged_manually"'
 
-export async function fetchAuditLog(filters: AuditLogFilters = {}): Promise<AuditLogRow[]> {
+/**
+ * One page of the audit trail, newest first. Offset paging (rather than a
+ * created_at cursor) is safe here precisely because audit_log is append-only:
+ * inserts only ever push rows *down*, so a window can repeat a row but can never
+ * skip one. The caller de-duplicates by id when flattening pages.
+ */
+export async function fetchAuditLog(filters: AuditLogFilters = {}, page = 0): Promise<AuditLogPage> {
+  const from = page * AUDIT_PAGE_SIZE
+  // Counting is a second scan, so only the first page pays for it — later pages
+  // inherit the total through the query cache.
   let query = supabase
     .from('audit_log')
-    .select('*')
+    .select('*', page === 0 ? { count: 'exact' } : undefined)
     .or(PROJECTS_EXCEPT_MANUAL_TIME)
     .order('created_at', { ascending: false })
-    .limit(PAGE_SIZE)
+    .range(from, from + AUDIT_PAGE_SIZE - 1)
 
   if (filters.module && filters.module !== 'all') query = query.eq('module', filters.module)
   if (filters.severity && filters.severity !== 'all') query = query.eq('severity', filters.severity)
@@ -40,9 +56,9 @@ export async function fetchAuditLog(filters: AuditLogFilters = {}): Promise<Audi
   if (filters.from) query = query.gte('created_at', `${filters.from}T00:00:00`)
   if (filters.to) query = query.lte('created_at', `${filters.to}T23:59:59.999`)
 
-  const { data, error } = await query
+  const { data, error, count } = await query
   if (error) throw error
-  return data
+  return { rows: data, total: count ?? null, hasMore: data.length === AUDIT_PAGE_SIZE }
 }
 
 // The nav badge is an unread indicator: how many entries landed since the admin

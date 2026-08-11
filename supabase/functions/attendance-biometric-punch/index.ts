@@ -198,17 +198,27 @@ async function reconcileDay(
     return
   }
 
-  // ── Approved leave / WFH already own the day. Record and flag; never
-  //    overwrite, since that would silently cancel an approved absence.
+  // ── A whole day off already owns the date. Record and flag; never overwrite,
+  //    since that would silently cancel an approved absence.
+  //
+  //    Keyed off day_type, and only when day_part = 'full'. Previously this tested
+  //    status === 'leave' || 'wfh', which meant a HALF-day leave (then status
+  //    'half_day') matched neither branch, fell through, and had its status
+  //    overwritten with present/late by the update below — the terminal silently
+  //    cancelled the approved half day. A half day is now workable by design: the
+  //    punch records the arrival and leaves day_type/day_part alone.
   const { data: existing } = await db
     .from('attendance')
-    .select('id, source, status')
+    .select('id, source, status, day_type, day_part, check_in')
     .eq('profile_id', profileId)
     .eq('date', date)
     .maybeSingle()
 
-  if (existing?.source === 'system' && (existing.status === 'leave' || existing.status === 'wfh')) {
-    const onLeave = existing.status === 'leave'
+  const fullDayOff = existing?.day_part === 'full'
+    && (existing.day_type === 'leave' || existing.day_type === 'wfh')
+
+  if (fullDayOff) {
+    const onLeave = existing!.day_type === 'leave'
     await setResolution(allIds, onLeave ? 'ignored_leave' : 'ignored_wfh')
     await auditOnce(db, {
       action: onLeave ? 'attendance.terminal_punch_while_on_leave' : 'attendance.terminal_punch_while_wfh',
@@ -228,6 +238,11 @@ async function reconcileDay(
 
   // ── A human self/admin record wins; punches are then redundant. Terminal owns
   //    only an absent/machine-written row.
+  //
+  //    A leave sync now stamps day_type on a row without changing its source, so
+  //    source still answers "who last recorded an arrival here" and stays the right
+  //    test. A half-day leave row written by the sync is source='system', which the
+  //    terminal owns — correct, since the punch is the arrival for the worked half.
   const terminalOwnsRow = !existing || existing.source === 'system' || existing.source === 'biometric'
   if (!terminalOwnsRow) {
     await setResolution(allIds, 'ignored_extra')
@@ -257,6 +272,10 @@ async function reconcileDay(
   //    cron records the end of day for every row, so biometric rows stay
   //    consistent with portal/absent ones. Standing at the terminal is stronger
   //    proof than office WiFi, so the network gate is satisfied by definition.
+  //    day_type/day_part are absent from both payloads on purpose: a punch is
+  //    evidence of an arrival and says nothing about what kind of day it is. On a
+  //    half-day-leave row the sync's day_type='leave'/day_part survives untouched
+  //    alongside the arrival this records.
   if (!existing) {
     await db.from('attendance').insert({
       profile_id: profileId,
@@ -285,6 +304,55 @@ async function reconcileDay(
   //    rest are extra scans with no effect.
   await setResolution([first.id], 'check_in')
   await setResolution(extraIds, 'ignored_extra')
+}
+
+/**
+ * Keeps attendance_settings.office_ip_cidr pointed at the office's real public IP.
+ *
+ * The office IP is an ISP lease: it changes whenever the router reboots, and
+ * until someone retypes the CIDR by hand every on-site check-in is rejected as
+ * 'wrong_network'. The fix costs nothing extra, because the Pi already
+ * heartbeats from inside the office every minute — so THIS request's source
+ * address IS the office's public IP, observed through exactly the same proxy
+ * that stamps X-Forwarded-For on an employee's check-in. That is strictly
+ * better than asking api.ipify.org: no third party, no outage surface, and the
+ * value is measured by the same mechanism it will later be compared against.
+ *
+ * The Pi still resolves its own public IP independently and sends it as
+ * `public_ip`; the SQL side treats a disagreement as "this terminal is reaching
+ * us over some other network" and refuses to write, rather than risking locking
+ * the office out. All of the decision (validation, prefix preservation, audit)
+ * lives in fn_terminal_sync_office_ip — the CIDR maths is native to Postgres'
+ * inet type, and the audit-suppression GUC only works in the same transaction
+ * as the UPDATE.
+ */
+async function maintainOfficeIp(
+  db: SupabaseClient,
+  req: Request,
+  terminalName: string,
+  body: Record<string, unknown>,
+): Promise<unknown> {
+  // Left-most X-Forwarded-For entry = the original client, i.e. the office's
+  // WAN address. Read exactly as attendance-checkin reads it, so the two can
+  // never disagree about what "the office IP" means.
+  const forwarded = req.headers.get('X-Forwarded-For')
+  const observedIp = forwarded ? forwarded.split(',')[0].trim() : ''
+  if (!observedIp) return { status: 'no_client_ip' }
+
+  const reportedIp = typeof body.public_ip === 'string' && body.public_ip.trim()
+    ? body.public_ip.trim()
+    : null
+
+  const { data, error } = await db.rpc('fn_terminal_sync_office_ip', {
+    p_terminal_name: terminalName,
+    p_observed_ip: observedIp,
+    p_reported_ip: reportedIp,
+  })
+
+  // A failure here must never fail the heartbeat: the heartbeat is what keeps
+  // terminal-gated portal check-in open.
+  if (error) return { status: 'error', message: error.message }
+  return data
 }
 
 Deno.serve(async (req: Request) => {
@@ -331,22 +399,27 @@ Deno.serve(async (req: Request) => {
 
   // ── Heartbeat: terminal health, and the signal attendance-checkin uses to
   //    decide whether portal check-in stays closed for terminal-gated staff.
+  //    It also carries the office's public IP for free — see maintainOfficeIp.
   if (action === 'heartbeat') {
-    await db
-      .from('biometric_terminals')
-      .update({
-        last_heartbeat_at: nowIso,
-        last_poll_at: typeof body.last_poll_at === 'string' ? body.last_poll_at : nowIso,
-        firmware: typeof body.firmware === 'string' ? body.firmware : null,
-        serial_number: typeof body.serial_number === 'string' ? body.serial_number : null,
-        device_ip: typeof body.device_ip === 'string' ? body.device_ip : null,
-        device_log_count: typeof body.device_log_count === 'number' ? body.device_log_count : null,
-        clock_skew_sec: typeof body.clock_skew_sec === 'number' ? body.clock_skew_sec : null,
-        updated_at: nowIso,
-      })
-      .eq('id', terminal.id)
+    // The Pi's device_ip is its LAN address (192.168.x) and is only ever a
+    // health detail. A heartbeat that could not reach the device omits it
+    // entirely, so absent fields must not clobber the last known good values.
+    const health: Record<string, unknown> = {
+      last_heartbeat_at: nowIso,
+      last_poll_at: typeof body.last_poll_at === 'string' ? body.last_poll_at : nowIso,
+      updated_at: nowIso,
+    }
+    if (typeof body.firmware === 'string') health.firmware = body.firmware
+    if (typeof body.serial_number === 'string') health.serial_number = body.serial_number
+    if (typeof body.device_ip === 'string') health.device_ip = body.device_ip
+    if (typeof body.device_log_count === 'number') health.device_log_count = body.device_log_count
+    if (typeof body.clock_skew_sec === 'number') health.clock_skew_sec = body.clock_skew_sec
 
-    return json({ ok: true }, 200)
+    await db.from('biometric_terminals').update(health).eq('id', terminal.id)
+
+    const officeIp = await maintainOfficeIp(db, req, terminal.name, body)
+
+    return json({ ok: true, office_ip: officeIp }, 200)
   }
 
   // ── Roster: the device's enrolled users, so admins can link enroll numbers to

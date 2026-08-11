@@ -3,12 +3,20 @@ import { ChevronDown, Check, Search } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { Popover } from './Popover'
 import { Avatar, AvatarGroup } from './Avatar'
+import { DepartedBadge } from './DepartedBadge'
 import { SEARCHABLE_BY_DEFAULT, matchesQuery, shouldAutoFocusSearch } from './optionSearch'
 
 export interface PersonOption {
   id: string
   name: string
   avatar_url?: string | null
+  /**
+   * Someone who has left the company but is still attached to this record. They
+   * are never offered as a new choice — only shown, flagged, when already
+   * selected, so the work reads as needing reassignment instead of quietly
+   * looking unassigned.
+   */
+  departed?: boolean
 }
 
 interface MultiSelectPeopleProps {
@@ -117,7 +125,8 @@ function PeopleMenu({ options, value, searchable, onToggle, onClose }: PeopleMen
               )}
             >
               <Avatar name={o.name} src={o.avatar_url ?? undefined} size="xs" />
-              <span className="flex-1 min-w-0 truncate">{o.name}</span>
+              <span className={cn('flex-1 min-w-0 truncate', o.departed && 'text-text-3')}>{o.name}</span>
+              {o.departed && <DepartedBadge />}
               {on && <Check size={13} className="text-brand-red shrink-0" />}
             </button>
           )
@@ -141,6 +150,10 @@ export function MultiSelectPeople({
   const triggerRef = useRef<HTMLButtonElement>(null)
   const selected = options.filter((o) => value.includes(o.id))
   const withSearch = searchable ?? SEARCHABLE_BY_DEFAULT
+  const departedSelected = selected.filter((o) => o.departed)
+  // A leaver stays listed only while still assigned, so they can be removed —
+  // never as a fresh choice.
+  const choosable = options.filter((o) => !o.departed || value.includes(o.id))
 
   const toggle = (id: string) => {
     onChange(value.includes(id) ? value.filter((v) => v !== id) : [...value, id])
@@ -174,6 +187,7 @@ export function MultiSelectPeople({
               <span className="font-ui text-[11.5px] text-text-2 truncate">
                 {selected.length === 1 ? selected[0].name : `${selected.length} assigned`}
               </span>
+              {departedSelected.length > 0 && <DepartedBadge label="Reassign" />}
             </>
           )}
         </span>
@@ -187,8 +201,8 @@ export function MultiSelectPeople({
         matchAnchorWidth
         className="max-w-[calc(100vw-2rem)] bg-surface-2 border border-border-strong rounded-md shadow-lg overflow-hidden"
       >
-        <PeopleMenu
-          options={options}
+<PeopleMenu
+          options={choosable}
           value={value}
           searchable={withSearch}
           onToggle={toggle}

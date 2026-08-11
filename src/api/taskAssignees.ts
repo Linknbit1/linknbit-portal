@@ -33,7 +33,7 @@ export async function setTaskAssignees(taskId: string, profileIds: string[]): Pr
 export async function fetchTaskAssignees(taskId: string): Promise<PersonMini[]> {
   const { data, error } = await supabase
     .from('task_assignees')
-    .select('profile:profiles(id,name,avatar_url)')
+    .select('profile:profiles(id,name,avatar_url,is_active)')
     .eq('task_id', taskId)
   if (error) throw error
   return data.flatMap((r) => (r.profile ? [r.profile] : []))

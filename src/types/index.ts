@@ -285,7 +285,12 @@ export interface Client {
 }
 
 /* ---- Attendance ---- */
-export type AttendanceStatus = 'present' | 'late' | 'absent' | 'remote' | 'half_day'
+/** Attendance fact only. Day kinds (leave/WFH/holiday) live on day_type. */
+export type AttendanceStatus = 'present' | 'late' | 'absent'
+/** What kind of day it was, independent of whether the person turned up. */
+export type AttendanceDayType = 'work' | 'leave' | 'wfh' | 'holiday'
+/** How much of the day day_type covers. Only leave is ever partial. */
+export type AttendanceDayPart = 'full' | 'first_half' | 'second_half'
 
 export interface AttendanceRecord {
   id: string
@@ -326,4 +331,63 @@ export interface Team {
   memberIds: string[]
   activeProjects: number
   avgWorkload: WorkloadLevel
+}
+
+/* =========================================================
+   In-portal handbook (/docs) and changelog (/docs/changelog)
+   ========================================================= */
+
+/**
+ * Visibility gate, mirroring `NavItem`'s: a role allow-list, a capability key
+ * (or ANY of several), or both. Omitting both means "everyone internal".
+ * Documentation must never describe a screen the reader cannot open.
+ */
+export interface DocGate {
+  roles?: readonly string[]
+  feature?: string | readonly string[]
+}
+
+/** One numbered how-to inside a topic. */
+export interface DocProcedure {
+  title: string
+  /** Ordered steps. Written as instructions, not descriptions. */
+  steps: string[]
+}
+
+export interface DocTopic extends DocGate {
+  /** Anchor slug — also the deep-link target (`/docs#check-in`). */
+  id: string
+  title: string
+  /** One or two sentences on what this is for. */
+  summary: string
+  /** Where to find it, as a nav trail, e.g. "Workspace → Standup". */
+  where?: string
+  procedures?: DocProcedure[]
+  /** Things that are true but surprising — the stuff support gets asked twice. */
+  notes?: string[]
+}
+
+export interface DocChapter extends DocGate {
+  id: string
+  title: string
+  blurb: string
+  topics: DocTopic[]
+}
+
+export type ChangelogKind = 'added' | 'improved' | 'fixed'
+
+export interface ChangelogEntry {
+  kind: ChangelogKind
+  text: string
+}
+
+export interface ChangelogRelease {
+  /** Curated milestone tag, e.g. "v1.4". */
+  version: string
+  /** ISO date of the release's last shipped change. */
+  date: string
+  title: string
+  /** Headline shown on the docs "What's new" callout — newest release only. */
+  highlight?: string
+  entries: ChangelogEntry[]
 }

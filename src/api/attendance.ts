@@ -1148,22 +1148,3 @@ export interface HalfDayLeaveDate {
 // Approved half-day (non-'full') leave is always a single day, so start_date IS
 // the date. The report uses this to halve a day's expected hours even when the
 // employee checked in before approval (so the attendance row stayed 'present').
-export async function fetchHalfDayLeaveDates(
-  year: number,
-  month: number, // 1-indexed
-): Promise<HalfDayLeaveDate[]> {
-  const pad = (n: number) => String(n).padStart(2, '0')
-  const from = `${year}-${pad(month)}-01`
-  const last = new Date(year, month, 0).getDate()
-  const to   = `${year}-${pad(month)}-${pad(last)}`
-
-  const { data, error } = await supabase
-    .from('leave_requests')
-    .select('profile_id, start_date')
-    .eq('status', 'approved')
-    .neq('day_part', 'full')
-    .gte('start_date', from)
-    .lte('start_date', to)
-  if (error) throw error
-  return (data ?? []).map((r) => ({ profileId: r.profile_id, date: r.start_date }))
-}

@@ -236,12 +236,12 @@ export function AttendanceCheckInCard() {
 
       {/* ── Non-attendance day states (absent / leave / WFH) ── */}
       {/* A row can exist without a real check-in: the daily absence job inserts an
-          'absent' row, and approved Leave/WFH sync 'leave'/'wfh' rows. Render the
-          actual status instead of treating any row as "Checked In". */}
+          'absent' row, and approved Leave/WFH set day_type. Read the day kind
+          from day_type rather than treating any row as "Checked In". */}
       {!todayHoliday && !isDayOff && today && !today.check_in && (() => {
-        const meta = today.status === 'wfh'
+        const meta = today.day_type === 'wfh'
           ? { icon: Home, ring: 'bg-service-dev/10 border-service-dev/30', fg: 'text-service-dev', title: 'Working From Home', sub: today.note || 'Approved work-from-home day.' }
-          : today.status === 'leave'
+          : today.day_type === 'leave'
           ? { icon: Plane, ring: 'bg-service-design/10 border-service-design/30', fg: 'text-service-design', title: 'On Leave', sub: today.note || 'Approved leave for today.' }
           : { icon: XCircle, ring: 'bg-error/10 border-error/30', fg: 'text-error', title: 'Marked Absent', sub: 'No check-in was recorded for today.' }
         return (
@@ -254,7 +254,7 @@ export function AttendanceCheckInCard() {
               <p className="font-ui text-[13px] text-text-3 mt-0.5">{meta.sub}</p>
             </div>
             {/* WFH days can still be checked in to track worked hours (no office WiFi). */}
-            {today.status === 'wfh' && (
+            {today.day_type === 'wfh' && (
               <>
                 {errorMsg && <ErrorBanner msg={errorMsg} />}
                 {canCheckIn ? (

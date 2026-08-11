@@ -53,6 +53,7 @@ import { TeamAttendancePanel } from '../../components/shared/TeamAttendancePanel
 import { useAuthContext } from '../../context/AuthContext'
 import { useToast } from '../../components/ui/toast-context'
 import { cn } from '../../lib/cn'
+import { AttendanceChips } from '../../components/shared/AttendanceChips'
 import type { AttendanceRow, AttendanceException } from '../../api/attendance'
 import { ModalShell } from '../../components/ui/ModalShell'
 import { showsInlineTeamAttendance } from '../../lib/roles'
@@ -80,24 +81,7 @@ function calcHours(checkIn: string | null, checkOut: string | null, excludedMinu
   return `${h}h ${m}m`
 }
 
-const STATUS_CONFIG: Record<string, { label: string; cls: string; dot: string }> = {
-  present: { label: 'Present',  cls: 'bg-success/10 text-success border-success/25',   dot: 'bg-success' },
-  late:    { label: 'Late',     cls: 'bg-warning/10 text-warning border-warning/25',   dot: 'bg-warning' },
-  absent:  { label: 'Absent',   cls: 'bg-error/10 text-error border-error/25',         dot: 'bg-error'   },
-  wfh:     { label: 'WFH',      cls: 'bg-service-dev/10 text-service-dev border-service-dev/25', dot: 'bg-service-dev' },
-  holiday: { label: 'Holiday',  cls: 'bg-surface-2 text-text-3 border-border-default', dot: 'bg-text-4' },
-  leave:   { label: 'Leave',    cls: 'bg-surface-2 text-text-3 border-border-default', dot: 'bg-text-4' },
-}
 
-function StatusPill({ status }: { status: string }) {
-  const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.absent
-  return (
-    <span className={cn('inline-flex items-center gap-1.5 text-[11px] font-mono font-semibold px-2 py-0.5 rounded-xs border', cfg.cls)}>
-      <span className={cn('size-1.5 rounded-full shrink-0', cfg.dot)} />
-      {cfg.label}
-    </span>
-  )
-}
 
 // ── Upcoming schedule section ─────────────────────────────────────────────────
 
@@ -217,7 +201,9 @@ export function SummaryStats({ records, year, month }: { records: AttendanceRow[
 
   const totalPresent = records.filter((r) => r.status === 'present').length
   const late         = records.filter((r) => r.status === 'late').length
-  const leave        = records.filter((r) => r.status === 'leave').length
+  // Leave is a day kind now; a worked half day counts as half a leave day.
+  const leave        = records.reduce((n, r) =>
+    r.day_type === 'leave' ? n + (r.day_part === 'full' ? 1 : 0.5) : n, 0)
 
   const stats = [
     { label: 'Present', value: totalPresent, icon: CheckCircle2,  color: 'text-success',        bg: 'bg-success/10 border-success/20' },
@@ -279,7 +265,7 @@ export function HistoryTable({ records, periodLabel }: { records: AttendanceRow[
                   {formatDateLabel(row.date)}
                 </td>
                 <td className="px-5 py-3">
-                  <StatusPill status={row.status ?? 'absent'} />
+                  <AttendanceChips facts={row} />
                 </td>
                 <td className="px-5 py-3 font-mono text-[12px] text-text-2 whitespace-nowrap">
                   {formatTime(row.check_in)}

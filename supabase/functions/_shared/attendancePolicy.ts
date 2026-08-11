@@ -198,27 +198,48 @@ export function computeStatus(
 export type ExistingRowKind =
   /** No row yet for this date. */
   | 'none'
-  /** A real self/biometric arrival is already recorded. */
+  /** An arrival is already recorded for today. */
   | 'duplicate'
-  /** Approved leave — arrival must not silently cancel it. */
+  /** Off for the WHOLE day — there is no half left to work. */
   | 'leave'
-  /** Approved WFH — hours may be recorded but status stays 'wfh'. */
+  /** Approved WFH: record the arrival, but waive the office-network gate. */
   | 'wfh'
-  /** A non-blocking system row (e.g. 'absent') that a real arrival supersedes. */
+  /** Anything else (absence placeholder, holiday, HALF-day leave) that an arrival supersedes. */
   | 'override'
 
+export interface ExistingAttendanceRow {
+  source: string
+  status: string | null
+  day_type: string
+  day_part: string
+  check_in: string | null
+}
+
 /**
- * Classifies the pre-existing attendance row for the date. Approved WFH/leave
- * and the nightly absence job all pre-insert 'system' rows, so the presence of
- * a row is not by itself a duplicate.
+ * Classifies the pre-existing attendance row for the date. Approved WFH/leave and
+ * the nightly absence job all pre-insert 'system' rows, so the presence of a row
+ * is not by itself a duplicate.
+ *
+ * Two fixes over the previous version, both causes of the same reported bug:
+ *
+ *  - It keys off day_type, not status. A half-day leave used to be status
+ *    'half_day', which matched no branch here and fell through to 'override' — so
+ *    the caller overwrote status with present/late and the leave vanished. Only a
+ *    FULL day off blocks an arrival now; a half day is explicitly workable, and
+ *    day_type/day_part are a different column that the arrival never touches.
+ *
+ *  - 'duplicate' now means "an arrival is already recorded" (check_in present)
+ *    rather than "the row's source is self/biometric". Source described who wrote
+ *    the row last, which is not the same question, and a leave sync stamping the
+ *    row could change the answer.
  */
 export function classifyExistingRow(
-  existing: { source: string; status: string } | null,
+  existing: ExistingAttendanceRow | null,
 ): ExistingRowKind {
   if (!existing) return 'none'
-  if (existing.source === 'self' || existing.source === 'biometric') return 'duplicate'
-  if (existing.source === 'system' && existing.status === 'leave') return 'leave'
-  if (existing.source === 'system' && existing.status === 'wfh') return 'wfh'
+  if (existing.check_in) return 'duplicate'
+  if (existing.day_type === 'leave' && existing.day_part === 'full') return 'leave'
+  if (existing.day_type === 'wfh') return 'wfh'
   return 'override'
 }
 

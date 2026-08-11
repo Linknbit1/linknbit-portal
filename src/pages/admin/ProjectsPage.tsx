@@ -103,7 +103,22 @@ export default function ProjectsPage() {
 
   const serviceOptions = [{ value: '', label: 'All services' }, ...services.map((s) => ({ value: s.slug, label: s.name, dot: s.color }))]
   const statusOptions = [{ value: '', label: 'All statuses' }, ...KANBAN_COLUMNS.map((s) => ({ value: s, label: PROJECT_STATUS_LABELS[s] }))]
-  const managerOptions = [{ value: '', label: 'All managers' }, ...people.filter((p) => p.is_active).map((p) => ({ value: p.id, label: p.name, avatar: { name: p.name, url: p.avatar_url } }))]
+  // Managers who have left but still hold projects are listed too — otherwise the
+  // one filter that would find the projects needing a new owner can't name them.
+  const departedManagers = useMemo(() => {
+    const byId = new Map<string, ProjectListItem['manager']>()
+    for (const p of projects) {
+      if (p.manager && p.manager.is_active === false) byId.set(p.manager.id, p.manager)
+    }
+    return [...byId.values()]
+  }, [projects])
+  const managerOptions = [
+    { value: '', label: 'All managers' },
+    ...people.filter((p) => p.is_active).map((p) => ({ value: p.id, label: p.name, avatar: { name: p.name, url: p.avatar_url } })),
+    ...departedManagers.flatMap((m) => m
+      ? [{ value: m.id, label: `${m.name} — deactivated`, avatar: { name: m.name, url: m.avatar_url } }]
+      : []),
+  ]
 
   return (
     <div className={cn('flex flex-col flex-1', view === 'kanban' && 'min-h-0')}>

@@ -78,16 +78,41 @@ class Ingest:
             "punches": [p.to_payload() for p in punches],
         })
 
-    def send_heartbeat(self, info: DeviceInfo, device_ip: str, last_poll_at: str | None) -> dict:
-        return self._post({
+    def send_heartbeat(
+        self,
+        info: DeviceInfo | None,
+        device_ip: str,
+        last_poll_at: str | None,
+        public_ip: str | None = None,
+    ) -> dict:
+        """Report terminal health, and let the server refresh the office IP.
+
+        `info` is None when the device could not be read this cycle. The
+        heartbeat still goes out: it is what keeps terminal-gated portal
+        check-in open, and the request's own source address is how the server
+        keeps the office IP current — both matter most precisely when the
+        hardware is unreachable. Health fields are then omitted rather than
+        nulled, so the server keeps the last known good values.
+
+        `public_ip` is the Pi's independent view of its own public address, sent
+        only as a cross-check (see public_ip.py); the server treats a
+        disagreement as a reason NOT to touch the office IP.
+        """
+        payload: dict = {
             "action": "heartbeat",
             "device_ip": device_ip,
-            "firmware": info.firmware,
-            "serial_number": info.serial_number,
-            "device_log_count": info.log_count,
-            "clock_skew_sec": info.clock_skew_sec,
             "last_poll_at": last_poll_at,
-        })
+        }
+        if info is not None:
+            payload.update({
+                "firmware": info.firmware,
+                "serial_number": info.serial_number,
+                "device_log_count": info.log_count,
+                "clock_skew_sec": info.clock_skew_sec,
+            })
+        if public_ip:
+            payload["public_ip"] = public_ip
+        return self._post(payload)
 
     def send_roster(self, users: list[RosterUser]) -> dict:
         """Push enrolled users so admins can link enroll numbers by name.

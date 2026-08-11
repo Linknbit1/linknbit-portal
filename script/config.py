@@ -52,6 +52,11 @@ class Config:
     # the last line of defence if the Pi's SD card dies.
     clear_device_logs: bool
     clear_threshold: int
+    # Cross-check for the office-IP auto-update: the Pi resolves its own public
+    # IP and sends it with each heartbeat, so the server can refuse to write the
+    # office range when the two views disagree. Off => the server updates on its
+    # own observation alone. See public_ip.py.
+    public_ip_check: bool
 
 
 def _int_env(key: str, default: int) -> int:
@@ -97,4 +102,5 @@ def load() -> Config:
         timezone=os.environ.get("ZK_TIMEZONE", "Asia/Karachi"),
         clear_device_logs=os.environ.get("ZK_CLEAR_DEVICE_LOGS", "false").lower() == "true",
         clear_threshold=_int_env("ZK_CLEAR_THRESHOLD", 80000),
+        public_ip_check=os.environ.get("ZK_PUBLIC_IP_CHECK", "true").lower() != "false",
     )

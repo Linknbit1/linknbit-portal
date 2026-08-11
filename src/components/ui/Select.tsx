@@ -3,6 +3,7 @@ import { Check, ChevronDown, Search } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { Popover } from './Popover'
 import { Avatar } from './Avatar'
+import { DepartedBadge } from './DepartedBadge'
 import { SEARCHABLE_BY_DEFAULT, matchesQuery, shouldAutoFocusSearch } from './optionSearch'
 
 export interface SelectOption {
@@ -11,6 +12,12 @@ export interface SelectOption {
   dot?: string
   /** Optional avatar shown before the label (employee pickers). Falls back to initials. */
   avatar?: { name: string; url?: string | null }
+  /**
+   * Someone who has left the company but is still what this field holds. Mirrors
+   * MultiSelectPeople: only ever listed while selected, so the field reads as
+   * "needs reassigning" rather than silently falling back to the placeholder.
+   */
+  departed?: boolean
 }
 
 interface SelectProps {
@@ -122,7 +129,8 @@ function SelectMenu({ options, value, searchable, onPick, onClose }: SelectMenuP
             {opt.dot && (
               <span className="size-2 rounded-full shrink-0" style={{ background: opt.dot }} />
             )}
-            <span className="min-w-0 flex-1 truncate">{opt.label}</span>
+            <span className={cn('min-w-0 flex-1 truncate', opt.departed && 'text-text-3')}>{opt.label}</span>
+            {opt.departed && <DepartedBadge />}
             {opt.value === value && <Check size={13} className="shrink-0 text-brand-red" />}
           </button>
         ))}
@@ -143,6 +151,9 @@ export function Select({
 
   const selected = options.find((o) => o.value === value)
   const withSearch = searchable ?? SEARCHABLE_BY_DEFAULT
+  // A leaver stays listed only while still selected, so they can be replaced —
+  // never as a fresh choice.
+  const choosable = options.filter((o) => !o.departed || o.value === value)
 
   return (
     <div className={cn('relative', className)}>
@@ -165,9 +176,10 @@ export function Select({
         {selected?.dot && (
           <span className="size-2 rounded-full shrink-0" style={{ background: selected.dot }} />
         )}
-        <span className={cn('font-ui font-semibold flex-1 min-w-0 text-left truncate', !selected && 'text-text-3 font-medium')}>
+        <span className={cn('font-ui font-semibold flex-1 min-w-0 truncate text-left', !selected && 'text-text-3 font-medium')}>
           {selected?.label ?? placeholder ?? 'Select'}
         </span>
+        {selected?.departed && <DepartedBadge label="Reassign" />}
         <ChevronDown size={12} className="text-text-3 shrink-0" />
       </button>
 
@@ -178,8 +190,8 @@ export function Select({
         matchAnchorWidth
         className="max-w-[calc(100vw-2rem)] bg-surface-2 border border-border-strong rounded-md shadow-lg overflow-hidden"
       >
-        <SelectMenu
-          options={options}
+<SelectMenu
+          options={choosable}
           value={value}
           searchable={withSearch}
           onPick={(v) => { onChange(v); setOpen(false) }}

@@ -56,8 +56,21 @@ export function ProjectFormModal({ project, onClose }: ProjectFormModalProps) {
   const activeServices = services.filter((s) => s.is_active)
   // Only fetched while creating — RLS already limits these to the user's own teams.
   const { data: templates = [] } = useUsableTemplates(!isEdit)
+  // A manager who has since left stays selected and is listed as such, so the
+  // field matches the project header instead of quietly reading "Unassigned"
+  // while the project is still recorded as theirs. `Select` keeps them
+  // unpickable for any other project.
+  const departedManager = project?.manager && project.manager.is_active === false ? project.manager : null
   const managerOptions = [
     { value: '', label: 'Unassigned' },
+    ...(departedManager
+      ? [{
+          value: departedManager.id,
+          label: `${departedManager.name} — deactivated`,
+          avatar: { name: departedManager.name, url: departedManager.avatar_url },
+          departed: true,
+        }]
+      : []),
     ...people.filter((p) => p.is_active).map((p) => ({ value: p.id, label: p.name, avatar: { name: p.name, url: p.avatar_url } })),
   ]
   const statusOptions = STATUS_ORDER.map((s) => ({ value: s, label: PROJECT_STATUS_LABELS[s] }))
@@ -168,6 +181,11 @@ export function ProjectFormModal({ project, onClose }: ProjectFormModalProps) {
           <div className="space-y-1.5">
             <label className="text-label font-ui font-semibold text-text-2 uppercase tracking-wider">Project manager</label>
             <Select value={managerId} onChange={setManagerId} options={managerOptions} placeholder="Unassigned" />
+            {departedManager && managerId === departedManager.id && (
+              <p className="font-mono text-[10.5px] text-brand-red">
+                {departedManager.name} has left the company — pick a replacement.
+              </p>
+            )}
           </div>
           <div className="space-y-1.5">
             <label className="text-label font-ui font-semibold text-text-2 uppercase tracking-wider">Status</label>

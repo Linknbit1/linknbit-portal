@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Loader2, Home, Plane, AlertCircle, Hourglass, CalendarCheck } from 'lucide-react'
 import { cn } from '../../lib/cn'
+import { AttendanceChips } from './AttendanceChips'
 import { Avatar } from '../ui/Avatar'
 import { PersonLink } from './PersonLink'
 import { Tabs } from '../ui/Tabs'
@@ -57,14 +58,6 @@ const REQUEST_STATUS: Record<string, string> = {
   pending:  'bg-warning/12 text-warning border-warning/30',
   approved: 'bg-success/12 text-success border-success/30',
   rejected: 'bg-error/10 text-error border-error/30',
-}
-const ATTENDANCE_STATUS: Record<string, string> = {
-  present:   'bg-success/12 text-success border-success/30',
-  late:      'bg-warning/12 text-warning border-warning/30',
-  absent:    'bg-error/10 text-error border-error/30',
-  leave:     'bg-service-design/12 text-service-design border-service-design/30',
-  wfh:       'bg-service-dev/12 text-service-dev border-service-dev/30',
-  holiday:   'bg-surface-3 text-text-3 border-border-default',
 }
 
 function Pill({ status, map }: { status: string; map: Record<string, string> }) {
@@ -176,11 +169,18 @@ export function TeamRoster({ memberIds }: TeamScope = {}) {
         profileId: id, name: r.profiles?.name ?? '—', avatar: r.profiles?.avatar_url ?? null,
         present: 0, late: 0, wfh: 0, leave: 0, absent: 0,
       }
-      if (r.status === 'present') t.present += 1
-      else if (r.status === 'late') t.late += 1
-      else if (r.status === 'wfh') t.wfh += 1
-      else if (r.status === 'leave') t.leave += 1
-      else if (r.status === 'absent') t.absent += 1
+      // A worked half day is half an attendance and half a leave, so it counts
+      // 0.5 to each rather than a whole day to both.
+      const isLeave = r.day_type === 'leave'
+      const isHalf = isLeave && r.day_part !== 'full'
+      if (isHalf) t.leave += 0.5
+      else if (isLeave) t.leave += 1
+      else if (r.day_type === 'wfh') t.wfh += 1
+
+      const w = isHalf ? 0.5 : 1
+      if (r.status === 'present') t.present += w
+      else if (r.status === 'late') t.late += w
+      else if (r.status === 'absent') t.absent += w
       byMember.set(id, t)
     }
     return [...byMember.values()].sort((a, b) => a.name.localeCompare(b.name))
@@ -209,7 +209,7 @@ export function TeamRoster({ memberIds }: TeamScope = {}) {
         <div>
           {dayRows.map((r) => (
             <Row key={r.id} name={r.profiles?.name ?? '—'} avatar={r.profiles?.avatar_url ?? null} personId={r.profile_id}
-              status={<Pill status={r.status ?? 'unknown'} map={ATTENDANCE_STATUS} />}>
+              status={<AttendanceChips facts={r} />}>
               <span>In: <span className="text-text-1">{fmtTime(r.check_in)}</span></span>
             </Row>
           ))}

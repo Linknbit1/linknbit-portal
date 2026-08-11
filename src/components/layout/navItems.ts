@@ -15,6 +15,8 @@ import {
   ShieldAlert,
   Crown,
   StickyNote,
+  BookOpen,
+  Tag,
   type LucideIcon,
 } from 'lucide-react'
 import { showWipFeatures } from '../../lib/featureFlags'
@@ -126,6 +128,17 @@ const STANDUP_CHILDREN: NavItem[] = [
   { label: 'History',    icon: ClipboardList, to: '/standup/history',  roles: STANDUP_ROLES },
   { label: 'Settings',   icon: ClipboardList, to: '/standup/settings', feature: 'can_manage_standups' },
 ]
+
+/**
+ * Pages that describe the portal itself rather than a destination inside it, so
+ * they sit behind the arrow beside the logo instead of taking a sidebar row.
+ * Ungated on purpose: both are staff-only via PrivateRoute, and the handbook
+ * filters its own chapters per reader.
+ */
+export const BRAND_MENU_LINKS = [
+  { to: '/docs', label: 'Documentation', hint: 'How the portal works', icon: BookOpen },
+  { to: '/docs/changelog', label: "What's new", hint: 'Every release, newest first', icon: Tag },
+] as const
 
 export const NAV_ITEMS: NavItem[] = [
   // Workspace — what someone opens to do their own day.

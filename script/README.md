@@ -41,6 +41,47 @@ Every punch exists in two places until the server confirms it:
 key, so re-sending after an ambiguous failure is always a no-op. Delivery only has
 to be at-least-once, which the Pi can actually guarantee.
 
+## Office IP auto-update
+
+WiFi check-in compares the phone's IP against `attendance_settings.office_ip_cidr`.
+That address is an ISP lease: it changes whenever the router reboots, and until
+someone retypes the CIDR every on-site check-in is rejected as `wrong_network`.
+
+The heartbeat fixes this for free. The Pi POSTs from inside the office every 60s,
+so **the source address of that request is the office's public IP** — observed
+through the same proxy that stamps `X-Forwarded-For` on an employee's check-in.
+No third-party lookup is involved in the decision, and the value is measured by
+the same mechanism it will later be compared against. `fn_terminal_sync_office_ip`
+does the rest.
+
+Deliberate properties:
+
+- **Your prefix is kept.** A `/24` stays a `/24`; only the network part moves. A
+  bare address (an implicit `/32`) stays exact.
+- **It only fires when the gate would have broken.** If the observed IP is still
+  inside the configured range, nothing is written.
+- **It never turns enforcement on.** A blank CIDR stays blank; the settings page
+  shows the observed IP with a "Use this IP" button for the initial setup.
+- **The Pi cross-checks itself.** `public_ip.py` resolves the Pi's public IP from
+  two independent providers that must agree (see that file for why the failure
+  modes are asymmetric). If that disagrees with the address the server sees, the
+  Pi is reaching Supabase over some other path — a VPN, a tethered backup link —
+  and the update is refused with a flagged audit entry instead of locking the
+  office out. Set `ZK_PUBLIC_IP_CHECK=false` to skip the cross-check.
+- **It survives the outage that causes it.** A router reboot changes the IP and
+  kills the WAN at the same moment, so the heartbeat runs on its own clock rather
+  than on the poll cycle: it still goes out when the device is unreachable and
+  when the poll loop has backed off to 5-minute retries.
+- **Changes are auditable.** Every rewrite files
+  `attendance.office_ip_auto_updated`; a cross-check failure files
+  `attendance.office_ip_mismatch`. The routine "nothing changed" case writes
+  nothing at all.
+
+> **Run the bridge only from inside the office.** Anything holding the terminal
+> secret can move the office IP range, so a copy left running on a laptop at home
+> will point WiFi check-in at that home connection. Toggle
+> **Attendance → Settings → Auto-Update from Terminal** off while testing off-site.
+
 ## Install on the Pi — automated
 
 Once SSH is enabled on the Pi (Raspberry Pi OS ships with it **off**: either
@@ -55,6 +96,30 @@ That copies the code, creates the `zkbridge` service account, builds the venv,
 writes `/etc/linknbit-zk.env` (0600, secret read from your local `.env` and never
 echoed), runs a connectivity check to the terminal **as the service user**, then
 enables and starts the service. Idempotent — re-run it after editing any `.py` file.
+
+It asks for the Pi user's **sudo** password **once, ever**, then remembers it in
+the macOS Keychain (`linknbit-zk-sudo`, account = the ssh target). Every password
+is verified against the Pi before being stored, and a saved one that stops
+working is forgotten and re-asked rather than failing forever. To forget it:
+
+```bash
+security delete-generic-password -s linknbit-zk-sudo -a ghayas@192.168.18.43
+```
+
+The install runs over a piped heredoc, so sudo has no terminal to prompt on — the
+password is handed to it via a 0700 `SUDO_ASKPASS` helper deleted on every exit
+path. `sudo -S` would be simpler but reads from stdin, colliding with the
+`sudo tee <<EOF` that writes the env file.
+
+**The comm key is settled by probing the terminal, not by trusting `.env`.** The
+key is set on the K40's keypad and cannot be read back over the wire, so
+`/etc/linknbit-zk.env` is its only record — and a deploy from a laptop whose
+`.env` still held the factory `0` used to overwrite it silently. Nothing looked
+wrong, because the running process keeps the working value in memory: the bridge
+would only die at the next reboot, hours later. The deploy now tries your `.env`
+key against the device first, falls back to the key already on the Pi if that is
+the one the terminal accepts, and keeps the Pi's copy when the terminal cannot be
+reached at all (a powered-off terminal is no reason to destroy the record).
 
 The manual equivalent is below, if you'd rather do it by hand.
 
@@ -86,6 +151,8 @@ ZK_POLL_INTERVAL_SEC=30
 # systemd runs with ProtectSystem=strict, so /opt is read-only — the spool must
 # live under the unit's ReadWritePaths.
 ZK_SPOOL_PATH=/var/lib/linknbit-zk/spool.sqlite3
+# Cross-check for the office-IP auto-update (see below). false = skip it.
+ZK_PUBLIC_IP_CHECK=true
 ```
 
 Then:
@@ -125,6 +192,10 @@ python zk_bridge.py --once --fake-device            # full path incl. upload
 The fake device emits a realistic day: one member with a long lunch (producing one
 excluded gap) and one with only an arrival and a departure.
 
+Note that the second form sends a real heartbeat, which is what carries the office
+IP — off-site, prefer `--dry-run` (which skips the heartbeat entirely) or turn
+Auto-Update off in the portal first. See the office-IP section above.
+
 ## Device configuration that cannot be automated
 
 pyzk cannot set the comm key remotely. On the keypad:
@@ -145,6 +216,8 @@ only ever calls `clear_attendance()`.
 | Symptom | What happens | What to do |
 |---|---|---|
 | Pi loses WAN | punches keep spooling, nothing acked | self-heals; watch `unacked` in the logs |
+| Router reboot changes the office IP | the first heartbeat after the WAN returns moves `office_ip_cidr` | nothing; check the audit log for `office_ip_auto_updated` |
+| Bridge run from off-site | office IP would follow that connection | keep it in the office, or turn off Auto-Update in Attendance settings |
 | Pi is down | terminal keeps logging locally | portal check-in re-opens automatically once the heartbeat goes stale (10 min) |
 | Device clock drifts | punches land at the wrong time | `--sync-time`; the bridge also re-syncs every cycle and warns above 60s skew |
 | Enroll number not linked | punch stored, no attendance | `unmatched_user` + a warning in the audit log; link it in the portal |
@@ -165,6 +238,7 @@ never written to the Pi's logs or spool — the SD card holds enroll numbers onl
 | `spool.py` | SQLite spool, dedupe and cursor |
 | `uploader.py` | HTTP client for all three Pi→server messages |
 | `config.py` | environment loading and validation |
+| `public_ip.py` | the Pi's own public-IP lookup, used only to cross-check the office-IP update |
 | `zk_provision.py` | setup/diagnostics; `--new-secret` mints a terminal secret |
 | `linknbit-zk.service` | systemd unit |
 | `test_zk.py` | original bare connectivity probe |

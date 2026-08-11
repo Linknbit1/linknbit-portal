@@ -24,7 +24,7 @@ export const STANDUP_REVIEW_ROLES: readonly string[] = [
 ]
 
 /** Client-portal roles. The /client/* tree is restricted to these. */
-export const CLIENT_ROLES: readonly string[] = ['client_owner', 'client_member']
+export const CLIENT_ROLES: readonly string[] = ['client_owner', 'client_member', 'super_admin']
 
 /**
  * Roles a chat channel can be granted to. Client-portal roles are excluded —

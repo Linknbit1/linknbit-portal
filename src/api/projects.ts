@@ -9,6 +9,13 @@ export interface PersonMini {
   id: string
   name: string
   avatar_url: string | null
+  /**
+   * Present only where a departed person still has to be shown — a task they were
+   * assigned, or a project they still manage, from before they left. Optional
+   * because most selects have no reason to ask for it: the rosters and pickers
+   * exclude leavers outright.
+   */
+  is_active?: boolean
 }
 
 /** The services a project runs, flattened for chips and filters. */
@@ -42,7 +49,7 @@ export interface ProjectFilters {
 // supabase-js infers the response type from it, and a concatenation would widen
 // it to `string` and lose that inference.
 const PROJECT_SELECT =
-  '*,client:clients(id,name),manager:profiles!projects_manager_id_fkey(id,name,avatar_url),services:project_services(id,service_id,order_index,service:services(id,name,slug,color),members:service_members(profile:profiles(id,name,avatar_url))),task_count:tasks(count)'
+  '*,client:clients(id,name),manager:profiles!projects_manager_id_fkey(id,name,avatar_url,is_active),services:project_services(id,service_id,order_index,service:services(id,name,slug,color),members:service_members(profile:profiles(id,name,avatar_url))),task_count:tasks(count)'
 
 /** What PROJECT_SELECT returns, before flattening. */
 interface RawProjectRow extends ProjectRow {

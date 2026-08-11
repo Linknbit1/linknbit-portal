@@ -8,7 +8,8 @@
 // flow, folded in by the Reports tab.
 //   • Required target = Σ over ELAPSED working days of daily_expected
 //     (= work_end − work_start). Approved full leave → 0 expected that day.
-//     Half-day (leave or status) → half expected. WFH → credited as worked.
+//     Half-day leave (day_type='leave', day_part<>'full') → half expected, and
+//     credit for the half they worked is capped at that half. WFH → credited.
 //     Absent / no record on an elapsed working day → full expected, 0 worked.
 //     Holiday / non-working / future → excluded.
 //   • Worked = work_end − effective_start − excluded_minutes. Early arrival is
@@ -33,7 +34,12 @@ export type DayKind =
 
 export interface AttendanceLike {
   date: string // YYYY-MM-DD
-  status: string
+  /** Attendance fact only: present | late | absent | null. Never leave/wfh. */
+  status: string | null
+  /** work | leave | wfh | holiday. */
+  day_type: string
+  /** full | first_half | second_half. Only leave is ever partial. */
+  day_part: string
   check_in: string | null
   excluded_minutes?: number
 }
@@ -59,9 +65,6 @@ export interface ComputeHoursArgs {
   month: number // 1-indexed
   settings: HoursSettings
   isWorkingDay: (dateStr: string) => boolean
-  /** Dates with an approved half-day leave (forces half credit even if the row
-   *  stayed 'present' because the employee checked in before approval). */
-  halfDayDates: Set<string>
   todayStr: string // YYYY-MM-DD in office tz
   /** UTC ISO → minutes since office-local midnight. */
   toLocalMinutes: (iso: string) => number
@@ -72,7 +75,7 @@ function pad(n: number): string {
 }
 
 export function computeEmployeeHours(args: ComputeHoursArgs): EmployeeHours {
-  const { records, year, month, settings, isWorkingDay, halfDayDates, todayStr, toLocalMinutes } = args
+  const { records, year, month, settings, isWorkingDay, todayStr, toLocalMinutes } = args
   const { workStartMin, workEndMin } = settings
   const dailyExpected = Math.max(0, workEndMin - workStartMin)
 
@@ -105,25 +108,33 @@ export function computeEmployeeHours(args: ComputeHoursArgs): EmployeeHours {
     }
 
     const rec = byDate.get(dateStr)
-    const isHalf = rec?.status === 'half_day' || halfDayDates.has(dateStr)
 
-    if (rec?.status === 'leave') {
+    // The two facts are read from their own columns now. `halfDayDates` used to be
+    // passed in to force half credit on days whose row had been overwritten to
+    // 'present' by a check-in — that compensation is gone because the overwrite is.
+    const isLeave = rec?.day_type === 'leave'
+    const isHalf = isLeave && rec.day_part !== 'full'
+
+    if (isLeave && !isHalf) {
       days.push({ date: dateStr, kind: 'leave', expectedMin: 0, workedMin: 0 })
     } else if (isHalf) {
+      // Half the day is owed; whatever they actually worked on the other half counts.
       const { worked } = rec ? clocked(rec) : { worked: 0 }
       days.push({
         date: dateStr,
         kind: 'half_day',
         expectedMin: dailyExpected / 2,
-        workedMin: worked,
+        workedMin: Math.min(worked, dailyExpected / 2),
       })
-    } else if (rec?.status === 'wfh') {
+    } else if (rec?.day_type === 'wfh') {
       days.push({
         date: dateStr,
         kind: 'wfh',
         expectedMin: dailyExpected,
         workedMin: dailyExpected,
       })
+    } else if (rec?.day_type === 'holiday') {
+      days.push({ date: dateStr, kind: 'holiday', expectedMin: 0, workedMin: 0 })
     } else if (!rec || rec.status === 'absent' || !rec.check_in) {
       days.push({ date: dateStr, kind: 'absent', expectedMin: dailyExpected, workedMin: 0 })
     } else {

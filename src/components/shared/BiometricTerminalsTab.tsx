@@ -13,12 +13,13 @@ import {
   useLinkEnrollment,
   useUnlinkEnrollment,
 } from '../../hooks/useBiometric'
-import { parseRoster, type RosterEntry, type TerminalPublic } from '../../api/biometric'
+import { parseRoster, type EnrollmentLink, type RosterEntry, type TerminalPublic } from '../../api/biometric'
 import { terminalHealth, clockSkewLabel, type TerminalHealth } from '../../lib/terminalHealth'
 import { useToast } from '../ui/toast-context'
 import { Button } from '../ui/Button'
 import { Select } from '../ui/Select'
 import { Avatar } from '../ui/Avatar'
+import { DepartedBadge } from '../ui/DepartedBadge'
 import { ModalShell } from '../ui/ModalShell'
 import { cn } from '../../lib/cn'
 
@@ -306,20 +307,32 @@ function AddTerminal() {
 
 /* ── Enroll-number linking ─────────────────────────────────────────────────── */
 
-function LinkRow({ entry, alreadyLinkedTo }: { entry: RosterEntry; alreadyLinkedTo: string | null }) {
+function LinkRow({ entry, linkedTo }: { entry: RosterEntry; linkedTo: EnrollmentLink | null }) {
   const toast = useToast()
   const link = useLinkEnrollment()
+  const unlink = useUnlinkEnrollment()
   const { data: members = [] } = useEnrollmentLinks()
   const [selected, setSelected] = useState('')
 
+  // Someone who has left can't be given a fingerprint.
   const options = useMemo(
-    () => members.map((m) => ({
+    () => members.filter((m) => m.is_active).map((m) => ({
       value: m.id,
       label: m.zk_user_id ? `${m.name} (#${m.zk_user_id})` : m.name,
       avatar: { name: m.name, url: m.avatar_url },
     })),
     [members],
   )
+
+  const handleUnlink = async () => {
+    if (!linkedTo) return
+    try {
+      await unlink.mutateAsync(linkedTo.id)
+      toast(`#${entry.zk_user_id} freed — past attendance is unchanged`, 'success')
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Could not unlink', 'error')
+    }
+  }
 
   const handleLink = async () => {
     try {
@@ -342,9 +355,22 @@ function LinkRow({ entry, alreadyLinkedTo }: { entry: RosterEntry; alreadyLinked
       <span className="font-ui text-[12.5px] text-text-3 flex-1 min-w-30 truncate">
         {entry.name || <span className="text-text-4 italic">no name on device</span>}
       </span>
-      {alreadyLinkedTo ? (
+      {linkedTo && !linkedTo.is_active ? (
+        // The link is kept on purpose (see fetchEnrollmentLinks); what the admin
+        // needs here is to know whose finger is still enrolled on the device and
+        // to be able to free the ID once they have deleted it at the keypad.
+        <div className="flex items-center gap-2">
+          <span className="flex items-center gap-1.5 font-ui text-[12px] text-text-3">
+            <Link2 size={13} className="text-text-4" /> {linkedTo.name}
+          </span>
+          <DepartedBadge />
+          <Button size="sm" variant="ghost" onClick={handleUnlink} disabled={unlink.isPending}>
+            <Unlink size={13} /> Unlink
+          </Button>
+        </div>
+      ) : linkedTo ? (
         <span className="flex items-center gap-1.5 font-ui text-[12px] text-success">
-          <Link2 size={13} /> {alreadyLinkedTo}
+          <Link2 size={13} /> {linkedTo.name}
         </span>
       ) : (
         <div className="flex items-center gap-2">
@@ -369,7 +395,10 @@ function LinkedMembers() {
   const toast = useToast()
   const { data: members = [] } = useEnrollmentLinks()
   const unlink = useUnlinkEnrollment()
-  const linked = members.filter((m) => m.zk_user_id)
+  // Leavers first: theirs are the links that need an admin decision.
+  const linked = members
+    .filter((m) => m.zk_user_id)
+    .sort((a, b) => Number(a.is_active) - Number(b.is_active))
 
   const handleUnlink = async (id: string) => {
     try {
@@ -395,7 +424,10 @@ function LinkedMembers() {
         linked.map((m) => (
           <div key={m.id} className="flex items-center gap-3 px-3.5 py-2.5 border-b border-border-subtle last:border-0">
             <Avatar name={m.name} src={m.avatar_url ?? undefined} size="xs" />
-            <span className="font-ui text-[12.5px] text-text-1 flex-1 truncate">{m.name}</span>
+            <span className={cn('font-ui text-[12.5px] flex-1 truncate', m.is_active ? 'text-text-1' : 'text-text-3')}>
+              {m.name}
+            </span>
+            {!m.is_active && <DepartedBadge />}
             <span className="font-mono text-[12px] text-text-3">#{m.zk_user_id}</span>
             <Button size="sm" variant="ghost" onClick={() => handleUnlink(m.id)} disabled={unlink.isPending}>
               <Unlink size={13} /> Unlink
@@ -415,8 +447,8 @@ export function BiometricTerminalsTab() {
   const { data: unmatched = [] } = useUnmatchedPunches()
 
   const linkedByZkId = useMemo(() => {
-    const map = new Map<string, string>()
-    for (const m of members) if (m.zk_user_id) map.set(m.zk_user_id, m.name)
+    const map = new Map<string, EnrollmentLink>()
+    for (const m of members) if (m.zk_user_id) map.set(m.zk_user_id, m)
     return map
   }, [members])
 
@@ -437,6 +469,9 @@ export function BiometricTerminalsTab() {
   }, [terminals, unmatched])
 
   const unlinkedCount = rosterEntries.filter((e) => !linkedByZkId.has(e.zk_user_id)).length
+  // Enrolled fingers belonging to people who have left. Counted separately: the
+  // fix is to delete the finger at the keypad and free the ID, not to link it.
+  const departedCount = rosterEntries.filter((e) => linkedByZkId.get(e.zk_user_id)?.is_active === false).length
 
   // Surfaced in the empty state so "nothing here" can be told apart from
   // "the portal has never heard from the device".
@@ -496,9 +531,14 @@ export function BiometricTerminalsTab() {
         <div className="bg-surface-1 border border-border-default rounded-lg overflow-hidden">
           <div className="px-3.5 py-2.5 border-b border-border-subtle flex items-center justify-between gap-3">
             <p className="font-ui font-semibold text-[13px] text-text-1">Enrolled on the device</p>
-            {unlinkedCount > 0 && (
-              <span className="font-mono text-[11px] text-warning">{unlinkedCount} unlinked</span>
-            )}
+            <div className="flex items-center gap-2.5">
+              {departedCount > 0 && (
+                <span className="font-mono text-[11px] text-brand-red">{departedCount} left the company</span>
+              )}
+              {unlinkedCount > 0 && (
+                <span className="font-mono text-[11px] text-warning">{unlinkedCount} unlinked</span>
+              )}
+            </div>
           </div>
 
           {rosterEntries.length === 0 ? (
@@ -522,7 +562,7 @@ export function BiometricTerminalsTab() {
               <LinkRow
                 key={entry.zk_user_id}
                 entry={entry}
-                alreadyLinkedTo={linkedByZkId.get(entry.zk_user_id) ?? null}
+                linkedTo={linkedByZkId.get(entry.zk_user_id) ?? null}
               />
             ))
           )}

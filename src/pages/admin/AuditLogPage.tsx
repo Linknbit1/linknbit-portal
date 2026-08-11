@@ -1,18 +1,23 @@
-import { useEffect, useMemo, useState } from 'react'
-import type { ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import {
-  ShieldAlert, AlertTriangle, Info, X, ChevronRight, Radio,
+  ShieldAlert, AlertTriangle, Info, X, ChevronRight, Radio, ArrowUp,
 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Select } from '../../components/ui/Select'
 import { DatePicker } from '../../components/ui/DatePicker'
 import { Skeleton } from '../../components/ui/Skeleton'
+import { Button } from '../../components/ui/Button'
 import { SeverityChip } from '../../components/shared/SeverityChip'
+import { DateGroupHeading } from '../../components/shared/MonthFilter'
 import { useAuditLog, useMarkAuditSeen } from '../../hooks/useAuditLog'
 import { useRealtimeAuditLog } from '../../hooks/realtime/useRealtimeAuditLog'
 import { useFeatureAccess } from '../../hooks/useRoleFlags'
-import { usePeople } from '../../hooks/usePeople'
+import { useElementHeight } from '../../hooks/useElementHeight'
+import { useAllPeople } from '../../hooks/usePeople'
 import { cn } from '../../lib/cn'
+import { groupByDate, isoDayKey } from '../../lib/dateGroups'
+import { scrollAncestorToTop } from '../../lib/scroll'
 import type { AuditLogRow } from '../../api/auditLog'
 import type { AuditLogFilters, AuditModule, AuditSeverity } from '../../types'
 import { PersonLink } from '../../components/shared/PersonLink'
@@ -52,6 +57,24 @@ const MODULE_LABEL: Record<string, string> = {
 }
 
 const SEVERITY_ICON: Record<string, typeof Info> = { danger: ShieldAlert, warning: AlertTriangle, info: Info }
+
+/**
+ * Three sticky layers stack under the 64px Topbar: filter toolbar, column header,
+ * then the day heading.
+ *
+ * Only the toolbar is measured (into `--audit-toolbar-h` on the page wrapper) —
+ * it wraps to more rows as the window narrows, and it is always displayed, which
+ * is the case a ResizeObserver reports reliably. The column header is a fixed
+ * single line pinned to `COLHEAD_H`, and it disappears below `md`; a measured
+ * height would go stale there, because an element switching to `display: none`
+ * does not dependably deliver a resize. So the day heading mirrors the header's
+ * own `hidden md:grid` with a plain responsive variant instead: no header below
+ * `md`, no offset for one.
+ */
+const COLHEAD_H = 'h-8' /* 2rem — keep in step with the offset below */
+const STICKY_COLHEAD_TOP = 'top-[calc(4rem+var(--audit-toolbar-h))]'
+const STICKY_DATE_TOP =
+  'top-[calc(4rem+var(--audit-toolbar-h))] md:top-[calc(4rem+var(--audit-toolbar-h)+2rem)]'
 
 /** Falls back to a de-slugged action if a row predates readable summaries. */
 function headline(row: AuditLogRow): string {
@@ -255,16 +278,24 @@ const AuditRow = ({ row, expanded, onToggle }: RowProps) => {
 const AuditLogPage = () => {
   const [filters, setFilters] = useState<AuditLogFilters>({ module: 'all', severity: 'all' })
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  /** Rows that landed while the page was open, held back until the viewer asks. */
+  const [pendingCount, setPendingCount] = useState(0)
+
+  const [toolbarRef, toolbarH] = useElementHeight<HTMLDivElement>()
 
   const { allowed } = useFeatureAccess('can_view_audit_log')
-  useRealtimeAuditLog(allowed)
+  useRealtimeAuditLog(allowed, useCallback(() => setPendingCount((n) => n + 1), []))
 
   // Opening the page clears the "new logs" badge — everything here is now seen.
   const markSeen = useMarkAuditSeen()
   useEffect(() => { if (allowed) markSeen() }, [allowed, markSeen])
 
-  const { data: rows, isLoading } = useAuditLog(filters)
-  const { data: people } = usePeople()
+  const {
+    data, isLoading, refetch, fetchNextPage, hasNextPage, isFetchingNextPage,
+  } = useAuditLog(filters)
+  // Departed staff included on purpose: investigating what someone did before
+  // they left is exactly what this filter is for.
+  const { data: people } = useAllPeople()
 
   const actorOptions = useMemo(
     () => [{ value: '', label: 'All actors' }, ...(people ?? []).map((p) => ({ value: p.id, label: p.name ?? p.email ?? p.id }))],
@@ -277,15 +308,57 @@ const AuditLogPage = () => {
     (filters.module && filters.module !== 'all') || (filters.severity && filters.severity !== 'all') ||
     filters.flaggedOnly || filters.actorId || filters.from || filters.to
 
-  const list = rows ?? []
+  const pages = data?.pages
+  // Offset paging can repeat a row when an insert lands mid-scroll (it never
+  // skips one — the table is append-only), so the id wins over the window.
+  const list = useMemo(() => {
+    const seen = new Set<string>()
+    const out: AuditLogRow[] = []
+    for (const page of pages ?? []) {
+      for (const row of page.rows) {
+        if (seen.has(row.id)) continue
+        seen.add(row.id)
+        out.push(row)
+      }
+    }
+    return out
+  }, [pages])
+
+  const total = pages?.[0]?.total ?? null
+  const groups = useMemo(() => groupByDate(list, (r) => [isoDayKey(r.created_at)]), [list])
+
+  const pageRef = useRef<HTMLDivElement>(null)
+  const showNewEntries = () => {
+    setPendingCount(0)
+    void refetch()
+    scrollAncestorToTop(pageRef.current)
+  }
+
+  // Auto-load the next page as the end of the list comes into view; the button
+  // below it stays as the keyboard- and screen-reader-reachable equivalent.
+  const sentinelRef = useRef<HTMLDivElement | null>(null)
+  useEffect(() => {
+    const node = sentinelRef.current
+    if (!node || !hasNextPage || isFetchingNextPage) return
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) void fetchNextPage() },
+      { rootMargin: '400px' },
+    )
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage, list.length])
+
+  // Custom properties are outside React's CSSProperties; this cast is the only
+  // way to hand a measured sticky offset to Tailwind's arbitrary calc() values.
+  const stickyVars = { '--audit-toolbar-h': `${toolbarH}px` } as CSSProperties
 
   return (
     <>
       <Topbar title="Audit Log" />
 
-      <div className="w-full px-4 pb-10 sm:px-6">
+      <div ref={pageRef} className="w-full px-4 pb-10 sm:px-6" style={stickyVars}>
         {/* Sticky toolbar — sits directly under the Topbar */}
-        <div className="sticky top-16 z-30 -mx-4 border-b border-border-default bg-bg-base px-4 py-3 sm:-mx-6 sm:px-6">
+        <div ref={toolbarRef} className="sticky top-16 z-30 -mx-4 border-b border-border-default bg-bg-base px-4 py-3 sm:-mx-6 sm:px-6">
           <div className="flex flex-wrap items-center gap-2.5">
             {/* Severity segmented control */}
             <div className="inline-flex items-center rounded-md border border-border-default bg-surface-inset p-0.5">
@@ -342,11 +415,29 @@ const AuditLogPage = () => {
           </div>
         </div>
 
-        <p className="my-4 max-w-3xl font-ui text-body-sm/relaxed text-text-3">
-          Every action people take across attendance, gamification, projects and chat — who did it, what happened, and
-          for whom. Automated system actions aren't logged. <span className="text-brand-red">Flagged</span> rows are
-          likely attempts to game the system.
-        </p>
+        <div className="my-4 flex flex-wrap items-start justify-between gap-3">
+          <p className="max-w-3xl font-ui text-body-sm/relaxed text-text-3">
+            Every action people take across attendance, gamification, projects and chat — who did it, what happened, and
+            for whom. Automated system actions aren't logged. <span className="text-brand-red">Flagged</span> rows are
+            likely attempts to game the system.
+          </p>
+          {total !== null && list.length > 0 && (
+            <span className="shrink-0 font-mono text-[11px] tabular-nums text-text-4">
+              {list.length.toLocaleString()} of {total.toLocaleString()}
+            </span>
+          )}
+        </div>
+
+        {/* New rows arrive live but never reflow the list mid-read — the viewer asks. */}
+        {pendingCount > 0 && (
+          <button
+            onClick={showNewEntries}
+            className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-border-strong bg-surface-2 px-3 py-1.5 font-ui text-[12px] font-medium text-text-1 transition-colors hover:bg-surface-3 motion-reduce:transition-none"
+          >
+            <ArrowUp size={13} className="text-service-dev" />
+            {pendingCount === 1 ? '1 new entry' : `${pendingCount} new entries`}
+          </button>
+        )}
 
         {/* Table */}
         {isLoading ? (
@@ -362,25 +453,62 @@ const AuditLogPage = () => {
             </p>
           </div>
         ) : (
-          <div className="overflow-hidden rounded-xl border border-border-default bg-surface-1">
-            {/* Column header (desktop) */}
-            <div className={cn(ROW_GRID, 'hidden border-b border-border-default bg-surface-2/50 px-4 py-2 font-mono text-[10px] uppercase tracking-wider text-text-4 md:grid')}>
+          // overflow-clip, not overflow-hidden: hidden makes this a scroll
+          // container, which would confine every sticky child to it and stop the
+          // headers from pinning to the viewport.
+          <div className="overflow-clip rounded-xl border border-border-default bg-surface-1">
+            {/* Column header (desktop) — pins under the filter toolbar */}
+            <div
+              className={cn(
+                ROW_GRID, STICKY_COLHEAD_TOP, COLHEAD_H,
+                'sticky z-20 hidden border-b border-border-default bg-surface-2 px-4 font-mono text-[10px] uppercase tracking-wider text-text-4 md:grid',
+              )}
+            >
               <span>Time</span>
               <span>Severity</span>
               <span>What happened</span>
               <span>Module</span>
               <span />
             </div>
-            <div className="divide-y divide-border-subtle">
-              {list.map((row) => (
-                <AuditRow
-                  key={row.id}
-                  row={row}
-                  expanded={expandedId === row.id}
-                  onToggle={() => setExpandedId((id) => (id === row.id ? null : row.id))}
+
+            {groups.map((group) => (
+              <div key={group.date}>
+                <DateGroupHeading
+                  date={group.date}
+                  count={group.items.length}
+                  className={cn(STICKY_DATE_TOP, 'px-4')}
                 />
-              ))}
-            </div>
+                <div className="divide-y divide-border-subtle">
+                  {group.items.map((row) => (
+                    <AuditRow
+                      key={row.id}
+                      row={row}
+                      expanded={expandedId === row.id}
+                      onToggle={() => setExpandedId((id) => (id === row.id ? null : row.id))}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {list.length > 0 && (
+          <div ref={sentinelRef} className="flex justify-center pt-5">
+            {hasNextPage ? (
+              <Button
+                variant="secondary"
+                size="sm"
+                loading={isFetchingNextPage}
+                onClick={() => void fetchNextPage()}
+              >
+                {isFetchingNextPage ? 'Loading' : 'Load older entries'}
+              </Button>
+            ) : (
+              <p className="font-mono text-[11px] uppercase tracking-wide text-text-4">
+                End of the log
+              </p>
+            )}
           </div>
         )}
       </div>

@@ -35,7 +35,10 @@ export interface TaskFilters {
 }
 
 const TASK_SELECT =
-  '*, project:projects(id,name), project_service:project_services(id, service:services(id,name,slug,color)), assignee:profiles!tasks_assignee_id_fkey(id,name,avatar_url), assignees:task_assignees(profile:profiles(id,name,avatar_url)), stage:stages(id,name), subtasks(completed), comment_count:comments(count), attachment_count:attachments(count)'
+  // is_active on the assignees: someone deactivated mid-task must still show up,
+  // flagged, so their work is visibly waiting to be reassigned rather than
+  // silently reading as unassigned.
+  '*, project:projects(id,name), project_service:project_services(id, service:services(id,name,slug,color)), assignee:profiles!tasks_assignee_id_fkey(id,name,avatar_url,is_active), assignees:task_assignees(profile:profiles(id,name,avatar_url,is_active)), stage:stages(id,name), subtasks(completed), comment_count:comments(count), attachment_count:attachments(count)'
 
 export async function fetchTasks(filters: TaskFilters = {}): Promise<TaskListItem[]> {
   let query = supabase

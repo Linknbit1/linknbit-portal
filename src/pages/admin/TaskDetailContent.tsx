@@ -152,6 +152,23 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
     () => allMembers.filter((m) => m.project_service_id === task?.project_service_id),
     [allMembers, task?.project_service_id],
   )
+
+  /**
+   * The staffed members, plus anyone already assigned who has since left.
+   *
+   * Without that second group the picker would drop a departed assignee entirely
+   * — their id stays in `value` but matches no option, so the field would read
+   * "Unassigned" while the row still exists. The task would look like nobody's
+   * problem instead of somebody's to hand over.
+   */
+  const assigneeOptions = useMemo(() => {
+    const staffed = members.map((m) => ({ id: m.id, name: m.name, avatar_url: m.avatar_url }))
+    const staffedIds = new Set(staffed.map((m) => m.id))
+    const departed = (task?.assignees ?? [])
+      .filter((a) => a.is_active === false && !staffedIds.has(a.id))
+      .map((a) => ({ id: a.id, name: a.name, avatar_url: a.avatar_url, departed: true }))
+    return [...staffed, ...departed]
+  }, [members, task?.assignees])
   const { data: projectFiles = [] } = useProjectFiles(projectId)
   const fileItems = useMemo(() => projectFiles.map((f) => ({
     id: f.id, name: f.file_name, kind: f.kind === 'link' ? 'link' : fileKind(f.mime_type, f.file_name),
@@ -309,7 +326,7 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
                 },
               )
             }}
-            options={members.map((m) => ({ id: m.id, name: m.name, avatar_url: m.avatar_url }))}
+            options={assigneeOptions}
             size="sm"
             closeOnSelect
           />

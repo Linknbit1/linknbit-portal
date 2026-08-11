@@ -313,6 +313,12 @@ function LoginForm({
   const [attempts, setAttempts] = useState(0)
   const signIn = useSignIn()
 
+  // Set by AuthContext when a live session is revoked mid-use, so the sudden
+  // return to this screen has an explanation. Cleared as soon as they retype.
+  const [wasSignedOut, setWasSignedOut] = useState(
+    () => new URLSearchParams(window.location.search).get('deactivated') === '1',
+  )
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     signIn.mutate(
@@ -333,6 +339,11 @@ function LoginForm({
   }
 
   const hasError = signIn.isError
+  // auth-signin answers a deactivated account with its own wording. Showing the
+  // generic "wrong password" for that would send someone who has left the company
+  // round the password-reset loop forever.
+  const serverMessage = signIn.error instanceof Error ? signIn.error.message : ''
+  const isDeactivated = /deactivated/i.test(serverMessage)
 
   return (
     <form onSubmit={handleSubmit}>
@@ -343,15 +354,34 @@ function LoginForm({
         Sign in to your workspace to continue.
       </p>
 
+      {wasSignedOut && !hasError && (
+        <div className="mb-4.5 flex items-start gap-2.5 rounded-sm border border-error-border bg-error-soft px-3.5 py-3">
+          <AlertCircle size={16} className="mt-px shrink-0 text-error" />
+          <div className="font-ui text-[12.5px] leading-normal text-text-1">
+            <strong className="font-semibold text-error">You have been signed out.</strong>{' '}
+            Your account is no longer active. Please contact your administrator.
+          </div>
+        </div>
+      )}
+
       {hasError && (
         <div className="mb-4.5 flex items-start gap-2.5 rounded-sm border border-error-border bg-error-soft px-3.5 py-3">
           <AlertCircle size={16} className="mt-px shrink-0 text-error" />
           <div className="font-ui text-[12.5px] leading-normal text-text-1">
-            <strong className="font-semibold text-error">That email and password don't match.</strong>{' '}
-            Double-check your credentials or reset your password.
-            <span className="mt-1 block font-mono text-[10.5px] tracking-[0.04em] text-text-3">
-              Attempt {attempts} of 5 — next try free
-            </span>
+            {isDeactivated ? (
+              <>
+                <strong className="font-semibold text-error">This account has been deactivated.</strong>{' '}
+                Please contact your administrator.
+              </>
+            ) : (
+              <>
+                <strong className="font-semibold text-error">That email and password don't match.</strong>{' '}
+                Double-check your credentials or reset your password.
+                <span className="mt-1 block font-mono text-[10.5px] tracking-[0.04em] text-text-3">
+                  Attempt {attempts} of 5 — next try free
+                </span>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -360,7 +390,7 @@ function LoginForm({
         label="Work email"
         type="email"
         value={email}
-        onChange={setEmail}
+        onChange={(v) => { setEmail(v); setWasSignedOut(false) }}
         invalid={hasError}
         icon={<Mail size={16} strokeWidth={1.75} />}
       />
@@ -368,7 +398,7 @@ function LoginForm({
         label="Password"
         type={showPass ? 'text' : 'password'}
         value={password}
-        onChange={setPassword}
+        onChange={(v) => { setPassword(v); setWasSignedOut(false) }}
         invalid={hasError}
         icon={<Lock size={16} strokeWidth={1.75} />}
         labelRight={
