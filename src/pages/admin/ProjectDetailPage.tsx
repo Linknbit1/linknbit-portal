@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   Plus, Users, Layers, Paperclip, Calendar, Wallet, UserCircle,
-  Pencil, Trash2, Flag, X, CheckCircle2, Columns, FileText, Bell, BellOff, MoreVertical,
+  Pencil, Trash2, Flag, X, CheckCircle2, Columns, FileText, Bell, BellOff, MoreVertical, History,
 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Button } from '../../components/ui/Button'
@@ -17,6 +17,7 @@ import { ServiceChip } from '../../components/shared/ServiceChip'
 import { StatusChip } from '../../components/shared/StatusChip'
 import { PriorityChip } from '../../components/shared/PriorityChip'
 import { TaskBoard } from '../../components/shared/TaskBoard'
+import { TimeBacklog } from '../../components/shared/TimeBacklog'
 import { MeModeNotice } from '../../components/shared/MeModeNotice'
 import { DocEditor } from '../../components/editor/DocEditor'
 import { ProjectFilesTab } from './ProjectFilesTab'
@@ -58,6 +59,9 @@ const TABS = [
   { key: 'overview', label: 'Overview', icon: FileText },
   { key: 'files', label: 'Files', icon: Paperclip },
   { key: 'team', label: 'Team', icon: Users },
+  // Where this project's hours actually went, task by task. Same permission as
+  // the Tasks page backlog — time is management data, not everyone's business.
+  { key: 'backlog', label: 'Backlog', icon: History },
 ] as const
 type ProjectTab = typeof TABS[number]['key']
 
@@ -174,7 +178,12 @@ export default function ProjectDetailPage() {
   // Delete is enforced by delete_project_cascade via the flag; showing it to anyone
   // else produced a button that always errored.
   const canManageProjects = useCanAccess('can_manage_projects')
+  const canViewBacklog = useCanAccess('can_view_backlog')
   const [projectView, setProjectView] = useState<ProjectTab>('board')
+  const visibleTabs = TABS.filter((t) => t.key !== 'backlog' || canViewBacklog)
+  // Permissions resolve after first paint; clamp rather than stranding someone
+  // on a tab that has just disappeared from the row.
+  const activeTab: ProjectTab = visibleTabs.some((t) => t.key === projectView) ? projectView : 'board'
   const [showEdit, setShowEdit] = useState(false)
   // Which service the "add member" modal is filling — the picker is per service now.
   const [addMemberFor, setAddMemberFor] = useState<string | null>(null)
@@ -257,13 +266,13 @@ export default function ProjectDetailPage() {
   }
 
   return (
-    <div className={cn('flex flex-col flex-1', projectView === 'board' && 'min-h-0')}>
+    <div className={cn('flex flex-col flex-1', activeTab === 'board' && 'min-h-0')}>
       <Topbar title={project.name} back="/admin/projects" />
       {/* On the board tab the page stops scrolling and hands its remaining height
           to the board, so each column scrolls its own cards under a fixed header.
           overflow-hidden is what makes that binding: without it the tall summary
           header pushes the board past the viewport and <main> scrolls instead. */}
-      <div className={cn('flex flex-col gap-5 p-4 lg:px-8 lg:py-7', projectView === 'board' && 'min-h-0 flex-1 overflow-hidden')}>
+      <div className={cn('flex flex-col gap-5 p-4 lg:px-8 lg:py-7', activeTab === 'board' && 'min-h-0 flex-1 overflow-hidden')}>
         {/* Summary header */}
         <div className="shrink-0 bg-surface-1 border border-border-default rounded-xl p-4 sm:p-5">
           <div className="flex flex-wrap items-start gap-3">
@@ -363,33 +372,33 @@ export default function ProjectDetailPage() {
         {/* Tabs */}
         <div className="shrink-0 flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-1 bg-surface-1 border border-border-default rounded-lg p-1 overflow-x-auto no-scrollbar">
-            {TABS.map((t) => (
+            {visibleTabs.map((t) => (
               <button
                 key={t.key}
                 onClick={() => setProjectView(t.key)}
                 className={cn(
                   'flex items-center gap-1.5 px-3 h-8 rounded-md font-ui font-medium text-[12.5px] whitespace-nowrap transition-colors',
-                  projectView === t.key ? 'bg-surface-3 text-text-1 shadow-sm' : 'text-text-3 hover:text-text-1',
+                  activeTab === t.key ? 'bg-surface-3 text-text-1 shadow-sm' : 'text-text-3 hover:text-text-1',
                 )}
               >
                 <t.icon size={13} /> {t.label}{t.key === 'team' ? ` (${members.length})` : t.key === 'files' && projectFiles.length ? ` (${projectFiles.length})` : ''}
               </button>
             ))}
           </div>
-          {canManage && (projectView === 'pipeline' || projectView === 'board') && (
+          {canManage && (activeTab === 'pipeline' || activeTab === 'board') && (
             <div className="flex items-center gap-2">
               <Button size="sm" variant="secondary" iconLeft={<Plus size={14} />} onClick={() => { setEditingStage(null); setShowStageForm(true) }}>Stage</Button>
               <Button size="sm" iconLeft={<Plus size={14} />} onClick={() => openAddTask()}>Task</Button>
             </div>
           )}
-          {canManage && projectView === 'team' && activeServiceId && (
+          {canManage && activeTab === 'team' && activeServiceId && (
             <Button size="sm" iconLeft={<Plus size={14} />} onClick={() => setAddMemberFor(activeServiceId)}>
               Add to {activeService?.service?.name ?? 'service'}
             </Button>
           )}
         </div>
 
-        {projectView === 'pipeline' && (
+        {activeTab === 'pipeline' && (
           stages.length === 0 && (tasksByStage.get('__none__')?.length ?? 0) === 0 ? (
             <div className="bg-surface-1 border border-border-default rounded-md py-10 px-4 text-center font-ui text-[13px] text-text-4 space-y-3">
               <p>No stages or tasks yet. {canManage && 'Add a stage or task to get started.'}</p>
@@ -443,17 +452,17 @@ export default function ProjectDetailPage() {
           )
         )}
 
-        {(projectView === 'board' || projectView === 'pipeline') && (
+        {(activeTab === 'board' || activeTab === 'pipeline') && (
           <MeModeNotice shown={tasks.length} total={allTasks.length} />
         )}
 
-        {projectView === 'board' && (
+        {activeTab === 'board' && (
           tasks.length === 0
             ? <div className="bg-surface-1 border border-border-default rounded-md py-10 text-center font-ui text-[13px] text-text-4">No tasks yet.</div>
             : <TaskBoard tasks={tasks} onOpenTask={setOpenTaskId} />
         )}
 
-        {projectView === 'overview' && (
+        {activeTab === 'overview' && (
           <div className="bg-surface-1 border border-border-default rounded-xl p-4 sm:p-5">
             <DocEditor
               key={id}
@@ -467,14 +476,14 @@ export default function ProjectDetailPage() {
           </div>
         )}
 
-        {projectView === 'files' && (
+        {activeTab === 'files' && (
           <div className="bg-surface-1 border border-border-default rounded-xl p-3 sm:p-4 max-w-3xl">
             <ProjectFilesTab projectId={id} canManage={canManage} onOpenTask={setOpenTaskId} />
           </div>
         )}
 
         {/* People belong to a service, so the team reads as one block per service. */}
-        {projectView === 'team' && (
+        {activeTab === 'team' && (
           // Wrapping flex rather than a fixed grid: cards share the row when
           // there are several services and one card stretches the full width when
           // there is only one, instead of being stranded in a half-width column.
@@ -539,6 +548,11 @@ export default function ProjectDetailPage() {
               )
             })}
           </div>
+        )}
+
+        {/* Scoped to this project, grouped by task — "which task ate the hours". */}
+        {activeTab === 'backlog' && canViewBacklog && (
+          <TimeBacklog projectId={id} groupBy="task" />
         )}
       </div>
 

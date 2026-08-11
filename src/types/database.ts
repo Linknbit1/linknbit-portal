@@ -182,6 +182,8 @@ export type Database = {
           check_out: string | null
           created_at: string
           date: string
+          day_part: string
+          day_type: string
           device_fingerprint: string | null
           device_flagged: boolean
           device_name: string | null
@@ -192,7 +194,7 @@ export type Database = {
           note: string | null
           profile_id: string
           source: string
-          status: string
+          status: string | null
           updated_at: string
           wifi_validated: boolean
         }
@@ -201,6 +203,8 @@ export type Database = {
           check_out?: string | null
           created_at?: string
           date: string
+          day_part?: string
+          day_type?: string
           device_fingerprint?: string | null
           device_flagged?: boolean
           device_name?: string | null
@@ -211,7 +215,7 @@ export type Database = {
           note?: string | null
           profile_id: string
           source?: string
-          status?: string
+          status?: string | null
           updated_at?: string
           wifi_validated?: boolean
         }
@@ -220,6 +224,8 @@ export type Database = {
           check_out?: string | null
           created_at?: string
           date?: string
+          day_part?: string
+          day_type?: string
           device_fingerprint?: string | null
           device_flagged?: boolean
           device_name?: string | null
@@ -230,7 +236,7 @@ export type Database = {
           note?: string | null
           profile_id?: string
           source?: string
-          status?: string
+          status?: string | null
           updated_at?: string
           wifi_validated?: boolean
         }
@@ -324,7 +330,10 @@ export type Database = {
           early_checkin_min: number
           grace_period_min: number
           min_excluded_gap_min: number
+          office_ip_auto_update: boolean
           office_ip_cidr: string | null
+          office_ip_last_observed: string | null
+          office_ip_updated_at: string | null
           saturday_working: boolean
           singleton: boolean
           terminal_stale_min: number
@@ -341,7 +350,10 @@ export type Database = {
           early_checkin_min?: number
           grace_period_min?: number
           min_excluded_gap_min?: number
+          office_ip_auto_update?: boolean
           office_ip_cidr?: string | null
+          office_ip_last_observed?: string | null
+          office_ip_updated_at?: string | null
           saturday_working?: boolean
           singleton?: boolean
           terminal_stale_min?: number
@@ -358,7 +370,10 @@ export type Database = {
           early_checkin_min?: number
           grace_period_min?: number
           min_excluded_gap_min?: number
+          office_ip_auto_update?: boolean
           office_ip_cidr?: string | null
+          office_ip_last_observed?: string | null
+          office_ip_updated_at?: string | null
           saturday_working?: boolean
           singleton?: boolean
           terminal_stale_min?: number
@@ -3241,6 +3256,7 @@ export type Database = {
           id: string
           note: string | null
           profile_id: string
+          source: string
           started_at: string
           task_id: string
           updated_at: string
@@ -3252,6 +3268,7 @@ export type Database = {
           id?: string
           note?: string | null
           profile_id: string
+          source?: string
           started_at: string
           task_id: string
           updated_at?: string
@@ -3263,6 +3280,7 @@ export type Database = {
           id?: string
           note?: string | null
           profile_id?: string
+          source?: string
           started_at?: string
           task_id?: string
           updated_at?: string
@@ -3875,6 +3893,11 @@ export type Database = {
         }
         Returns: undefined
       }
+      fn_purge_old_notifications: { Args: never; Returns: undefined }
+      fn_recalc_project_progress: {
+        Args: { p_project: string }
+        Returns: undefined
+      }
       fn_remove_channel_role: {
         Args: { p_channel_id: string; p_role: string }
         Returns: undefined
@@ -3930,11 +3953,25 @@ export type Database = {
         }[]
       }
       fn_task_status_label: { Args: { p_status: string }; Returns: string }
+      fn_task_status_recipients: {
+        Args: { p_actor: string; p_task_id: string }
+        Returns: {
+          profile_id: string
+        }[]
+      }
       fn_task_subscribers: {
         Args: { p_actor: string; p_task_id: string }
         Returns: {
           profile_id: string
         }[]
+      }
+      fn_terminal_sync_office_ip: {
+        Args: {
+          p_observed_ip: string
+          p_reported_ip?: string
+          p_terminal_name: string
+        }
+        Returns: Json
       }
       fn_toggle_reaction: {
         Args: { p_emoji: string; p_message_id: string }

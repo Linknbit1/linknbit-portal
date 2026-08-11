@@ -209,7 +209,7 @@ export function TeamRoster({ memberIds }: TeamScope = {}) {
         <div>
           {dayRows.map((r) => (
             <Row key={r.id} name={r.profiles?.name ?? '—'} avatar={r.profiles?.avatar_url ?? null} personId={r.profile_id}
-              status={<Pill status={r.status} map={ATTENDANCE_STATUS} />}>
+              status={<Pill status={r.status ?? 'unknown'} map={ATTENDANCE_STATUS} />}>
               <span>In: <span className="text-text-1">{fmtTime(r.check_in)}</span></span>
             </Row>
           ))}

@@ -279,7 +279,7 @@ export function HistoryTable({ records, periodLabel }: { records: AttendanceRow[
                   {formatDateLabel(row.date)}
                 </td>
                 <td className="px-5 py-3">
-                  <StatusPill status={row.status} />
+                  <StatusPill status={row.status ?? 'absent'} />
                 </td>
                 <td className="px-5 py-3 font-mono text-[12px] text-text-2 whitespace-nowrap">
                   {formatTime(row.check_in)}

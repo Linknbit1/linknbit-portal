@@ -113,6 +113,8 @@ export function useLogTime() {
         profile_id: profile.id,
         started_at: start.toISOString(),
         ended_at: end.toISOString(),
+        // Log time is always hand-entered; the server will say the same.
+        source: 'manual',
         note: input.note ?? null,
         billable: input.billable ?? false,
         created_at: new Date().toISOString(),

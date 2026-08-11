@@ -481,7 +481,7 @@ function AttendanceTab({ personId, leave, wfh }: {
           {records.length === 0 ? <Empty label="This month's clock-ins are missing, presumed on holiday somewhere warm." /> : (
             <div className="-mx-5 -mb-5 divide-y divide-border-subtle border-t border-border-subtle">
               {records.map((r) => {
-                const meta = ATT_STATUS[r.status]
+                const meta = r.status ? ATT_STATUS[r.status] : undefined
                 return (
                   <div key={r.id} className="flex items-center gap-3 px-5 py-2.5 transition-colors hover:bg-surface-2/40">
                     <span className={cn('size-2 shrink-0 rounded-full', meta?.dot ?? 'bg-text-4')} />

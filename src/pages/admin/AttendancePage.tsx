@@ -693,7 +693,7 @@ export function DailyRecordsTab() {
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <StatusChip status={rec.status} />
+                    <StatusChip status={rec.status ?? 'absent'} />
                   </td>
                   <td className="px-4 py-3 font-mono text-[12.5px] text-text-1">
                     {fmtTime(rec.check_in)}
@@ -790,7 +790,7 @@ export function DailyRecordsTab() {
                     )}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <StatusChip status={rec.status} />
+                    <StatusChip status={rec.status ?? 'absent'} />
                     <button
                       onClick={() => setEditRec(rec)}
                       className="text-text-4 hover:text-text-1 transition-colors"
@@ -4706,7 +4706,7 @@ export function ReportsTab() {
   for (const [profileId, s] of statsMap) {
     const empRecords = (recordsByProfile.get(profileId) ?? []).map((r) => ({
       date: r.date,
-      status: r.status,
+      status: r.status ?? 'absent',
       check_in: r.check_in,
       excluded_minutes: r.excluded_minutes,
     }));

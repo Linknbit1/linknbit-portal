@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Bell, Search, Check, CheckCheck, ChevronDown, UserCircle, LogOut, ChevronLeft, UserRound } from 'lucide-react'
+import { Bell, Search, Check, CheckCheck, ChevronDown, ChevronRight, UserCircle, LogOut, ChevronLeft, UserRound } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { showWipFeatures } from '../../lib/featureFlags'
 import { Avatar } from '../ui/Avatar'
@@ -256,6 +256,17 @@ export function Topbar({ title, breadcrumb, className, back, actions }: TopbarPr
                     )
                   })
                 )}
+              </div>
+
+              {/* The list above is capped at a short scroll; this is the way out
+                  to the whole history. */}
+              <div className="border-t border-border-subtle">
+                <button
+                  onClick={() => { setBellOpen(false); navigate('/notifications') }}
+                  className="flex w-full items-center justify-center gap-1.5 px-4 py-2.5 font-ui text-[12px] font-semibold text-brand-red transition-colors hover:bg-surface-2/60"
+                >
+                  View all notifications <ChevronRight size={13} />
+                </button>
               </div>
             </div>
           )}

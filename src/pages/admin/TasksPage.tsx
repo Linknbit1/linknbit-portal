@@ -148,11 +148,13 @@ export default function TasksPage() {
           <div className="space-y-2">
             {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-14" />)}
           </div>
+        ) : view === 'backlog' && canViewBacklog ? (
+          /* Every logged session, grouped per task — start, stop, resume. Ahead of
+             the empty-list check on purpose: the backlog answers a question about
+             tracked time, so the task filters above must not blank it out. */
+          <TimeBacklog groupBy="task" />
         ) : shown.length === 0 ? (
           <div className="py-16 text-center font-ui text-[13px] text-text-4">No tasks match your filters.</div>
-        ) : view === 'backlog' && canViewBacklog ? (
-          /* Every logged session, grouped per task — start, stop, resume. */
-          <TimeBacklog groupBy="task" />
         ) : view === 'board' ? (
           <TaskBoard tasks={shown} onOpenTask={setOpenTaskId} showProject />
         ) : (

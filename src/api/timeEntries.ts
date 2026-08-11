@@ -174,6 +174,8 @@ export async function logTime({ taskId, minutes, endedAt, startedAt, note, billa
       ended_at: end.toISOString(),
       note: note ?? null,
       billable: billable ?? false,
+      // Self-reported rather than witnessed by the clock — the backlog says so.
+      source: 'manual',
     })
     .select()
     .single()
