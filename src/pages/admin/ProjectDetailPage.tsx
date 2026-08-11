@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState, type ReactNode } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
   Plus, Users, Layers, Paperclip, Calendar, Wallet, UserCircle,
   Pencil, Trash2, Flag, X, CheckCircle2, Columns, FileText, Bell, BellOff, MoreVertical, History,
@@ -43,6 +43,7 @@ import { useUsableTemplates, useApplyTemplate } from '../../hooks/useTemplates'
 import { useApprovals, useRequestApproval, useReviewApproval } from '../../hooks/useApprovals'
 import { useRealtimeTasks } from '../../hooks/realtime/useRealtimeTasks'
 import { useMyTasksFilter } from '../../hooks/useMeMode'
+import { PROJECT_TASK_QUERY_PARAM } from '../../constants/notifications'
 import { StageFormModal } from './StageFormModal'
 import { TaskFormModal } from './TaskFormModal'
 import { AddProjectMemberModal } from './AddProjectMemberModal'
@@ -124,6 +125,7 @@ function ProjectActionsMenu({
 export default function ProjectDetailPage() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const toast = useToast()
   const { profile } = useAuthContext()
   const canManage = isAuthoritative(profile?.role)
@@ -133,14 +135,23 @@ export default function ProjectDetailPage() {
   // Which service block is on screen. Falls back to the first one until picked,
   // so the page always shows real work instead of an empty shell.
   const [pickedServiceId, setPickedServiceId] = useState<string | null>(null)
-  const activeService = services.find((s) => s.id === pickedServiceId) ?? services[0] ?? null
-  const activeServiceId = activeService?.id
 
-  const { data: stages = [] } = useServiceStages(activeServiceId)
   // Every task in the project, not just the active service's. Switching service
   // becomes instant instead of refetching, and it makes a real per-service task
   // count available for the switcher.
   const { data: projectTasks = [] } = useTasks({ projectId: id })
+  const taskIdFromUrl = useMemo(
+    () => new URLSearchParams(location.search).get(PROJECT_TASK_QUERY_PARAM),
+    [location.search],
+  )
+  const taskFromUrl = useMemo(
+    () => taskIdFromUrl ? projectTasks.find((t) => t.id === taskIdFromUrl) ?? null : null,
+    [projectTasks, taskIdFromUrl],
+  )
+  const activeService = services.find((s) => s.id === (taskFromUrl?.project_service_id ?? pickedServiceId)) ?? services[0] ?? null
+  const activeServiceId = activeService?.id
+
+  const { data: stages = [] } = useServiceStages(activeServiceId)
   const allTasks = useMemo(
     () => projectTasks.filter((t) => t.project_service_id === activeServiceId),
     [projectTasks, activeServiceId],
@@ -184,7 +195,8 @@ export default function ProjectDetailPage() {
   const visibleTabs = TABS.filter((t) => t.key !== 'backlog' || canViewBacklog)
   // Permissions resolve after first paint; clamp rather than stranding someone
   // on a tab that has just disappeared from the row.
-  const activeTab: ProjectTab = visibleTabs.some((t) => t.key === projectView) ? projectView : 'board'
+  const requestedTab: ProjectTab = taskIdFromUrl ? 'board' : projectView
+  const activeTab: ProjectTab = visibleTabs.some((t) => t.key === requestedTab) ? requestedTab : 'board'
   const [showEdit, setShowEdit] = useState(false)
   // Which service the "add member" modal is filling — the picker is per service now.
   const [addMemberFor, setAddMemberFor] = useState<string | null>(null)
@@ -194,7 +206,8 @@ export default function ProjectDetailPage() {
   const [editingStage, setEditingStage] = useState<StageRow | null>(null)
   const [showTaskForm, setShowTaskForm] = useState(false)
   const [taskFormStage, setTaskFormStage] = useState<string | undefined>(undefined)
-  const [openTaskId, setOpenTaskId] = useState<string | null>(null)
+  const [manualOpenTaskId, setManualOpenTaskId] = useState<string | null>(null)
+  const openTaskId = taskIdFromUrl ?? manualOpenTaskId
   const [reviewStage, setReviewStage] = useState<StageRow | null>(null)
   const [pendingStageDelete, setPendingStageDelete] = useState<StageRow | null>(null)
   const [confirmProjectDelete, setConfirmProjectDelete] = useState(false)
@@ -219,6 +232,15 @@ export default function ProjectDetailPage() {
     }
     return map
   }, [tasks])
+
+  const closeTaskDrawer = () => {
+    setManualOpenTaskId(null)
+    if (!taskIdFromUrl) return
+    const params = new URLSearchParams(location.search)
+    params.delete(PROJECT_TASK_QUERY_PARAM)
+    const search = params.toString()
+    navigate({ pathname: location.pathname, search: search ? `?${search}` : '' }, { replace: true })
+  }
 
   if (isLoading) {
     return (
@@ -440,7 +462,7 @@ export default function ProjectDetailPage() {
                   stage={stage}
                   tasks={tasksByStage.get(stage.id) ?? []}
                   canManage={canManage}
-                  onOpenTask={setOpenTaskId}
+                  onOpenTask={setManualOpenTaskId}
                   onAddTask={() => openAddTask(stage.id)}
                   onEdit={() => openEditStage(stage)}
                   onDelete={() => setPendingStageDelete(stage)}
@@ -451,7 +473,7 @@ export default function ProjectDetailPage() {
               {(tasksByStage.get('__none__')?.length ?? 0) > 0 && (
                 <div className="bg-surface-1 border border-border-default rounded-md">
                   <div className="px-4 py-2.5 border-b border-border-subtle font-ui font-semibold text-[12.5px] text-text-2">Unstaged tasks</div>
-                  <TaskList tasks={tasksByStage.get('__none__') ?? []} onOpenTask={setOpenTaskId} />
+                  <TaskList tasks={tasksByStage.get('__none__') ?? []} onOpenTask={setManualOpenTaskId} />
                 </div>
               )}
             </div>
@@ -465,7 +487,7 @@ export default function ProjectDetailPage() {
         {activeTab === 'board' && (
           tasks.length === 0
             ? <div className="bg-surface-1 border border-border-default rounded-md py-10 text-center font-ui text-[13px] text-text-4">No tasks yet.</div>
-            : <TaskBoard tasks={tasks} onOpenTask={setOpenTaskId} />
+            : <TaskBoard tasks={tasks} onOpenTask={setManualOpenTaskId} />
         )}
 
         {activeTab === 'overview' && (
@@ -484,7 +506,7 @@ export default function ProjectDetailPage() {
 
         {activeTab === 'files' && (
           <div className="bg-surface-1 border border-border-default rounded-xl p-3 sm:p-4 max-w-3xl">
-            <ProjectFilesTab projectId={id} canManage={canManage} onOpenTask={setOpenTaskId} />
+            <ProjectFilesTab projectId={id} canManage={canManage} onOpenTask={setManualOpenTaskId} />
           </div>
         )}
 
@@ -598,7 +620,7 @@ export default function ProjectDetailPage() {
         />
       )}
       {reviewStage && <ApprovalModal title="Review stage" subject={reviewStage.name} pending={reviewApproval.isPending} onSubmit={handleReview} onClose={() => setReviewStage(null)} />}
-      <TaskDetailDrawer taskId={openTaskId} open={!!openTaskId} onClose={() => setOpenTaskId(null)} />
+      <TaskDetailDrawer taskId={openTaskId} open={!!openTaskId} onClose={closeTaskDrawer} />
 
       <ConfirmDialog
         open={confirmProjectDelete}

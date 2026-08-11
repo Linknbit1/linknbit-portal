@@ -138,7 +138,7 @@ self.addEventListener('push', (event) => {
 function pathForNotification(data) {
   const id = data.resourceId
   switch (data.resourceType) {
-    case 'task': return id ? '/admin/tasks/' + id : '/inbox'
+    case 'task': return id ? '/admin/tasks/' + id + '?openInProject=1' : '/inbox'
     case 'project': return id ? '/admin/projects/' + id : '/inbox'
     case 'leave_request':
     case 'wfh_request':

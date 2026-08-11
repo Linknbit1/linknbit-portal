@@ -129,11 +129,22 @@ export function notificationGroupsFor(role: string | null | undefined): Notifica
     .filter((g) => g.items.length > 0)
 }
 
+export const PROJECT_TASK_QUERY_PARAM = 'task'
+export const TASK_PROJECT_REDIRECT_QUERY_PARAM = 'openInProject'
+
+export function projectTaskDrawerHref(projectId: string, taskId: string): string {
+  return `/admin/projects/${projectId}?${PROJECT_TASK_QUERY_PARAM}=${encodeURIComponent(taskId)}`
+}
+
+function taskNotificationHref(taskId: string): string {
+  return `/admin/tasks/${taskId}?${TASK_PROJECT_REDIRECT_QUERY_PARAM}=1`
+}
+
 /** Where a notification should take you when clicked. */
 export function notificationHref(resourceType: string | null, resourceId?: string | null): string | null {
   switch (resourceType) {
     case 'task':
-      return resourceId ? `/admin/tasks/${resourceId}` : '/inbox'
+      return resourceId ? taskNotificationHref(resourceId) : '/inbox'
     case 'project':
       return resourceId ? `/admin/projects/${resourceId}` : '/inbox'
     case 'leave_request':
