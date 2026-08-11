@@ -44,12 +44,16 @@ export default function MorePage() {
           </button>
         )}
 
-        {/* Same sections as the desktop sidebar, so the two agree. */}
+        {/* Same sections, in the same order, as the desktop sidebar so the two
+            agree. The pinned footer group carries no label — it renders as a
+            headingless block here, which lands Settings last either way. */}
         {groups.map((group) => (
           <section key={group.id} className="flex flex-col gap-2.5">
-            <h2 className="text-[10px] font-ui font-semibold text-text-4 uppercase tracking-widest px-1">
-              {group.label}
-            </h2>
+            {group.label && (
+              <h2 className="text-[10px] font-ui font-semibold text-text-4 uppercase tracking-widest px-1">
+                {group.label}
+              </h2>
+            )}
             {group.items.map((item) => (
               <HubRow key={item.to} to={item.to} label={item.label} icon={item.icon} badge={item.badge} />
             ))}

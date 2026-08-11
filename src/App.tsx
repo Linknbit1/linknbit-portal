@@ -38,6 +38,7 @@ import ReportsPage from './pages/admin/ReportsPage'
 import AuditLogPage from './pages/admin/AuditLogPage'
 import SettingsPage, { SettingsSectionScreen } from './pages/admin/SettingsPage'
 import AttendancePage from './pages/AttendancePage'
+import BdSectionScreen from './pages/bd/BdSectionScreen'
 import DocumentationPage from './pages/docs/DocumentationPage'
 import ChangelogPage from './pages/docs/ChangelogPage'
 
@@ -143,6 +144,18 @@ export default function App() {
                 {/* Still work-in-progress — only routable in development builds */}
                 {showWipFeatures && (
                   <Route path="/admin/reports" element={<RoleGuard feature="can_view_reports"><ReportsPage /></RoleGuard>} />
+                )}
+                {/* Business Development — placeholder screens only. Same
+                    devOnly + capability pair as the nav item, so the URL can no
+                    more be reached in production than the sidebar row can. */}
+                {showWipFeatures && (
+                  <>
+                    <Route path="/bd" element={<Navigate to="/bd/pipeline" replace />} />
+                    <Route
+                      path="/bd/:section"
+                      element={<RoleGuard feature="can_view_bd"><BdSectionScreen /></RoleGuard>}
+                    />
+                  </>
                 )}
 
                 {/* Legacy path redirects */}

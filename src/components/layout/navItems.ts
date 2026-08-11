@@ -17,6 +17,7 @@ import {
   StickyNote,
   BookOpen,
   Tag,
+  TrendingUp,
   type LucideIcon,
 } from 'lucide-react'
 import { showWipFeatures } from '../../lib/featureFlags'
@@ -48,7 +49,15 @@ export const NAV_GROUPS = [
   { id: 'delivery',  label: 'Delivery' },
   { id: 'people',    label: 'People' },
   { id: 'admin',     label: 'Admin' },
+  // Pinned to the sidebar footer instead of rendering as a labelled section.
+  // Settings is somewhere you go occasionally to change how the portal behaves,
+  // not a step in any workflow, so it sits out of the scan path in the corner
+  // every desktop app puts it. An empty label means "render no heading".
+  { id: 'bottom',    label: '' },
 ] as const
+
+/** The section rendered in the sidebar footer rather than the scrolling body. */
+export const BOTTOM_GROUP_ID = 'bottom'
 
 export type NavGroupId = typeof NAV_GROUPS[number]['id']
 
@@ -114,6 +123,23 @@ const GAMIFICATION_CHILDREN: NavItem[] = [
     feature: ['can_govern_gamification', 'can_recognize'] },
 ]
 
+/**
+ * Business Development sub-pages — each is its own route at /bd/:section.
+ *
+ * Gated on `can_view_bd` rather than `can_manage_bd`: a BD rep holds only the
+ * view key (their write access to their own leads comes from RLS ownership), so
+ * gating on manage would hide the module from the very people who live in it.
+ * The department-wide sections a rep cannot act on gate themselves in-page.
+ */
+const BD_CHILDREN: NavItem[] = [
+  { label: 'Pipeline',       icon: TrendingUp, to: '/bd/pipeline',  feature: 'can_view_bd' },
+  { label: 'Meetings',       icon: TrendingUp, to: '/bd/meetings',  feature: 'can_view_bd' },
+  { label: 'Outreach',       icon: TrendingUp, to: '/bd/outreach',  feature: 'can_view_bd' },
+  { label: 'Daily Updates',  icon: TrendingUp, to: '/bd/updates',   feature: 'can_view_bd' },
+  { label: 'Targets & KPIs', icon: TrendingUp, to: '/bd/targets',   feature: 'can_view_bd' },
+  { label: 'BD Reports',     icon: TrendingUp, to: '/bd/reports',   feature: 'can_view_bd' },
+]
+
 // Everyone internal except finance: finance is never required to submit a standup and
 // cannot view the team tab, so the page is a dead end for them.
 const STANDUP_ROLES = ['super_admin', 'admin', 'hr', 'project_manager', 'team_lead', 'employee'] as const
@@ -151,33 +177,43 @@ export const NAV_ITEMS: NavItem[] = [
   // A private pin-board. Gated on a capability rather than a role so it can be
   // handed to anyone from Settings; the notes themselves are owner-only in RLS.
   { label: 'My Notes', icon: StickyNote, to: '/notes', group: 'workspace', feature: 'can_use_sticky_notes' },
-  // Personal for most roles (My Devices, Notifications); the admin-only sections
-  // filter themselves in-page. Grouping it under Admin would put an "Admin"
-  // heading in front of all seven roles and mean nothing.
-  { label: 'Settings', icon: Settings, to: '/settings', group: 'workspace', roles: SETTINGS_ROLES },
 
-  // Delivery — the client work itself.
+  // Delivery — winning the work, then doing it. Ordered by the lifecycle a piece
+  // of work actually travels (lead → client → project → task) rather than by
+  // which screen was built first, so the section reads as one pipeline.
+  // "Business Dev", not the full name: at 248px the expanded sidebar truncates
+  // "Business Development" to "Business Develo…" once the expand chevron takes
+  // its share of the row. The pages themselves keep the full name.
+  { label: 'Business Dev', icon: TrendingUp, to: '/bd/pipeline', group: 'delivery', matchPrefix: '/bd', devOnly: true, feature: 'can_view_bd', children: BD_CHILDREN },
+  { label: 'Clients', icon: UserCircle, to: '/admin/clients', group: 'delivery', feature: 'can_manage_clients' },
   { label: 'Projects', icon: FolderOpen, to: '/admin/projects', group: 'delivery' },
   { label: 'Tasks', icon: CheckSquare, to: '/admin/tasks', group: 'delivery' },
-  { label: 'Clients', icon: UserCircle, to: '/admin/clients', group: 'delivery', feature: 'can_manage_clients' },
 
-  // People — who works here, when, and how they are recognised.
+  // People — who works here, when, and how they are recognised. The three
+  // directory views sit together at the top; the two heavy sections with their
+  // own sub-navigation follow, so expanding one never pushes a plain link
+  // out of reach.
   // `to` is filled in by useNavItems() with the team this person leads; the item
   // is dropped for everyone who leads none.
   { label: 'My Team', icon: Crown, to: '/teams', group: 'people' },
-  // `to` is rewritten below: managers land on Daily Records, everyone else on their
-  // own self-service view (the old hardcoded /attendance/records bounced 4 of 7 roles).
-  { label: 'Attendance', icon: CalendarCheck, to: '/attendance', group: 'people', matchPrefix: '/attendance', primaryMobile: true, children: ATTENDANCE_CHILDREN },
   // Directory views: everyone internal can browse people/teams. The management
   // actions inside are gated on can_manage_people; RLS blocks writes regardless.
   { label: 'Teams', icon: Users, to: '/teams', group: 'people' },
   { label: 'People', icon: UserCog, to: '/people', group: 'people' },
+  // `to` is rewritten below: managers land on Daily Records, everyone else on their
+  // own self-service view (the old hardcoded /attendance/records bounced 4 of 7 roles).
+  { label: 'Attendance', icon: CalendarCheck, to: '/attendance', group: 'people', matchPrefix: '/attendance', primaryMobile: true, children: ATTENDANCE_CHILDREN },
   { label: 'Gamification', icon: Trophy, to: '/gamification/leaderboard', group: 'people', matchPrefix: '/gamification', primaryMobile: true, children: GAMIFICATION_CHILDREN },
 
   // Admin — governance only, so the section genuinely disappears for the five
-  // roles that have none of it.
-  { label: 'Reports', icon: BarChart2, to: '/admin/reports', group: 'admin', devOnly: true, feature: 'can_view_reports' },
+  // roles that have none of it. Audit Log leads because it is the one that ships;
+  // Reports is still dev-only.
   { label: 'Audit Log', icon: ShieldAlert, to: '/admin/audit', group: 'admin', feature: 'can_view_audit_log' },
+  { label: 'Reports', icon: BarChart2, to: '/admin/reports', group: 'admin', devOnly: true, feature: 'can_view_reports' },
+
+  // Pinned to the footer — see NAV_GROUPS. Personal for most roles (My Devices,
+  // Notifications); the admin-only sections filter themselves in-page.
+  { label: 'Settings', icon: Settings, to: '/settings', group: 'bottom', roles: SETTINGS_ROLES },
 ]
 
 type CanFn = (feature: string) => boolean

@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { ChevronRight, ChevronDown } from 'lucide-react'
 import { cn } from '../../lib/cn'
-import { useNavGroups, activeNavPath, BRAND_MENU_LINKS, type NavItem } from './navItems'
+import { useNavGroups, activeNavPath, BRAND_MENU_LINKS, BOTTOM_GROUP_ID, type NavItem } from './navItems'
 import { LinknbitMark } from '../brand/LinknbitLogo'
 import { InstallAppButton } from '../pwa/InstallAppButton'
 import { Popover } from '../ui/Popover'
@@ -10,11 +10,16 @@ import { Popover } from '../ui/Popover'
 export function Sidebar() {
   const location = useLocation()
   const navGroups = useNavGroups()
-  // Resolved once across every section so exactly one item can be active.
+  // Resolved once across every section — including the pinned footer — so
+  // exactly one item can be active.
   const activePath = activeNavPath(navGroups.flatMap((g) => g.items), location.pathname)
+  const bodyGroups = navGroups.filter((g) => g.id !== BOTTOM_GROUP_ID)
+  const bottomGroup = navGroups.find((g) => g.id === BOTTOM_GROUP_ID)
 
+  // Scrolling lives on <nav> rather than the aside: with the whole aside as the
+  // scroll container, the pinned footer scrolled away with the list.
   return (
-    <aside className="w-sidebar-expanded bg-surface-1 border-r border-border-default hidden lg:flex flex-col sticky top-0 h-screen overflow-y-auto shrink-0">
+    <aside className="w-sidebar-expanded bg-surface-1 border-r border-border-default hidden lg:flex flex-col sticky top-0 h-screen overflow-hidden shrink-0">
       {/* Brand */}
       <div className="flex items-center gap-3 px-4 pt-5 pb-4 border-b border-border-subtle">
         <LinknbitMark surface="dark" className="h-8 w-7 shrink-0" />
@@ -26,8 +31,8 @@ export function Sidebar() {
       </div>
 
       {/* Nav — one section per kind of work; empty sections drop out per role. */}
-      <nav className="flex-1 px-3 pt-3 pb-2 flex flex-col">
-        {navGroups.map((group, i) => (
+      <nav className="flex-1 min-h-0 overflow-y-auto px-3 pt-3 pb-2 flex flex-col">
+        {bodyGroups.map((group, i) => (
           <section key={group.id} className={cn('flex flex-col gap-px', i > 0 && 'mt-3')}>
             <h2 className="text-[10px] font-ui font-semibold text-text-4 uppercase tracking-widest px-2 pt-2 pb-1.5">
               {group.label}
@@ -39,8 +44,18 @@ export function Sidebar() {
         ))}
       </nav>
 
-      {/* Install app (shown only when installable) */}
-      <div className="px-3 pb-3 pt-1">
+      {/* Pinned footer — Settings, then the install prompt. Separated by a rule
+          so it reads as a different kind of destination from the nav above, and
+          stays put when the sections above overflow into a scroll. */}
+      <div className="shrink-0 border-t border-border-subtle px-3 pt-2 pb-3">
+        {bottomGroup && (
+          <div className="flex flex-col gap-px">
+            {bottomGroup.items.map((item) => (
+              <NavRow key={item.to} item={item} pathname={location.pathname} activePath={activePath} />
+            ))}
+          </div>
+        )}
+        {/* Shown only when installable */}
         <InstallAppButton />
       </div>
     </aside>
