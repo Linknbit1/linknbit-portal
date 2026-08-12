@@ -6,7 +6,6 @@ import { cn } from '../../lib/cn'
 import { ConversationInfoPanel } from './ConversationInfoPanel'
 import { MessageList } from './MessageList'
 import { MessageComposer, type ComposerPayload } from './MessageComposer'
-import { ChannelMembersModal } from './ChannelMembersModal'
 import { useToast } from '../ui/toast-context'
 import { useChannel } from '../../hooks/useChannels'
 import { useChannelMembers } from '../../hooks/useChannelMembers'
@@ -32,7 +31,6 @@ export function ChatThread({ channelId, hideHeader }: ChatThreadProps) {
   const { data: channel } = useChannel(channelId)
   const { data: members = [] } = useChannelMembers(channelId)
   const canModerate = useCanAccess('can_delete_any_message')
-  const canManageAll = useCanAccess('can_manage_all_channels')
 
   const { messages, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } = useFlatMessages(channelId)
   const { mutate: sendMessage } = useSendMessage()
@@ -43,7 +41,6 @@ export function ChatThread({ channelId, hideHeader }: ChatThreadProps) {
   const { data: reactions = [] } = useChannelReactions(channelId)
   const { mutate: toggleReaction } = useToggleReaction()
   const [editing, setEditing] = useState<{ id: string; doc: JSONContent | null } | null>(null)
-  const [membersOpen, setMembersOpen] = useState(false)
   const [infoOpen, setInfoOpen] = useState(false)
 
   useRealtimeChatMessages(channelId)
@@ -58,7 +55,6 @@ export function ChatThread({ channelId, hideHeader }: ChatThreadProps) {
     [members],
   )
 
-  const isOwner = members.some((m) => m.id === profile?.id && m.role_in_channel === 'owner')
   const title = channel ? channelTitle(channel, profile?.id) : ''
   const counterpart = channel ? dmCounterpart(channel, profile?.id) : null
 
@@ -98,9 +94,12 @@ export function ChatThread({ channelId, hideHeader }: ChatThreadProps) {
             )}
           </div>
           <div className="ml-auto shrink-0 flex items-center gap-1">
+            {/* Opens the details panel rather than a modal: managing who is in a
+                conversation belongs beside it, and a DM has nobody to add. */}
             <button
-              onClick={() => setMembersOpen(true)}
-              className="font-ui text-[12px] text-text-3 hover:text-text-1 transition-colors px-2"
+              onClick={() => setInfoOpen(true)}
+              title="Show members and shared files"
+              className="rounded-sm px-2 py-1 font-ui text-[12px] text-text-3 transition-colors hover:bg-surface-2 hover:text-text-1"
             >
               {members.length} {members.length === 1 ? 'member' : 'members'}
             </button>
@@ -170,12 +169,6 @@ export function ChatThread({ channelId, hideHeader }: ChatThreadProps) {
         }}
       />
 
-      <ChannelMembersModal
-        open={membersOpen}
-        onClose={() => setMembersOpen(false)}
-        channelId={channelId}
-        canManage={canManageAll || isOwner}
-      />
     </div>
   )
 }

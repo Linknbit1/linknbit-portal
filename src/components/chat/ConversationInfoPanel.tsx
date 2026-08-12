@@ -68,8 +68,9 @@ function MemberList({ channelId, kind }: { channelId: string; kind: ChannelListI
   const [manageOpen, setManageOpen] = useState(false)
 
   const isOwner = members.some((m) => m.id === profile?.id && m.role_in_channel === 'owner')
-  // A 1:1 DM is fixed at two people — RLS refuses inserts on kind='dm' — so
-  // offering "Manage" there would open a modal that can't do anything.
+  // A 1:1 DM is fixed at two people, enforced by trg_guard_dm_membership. The
+  // button is hidden here so nobody is offered a dialog the database refuses —
+  // the trigger is what actually holds the line, including against admins.
   const canManage = kind !== 'dm' && (canManageAll || isOwner)
 
   return (
