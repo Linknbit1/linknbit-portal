@@ -133,6 +133,9 @@ const GAMIFICATION_CHILDREN: NavItem[] = [
  */
 const BD_CHILDREN: NavItem[] = [
   { label: 'Pipeline',       icon: TrendingUp, to: '/bd/pipeline',  feature: 'can_view_bd' },
+  // Campaigns the BD team runs, and the work under them — the same pair as
+  // Delivery's Projects/Tasks, in the same order.
+  { label: 'Projects',       icon: TrendingUp, to: '/bd/projects',  feature: 'can_view_bd' },
   // The BD team's own work board. Scoped in-page: a rep sees only tasks assigned
   // to them, and only `can_manage_bd` unlocks the whole-department view.
   { label: 'Tasks',          icon: TrendingUp, to: '/bd/tasks',     feature: 'can_view_bd' },

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import {
-  Plus, Search, Target, Wallet, Percent, Timer, Columns3, Table2, CalendarClock,
+  Plus, Search, Target, Columns3, Table2, CalendarClock,
   AlertTriangle, MessageSquare, ChevronLeft, SlidersHorizontal,
 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
@@ -11,7 +11,6 @@ import { Avatar } from '../../components/ui/Avatar'
 import { ViewToggle, type ViewToggleOption } from '../../components/ui/ViewToggle'
 import { ResponsiveTable } from '../../components/ui/ResponsiveTable'
 import { useToast } from '../../components/ui/toast-context'
-import { BdKpiTile } from '../../components/shared/BdKpiTile'
 import { StageChip, ChannelChip, TemperatureChip, IcpFitChip } from '../../components/shared/BdChips'
 import { STAGE_CONFIG, STAGE_ORDER } from '../../constants/bd'
 import { useBd } from '../../context/BdPrototypeContext'
@@ -151,7 +150,7 @@ export default function PipelinePage() {
         {/* ── Header ── */}
         <div className="flex flex-wrap items-center gap-3">
           <div>
-            <h2 className="font-display text-[22px] font-bold text-text-1">Pipeline</h2>
+            <h2 className="font-display text-[20px] font-bold text-text-1">Pipeline</h2>
             <p className="font-ui text-[13px] text-text-3">
               {filtered.length} lead{filtered.length !== 1 ? 's' : ''}
               {stats.needsFollowUp > 0 && (
@@ -182,38 +181,8 @@ export default function PipelinePage() {
           </div>
         </div>
 
-        {/* ── KPI row ── */}
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <BdKpiTile
-            icon={Wallet}
-            label="Open pipeline"
-            value={formatCompactCurrency(stats.openValue)}
-            delta={{ label: `${stats.openCount} open deals`, direction: 'flat' }}
-          />
-          <BdKpiTile
-            icon={Percent}
-            label="Win rate"
-            value={`${stats.winRate}`}
-            unit="%"
-            delta={{ label: '+6 pts', direction: 'up', caption: 'vs last quarter' }}
-          />
-          <BdKpiTile
-            icon={Target}
-            label="Avg deal size"
-            value={formatCompactCurrency(stats.avgDeal)}
-            delta={{ label: '+12%', direction: 'up', caption: 'vs last quarter' }}
-          />
-          <BdKpiTile
-            icon={Timer}
-            label="Avg sales cycle"
-            value="34"
-            unit="days"
-            delta={{ label: '-4 days', direction: 'up', caption: 'faster than last quarter' }}
-          />
-        </div>
-
         {/* ── Funnel strip: proportions across the five open stages ── */}
-        <FunnelStrip byStage={byStage} />
+        <FunnelStrip byStage={byStage} stats={stats} />
 
         {/* ── Board ── */}
         {view === 'board' ? (
@@ -240,7 +209,7 @@ export default function PipelinePage() {
                     aria-label={`Expand ${config.label}`}
                     className={cn(
                       'flex w-12 shrink-0 flex-col items-center gap-3 rounded-lg border py-3 transition-colors duration-150',
-                      dragOver === stage ? cn(config.dropBorder ?? 'border-border-strong', 'bg-surface-2/40') : 'border-border-default bg-surface-1/50 hover:border-border-strong',
+                      dragOver === stage ? cn(config.dropBorder, 'bg-surface-2/40') : 'border-border-default bg-surface-1/50 hover:border-border-strong',
                     )}
                   >
                     <span className={cn('flex size-7 items-center justify-center rounded-md border', config.accent)}>
@@ -268,7 +237,7 @@ export default function PipelinePage() {
                     'flex w-[84vw] shrink-0 flex-col gap-2.5 rounded-lg border p-2.5 transition-colors duration-150',
                     'sm:w-[300px] lg:w-[292px]',
                     dragOver === stage
-                      ? cn(config.dropBorder ?? 'border-border-strong', 'bg-surface-2/40')
+                      ? cn(config.dropBorder, 'bg-surface-2/40')
                       : isTerminal ? 'border-border-subtle bg-surface-1/30' : 'border-border-default bg-surface-1/50',
                   )}
                 >
@@ -354,19 +323,39 @@ export default function PipelinePage() {
 
 /* ── Funnel strip ───────────────────────────────────────────────────────────── */
 
-function FunnelStrip({ byStage }: { byStage: Record<LeadStage, Lead[]> }) {
+interface FunnelStripProps {
+  byStage: Record<LeadStage, Lead[]>
+  stats: { openValue: number; openCount: number; winRate: number; avgDeal: number }
+}
+
+/**
+ * The pipeline's shape plus its headline numbers, in one strip.
+ *
+ * This replaced a row of four large KPI cards. The same figures are here, set
+ * inline at label size — the numbers are context for the board, not the subject
+ * of the page, and four big tiles pushed the board itself below the fold.
+ */
+function FunnelStrip({ byStage, stats }: FunnelStripProps) {
   const open = OPEN_STAGES.map((s) => ({ stage: s, leads: byStage[s] }))
   const total = open.reduce((sum, s) => sum + s.leads.length, 0)
   if (total === 0) return null
 
   return (
     <div className="flex flex-col gap-2 rounded-lg border border-border-default bg-surface-1 px-4 py-3.5">
-      <div className="flex items-center gap-2">
-        <SlidersHorizontal size={13} className="text-text-4" />
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+        <SlidersHorizontal size={13} className="shrink-0 text-text-4" />
         <span className="font-ui text-[11px] font-semibold uppercase tracking-widest text-text-3">
-          Open pipeline shape
+          Open pipeline
         </span>
-        <span className="ml-auto font-mono text-[11px] tabular-nums text-text-4">{total} open</span>
+        <span className="font-mono text-[12px] tabular-nums text-text-1">
+          {formatCompactCurrency(stats.openValue)}
+        </span>
+        <span className="font-mono text-[11px] tabular-nums text-text-4">{stats.openCount} deals</span>
+        <span className="ml-auto flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[11px] tabular-nums text-text-4">
+          <span>Win rate <span className="text-text-2">{stats.winRate}%</span></span>
+          <span>Avg deal <span className="text-text-2">{formatCompactCurrency(stats.avgDeal)}</span></span>
+          <span>Cycle <span className="text-text-2">34d</span></span>
+        </span>
       </div>
       <div className="flex h-2 gap-0.5 overflow-hidden rounded-full">
         {open.map(({ stage, leads }) => {
@@ -426,7 +415,7 @@ function LeadCard({ lead, dragging, onDragStart, onDragEnd, onClick }: LeadCardP
     >
       <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
-          <h3 className="truncate font-ui text-[13.5px] font-semibold leading-snug text-text-1">{lead.company}</h3>
+          <h3 className="truncate font-ui text-body-sm/snug font-semibold text-text-1">{lead.company}</h3>
           <p className="truncate font-ui text-[11.5px] text-text-3">{lead.contactName}</p>
         </div>
         <TemperatureChip temperature={lead.temperature} />
@@ -449,7 +438,7 @@ function LeadCard({ lead, dragging, onDragStart, onDragEnd, onClick }: LeadCardP
       </div>
 
       <div className="mt-2.5 flex items-center gap-2 border-t border-border-subtle pt-2.5">
-        <span className="font-display text-[15px] font-bold tabular-nums text-text-1">
+        <span className="font-mono text-[13px] font-semibold tabular-nums text-text-1">
           {formatCompactCurrency(lead.value)}
         </span>
         <span className="ml-auto flex items-center gap-1 font-mono text-[10px] text-text-4">

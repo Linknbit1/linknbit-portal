@@ -4,7 +4,6 @@ import { Topbar } from '../../components/layout/Topbar'
 import { Button } from '../../components/ui/Button'
 import { Select } from '../../components/ui/Select'
 import { Avatar } from '../../components/ui/Avatar'
-import { BdKpiTile } from '../../components/shared/BdKpiTile'
 import { ChannelChip } from '../../components/shared/BdChips'
 import { cn } from '../../lib/cn'
 import { formatRelativeTime } from '../../lib/utils'
@@ -52,7 +51,6 @@ export default function DailyUpdatesPage() {
     [submitted],
   )
 
-  const compliance = Math.round((submitted.length / BD_REPS.length) * 100)
 
   return (
     <div className="flex flex-col flex-1">
@@ -71,28 +69,13 @@ export default function DailyUpdatesPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <BdKpiTile
-            icon={ClipboardList}
-            label="Checked in"
-            value={`${submitted.length}/${BD_REPS.length}`}
-            tone={compliance === 100 ? 'success' : compliance >= 50 ? 'default' : 'warning'}
-            delta={{ label: `${compliance}%`, direction: 'flat', caption: 'compliance' }}
-          />
-          <BdKpiTile icon={Send} label="Proposals sent" value={`${totals.proposals}`} />
-          <BdKpiTile icon={Phone} label="Calls made" value={`${totals.calls}`} />
-          <BdKpiTile icon={UserPlus} label="Leads added" value={`${totals.leads}`} />
-        </div>
-
         {/* ── Still waiting on ── */}
         {missing.length > 0 && (
-          <div className="rounded-lg border border-warning/30 bg-warning/5 px-4 py-3 flex flex-wrap items-center gap-x-3 gap-y-2">
-            <Clock size={15} className="text-warning shrink-0" />
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-warning/30 bg-warning/5 px-4 py-3">
+            <Clock size={15} className="shrink-0 text-warning" />
             <p className="font-ui text-[13px] text-text-2">
               Still waiting on{' '}
-              <span className="font-semibold text-text-1">
-                {missing.map((r) => r.name).join(', ')}
-              </span>
+              <span className="font-semibold text-text-1">{missing.map((r) => r.name).join(', ')}</span>
             </p>
             <Button size="sm" variant="ghost" className="ml-auto">Send reminder</Button>
           </div>
@@ -100,13 +83,16 @@ export default function DailyUpdatesPage() {
 
         {/* ── Team feed ── */}
         <div className="flex flex-col gap-3">
-          <h3 className="font-ui text-[11px] font-semibold uppercase tracking-widest text-text-4 px-0.5">
-            Team feed
-          </h3>
+          <div className="flex items-center gap-2 px-0.5">
+            <h3 className="font-ui text-[11px] font-semibold uppercase tracking-widest text-text-4">Team feed</h3>
+            <span className="font-mono text-[11px] text-text-4">
+              {submitted.length}/{BD_REPS.length} checked in · {totals.proposals} proposals · {totals.calls} calls · {totals.leads} leads
+            </span>
+          </div>
 
           {submitted.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
-              <span className="size-12 rounded-full bg-surface-2 flex items-center justify-center text-text-3">
+              <span className="flex size-12 items-center justify-center rounded-full bg-surface-2 text-text-3">
                 <ClipboardList size={22} />
               </span>
               <p className="font-ui text-[14px] text-text-2">Nobody has checked in yet</p>

@@ -2,6 +2,7 @@ import type { ComponentType } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
 import { BdPrototypeProvider } from '../../context/BdPrototypeContext'
 import PipelinePage from './PipelinePage'
+import BdProjectsPage from './BdProjectsPage'
 import BdTasksPage from './BdTasksPage'
 import MeetingsPage from './MeetingsPage'
 import OutreachPage from './OutreachPage'
@@ -21,6 +22,7 @@ import BdReportsPage from './BdReportsPage'
  */
 const BD_SECTIONS: Record<string, ComponentType> = {
   pipeline: PipelinePage,
+  projects: BdProjectsPage,
   tasks: BdTasksPage,
   meetings: MeetingsPage,
   outreach: OutreachPage,

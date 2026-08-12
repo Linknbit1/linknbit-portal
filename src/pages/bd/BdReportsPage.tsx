@@ -2,13 +2,12 @@ import { useMemo, useState } from 'react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts'
-import { FileDown, Filter, TrendingDown, Trophy, Percent, Wallet } from 'lucide-react'
+import { FileDown, Filter, TrendingDown, Trophy } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Button } from '../../components/ui/Button'
 import { Select } from '../../components/ui/Select'
 import { SectionToolbar } from '../../components/ui/SectionToolbar'
 import { ResponsiveTable } from '../../components/ui/ResponsiveTable'
-import { BdKpiTile } from '../../components/shared/BdKpiTile'
 import { CHANNEL_CONFIG, CHANNEL_ORDER } from '../../constants/bd'
 import { cn } from '../../lib/cn'
 import { formatCompactCurrency } from '../../lib/utils'
@@ -82,27 +81,14 @@ export default function BdReportsPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <BdKpiTile icon={Wallet} label="Revenue won" value={formatCompactCurrency(totalRevenue)} tone="success" />
-          <BdKpiTile icon={Trophy} label="Deals won" value={`${totalWon}`} delta={{ label: '+3', direction: 'up', caption: 'vs last period' }} />
-          <BdKpiTile icon={Percent} label="Lead → win" value={`${Math.round((totalWon / totalLeads) * 100)}`} unit="%" />
-          <BdKpiTile
-            icon={TrendingDown}
-            label="Biggest drop-off"
-            value={worstStep.stage}
-            tone="warning"
-            delta={{ label: `${worstStep.fromPrevious}% carry through`, direction: 'down' }}
-          />
-        </div>
-
         {/* ── Funnel ── */}
-        <div className="rounded-lg border border-border-default bg-surface-1 overflow-hidden">
+        <div className="overflow-hidden rounded-lg border border-border-default bg-surface-1">
           <SectionToolbar
             icon={TrendingDown}
             title="Conversion funnel"
             description="New lead through to won, with the carry-through at each step"
           />
-          <div className="p-4 lg:p-5 flex flex-col gap-5">
+          <div className="flex flex-col gap-5 p-4 lg:p-5">
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={funnel} layout="vertical" margin={{ left: 8, right: 16 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_STROKE} horizontal={false} />
@@ -129,14 +115,14 @@ export default function BdReportsPage() {
             </ResponsiveContainer>
 
             {/* The chart shows volume; this row shows where leads are actually lost. */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 border-t border-border-subtle pt-4">
+            <div className="grid grid-cols-2 gap-2.5 border-t border-border-subtle pt-4 sm:grid-cols-3 lg:grid-cols-6">
               {funnel.map((step, i) => (
                 <div key={step.stage} className="min-w-0">
-                  <p className="font-ui text-[10.5px] uppercase tracking-wider text-text-4 truncate">{step.stage}</p>
-                  <p className="font-display font-bold text-[19px] text-text-1 tabular-nums leading-tight mt-1">
+                  <p className="truncate font-ui text-[10.5px] uppercase tracking-wider text-text-4">{step.stage}</p>
+                  <p className="mt-1 font-display text-[19px] font-bold leading-tight tabular-nums text-text-1">
                     {step.count}
                   </p>
-                  <p className="font-mono text-[10.5px] mt-0.5">
+                  <p className="mt-0.5 font-mono text-[10.5px]">
                     <span style={{ color: FUNNEL_COLORS[i] }}>{step.ofTotal}%</span>
                     <span className="text-text-4"> of all</span>
                   </p>
@@ -157,7 +143,7 @@ export default function BdReportsPage() {
         </div>
 
         {/* ── Channel comparison ── */}
-        <div className="rounded-lg border border-border-default bg-surface-1 overflow-hidden">
+        <div className="overflow-hidden rounded-lg border border-border-default bg-surface-1">
           <SectionToolbar
             icon={Trophy}
             title="Channel comparison"
@@ -169,11 +155,11 @@ export default function BdReportsPage() {
         </div>
 
         {/* ── Weekly summary ── */}
-        <div className="rounded-lg border border-border-default bg-surface-1 overflow-hidden">
+        <div className="overflow-hidden rounded-lg border border-border-default bg-surface-1">
           <SectionToolbar icon={FileDown} title="Weekly summary" description="Auto-generated every Monday morning">
             <Button size="sm" variant="ghost" iconLeft={<FileDown size={14} />}>Download PDF</Button>
           </SectionToolbar>
-          <div className="p-5 flex flex-col gap-3 font-ui text-body-sm/relaxed text-text-2">
+          <div className="flex flex-col gap-3 p-5 font-ui text-body-sm/relaxed text-text-2">
             <p>
               <span className="font-semibold text-text-1">Pipeline moved forward.</span> Six leads advanced a stage,
               two reached Negotiation, and Peak Fitness Collective closed at{' '}
@@ -181,8 +167,8 @@ export default function BdReportsPage() {
             </p>
             <p>
               <span className="font-semibold text-text-1">LinkedIn is carrying the quarter.</span> It produced the most
-              leads and the most revenue, and is up 32% on volume — while cold calling is down 14% and has yet to
-              convert a single deal.
+              leads and the most revenue — {formatCompactCurrency(totalRevenue)} across {totalWon} of {totalLeads} leads
+              won — while cold calling is down 14% and has yet to convert a single deal.
             </p>
             <p>
               <span className="font-semibold text-text-1">The gap is at {worstStep.stage}.</span> Only{' '}
@@ -196,7 +182,7 @@ export default function BdReportsPage() {
   )
 }
 
-const COLS = 'grid grid-cols-[minmax(0,1.3fr)_80px_80px_80px_70px_90px_minmax(0,1fr)] gap-3 items-center'
+const COLS ='grid grid-cols-[minmax(0,1.3fr)_80px_80px_80px_70px_90px_minmax(0,1fr)] gap-3 items-center'
 
 function ChannelReportTable({ stats }: { stats: ChannelStats[] }) {
   const best = stats[0]

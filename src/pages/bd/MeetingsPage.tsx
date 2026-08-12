@@ -1,13 +1,12 @@
 import { useMemo, useState } from 'react'
 import {
-  Plus, CalendarClock, Video, Phone, MapPin, Users, CalendarDays, CheckCircle2, ArrowRight,
+  Plus, CalendarClock, Video, Phone, MapPin, ArrowRight,
 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Button } from '../../components/ui/Button'
 import { Select } from '../../components/ui/Select'
 import { Avatar } from '../../components/ui/Avatar'
 import { Tabs } from '../../components/ui/Tabs'
-import { BdKpiTile } from '../../components/shared/BdKpiTile'
 import { cn } from '../../lib/cn'
 import { useBd } from '../../context/BdPrototypeContext'
 import { BD_REPS } from '../../data/bdMock'
@@ -113,24 +112,6 @@ export default function MeetingsPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <BdKpiTile icon={CalendarDays} label="This week" value={`${thisWeek}`} unit="meetings" />
-          <BdKpiTile icon={CalendarClock} label="Upcoming" value={`${upcoming.length}`} unit="scheduled" />
-          <BdKpiTile
-            icon={CheckCircle2}
-            label="Held this month"
-            value="23"
-            delta={{ label: '+7', direction: 'up', caption: 'vs last month' }}
-          />
-          <BdKpiTile
-            icon={Users}
-            label="Meeting → win rate"
-            value="31"
-            unit="%"
-            delta={{ label: '+4 pts', direction: 'up', caption: 'vs last month' }}
-          />
-        </div>
-
         <div className="flex flex-col gap-4">
           <Tabs
             tabs={TABS.map((t) => ({
@@ -143,7 +124,7 @@ export default function MeetingsPage() {
 
           {grouped.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
-              <span className="size-12 rounded-full bg-surface-2 flex items-center justify-center text-text-3">
+              <span className="flex size-12 items-center justify-center rounded-full bg-surface-2 text-text-3">
                 <CalendarClock size={22} />
               </span>
               <p className="font-ui text-[14px] text-text-2">
@@ -153,9 +134,14 @@ export default function MeetingsPage() {
           ) : (
             grouped.map((group) => (
               <section key={group.label} className="flex flex-col gap-2.5">
-                <h3 className="font-ui text-[11px] font-semibold uppercase tracking-widest text-text-4 px-0.5">
-                  {group.label}
-                </h3>
+                <div className="flex items-center gap-2 px-0.5">
+                  <h3 className="font-ui text-[11px] font-semibold uppercase tracking-widest text-text-4">
+                    {group.label}
+                  </h3>
+                  {group.label === 'Today' && thisWeek > 0 && (
+                    <span className="font-mono text-[11px] text-text-4">{thisWeek} this week</span>
+                  )}
+                </div>
                 {group.meetings.map((meeting) => (
                   <MeetingRow
                     key={meeting.id}

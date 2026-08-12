@@ -1,140 +1,180 @@
 import { useMemo, useState } from 'react'
-import {
-  Plus, Search, Columns3, List, CheckCircle2, AlertTriangle, Repeat, Building2, Lock,
-} from 'lucide-react'
+import { Search, LayoutList, Columns, SlidersHorizontal, Trash2, Plus, Lock } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Select } from '../../components/ui/Select'
+import { DatePicker } from '../../components/ui/DatePicker'
 import { Avatar } from '../../components/ui/Avatar'
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
+import { StatusChip } from '../../components/shared/StatusChip'
+import { PriorityChip } from '../../components/shared/PriorityChip'
+import { ChannelChip } from '../../components/shared/BdChips'
 import { ViewToggle, type ViewToggleOption } from '../../components/ui/ViewToggle'
 import { useToast } from '../../components/ui/toast-context'
-import { BdKpiTile } from '../../components/shared/BdKpiTile'
-import { ChannelChip } from '../../components/shared/BdChips'
-import { TASK_STATUS_CONFIG, TASK_STATUS_ORDER, TASK_PRIORITY_CONFIG } from '../../constants/bd'
+import { CHANNEL_CONFIG, CHANNEL_ORDER } from '../../constants/bd'
 import { useBd } from '../../context/BdPrototypeContext'
-import { useDragScroll } from '../../hooks/useDragScroll'
 import { cn } from '../../lib/cn'
-import { formatDate, getDaysUntil } from '../../lib/utils'
+import { formatDate, isOverdue, STATUS_LABELS, PRIORITY_LABELS } from '../../lib/utils'
 import { BD_REPS } from '../../data/bdMock'
-import { TaskFormModal } from './TaskFormModal'
+import { BdTaskBoard } from './BdTaskBoard'
 import { TaskDrawer } from './TaskDrawer'
-import type { BdTask, BdTaskStatus } from '../../types'
+import { randomUUID } from '../../lib/uuid'
+import { BD_TASK_STATUSES, type BdTask, type Priority, type TaskStatus } from '../../types'
 
-type TaskView = 'board' | 'list'
+const PRIORITY_ORDER: Priority[] = ['critical', 'high', 'medium', 'low']
+const PRIORITY_RANK: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 }
 
-const VIEWS: ViewToggleOption<TaskView>[] = [
-  { value: 'board', label: 'Board', icon: Columns3 },
-  { value: 'list', label: 'List', icon: List },
+const SORT_OPTIONS = [
+  { value: 'recent', label: 'Newest' },
+  { value: 'due_asc', label: 'Due date' },
+  { value: 'priority', label: 'Priority' },
+  { value: 'title', label: 'Title A–Z' },
 ]
 
-const PRIORITY_FILTER = [
-  { value: 'all', label: 'Any priority' },
-  { value: 'high', label: 'High' },
-  { value: 'medium', label: 'Medium' },
-  { value: 'low', label: 'Low' },
+/** Board and List only — the delivery board's third view is the time backlog. */
+type TaskView = 'board' | 'table'
+
+const TASK_VIEWS: ViewToggleOption<TaskView>[] = [
+  { value: 'board', label: 'Board', icon: Columns },
+  { value: 'table', label: 'List', icon: LayoutList },
 ]
+
+function sortTasks(list: BdTask[], sort: string): BdTask[] {
+  const arr = [...list]
+  switch (sort) {
+    case 'due_asc': arr.sort((a, b) => (a.dueDate ?? '9999').localeCompare(b.dueDate ?? '9999')); break
+    case 'priority': arr.sort((a, b) => (PRIORITY_RANK[a.priority] ?? 9) - (PRIORITY_RANK[b.priority] ?? 9)); break
+    case 'title': arr.sort((a, b) => a.title.localeCompare(b.title)); break
+    default: break
+  }
+  return arr
+}
 
 export default function BdTasksPage() {
   const toast = useToast()
-  const { tasks, moveTaskStatus, viewerRepId, viewerName, canSeeAll } = useBd()
+  const { tasks, projects, saveTask, deleteTask, viewerRepId, viewerName, canSeeAll } = useBd()
 
-  const [view, setView] = useState<TaskView>('board')
   const [search, setSearch] = useState('')
-  const [priority, setPriority] = useState('all')
+  const [statusFilter, setStatusFilter] = useState('')
+  const [priorityFilter, setPriorityFilter] = useState('')
+  const [projectFilter, setProjectFilter] = useState('')
+  const [channelFilter, setChannelFilter] = useState('')
   /**
-   * Who the board is showing. A rep without `can_manage_bd` is pinned to their
-   * own work — the control is not rendered at all, and the filter below still
-   * forces `viewerRepId`, so it is not merely hidden.
+   * Ownership scope. A rep without `can_manage_bd` is pinned to their own work:
+   * the control is never rendered, and the filter below still forces
+   * `viewerRepId`, so it is enforced rather than merely hidden.
    */
-  const [assignee, setAssignee] = useState('me')
+  const [assigneeFilter, setAssigneeFilter] = useState('me')
+  const [dueFrom, setDueFrom] = useState('')
+  const [dueTo, setDueTo] = useState('')
+  const [sortBy, setSortBy] = useState('recent')
+  const [showAdv, setShowAdv] = useState(false)
+  const [view, setView] = useState<TaskView>('board')
 
-  const [formOpen, setFormOpen] = useState(false)
-  const [editing, setEditing] = useState<BdTask | null>(null)
-  const [formStatus, setFormStatus] = useState<BdTaskStatus>('todo')
   const [openTaskId, setOpenTaskId] = useState<string | null>(null)
+  const [pendingDelete, setPendingDelete] = useState<BdTask | null>(null)
 
-  const [dragId, setDragId] = useState<string | null>(null)
-  const [dragOver, setDragOver] = useState<BdTaskStatus | null>(null)
-  const boardRef = useDragScroll<HTMLDivElement>()
+  /**
+   * Creating a task writes a blank record and opens the drawer on it — there is
+   * no create form. Every field is editable in the panel, so a modal would only
+   * be a second, divergent copy of the same controls.
+   */
+  const createTask = (status: TaskStatus = 'todo') => {
+    const id = randomUUID()
+    saveTask({
+      id,
+      title: 'New task',
+      assigneeId: viewerRepId,
+      assigneeName: viewerName,
+      status,
+      priority: 'medium',
+      dueDate: null,
+      projectId: projects[0]?.id ?? '',
+      projectName: projects[0]?.name ?? '',
+      recurrence: 'once',
+      createdBy: viewerName,
+      checklist: [],
+    })
+    setOpenTaskId(id)
+  }
 
-  const visible = useMemo(() => {
+  const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
-    return tasks.filter((t) => {
-      // Ownership scope first — a rep can never widen it.
+    const list = tasks.filter((t) => {
       if (!canSeeAll) {
         if (t.assigneeId !== viewerRepId) return false
-      } else if (assignee === 'me') {
+      } else if (assigneeFilter === 'me') {
         if (t.assigneeId !== viewerRepId) return false
-      } else if (assignee !== 'all' && t.assigneeId !== assignee) {
+      } else if (assigneeFilter && assigneeFilter !== 'all' && t.assigneeId !== assigneeFilter) {
         return false
       }
-      if (priority !== 'all' && t.priority !== priority) return false
-      if (!q) return true
       return (
-        t.title.toLowerCase().includes(q) ||
-        (t.leadCompany ?? '').toLowerCase().includes(q)
+        (!q || t.title.toLowerCase().includes(q) || t.projectName.toLowerCase().includes(q) || (t.leadCompany ?? '').toLowerCase().includes(q)) &&
+        (!statusFilter || t.status === statusFilter) &&
+        (!priorityFilter || t.priority === priorityFilter) &&
+        (!projectFilter || t.projectId === projectFilter) &&
+        (!channelFilter || t.channel === channelFilter) &&
+        (!dueFrom || (!!t.dueDate && t.dueDate >= dueFrom)) &&
+        (!dueTo || (!!t.dueDate && t.dueDate <= dueTo))
       )
     })
-  }, [tasks, search, priority, assignee, canSeeAll, viewerRepId])
+    return sortTasks(list, sortBy)
+  }, [
+    tasks, search, statusFilter, priorityFilter, projectFilter, channelFilter,
+    assigneeFilter, dueFrom, dueTo, sortBy, canSeeAll, viewerRepId,
+  ])
 
-  const stats = useMemo(() => {
-    const open = visible.filter((t) => t.status !== 'done')
-    return {
-      open: open.length,
-      overdue: open.filter((t) => t.dueDate && getDaysUntil(t.dueDate) < 0).length,
-      dueToday: open.filter((t) => t.dueDate && getDaysUntil(t.dueDate) === 0).length,
-      done: visible.filter((t) => t.status === 'done').length,
-    }
-  }, [visible])
+  const statusOptions = [{ value: '', label: 'All statuses' }, ...BD_TASK_STATUSES.map((s) => ({ value: s, label: STATUS_LABELS[s] }))]
+  const priorityOptions = [{ value: '', label: 'All priorities' }, ...PRIORITY_ORDER.map((p) => ({ value: p, label: PRIORITY_LABELS[p] }))]
+  const projectOptions = [{ value: '', label: 'All projects' }, ...projects.map((p) => ({ value: p.id, label: p.name }))]
+  const channelOptions = [{ value: '', label: 'All channels' }, ...CHANNEL_ORDER.map((c) => ({ value: c, label: CHANNEL_CONFIG[c].label }))]
 
   const openTask = openTaskId ? tasks.find((t) => t.id === openTaskId) ?? null : null
 
-  const handleDrop = (status: BdTaskStatus) => {
-    setDragOver(null)
-    const id = dragId
-    setDragId(null)
-    if (!id) return
-    const task = tasks.find((t) => t.id === id)
-    if (!task || task.status === status) return
-    moveTaskStatus(id, status)
-    toast(`Moved to ${TASK_STATUS_CONFIG[status].label}`, 'success')
-  }
-
-  const newTask = (status: BdTaskStatus = 'todo') => {
-    setEditing(null)
-    setFormStatus(status)
-    setFormOpen(true)
-  }
-
   return (
-    <div className="flex flex-1 flex-col">
+    <div className={cn('flex flex-1 flex-col', view === 'board' && 'min-h-0')}>
       <Topbar title="Tasks" />
-      <div className="flex flex-col gap-6 p-4 lg:px-8 lg:py-7">
+      <div className={cn('flex flex-col gap-5 p-4 lg:px-8 lg:py-7', view === 'board' && 'min-h-0 flex-1')}>
         <div className="flex flex-wrap items-center gap-3">
-          <div>
-            <h2 className="font-display text-[22px] font-bold text-text-1">Tasks</h2>
-            <p className="font-ui text-[13px] text-text-3">
-              {canSeeAll
-                ? 'Outreach quotas, follow-ups and proposal prep across the department'
-                : 'Your outreach quotas, follow-ups and proposal prep'}
-            </p>
-          </div>
-          <div className="ml-auto flex flex-wrap items-center gap-2">
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search tasks…"
-              iconLeft={<Search size={14} />}
-              className="w-full sm:w-48"
-            />
-            <Select value={priority} onChange={setPriority} options={PRIORITY_FILTER} size="sm" className="w-36" />
+          <h2 className="font-display text-[22px] font-bold text-text-1">Tasks</h2>
+          <Button
+            size="sm"
+            className="ml-auto"
+            iconLeft={<Plus size={15} />}
+            onClick={() => createTask()}
+          >
+            New Task
+          </Button>
+        </div>
+
+        {/* Filters */}
+        <div className="flex flex-wrap items-center gap-2">
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search tasks…" iconLeft={<Search size={14} />} className="w-full sm:w-56" />
+          <Select value={statusFilter} onChange={setStatusFilter} options={statusOptions} size="sm" />
+          <Select value={priorityFilter} onChange={setPriorityFilter} options={priorityOptions} size="sm" />
+          <Select value={projectFilter} onChange={setProjectFilter} options={projectOptions} size="sm" />
+          <Select value={sortBy} onChange={setSortBy} options={SORT_OPTIONS} size="sm" label="Sort" />
+          <button
+            onClick={() => setShowAdv((v) => !v)}
+            className={cn('flex h-8 items-center gap-1.5 rounded-sm border px-2.5 font-ui text-[11.5px] transition-colors', showAdv || dueFrom || dueTo || channelFilter ? 'border-border-focus bg-surface-2 text-text-1' : 'border-border-default text-text-3 hover:text-text-1')}
+          >
+            <SlidersHorizontal size={13} /> Filters
+          </button>
+          <ViewToggle value={view} onChange={setView} options={TASK_VIEWS} className="ml-auto" />
+        </div>
+
+        {showAdv && (
+          <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border-default bg-surface-1 p-2.5">
+            <span className="self-center font-mono text-[10px] uppercase tracking-wider text-text-4">Due between</span>
+            <DatePicker value={dueFrom} onChange={setDueFrom} placeholder="From" className="w-full sm:w-40" />
+            <DatePicker value={dueTo} onChange={setDueTo} placeholder="To" minDate={dueFrom || undefined} className="w-full sm:w-40" />
+            <Select value={channelFilter} onChange={setChannelFilter} options={channelOptions} size="sm" />
             {canSeeAll ? (
               <Select
-                value={assignee}
-                onChange={setAssignee}
+                value={assigneeFilter}
+                onChange={setAssigneeFilter}
                 size="sm"
-                className="w-40"
                 options={[
                   { value: 'me', label: 'My tasks' },
                   { value: 'all', label: 'Whole team' },
@@ -144,258 +184,93 @@ export default function BdTasksPage() {
             ) : (
               // Not a disabled control — a rep has no team view to be denied.
               <span className="flex items-center gap-1.5 rounded-sm border border-border-subtle bg-surface-2 px-2.5 py-1.5 font-ui text-[12px] text-text-3">
-                <Lock size={12} className="text-text-4" />
-                {viewerName}
+                <Lock size={12} className="text-text-4" /> {viewerName}
               </span>
             )}
-            <ViewToggle value={view} onChange={setView} options={VIEWS} className="hidden lg:flex" />
-            <Button size="sm" iconLeft={<Plus size={15} />} onClick={() => newTask()}>New Task</Button>
+            {(dueFrom || dueTo || channelFilter) && (
+              <button onClick={() => { setDueFrom(''); setDueTo(''); setChannelFilter('') }} className="h-8 rounded-sm px-2.5 text-[11.5px] text-text-3 transition-colors hover:text-error">Clear</button>
+            )}
           </div>
-        </div>
+        )}
 
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <BdKpiTile icon={List} label="Open" value={`${stats.open}`} unit="tasks" />
-          <BdKpiTile
-            icon={AlertTriangle}
-            label="Overdue"
-            value={`${stats.overdue}`}
-            tone={stats.overdue > 0 ? 'error' : 'default'}
-          />
-          <BdKpiTile
-            icon={Repeat}
-            label="Due today"
-            value={`${stats.dueToday}`}
-            tone={stats.dueToday > 0 ? 'warning' : 'default'}
-          />
-          <BdKpiTile icon={CheckCircle2} label="Completed" value={`${stats.done}`} tone="success" />
-        </div>
-
-        {view === 'board' ? (
-          <div ref={boardRef} className="flex gap-3 overflow-x-auto pb-3 no-scrollbar">
-            {TASK_STATUS_ORDER.map((status) => {
-              const config = TASK_STATUS_CONFIG[status]
-              const items = visible.filter((t) => t.status === status)
-              const Icon = config.icon
-              return (
-                <section
-                  key={status}
-                  onDragOver={(e) => { e.preventDefault(); setDragOver(status) }}
-                  onDragLeave={() => setDragOver((c) => (c === status ? null : c))}
-                  onDrop={() => handleDrop(status)}
-                  className={cn(
-                    'flex w-[86vw] shrink-0 flex-col gap-2.5 rounded-lg border p-2.5 transition-colors duration-150',
-                    'sm:w-80 lg:w-auto lg:min-w-72 lg:flex-1',
-                    dragOver === status ? cn(config.dropBorder, 'bg-surface-2/40') : 'border-border-default bg-surface-1/50',
-                  )}
-                >
-                  <header className={cn('flex items-center gap-2 rounded-md border px-2.5 py-2', config.accent)}>
-                    <Icon size={14} className="shrink-0" />
-                    <span className="min-w-0 flex-1 truncate font-ui text-[11.5px] font-bold uppercase tracking-wider">
-                      {config.label}
-                    </span>
-                    <span className="shrink-0 font-mono text-[11px] font-bold tabular-nums">{items.length}</span>
-                  </header>
-
-                  <div className="flex flex-col gap-2">
-                    {items.map((task) => (
-                      <TaskCard
-                        key={task.id}
-                        task={task}
-                        dragging={dragId === task.id}
-                        onDragStart={() => setDragId(task.id)}
-                        onDragEnd={() => { setDragId(null); setDragOver(null) }}
-                        onClick={() => setOpenTaskId(task.id)}
-                      />
-                    ))}
-
-                    <button
-                      onClick={() => newTask(status)}
-                      className={cn(
-                        'flex items-center justify-center gap-1.5 rounded-md border border-dashed border-border-subtle py-2.5',
-                        'font-ui text-[12px] text-text-4 transition-colors hover:border-border-strong hover:text-text-2',
-                      )}
-                    >
-                      <Plus size={13} /> Add task
-                    </button>
-                  </div>
-                </section>
-              )
-            })}
-          </div>
+        {filtered.length === 0 ? (
+          <div className="py-16 text-center font-ui text-[13px] text-text-4">No tasks match your filters.</div>
+        ) : view === 'board' ? (
+          <BdTaskBoard tasks={filtered} onOpenTask={setOpenTaskId} onAddTask={createTask} showProject />
         ) : (
-          <TaskList tasks={visible} onOpen={setOpenTaskId} />
-        )}
-
-        {visible.length === 0 && view === 'list' && (
-          <div className="flex flex-col items-center gap-3 py-16 text-center">
-            <span className="flex size-12 items-center justify-center rounded-full bg-surface-2 text-text-3">
-              <CheckCircle2 size={22} />
-            </span>
-            <p className="font-ui text-[14px] text-text-2">Nothing on your board</p>
-            <p className="max-w-[42ch] font-ui text-[12.5px]/relaxed text-text-4">
-              Tasks track the work behind the pipeline — outreach quotas, follow-ups, proposal prep. Link one to a lead
-              and it shows on that lead's record too.
-            </p>
-            <Button size="sm" variant="secondary" iconLeft={<Plus size={15} />} onClick={() => newTask()}>
-              Create the first task
-            </Button>
+          <div className="overflow-x-auto rounded-md border border-border-default bg-surface-1">
+            <table className="w-full min-w-[760px] text-left">
+              <thead>
+                <tr className="border-b border-border-default font-mono text-[10.5px] uppercase tracking-wider text-text-4">
+                  <th className="px-4 py-2.5 font-medium">Task</th>
+                  <th className="px-4 py-2.5 font-medium">Project</th>
+                  <th className="px-4 py-2.5 font-medium">Priority</th>
+                  <th className="px-4 py-2.5 font-medium">Status</th>
+                  <th className="px-4 py-2.5 font-medium">Due</th>
+                  <th className="px-4 py-2.5 font-medium">Assignee</th>
+                  <th className="px-4 py-2.5" />
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((t) => (
+                  <tr key={t.id} onClick={() => setOpenTaskId(t.id)} className="cursor-pointer border-b border-border-subtle last:border-0 hover:bg-surface-2/50">
+                    <td className="px-4 py-3 font-ui text-[13px] text-text-1">{t.title}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        {t.channel && <ChannelChip channel={t.channel} compact />}
+                        <span className="max-w-[160px] truncate font-ui text-[12px] text-text-3">{t.projectName}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3"><PriorityChip priority={t.priority} /></td>
+                    <td className="px-4 py-3"><StatusChip status={t.status} /></td>
+                    <td className="px-4 py-3">
+                      {t.dueDate
+                        ? <span className={cn('font-mono text-[12px]', isOverdue(t.dueDate) && t.status !== 'completed' && t.status !== 'approved' ? 'text-error' : 'text-text-3')}>{formatDate(t.dueDate)}</span>
+                        : <span className="text-[12px] text-text-4">—</span>}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="flex items-center gap-2">
+                        <Avatar name={t.assigneeName} size="xs" />
+                        <span className="font-ui text-[12px] text-text-2">{t.assigneeName}</span>
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setPendingDelete(t) }}
+                        className="inline-flex size-7 items-center justify-center rounded-sm text-text-3 hover:bg-error/10 hover:text-error"
+                        aria-label={`Delete ${t.title}`}
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
 
-      {formOpen && (
-        <TaskFormModal
-          key={editing?.id ?? 'new'}
-          open
-          task={editing}
-          defaultStatus={formStatus}
-          onClose={() => { setFormOpen(false); setEditing(null) }}
-        />
-      )}
+      <TaskDrawer task={openTask} onClose={() => setOpenTaskId(null)} />
 
-      <TaskDrawer
-        task={openTask}
-        onClose={() => setOpenTaskId(null)}
-        onEdit={(t) => { setOpenTaskId(null); setEditing(t); setFormOpen(true) }}
+      <ConfirmDialog
+        open={!!pendingDelete}
+        title="Delete task?"
+        message={
+          <span>
+            <strong className="text-text-1">{pendingDelete?.title}</strong> will be deleted, along with its checklist.
+          </span>
+        }
+        confirmLabel="Delete task"
+        danger
+        onConfirm={() => {
+          if (!pendingDelete) return
+          deleteTask(pendingDelete.id)
+          toast('Task deleted', 'success')
+          setPendingDelete(null)
+        }}
+        onClose={() => setPendingDelete(null)}
       />
-    </div>
-  )
-}
-
-interface TaskCardProps {
-  task: BdTask
-  dragging: boolean
-  onDragStart: () => void
-  onDragEnd: () => void
-  onClick: () => void
-}
-
-function TaskCard({ task, dragging, onDragStart, onDragEnd, onClick }: TaskCardProps) {
-  const overdue = task.dueDate && task.status !== 'done' && getDaysUntil(task.dueDate) < 0
-  const dueToday = task.dueDate && getDaysUntil(task.dueDate) === 0
-  const priority = TASK_PRIORITY_CONFIG[task.priority]
-  const doneCount = task.checklist.filter((c) => c.done).length
-
-  return (
-    <article
-      draggable
-      data-no-pan
-      onDragStart={onDragStart}
-      onDragEnd={onDragEnd}
-      onClick={onClick}
-      className={cn(
-        'cursor-grab rounded-md border border-border-default bg-surface-1 p-3 active:cursor-grabbing',
-        'transition-[transform,opacity,border-color] duration-150 hover:border-border-strong',
-        dragging ? 'scale-[0.98] opacity-40' : 'opacity-100',
-      )}
-    >
-      <div className="mb-2 flex items-start gap-2">
-        <span className={cn('mt-1.5 size-1.5 shrink-0 rounded-full', priority.dot)} title={`${priority.label} priority`} />
-        <p
-          className={cn(
-            'min-w-0 flex-1 font-ui text-body-sm/snug font-medium',
-            task.status === 'done' ? 'text-text-3 line-through' : 'text-text-1',
-          )}
-        >
-          {task.title}
-        </p>
-      </div>
-
-      {task.leadCompany && (
-        <p className="mb-2 flex items-center gap-1.5 font-ui text-[11px] text-text-4">
-          <Building2 size={10} className="shrink-0" />
-          <span className="truncate">{task.leadCompany}</span>
-        </p>
-      )}
-
-      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 border-t border-border-subtle pt-2.5">
-        {task.dueDate && (
-          <span
-            className={cn(
-              'font-mono text-[10.5px]',
-              overdue ? 'text-error' : dueToday ? 'text-warning' : 'text-text-4',
-            )}
-          >
-            {overdue ? 'Overdue · ' : dueToday ? 'Today' : formatDate(task.dueDate)}
-            {overdue && formatDate(task.dueDate)}
-          </span>
-        )}
-        {task.checklist.length > 0 && (
-          <span className="font-mono text-[10.5px] text-text-4">
-            {doneCount}/{task.checklist.length}
-          </span>
-        )}
-        {task.recurrence !== 'once' && <Repeat size={10} className="text-text-4" />}
-        {task.channel && <ChannelChip channel={task.channel} compact />}
-        <Avatar name={task.assigneeName} size="xs" className="ml-auto" />
-      </div>
-    </article>
-  )
-}
-
-const COLS = 'grid grid-cols-[minmax(0,2.2fr)_130px_110px_100px_minmax(0,1fr)] items-center gap-3'
-
-function TaskList({ tasks, onOpen }: { tasks: BdTask[]; onOpen: (id: string) => void }) {
-  if (tasks.length === 0) return null
-
-  return (
-    <div className="overflow-hidden rounded-lg border border-border-default bg-surface-1">
-      <div
-        className={cn(
-          COLS,
-          'border-b border-border-subtle bg-surface-2 px-4 py-2.5 font-ui text-[11px] font-semibold uppercase tracking-widest text-text-3',
-        )}
-      >
-        <span>Task</span>
-        <span>Status</span>
-        <span>Priority</span>
-        <span>Due</span>
-        <span>Assignee</span>
-      </div>
-      {tasks.map((task) => {
-        const status = TASK_STATUS_CONFIG[task.status]
-        const priority = TASK_PRIORITY_CONFIG[task.priority]
-        const overdue = task.dueDate && task.status !== 'done' && getDaysUntil(task.dueDate) < 0
-        return (
-          <button
-            key={task.id}
-            onClick={() => onOpen(task.id)}
-            className={cn(COLS, 'w-full border-b border-border-subtle px-4 py-3 text-left transition-colors last:border-0 hover:bg-surface-2/50')}
-          >
-            <span className="min-w-0">
-              <span className={cn('block truncate font-ui text-[13px]', task.status === 'done' ? 'text-text-3 line-through' : 'text-text-1')}>
-                {task.title}
-              </span>
-              {task.leadCompany && (
-                <span className="block truncate font-ui text-[11.5px] text-text-4">{task.leadCompany}</span>
-              )}
-            </span>
-            <span
-              className={cn(
-                'inline-flex w-fit items-center gap-1.5 rounded-full border px-2 py-0.5 font-ui text-[10px] font-semibold uppercase tracking-[0.04em]',
-                status.accent,
-              )}
-            >
-              {status.label}
-            </span>
-            <span
-              className={cn(
-                'inline-flex w-fit items-center rounded-full border px-2 py-0.5 font-ui text-[10px] font-semibold uppercase tracking-[0.04em]',
-                priority.classes,
-              )}
-            >
-              {priority.label}
-            </span>
-            <span className={cn('font-mono text-[11.5px]', overdue ? 'text-error' : 'text-text-3')}>
-              {task.dueDate ? formatDate(task.dueDate) : '—'}
-            </span>
-            <span className="flex min-w-0 items-center gap-2">
-              <Avatar name={task.assigneeName} size="xs" />
-              <span className="truncate font-ui text-[12.5px] text-text-2">{task.assigneeName}</span>
-            </span>
-          </button>
-        )
-      })}
     </div>
   )
 }

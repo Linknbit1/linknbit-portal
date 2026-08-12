@@ -1,12 +1,11 @@
 import { useMemo, useState } from 'react'
-import { Plus, Send, MessageSquareReply, CalendarCheck, Trophy, TrendingUp, TrendingDown } from 'lucide-react'
+import { Plus, Send, TrendingUp, TrendingDown } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Button } from '../../components/ui/Button'
 import { Select } from '../../components/ui/Select'
 import { ProgressBar } from '../../components/ui/ProgressBar'
 import { ResponsiveTable } from '../../components/ui/ResponsiveTable'
 import { SectionToolbar } from '../../components/ui/SectionToolbar'
-import { BdKpiTile } from '../../components/shared/BdKpiTile'
 import { CHANNEL_CONFIG, CHANNEL_ORDER } from '../../constants/bd'
 import { cn } from '../../lib/cn'
 import { formatCompactCurrency } from '../../lib/utils'
@@ -66,44 +65,25 @@ export default function OutreachPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <BdKpiTile
-            icon={Send}
-            label="Outreach sent"
-            value={totals.sent.toLocaleString('en-PK')}
-            delta={{ label: '+14%', direction: 'up', caption: 'vs last month' }}
-          />
-          <BdKpiTile
-            icon={MessageSquareReply}
-            label="Response rate"
-            value={`${totals.rate}`}
-            unit="%"
-            delta={{ label: `${totals.responses} replies`, direction: 'flat' }}
-          />
-          <BdKpiTile
-            icon={CalendarCheck}
-            label="Meetings booked"
-            value={`${totals.meetings}`}
-            delta={{ label: '+9', direction: 'up', caption: 'vs last month' }}
-          />
-          <BdKpiTile
-            icon={Trophy}
-            label="Revenue won"
-            value={formatCompactCurrency(totals.revenue)}
-            tone="success"
-            delta={{ label: '12 deals', direction: 'flat' }}
-          />
+        {/* Totals inline rather than as a row of tiles — they frame the per-channel
+            cards below, which are the actual subject of the page. */}
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 rounded-lg border border-border-default bg-surface-1 px-4 py-3 font-mono text-[11.5px] tabular-nums text-text-4">
+          <span>Sent <span className="text-text-1">{totals.sent.toLocaleString('en-PK')}</span></span>
+          <span>Replies <span className="text-text-2">{totals.responses}</span></span>
+          <span>Response rate <span className="text-text-2">{totals.rate}%</span></span>
+          <span>Meetings <span className="text-text-2">{totals.meetings}</span></span>
+          <span className="ml-auto">Revenue won <span className="text-success">{formatCompactCurrency(totals.revenue)}</span></span>
         </div>
 
         {/* ── Per-channel cards ── */}
-        <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-3">
           {ordered.map((stat) => (
             <ChannelCard key={stat.channel} stat={stat} maxSent={maxSent} />
           ))}
         </div>
 
         {/* ── Comparison table ── */}
-        <div className="rounded-lg border border-border-default bg-surface-1 overflow-hidden">
+        <div className="overflow-hidden rounded-lg border border-border-default bg-surface-1">
           <SectionToolbar
             icon={Send}
             title="Channel comparison"

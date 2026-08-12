@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts'
-import { Pencil, Wallet, Target, Percent, Timer, Trophy } from 'lucide-react'
+import { Pencil, Target, Trophy } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Button } from '../../components/ui/Button'
 import { Select } from '../../components/ui/Select'
@@ -10,7 +10,6 @@ import { Avatar } from '../../components/ui/Avatar'
 import { ProgressBar } from '../../components/ui/ProgressBar'
 import { SectionToolbar } from '../../components/ui/SectionToolbar'
 import { ResponsiveTable } from '../../components/ui/ResponsiveTable'
-import { BdKpiTile } from '../../components/shared/BdKpiTile'
 import { cn } from '../../lib/cn'
 import { formatCompactCurrency } from '../../lib/utils'
 import {
@@ -116,38 +115,18 @@ export default function TargetsPage() {
           />
         </div>
 
-        {/* ── Supporting KPIs ── */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <BdKpiTile
-            icon={Wallet}
-            label="Pipeline value"
-            value={formatCompactCurrency(18_500_000)}
-            delta={{ label: 'weighted', direction: 'flat', caption: 'by stage' }}
-          />
-          <BdKpiTile
-            icon={Percent}
-            label="Win rate"
-            value={`${totals.winRate}`}
-            unit="%"
-            delta={{ label: `${totals.wins} won`, direction: 'flat', caption: 'this month' }}
-          />
-          <BdKpiTile
-            icon={Target}
-            label="Avg deal size"
-            value={formatCompactCurrency(1_490_000)}
-            delta={{ label: '+12%', direction: 'up', caption: 'vs last month' }}
-          />
-          <BdKpiTile
-            icon={Timer}
-            label="Avg sales cycle"
-            value="34"
-            unit="days"
-            delta={{ label: '-4 days', direction: 'up', caption: 'faster' }}
-          />
+        {/* Supporting figures inline — the headline block above is the page's
+            subject, so these sit under it as context rather than as four tiles. */}
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 rounded-lg border border-border-default bg-surface-1 px-4 py-3 font-mono text-[11.5px] tabular-nums text-text-4">
+          <span>Pipeline value <span className="text-text-1">{formatCompactCurrency(18_500_000)}</span></span>
+          <span>Win rate <span className="text-text-2">{totals.winRate}%</span></span>
+          <span>Avg deal <span className="text-text-2">{formatCompactCurrency(1_490_000)}</span></span>
+          <span>Sales cycle <span className="text-text-2">34 days</span></span>
+          <span className="ml-auto">{totals.wins} won this month</span>
         </div>
 
         {/* ── Trend ── */}
-        <div className="rounded-lg border border-border-default bg-surface-1 overflow-hidden">
+        <div className="overflow-hidden rounded-lg border border-border-default bg-surface-1">
           <SectionToolbar
             icon={Trophy}
             title="Revenue vs target"
@@ -179,7 +158,7 @@ export default function TargetsPage() {
         </div>
 
         {/* ── Per-rep ── */}
-        <div className="rounded-lg border border-border-default bg-surface-1 overflow-hidden">
+        <div className="overflow-hidden rounded-lg border border-border-default bg-surface-1">
           <SectionToolbar
             icon={Target}
             title="By rep"
