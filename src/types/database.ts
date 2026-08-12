@@ -108,6 +108,7 @@ export type Database = {
           client_visible: boolean
           confidential_scope: string
           created_at: string
+          description: string | null
           file_name: string
           file_size: number | null
           id: string
@@ -124,6 +125,7 @@ export type Database = {
           client_visible?: boolean
           confidential_scope?: string
           created_at?: string
+          description?: string | null
           file_name: string
           file_size?: number | null
           id?: string
@@ -140,6 +142,7 @@ export type Database = {
           client_visible?: boolean
           confidential_scope?: string
           created_at?: string
+          description?: string | null
           file_name?: string
           file_size?: number | null
           id?: string
@@ -3880,6 +3883,14 @@ export type Database = {
         Returns: undefined
       }
       fn_monthly_lp_reset: { Args: never; Returns: undefined }
+      fn_move_task: {
+        Args: {
+          p_project_service_id: string
+          p_stage_id?: string
+          p_task_id: string
+        }
+        Returns: undefined
+      }
       fn_next_working_start: { Args: { p_date: string }; Returns: string }
       fn_notify: {
         Args: {

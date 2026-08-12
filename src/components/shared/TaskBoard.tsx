@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   AlertCircle, Ban, BadgeCheck, CheckCircle2, Circle, CircleDashed, CircleDotDashed, Eye,
-  GitBranch, Layers, MessageSquare, Paperclip, Timer, Trash2, type LucideIcon,
+  CornerUpRight, GitBranch, Layers, MessageSquare, MoreHorizontal, Paperclip, Timer, Trash2, type LucideIcon,
 } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { Avatar, AvatarGroup } from '../ui/Avatar'
@@ -11,6 +11,9 @@ import { useDeleteTask, useUpdateTaskStatus } from '../../hooks/useTasks'
 import { useDragScroll } from '../../hooks/useDragScroll'
 import { useToast } from '../ui/toast-context'
 import { ConfirmDialog } from '../ui/ConfirmDialog'
+import { Popover } from '../ui/Popover'
+import { MoveTaskModal } from './MoveTaskModal'
+import { useCanAccess } from '../../hooks/useRoleFlags'
 import { ProgressBar } from '../ui/ProgressBar'
 import { isOverdue, formatStamp } from '../../lib/utils'
 import { formatEstimate } from '../../lib/duration'
@@ -157,6 +160,53 @@ function TaskCardMeta({ task }: { task: TaskListItem }) {
   )
 }
 
+interface CardMenuProps {
+  onMove: () => void
+  onDelete: () => void
+  canMove: boolean
+}
+
+/** Per-card actions, where ClickUp keeps them: the ellipsis on hover. */
+function CardMenu({ onMove, onDelete, canMove }: CardMenuProps) {
+  const ref = useRef<HTMLButtonElement>(null)
+  const [open, setOpen] = useState(false)
+  const item = 'flex w-full items-center gap-2 px-3 py-1.5 text-left font-ui text-[12.5px] text-text-1 transition-colors hover:bg-surface-3'
+
+  return (
+    <>
+      <button
+        ref={ref}
+        onClick={(e) => { e.stopPropagation(); setOpen((v) => !v) }}
+        aria-label="Task actions"
+        className={cn(
+          'flex size-6 shrink-0 items-center justify-center rounded-sm text-text-4 transition-opacity hover:bg-surface-3 hover:text-text-1',
+          open ? 'opacity-100' : 'opacity-0 focus-visible:opacity-100 group-hover/card:opacity-100',
+        )}
+      >
+        <MoreHorizontal size={13} />
+      </button>
+      <Popover
+        anchorRef={ref}
+        open={open}
+        onClose={() => setOpen(false)}
+        className="w-44 overflow-hidden rounded-md border border-border-strong bg-surface-2 py-1 shadow-lg"
+      >
+        {canMove && (
+          <button className={item} onClick={(e) => { e.stopPropagation(); setOpen(false); onMove() }}>
+            <CornerUpRight size={13} className="text-text-4" /> Move to…
+          </button>
+        )}
+        <button
+          className={cn(item, 'text-error hover:bg-error/10')}
+          onClick={(e) => { e.stopPropagation(); setOpen(false); onDelete() }}
+        >
+          <Trash2 size={13} /> Delete
+        </button>
+      </Popover>
+    </>
+  )
+}
+
 interface TaskBoardProps {
   tasks: TaskListItem[]
   onOpenTask: (id: string) => void
@@ -170,6 +220,8 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
   const [dragId, setDragId] = useState<string | null>(null)
   const [dragOver, setDragOver] = useState<string | null>(null)
   const [pendingDelete, setPendingDelete] = useState<TaskListItem | null>(null)
+  const [pendingMove, setPendingMove] = useState<TaskListItem | null>(null)
+  const canMoveTask = useCanAccess('can_manage_projects')
   const boardRef = useDragScroll<HTMLDivElement>()
   // Optimistic status overrides so a dropped card moves instantly (no refetch flicker).
   const [optimistic, setOptimistic] = useState<Record<string, TaskStatus>>({})
@@ -262,13 +314,11 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
                       line and the title text wraps around them. */}
                   <div className="float-right -mr-1 -mt-0.5 ml-1.5 flex items-center gap-1.5">
                     {!!t.due_date && isOverdue(t.due_date) && statusOf(t) !== 'completed' && statusOf(t) !== 'approved' && <OverduePill />}
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setPendingDelete(t) }}
-                      aria-label={`Delete ${t.title}`}
-                      className="flex size-6 shrink-0 items-center justify-center rounded-sm text-text-4 opacity-0 transition-opacity hover:bg-error/10 hover:text-error focus-visible:opacity-100 group-hover/card:opacity-100"
-                    >
-                      <Trash2 size={12} />
-                    </button>
+                    <CardMenu
+                      canMove={canMoveTask}
+                      onMove={() => setPendingMove(t)}
+                      onDelete={() => setPendingDelete(t)}
+                    />
                   </div>
                   {/* Inside a project the project/service row is hidden, so the
                       stage is what gives this row something to say. */}
@@ -315,6 +365,17 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
         )
       })}
 
+      {pendingMove && (
+        <MoveTaskModal
+          taskId={pendingMove.id}
+          taskTitle={pendingMove.title}
+          currentProjectId={pendingMove.project_id}
+          currentProjectName={pendingMove.project?.name ?? 'this project'}
+          currentServiceId={pendingMove.project_service_id}
+          currentServiceName={pendingMove.project_service?.service?.name}
+          onClose={() => setPendingMove(null)}
+        />
+      )}
       <ConfirmDialog
         open={!!pendingDelete}
         title="Delete task?"

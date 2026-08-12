@@ -42,7 +42,7 @@ const VIEWS: { key: ViewMode; label: string; icon: typeof List }[] = [
 const backlogVisible = (canViewBacklog: boolean) =>
   VIEWS.filter((v) => v.key !== 'backlog' || canViewBacklog)
 
-const KANBAN_COLUMNS: AppProjectStatus[] = ['in_progress', 'ongoing', 'awaiting_client', 'blocked', 'on_hold', 'completed']
+const KANBAN_COLUMNS: AppProjectStatus[] = ['todo', 'in_progress', 'ongoing', 'awaiting_client', 'blocked', 'on_hold', 'completed']
 const PROJECT_SORT = [
   { value: 'recent', label: 'Newest' },
   { value: 'deadline', label: 'Deadline' },

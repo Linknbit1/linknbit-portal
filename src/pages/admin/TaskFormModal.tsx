@@ -1,22 +1,27 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
+import { Paperclip, X as XIcon } from 'lucide-react'
 import { Drawer } from '../../components/ui/Drawer'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Select } from '../../components/ui/Select'
-import { DateTimeRangePicker } from '../../components/ui/DateTimeRangePicker'
+import { DatePicker } from '../../components/ui/DatePicker'
+import { TimePicker } from '../../components/ui/TimePicker'
 import { DurationInput } from '../../components/ui/DurationInput'
 import { Toggle } from '../../components/ui/Toggle'
 import { useProjects } from '../../hooks/useProjects'
 import { useServiceStages } from '../../hooks/useStages'
 import { useAddProjectService, useProjectServices, useProjectServiceMembers } from '../../hooks/useProjectServices'
 import { useServices } from '../../hooks/useServices'
-import { useCreateTask, useUpdateTask } from '../../hooks/useTasks'
+import { useCreateTask, useUpdateTask, useMoveTask } from '../../hooks/useTasks'
 import { MultiSelectPeople } from '../../components/ui/MultiSelectPeople'
 import { TaskTimeTracker } from '../../components/shared/TaskTimeTracker'
 import { useSetTaskAssignees } from '../../hooks/useTaskAssignees'
+import { useUploadAttachment } from '../../hooks/useAttachments'
 import { useToast } from '../../components/ui/toast-context'
+import { formatFileSize } from '../../lib/attachment'
+import { cn } from '../../lib/cn'
 import { docToPlainText, fromDbDoc, plainTextToDoc, toDbDoc } from '../../lib/richText'
-import { PRIORITY_LABELS, STATUS_LABELS } from '../../lib/utils'
+import { PRIORITY_LABELS, STATUS_LABELS, toDateInput, toTimeInput, fromDateTimeInput } from '../../lib/utils'
 import type { TaskListItem } from '../../api/tasks'
 import type { Priority, TaskStatus } from '../../types'
 
@@ -56,6 +61,8 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
   const { data: projects = [] } = useProjects()
   const createTask = useCreateTask()
   const updateTask = useUpdateTask()
+  const moveTask = useMoveTask()
+  const uploadAttachment = useUploadAttachment()
   const setAssignees = useSetTaskAssignees()
 
   const lockedProjectId = projectId ?? task?.project_id
@@ -107,10 +114,18 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
   const [assigneeIds, setAssigneeIds] = useState<string[]>(task?.assignees.map((a) => a.id) ?? [])
   const [priority, setPriority] = useState<Priority>(toPriority(task?.priority))
   const [status, setStatus] = useState<TaskStatus>(toStatus(task?.status))
-  const [startAt, setStartAt] = useState<string | null>(task?.start_date ?? null)
-  const [dueAt, setDueAt] = useState<string | null>(task?.due_date ?? null)
+  // Deadline only — a task is "due by", not "scheduled from". start_date is left
+  // untouched on existing rows rather than silently wiped.
+  const [dueDay, setDueDay] = useState(toDateInput(task?.due_date))
+  const [dueTime, setDueTime] = useState(toTimeInput(task?.due_date) || '18:00')
+  const dueAt = dueDay ? fromDateTimeInput(dueDay, dueTime) : null
   const [clientVisible, setClientVisible] = useState(task?.client_visible ?? false)
   const [estimatedMinutes, setEstimatedMinutes] = useState<number | null>(task?.estimated_minutes ?? null)
+  // Files chosen before the task exists. There is no task_id to attach them to
+  // until save, so they wait here with their descriptions and upload after.
+  const [pendingFiles, setPendingFiles] = useState<{ file: File; description: string }[]>([])
+  const [dragging, setDragging] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   // Drives the slide-out; the real `onClose` runs once the animation finishes.
   const [visible, setVisible] = useState(true)
   const dismiss = () => setVisible(false)
@@ -121,12 +136,29 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
   const priorityOptions = PRIORITY_ORDER.map((p) => ({ value: p, label: PRIORITY_LABELS[p], dot: PRIORITY_DOTS[p] }))
   const statusOptions = STATUS_ORDER.map((s) => ({ value: s, label: STATUS_LABELS[s] }))
 
-  const pending = createTask.isPending || updateTask.isPending || addService.isPending
+  const pending = createTask.isPending || updateTask.isPending || addService.isPending || moveTask.isPending || uploadAttachment.isPending
+
+  const addFiles = (list: FileList | null) => {
+    if (!list?.length) return
+    setPendingFiles((prev) => [...prev, ...Array.from(list).map((file) => ({ file, description: '' }))])
+  }
+
+  /** Uploads sequentially so one rejected file doesn't take the rest with it. */
+  const uploadPending = async (taskId: string, projectIdForFiles: string) => {
+    for (const { file, description } of pendingFiles) {
+      await uploadAttachment.mutateAsync({
+        file,
+        args: { projectId: projectIdForFiles, taskId, description, clientVisible: false },
+      })
+    }
+  }
 
   const handleSubmit = async () => {
     if (!selectedProject) { toast('Choose a project', 'error'); return }
     if (!effectiveService) { toast('Choose a service', 'error'); return }
     if (!title.trim()) { toast('Task title is required', 'error'); return }
+    if (!description.trim()) { toast('A description is required', 'error'); return }
+    if (!dueAt) { toast('A deadline is required', 'error'); return }
     const onSuccess = () => { toast(isEdit ? 'Task updated' : 'Task created', 'success'); dismiss() }
     const onError = (e: unknown) => toast(e instanceof Error ? e.message : 'Save failed', 'error')
 
@@ -154,19 +186,35 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
             title: title.trim(),
             // Both halves together: editing the plain mirror here would otherwise
             // leave the rich doc stale and the task view showing the old text.
-            description: description.trim() || null,
+            description: description.trim(),
             doc: toDbDoc(plainTextToDoc(description)),
-            project_service_id: serviceBlockId,
             stage_id: stageId || null,
-            priority, status, start_date: startAt, due_date: dueAt, client_visible: clientVisible,
+            priority, status, due_date: dueAt, client_visible: clientVisible,
             estimated_minutes: estimatedMinutes,
           },
         },
         {
-          onSuccess: () => setAssignees.mutate(
-            { taskId: task.id, profileIds: assigneeIds, projectId: task.project_id },
-            { onSuccess, onError },
-          ),
+          onSuccess: () => {
+            const moved = serviceBlockId !== task.project_service_id
+            const afterAssignees = () => {
+              // Moving last: the field edits above are scoped to the task, while
+              // this re-homes it (and its files) under another project.
+              if (!moved) { onSuccess(); return }
+              moveTask.mutate(
+                {
+                  taskId: task.id,
+                  projectServiceId: serviceBlockId,
+                  stageId: stageId || null,
+                  fromProjectId: task.project_id,
+                },
+                { onSuccess, onError },
+              )
+            }
+            setAssignees.mutate(
+              { taskId: task.id, profileIds: assigneeIds, projectId: task.project_id },
+              { onSuccess: afterAssignees, onError },
+            )
+          },
           onError,
         },
       )
@@ -176,15 +224,23 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
           project_id: selectedProject,
           project_service_id: serviceBlockId,
           title: title.trim(),
-          description: description.trim() || null,
+          description: description.trim(),
           doc: toDbDoc(plainTextToDoc(description)),
           stage_id: stageId || null,
           assignee_id: assigneeIds[0] ?? null,
-          priority, status, start_date: startAt, due_date: dueAt, client_visible: clientVisible,
+          priority, status, due_date: dueAt, client_visible: clientVisible,
           estimated_minutes: estimatedMinutes,
         },
         {
-          onSuccess: (row) => {
+          onSuccess: async (row) => {
+            try {
+              await uploadPending(row.id, selectedProject)
+            } catch (e) {
+              // The task is already saved; say what failed rather than pretending.
+              onError(new Error(e instanceof Error ? `Task created, but a file failed to upload: ${e.message}` : 'Task created, but a file failed to upload'))
+              dismiss()
+              return
+            }
             if (assigneeIds.length) {
               setAssignees.mutate({ taskId: row.id, profileIds: assigneeIds, projectId: selectedProject }, { onSuccess, onError })
             } else onSuccess()
@@ -235,12 +291,14 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
         )}
         <Input label="Title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="What needs to be done?" autoFocus />
         <div className="flex flex-col gap-1.5">
-          <label className="text-label font-ui font-semibold text-text-2 uppercase tracking-wider">Description</label>
+          <label className="text-label font-ui font-semibold text-text-2 uppercase tracking-wider">
+            Description <span className="text-brand-red">*</span>
+          </label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={3}
-            placeholder="Add details…"
+            placeholder="What does done look like? (required)"
             className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 font-ui text-body-sm text-text-1 placeholder:text-text-3 focus:outline-none focus:border-border-focus focus:shadow-ring-focus resize-none"
           />
         </div>
@@ -263,13 +321,91 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
           </div>
         </div>
         <div className="space-y-1.5">
-          <label className="text-label font-ui font-semibold text-text-2 uppercase tracking-wider">Schedule</label>
-          <DateTimeRangePicker
-            start={startAt}
-            end={dueAt}
-            onChange={({ start, end }) => { setStartAt(start); setDueAt(end) }}
-          />
+          <label className="text-label font-ui font-semibold text-text-2 uppercase tracking-wider">
+            Deadline <span className="text-brand-red">*</span>
+          </label>
+          <div className="flex gap-2">
+            <DatePicker value={dueDay} onChange={setDueDay} placeholder="Pick a date" className="flex-1" />
+            <TimePicker value={dueTime} onChange={setDueTime} step={15} disabled={!dueDay} className="w-36" />
+          </div>
         </div>
+        {/* Documents. On a new task these wait for the row to exist; on an
+            existing one the Files tab already owns them. */}
+        {!isEdit && (
+          <div className="space-y-2">
+            <label className="block text-label font-ui font-semibold text-text-2 uppercase tracking-wider">
+              Documents
+              {pendingFiles.length > 0 && (
+                <span className="ml-1.5 font-mono text-[10px] normal-case tracking-normal text-text-4">
+                  {pendingFiles.length} file{pendingFiles.length === 1 ? '' : 's'}
+                </span>
+              )}
+            </label>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              className="hidden"
+              onChange={(e) => { addFiles(e.target.files); e.target.value = '' }}
+            />
+
+            {/* A drop target rather than a lone button: files usually arrive by
+                drag, and it gives the empty state something to say. */}
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
+              onDragLeave={() => setDragging(false)}
+              onDrop={(e) => { e.preventDefault(); setDragging(false); addFiles(e.dataTransfer.files) }}
+              className={cn(
+                'flex w-full flex-col items-center gap-1 rounded-md border border-dashed px-3 py-4 transition-colors',
+                dragging
+                  ? 'border-brand-red bg-brand-red/5'
+                  : 'border-border-default bg-surface-inset hover:border-border-strong',
+              )}
+            >
+              <Paperclip size={15} className="text-text-4" />
+              <span className="font-ui text-[12.5px] text-text-2">
+                <span className="font-semibold text-text-1">Choose files</span> or drop them here
+              </span>
+              <span className="font-ui text-[11px] text-text-4">Add a note to each so the next person knows what it is</span>
+            </button>
+
+            {pendingFiles.length > 0 && (
+              <div className="space-y-1.5">
+                {pendingFiles.map((entry, i) => (
+                  <div key={`${entry.file.name}-${i}`} className="rounded-md border border-border-default bg-surface-1 p-2.5">
+                    <div className="flex items-center gap-2">
+                      <span className="flex size-7 shrink-0 items-center justify-center rounded-sm bg-surface-2 text-text-3">
+                        <Paperclip size={12} />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-ui text-[12.5px] text-text-1">{entry.file.name}</span>
+                        <span className="block font-mono text-[10px] text-text-4">{formatFileSize(entry.file.size)}</span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setPendingFiles((prev) => prev.filter((_, idx) => idx !== i))}
+                        aria-label={`Remove ${entry.file.name}`}
+                        className="flex size-7 shrink-0 items-center justify-center rounded-sm text-text-4 transition-colors hover:bg-error/10 hover:text-error"
+                      >
+                        <XIcon size={13} />
+                      </button>
+                    </div>
+                    <input
+                      value={entry.description}
+                      onChange={(e) => setPendingFiles((prev) => prev.map((f, idx) => (idx === i ? { ...f, description: e.target.value } : f)))}
+                      placeholder="What is this file? (optional)"
+                      className="mt-2 w-full rounded-sm border border-border-default bg-surface-inset px-2.5 py-1.5 font-ui text-[12px] text-text-1 outline-none transition-colors placeholder:text-text-4 hover:border-border-strong focus:border-border-focus"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="space-y-1.5">
           <label className="text-label font-ui font-semibold text-text-2 uppercase tracking-wider">Time estimate</label>
           <DurationInput value={estimatedMinutes} onChange={setEstimatedMinutes} />

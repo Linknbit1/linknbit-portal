@@ -12,6 +12,7 @@ const TASK_STATUS_CONFIG: Record<TaskStatus, { label: string; classes: string }>
 }
 
 const PROJECT_STATUS_CONFIG: Record<ProjectStatus, { label: string; classes: string }> = {
+  todo:            { label: 'To Do',           classes: 'bg-surface-2 text-text-3 border-border-default' },
   in_progress:     { label: 'In Progress',     classes: 'bg-[rgba(34,197,94,0.12)] text-[#22C55E] border-[rgba(34,197,94,0.3)]' },
   blocked:         { label: 'Blocked',         classes: 'bg-[rgba(244,54,76,0.1)] text-[#F4364C] border-[rgba(244,54,76,0.3)]' },
   awaiting_client: { label: 'Awaiting Client', classes: 'bg-[rgba(245,158,11,0.12)] text-[#F59E0B] border-[rgba(245,158,11,0.3)]' },

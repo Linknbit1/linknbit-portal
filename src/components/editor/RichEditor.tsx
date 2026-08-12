@@ -17,6 +17,8 @@ import { useFileRefClick } from './useFileRefClick'
 interface RichEditorProps {
   value: JSONContent | null
   onChange: (doc: JSONContent) => void
+  /** Fires when focus leaves the editor — the point at which an edit is "done". */
+  onBlur?: () => void
   placeholder?: string
   /** People available to @mention (kept fresh via a ref). */
   mentionItems?: PersonMini[]
@@ -32,7 +34,7 @@ interface RichEditorProps {
 }
 
 export function RichEditor({
-  value, onChange, placeholder, mentionItems = [], fileItems, compact, onSubmit, className, autoFocus, onEditorReady,
+  value, onChange, onBlur, placeholder, mentionItems = [], fileItems, compact, onSubmit, className, autoFocus, onEditorReady,
 }: RichEditorProps) {
   const mentionsRef = useRef(mentionItems)
   useEffect(() => { mentionsRef.current = mentionItems }, [mentionItems])
@@ -42,6 +44,8 @@ export function RichEditor({
   const onFileRefClick = useFileRefClick()
   const onSubmitRef = useRef(onSubmit)
   useEffect(() => { onSubmitRef.current = onSubmit }, [onSubmit])
+  const onBlurRef = useRef(onBlur)
+  useEffect(() => { onBlurRef.current = onBlur }, [onBlur])
   const [linkOpen, setLinkOpen] = useState(false)
   const [linkVal, setLinkVal] = useState('')
 
@@ -87,6 +91,9 @@ export function RichEditor({
       },
     },
     onUpdate: ({ editor: ed }) => onChange(ed.getJSON()),
+    // Read through a ref: the editor is created once, so a prop captured here
+    // would go stale (same reason mentions/files use refs above).
+    onBlur: () => onBlurRef.current?.(),
   })
 
   // NOTE: content is intentionally set only at editor creation (`content: value`).

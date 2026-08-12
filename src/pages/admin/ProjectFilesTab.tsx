@@ -194,6 +194,10 @@ export function ProjectFilesTab({ projectId, canManage = true, onOpenTask }: Pro
                       </span>
                     )}
                   </div>
+                  {/* What the uploader said it is — the filename rarely says. */}
+                  {file.description && (
+                    <p className="truncate font-ui text-[11.5px] text-text-3">{file.description}</p>
+                  )}
                   <p className="truncate font-mono text-[10.5px] text-text-4">
                     {isLink ? meta?.label : formatFileSize(file.file_size)}
                     {file.uploader && <> · <PersonLink personId={file.uploader.id} className="hover:text-text-2">{file.uploader.name}</PersonLink></>}

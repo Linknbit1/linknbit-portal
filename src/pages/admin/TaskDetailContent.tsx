@@ -3,6 +3,7 @@ import type { JSONContent } from '@tiptap/react'
 import {
   Plus, Trash2, Send, CheckCircle2, MessageSquare, ListChecks, RotateCcw, Pencil,
   CircleDot, UserRound, CalendarDays, Flag, Layers, Eye, Paperclip, Bell, BellOff, Timer, Clock, History,
+  CornerUpRight,
   type LucideIcon,
 } from 'lucide-react'
 import { cn } from '../../lib/cn'
@@ -41,6 +42,8 @@ import { useRealtimeTaskActivity } from '../../hooks/realtime/useRealtimeTaskAct
 import { useTaskActivity } from '../../hooks/useAuditLog'
 import { useTaskWatch } from '../../hooks/useWatchers'
 import { useAuthContext } from '../../context/AuthContext'
+import { useCanAccess } from '../../hooks/useRoleFlags'
+import { MoveTaskModal } from '../../components/shared/MoveTaskModal'
 import { describeTaskActivity } from '../../lib/taskActivity'
 import type { Priority, TaskStatus } from '../../types'
 
@@ -198,6 +201,8 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
   const [subtasksOpen, setSubtasksOpen] = useState(false)
   const [filesOpen, setFilesOpen] = useState(false)
   const [railTab, setRailTab] = useState<'comments' | 'activity'>('comments')
+  const [moving, setMoving] = useState(false)
+  const canMoveTask = useCanAccess('can_manage_projects')
 
   const { data: activity = [] } = useTaskActivity(taskId)
   const { data: taskFiles = [] } = useTaskAttachments(taskId)
@@ -291,8 +296,22 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
       {/* Header */}
       <div className="space-y-2">
         <div className="flex min-h-5 items-center gap-2 flex-wrap">
-          {task.project_service?.service && <ServiceChip service={task.project_service.service.slug} />}
-          {task.project?.name && <span className="font-ui text-[12px] text-text-3">{task.project.name}</span>}
+          {canMoveTask ? (
+            <button
+              onClick={() => setMoving(true)}
+              title="Move this task to another project"
+              className="group/loc -mx-1 flex min-w-0 items-center gap-2 rounded-sm px-1 py-0.5 transition-colors hover:bg-surface-2"
+            >
+              {task.project_service?.service && <ServiceChip service={task.project_service.service.slug} />}
+              {task.project?.name && <span className="truncate font-ui text-[12px] text-text-3 group-hover/loc:text-text-1">{task.project.name}</span>}
+              <CornerUpRight size={11} className="shrink-0 text-text-4 opacity-0 transition-opacity group-hover/loc:opacity-100" />
+            </button>
+          ) : (
+            <>
+              {task.project_service?.service && <ServiceChip service={task.project_service.service.slug} />}
+              {task.project?.name && <span className="font-ui text-[12px] text-text-3">{task.project.name}</span>}
+            </>
+          )}
           <SaveIndicator state={saveState} className="ml-auto" />
         </div>
         <EditableTitle value={task.title} onSave={(title) => patch({ title })} />
@@ -543,6 +562,17 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
           </div>
         </div>
       </aside>
+      {moving && (
+        <MoveTaskModal
+          taskId={task.id}
+          taskTitle={task.title}
+          currentProjectId={task.project_id}
+          currentProjectName={task.project?.name ?? 'this project'}
+          currentServiceId={task.project_service_id}
+          currentServiceName={task.project_service?.service?.name}
+          onClose={() => setMoving(false)}
+        />
+      )}
       <ConfirmDialog
         open={confirmDelete}
         title="Delete task?"

@@ -144,6 +144,7 @@ export const PRIORITY_LABELS: Record<Priority, string> = {
 }
 
 export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
+  todo: 'To Do',
   in_progress: 'In Progress',
   blocked: 'Blocked',
   awaiting_client: 'Awaiting Client',
