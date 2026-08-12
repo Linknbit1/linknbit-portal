@@ -63,6 +63,8 @@ export const DOC_CHAPTERS: DocChapter[] = [
           'The left sidebar is grouped by the kind of work rather than by your role: Workspace (your own day), Delivery (client work), People, and Admin. Sections you have no access to are not shown at all.',
         where: 'Sidebar',
         notes: [
+          'Delivery is ordered the way a piece of work travels — clients, then projects, then tasks.',
+          'Settings sits on its own below the divider at the very bottom, and stays there while the sections above scroll.',
           'Red count badges mark things waiting on you — unread chat, claimable quests, requests to approve.',
           'On a phone the same destinations live in the bottom bar and behind the “More” tab.',
           'The arrow beside the Linknbit logo opens this handbook and the changelog.',

@@ -31,6 +31,10 @@ export const RELEASES: ChangelogRelease[] = [
         kind: 'improved',
         text: 'People who have left the company no longer vanish from the records that still point at them. A project they managed shows their name flagged “Left” instead of silently reading Unassigned, and their terminal fingerprint is no longer offered to somebody else.',
       },
+      {
+        kind: 'improved',
+        text: 'Settings has moved to the bottom of the sidebar, pinned below a divider, and stays put while the rest of the list scrolls. Delivery now reads in the order work actually travels — clients, then projects, then tasks — and the People section groups the directory pages together above Attendance and Gamification.',
+      },
     ],
   },
   {

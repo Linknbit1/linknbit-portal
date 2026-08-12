@@ -173,3 +173,14 @@ export function formatXP(xp: number): string {
 export function formatCurrency(amount: number, currency = 'PKR'): string {
   return `${currency} ${amount.toLocaleString('en-PK')}`
 }
+
+/**
+ * Compact money for dense UI — `PKR 1.2M`, `PKR 450K`. Deal values run into the
+ * millions, and the full formatCurrency() form is too wide for a pipeline card
+ * or a table cell.
+ */
+export function formatCompactCurrency(amount: number, currency = 'PKR'): string {
+  if (amount >= 1_000_000) return `${currency} ${(amount / 1_000_000).toFixed(amount >= 10_000_000 ? 0 : 1)}M`
+  if (amount >= 1_000) return `${currency} ${Math.round(amount / 1_000)}K`
+  return `${currency} ${amount}`
+}
