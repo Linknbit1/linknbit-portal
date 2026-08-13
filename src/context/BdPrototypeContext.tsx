@@ -63,6 +63,8 @@ interface BdContextValue {
   toggleChecklistItem: (taskId: string, itemId: string) => void
   deleteTask: (taskId: string) => void
   saveProject: (project: BdProject) => void
+  /** Inline field edit from the project detail page. */
+  patchProject: (projectId: string, patch: Partial<BdProject>) => void
   moveProjectStatus: (projectId: string, status: ProjectStatus) => void
   deleteProject: (projectId: string) => void
   saveUpdate: (update: BdDailyUpdate) => void
@@ -213,6 +215,10 @@ export function BdPrototypeProvider({ children }: { children: ReactNode }) {
     })
   }, [])
 
+  const patchProject = useCallback((projectId: string, patch: Partial<BdProject>) => {
+    setProjects((prev) => prev.map((p) => (p.id === projectId ? { ...p, ...patch } : p)))
+  }, [])
+
   const moveProjectStatus = useCallback((projectId: string, status: ProjectStatus) => {
     setProjects((prev) => prev.map((p) => (p.id === projectId ? { ...p, status } : p)))
   }, [])
@@ -320,7 +326,7 @@ export function BdPrototypeProvider({ children }: { children: ReactNode }) {
       moveLeadStage, saveLead, deleteLead, logActivity,
       saveMeeting, deleteMeeting,
       saveTask, patchTask, moveTaskStatus, moveTask, toggleChecklistItem, deleteTask,
-      saveProject, moveProjectStatus, deleteProject,
+      saveProject, patchProject, moveProjectStatus, deleteProject,
       saveUpdate, saveTargets, logBatch, recordHandoff,
     }),
     [
@@ -329,7 +335,7 @@ export function BdPrototypeProvider({ children }: { children: ReactNode }) {
       moveLeadStage, saveLead, deleteLead, logActivity,
       saveMeeting, deleteMeeting,
       saveTask, patchTask, moveTaskStatus, moveTask, toggleChecklistItem, deleteTask,
-      saveProject, moveProjectStatus, deleteProject,
+      saveProject, patchProject, moveProjectStatus, deleteProject,
       saveUpdate, saveTargets, logBatch, recordHandoff,
     ],
   )

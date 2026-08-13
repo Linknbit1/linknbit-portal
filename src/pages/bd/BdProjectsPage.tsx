@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   List, Columns, Calendar, Plus, Search, ChevronRight, AlertCircle, SlidersHorizontal,
   Trash2, LayoutGrid, CheckSquare, Users,
@@ -50,6 +51,7 @@ function sortProjects(list: BdProject[], sort: string): BdProject[] {
 }
 
 export default function BdProjectsPage() {
+  const navigate = useNavigate()
   const toast = useToast()
   const { projects, tasks, deleteProject, viewerRepId, canSeeAll } = useBd()
 
@@ -91,7 +93,9 @@ export default function BdProjectsPage() {
   const ownerOptions = [{ value: '', label: 'All owners' }, ...BD_REPS.map((r) => ({ value: r.id, label: r.name }))]
 
   const openNew = () => { setEditing(null); setShowForm(true) }
-  const openEdit = (p: BdProject) => { setEditing(p); setShowForm(true) }
+  // Opens the project's own page — the form modal is now create-only, the same
+  // split the delivery Projects page uses.
+  const openProject = (p: BdProject) => navigate(`/bd/projects/${p.id}`)
 
   return (
     <div className={cn('flex flex-1 flex-col', view === 'kanban' && 'min-h-0')}>
@@ -153,9 +157,9 @@ export default function BdProjectsPage() {
           <EmptyState onNew={openNew} />
         ) : (
           <>
-            {view === 'cards' && <CardsView projects={filtered} taskCountOf={taskCountOf} onOpen={openEdit} onDelete={setPendingDelete} />}
-            {view === 'list' && <ListView projects={filtered} taskCountOf={taskCountOf} onOpen={openEdit} onDelete={setPendingDelete} />}
-            {view === 'kanban' && <KanbanView projects={filtered} onOpen={openEdit} />}
+            {view === 'cards' && <CardsView projects={filtered} taskCountOf={taskCountOf} onOpen={openProject} onDelete={setPendingDelete} />}
+            {view === 'list' && <ListView projects={filtered} taskCountOf={taskCountOf} onOpen={openProject} onDelete={setPendingDelete} />}
+            {view === 'kanban' && <KanbanView projects={filtered} onOpen={openProject} />}
           </>
         )}
       </div>

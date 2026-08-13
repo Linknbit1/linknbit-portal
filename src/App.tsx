@@ -38,7 +38,9 @@ import ReportsPage from './pages/admin/ReportsPage'
 import AuditLogPage from './pages/admin/AuditLogPage'
 import SettingsPage, { SettingsSectionScreen } from './pages/admin/SettingsPage'
 import AttendancePage from './pages/AttendancePage'
+import BdLayout from './pages/bd/BdLayout'
 import BdSectionScreen from './pages/bd/BdSectionScreen'
+import BdProjectDetailPage from './pages/bd/BdProjectDetailPage'
 import DocumentationPage from './pages/docs/DocumentationPage'
 import ChangelogPage from './pages/docs/ChangelogPage'
 
@@ -149,13 +151,12 @@ export default function App() {
                     devOnly + capability pair as the nav item, so the URL can no
                     more be reached in production than the sidebar row can. */}
                 {showWipFeatures && (
-                  <>
-                    <Route path="/bd" element={<Navigate to="/bd/pipeline" replace />} />
-                    <Route
-                      path="/bd/:section"
-                      element={<RoleGuard feature="can_view_bd"><BdSectionScreen /></RoleGuard>}
-                    />
-                  </>
+                  <Route path="/bd" element={<RoleGuard feature="can_view_bd"><BdLayout /></RoleGuard>}>
+                    <Route index element={<Navigate to="/bd/pipeline" replace />} />
+                    {/* Before the :section catch-all, or "projects" would swallow it. */}
+                    <Route path="projects/:id" element={<BdProjectDetailPage />} />
+                    <Route path=":section" element={<BdSectionScreen />} />
+                  </Route>
                 )}
 
                 {/* Legacy path redirects */}

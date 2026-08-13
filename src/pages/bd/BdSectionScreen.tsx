@@ -1,6 +1,5 @@
 import type { ComponentType } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
-import { BdPrototypeProvider } from '../../context/BdPrototypeContext'
 import PipelinePage from './PipelinePage'
 import BdProjectsPage from './BdProjectsPage'
 import BdTasksPage from './BdTasksPage'
@@ -15,9 +14,9 @@ import PerformancePage from './TargetsPage'
  * Keys mirror the `to` paths in BD_CHILDREN (navItems.ts) exactly; an unknown
  * key bounces to Pipeline rather than rendering a blank shell.
  *
- * Every screen renders from the prototype store, not an API. The provider sits
- * here rather than in App.tsx so its state is scoped to the module: leaving BD
- * and coming back resets it, which is the honest behaviour for mock data.
+ * Every screen renders from the prototype store, not an API. The provider is a
+ * layout route above this one (BdLayout), so state survives moving between BD
+ * screens and only resets on leaving the module.
  */
 const BD_SECTIONS: Record<string, ComponentType> = {
   pipeline: PipelinePage,
@@ -33,9 +32,5 @@ export default function BdSectionScreen() {
   const { section } = useParams()
   const Section = section ? BD_SECTIONS[section] : undefined
   if (!Section) return <Navigate to="/bd/pipeline" replace />
-  return (
-    <BdPrototypeProvider>
-      <Section />
-    </BdPrototypeProvider>
-  )
+  return <Section />
 }
