@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Plus, Send, TrendingUp, TrendingDown } from 'lucide-react'
+import { Plus, Send, TrendingUp, TrendingDown, History } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Button } from '../../components/ui/Button'
 import { Select } from '../../components/ui/Select'
@@ -9,8 +9,11 @@ import { SectionToolbar } from '../../components/ui/SectionToolbar'
 import { CHANNEL_CONFIG, CHANNEL_ORDER } from '../../constants/bd'
 import { cn } from '../../lib/cn'
 import { formatCompactCurrency } from '../../lib/utils'
-import { CHANNEL_STATS } from '../../data/bdMock'
-import type { ChannelStats } from '../../types'
+import { useBd } from '../../context/BdPrototypeContext'
+import { Avatar } from '../../components/ui/Avatar'
+import { formatDate } from '../../lib/utils'
+import { LogOutreachModal } from './LogOutreachModal'
+import type { ChannelStats, BdChannel } from '../../types'
 
 const PERIOD_OPTIONS = [
   { value: 'month', label: 'This month' },
@@ -25,23 +28,26 @@ function responseRate(stat: ChannelStats): number | null {
 }
 
 export default function OutreachPage() {
+  const { channelStats, outreachLogs } = useBd()
   const [period, setPeriod] = useState('month')
+  const [logFor, setLogFor] = useState<BdChannel | null>(null)
+  const [logOpen, setLogOpen] = useState(false)
 
   const totals = useMemo(() => {
-    const sent = CHANNEL_STATS.reduce((s, c) => s + c.sent, 0)
-    const responses = CHANNEL_STATS.reduce((s, c) => s + c.responses, 0)
+    const sent = channelStats.reduce((s, c) => s + c.sent, 0)
+    const responses = channelStats.reduce((s, c) => s + c.responses, 0)
     return {
       sent,
       responses,
       rate: sent === 0 ? 0 : Math.round((responses / sent) * 100),
-      meetings: CHANNEL_STATS.reduce((s, c) => s + c.meetings, 0),
-      revenue: CHANNEL_STATS.reduce((s, c) => s + c.revenue, 0),
+      meetings: channelStats.reduce((s, c) => s + c.meetings, 0),
+      revenue: channelStats.reduce((s, c) => s + c.revenue, 0),
     }
-  }, [])
+  }, [channelStats])
 
   const ordered = useMemo(
-    () => CHANNEL_ORDER.map((ch) => CHANNEL_STATS.find((s) => s.channel === ch)).filter((s): s is ChannelStats => !!s),
-    [],
+    () => CHANNEL_ORDER.map((ch) => channelStats.find((s) => s.channel === ch)).filter((s): s is ChannelStats => !!s),
+    [channelStats],
   )
 
   // The busiest channel sets the bar scale, so the cards compare against each
@@ -61,7 +67,7 @@ export default function OutreachPage() {
           </div>
           <div className="ml-auto flex items-center gap-2">
             <Select value={period} onChange={setPeriod} options={PERIOD_OPTIONS} size="sm" className="w-36" />
-            <Button size="sm" iconLeft={<Plus size={15} />}>Log activity</Button>
+            <Button size="sm" iconLeft={<Plus size={15} />} onClick={() => { setLogFor(null); setLogOpen(true) }}>Log outreach</Button>
           </div>
         </div>
 
@@ -78,7 +84,12 @@ export default function OutreachPage() {
         {/* ── Per-channel cards ── */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-3">
           {ordered.map((stat) => (
-            <ChannelCard key={stat.channel} stat={stat} maxSent={maxSent} />
+            <ChannelCard
+              key={stat.channel}
+              stat={stat}
+              maxSent={maxSent}
+              onLog={() => { setLogFor(stat.channel); setLogOpen(true) }}
+            />
           ))}
         </div>
 
@@ -93,12 +104,65 @@ export default function OutreachPage() {
             <ChannelTable stats={[...ordered].sort((a, b) => b.revenue - a.revenue)} />
           </div>
         </div>
+
+        {/* What was actually logged, newest first — the audit behind the totals. */}
+        <div className="overflow-hidden rounded-lg border border-border-default bg-surface-1">
+          <SectionToolbar
+            icon={History}
+            title="Recent outreach"
+            description="Every batch logged, newest first"
+            badge={outreachLogs.length}
+          />
+          <div className="flex flex-col divide-y divide-border-subtle">
+            {outreachLogs.length === 0 ? (
+              <p className="px-5 py-10 text-center font-ui text-[13px] text-text-4">
+                Nothing logged yet. Use “Log outreach” after a session of sending.
+              </p>
+            ) : (
+              outreachLogs.slice(0, 8).map((log) => {
+                const cfg = CHANNEL_CONFIG[log.channel]
+                const Icon = cfg.icon
+                return (
+                  <div key={log.id} className="flex flex-wrap items-center gap-x-3 gap-y-1.5 px-4 py-3 lg:px-5">
+                    <Icon size={14} className={cn('shrink-0', cfg.tint)} />
+                    <span className="font-ui text-[13px] text-text-1">
+                      {log.volume} <span className="text-text-3">{cfg.volumeLabel.toLowerCase()}</span>
+                    </span>
+                    <span className="font-mono text-[11.5px] tabular-nums text-text-4">
+                      {[
+                        log.responses > 0 && `${log.responses} ${log.responses === 1 ? 'reply' : 'replies'}`,
+                        log.meetings > 0 && `${log.meetings} ${log.meetings === 1 ? 'meeting' : 'meetings'}`,
+                        log.leads > 0 && `${log.leads} ${log.leads === 1 ? 'lead' : 'leads'}`,
+                      ].filter(Boolean).join(' · ')}
+                    </span>
+                    {log.note && (
+                      <span className="min-w-0 flex-1 truncate font-ui text-[12px] text-text-4">{log.note}</span>
+                    )}
+                    <span className="ml-auto flex items-center gap-2">
+                      <Avatar name={log.repName} size="xs" />
+                      <span className="font-mono text-[11px] text-text-4">{formatDate(log.date)}</span>
+                    </span>
+                  </div>
+                )
+              })
+            )}
+          </div>
+        </div>
       </div>
+
+      {logOpen && (
+        <LogOutreachModal
+          key={logFor ?? 'any'}
+          open
+          channel={logFor ?? undefined}
+          onClose={() => { setLogOpen(false); setLogFor(null) }}
+        />
+      )}
     </div>
   )
 }
 
-function ChannelCard({ stat, maxSent }: { stat: ChannelStats; maxSent: number }) {
+function ChannelCard({ stat, maxSent, onLog }: { stat: ChannelStats; maxSent: number; onLog: () => void }) {
   const config = CHANNEL_CONFIG[stat.channel]
   const Icon = config.icon
   const rate = responseRate(stat)
@@ -125,6 +189,13 @@ function ChannelCard({ stat, maxSent }: { stat: ChannelStats; maxSent: number })
           <TrendIcon size={12} />
           {stat.trend > 0 ? '+' : ''}{stat.trend}%
         </span>
+        <button
+          onClick={onLog}
+          aria-label={`Log outreach on ${config.label}`}
+          className="flex size-6 shrink-0 items-center justify-center rounded-sm text-text-4 transition-colors hover:bg-surface-3 hover:text-text-1"
+        >
+          <Plus size={14} />
+        </button>
       </div>
 
       {stat.sent > 0 && (

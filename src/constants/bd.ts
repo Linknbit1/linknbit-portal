@@ -72,14 +72,23 @@ export const STAGE_ORDER: LeadStage[] = [
   'new', 'contacted', 'qualified', 'proposal_sent', 'negotiation', 'won', 'lost',
 ]
 
-export const CHANNEL_CONFIG: Record<BdChannel, { label: string; icon: LucideIcon; tint: string }> = {
-  upwork:    { label: 'Upwork',      icon: Briefcase,   tint: 'text-[#22C55E]' },
-  fiverr:    { label: 'Fiverr',      icon: ShoppingBag, tint: 'text-[#2DD4BF]' },
-  linkedin:  { label: 'LinkedIn',    icon: Contact,     tint: 'text-[#60A5FA]' },
-  email:     { label: 'Email',       icon: Mail,        tint: 'text-[#A78BFA]' },
-  cold_call: { label: 'Cold Call',   icon: Phone,       tint: 'text-[#F59E0B]' },
-  inbound:   { label: 'Website/SEO', icon: Globe,       tint: 'text-[#22D3EE]' },
-  referral:  { label: 'Referral',    icon: Users,       tint: 'text-[#FBBF24]' },
+/**
+ * `volumeLabel` is what one unit of effort is called on that channel — the
+ * Log-outreach form relabels its count field from it, because "Proposals sent"
+ * and "Calls made" are not the same question.
+ *
+ * `passive` marks the channels nobody sends on. Their volume arrives rather
+ * than being pushed, so a logged count lands on `responses`, not `sent` — that
+ * is why a response rate is undefined for them.
+ */
+export const CHANNEL_CONFIG: Record<BdChannel, { label: string; icon: LucideIcon; tint: string; volumeLabel: string; passive?: boolean }> = {
+  upwork:    { label: 'Upwork',      icon: Briefcase,   tint: 'text-[#22C55E]', volumeLabel: 'Proposals sent' },
+  fiverr:    { label: 'Fiverr',      icon: ShoppingBag, tint: 'text-[#2DD4BF]', volumeLabel: 'Briefs answered' },
+  linkedin:  { label: 'LinkedIn',    icon: Contact,     tint: 'text-[#60A5FA]', volumeLabel: 'Connects & DMs sent' },
+  email:     { label: 'Email',       icon: Mail,        tint: 'text-[#A78BFA]', volumeLabel: 'Emails sent' },
+  cold_call: { label: 'Cold Call',   icon: Phone,       tint: 'text-[#F59E0B]', volumeLabel: 'Calls made' },
+  inbound:   { label: 'Website/SEO', icon: Globe,       tint: 'text-[#22D3EE]', volumeLabel: 'Enquiries received', passive: true },
+  referral:  { label: 'Referral',    icon: Users,       tint: 'text-[#FBBF24]', volumeLabel: 'Intros received',     passive: true },
 }
 
 /** Channels in reporting order — outreach volume first, passive sources last. */

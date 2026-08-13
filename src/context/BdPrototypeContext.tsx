@@ -4,11 +4,12 @@ import { useMyPermissions } from '../hooks/usePermissions'
 import { ADMINISTRATOR } from '../api/permissions'
 import { useAuthContext } from '../context/AuthContext'
 import {
-  LEADS, BD_ACTIVITIES, BD_MEETINGS, BD_TASKS, BD_PROJECTS, BD_DAILY_UPDATES, BD_TARGETS, BD_REPS,
+  LEADS, BD_ACTIVITIES, BD_MEETINGS, BD_TASKS, BD_PROJECTS, BD_DAILY_UPDATES, BD_TARGETS,
+  CHANNEL_STATS, BD_OUTREACH_LOGS, BD_REPS,
 } from '../data/bdMock'
 import type {
   Lead, LeadStage, BdActivity, BdMeeting, BdTask, BdProject,
-  TaskStatus, ProjectStatus, BdDailyUpdate, BdTarget,
+  TaskStatus, ProjectStatus, BdDailyUpdate, BdTarget, ChannelStats, BdOutreachLog,
 } from '../types'
 
 /**
@@ -33,6 +34,8 @@ interface BdContextValue {
   projects: BdProject[]
   updates: BdDailyUpdate[]
   targets: BdTarget[]
+  channelStats: ChannelStats[]
+  outreachLogs: BdOutreachLog[]
 
   /** The BD person the signed-in user acts as. See `viewerRepId` below. */
   viewerRepId: string
@@ -62,6 +65,8 @@ interface BdContextValue {
   deleteProject: (projectId: string) => void
   saveUpdate: (update: BdDailyUpdate) => void
   saveTargets: (targets: BdTarget[]) => void
+  /** Record a batch of outreach and roll it into that channel's totals. */
+  logOutreach: (entry: Omit<BdOutreachLog, 'id'>, passive: boolean) => void
 }
 
 const BdContext = createContext<BdContextValue | null>(null)
@@ -77,6 +82,8 @@ export function BdPrototypeProvider({ children }: { children: ReactNode }) {
   const [projects, setProjects] = useState<BdProject[]>(BD_PROJECTS)
   const [updates, setUpdates] = useState<BdDailyUpdate[]>(BD_DAILY_UPDATES)
   const [targets, setTargets] = useState<BdTarget[]>(BD_TARGETS)
+  const [channelStats, setChannelStats] = useState<ChannelStats[]>(CHANNEL_STATS)
+  const [outreachLogs, setOutreachLogs] = useState<BdOutreachLog[]>(BD_OUTREACH_LOGS)
 
   const canSeeAll =
     !!permissions &&
@@ -220,9 +227,28 @@ export function BdPrototypeProvider({ children }: { children: ReactNode }) {
 
   const saveTargets = useCallback((next: BdTarget[]) => setTargets(next), [])
 
+  const logOutreach = useCallback((entry: Omit<BdOutreachLog, 'id'>, passive: boolean) => {
+    setOutreachLogs((prev) => [{ ...entry, id: randomUUID() }, ...prev])
+    setChannelStats((prev) =>
+      prev.map((c) =>
+        c.channel === entry.channel
+          ? {
+              ...c,
+              // Passive channels are not sent on, so their volume is inbound
+              // replies rather than outbound sends.
+              sent: passive ? c.sent : c.sent + entry.volume,
+              responses: c.responses + (passive ? entry.volume : entry.responses),
+              meetings: c.meetings + entry.meetings,
+              leads: c.leads + entry.leads,
+            }
+          : c,
+      ),
+    )
+  }, [])
+
   const value = useMemo<BdContextValue>(
     () => ({
-      leads, activities, meetings, tasks, projects, updates, targets,
+      leads, activities, meetings, tasks, projects, updates, targets, channelStats, outreachLogs,
       viewerRepId: viewerRep.id,
       viewerName: viewerRep.name,
       canSeeAll,
@@ -230,16 +256,16 @@ export function BdPrototypeProvider({ children }: { children: ReactNode }) {
       saveMeeting, deleteMeeting,
       saveTask, patchTask, moveTaskStatus, moveTask, toggleChecklistItem, deleteTask,
       saveProject, moveProjectStatus, deleteProject,
-      saveUpdate, saveTargets,
+      saveUpdate, saveTargets, logOutreach,
     }),
     [
-      leads, activities, meetings, tasks, projects, updates, targets,
+      leads, activities, meetings, tasks, projects, updates, targets, channelStats, outreachLogs,
       viewerRep.id, viewerRep.name, canSeeAll,
       moveLeadStage, saveLead, deleteLead, logActivity,
       saveMeeting, deleteMeeting,
       saveTask, patchTask, moveTaskStatus, moveTask, toggleChecklistItem, deleteTask,
       saveProject, moveProjectStatus, deleteProject,
-      saveUpdate, saveTargets,
+      saveUpdate, saveTargets, logOutreach,
     ],
   )
 

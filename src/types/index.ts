@@ -590,3 +590,25 @@ export interface BdProject {
   members: { id: string; name: string }[]
   taskCount: number
 }
+
+/**
+ * One batch of outreach on a channel.
+ *
+ * The Outreach page counts effort, not leads — most messages never become a
+ * lead record, so this is logged in bulk against a channel rather than one
+ * entry per touch (that is BdActivity's job, and it hangs off a lead).
+ */
+export interface BdOutreachLog {
+  id: string
+  channel: BdChannel
+  /** ISO date. */
+  date: string
+  repId: string
+  repName: string
+  /** Messages/proposals/calls pushed out, or enquiries in on a passive channel. */
+  volume: number
+  responses: number
+  meetings: number
+  leads: number
+  note?: string
+}

@@ -7,6 +7,7 @@ import type {
   BdActivity,
   BdTask,
   BdProject,
+  BdOutreachLog,
 } from '../types'
 
 /**
@@ -866,4 +867,17 @@ export const BD_TASKS: BdTask[] = [
     createdBy: 'Ayesha Siddiqui',
     checklist: [],
   },
+]
+
+/* =========================================================
+   OUTREACH LOG — batches of effort, per channel
+   ========================================================= */
+
+export const BD_OUTREACH_LOGS: BdOutreachLog[] = [
+  { id: 'o1', channel: 'upwork',    date: day(0),  repId: 'bd2', repName: 'Faisal Nadeem',   volume: 12, responses: 2, meetings: 0, leads: 2, note: 'Healthcare and legal job feeds.' },
+  { id: 'o2', channel: 'linkedin',  date: day(0),  repId: 'bd1', repName: 'Ayesha Siddiqui', volume: 14, responses: 3, meetings: 1, leads: 0, note: 'Logistics list — Nordics.' },
+  { id: 'o3', channel: 'cold_call', date: day(0),  repId: 'bd2', repName: 'Faisal Nadeem',   volume: 18, responses: 4, meetings: 1, leads: 0, note: 'Lumen Solar list.' },
+  { id: 'o4', channel: 'email',     date: day(-1), repId: 'bd2', repName: 'Faisal Nadeem',   volume: 120, responses: 4, meetings: 0, leads: 1, note: 'Legal-sector sequence, second touch.' },
+  { id: 'o5', channel: 'fiverr',    date: day(-1), repId: 'bd3', repName: 'Maryam Khan',     volume: 6,  responses: 2, meetings: 0, leads: 0 },
+  { id: 'o6', channel: 'inbound',   date: day(-2), repId: 'bd3', repName: 'Maryam Khan',     volume: 3,  responses: 3, meetings: 1, leads: 1, note: 'Website form — Orbit Study Abroad.' },
 ]
