@@ -6,6 +6,7 @@ import type {
   BdTarget,
   BdActivity,
   BdTask,
+  BdProject,
 } from '../types'
 
 /**
@@ -664,16 +665,84 @@ export const BD_ACTIVITIES: BdActivity[] = [
 ]
 
 /* =========================================================
+   BD PROJECTS — outreach campaigns and initiatives
+   ========================================================= */
+
+export const BD_PROJECTS: BdProject[] = [
+  {
+    id: 'p1',
+    name: 'Logistics Outbound Campaign',
+    description: 'Nordics and Benelux operations directors, LinkedIn-led with an email second touch.',
+    ownerId: 'bd1', ownerName: 'Ayesha Siddiqui',
+    status: 'in_progress', progress: 62, deadline: day(24),
+    channels: ['linkedin', 'email'],
+    members: [{ id: 'bd1', name: 'Ayesha Siddiqui' }, { id: 'bd3', name: 'Maryam Khan' }],
+    taskCount: 4,
+  },
+  {
+    id: 'p2',
+    name: 'Q3 Upwork Push',
+    description: 'Twenty proposals a week against the healthcare and legal job feeds.',
+    ownerId: 'bd2', ownerName: 'Faisal Nadeem',
+    status: 'ongoing', progress: 48, deadline: day(38),
+    channels: ['upwork', 'fiverr'],
+    members: [{ id: 'bd2', name: 'Faisal Nadeem' }],
+    taskCount: 3,
+  },
+  {
+    id: 'p3',
+    name: 'Enterprise Deal Desk',
+    description: 'Proposal and SOW work on the deals above PKR 3M.',
+    ownerId: 'bd1', ownerName: 'Ayesha Siddiqui',
+    status: 'in_progress', progress: 75, deadline: day(9),
+    channels: ['referral'],
+    members: [{ id: 'bd1', name: 'Ayesha Siddiqui' }, { id: 'bd2', name: 'Faisal Nadeem' }],
+    taskCount: 3,
+  },
+  {
+    id: 'p4',
+    name: 'Inbound & Case Studies',
+    description: 'Website enquiries, plus the case studies that feed the portfolio.',
+    ownerId: 'bd3', ownerName: 'Maryam Khan',
+    status: 'blocked', progress: 20, deadline: day(-2),
+    channels: ['inbound'],
+    members: [{ id: 'bd3', name: 'Maryam Khan' }],
+    taskCount: 2,
+  },
+  {
+    id: 'p5',
+    name: 'Cold Calling Pilot',
+    description: 'Four-week trial across the energy and automotive lists.',
+    ownerId: 'bd2', ownerName: 'Faisal Nadeem',
+    status: 'on_hold', progress: 35, deadline: day(15),
+    channels: ['cold_call'],
+    members: [{ id: 'bd2', name: 'Faisal Nadeem' }],
+    taskCount: 0,
+  },
+  {
+    id: 'p6',
+    name: 'H1 Referral Programme',
+    description: 'Warm intros from delivered accounts. Closed out in July.',
+    ownerId: 'bd1', ownerName: 'Ayesha Siddiqui',
+    status: 'completed', progress: 100, deadline: day(-12),
+    channels: ['referral'],
+    members: [{ id: 'bd1', name: 'Ayesha Siddiqui' }, { id: 'bd3', name: 'Maryam Khan' }],
+    taskCount: 0,
+  },
+]
+
+/* =========================================================
    BD TASKS
    ========================================================= */
 
 export const BD_TASKS: BdTask[] = [
   {
     id: 't1',
+    projectId: 'p3', projectName: 'Enterprise Deal Desk',
     title: 'Send revised Kestrel SOW with phased billing',
     description: 'Split the PKR 5.4M into three quarterly phases. Ahmad to confirm the delivery split before it goes out.',
     assigneeId: 'bd1', assigneeName: 'Ayesha Siddiqui',
-    status: 'in_progress', priority: 'high', dueDate: day(1),
+    status: 'in_progress', priority: 'critical', dueDate: day(1),
     leadId: 'l14', leadCompany: 'Kestrel Analytics', channel: 'email', recurrence: 'once',
     createdBy: 'Ayesha Siddiqui',
     checklist: [
@@ -684,6 +753,7 @@ export const BD_TASKS: BdTask[] = [
   },
   {
     id: 't2',
+    projectId: 'p2', projectName: 'Q3 Upwork Push',
     title: 'Send 20 Upwork proposals this week',
     assigneeId: 'bd2', assigneeName: 'Faisal Nadeem',
     status: 'in_progress', priority: 'medium', dueDate: day(3),
@@ -693,6 +763,7 @@ export const BD_TASKS: BdTask[] = [
   },
   {
     id: 't3',
+    projectId: 'p3', projectName: 'Enterprise Deal Desk',
     title: 'Reissue Nordic quote as two phases',
     assigneeId: 'bd1', assigneeName: 'Ayesha Siddiqui',
     status: 'todo', priority: 'high', dueDate: day(2),
@@ -702,6 +773,7 @@ export const BD_TASKS: BdTask[] = [
   },
   {
     id: 't4',
+    projectId: 'p2', projectName: 'Q3 Upwork Push',
     title: 'Follow up with Halcyon Dental on the proposal',
     description: 'Third touch. If no reply by Friday, move to Contacted and drop the priority.',
     assigneeId: 'bd2', assigneeName: 'Faisal Nadeem',
@@ -712,6 +784,7 @@ export const BD_TASKS: BdTask[] = [
   },
   {
     id: 't5',
+    projectId: 'p1', projectName: 'Logistics Outbound Campaign',
     title: 'Build the logistics-sector LinkedIn list',
     description: '150 operations directors across Nordics and Benelux.',
     assigneeId: 'bd3', assigneeName: 'Maryam Khan',
@@ -724,33 +797,37 @@ export const BD_TASKS: BdTask[] = [
   },
   {
     id: 't6',
+    projectId: 'p3', projectName: 'Enterprise Deal Desk',
     title: 'Prep the Tayyab Textiles discovery deck',
     assigneeId: 'bd1', assigneeName: 'Ayesha Siddiqui',
-    status: 'todo', priority: 'medium', dueDate: day(1),
+    status: 'review', priority: 'medium', dueDate: day(1),
     leadId: 'l3', leadCompany: 'Tayyab Textiles', recurrence: 'once',
     createdBy: 'Ayesha Siddiqui',
     checklist: [],
   },
   {
     id: 't7',
+    projectId: 'p2', projectName: 'Q3 Upwork Push',
     title: 'Clear the Fiverr brief inbox',
     assigneeId: 'bd3', assigneeName: 'Maryam Khan',
-    status: 'done', priority: 'low', dueDate: day(-1),
+    status: 'completed', priority: 'low', dueDate: day(-1),
     channel: 'fiverr', recurrence: 'daily',
     createdBy: 'Maryam Khan',
     checklist: [],
   },
   {
     id: 't8',
+    projectId: 'p5', projectName: 'Cold Calling Pilot',
     title: 'Cold-call the Lumen Solar commercial team',
     assigneeId: 'bd2', assigneeName: 'Faisal Nadeem',
-    status: 'done', priority: 'medium', dueDate: day(-1),
+    status: 'completed', priority: 'medium', dueDate: day(-1),
     leadId: 'l8', leadCompany: 'Lumen Solar', channel: 'cold_call', recurrence: 'once',
     createdBy: 'Faisal Nadeem',
     checklist: [],
   },
   {
     id: 't9',
+    projectId: 'p1', projectName: 'Logistics Outbound Campaign',
     title: 'Second touch — legal-sector email sequence',
     assigneeId: 'bd2', assigneeName: 'Faisal Nadeem',
     status: 'in_progress', priority: 'low', dueDate: day(4),
@@ -760,15 +837,17 @@ export const BD_TASKS: BdTask[] = [
   },
   {
     id: 't10',
+    projectId: 'p1', projectName: 'Logistics Outbound Campaign',
     title: 'Chase Crestline after their board meets',
     assigneeId: 'bd3', assigneeName: 'Maryam Khan',
-    status: 'todo', priority: 'low', dueDate: day(6),
+    status: 'approved', priority: 'low', dueDate: day(6),
     leadId: 'l9', leadCompany: 'Crestline Realty', recurrence: 'once',
     createdBy: 'Maryam Khan',
     checklist: [],
   },
   {
     id: 't11',
+    projectId: 'p4', projectName: 'Inbound & Case Studies',
     title: 'Write the Peak Fitness case study',
     description: 'Now the deal is closed — use it on LinkedIn and in the Upwork portfolio.',
     assigneeId: 'bd3', assigneeName: 'Maryam Khan',
@@ -779,6 +858,7 @@ export const BD_TASKS: BdTask[] = [
   },
   {
     id: 't12',
+    projectId: 'p1', projectName: 'Logistics Outbound Campaign',
     title: 'Monthly channel review with leadership',
     assigneeId: 'bd1', assigneeName: 'Ayesha Siddiqui',
     status: 'todo', priority: 'medium', dueDate: day(12),

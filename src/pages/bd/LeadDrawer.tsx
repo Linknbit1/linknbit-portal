@@ -141,7 +141,7 @@ export function LeadDrawer({ lead, onClose, onEdit, onLogActivity }: LeadDrawerP
                 </a>
               </div>
               <div className="text-right">
-                <p className="font-display text-[24px] font-bold tabular-nums text-text-1">
+                <p className="font-display text-[19px] font-bold tabular-nums text-text-1">
                   {formatCompactCurrency(lead.value)}
                 </p>
                 <p className="font-ui text-[10.5px] uppercase tracking-widest text-text-4">Deal value</p>
@@ -315,12 +315,12 @@ export function LeadDrawer({ lead, onClose, onEdit, onLogActivity }: LeadDrawerP
                       <span
                         className={cn(
                           'size-1.5 shrink-0 rounded-full',
-                          t.status === 'done' ? 'bg-success'
+                          t.status === 'completed' || t.status === 'approved' ? 'bg-success'
                             : t.status === 'blocked' ? 'bg-error'
                             : t.status === 'in_progress' ? 'bg-warning' : 'bg-text-4',
                         )}
                       />
-                      <span className={cn('min-w-0 flex-1 truncate font-ui text-[12.5px]', t.status === 'done' ? 'text-text-4 line-through' : 'text-text-2')}>
+                      <span className={cn('min-w-0 flex-1 truncate font-ui text-[12.5px]', t.status === 'completed' ? 'text-text-4 line-through' : 'text-text-2')}>
                         {t.title}
                       </span>
                       <Avatar name={t.assigneeName} size="xs" />

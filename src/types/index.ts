@@ -536,10 +536,16 @@ export interface BdActivity {
   byName: string
 }
 
-/** BD task board columns. A deliberate subset of the delivery board's seven. */
-export type BdTaskStatus = 'todo' | 'in_progress' | 'blocked' | 'done'
-
-export type BdTaskPriority = 'high' | 'medium' | 'low'
+/**
+ * BD task statuses are the delivery board's, minus `backlog`.
+ *
+ * The BD module reuses TaskStatus outright — same StatusChip, same board
+ * columns, same labels — so the two boards read identically. Backlog is dropped
+ * because BD work is either queued or it isn't; there is no parking lot.
+ */
+export const BD_TASK_STATUSES: TaskStatus[] = [
+  'todo', 'in_progress', 'review', 'approved', 'completed', 'blocked',
+]
 
 export type BdTaskRecurrence = 'once' | 'daily' | 'weekly' | 'monthly'
 
@@ -549,9 +555,12 @@ export interface BdTask {
   description?: string
   assigneeId: string
   assigneeName: string
-  status: BdTaskStatus
-  priority: BdTaskPriority
+  status: TaskStatus
+  priority: Priority
   dueDate: string | null
+  /** The BD project this sits under — the equivalent of a delivery project. */
+  projectId: string
+  projectName: string
   /** Optional link back to the lead this work is for. */
   leadId?: string
   leadCompany?: string
@@ -559,4 +568,26 @@ export interface BdTask {
   recurrence: BdTaskRecurrence
   createdBy: string
   checklist: { id: string; label: string; done: boolean }[]
+}
+
+/**
+ * A BD project — an outreach campaign or initiative that tasks hang off.
+ *
+ * Deliberately shaped like ProjectListItem so BdProjectsPage can mirror the
+ * delivery Projects page component for component. `channels` takes the slot
+ * `services` occupies there: an outreach campaign targets Upwork or LinkedIn,
+ * not design or development.
+ */
+export interface BdProject {
+  id: string
+  name: string
+  description?: string
+  ownerId: string
+  ownerName: string
+  status: ProjectStatus
+  progress: number
+  deadline: string | null
+  channels: BdChannel[]
+  members: { id: string; name: string }[]
+  taskCount: number
 }

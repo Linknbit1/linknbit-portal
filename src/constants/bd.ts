@@ -3,10 +3,10 @@ import {
   // "professional network" glyph available.
   Briefcase, ShoppingBag, Contact, Mail, Phone, Globe, Users,
   Circle, CircleDotDashed, BadgeCheck, FileText, Handshake, Trophy, XCircle,
-  Ban, CheckCircle2,
+  Ban, CheckCircle2, Eye,
   type LucideIcon,
 } from 'lucide-react'
-import type { LeadStage, BdChannel, BdTaskStatus, BdTaskPriority } from '../types'
+import type { LeadStage, BdChannel, TaskStatus, ProjectStatus } from '../types'
 
 /**
  * Business Development lookup tables.
@@ -89,38 +89,50 @@ export const CHANNEL_ORDER: BdChannel[] = [
 
 /* ── BD task board ─────────────────────────────────────────────────────────── */
 
+export interface BdBoardColumn {
+  status: TaskStatus
+  label: string
+  icon: LucideIcon
+  /** Solid status pill at the top of the column — colour carries the meaning. */
+  pill: string
+  /** Whole-column wash, so a lane is identifiable before you read the header. */
+  lane: string
+  /** Text colour for the count and the column's "Add task" affordance. */
+  accent: string
+  /** Border while a card is dragged over this lane. */
+  dropBorder: string
+}
+
 /**
- * Four columns, not the delivery board's seven. BD work is either queued, being
- * done, stuck on someone else, or finished — there is no review or approval gate
- * on sending a proposal.
+ * The delivery board's columns, minus `backlog`.
+ *
+ * Same statuses, icons and hues as TaskBoard, but presented ClickUp-style: a
+ * solid status pill with the count set outside it, and a wash of the status
+ * colour across the whole lane rather than a single tinted header bar. Time
+ * tracking is deliberately absent — BD measures outreach sent, not hours logged.
  */
-export const TASK_STATUS_CONFIG: Record<BdTaskStatus, { label: string; icon: LucideIcon; accent: string; dropBorder: string }> = {
-  todo: {
-    label: 'To Do', icon: Circle,
-    accent: 'bg-[rgba(138,147,163,0.14)] text-[#8A93A3] border-[rgba(138,147,163,0.28)]',
-    dropBorder: 'border-[#8A93A3]',
-  },
-  in_progress: {
-    label: 'In Progress', icon: CircleDotDashed,
-    accent: 'bg-[rgba(245,158,11,0.14)] text-[#F59E0B] border-[rgba(245,158,11,0.3)]',
-    dropBorder: 'border-[#F59E0B]',
-  },
-  blocked: {
-    label: 'Blocked', icon: Ban,
-    accent: 'bg-[rgba(244,54,76,0.1)] text-[#F4364C] border-[rgba(244,54,76,0.3)]',
-    dropBorder: 'border-[#F4364C]',
-  },
-  done: {
-    label: 'Done', icon: CheckCircle2,
-    accent: 'bg-[rgba(34,197,94,0.13)] text-[#22C55E] border-[rgba(34,197,94,0.3)]',
-    dropBorder: 'border-[#22C55E]',
-  },
-}
+export const BD_BOARD_COLUMNS: BdBoardColumn[] = [
+  { status: 'todo', label: 'To Do', icon: Circle,
+    pill: 'bg-[#60A5FA] text-[#0B1018]', lane: 'bg-[rgba(96,165,250,0.05)] border-[rgba(96,165,250,0.16)]',
+    accent: 'text-[#60A5FA]', dropBorder: 'border-[#60A5FA]' },
+  { status: 'in_progress', label: 'In Progress', icon: CircleDotDashed,
+    pill: 'bg-[#F59E0B] text-[#0B1018]', lane: 'bg-[rgba(245,158,11,0.055)] border-[rgba(245,158,11,0.18)]',
+    accent: 'text-[#F59E0B]', dropBorder: 'border-[#F59E0B]' },
+  { status: 'review', label: 'Review', icon: Eye,
+    pill: 'bg-[#A78BFA] text-[#0B1018]', lane: 'bg-[rgba(167,139,250,0.055)] border-[rgba(167,139,250,0.18)]',
+    accent: 'text-[#A78BFA]', dropBorder: 'border-[#A78BFA]' },
+  { status: 'approved', label: 'Approved', icon: BadgeCheck,
+    pill: 'bg-[#22C55E] text-[#0B1018]', lane: 'bg-[rgba(34,197,94,0.05)] border-[rgba(34,197,94,0.16)]',
+    accent: 'text-[#22C55E]', dropBorder: 'border-[#22C55E]' },
+  { status: 'completed', label: 'Completed', icon: CheckCircle2,
+    pill: 'bg-[#2DD4BF] text-[#0B1018]', lane: 'bg-[rgba(45,212,191,0.05)] border-[rgba(45,212,191,0.16)]',
+    accent: 'text-[#2DD4BF]', dropBorder: 'border-[#2DD4BF]' },
+  { status: 'blocked', label: 'Blocked', icon: Ban,
+    pill: 'bg-[#F4364C] text-white', lane: 'bg-[rgba(244,54,76,0.05)] border-[rgba(244,54,76,0.16)]',
+    accent: 'text-[#F4364C]', dropBorder: 'border-[#F4364C]' },
+]
 
-export const TASK_STATUS_ORDER: BdTaskStatus[] = ['todo', 'in_progress', 'blocked', 'done']
-
-export const TASK_PRIORITY_CONFIG: Record<BdTaskPriority, { label: string; classes: string; dot: string }> = {
-  high:   { label: 'High',   classes: 'bg-[rgba(244,54,76,0.12)] text-[#F4364C] border-[rgba(244,54,76,0.3)]',   dot: 'bg-[#F4364C]' },
-  medium: { label: 'Medium', classes: 'bg-[rgba(245,158,11,0.12)] text-[#F59E0B] border-[rgba(245,158,11,0.3)]', dot: 'bg-[#F59E0B]' },
-  low:    { label: 'Low',    classes: 'bg-surface-3 text-text-3 border-border-default',                          dot: 'bg-text-4' },
-}
+/** BD project board columns — the delivery project statuses, unchanged. */
+export const BD_PROJECT_COLUMNS: ProjectStatus[] = [
+  'in_progress', 'ongoing', 'awaiting_client', 'blocked', 'on_hold', 'completed',
+]
