@@ -24,6 +24,13 @@ export type TaskStatus =
   | 'completed'
   | 'blocked'
 
+/**
+ * Statuses that declare a task finished. Setting one is a sign-off: the database
+ * (fn_guard_task_approval) refuses it without can_approve_tasks, so every picker
+ * filters against this list rather than offering a move that will bounce.
+ */
+export const SIGN_OFF_STATUSES: TaskStatus[] = ['approved', 'completed']
+
 export type Priority = 'critical' | 'high' | 'medium' | 'low'
 
 export type ProjectStatus =

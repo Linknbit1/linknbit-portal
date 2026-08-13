@@ -140,6 +140,7 @@ export function MessageComposer({
             onChange={setDoc}
             onEditorReady={(editor) => { editorRef.current = editor }}
             mentionItems={mentionItems}
+          allowEveryone
             placeholder={placeholder ?? 'Write a message…'}
             compact
             onSubmit={submit}

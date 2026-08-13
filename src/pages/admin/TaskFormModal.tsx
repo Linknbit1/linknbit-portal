@@ -17,12 +17,14 @@ import { MultiSelectPeople } from '../../components/ui/MultiSelectPeople'
 import { TaskTimeTracker } from '../../components/shared/TaskTimeTracker'
 import { useSetTaskAssignees } from '../../hooks/useTaskAssignees'
 import { useUploadAttachment } from '../../hooks/useAttachments'
+import { useCanAccess } from '../../hooks/useRoleFlags'
 import { useToast } from '../../components/ui/toast-context'
 import { formatFileSize } from '../../lib/attachment'
 import { cn } from '../../lib/cn'
 import { docToPlainText, fromDbDoc, plainTextToDoc, toDbDoc } from '../../lib/richText'
 import { PRIORITY_LABELS, STATUS_LABELS, toDateInput, toTimeInput, fromDateTimeInput } from '../../lib/utils'
 import type { TaskListItem } from '../../api/tasks'
+import { SIGN_OFF_STATUSES } from '../../types'
 import type { Priority, TaskStatus } from '../../types'
 
 interface TaskFormModalProps {
@@ -63,6 +65,7 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
   const updateTask = useUpdateTask()
   const moveTask = useMoveTask()
   const uploadAttachment = useUploadAttachment()
+  const canSignOff = useCanAccess('can_approve_tasks')
   const setAssignees = useSetTaskAssignees()
 
   const lockedProjectId = projectId ?? task?.project_id
@@ -134,7 +137,12 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
   const stageOptions = [{ value: '', label: 'No stage' }, ...stages.map((s) => ({ value: s.id, label: s.name }))]
   const memberPeople = members.map((m) => ({ id: m.id, name: m.name, avatar_url: m.avatar_url }))
   const priorityOptions = PRIORITY_ORDER.map((p) => ({ value: p, label: PRIORITY_LABELS[p], dot: PRIORITY_DOTS[p] }))
-  const statusOptions = STATUS_ORDER.map((s) => ({ value: s, label: STATUS_LABELS[s] }))
+  // Approved/Completed are a sign-off, refused by fn_guard_task_approval for
+  // anyone without can_approve_tasks. The task's current status stays listed so
+  // editing an approved task doesn't blank the field.
+  const statusOptions = STATUS_ORDER
+    .filter((s) => canSignOff || !SIGN_OFF_STATUSES.includes(s) || s === task?.status)
+    .map((s) => ({ value: s, label: STATUS_LABELS[s] }))
 
   const pending = createTask.isPending || updateTask.isPending || addService.isPending || moveTask.isPending || uploadAttachment.isPending
 

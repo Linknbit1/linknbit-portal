@@ -6,6 +6,8 @@ import { Input } from '../ui/Input'
 import { Toggle } from '../ui/Toggle'
 import { MultiSelectPeople } from '../ui/MultiSelectPeople'
 import { RolePicker } from './RolePicker'
+import { Select } from '../ui/Select'
+import { useChannelCategories, useCreateChannelCategory, useSetChannelCategory } from '../../hooks/useChannelCategories'
 import { useToast } from '../ui/toast-context'
 import { useCreateChannel } from '../../hooks/useChannels'
 import { usePeople } from '../../hooks/usePeople'
@@ -17,6 +19,9 @@ interface CreateChannelModalProps {
   onCreated: (channelId: string) => void
 }
 
+/** Sentinel for "create a heading that doesn't exist yet", inline. */
+const NEW_CATEGORY = '__new__'
+
 export function CreateChannelModal({ open, onClose, onCreated }: CreateChannelModalProps) {
   const toast = useToast()
   const { profile } = useAuthContext()
@@ -26,10 +31,17 @@ export function CreateChannelModal({ open, onClose, onCreated }: CreateChannelMo
   const [description, setDescription] = useState('')
   const [memberIds, setMemberIds] = useState<string[]>([])
   const [roles, setRoles] = useState<string[]>([])
+  const { data: categories = [] } = useChannelCategories()
+  const createCategory = useCreateChannelCategory()
+  const setChannelCategory = useSetChannelCategory()
+  const [categoryId, setCategoryId] = useState('')
+  // Typing a heading that doesn't exist yet shouldn't mean leaving the modal.
+  const [newCategory, setNewCategory] = useState('')
   const [isPrivate, setIsPrivate] = useState(false)
 
   const reset = () => {
     setName(''); setDescription(''); setMemberIds([]); setRoles([]); setIsPrivate(false)
+    setCategoryId(''); setNewCategory('')
   }
 
   const submit = () => {
@@ -38,7 +50,20 @@ export function CreateChannelModal({ open, onClose, onCreated }: CreateChannelMo
     createChannel(
       { name: trimmed, description: description.trim() || null, memberIds, roles, isPrivate },
       {
-        onSuccess: (channel) => {
+        onSuccess: async (channel) => {
+          // The channel has to exist before it can be filed under a heading.
+          try {
+            let target = categoryId === NEW_CATEGORY ? '' : categoryId
+            if (categoryId === NEW_CATEGORY && newCategory.trim()) {
+              target = (await createCategory.mutateAsync(newCategory)).id
+            }
+            if (target) {
+              await setChannelCategory.mutateAsync({ channelId: channel.id, categoryId: target })
+            }
+          } catch {
+            // The channel is real either way; say so rather than looking failed.
+            toast(`#${trimmed} created, but it could not be filed under that category`, 'error')
+          }
           toast(`#${trimmed} created`, 'success')
           reset()
           onCreated(channel.id)
@@ -81,6 +106,26 @@ export function CreateChannelModal({ open, onClose, onCreated }: CreateChannelMo
             onChange={(e) => setDescription(e.target.value)}
             placeholder="What this channel is for (optional)"
           />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <span className="font-mono text-[11px] uppercase tracking-wider text-text-4">Category</span>
+          <Select
+            value={categoryId}
+            onChange={setCategoryId}
+            options={[
+              { value: '', label: 'Uncategorised' },
+              ...categories.map((c) => ({ value: c.id, label: c.name })),
+              { value: NEW_CATEGORY, label: '+ New category…' },
+            ]}
+          />
+          {categoryId === NEW_CATEGORY && (
+            <Input
+              value={newCategory}
+              onChange={(e) => setNewCategory(e.target.value)}
+              placeholder="Category name (e.g. Design)"
+            />
+          )}
         </div>
 
         <div className="flex flex-col gap-1.5">

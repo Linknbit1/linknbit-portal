@@ -668,6 +668,38 @@ export type Database = {
         }
         Relationships: []
       }
+      channel_categories: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          position: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          position?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          position?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channel_categories_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       channel_members: {
         Row: {
           added_via_role: string | null
@@ -754,6 +786,7 @@ export type Database = {
       }
       channels: {
         Row: {
+          category_id: string | null
           created_at: string
           created_by: string | null
           description: string | null
@@ -765,6 +798,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          category_id?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -776,6 +810,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          category_id?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -787,6 +822,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "channels_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "channel_categories"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "channels_created_by_fkey"
             columns: ["created_by"]
@@ -3830,6 +3872,7 @@ export type Database = {
         Args: { p_team_id: string }
         Returns: boolean
       }
+      can_oversee_channel: { Args: { p_channel_id: string }; Returns: boolean }
       can_recognize: { Args: never; Returns: boolean }
       can_view_confidential_scope: {
         Args: { p_scope: string }

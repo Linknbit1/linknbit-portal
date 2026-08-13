@@ -36,7 +36,7 @@ import { useProjectServiceMembers } from '../../hooks/useProjectServices'
 import { useProjectFiles, useTaskAttachments } from '../../hooks/useAttachments'
 import { fileKind } from '../../lib/attachment'
 import { useSubtasks, useCreateSubtask, useToggleSubtask, useDeleteSubtask } from '../../hooks/useSubtasks'
-import { useComments, useCreateComment } from '../../hooks/useComments'
+import { useComments, useCreateComment, useUpdateComment, useDeleteComment } from '../../hooks/useComments'
 import { useRealtimeComments } from '../../hooks/realtime/useRealtimeComments'
 import { useRealtimeTaskActivity } from '../../hooks/realtime/useRealtimeTaskActivity'
 import { useTaskActivity } from '../../hooks/useAuditLog'
@@ -45,6 +45,7 @@ import { useAuthContext } from '../../context/AuthContext'
 import { useCanAccess } from '../../hooks/useRoleFlags'
 import { MoveTaskModal } from '../../components/shared/MoveTaskModal'
 import { describeTaskActivity } from '../../lib/taskActivity'
+import { SIGN_OFF_STATUSES } from '../../types'
 import type { Priority, TaskStatus } from '../../types'
 
 const STATUS_ORDER: TaskStatus[] = ['backlog', 'todo', 'in_progress', 'review', 'approved', 'completed', 'blocked']
@@ -182,6 +183,8 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
   const toggleSubtask = useToggleSubtask()
   const deleteSubtask = useDeleteSubtask()
   const createComment = useCreateComment()
+  const updateComment = useUpdateComment()
+  const deleteComment = useDeleteComment()
   const syncMentions = useSyncMentions()
   const setAssignees = useSetTaskAssignees()
 
@@ -194,6 +197,9 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
 
   const [newSubtask, setNewSubtask] = useState('')
   const [commentDoc, setCommentDoc] = useState<JSONContent | null>(null)
+  // Which comment is open for editing, and its working copy.
+  const [editingComment, setEditingComment] = useState<{ id: string; doc: JSONContent | null } | null>(null)
+  const [pendingCommentDelete, setPendingCommentDelete] = useState<string | null>(null)
   const [composerKey, setComposerKey] = useState(0)
   const [commentInternal, setCommentInternal] = useState(true)
   // Sections start collapsed behind a quick-action row, but open on their own
@@ -203,6 +209,8 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
   const [railTab, setRailTab] = useState<'comments' | 'activity'>('comments')
   const [moving, setMoving] = useState(false)
   const canMoveTask = useCanAccess('can_manage_projects')
+  const canModerateComments = useCanAccess('can_moderate_comments')
+  const canSignOff = useCanAccess('can_approve_tasks')
 
   const { data: activity = [] } = useTaskActivity(taskId)
   const { data: taskFiles = [] } = useTaskAttachments(taskId)
@@ -248,13 +256,34 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
   }
 
   const stageOptions = [{ value: '', label: 'No stage' }, ...stages.map((s) => ({ value: s.id, label: s.name }))]
-  const statusOptions = STATUS_ORDER.map((s) => ({ value: s, label: STATUS_LABELS[s] }))
+  const statusOptions = STATUS_ORDER
+    .filter((s) => canSignOff || !SIGN_OFF_STATUSES.includes(s) || s === task?.status)
+    .map((s) => ({ value: s, label: STATUS_LABELS[s] }))
   const priorityOptions = PRIORITY_ORDER.map((p) => ({ value: p, label: PRIORITY_LABELS[p], dot: PRIORITY_DOTS[p] }))
 
   const addSubtask = () => {
     if (!newSubtask.trim()) return
     createSubtask.mutate({ taskId, title: newSubtask.trim() }, { onError: (e) => toast(e instanceof Error ? e.message : 'Failed', 'error') })
     setNewSubtask('')
+  }
+
+  const saveCommentEdit = () => {
+    if (!editingComment) return
+    const doc = editingComment.doc
+    updateComment.mutate(
+      { id: editingComment.id, taskId, args: { content: docToPlainText(doc), doc: toDbDoc(doc) } },
+      {
+        onSuccess: () => setEditingComment(null),
+        onError: (e) => toast(e instanceof Error ? e.message : 'Could not save the edit', 'error'),
+      },
+    )
+  }
+
+  const removeComment = (id: string) => {
+    deleteComment.mutate({ id, taskId }, {
+      onSuccess: () => { toast('Comment deleted', 'success'); setPendingCommentDelete(null) },
+      onError: (e) => toast(e instanceof Error ? e.message : 'Could not delete the comment', 'error'),
+    })
   }
 
   const sendComment = () => {
@@ -275,6 +304,10 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
 
   const isDone = task.status === 'completed' || task.status === 'approved'
   const toggleComplete = () => {
+    if (!isDone && !canSignOff) {
+      toast('Only a project manager or team lead can mark a task complete', 'error')
+      return
+    }
     patch({ status: isDone ? 'in_progress' : 'completed' })
     toast(isDone ? 'Task reopened' : 'Task marked complete', 'success')
   }
@@ -504,21 +537,75 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
             {commentFeed.length === 0 && (
               <p className="py-8 text-center font-ui text-[12.5px] text-text-4">No comments yet.</p>
             )}
-            {commentFeed.map((c) => (
-              <div key={c.id} className="flex gap-2.5">
-                <Avatar name={c.author?.name ?? '?'} src={c.author?.avatar_url ?? undefined} size="sm" personId={c.author?.id} />
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <PersonLink personId={c.author?.id} className="font-ui text-[12.5px] font-semibold text-text-1">{c.author?.name ?? 'Unknown'}</PersonLink>
-                    <span className="font-mono text-[10px] text-text-4">{formatRelativeTime(c.created_at)}</span>
-                    {!c.is_internal && <span className="font-ui text-[9.5px] font-semibold uppercase text-service-mkt">Client</span>}
+            {commentFeed.map((c) => {
+              // Matches p_comments_update / p_comments_delete exactly, so the
+              // buttons never appear where the database would refuse.
+              const mine = !!profile && c.author_id === profile.id
+              const canEdit = mine
+              const canRemove = mine || canModerateComments
+              const isEditing = editingComment?.id === c.id
+              const edited = c.updated_at && c.updated_at !== c.created_at
+
+              return (
+                <div key={c.id} className="group/comment flex gap-2.5">
+                  <Avatar name={c.author?.name ?? '?'} src={c.author?.avatar_url ?? undefined} size="sm" personId={c.author?.id} />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <PersonLink personId={c.author?.id} className="font-ui text-[12.5px] font-semibold text-text-1">{c.author?.name ?? 'Unknown'}</PersonLink>
+                      <span className="font-mono text-[10px] text-text-4">{formatRelativeTime(c.created_at)}</span>
+                      {edited && <span className="font-mono text-[10px] text-text-4" title={`Edited ${formatRelativeTime(c.updated_at)}`}>(edited)</span>}
+                      {!c.is_internal && <span className="font-ui text-[9.5px] font-semibold uppercase text-service-mkt">Client</span>}
+
+                      {!isEditing && (canEdit || canRemove) && (
+                        <span className="ml-auto flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity focus-within:opacity-100 group-hover/comment:opacity-100">
+                          {canEdit && (
+                            <button
+                              onClick={() => setEditingComment({ id: c.id, doc: fromDbDoc(c.doc) })}
+                              aria-label="Edit comment"
+                              className="flex size-6 items-center justify-center rounded-sm text-text-4 transition-colors hover:bg-surface-3 hover:text-text-1"
+                            >
+                              <Pencil size={11} />
+                            </button>
+                          )}
+                          {canRemove && (
+                            <button
+                              onClick={() => setPendingCommentDelete(c.id)}
+                              aria-label="Delete comment"
+                              className="flex size-6 items-center justify-center rounded-sm text-text-4 transition-colors hover:bg-error/10 hover:text-error"
+                            >
+                              <Trash2 size={11} />
+                            </button>
+                          )}
+                        </span>
+                      )}
+                    </div>
+
+                    {isEditing ? (
+                      <div className="mt-1.5 space-y-2">
+                        <div className="rounded-md border border-border-default bg-surface-inset px-2.5 py-1.5">
+                          <RichEditor
+                            value={editingComment.doc}
+                            onChange={(doc) => setEditingComment((prev) => (prev ? { ...prev, doc } : prev))}
+                            mentionItems={members}
+                            compact
+                            onSubmit={saveCommentEdit}
+                            placeholder="Edit your comment…"
+                          />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button size="sm" onClick={saveCommentEdit} loading={updateComment.isPending}>Save</Button>
+                          <Button size="sm" variant="ghost" onClick={() => setEditingComment(null)} disabled={updateComment.isPending}>Cancel</Button>
+                        </div>
+                      </div>
+                    ) : c.doc ? (
+                      <RichRenderer doc={fromDbDoc(c.doc)} className="font-ui text-[13px] text-text-2" />
+                    ) : (
+                      <p className="whitespace-pre-wrap font-ui text-[13px] text-text-2">{c.content}</p>
+                    )}
                   </div>
-                  {c.doc
-                    ? <RichRenderer doc={fromDbDoc(c.doc)} className="font-ui text-[13px] text-text-2" />
-                    : <p className="whitespace-pre-wrap font-ui text-[13px] text-text-2">{c.content}</p>}
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         ) : (
           // Newest first, so the change you just made is the top line.
@@ -573,6 +660,17 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
           onClose={() => setMoving(false)}
         />
       )}
+      <ConfirmDialog
+        open={!!pendingCommentDelete}
+        danger
+        title="Delete comment?"
+        confirmLabel="Delete comment"
+        isPending={deleteComment.isPending}
+        message="The comment will be removed for everyone. This can't be undone."
+        onConfirm={() => pendingCommentDelete && removeComment(pendingCommentDelete)}
+        onClose={() => setPendingCommentDelete(null)}
+      />
+
       <ConfirmDialog
         open={confirmDelete}
         title="Delete task?"

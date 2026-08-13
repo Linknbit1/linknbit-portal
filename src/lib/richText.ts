@@ -64,6 +64,13 @@ export function plainTextToDoc(text: string): JSONContent | null {
 }
 
 /** Collect the profile ids of every @mention in a doc (deduped). */
+/**
+ * The id behind @everyone. A real-looking UUID that can belong to no profile:
+ * fn_extract_mention_ids only keeps values of UUID shape, so a literal
+ * "everyone" would be dropped before the notifier ever saw it.
+ */
+export const EVERYONE_MENTION_ID = '00000000-0000-0000-0000-000000000000'
+
 export function extractMentionIds(doc: JSONContent | null | undefined): string[] {
   const ids = new Set<string>()
   const walk = (node: JSONContent) => {
