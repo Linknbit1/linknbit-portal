@@ -143,8 +143,9 @@ const BD_CHILDREN: NavItem[] = [
   { label: 'Meetings',       icon: TrendingUp, to: '/bd/meetings',  feature: 'can_view_bd' },
   { label: 'Outreach',       icon: TrendingUp, to: '/bd/outreach',  feature: 'can_view_bd' },
   { label: 'Daily Updates',  icon: TrendingUp, to: '/bd/updates',   feature: 'can_view_bd' },
-  { label: 'Targets & KPIs', icon: TrendingUp, to: '/bd/targets',   feature: 'can_view_bd' },
-  { label: 'BD Reports',     icon: TrendingUp, to: '/bd/reports',   feature: 'can_view_bd' },
+  // Targets, KPIs and reporting were two screens showing halves of the same
+  // picture; a manager wants them in one place.
+  { label: 'Performance',    icon: TrendingUp, to: '/bd/performance', feature: 'can_view_bd' },
 ]
 
 // Everyone internal except finance: finance is never required to submit a standup and

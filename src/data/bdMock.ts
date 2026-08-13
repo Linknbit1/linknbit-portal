@@ -1,13 +1,14 @@
 import type {
   Lead,
   BdMeeting,
-  ChannelStats,
   BdDailyUpdate,
   BdTarget,
   BdActivity,
+  BdActivityType,
+  BdActivityOutcome,
+  BdChannel,
   BdTask,
   BdProject,
-  BdOutreachLog,
 } from '../types'
 
 /**
@@ -472,15 +473,16 @@ export const BD_MEETINGS: BdMeeting[] = [
    CHANNEL PERFORMANCE
    ========================================================= */
 
-export const CHANNEL_STATS: ChannelStats[] = [
-  { channel: 'upwork',    sent: 148, responses: 31, meetings: 12, leads: 9, won: 3, revenue: 4300000, trend: 18 },
-  { channel: 'linkedin',  sent: 320, responses: 44, meetings: 15, leads: 11, won: 2, revenue: 6600000, trend: 32 },
-  { channel: 'fiverr',    sent: 86,  responses: 19, meetings: 6,  leads: 5, won: 2, revenue: 2100000, trend: -9 },
-  { channel: 'email',     sent: 540, responses: 38, meetings: 9,  leads: 7, won: 1, revenue: 1250000, trend: 12 },
-  { channel: 'cold_call', sent: 210, responses: 27, meetings: 5,  leads: 4, won: 0, revenue: 0,       trend: -14 },
-  { channel: 'inbound',   sent: 0,   responses: 23, meetings: 8,  leads: 6, won: 2, revenue: 1890000, trend: 41 },
-  { channel: 'referral',  sent: 0,   responses: 7,  meetings: 4,  leads: 3, won: 2, revenue: 3600000, trend: 5 },
-]
+/**
+ * Period-over-period movement, which is the one channel figure that cannot be
+ * derived from the activity list — it needs the previous period's totals, and
+ * the prototype only holds the current one. Everything else on the Outreach
+ * page (sent, replies, meetings, leads, won, revenue) is now computed from
+ * activities and leads, so the numbers cannot drift from the pipeline.
+ */
+export const CHANNEL_TREND: Record<BdChannel, number> = {
+  upwork: 18, linkedin: 32, fiverr: -9, email: 12, cold_call: -14, inbound: 41, referral: 5,
+}
 
 /* =========================================================
    DAILY UPDATES
@@ -636,33 +638,60 @@ export const BD_FUNNEL = [
 ]
 
 /* =========================================================
-   ACTIVITY LOG
+   ACTIVITY — every unit of BD effort, touchpoint or batch
    ========================================================= */
 
+/** Shorthand: a single touchpoint on a lead. */
+const touch = (
+  id: string, leadId: string, channel: BdChannel, type: BdActivityType,
+  at: string, note: string, byId: string, byName: string,
+  outcome?: BdActivityOutcome, meetingsBooked = 0,
+): BdActivity => ({
+  id, leadId, channel, type, at, note, byId, byName, outcome,
+  volume: 1, responses: 0, meetingsBooked, leadsCreated: 0,
+})
+
+/** Shorthand: a batch of cold outreach, not yet attached to any prospect. */
+const batch = (
+  id: string, channel: BdChannel, at: string, byId: string, byName: string,
+  volume: number, responses: number, meetingsBooked: number, leadsCreated: number, note = '',
+): BdActivity => ({
+  id, leadId: null, channel, type: 'note', at, note, byId, byName,
+  volume, responses, meetingsBooked, leadsCreated,
+})
+
 export const BD_ACTIVITIES: BdActivity[] = [
-  { id: 'a1',  leadId: 'l14', type: 'meeting',  at: at(0, 16, 30),  outcome: 'follow_up',      note: 'Negotiation call. Phased billing requested — revised SOW due tomorrow.', byId: 'bd1', byName: 'Ayesha Siddiqui' },
-  { id: 'a2',  leadId: 'l14', type: 'email',    at: at(-2, 10, 15), outcome: 'connected',      note: 'Sent the integration scope breakdown Tom asked for.', byId: 'bd1', byName: 'Ayesha Siddiqui' },
-  { id: 'a3',  leadId: 'l14', type: 'stage_change', at: at(-6, 9, 0), note: 'Moved from Proposal Sent to Negotiation.', byId: 'bd1', byName: 'Ayesha Siddiqui' },
-  { id: 'a4',  leadId: 'l14', type: 'proposal', at: at(-9, 14, 0),  outcome: 'connected',      note: 'Proposal issued — PKR 5.4M across three phases.', byId: 'bd1', byName: 'Ayesha Siddiqui' },
-  { id: 'a5',  leadId: 'l14', type: 'call',     at: at(-14, 11, 30), outcome: 'meeting_booked', note: 'Discovery call booked for the following week.', byId: 'bd1', byName: 'Ayesha Siddiqui' },
+  touch('a1',  'l14', 'email',     'meeting',      at(0, 16, 30),  'Negotiation call. Phased billing requested — revised SOW due tomorrow.', 'bd1', 'Ayesha Siddiqui', 'follow_up', 1),
+  touch('a2',  'l14', 'email',     'email',        at(-2, 10, 15), 'Sent the integration scope breakdown Tom asked for.', 'bd1', 'Ayesha Siddiqui', 'connected'),
+  touch('a3',  'l14', 'email',     'stage_change', at(-6, 9, 0),   'Moved from Proposal Sent to Negotiation.', 'bd1', 'Ayesha Siddiqui'),
+  touch('a4',  'l14', 'email',     'proposal',     at(-9, 14, 0),  'Proposal issued — PKR 5.4M across three phases.', 'bd1', 'Ayesha Siddiqui', 'connected'),
+  touch('a5',  'l14', 'email',     'call',         at(-14, 11, 30),'Discovery call booked for the following week.', 'bd1', 'Ayesha Siddiqui', 'meeting_booked', 1),
 
-  { id: 'a6',  leadId: 'l1',  type: 'meeting',  at: at(-1, 16, 0),  outcome: 'follow_up',      note: 'Proposal walkthrough. Pricing accepted; wants the rollout split across two quarters.', byId: 'bd1', byName: 'Ayesha Siddiqui' },
-  { id: 'a7',  leadId: 'l1',  type: 'linkedin', at: at(-5, 12, 0),  outcome: 'connected',      note: 'Henrik replied to the case-study post and asked for pricing.', byId: 'bd1', byName: 'Ayesha Siddiqui' },
-  { id: 'a8',  leadId: 'l1',  type: 'proposal', at: at(-8, 15, 30), note: 'Automation proposal sent.', byId: 'bd1', byName: 'Ayesha Siddiqui' },
+  touch('a6',  'l1',  'linkedin',  'meeting',      at(-1, 16, 0),  'Proposal walkthrough. Pricing accepted; wants the rollout split across two quarters.', 'bd1', 'Ayesha Siddiqui', 'follow_up', 1),
+  touch('a7',  'l1',  'linkedin',  'linkedin',     at(-5, 12, 0),  'Henrik replied to the case-study post and asked for pricing.', 'bd1', 'Ayesha Siddiqui', 'connected'),
+  touch('a8',  'l1',  'linkedin',  'proposal',     at(-8, 15, 30), 'Automation proposal sent.', 'bd1', 'Ayesha Siddiqui'),
 
-  { id: 'a9',  leadId: 'l2',  type: 'email',    at: at(-3, 9, 45),  outcome: 'no_response',    note: 'Chased the proposal. No reply yet.', byId: 'bd2', byName: 'Faisal Nadeem' },
-  { id: 'a10', leadId: 'l2',  type: 'proposal', at: at(-7, 13, 0),  outcome: 'connected',      note: 'Branding + site proposal sent via Upwork.', byId: 'bd2', byName: 'Faisal Nadeem' },
-  { id: 'a11', leadId: 'l2',  type: 'call',     at: at(-11, 16, 0), outcome: 'meeting_booked', note: 'Intro call — three practices, wants one brand across all.', byId: 'bd2', byName: 'Faisal Nadeem' },
+  touch('a9',  'l2',  'upwork',    'email',        at(-3, 9, 45),  'Chased the proposal. No reply yet.', 'bd2', 'Faisal Nadeem', 'no_response'),
+  touch('a10', 'l2',  'upwork',    'proposal',     at(-7, 13, 0),  'Branding + site proposal sent via Upwork.', 'bd2', 'Faisal Nadeem', 'connected'),
+  touch('a11', 'l2',  'upwork',    'call',         at(-11, 16, 0), 'Intro call — three practices, wants one brand across all.', 'bd2', 'Faisal Nadeem', 'meeting_booked', 1),
 
-  { id: 'a12', leadId: 'l3',  type: 'call',     at: at(-2, 11, 0),  outcome: 'meeting_booked', note: 'Rehan wants the team on site for the discovery session.', byId: 'bd1', byName: 'Ayesha Siddiqui' },
-  { id: 'a13', leadId: 'l3',  type: 'note',     at: at(-10, 10, 0), note: 'Referred by the Sana Jewellers contact. Warm intro.', byId: 'bd1', byName: 'Ayesha Siddiqui' },
+  touch('a12', 'l3',  'referral',  'call',         at(-2, 11, 0),  'Rehan wants the team on site for the discovery session.', 'bd1', 'Ayesha Siddiqui', 'meeting_booked', 1),
+  touch('a13', 'l3',  'referral',  'note',         at(-10, 10, 0), 'Referred by the Sana Jewellers contact. Warm intro.', 'bd1', 'Ayesha Siddiqui'),
 
-  { id: 'a14', leadId: 'l9',  type: 'meeting',  at: at(-3, 18, 0),  outcome: 'follow_up',      note: 'Design direction landed. Waiting on their Q4 budget sign-off.', byId: 'bd3', byName: 'Maryam Khan' },
-  { id: 'a15', leadId: 'l9',  type: 'proposal', at: at(-12, 11, 0), note: 'Proposal sent — PKR 1.4M.', byId: 'bd3', byName: 'Maryam Khan' },
+  touch('a14', 'l9',  'upwork',    'meeting',      at(-3, 18, 0),  'Design direction landed. Waiting on their Q4 budget sign-off.', 'bd3', 'Maryam Khan', 'follow_up', 1),
+  touch('a15', 'l9',  'upwork',    'proposal',     at(-12, 11, 0), 'Proposal sent — PKR 1.4M.', 'bd3', 'Maryam Khan'),
 
-  { id: 'a16', leadId: 'l12', type: 'note',     at: at(-14, 15, 0), outcome: 'not_interested', note: 'Budget came in at a third of the quote. Closing as lost.', byId: 'bd2', byName: 'Faisal Nadeem' },
-  { id: 'a17', leadId: 'l6',  type: 'call',     at: at(-5, 17, 0),  outcome: 'follow_up',      note: 'Comparing three vendors, shortlisting in two weeks.', byId: 'bd1', byName: 'Ayesha Siddiqui' },
-  { id: 'a18', leadId: 'l7',  type: 'email',    at: at(-2, 9, 30),  outcome: 'connected',      note: 'Website enquiry — replied within the hour with the discovery link.', byId: 'bd3', byName: 'Maryam Khan' },
+  touch('a16', 'l12', 'cold_call', 'note',         at(-14, 15, 0), 'Budget came in at a third of the quote. Closing as lost.', 'bd2', 'Faisal Nadeem', 'not_interested'),
+  touch('a17', 'l6',  'linkedin',  'call',         at(-5, 17, 0),  'Comparing three vendors, shortlisting in two weeks.', 'bd1', 'Ayesha Siddiqui', 'follow_up'),
+  touch('a18', 'l7',  'inbound',   'email',        at(-2, 9, 30),  'Website enquiry — replied within the hour with the discovery link.', 'bd3', 'Maryam Khan', 'connected'),
+
+  // Batches — effort with no named prospect behind it (yet).
+  batch('a19', 'upwork',    at(0, 17, 0),  'bd2', 'Faisal Nadeem',   12,  2, 0, 2, 'Healthcare and legal job feeds.'),
+  batch('a20', 'linkedin',  at(0, 15, 0),  'bd1', 'Ayesha Siddiqui', 14,  3, 1, 0, 'Logistics list — Nordics.'),
+  batch('a21', 'cold_call', at(0, 12, 0),  'bd2', 'Faisal Nadeem',   18,  4, 1, 0, 'Lumen Solar list.'),
+  batch('a22', 'email',     at(-1, 14, 0), 'bd2', 'Faisal Nadeem',  120,  4, 0, 1, 'Legal-sector sequence, second touch.'),
+  batch('a23', 'fiverr',    at(-1, 11, 0), 'bd3', 'Maryam Khan',      6,  2, 0, 0),
+  batch('a24', 'inbound',   at(-2, 10, 0), 'bd3', 'Maryam Khan',      3,  3, 1, 1, 'Website form — Orbit Study Abroad.'),
 ]
 
 /* =========================================================
@@ -869,15 +898,3 @@ export const BD_TASKS: BdTask[] = [
   },
 ]
 
-/* =========================================================
-   OUTREACH LOG — batches of effort, per channel
-   ========================================================= */
-
-export const BD_OUTREACH_LOGS: BdOutreachLog[] = [
-  { id: 'o1', channel: 'upwork',    date: day(0),  repId: 'bd2', repName: 'Faisal Nadeem',   volume: 12, responses: 2, meetings: 0, leads: 2, note: 'Healthcare and legal job feeds.' },
-  { id: 'o2', channel: 'linkedin',  date: day(0),  repId: 'bd1', repName: 'Ayesha Siddiqui', volume: 14, responses: 3, meetings: 1, leads: 0, note: 'Logistics list — Nordics.' },
-  { id: 'o3', channel: 'cold_call', date: day(0),  repId: 'bd2', repName: 'Faisal Nadeem',   volume: 18, responses: 4, meetings: 1, leads: 0, note: 'Lumen Solar list.' },
-  { id: 'o4', channel: 'email',     date: day(-1), repId: 'bd2', repName: 'Faisal Nadeem',   volume: 120, responses: 4, meetings: 0, leads: 1, note: 'Legal-sector sequence, second touch.' },
-  { id: 'o5', channel: 'fiverr',    date: day(-1), repId: 'bd3', repName: 'Maryam Khan',     volume: 6,  responses: 2, meetings: 0, leads: 0 },
-  { id: 'o6', channel: 'inbound',   date: day(-2), repId: 'bd3', repName: 'Maryam Khan',     volume: 3,  responses: 3, meetings: 1, leads: 1, note: 'Website form — Orbit Study Abroad.' },
-]

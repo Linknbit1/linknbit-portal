@@ -28,7 +28,7 @@ interface LogOutreachModalProps {
  */
 export function LogOutreachModal({ open, channel: initialChannel, onClose }: LogOutreachModalProps) {
   const toast = useToast()
-  const { logOutreach, viewerRepId, viewerName, canSeeAll } = useBd()
+  const { logBatch, viewerRepId, viewerName, canSeeAll } = useBd()
 
   const [channel, setChannel] = useState<BdChannel>(initialChannel ?? 'upwork')
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10))
@@ -52,20 +52,18 @@ export function LogOutreachModal({ open, channel: initialChannel, onClose }: Log
     if (volume <= 0) return
     if (!passive && responses > volume) return
     const rep = BD_REPS.find((r) => r.id === repId)
-    logOutreach(
-      {
-        channel,
-        date,
-        repId,
-        repName: rep?.name ?? viewerName,
-        volume,
-        responses: passive ? 0 : responses,
-        meetings,
-        leads,
-        note: note.trim() || undefined,
-      },
-      passive,
-    )
+    logBatch({
+      channel,
+      at: new Date(`${date}T12:00:00`).toISOString(),
+      // A passive channel is not sent on — the enquiry itself is the reply.
+      volume,
+      responses: passive ? volume : responses,
+      meetingsBooked: meetings,
+      leadsCreated: leads,
+      note: note.trim(),
+      byId: repId,
+      byName: rep?.name ?? viewerName,
+    })
     toast(`${volume} logged against ${config.label}`, 'success')
     onClose()
   }

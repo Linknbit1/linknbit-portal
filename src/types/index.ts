@@ -445,6 +445,8 @@ export interface Lead {
   nextFollowUp: string | null
   /** Only set once the lead reaches `lost`. */
   lostReason?: string
+  /** Set once a won lead has been handed to delivery — SRS §3.6. */
+  handoffId?: string
   activityCount: number
 }
 
@@ -524,14 +526,35 @@ export type BdActivityOutcome =
   | 'meeting_booked'
   | 'not_interested'
 
+/**
+ * One unit of BD effort — the single activity model the SRS asks for (§3.2:
+ * every channel "feeds the same underlying Activity data … channel is just one
+ * dimension to filter and report by").
+ *
+ * A touchpoint on a named prospect and a batch of cold outreach are the same
+ * record with different shapes:
+ *   - a call on Nordic Freight  → leadId set,  volume 1
+ *   - 20 Upwork proposals       → leadId null, volume 20
+ *
+ * That is why Outreach and the lead's own log can never disagree: they are two
+ * filters over this one list.
+ */
 export interface BdActivity {
   id: string
-  leadId: string
+  /** Null when the effort is not (yet) about a named prospect. */
+  leadId: string | null
+  /** Always set — it is the reporting dimension, not an optional tag. */
+  channel: BdChannel
   type: BdActivityType
   /** ISO datetime. */
   at: string
   outcome?: BdActivityOutcome
   note: string
+  /** 1 for a single touchpoint; more for a logged batch. */
+  volume: number
+  responses: number
+  meetingsBooked: number
+  leadsCreated: number
   byId: string
   byName: string
 }
@@ -592,24 +615,27 @@ export interface BdProject {
   taskCount: number
 }
 
+
+
 /**
- * One batch of outreach on a channel.
+ * A won lead handed over to delivery.
  *
- * The Outreach page counts effort, not leads — most messages never become a
- * lead record, so this is logged in bulk against a channel rather than one
- * entry per touch (that is BdActivity's job, and it hangs off a lead).
+ * Recorded on the BD side so the lead stays visible in BD history (read-only)
+ * and linked to what it became — SRS §3.6. In the prototype this captures the
+ * handoff intent; creating the real client + project is an API-layer job.
  */
-export interface BdOutreachLog {
+export interface BdHandoff {
   id: string
-  channel: BdChannel
-  /** ISO date. */
-  date: string
-  repId: string
-  repName: string
-  /** Messages/proposals/calls pushed out, or enquiries in on a passive channel. */
-  volume: number
-  responses: number
-  meetings: number
-  leads: number
-  note?: string
+  leadId: string
+  company: string
+  /** Delivery service the BD services were mapped down to. */
+  serviceSlug: string
+  projectName: string
+  budget: number
+  /** Profile id of the PM the work was assigned to. */
+  managerId: string
+  managerName: string
+  notes?: string
+  at: string
+  byName: string
 }

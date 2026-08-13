@@ -13,6 +13,7 @@ import { useToast } from '../../components/ui/toast-context'
 import { TemperatureChip, IcpFitChip, ChannelChip } from '../../components/shared/BdChips'
 import { STAGE_CONFIG, STAGE_ORDER } from '../../constants/bd'
 import { useBd } from '../../context/BdPrototypeContext'
+import { HandoffModal } from './HandoffModal'
 import { cn } from '../../lib/cn'
 import { formatCompactCurrency, formatDate, formatRelativeTime, getDaysUntil } from '../../lib/utils'
 import type { Lead, LeadStage, BdActivityType } from '../../types'
@@ -57,10 +58,11 @@ interface LeadDrawerProps {
  */
 export function LeadDrawer({ lead, onClose, onEdit, onLogActivity }: LeadDrawerProps) {
   const toast = useToast()
-  const { activities, meetings, tasks, moveLeadStage, deleteLead } = useBd()
+  const { activities, meetings, tasks, handoffs, moveLeadStage, deleteLead } = useBd()
   const [tab, setTab] = useState('activity')
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [pendingLost, setPendingLost] = useState<string | null>(null)
+  const [handoffOpen, setHandoffOpen] = useState(false)
 
   const leadActivities = useMemo(
     () => (lead ? activities.filter((a) => a.leadId === lead.id).sort((a, b) => b.at.localeCompare(a.at)) : []),
@@ -84,6 +86,8 @@ export function LeadDrawer({ lead, onClose, onEdit, onLogActivity }: LeadDrawerP
     if (stage === 'lost') { setPendingLost(LOST_REASONS[0].value); return }
     moveLeadStage(lead.id, stage)
     toast(`${lead.company} moved to ${STAGE_CONFIG[stage].label}`, 'success')
+    // Winning is the one move that has somewhere to go next.
+    if (stage === 'won' && !lead.handoffId) setHandoffOpen(true)
   }
 
   const confirmLost = () => {
@@ -93,6 +97,7 @@ export function LeadDrawer({ lead, onClose, onEdit, onLogActivity }: LeadDrawerP
   }
 
   const daysUntilFollowUp = lead.nextFollowUp ? getDaysUntil(lead.nextFollowUp) : null
+  const handoff = handoffs.find((h) => h.leadId === lead.id)
 
   return (
     <>
@@ -171,6 +176,21 @@ export function LeadDrawer({ lead, onClose, onEdit, onLogActivity }: LeadDrawerP
             <StageStepper stage={lead.stage} />
             {lead.lostReason && (
               <p className="font-ui text-[12px] text-error">Lost — {lead.lostReason}</p>
+            )}
+            {lead.stage === 'won' && (
+              handoff ? (
+                <p className="flex items-center gap-1.5 font-ui text-[12px] text-success">
+                  <ArrowRight size={12} className="shrink-0" />
+                  Handed to {handoff.managerName} as “{handoff.projectName}”
+                </p>
+              ) : (
+                <button
+                  onClick={() => setHandoffOpen(true)}
+                  className="flex items-center gap-1.5 self-start rounded-sm border border-success/30 bg-success/10 px-2.5 py-1 font-ui text-[12px] font-medium text-success transition-colors hover:bg-success/15"
+                >
+                  <ArrowRight size={12} /> Hand off to delivery
+                </button>
+              )
             )}
           </div>
 
@@ -342,6 +362,8 @@ export function LeadDrawer({ lead, onClose, onEdit, onLogActivity }: LeadDrawerP
         confirmLabel="Delete lead"
       />
 
+      <HandoffModal open={handoffOpen} lead={lead} onClose={() => setHandoffOpen(false)} />
+
       {/* Marking a lead lost is the one stage change that captures a reason, so
           the picker rides inside the confirm rather than opening a second step. */}
       <ConfirmDialog
@@ -406,7 +428,7 @@ function EmptyHint({ icon: Icon, title, body }: { icon: typeof Mail; title: stri
     <div className="flex flex-col items-center gap-2 rounded-md border border-dashed border-border-subtle px-4 py-8 text-center">
       <Icon size={18} className="text-text-4" />
       <p className="font-ui text-[13px] text-text-2">{title}</p>
-      <p className="max-w-[36ch] font-ui text-[11.5px] leading-relaxed text-text-4">{body}</p>
+      <p className="max-w-[36ch] font-ui text-[11.5px]/relaxed text-text-4">{body}</p>
     </div>
   )
 }

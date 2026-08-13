@@ -21,6 +21,7 @@ import { BD_REPS } from '../../data/bdMock'
 import { LeadDrawer } from './LeadDrawer'
 import { LeadFormModal } from './LeadFormModal'
 import { LogActivityModal } from './LogActivityModal'
+import { HandoffModal } from './HandoffModal'
 import type { Lead, LeadStage } from '../../types'
 
 type PipelineView = 'board' | 'table'
@@ -76,6 +77,8 @@ export default function PipelinePage() {
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<Lead | null>(null)
   const [activityFor, setActivityFor] = useState<Lead | null>(null)
+  // Winning a deal is the one stage change with a next step attached.
+  const [handoffFor, setHandoffFor] = useState<Lead | null>(null)
 
   const [dragId, setDragId] = useState<string | null>(null)
   const [dragOver, setDragOver] = useState<LeadStage | null>(null)
@@ -138,6 +141,7 @@ export default function PipelinePage() {
     if (!lead || lead.stage === stage) return
     moveLeadStage(id, stage, stage === 'lost' ? 'No response' : undefined)
     toast(`${lead.company} → ${STAGE_CONFIG[stage].label}`, stage === 'won' ? 'success' : 'info')
+    if (stage === 'won' && !lead.handoffId) setHandoffFor({ ...lead, stage })
   }
 
   const toggleColumn = (stage: LeadStage) =>
@@ -316,6 +320,13 @@ export default function PipelinePage() {
         open={!!activityFor}
         lead={activityFor}
         onClose={() => setActivityFor(null)}
+      />
+
+      <HandoffModal
+        key={handoffFor?.id ?? 'no-handoff'}
+        open={!!handoffFor}
+        lead={handoffFor}
+        onClose={() => setHandoffFor(null)}
       />
     </div>
   )

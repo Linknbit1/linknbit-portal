@@ -7,8 +7,7 @@ import BdTasksPage from './BdTasksPage'
 import MeetingsPage from './MeetingsPage'
 import OutreachPage from './OutreachPage'
 import DailyUpdatesPage from './DailyUpdatesPage'
-import TargetsPage from './TargetsPage'
-import BdReportsPage from './BdReportsPage'
+import PerformancePage from './TargetsPage'
 
 /**
  * Business Development section router.
@@ -27,8 +26,7 @@ const BD_SECTIONS: Record<string, ComponentType> = {
   meetings: MeetingsPage,
   outreach: OutreachPage,
   updates: DailyUpdatesPage,
-  targets: TargetsPage,
-  reports: BdReportsPage,
+  performance: PerformancePage,
 }
 
 export default function BdSectionScreen() {

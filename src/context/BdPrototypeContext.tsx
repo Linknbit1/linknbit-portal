@@ -1,15 +1,16 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react'
 import { randomUUID } from '../lib/uuid'
+import { CHANNEL_ORDER } from '../constants/bd'
 import { useMyPermissions } from '../hooks/usePermissions'
 import { ADMINISTRATOR } from '../api/permissions'
 import { useAuthContext } from '../context/AuthContext'
 import {
   LEADS, BD_ACTIVITIES, BD_MEETINGS, BD_TASKS, BD_PROJECTS, BD_DAILY_UPDATES, BD_TARGETS,
-  CHANNEL_STATS, BD_OUTREACH_LOGS, BD_REPS,
+  CHANNEL_TREND, BD_REPS,
 } from '../data/bdMock'
 import type {
   Lead, LeadStage, BdActivity, BdMeeting, BdTask, BdProject,
-  TaskStatus, ProjectStatus, BdDailyUpdate, BdTarget, ChannelStats, BdOutreachLog,
+  TaskStatus, ProjectStatus, BdDailyUpdate, BdTarget, ChannelStats, BdChannel, BdHandoff,
 } from '../types'
 
 /**
@@ -34,8 +35,9 @@ interface BdContextValue {
   projects: BdProject[]
   updates: BdDailyUpdate[]
   targets: BdTarget[]
+  handoffs: BdHandoff[]
+  /** Derived from `activities` + `leads` — never stored, so it cannot drift. */
   channelStats: ChannelStats[]
-  outreachLogs: BdOutreachLog[]
 
   /** The BD person the signed-in user acts as. See `viewerRepId` below. */
   viewerRepId: string
@@ -66,7 +68,9 @@ interface BdContextValue {
   saveUpdate: (update: BdDailyUpdate) => void
   saveTargets: (targets: BdTarget[]) => void
   /** Record a batch of outreach and roll it into that channel's totals. */
-  logOutreach: (entry: Omit<BdOutreachLog, 'id'>, passive: boolean) => void
+  logBatch: (entry: Omit<BdActivity, 'id' | 'leadId' | 'type'>) => void
+  /** Hand a won lead to delivery, and stamp the lead with what it became. */
+  recordHandoff: (handoff: BdHandoff) => void
 }
 
 const BdContext = createContext<BdContextValue | null>(null)
@@ -82,8 +86,7 @@ export function BdPrototypeProvider({ children }: { children: ReactNode }) {
   const [projects, setProjects] = useState<BdProject[]>(BD_PROJECTS)
   const [updates, setUpdates] = useState<BdDailyUpdate[]>(BD_DAILY_UPDATES)
   const [targets, setTargets] = useState<BdTarget[]>(BD_TARGETS)
-  const [channelStats, setChannelStats] = useState<ChannelStats[]>(CHANNEL_STATS)
-  const [outreachLogs, setOutreachLogs] = useState<BdOutreachLog[]>(BD_OUTREACH_LOGS)
+  const [handoffs, setHandoffs] = useState<BdHandoff[]>([])
 
   const canSeeAll =
     !!permissions &&
@@ -128,6 +131,7 @@ export function BdPrototypeProvider({ children }: { children: ReactNode }) {
 
   const logActivity = useCallback((activity: Omit<BdActivity, 'id'>) => {
     setActivities((prev) => [{ ...activity, id: randomUUID() }, ...prev])
+    if (!activity.leadId) return
     // An activity is a touchpoint, so it moves the lead's own counters too.
     setLeads((prev) =>
       prev.map((l) =>
@@ -227,28 +231,89 @@ export function BdPrototypeProvider({ children }: { children: ReactNode }) {
 
   const saveTargets = useCallback((next: BdTarget[]) => setTargets(next), [])
 
-  const logOutreach = useCallback((entry: Omit<BdOutreachLog, 'id'>, passive: boolean) => {
-    setOutreachLogs((prev) => [{ ...entry, id: randomUUID() }, ...prev])
-    setChannelStats((prev) =>
-      prev.map((c) =>
-        c.channel === entry.channel
-          ? {
-              ...c,
-              // Passive channels are not sent on, so their volume is inbound
-              // replies rather than outbound sends.
-              sent: passive ? c.sent : c.sent + entry.volume,
-              responses: c.responses + (passive ? entry.volume : entry.responses),
-              meetings: c.meetings + entry.meetings,
-              leads: c.leads + entry.leads,
-            }
-          : c,
-      ),
-    )
+  const recordHandoff = useCallback((handoff: BdHandoff) => {
+    setHandoffs((prev) => [handoff, ...prev])
+    setLeads((prev) => prev.map((l) => (l.id === handoff.leadId ? { ...l, handoffId: handoff.id } : l)))
+    // The handoff is itself a touchpoint worth keeping on the lead's timeline.
+    setActivities((prev) => [
+      {
+        id: randomUUID(),
+        leadId: handoff.leadId,
+        channel: prev.find((a) => a.leadId === handoff.leadId)?.channel ?? 'referral',
+        type: 'stage_change',
+        at: handoff.at,
+        note: `Handed to delivery as “${handoff.projectName}”, owned by ${handoff.managerName}.`,
+        volume: 1, responses: 0, meetingsBooked: 0, leadsCreated: 0,
+        byId: '', byName: handoff.byName,
+      },
+      ...prev,
+    ])
   }, [])
+
+  /** A batch of channel effort — the same record as a touchpoint, with no lead. */
+  const logBatch = useCallback((entry: Omit<BdActivity, 'id' | 'leadId' | 'type'>) => {
+    setActivities((prev) => [{ ...entry, id: randomUUID(), leadId: null, type: 'note' }, ...prev])
+  }, [])
+
+  /**
+   * Channel performance, computed rather than stored.
+   *
+   * Effort comes from activities, outcome comes from leads — so a won deal
+   * shows up as that channel's revenue automatically, and the Outreach page can
+   * never contradict the pipeline. `trend` is the one exception: it needs the
+   * previous period, which the prototype does not carry.
+   */
+  const channelStats = useMemo<ChannelStats[]>(
+    () =>
+      CHANNEL_ORDER.map((channel) => {
+        const effort = activities.filter((a) => a.channel === channel)
+        const channelLeads = leads.filter((l) => l.channel === channel)
+        const won = channelLeads.filter((l) => l.stage === 'won')
+        const passive = channel === 'inbound' || channel === 'referral'
+        return {
+          channel,
+          // Nobody sends on a passive channel — its volume arrives as replies.
+          sent: passive ? 0 : effort.reduce((n, a) => n + a.volume, 0),
+          responses: effort.reduce((n, a) => n + (passive ? a.volume : a.responses), 0),
+          meetings: effort.reduce((n, a) => n + a.meetingsBooked, 0),
+          leads: channelLeads.length,
+          won: won.length,
+          revenue: won.reduce((n, l) => n + l.value, 0),
+          trend: CHANNEL_TREND[channel as BdChannel] ?? 0,
+        }
+      }),
+    [activities, leads],
+  )
+
+  /**
+   * Targets with `revenueActual` read off closed-won deals rather than stored.
+   * Winning a lead now moves the rep's bar, which is the whole point of setting
+   * a target against a pipeline.
+   */
+  const targetsWithActuals = useMemo<BdTarget[]>(
+    () =>
+      targets.map((t) => {
+        const ownWon = leads.filter((l) => l.ownerId === t.repId && l.stage === 'won')
+        const ownLost = leads.filter((l) => l.ownerId === t.repId && l.stage === 'lost')
+        return {
+          ...t,
+          revenueActual: ownWon.reduce((n, l) => n + l.value, 0),
+          outreachActual: activities
+            .filter((a) => a.byId === t.repId)
+            .reduce((n, a) => n + a.volume, 0),
+          meetingsActual: meetings.filter((m) => m.hostId === t.repId).length,
+          wins: ownWon.length,
+          losses: ownLost.length,
+        }
+      }),
+    [targets, leads, activities, meetings],
+  )
 
   const value = useMemo<BdContextValue>(
     () => ({
-      leads, activities, meetings, tasks, projects, updates, targets, channelStats, outreachLogs,
+      leads, activities, meetings, tasks, projects, updates, handoffs,
+      targets: targetsWithActuals,
+      channelStats,
       viewerRepId: viewerRep.id,
       viewerName: viewerRep.name,
       canSeeAll,
@@ -256,16 +321,16 @@ export function BdPrototypeProvider({ children }: { children: ReactNode }) {
       saveMeeting, deleteMeeting,
       saveTask, patchTask, moveTaskStatus, moveTask, toggleChecklistItem, deleteTask,
       saveProject, moveProjectStatus, deleteProject,
-      saveUpdate, saveTargets, logOutreach,
+      saveUpdate, saveTargets, logBatch, recordHandoff,
     }),
     [
-      leads, activities, meetings, tasks, projects, updates, targets, channelStats, outreachLogs,
+      leads, activities, meetings, tasks, projects, updates, handoffs, targetsWithActuals, channelStats,
       viewerRep.id, viewerRep.name, canSeeAll,
       moveLeadStage, saveLead, deleteLead, logActivity,
       saveMeeting, deleteMeeting,
       saveTask, patchTask, moveTaskStatus, moveTask, toggleChecklistItem, deleteTask,
       saveProject, moveProjectStatus, deleteProject,
-      saveUpdate, saveTargets, logOutreach,
+      saveUpdate, saveTargets, logBatch, recordHandoff,
     ],
   )
 

@@ -28,7 +28,7 @@ function responseRate(stat: ChannelStats): number | null {
 }
 
 export default function OutreachPage() {
-  const { channelStats, outreachLogs } = useBd()
+  const { channelStats, activities } = useBd()
   const [period, setPeriod] = useState('month')
   const [logFor, setLogFor] = useState<BdChannel | null>(null)
   const [logOpen, setLogOpen] = useState(false)
@@ -53,6 +53,13 @@ export default function OutreachPage() {
   // The busiest channel sets the bar scale, so the cards compare against each
   // other rather than against an arbitrary ceiling.
   const maxSent = Math.max(...ordered.map((s) => s.sent), 1)
+
+  // The recent list shows batches only — a single touchpoint belongs on its
+  // lead, not in a roll-up of channel effort.
+  const batches = useMemo(
+    () => activities.filter((a) => a.leadId === null).sort((a, b) => b.at.localeCompare(a.at)),
+    [activities],
+  )
 
   return (
     <div className="flex flex-col flex-1">
@@ -111,15 +118,15 @@ export default function OutreachPage() {
             icon={History}
             title="Recent outreach"
             description="Every batch logged, newest first"
-            badge={outreachLogs.length}
+            badge={batches.length}
           />
           <div className="flex flex-col divide-y divide-border-subtle">
-            {outreachLogs.length === 0 ? (
+            {batches.length === 0 ? (
               <p className="px-5 py-10 text-center font-ui text-[13px] text-text-4">
                 Nothing logged yet. Use “Log outreach” after a session of sending.
               </p>
             ) : (
-              outreachLogs.slice(0, 8).map((log) => {
+              batches.slice(0, 8).map((log) => {
                 const cfg = CHANNEL_CONFIG[log.channel]
                 const Icon = cfg.icon
                 return (
@@ -131,16 +138,16 @@ export default function OutreachPage() {
                     <span className="font-mono text-[11.5px] tabular-nums text-text-4">
                       {[
                         log.responses > 0 && `${log.responses} ${log.responses === 1 ? 'reply' : 'replies'}`,
-                        log.meetings > 0 && `${log.meetings} ${log.meetings === 1 ? 'meeting' : 'meetings'}`,
-                        log.leads > 0 && `${log.leads} ${log.leads === 1 ? 'lead' : 'leads'}`,
+                        log.meetingsBooked > 0 && `${log.meetingsBooked} ${log.meetingsBooked === 1 ? 'meeting' : 'meetings'}`,
+                        log.leadsCreated > 0 && `${log.leadsCreated} ${log.leadsCreated === 1 ? 'lead' : 'leads'}`,
                       ].filter(Boolean).join(' · ')}
                     </span>
                     {log.note && (
                       <span className="min-w-0 flex-1 truncate font-ui text-[12px] text-text-4">{log.note}</span>
                     )}
                     <span className="ml-auto flex items-center gap-2">
-                      <Avatar name={log.repName} size="xs" />
-                      <span className="font-mono text-[11px] text-text-4">{formatDate(log.date)}</span>
+                      <Avatar name={log.byName} size="xs" />
+                      <span className="font-mono text-[11px] text-text-4">{formatDate(log.at.slice(0, 10))}</span>
                     </span>
                   </div>
                 )

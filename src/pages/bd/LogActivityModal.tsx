@@ -51,10 +51,17 @@ export function LogActivityModal({ open, lead, onClose }: LogActivityModalProps)
     if (!note.trim()) return
     logActivity({
       leadId: lead.id,
+      // A touchpoint inherits the lead's channel — that is how per-lead work
+      // shows up in the channel's numbers without being logged twice.
+      channel: lead.channel,
       type,
       at: new Date(`${date}T12:00:00`).toISOString(),
       outcome,
       note: note.trim(),
+      volume: 1,
+      responses: outcome === 'connected' || outcome === 'meeting_booked' ? 1 : 0,
+      meetingsBooked: outcome === 'meeting_booked' ? 1 : 0,
+      leadsCreated: 0,
       byId: viewerRepId,
       byName: viewerName,
     })
