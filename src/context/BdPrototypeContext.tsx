@@ -50,6 +50,11 @@ interface BdContextValue {
   /** Inline field edit from the task drawer — patches one or more fields in place. */
   patchTask: (taskId: string, patch: Partial<BdTask>) => void
   moveTaskStatus: (taskId: string, status: TaskStatus) => void
+  /**
+   * Drag-to-position: move a task into `status`, inserted before `beforeId`
+   * (or at the end of that lane when null). Order is the array's own order.
+   */
+  moveTask: (taskId: string, status: TaskStatus, beforeId: string | null) => void
   toggleChecklistItem: (taskId: string, itemId: string) => void
   deleteTask: (taskId: string) => void
   saveProject: (project: BdProject) => void
@@ -144,6 +149,27 @@ export function BdPrototypeProvider({ children }: { children: ReactNode }) {
     })
   }, [])
 
+  const moveTask = useCallback((taskId: string, status: TaskStatus, beforeId: string | null) => {
+    setTasks((prev) => {
+      const moving = prev.find((t) => t.id === taskId)
+      if (!moving) return prev
+      const rest = prev.filter((t) => t.id !== taskId)
+      const next = { ...moving, status }
+
+      if (beforeId) {
+        const idx = rest.findIndex((t) => t.id === beforeId)
+        if (idx !== -1) return [...rest.slice(0, idx), next, ...rest.slice(idx)]
+      }
+      // No anchor means "end of this lane" — insert after the last task already
+      // in that status rather than at the end of the whole list, or the card
+      // would jump behind other lanes' tasks.
+      const lastInLane = rest.map((t) => t.status).lastIndexOf(status)
+      return lastInLane === -1
+        ? [...rest, next]
+        : [...rest.slice(0, lastInLane + 1), next, ...rest.slice(lastInLane + 1)]
+    })
+  }, [])
+
   const patchTask = useCallback((taskId: string, patch: Partial<BdTask>) => {
     setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, ...patch } : t)))
   }, [])
@@ -202,7 +228,7 @@ export function BdPrototypeProvider({ children }: { children: ReactNode }) {
       canSeeAll,
       moveLeadStage, saveLead, deleteLead, logActivity,
       saveMeeting, deleteMeeting,
-      saveTask, patchTask, moveTaskStatus, toggleChecklistItem, deleteTask,
+      saveTask, patchTask, moveTaskStatus, moveTask, toggleChecklistItem, deleteTask,
       saveProject, moveProjectStatus, deleteProject,
       saveUpdate, saveTargets,
     }),
@@ -211,7 +237,7 @@ export function BdPrototypeProvider({ children }: { children: ReactNode }) {
       viewerRep.id, viewerRep.name, canSeeAll,
       moveLeadStage, saveLead, deleteLead, logActivity,
       saveMeeting, deleteMeeting,
-      saveTask, patchTask, moveTaskStatus, toggleChecklistItem, deleteTask,
+      saveTask, patchTask, moveTaskStatus, moveTask, toggleChecklistItem, deleteTask,
       saveProject, moveProjectStatus, deleteProject,
       saveUpdate, saveTargets,
     ],

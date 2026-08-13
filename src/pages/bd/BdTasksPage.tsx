@@ -26,7 +26,7 @@ const PRIORITY_ORDER: Priority[] = ['critical', 'high', 'medium', 'low']
 const PRIORITY_RANK: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 }
 
 const SORT_OPTIONS = [
-  { value: 'recent', label: 'Newest' },
+  { value: 'manual', label: 'Manual order' },
   { value: 'due_asc', label: 'Due date' },
   { value: 'priority', label: 'Priority' },
   { value: 'title', label: 'Title A–Z' },
@@ -68,7 +68,7 @@ export default function BdTasksPage() {
   const [assigneeFilter, setAssigneeFilter] = useState('me')
   const [dueFrom, setDueFrom] = useState('')
   const [dueTo, setDueTo] = useState('')
-  const [sortBy, setSortBy] = useState('recent')
+  const [sortBy, setSortBy] = useState('manual')
   const [showAdv, setShowAdv] = useState(false)
   const [view, setView] = useState<TaskView>('board')
 
@@ -196,7 +196,13 @@ export default function BdTasksPage() {
         {filtered.length === 0 ? (
           <div className="py-16 text-center font-ui text-[13px] text-text-4">No tasks match your filters.</div>
         ) : view === 'board' ? (
-          <BdTaskBoard tasks={filtered} onOpenTask={setOpenTaskId} onAddTask={createTask} showProject />
+          <BdTaskBoard
+            tasks={filtered}
+            onOpenTask={setOpenTaskId}
+            onAddTask={createTask}
+            showProject
+            reorderable={sortBy === 'manual'}
+          />
         ) : (
           <div className="overflow-x-auto rounded-md border border-border-default bg-surface-1">
             <table className="w-full min-w-[760px] text-left">

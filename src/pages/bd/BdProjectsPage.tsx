@@ -400,7 +400,7 @@ function KanbanView({ projects, onOpen }: { projects: BdProject[]; onOpen: (p: B
             onDrop={() => handleDrop(status)}
             className={cn(
               'flex h-full snap-start flex-col rounded-lg border p-2.5 transition-colors',
-              'w-[86vw] shrink-0 sm:w-72 lg:w-auto lg:min-w-[220px] lg:flex-1',
+              'w-[86vw] shrink-0 sm:w-80',
               dragOver === status ? 'border-brand-red bg-brand-red/5' : 'border-border-default bg-surface-1/60',
             )}
           >

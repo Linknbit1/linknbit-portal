@@ -41,13 +41,16 @@ function FieldPill({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 rounded-sm border border-border-subtle bg-surface-2 px-1.5 py-0.5',
-        'font-ui text-label/normal text-text-2 whitespace-nowrap',
+        'inline-flex max-w-full items-center gap-1 rounded-xs border border-border-subtle bg-surface-2 px-1.5 py-px',
+        // 10px at normal tracking. The `text-label` token is also 10-11px but
+        // carries 0.08em letter-spacing, which made a row of pills read as wide
+        // and loud next to a 13px title.
+        'font-ui text-[10px]/[1.5] tracking-normal text-text-3 whitespace-nowrap',
         className,
       )}
     >
-      {Icon && <Icon size={11} className={cn('shrink-0 text-text-4', iconClassName)} />}
-      {children}
+      {Icon && <Icon size={10} className={cn('shrink-0 text-text-4', iconClassName)} />}
+      <span className="min-w-0 truncate">{children}</span>
     </span>
   )
 }
@@ -58,6 +61,19 @@ interface BdTaskBoardProps {
   onAddTask: (status: TaskStatus) => void
   /** Hide the project line when the board is already scoped to one project. */
   showProject?: boolean
+  /**
+   * Whether a drop can set the position within a lane, not just the status.
+   * False while a sort is applied — the list would immediately re-sort and throw
+   * the placement away, so we don't offer an interaction that cannot stick.
+   */
+  reorderable?: boolean
+}
+
+/** Where a drop would land: a lane, and the card it would sit in front of. */
+interface DropAt {
+  status: TaskStatus
+  /** Index within the lane, ignoring the card being dragged. */
+  index: number
 }
 
 /**
@@ -67,31 +83,54 @@ interface BdTaskBoardProps {
  * open — but laid out ClickUp-style: solid status pill, count outside it, the
  * lane washed in its status colour, and an inline "Add task" per column. Empty
  * lanes collapse to a rail so the columns that hold work get the width.
+ *
+ * Dragging sets both lane and position: hovering the top or bottom half of a
+ * card picks the slot above or below it, and an insertion line shows where the
+ * card will land.
  */
-export function BdTaskBoard({ tasks, onOpenTask, onAddTask, showProject }: BdTaskBoardProps) {
+export function BdTaskBoard({ tasks, onOpenTask, onAddTask, showProject, reorderable = true }: BdTaskBoardProps) {
   const toast = useToast()
-  const { moveTaskStatus, deleteTask } = useBd()
+  const { moveTask, deleteTask } = useBd()
   const [dragId, setDragId] = useState<string | null>(null)
-  const [dragOver, setDragOver] = useState<TaskStatus | null>(null)
+  const [dropAt, setDropAt] = useState<DropAt | null>(null)
   const [pendingDelete, setPendingDelete] = useState<BdTask | null>(null)
   const [expanded, setExpanded] = useState<TaskStatus[]>([])
   const boardRef = useDragScroll<HTMLDivElement>()
 
-  const handleDrop = (status: TaskStatus) => {
-    setDragOver(null)
+  const endDrag = () => { setDragId(null); setDropAt(null) }
+
+  /** `lane` excludes the dragged card, so the index maps straight to a position. */
+  const handleDrop = (status: TaskStatus, lane: BdTask[]) => {
     const id = dragId
-    setDragId(null)
+    const at = dropAt
+    endDrag()
     if (!id) return
     const task = tasks.find((t) => t.id === id)
-    if (!task || task.status === status) return
-    moveTaskStatus(id, status)
-    toast(`Moved to ${BD_BOARD_COLUMNS.find((c) => c.status === status)?.label}`, 'success')
+    if (!task) return
+
+    const index = at && at.status === status ? at.index : lane.length
+    const beforeId = lane[index]?.id ?? null
+
+    // Dropping a card back exactly where it started is not a move.
+    if (task.status === status) {
+      const from = lane.findIndex((t) => t.id === id)
+      if (from === -1 && beforeId === null && lane.length === 0) return
+    }
+
+    moveTask(id, status, beforeId)
+    if (task.status !== status) {
+      toast(`Moved to ${BD_BOARD_COLUMNS.find((c) => c.status === status)?.label}`, 'success')
+    }
   }
 
   return (
     <div ref={boardRef} className="flex min-h-80 flex-1 snap-x snap-mandatory gap-2.5 overflow-x-auto pb-2 lg:snap-none lg:gap-3">
       {BD_BOARD_COLUMNS.map((col) => {
         const items = tasks.filter((t) => t.status === col.status)
+        // The lane as it will be once the dragged card leaves its old slot —
+        // this is what drop indices are measured against.
+        const lane = items.filter((t) => t.id !== dragId)
+        const over = dropAt?.status === col.status
         // An empty lane parks itself as a rail; clicking it forces it open so a
         // card can still be dropped in deliberately.
         const collapsed = items.length === 0 && !expanded.includes(col.status)
@@ -101,11 +140,11 @@ export function BdTaskBoard({ tasks, onOpenTask, onAddTask, showProject }: BdTas
             <CollapsedLane
               key={col.status}
               col={col}
-              active={dragOver === col.status}
+              active={over}
               onExpand={() => setExpanded((e) => [...e, col.status])}
-              onDragOver={(e) => { e.preventDefault(); setDragOver(col.status) }}
-              onDragLeave={() => setDragOver((c) => (c === col.status ? null : c))}
-              onDrop={() => handleDrop(col.status)}
+              onDragOver={(e) => { e.preventDefault(); setDropAt({ status: col.status, index: 0 }) }}
+              onDragLeave={() => setDropAt((c) => (c?.status === col.status ? null : c))}
+              onDrop={() => handleDrop(col.status, lane)}
             />
           )
         }
@@ -114,13 +153,19 @@ export function BdTaskBoard({ tasks, onOpenTask, onAddTask, showProject }: BdTas
         return (
           <section
             key={col.status}
-            onDragOver={(e) => { e.preventDefault(); setDragOver(col.status) }}
-            onDragLeave={() => setDragOver((c) => (c === col.status ? null : c))}
-            onDrop={() => handleDrop(col.status)}
+            // Fires for the lane's padding and gaps; a card's own handler stops
+            // propagation and picks a precise slot instead.
+            onDragOver={(e) => { e.preventDefault(); setDropAt({ status: col.status, index: lane.length }) }}
+            onDragLeave={(e) => {
+              // Ignore the events fired while crossing between children.
+              if (e.currentTarget.contains(e.relatedTarget as Node | null)) return
+              setDropAt((c) => (c?.status === col.status ? null : c))
+            }}
+            onDrop={() => handleDrop(col.status, lane)}
             className={cn(
               'flex h-full snap-start flex-col rounded-lg border p-2.5 transition-colors duration-150',
-              'w-[86vw] shrink-0 sm:w-[300px] lg:w-auto lg:min-w-[264px] lg:flex-1',
-              dragOver === col.status ? cn(col.dropBorder, 'bg-surface-2/40') : col.lane,
+              'w-[86vw] shrink-0 sm:w-80',
+              over ? cn(col.dropBorder, 'bg-surface-2/40') : col.lane,
             )}
           >
             {/* Solid pill, count outside it — the ClickUp header treatment. */}
@@ -148,18 +193,37 @@ export function BdTaskBoard({ tasks, onOpenTask, onAddTask, showProject }: BdTas
             </header>
 
             <div className="min-h-2 flex-1 space-y-2 overflow-y-auto overscroll-y-contain">
-              {items.map((t) => (
-                <TaskCard
-                  key={t.id}
-                  task={t}
-                  dragging={dragId === t.id}
-                  showProject={showProject}
-                  onDragStart={() => setDragId(t.id)}
-                  onDragEnd={() => { setDragId(null); setDragOver(null) }}
-                  onClick={() => onOpenTask(t.id)}
-                  onDelete={() => setPendingDelete(t)}
-                />
-              ))}
+              {items.map((t) => {
+                // Position within the post-drop lane; -1 for the card in hand.
+                const slot = lane.findIndex((x) => x.id === t.id)
+                return (
+                  <div key={t.id}>
+                    {over && dropAt.index === slot && slot !== -1 && <InsertionLine />}
+                    <TaskCard
+                      task={t}
+                      dragging={dragId === t.id}
+                      showProject={showProject}
+                      onDragStart={() => setDragId(t.id)}
+                      onDragEnd={endDrag}
+                      onDragOver={(e) => {
+                        if (!dragId || slot === -1) return
+                        e.preventDefault()
+                        // Stop the lane handler from overwriting this with "end".
+                        e.stopPropagation()
+                        if (!reorderable && t.status === tasks.find((x) => x.id === dragId)?.status) return
+                        const rect = e.currentTarget.getBoundingClientRect()
+                        const below = e.clientY > rect.top + rect.height / 2
+                        setDropAt({ status: col.status, index: below ? slot + 1 : slot })
+                      }}
+                      onClick={() => onOpenTask(t.id)}
+                      onDelete={() => setPendingDelete(t)}
+                    />
+                  </div>
+                )
+              })}
+
+              {/* The tail slot, so a card can be dropped below the last one. */}
+              {over && dropAt.index >= lane.length && lane.length > 0 && <InsertionLine />}
 
               <button
                 onClick={() => onAddTask(col.status)}
@@ -196,6 +260,11 @@ export function BdTaskBoard({ tasks, onOpenTask, onAddTask, showProject }: BdTas
       />
     </div>
   )
+}
+
+/** Where the dragged card will land. Sits in the 8px gap between two cards. */
+function InsertionLine() {
+  return <div className="-my-px h-0.5 rounded-full bg-brand-red" aria-hidden />
 }
 
 /* ── Collapsed lane ─────────────────────────────────────────────────────────── */
@@ -244,11 +313,12 @@ interface TaskCardProps {
   showProject?: boolean
   onDragStart: () => void
   onDragEnd: () => void
+  onDragOver: (e: React.DragEvent<HTMLElement>) => void
   onClick: () => void
   onDelete: () => void
 }
 
-function TaskCard({ task, dragging, showProject, onDragStart, onDragEnd, onClick, onDelete }: TaskCardProps) {
+function TaskCard({ task, dragging, showProject, onDragStart, onDragEnd, onDragOver, onClick, onDelete }: TaskCardProps) {
   const overdue = !!task.dueDate && isOverdue(task.dueDate) && task.status !== 'completed' && task.status !== 'approved'
   const doneCount = task.checklist.filter((c) => c.done).length
   const progress = task.checklist.length === 0
@@ -263,6 +333,7 @@ function TaskCard({ task, dragging, showProject, onDragStart, onDragEnd, onClick
       data-no-pan
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
+      onDragOver={onDragOver}
       onClick={onClick}
       className={cn(
         'group/card cursor-grab rounded-lg border border-border-default bg-surface-1 p-3',
@@ -284,14 +355,25 @@ function TaskCard({ task, dragging, showProject, onDragStart, onDragEnd, onClick
         </div>
       )}
 
-      <p className="font-ui text-[13.5px] font-medium leading-snug text-text-1">{task.title}</p>
+      <p className="font-ui text-body-sm/snug font-medium text-text-1">{task.title}</p>
 
-      {/* Meta row: avatar first, then one pill per field. */}
-      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+      {/*
+        Two tiers, so cards line up down the column instead of each wrapping to a
+        different shape:
+          1. who + when + how urgent — always the same three slots
+          2. optional context (lead, channel, recurrence), which many cards omit
+        Markers with no value — description, attachments — sit as bare icons on
+        the first row rather than as empty pills.
+      */}
+      <div className="mt-2 flex items-center gap-1.5">
         <Avatar name={task.assigneeName} size="xs" />
 
         {task.dueDate && (
-          <FieldPill icon={CalendarDays} className={overdue ? 'border-error/30 bg-error/10 text-error' : undefined} iconClassName={overdue ? 'text-error' : undefined}>
+          <FieldPill
+            icon={CalendarDays}
+            className={overdue ? 'border-error/30 bg-error/10 text-error' : undefined}
+            iconClassName={overdue ? 'text-error' : undefined}
+          >
             {formatDate(task.dueDate).replace(/ \d{4}$/, '')}
           </FieldPill>
         )}
@@ -300,17 +382,22 @@ function TaskCard({ task, dragging, showProject, onDragStart, onDragEnd, onClick
           {PRIORITY_LABELS[task.priority]}
         </FieldPill>
 
-        {channel && ChannelIcon && (
-          <FieldPill icon={ChannelIcon} iconClassName={channel.tint}>{channel.label}</FieldPill>
+        {task.description && (
+          <AlignLeft size={11} className="ml-auto shrink-0 text-text-4" aria-label="Has a description" />
         )}
-
-        {task.recurrence !== 'once' && <FieldPill icon={Repeat}>{RECURRENCE_LABEL[task.recurrence]}</FieldPill>}
-        {task.description && <FieldPill icon={AlignLeft}>&nbsp;</FieldPill>}
       </div>
 
-      {task.leadCompany && (
-        <div className="mt-1.5">
-          <FieldPill icon={Building2}>{task.leadCompany}</FieldPill>
+      {(task.leadCompany || channel || task.recurrence !== 'once') && (
+        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+          {task.leadCompany && (
+            <FieldPill icon={Building2} className="max-w-[60%]">{task.leadCompany}</FieldPill>
+          )}
+          {channel && ChannelIcon && (
+            <FieldPill icon={ChannelIcon} iconClassName={channel.tint}>{channel.label}</FieldPill>
+          )}
+          {task.recurrence !== 'once' && (
+            <FieldPill icon={Repeat}>{RECURRENCE_LABEL[task.recurrence]}</FieldPill>
+          )}
         </div>
       )}
 

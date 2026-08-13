@@ -235,7 +235,7 @@ export default function PipelinePage() {
                   onDrop={() => handleDrop(stage)}
                   className={cn(
                     'flex w-[84vw] shrink-0 flex-col gap-2.5 rounded-lg border p-2.5 transition-colors duration-150',
-                    'sm:w-[300px] lg:w-[292px]',
+                    'sm:w-80',
                     dragOver === stage
                       ? cn(config.dropBorder, 'bg-surface-2/40')
                       : isTerminal ? 'border-border-subtle bg-surface-1/30' : 'border-border-default bg-surface-1/50',
