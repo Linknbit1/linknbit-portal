@@ -16,11 +16,14 @@ import { cn } from '../../lib/cn'
 import { formatDate, isOverdue, STATUS_LABELS, PRIORITY_LABELS } from '../../lib/utils'
 import { useDeleteTask, useTaskDeleteImpact, useTasks } from '../../hooks/useTasks'
 import { useServices } from '../../hooks/useServices'
+import { useStatusOverrides } from '../../hooks/useStatusLabels'
 import { useCanAccess } from '../../hooks/useRoleFlags'
+import { useMyTasksFilter } from '../../hooks/useMeMode'
 import { useToast } from '../../components/ui/toast-context'
 import { ViewToggle, type ViewToggleOption } from '../../components/ui/ViewToggle'
 import { TaskBoard } from '../../components/shared/TaskBoard'
 import { TimeBacklog } from '../../components/shared/TimeBacklog'
+import { MeModeNotice } from '../../components/shared/MeModeNotice'
 import { TaskDetailDrawer } from './TaskDetailDrawer'
 import type { Priority, TaskStatus } from '../../types'
 import type { TaskListItem } from '../../api/tasks'
@@ -60,6 +63,7 @@ export default function TasksPage() {
   const { data: people = [] } = usePeople()
   const { data: tasks = [], isLoading } = useTasks()
   const canViewBacklog = useCanAccess('can_view_backlog')
+  const statusMeta = useStatusOverrides('task')
   const deleteTask = useDeleteTask()
 
   const [search, setSearch] = useState('')
@@ -89,7 +93,10 @@ export default function TasksPage() {
     return sortTasks(list, sortBy)
   }, [tasks, search, statusFilter, priorityFilter, serviceFilter, assigneeFilter, dueFrom, dueTo, sortBy])
 
-  const statusOptions = [{ value: '', label: 'All statuses' }, ...STATUS_ORDER.map((s) => ({ value: s, label: STATUS_LABELS[s] }))]
+  // Me Mode narrows to the signed-in user's own work, on top of the filters above.
+  const shown = useMyTasksFilter(filtered)
+
+  const statusOptions = [{ value: '', label: 'All statuses' }, ...STATUS_ORDER.map((s) => ({ value: s, label: statusMeta[s]?.label ?? STATUS_LABELS[s] }))]
   const priorityOptions = [{ value: '', label: 'All priorities' }, ...PRIORITY_ORDER.map((p) => ({ value: p, label: PRIORITY_LABELS[p] }))]
   const serviceOptions = [{ value: '', label: 'All services' }, ...services.map((s) => ({ value: s.slug, label: s.name, dot: s.color }))]
   const assigneeOptions = [{ value: '', label: 'All assignees' }, ...people.filter((p) => p.is_active).map((p) => ({ value: p.id, label: p.name, avatar: { name: p.name, url: p.avatar_url } }))]
@@ -125,6 +132,8 @@ export default function TasksPage() {
           />
         </div>
 
+        <MeModeNotice shown={shown.length} total={filtered.length} />
+
         {showAdv && (
           <div className="flex flex-wrap items-center gap-2 bg-surface-1 border border-border-default rounded-lg p-2.5">
             <span className="font-mono text-[10px] uppercase tracking-wider text-text-4 self-center">Due between</span>
@@ -141,13 +150,15 @@ export default function TasksPage() {
           <div className="space-y-2">
             {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-14" />)}
           </div>
-        ) : filtered.length === 0 ? (
-          <div className="py-16 text-center font-ui text-[13px] text-text-4">No tasks match your filters.</div>
         ) : view === 'backlog' && canViewBacklog ? (
-          /* Every logged session, grouped per task — start, stop, resume. */
+          /* Every logged session, grouped per task — start, stop, resume. Ahead of
+             the empty-list check on purpose: the backlog answers a question about
+             tracked time, so the task filters above must not blank it out. */
           <TimeBacklog groupBy="task" />
+        ) : shown.length === 0 ? (
+          <div className="py-16 text-center font-ui text-[13px] text-text-4">No tasks match your filters.</div>
         ) : view === 'board' ? (
-          <TaskBoard tasks={filtered} onOpenTask={setOpenTaskId} showProject />
+          <TaskBoard tasks={shown} onOpenTask={setOpenTaskId} showProject />
         ) : (
           <div className="bg-surface-1 border border-border-default rounded-md overflow-x-auto">
             <table className="w-full text-left min-w-[760px]">
@@ -163,7 +174,7 @@ export default function TasksPage() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((t) => (
+                {shown.map((t) => (
                   <tr key={t.id} onClick={() => setOpenTaskId(t.id)} className="border-b border-border-subtle last:border-0 hover:bg-surface-2/50 cursor-pointer">
                     <td className="px-4 py-3 font-ui text-[13px] text-text-1">{t.title}</td>
                     <td className="px-4 py-3">

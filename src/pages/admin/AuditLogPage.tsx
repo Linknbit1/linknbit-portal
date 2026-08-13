@@ -100,7 +100,7 @@ function relativeTime(iso: string): string {
   if (hours < 24) return `${hours}h ago`
   return `${Math.round(hours / 24)}d ago`
 }
-const timeHM = (iso: string) => new Date(iso).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
+const timeHM = (iso: string) => new Date(iso).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: true })
 const dateMD = (iso: string) => new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 const absolute = (iso: string) =>
   new Date(iso).toLocaleString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })

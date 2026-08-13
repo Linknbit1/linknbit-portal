@@ -42,7 +42,7 @@ function labelFor(field: string, raw: unknown, names: Map<string, string>): stri
       const day = at.toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' })
       // Midnight is what a date-only pick stores, so don't imply a time nobody set.
       if (at.getHours() === 0 && at.getMinutes() === 0) return day
-      return `${day} at ${at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+      return `${day} at ${at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}`
     }
     case 'client_visible':
       return value === 'true' ? 'visible to client' : 'internal only'

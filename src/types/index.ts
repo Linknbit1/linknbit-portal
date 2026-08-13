@@ -27,6 +27,7 @@ export type TaskStatus =
 export type Priority = 'critical' | 'high' | 'medium' | 'low'
 
 export type ProjectStatus =
+  | 'todo'
   | 'in_progress'
   | 'blocked'
   | 'awaiting_client'

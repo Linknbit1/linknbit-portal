@@ -34,6 +34,8 @@ export interface UploadAttachmentArgs {
   projectId: string
   taskId?: string | null
   clientVisible?: boolean
+  /** What the file is for, in the uploader's words. */
+  description?: string | null
 }
 
 const BUCKET = 'attachments'
@@ -76,6 +78,7 @@ export async function uploadAttachment(file: File, args: UploadAttachmentArgs): 
       mime_type: file.type || null,
       storage_path: path,
       client_visible: args.clientVisible ?? false,
+      description: args.description?.trim() || null,
     })
     .select()
     .single()

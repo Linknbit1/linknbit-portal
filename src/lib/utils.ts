@@ -58,6 +58,46 @@ export function toTimeInput(iso: string | null | undefined): string {
   return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`
 }
 
+export type Meridiem = 'AM' | 'PM'
+
+/** 12-hour parts of a 24-hour hour. */
+export function to12(hour24: number): { hour12: number; meridiem: Meridiem } {
+  return {
+    hour12: hour24 % 12 === 0 ? 12 : hour24 % 12,
+    meridiem: hour24 >= 12 ? 'PM' : 'AM',
+  }
+}
+
+/** Back to the 24-hour hour the database and `<input>` values speak. */
+export function to24(hour12: number, meridiem: Meridiem): number {
+  const base = hour12 % 12
+  return meridiem === 'PM' ? base + 12 : base
+}
+
+/** "09:00 AM" — the one place the 12-hour clock label is spelled out. */
+export function formatClockLabel(hour24: number, minute: number): string {
+  const { hour12, meridiem } = to12(hour24)
+  return `${pad2(hour12)}:${pad2(minute)} ${meridiem}`
+}
+
+/**
+ * "04 Aug, 09:00 AM" — one scheduled point, in the form DateTimeRangePicker
+ * labels its own value with, so a picker and the text beside it agree.
+ */
+export function formatStamp(iso: string): string {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  const day = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
+  return `${day}, ${d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true })}`
+}
+
+/** Just the clock half of {@link formatStamp} — "09:00 AM". */
+export function formatStampTime(iso: string): string {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true })
+}
+
 /**
  * Recombines a date + time picker pair into a timestamptz. A time on its own has
  * nothing to anchor to, so a missing date clears the column entirely; a missing
@@ -104,6 +144,7 @@ export const PRIORITY_LABELS: Record<Priority, string> = {
 }
 
 export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
+  todo: 'To Do',
   in_progress: 'In Progress',
   blocked: 'Blocked',
   awaiting_client: 'Awaiting Client',

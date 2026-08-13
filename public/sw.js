@@ -1,7 +1,7 @@
 // Bumped for the app-icon fix: the old cache holds the previous manifest, which
 // pointed the icons at splash art. Without a new name, installed clients would
 // keep serving the stale manifest and the banner icon with it.
-const CACHE_NAME = 'linknbit-portal-v6'
+const CACHE_NAME = 'linknbit-portal-v7'
 const PRECACHE_URLS = [
   '/',
   '/index.html',
@@ -94,12 +94,18 @@ self.addEventListener('fetch', (event) => {
 })
 
 // ── Web push ────────────────────────────────────────────────────────────────
-// A push arrives on EVERY subscribed device. Each device decides for itself:
-// if a window here is focused the user can already see the in-app toast (driven
-// by Supabase Realtime), so we forward the payload and stay silent. If nothing
-// here is focused — another device, another tab, or the app closed — we show a
-// system notification. That's why looking at your laptop still lets your phone
-// buzz: only the focused device suppresses.
+// Every push shows a system notification, always — app open, app closed, even
+// sitting on the very page the notification is about.
+//
+// This used to suppress the popup whenever a window here was focused, on the
+// theory that the in-app toast covered it. In practice people missed things:
+// a toast inside a tab you are not reading is not a notification. The suppressed
+// case also forwarded the payload to the page, which nothing ever listened for,
+// so a focused device showed nothing at all from push.
+//
+// The cost is that a focused device now shows both the system popup and the
+// Realtime in-app toast. That is the intended trade: seeing it twice beats
+// missing it.
 self.addEventListener('push', (event) => {
   let payload = {}
   try {
@@ -108,37 +114,31 @@ self.addEventListener('push', (event) => {
     payload = { title: 'Linknbit Portal', body: event.data ? event.data.text() : '' }
   }
 
-  event.waitUntil((async () => {
-    const clientList = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
-    const focused = clientList.find((c) => c.focused || c.visibilityState === 'visible')
-
-    if (focused) {
-      // Visible here — hand it to the page and don't stack a system popup on top.
-      focused.postMessage({ type: 'PUSH_NOTIFICATION', payload })
-      return
-    }
-
-    await self.registration.showNotification(payload.title || 'Linknbit Portal', {
+  event.waitUntil(
+    self.registration.showNotification(payload.title || 'Linknbit Portal', {
       body: payload.body || '',
       icon: '/icons/pwa-192x192.png',
       badge: '/icons/favicon-48x48.png',
-      // Collapse repeats of the same thing (e.g. re-sent) instead of stacking.
-      tag: payload.id || payload.type || 'linknbit',
-      renotify: false,
+      // A tag unique per notification. Sharing one (the old fallback to `type`)
+      // let a second request of the same kind silently replace the first popup
+      // instead of alerting again.
+      tag: payload.id || 'linknbit-' + Date.now(),
+      // Alert even when a tag does collide, rather than swapping in silence.
+      renotify: true,
       data: {
         notificationId: payload.id,
         resourceType: payload.resource_type,
         resourceId: payload.resource_id,
       },
-    })
-  })())
+    }),
+  )
 })
 
 // Map a notification's resource to an in-app path (mirrors notificationHref).
 function pathForNotification(data) {
   const id = data.resourceId
   switch (data.resourceType) {
-    case 'task': return id ? '/admin/tasks/' + id : '/inbox'
+    case 'task': return id ? '/admin/tasks/' + id + '?openInProject=1' : '/inbox'
     case 'project': return id ? '/admin/projects/' + id : '/inbox'
     case 'leave_request':
     case 'wfh_request':

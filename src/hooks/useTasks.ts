@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   fetchTasks, fetchTask, createTask, updateTask, updateTaskStatus,
-  type TaskFilters, type TaskStatus,
+  moveTask,
+  type TaskFilters, type TaskStatus, type MoveTaskArgs,
 } from '../api/tasks'
 import { deleteTaskCascade, fetchTaskDeleteImpact } from '../api/deleteCascade'
 import { PROJECT_KEYS } from './useProjects'
@@ -55,6 +56,26 @@ export function useUpdateTask() {
       // Every audited field edit adds a line to the task's activity feed.
       qc.invalidateQueries({ queryKey: AUDIT_KEYS.task(row.id) })
       invalidateTasks(qc, row.project_id)
+    },
+  })
+}
+
+/**
+ * Re-homes a task under another project/service. Both the old and the new
+ * project's lists have to be refreshed — the task leaves one and joins the
+ * other — and the files panel follows, since attachments were re-pointed too.
+ */
+export function useMoveTask() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (args: MoveTaskArgs & { fromProjectId?: string }) => moveTask(args),
+    onSuccess: (_r, v) => {
+      qc.invalidateQueries({ queryKey: TASK_KEYS.detail(v.taskId) })
+      qc.invalidateQueries({ queryKey: AUDIT_KEYS.task(v.taskId) })
+      // Broad: the files moved project, so both projects' panels are stale.
+      qc.invalidateQueries({ queryKey: ['attachments'] })
+      invalidateTasks(qc, v.fromProjectId)
+      invalidateTasks(qc)
     },
   })
 }

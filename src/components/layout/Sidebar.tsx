@@ -119,6 +119,9 @@ const rowCls = (active: boolean) =>
   )
 
 /** A nav entry — a plain link, or an expandable group when it has sub-pages. */
+/** Keeps a badge pill one or two glyphs wide, the way the bell does. */
+const badgeCount = (n: number) => (n > 99 ? '99+' : String(n))
+
 function NavRow({ item, pathname, activePath }: { item: NavItem; pathname: string; activePath: string | null }) {
   const inSection = (item.matchPrefix ?? item.to) === activePath
   // Expanded by default while you're inside the section; an explicit toggle wins
@@ -134,7 +137,7 @@ function NavRow({ item, pathname, activePath }: { item: NavItem; pathname: strin
         <span>{item.label}</span>
         {item.badge && item.badge > 0 && (
           <span className="ml-auto bg-brand-red text-white font-ui font-bold text-[10px] px-1.5 py-px rounded-full leading-tight">
-            {item.badge}
+            {badgeCount(item.badge)}
           </span>
         )}
       </NavLink>
@@ -152,7 +155,7 @@ function NavRow({ item, pathname, activePath }: { item: NavItem; pathname: strin
             per-child breakdown. */}
         {item.badge && item.badge > 0 && (
           <span className="bg-brand-red text-white font-ui font-bold text-[10px] px-1.5 py-px rounded-full leading-tight shrink-0">
-            {item.badge}
+            {badgeCount(item.badge)}
           </span>
         )}
         <button
@@ -181,7 +184,7 @@ function NavRow({ item, pathname, activePath }: { item: NavItem; pathname: strin
                 <span className="truncate">{child.label}</span>
                 {child.badge && child.badge > 0 && (
                   <span className="ml-auto bg-brand-red text-white font-ui font-bold text-[10px] px-1.5 py-px rounded-full leading-tight shrink-0">
-                    {child.badge}
+                    {badgeCount(child.badge)}
                   </span>
                 )}
               </NavLink>

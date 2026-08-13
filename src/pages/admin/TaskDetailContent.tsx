@@ -2,7 +2,8 @@ import { useMemo, useState, type ReactNode } from 'react'
 import type { JSONContent } from '@tiptap/react'
 import {
   Plus, Trash2, Send, CheckCircle2, MessageSquare, ListChecks, RotateCcw, Pencil,
-  CircleDot, UserRound, CalendarDays, Flag, Layers, Eye, Paperclip, Bell, BellOff, Timer, Clock,
+  CircleDot, UserRound, CalendarDays, Flag, Layers, Eye, Paperclip, Bell, BellOff, Timer, Clock, History,
+  CornerUpRight,
   type LucideIcon,
 } from 'lucide-react'
 import { cn } from '../../lib/cn'
@@ -41,6 +42,8 @@ import { useRealtimeTaskActivity } from '../../hooks/realtime/useRealtimeTaskAct
 import { useTaskActivity } from '../../hooks/useAuditLog'
 import { useTaskWatch } from '../../hooks/useWatchers'
 import { useAuthContext } from '../../context/AuthContext'
+import { useCanAccess } from '../../hooks/useRoleFlags'
+import { MoveTaskModal } from '../../components/shared/MoveTaskModal'
 import { describeTaskActivity } from '../../lib/taskActivity'
 import type { Priority, TaskStatus } from '../../types'
 
@@ -197,6 +200,9 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
   // once the task actually has something in them.
   const [subtasksOpen, setSubtasksOpen] = useState(false)
   const [filesOpen, setFilesOpen] = useState(false)
+  const [railTab, setRailTab] = useState<'comments' | 'activity'>('comments')
+  const [moving, setMoving] = useState(false)
+  const canMoveTask = useCanAccess('can_manage_projects')
 
   const { data: activity = [] } = useTaskActivity(taskId)
   const { data: taskFiles = [] } = useTaskAttachments(taskId)
@@ -210,13 +216,20 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
   }, [allMembers, stages])
 
   /** Comments and audit events on one timeline, oldest first (composer sits below). */
-  const feed = useMemo(() => {
-    const items = [
-      ...comments.map((c) => ({ kind: 'comment' as const, id: `c:${c.id}`, at: c.created_at, comment: c })),
-      ...describeTaskActivity(activity, activityNames).map((e) => ({ kind: 'event' as const, id: `e:${e.id}`, at: e.createdAt, entry: e })),
-    ]
-    return items.sort((a, b) => a.at.localeCompare(b.at))
-  }, [comments, activity, activityNames])
+  /**
+   * Comments read oldest-first like a conversation, with the composer beneath.
+   * Field changes read newest-first: merged into one list they were appended at
+   * the bottom, so a fresh priority change landed below the fold and looked like
+   * it had not been recorded at all.
+   */
+  const commentFeed = useMemo(
+    () => [...comments].sort((a, b) => a.created_at.localeCompare(b.created_at)),
+    [comments],
+  )
+  const eventFeed = useMemo(
+    () => describeTaskActivity(activity, activityNames).sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+    [activity, activityNames],
+  )
 
   const showSubtasks = subtasksOpen || subtasks.length > 0
   const showFiles = filesOpen || taskFiles.length > 0
@@ -283,8 +296,22 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
       {/* Header */}
       <div className="space-y-2">
         <div className="flex min-h-5 items-center gap-2 flex-wrap">
-          {task.project_service?.service && <ServiceChip service={task.project_service.service.slug} />}
-          {task.project?.name && <span className="font-ui text-[12px] text-text-3">{task.project.name}</span>}
+          {canMoveTask ? (
+            <button
+              onClick={() => setMoving(true)}
+              title="Move this task to another project"
+              className="group/loc -mx-1 flex min-w-0 items-center gap-2 rounded-sm px-1 py-0.5 transition-colors hover:bg-surface-2"
+            >
+              {task.project_service?.service && <ServiceChip service={task.project_service.service.slug} />}
+              {task.project?.name && <span className="truncate font-ui text-[12px] text-text-3 group-hover/loc:text-text-1">{task.project.name}</span>}
+              <CornerUpRight size={11} className="shrink-0 text-text-4 opacity-0 transition-opacity group-hover/loc:opacity-100" />
+            </button>
+          ) : (
+            <>
+              {task.project_service?.service && <ServiceChip service={task.project_service.service.slug} />}
+              {task.project?.name && <span className="font-ui text-[12px] text-text-3">{task.project.name}</span>}
+            </>
+          )}
           <SaveIndicator state={saveState} className="ml-auto" />
         </div>
         <EditableTitle value={task.title} onSave={(title) => patch({ title })} />
@@ -301,7 +328,17 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
             onChange={(ids) => {
               markSaving()
               setAssignees.mutate(
-                { taskId: task.id, profileIds: ids, projectId: task.project_id },
+                {
+                  taskId: task.id,
+                  profileIds: ids,
+                  projectId: task.project_id,
+                  // Resolved here so the picker updates on click; the save then
+                  // catches up in the background.
+                  people: ids.flatMap((id) => {
+                    const m = members.find((p) => p.id === id)
+                    return m ? [{ id: m.id, name: m.name, avatar_url: m.avatar_url }] : []
+                  }),
+                },
                 {
                   onSuccess: () => markSaved(),
                   onError: (e) => { markFailed(); toast(e instanceof Error ? e.message : 'Failed', 'error') },
@@ -310,6 +347,7 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
             }}
             options={assigneeOptions}
             size="sm"
+            closeOnSelect
           />
         </PropertyRow>
         <PropertyRow icon={CalendarDays} label="Schedule">
@@ -437,42 +475,72 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
         'flex w-full flex-col border-t border-border-default bg-bg-base/40 lg:w-96 lg:shrink-0 xl:w-105 lg:border-l lg:border-t-0',
         fill && 'lg:min-h-0',
       )}>
-        <div className="flex shrink-0 items-center gap-2 border-b border-border-default px-4 py-3">
-          <MessageSquare size={14} className="text-text-3" />
-          <h3 className="font-display text-[14px] font-bold text-text-1">Activity</h3>
-        </div>
-
-        <div className={cn('flex-1 space-y-4 p-4', fill && 'lg:overflow-y-auto')}>
-          {feed.length === 0 && (
-            <p className="py-8 text-center font-ui text-[12.5px] text-text-4">No activity yet.</p>
-          )}
-          {feed.map((item) => item.kind === 'comment' ? (
-            <div key={item.id} className="flex gap-2.5">
-              <Avatar name={item.comment.author?.name ?? '?'} src={item.comment.author?.avatar_url ?? undefined} size="sm" personId={item.comment.author?.id} />
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <PersonLink personId={item.comment.author?.id} className="font-ui text-[12.5px] font-semibold text-text-1">{item.comment.author?.name ?? 'Unknown'}</PersonLink>
-                  <span className="font-mono text-[10px] text-text-4">{formatRelativeTime(item.comment.created_at)}</span>
-                  {!item.comment.is_internal && <span className="font-ui text-[9.5px] font-semibold uppercase text-service-mkt">Client</span>}
-                </div>
-                {item.comment.doc
-                  ? <RichRenderer doc={fromDbDoc(item.comment.doc)} className="font-ui text-[13px] text-text-2" />
-                  : <p className="whitespace-pre-wrap font-ui text-[13px] text-text-2">{item.comment.content}</p>}
-              </div>
-            </div>
-          ) : (
-            <div key={item.id} className="flex gap-2.5">
-              <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-border-strong" />
-              <p className="min-w-0 flex-1 font-ui text-[12px] text-text-3">
-                <PersonLink personId={item.entry.actorId ?? undefined} className="font-semibold text-text-2">{item.entry.actorName}</PersonLink>
-                {' '}{item.entry.text}
-                <span className="ml-1.5 font-mono text-[10px] text-text-4">{formatRelativeTime(item.entry.createdAt)}</span>
-              </p>
-            </div>
+        {/* Two panes, not one merged stream: a comment and a field change are
+            different kinds of record, and mixing them hid both. */}
+        <div className="flex shrink-0 items-center gap-1 border-b border-border-default px-3 py-2">
+          {([
+            { key: 'comments' as const, label: 'Comments', icon: MessageSquare, count: comments.length },
+            { key: 'activity' as const, label: 'Activity', icon: History, count: eventFeed.length },
+          ]).map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setRailTab(t.key)}
+              aria-pressed={railTab === t.key}
+              className={cn(
+                'flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 font-ui text-[12.5px] font-semibold transition-colors',
+                railTab === t.key ? 'bg-surface-2 text-text-1' : 'text-text-3 hover:text-text-1',
+              )}
+            >
+              <t.icon size={13} /> {t.label}
+              {t.count > 0 && (
+                <span className="rounded-full bg-surface-3 px-1.5 font-mono text-[10px] font-bold text-text-3">{t.count}</span>
+              )}
+            </button>
           ))}
         </div>
 
-        <div className="shrink-0 space-y-2 border-t border-border-default p-3">
+        {railTab === 'comments' ? (
+          <div className={cn('flex-1 space-y-4 p-4', fill && 'lg:overflow-y-auto')}>
+            {commentFeed.length === 0 && (
+              <p className="py-8 text-center font-ui text-[12.5px] text-text-4">No comments yet.</p>
+            )}
+            {commentFeed.map((c) => (
+              <div key={c.id} className="flex gap-2.5">
+                <Avatar name={c.author?.name ?? '?'} src={c.author?.avatar_url ?? undefined} size="sm" personId={c.author?.id} />
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <PersonLink personId={c.author?.id} className="font-ui text-[12.5px] font-semibold text-text-1">{c.author?.name ?? 'Unknown'}</PersonLink>
+                    <span className="font-mono text-[10px] text-text-4">{formatRelativeTime(c.created_at)}</span>
+                    {!c.is_internal && <span className="font-ui text-[9.5px] font-semibold uppercase text-service-mkt">Client</span>}
+                  </div>
+                  {c.doc
+                    ? <RichRenderer doc={fromDbDoc(c.doc)} className="font-ui text-[13px] text-text-2" />
+                    : <p className="whitespace-pre-wrap font-ui text-[13px] text-text-2">{c.content}</p>}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          // Newest first, so the change you just made is the top line.
+          <div className={cn('flex-1 space-y-3 p-4', fill && 'lg:overflow-y-auto')}>
+            {eventFeed.length === 0 && (
+              <p className="py-8 text-center font-ui text-[12.5px] text-text-4">No changes recorded yet.</p>
+            )}
+            {eventFeed.map((entry) => (
+              <div key={entry.id} className="flex gap-2.5">
+                <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-border-strong" />
+                <p className="min-w-0 flex-1 font-ui text-[12px] text-text-3">
+                  <PersonLink personId={entry.actorId ?? undefined} className="font-semibold text-text-2">{entry.actorName}</PersonLink>
+                  {' '}{entry.text}
+                  <span className="ml-1.5 font-mono text-[10px] text-text-4">{formatRelativeTime(entry.createdAt)}</span>
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Composer belongs to comments only. */}
+        <div className={cn('shrink-0 space-y-2 border-t border-border-default p-3', railTab !== 'comments' && 'hidden')}>
           <div className="min-h-16 rounded-md border border-border-default bg-surface-inset px-3 py-2 focus-within:border-border-focus">
             <RichEditor
               key={composerKey}
@@ -494,6 +562,17 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
           </div>
         </div>
       </aside>
+      {moving && (
+        <MoveTaskModal
+          taskId={task.id}
+          taskTitle={task.title}
+          currentProjectId={task.project_id}
+          currentProjectName={task.project?.name ?? 'this project'}
+          currentServiceId={task.project_service_id}
+          currentServiceName={task.project_service?.service?.name}
+          onClose={() => setMoving(false)}
+        />
+      )}
       <ConfirmDialog
         open={confirmDelete}
         title="Delete task?"

@@ -112,6 +112,28 @@ export async function updateTaskStatus(id: string, status: TaskStatus, boardOrde
 }
 
 /** Soft delete (archive). */
+export interface MoveTaskArgs {
+  taskId: string
+  /** Destination service block; the project is derived from it server-side. */
+  projectServiceId: string
+  /** Stage in the destination service, if one was picked. */
+  stageId?: string | null
+}
+
+/**
+ * Moves a task to another project. Goes through fn_move_task rather than a
+ * plain update: the task's attachments carry their own project_id and its stage
+ * belongs to the old service, so all three have to change together.
+ */
+export async function moveTask({ taskId, projectServiceId, stageId }: MoveTaskArgs): Promise<void> {
+  const { error } = await supabase.rpc('fn_move_task', {
+    p_task_id: taskId,
+    p_project_service_id: projectServiceId,
+    p_stage_id: stageId ?? undefined,
+  })
+  if (error) throw error
+}
+
 export async function deleteTask(id: string): Promise<void> {
   const { data: auth } = await supabase.auth.getUser()
   const { error } = await supabase

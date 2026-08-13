@@ -35,3 +35,41 @@ export async function syncMentions(
   const { error } = await supabase.from('mentions').insert(rows)
   if (error) throw error
 }
+
+/**
+ * Task ids the given person has been @mentioned on — directly on the task doc, or
+ * in one of its comments.
+ *
+ * Two round trips because a comment mention records the comment id, so it has to
+ * be resolved to the task it belongs to. Me Mode pairs this with assignment: being
+ * tagged in a thread is how work reaches you when nobody assigned it.
+ */
+export async function fetchMentionedTaskIds(profileId: string): Promise<string[]> {
+  if (!profileId) return []
+
+  const { data: rows, error } = await supabase
+    .from('mentions')
+    .select('source_type, source_id')
+    .eq('profile_id', profileId)
+    .in('source_type', ['task', 'comment'])
+  if (error) throw error
+
+  const taskIds = new Set<string>()
+  const commentIds: string[] = []
+  for (const r of rows) {
+    if (r.source_type === 'task') taskIds.add(r.source_id)
+    else commentIds.push(r.source_id)
+  }
+
+  if (commentIds.length > 0) {
+    const { data: comments, error: cErr } = await supabase
+      .from('comments')
+      .select('task_id')
+      .in('id', commentIds)
+      .not('task_id', 'is', null)
+    if (cErr) throw cErr
+    for (const c of comments) if (c.task_id) taskIds.add(c.task_id)
+  }
+
+  return [...taskIds]
+}

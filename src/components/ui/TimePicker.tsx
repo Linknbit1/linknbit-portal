@@ -1,7 +1,9 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { Clock, ChevronDown } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { Popover } from './Popover'
+import { TimeWheel } from './TimeWheel'
+import { formatClockLabel } from '../../lib/utils'
 
 interface TimePickerProps {
   value: string          // HH:MM (24h) or ''
@@ -22,12 +24,6 @@ function parseTime(s: string): [number, number] | null {
 
 function fmt2(n: number): string {
   return String(n).padStart(2, '0')
-}
-
-function toAmPm(h: number, m: number): string {
-  const suffix = h >= 12 ? 'PM' : 'AM'
-  const h12 = h % 12 === 0 ? 12 : h % 12
-  return `${fmt2(h12)}:${fmt2(m)} ${suffix}`
 }
 
 export function TimePicker({
@@ -56,16 +52,6 @@ export function TimePicker({
   })
 
   const triggerRef = useRef<HTMLButtonElement>(null)
-  const hourListRef = useRef<HTMLUListElement>(null)
-  const minListRef = useRef<HTMLUListElement>(null)
-
-  const HOURS = Array.from({ length: 24 }, (_, i) => i)
-  const MINUTES = Array.from({ length: Math.ceil(60 / step) }, (_, i) => i * step)
-
-  const scrollTo = (ref: React.RefObject<HTMLUListElement | null>, idx: number) => {
-    const el = ref.current?.children[idx] as HTMLElement | undefined
-    el?.scrollIntoView({ block: 'center', behavior: 'instant' })
-  }
 
   const toggleOpen = () => {
     if (disabled) return
@@ -78,37 +64,10 @@ export function TimePicker({
     setOpen(nextOpen)
   }
 
-  // Scroll selected items into view after open animation
-  useEffect(() => {
-    if (!open) return
-    const id = setTimeout(() => {
-      const hIdx = HOURS.indexOf(pendingH)
-      const mIdx = MINUTES.indexOf(pendingM)
-      scrollTo(hourListRef, hIdx)
-      scrollTo(minListRef, mIdx)
-    }, 40)
-    return () => clearTimeout(id)
-  }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  const isHourDisabled = (h: number) => {
-    if (!minParsed) return false
-    return h < minParsed[0]
-  }
-
-  const isMinDisabled = (h: number, m: number) => {
-    if (!minParsed) return false
-    if (h < minParsed[0]) return true
-    if (h === minParsed[0] && m < minParsed[1]) return true
-    return false
-  }
-
-  const selectHour = (h: number) => {
-    if (isHourDisabled(h)) return
+  /** Moving to the floor hour can strand the minute behind it — pull it forward. */
+  const pick = (h: number, m: number) => {
     setPendingH(h)
-    // If current pending minute would be invalid with new hour, advance it
-    if (minParsed && h === minParsed[0] && pendingM < minParsed[1]) {
-      setPendingM(snapMin(minParsed[1]))
-    }
+    setPendingM(minParsed && h === minParsed[0] && m < minParsed[1] ? snapMin(minParsed[1]) : m)
   }
 
   const confirm = () => {
@@ -116,7 +75,7 @@ export function TimePicker({
     setOpen(false)
   }
 
-  const triggerLabel = parsed ? toAmPm(parsed[0], parsed[1]) : null
+  const triggerLabel = parsed ? formatClockLabel(parsed[0], parsed[1]) : null
 
   return (
     <div className={cn('relative', className)}>
@@ -145,72 +104,14 @@ export function TimePicker({
         anchorRef={triggerRef}
         open={open}
         onClose={() => setOpen(false)}
-        className="bg-surface-1 border border-border-default rounded-xl shadow-2xl overflow-hidden w-45 max-w-[calc(100vw-2rem)]"
+        className="bg-surface-1 border border-border-default rounded-xl shadow-2xl overflow-hidden w-64 max-w-[calc(100vw-2rem)]"
       >
-          <div className="flex divide-x divide-border-subtle">
-            {/* Hours column */}
-            <div className="flex-1 flex flex-col">
-              <div className="text-center font-mono text-[10px] text-text-4 uppercase tracking-wider py-1.5 border-b border-border-subtle bg-surface-2/40">
-                Hour
-              </div>
-              <ul ref={hourListRef} className="h-40 overflow-y-auto py-1">
-                {HOURS.map((h) => {
-                  const disabled = isHourDisabled(h)
-                  const active = h === pendingH
-                  return (
-                    <li
-                      key={h}
-                      onClick={() => selectHour(h)}
-                      className={cn(
-                        'py-1.5 font-mono text-[13px] text-center select-none transition-colors',
-                        active
-                          ? 'bg-brand-red text-white font-semibold'
-                          : disabled
-                          ? 'text-text-4 cursor-not-allowed'
-                          : 'text-text-2 hover:bg-surface-2 hover:text-text-1 cursor-pointer',
-                      )}
-                    >
-                      {fmt2(h)}
-                    </li>
-                  )
-                })}
-              </ul>
-            </div>
-
-            {/* Minutes column */}
-            <div className="flex-1 flex flex-col">
-              <div className="text-center font-mono text-[10px] text-text-4 uppercase tracking-wider py-1.5 border-b border-border-subtle bg-surface-2/40">
-                Min
-              </div>
-              <ul ref={minListRef} className="h-40 overflow-y-auto py-1">
-                {MINUTES.map((m) => {
-                  const disabled = isMinDisabled(pendingH, m)
-                  const active = m === pendingM
-                  return (
-                    <li
-                      key={m}
-                      onClick={() => { if (!disabled) setPendingM(m) }}
-                      className={cn(
-                        'py-1.5 font-mono text-[13px] text-center select-none transition-colors',
-                        active
-                          ? 'bg-brand-red text-white font-semibold'
-                          : disabled
-                          ? 'text-text-4 cursor-not-allowed'
-                          : 'text-text-2 hover:bg-surface-2 hover:text-text-1 cursor-pointer',
-                      )}
-                    >
-                      {fmt2(m)}
-                    </li>
-                  )
-                })}
-              </ul>
-            </div>
-          </div>
+          <TimeWheel hour={pendingH} minute={pendingM} onChange={pick} step={step} min={minParsed} />
 
           {/* Footer */}
           <div className="border-t border-border-subtle px-3 py-2 flex items-center justify-between">
             <span className="font-mono text-[13px] text-text-2">
-              {toAmPm(pendingH, pendingM)}
+              {formatClockLabel(pendingH, pendingM)}
             </span>
             <button
               type="button"

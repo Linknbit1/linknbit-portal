@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       approvals: {
@@ -83,6 +108,7 @@ export type Database = {
           client_visible: boolean
           confidential_scope: string
           created_at: string
+          description: string | null
           file_name: string
           file_size: number | null
           id: string
@@ -99,6 +125,7 @@ export type Database = {
           client_visible?: boolean
           confidential_scope?: string
           created_at?: string
+          description?: string | null
           file_name: string
           file_size?: number | null
           id?: string
@@ -115,6 +142,7 @@ export type Database = {
           client_visible?: boolean
           confidential_scope?: string
           created_at?: string
+          description?: string | null
           file_name?: string
           file_size?: number | null
           id?: string
@@ -3077,6 +3105,41 @@ export type Database = {
           },
         ]
       }
+      status_labels: {
+        Row: {
+          color: string
+          key: string
+          label: string
+          scope: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          color: string
+          key: string
+          label: string
+          scope: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          color?: string
+          key?: string
+          label?: string
+          scope?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "status_labels_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sticky_notes: {
         Row: {
           bold: boolean
@@ -3231,6 +3294,7 @@ export type Database = {
           id: string
           note: string | null
           profile_id: string
+          source: string
           started_at: string
           task_id: string
           updated_at: string
@@ -3242,6 +3306,7 @@ export type Database = {
           id?: string
           note?: string | null
           profile_id: string
+          source?: string
           started_at: string
           task_id: string
           updated_at?: string
@@ -3253,6 +3318,7 @@ export type Database = {
           id?: string
           note?: string | null
           profile_id?: string
+          source?: string
           started_at?: string
           task_id?: string
           updated_at?: string
@@ -3852,6 +3918,14 @@ export type Database = {
         Returns: undefined
       }
       fn_monthly_lp_reset: { Args: never; Returns: undefined }
+      fn_move_task: {
+        Args: {
+          p_project_service_id: string
+          p_stage_id?: string
+          p_task_id: string
+        }
+        Returns: undefined
+      }
       fn_next_working_start: { Args: { p_date: string }; Returns: string }
       fn_notify: {
         Args: {
@@ -3865,6 +3939,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      fn_purge_old_notifications: { Args: never; Returns: undefined }
       fn_recalc_project_progress: {
         Args: { p_project: string }
         Returns: undefined
@@ -4248,6 +4323,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       queue_status: ["pending", "processing", "done", "failed"],

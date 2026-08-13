@@ -1,8 +1,8 @@
 import { useMemo, useRef, useState, type ReactNode } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
   Plus, Users, Layers, Paperclip, Calendar, Wallet, UserCircle,
-  Pencil, Trash2, Flag, X, CheckCircle2, Columns, FileText, Bell, BellOff, MoreVertical,
+  Pencil, Trash2, Flag, X, CheckCircle2, Columns, FileText, Bell, BellOff, MoreVertical, History,
 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Button } from '../../components/ui/Button'
@@ -18,6 +18,8 @@ import { ServiceChip } from '../../components/shared/ServiceChip'
 import { StatusChip } from '../../components/shared/StatusChip'
 import { PriorityChip } from '../../components/shared/PriorityChip'
 import { TaskBoard } from '../../components/shared/TaskBoard'
+import { TimeBacklog } from '../../components/shared/TimeBacklog'
+import { MeModeNotice } from '../../components/shared/MeModeNotice'
 import { DocEditor } from '../../components/editor/DocEditor'
 import { ProjectFilesTab } from './ProjectFilesTab'
 import { ProjectFormModal } from './ProjectFormModal'
@@ -40,6 +42,8 @@ import { useServices } from '../../hooks/useServices'
 import { useUsableTemplates, useApplyTemplate } from '../../hooks/useTemplates'
 import { useApprovals, useRequestApproval, useReviewApproval } from '../../hooks/useApprovals'
 import { useRealtimeTasks } from '../../hooks/realtime/useRealtimeTasks'
+import { useMyTasksFilter } from '../../hooks/useMeMode'
+import { PROJECT_TASK_QUERY_PARAM } from '../../constants/notifications'
 import { StageFormModal } from './StageFormModal'
 import { TaskFormModal } from './TaskFormModal'
 import { AddProjectMemberModal } from './AddProjectMemberModal'
@@ -57,6 +61,9 @@ const TABS = [
   { key: 'overview', label: 'Overview', icon: FileText },
   { key: 'files', label: 'Files', icon: Paperclip },
   { key: 'team', label: 'Team', icon: Users },
+  // Where this project's hours actually went, task by task. Same permission as
+  // the Tasks page backlog — time is management data, not everyone's business.
+  { key: 'backlog', label: 'Backlog', icon: History },
 ] as const
 type ProjectTab = typeof TABS[number]['key']
 
@@ -118,6 +125,7 @@ function ProjectActionsMenu({
 export default function ProjectDetailPage() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const toast = useToast()
   const { profile } = useAuthContext()
   const canManage = isAuthoritative(profile?.role)
@@ -127,11 +135,37 @@ export default function ProjectDetailPage() {
   // Which service block is on screen. Falls back to the first one until picked,
   // so the page always shows real work instead of an empty shell.
   const [pickedServiceId, setPickedServiceId] = useState<string | null>(null)
-  const activeService = services.find((s) => s.id === pickedServiceId) ?? services[0] ?? null
+
+  // Every task in the project, not just the active service's. Switching service
+  // becomes instant instead of refetching, and it makes a real per-service task
+  // count available for the switcher.
+  const { data: projectTasks = [] } = useTasks({ projectId: id })
+  const taskIdFromUrl = useMemo(
+    () => new URLSearchParams(location.search).get(PROJECT_TASK_QUERY_PARAM),
+    [location.search],
+  )
+  const taskFromUrl = useMemo(
+    () => taskIdFromUrl ? projectTasks.find((t) => t.id === taskIdFromUrl) ?? null : null,
+    [projectTasks, taskIdFromUrl],
+  )
+  const activeService = services.find((s) => s.id === (taskFromUrl?.project_service_id ?? pickedServiceId)) ?? services[0] ?? null
   const activeServiceId = activeService?.id
 
   const { data: stages = [] } = useServiceStages(activeServiceId)
-  const { data: tasks = [] } = useTasks({ projectId: id, projectServiceId: activeServiceId })
+  const allTasks = useMemo(
+    () => projectTasks.filter((t) => t.project_service_id === activeServiceId),
+    [projectTasks, activeServiceId],
+  )
+  // Me Mode applies here too, so the lens holds when you drill into a project.
+  const tasks = useMyTasksFilter(allTasks)
+
+  const taskCountByService = useMemo(() => {
+    const map = new Map<string, number>()
+    for (const t of projectTasks) {
+      map.set(t.project_service_id, (map.get(t.project_service_id) ?? 0) + 1)
+    }
+    return map
+  }, [projectTasks])
   const { data: members = [] } = useProjectServiceMembers(id)
   const { data: approvals = [] } = useApprovals({ projectId: id })
   const { data: projectFiles = [] } = useProjectFiles(id)
@@ -156,7 +190,13 @@ export default function ProjectDetailPage() {
   // Delete is enforced by delete_project_cascade via the flag; showing it to anyone
   // else produced a button that always errored.
   const canManageProjects = useCanAccess('can_manage_projects')
+  const canViewBacklog = useCanAccess('can_view_backlog')
   const [projectView, setProjectView] = useState<ProjectTab>('board')
+  const visibleTabs = TABS.filter((t) => t.key !== 'backlog' || canViewBacklog)
+  // Permissions resolve after first paint; clamp rather than stranding someone
+  // on a tab that has just disappeared from the row.
+  const requestedTab: ProjectTab = taskIdFromUrl ? 'board' : projectView
+  const activeTab: ProjectTab = visibleTabs.some((t) => t.key === requestedTab) ? requestedTab : 'board'
   const [showEdit, setShowEdit] = useState(false)
   // Which service the "add member" modal is filling — the picker is per service now.
   const [addMemberFor, setAddMemberFor] = useState<string | null>(null)
@@ -166,7 +206,8 @@ export default function ProjectDetailPage() {
   const [editingStage, setEditingStage] = useState<StageRow | null>(null)
   const [showTaskForm, setShowTaskForm] = useState(false)
   const [taskFormStage, setTaskFormStage] = useState<string | undefined>(undefined)
-  const [openTaskId, setOpenTaskId] = useState<string | null>(null)
+  const [manualOpenTaskId, setManualOpenTaskId] = useState<string | null>(null)
+  const openTaskId = taskIdFromUrl ?? manualOpenTaskId
   const [reviewStage, setReviewStage] = useState<StageRow | null>(null)
   const [pendingStageDelete, setPendingStageDelete] = useState<StageRow | null>(null)
   const [confirmProjectDelete, setConfirmProjectDelete] = useState(false)
@@ -191,6 +232,15 @@ export default function ProjectDetailPage() {
     }
     return map
   }, [tasks])
+
+  const closeTaskDrawer = () => {
+    setManualOpenTaskId(null)
+    if (!taskIdFromUrl) return
+    const params = new URLSearchParams(location.search)
+    params.delete(PROJECT_TASK_QUERY_PARAM)
+    const search = params.toString()
+    navigate({ pathname: location.pathname, search: search ? `?${search}` : '' }, { replace: true })
+  }
 
   if (isLoading) {
     return (
@@ -239,13 +289,13 @@ export default function ProjectDetailPage() {
   }
 
   return (
-    <div className={cn('flex flex-col flex-1', projectView === 'board' && 'min-h-0')}>
+    <div className={cn('flex flex-col flex-1', activeTab === 'board' && 'min-h-0')}>
       <Topbar title={project.name} back="/admin/projects" />
       {/* On the board tab the page stops scrolling and hands its remaining height
           to the board, so each column scrolls its own cards under a fixed header.
           overflow-hidden is what makes that binding: without it the tall summary
           header pushes the board past the viewport and <main> scrolls instead. */}
-      <div className={cn('flex flex-col gap-5 p-4 lg:px-8 lg:py-7', projectView === 'board' && 'min-h-0 flex-1 overflow-hidden')}>
+      <div className={cn('flex flex-col gap-5 p-4 lg:px-8 lg:py-7', activeTab === 'board' && 'min-h-0 flex-1 overflow-hidden')}>
         {/* Summary header */}
         <div className="shrink-0 bg-surface-1 border border-border-default rounded-xl p-4 sm:p-5">
           <div className="flex flex-wrap items-start gap-3">
@@ -283,83 +333,100 @@ export default function ProjectDetailPage() {
           </div>
         </div>
 
-        {/* Service switcher — the layer between the project and its pipeline */}
-        <div className="shrink-0 flex flex-wrap items-center gap-2">
-          <span className="font-mono text-[10px] uppercase tracking-wider text-text-4 mr-0.5">Service</span>
-          {services.map((s) => {
-            const active = s.id === activeServiceId
-            const count = members.filter((m) => m.project_service_id === s.id).length
-            return (
-              <button
-                key={s.id}
-                onClick={() => setPickedServiceId(s.id)}
-                aria-current={active}
-                className={cn(
-                  'group flex items-center gap-2 rounded-full border pl-1 pr-3 py-1 transition-colors',
-                  active
-                    ? 'border-border-strong bg-surface-3 text-text-1'
-                    : 'border-border-default bg-surface-1 text-text-3 hover:text-text-1',
-                )}
-              >
-                <span
-                  className="size-2 rounded-full ml-1.5 shrink-0"
-                  // Per-service colour from the catalog — not expressible as a token.
-                  style={{ background: s.service?.color ?? '#8A93A3' }}
-                />
-                <span className="font-ui font-semibold text-[12.5px]">{s.service?.name ?? 'Service'}</span>
-                <span className="font-mono text-[10px] text-text-4">{count}</span>
-                {canManage && services.length > 1 && (
-                  <span
-                    role="button"
-                    tabIndex={0}
-                    aria-label={`Remove ${s.service?.name ?? 'service'} from this project`}
-                    onClick={(e) => { e.stopPropagation(); setPendingServiceRemoval(s.id) }}
-                    onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); setPendingServiceRemoval(s.id) } }}
-                    className="-mr-1 flex size-4 items-center justify-center rounded-full text-text-4 opacity-0 transition-opacity hover:bg-error/10 hover:text-error group-hover:opacity-100"
+        {/* Which service block is on screen. Framed as its own labelled selector so
+            it does not read as a second row of tabs — everything below it (Board,
+            Pipeline, Team) shows only the service picked here. */}
+        <div className="shrink-0 rounded-lg border border-border-default bg-surface-1 p-2.5">
+          <p className="mb-2 px-0.5 font-mono text-[10px] uppercase tracking-wider text-text-4">
+            Viewing service block
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            {services.map((s) => {
+              const active = s.id === activeServiceId
+              const colour = s.service?.color ?? '#8A93A3'
+              const taskCount = taskCountByService.get(s.id) ?? 0
+              const memberCount = members.filter((m) => m.project_service_id === s.id).length
+              return (
+                <div
+                  key={s.id}
+                  className={cn(
+                    'group flex items-center gap-2 rounded-md border py-1.5 pl-2.5 pr-2 transition-colors',
+                    active ? 'bg-surface-3' : 'border-border-default bg-surface-2/40 hover:bg-surface-2',
+                  )}
+                  // Active block wears its service colour, so which one you are in
+                  // is readable without comparing against the others.
+                  style={active ? { borderColor: colour, background: `${colour}14` } : undefined}
+                >
+                  <button
+                    onClick={() => setPickedServiceId(s.id)}
+                    aria-current={active}
+                    className="flex items-center gap-2 text-left"
                   >
-                    <X size={11} />
-                  </span>
-                )}
-              </button>
-            )
-          })}
-          {canManage && unusedServices.length > 0 && (
-            <Button size="sm" variant="secondary" iconLeft={<Plus size={13} />} onClick={() => setShowAddService(true)}>
-              Add service
-            </Button>
-          )}
+                    <span className="size-2.5 shrink-0 rounded-full" style={{ background: colour }} />
+                    <span className={cn('font-ui text-[12.5px] font-semibold', active ? 'text-text-1' : 'text-text-3')}>
+                      {s.service?.name ?? 'Service'}
+                    </span>
+                    {/* Both numbers labelled — an unlabelled "0" read as "no tasks"
+                        when it actually meant "nobody staffed". */}
+                    <span className="flex items-center gap-2 font-mono text-[10px] text-text-4">
+                      <span className="flex items-center gap-0.5" title={`${taskCount} task${taskCount === 1 ? '' : 's'}`}>
+                        <CheckCircle2 size={10} /> {taskCount}
+                      </span>
+                      <span className="flex items-center gap-0.5" title={`${memberCount} member${memberCount === 1 ? '' : 's'}`}>
+                        <Users size={10} /> {memberCount}
+                      </span>
+                    </span>
+                  </button>
+                  {canManage && services.length > 1 && (
+                    <button
+                      aria-label={`Remove ${s.service?.name ?? 'service'} from this project`}
+                      onClick={() => setPendingServiceRemoval(s.id)}
+                      className="flex size-5 shrink-0 items-center justify-center rounded-sm text-text-4 opacity-0 transition-opacity hover:bg-error/10 hover:text-error focus-visible:opacity-100 group-hover:opacity-100"
+                    >
+                      <X size={11} />
+                    </button>
+                  )}
+                </div>
+              )
+            })}
+            {canManage && unusedServices.length > 0 && (
+              <Button size="sm" variant="secondary" iconLeft={<Plus size={13} />} onClick={() => setShowAddService(true)}>
+                Add service
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Tabs */}
         <div className="shrink-0 flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-1 bg-surface-1 border border-border-default rounded-lg p-1 overflow-x-auto no-scrollbar">
-            {TABS.map((t) => (
+            {visibleTabs.map((t) => (
               <button
                 key={t.key}
                 onClick={() => setProjectView(t.key)}
                 className={cn(
                   'flex items-center gap-1.5 px-3 h-8 rounded-md font-ui font-medium text-[12.5px] whitespace-nowrap transition-colors',
-                  projectView === t.key ? 'bg-surface-3 text-text-1 shadow-sm' : 'text-text-3 hover:text-text-1',
+                  activeTab === t.key ? 'bg-surface-3 text-text-1 shadow-sm' : 'text-text-3 hover:text-text-1',
                 )}
               >
                 <t.icon size={13} /> {t.label}{t.key === 'team' ? ` (${members.length})` : t.key === 'files' && projectFiles.length ? ` (${projectFiles.length})` : ''}
               </button>
             ))}
           </div>
-          {canManage && (projectView === 'pipeline' || projectView === 'board') && (
+          {canManage && (activeTab === 'pipeline' || activeTab === 'board') && (
             <div className="flex items-center gap-2">
               <Button size="sm" variant="secondary" iconLeft={<Plus size={14} />} onClick={() => { setEditingStage(null); setShowStageForm(true) }}>Stage</Button>
               <Button size="sm" iconLeft={<Plus size={14} />} onClick={() => openAddTask()}>Task</Button>
             </div>
           )}
-          {canManage && projectView === 'team' && activeServiceId && (
+          {canManage && activeTab === 'team' && activeServiceId && (
             <Button size="sm" iconLeft={<Plus size={14} />} onClick={() => setAddMemberFor(activeServiceId)}>
               Add to {activeService?.service?.name ?? 'service'}
             </Button>
           )}
         </div>
 
-        {projectView === 'pipeline' && (
+        {activeTab === 'pipeline' && (
           stages.length === 0 && (tasksByStage.get('__none__')?.length ?? 0) === 0 ? (
             <div className="bg-surface-1 border border-border-default rounded-md py-10 px-4 text-center font-ui text-[13px] text-text-4 space-y-3">
               <p>No stages or tasks yet. {canManage && 'Add a stage or task to get started.'}</p>
@@ -395,7 +462,7 @@ export default function ProjectDetailPage() {
                   stage={stage}
                   tasks={tasksByStage.get(stage.id) ?? []}
                   canManage={canManage}
-                  onOpenTask={setOpenTaskId}
+                  onOpenTask={setManualOpenTaskId}
                   onAddTask={() => openAddTask(stage.id)}
                   onEdit={() => openEditStage(stage)}
                   onDelete={() => setPendingStageDelete(stage)}
@@ -406,20 +473,24 @@ export default function ProjectDetailPage() {
               {(tasksByStage.get('__none__')?.length ?? 0) > 0 && (
                 <div className="bg-surface-1 border border-border-default rounded-md">
                   <div className="px-4 py-2.5 border-b border-border-subtle font-ui font-semibold text-[12.5px] text-text-2">Unstaged tasks</div>
-                  <TaskList tasks={tasksByStage.get('__none__') ?? []} onOpenTask={setOpenTaskId} />
+                  <TaskList tasks={tasksByStage.get('__none__') ?? []} onOpenTask={setManualOpenTaskId} />
                 </div>
               )}
             </div>
           )
         )}
 
-        {projectView === 'board' && (
-          tasks.length === 0
-            ? <div className="bg-surface-1 border border-border-default rounded-md py-10 text-center font-ui text-[13px] text-text-4">No tasks yet.</div>
-            : <TaskBoard tasks={tasks} onOpenTask={setOpenTaskId} />
+        {(activeTab === 'board' || activeTab === 'pipeline') && (
+          <MeModeNotice shown={tasks.length} total={allTasks.length} />
         )}
 
-        {projectView === 'overview' && (
+        {activeTab === 'board' && (
+          tasks.length === 0
+            ? <div className="bg-surface-1 border border-border-default rounded-md py-10 text-center font-ui text-[13px] text-text-4">No tasks yet.</div>
+            : <TaskBoard tasks={tasks} onOpenTask={setManualOpenTaskId} />
+        )}
+
+        {activeTab === 'overview' && (
           <div className="bg-surface-1 border border-border-default rounded-xl p-4 sm:p-5">
             <DocEditor
               key={id}
@@ -433,14 +504,14 @@ export default function ProjectDetailPage() {
           </div>
         )}
 
-        {projectView === 'files' && (
+        {activeTab === 'files' && (
           <div className="bg-surface-1 border border-border-default rounded-xl p-3 sm:p-4 max-w-3xl">
-            <ProjectFilesTab projectId={id} canManage={canManage} onOpenTask={setOpenTaskId} />
+            <ProjectFilesTab projectId={id} canManage={canManage} onOpenTask={setManualOpenTaskId} />
           </div>
         )}
 
         {/* People belong to a service, so the team reads as one block per service. */}
-        {projectView === 'team' && (
+        {activeTab === 'team' && (
           // Wrapping flex rather than a fixed grid: cards share the row when
           // there are several services and one card stretches the full width when
           // there is only one, instead of being stranded in a half-width column.
@@ -506,6 +577,11 @@ export default function ProjectDetailPage() {
             })}
           </div>
         )}
+
+        {/* Scoped to this project, grouped by task — "which task ate the hours". */}
+        {activeTab === 'backlog' && canViewBacklog && (
+          <TimeBacklog projectId={id} groupBy="task" />
+        )}
       </div>
 
       {showEdit && <ProjectFormModal project={project} onClose={() => setShowEdit(false)} />}
@@ -544,7 +620,7 @@ export default function ProjectDetailPage() {
         />
       )}
       {reviewStage && <ApprovalModal title="Review stage" subject={reviewStage.name} pending={reviewApproval.isPending} onSubmit={handleReview} onClose={() => setReviewStage(null)} />}
-      <TaskDetailDrawer taskId={openTaskId} open={!!openTaskId} onClose={() => setOpenTaskId(null)} />
+      <TaskDetailDrawer taskId={openTaskId} open={!!openTaskId} onClose={closeTaskDrawer} />
 
       <ConfirmDialog
         open={confirmProjectDelete}

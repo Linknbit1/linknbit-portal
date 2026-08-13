@@ -7,7 +7,7 @@ import { Topbar } from '../components/layout/Topbar'
 import { Skeleton } from '../components/ui/Skeleton'
 import { useAuthContext } from '../context/AuthContext'
 import { useNotifications, useMarkGroupRead, useMarkAllRead } from '../hooks/useNotifications'
-import { notificationHref } from '../constants/notifications'
+import { notificationHref, categoryForType, INBOX_CATEGORIES } from '../constants/notifications'
 import { groupNotifications, groupTitle, type NotificationGroup } from '../lib/notificationGroups'
 import { formatRelativeTime } from '../lib/utils'
 import { cn } from '../lib/cn'
@@ -33,12 +33,43 @@ export default function InboxPage() {
   const { mutate: markGroupRead } = useMarkGroupRead(profileId)
   const { mutate: markAllRead } = useMarkAllRead(profileId)
   const [tab, setTab] = useState<'all' | 'unread'>('all')
+  const [category, setCategory] = useState('all')
 
   const unread = notifications.filter((n) => !n.read).length
-  // Group after filtering, so the unread tab counts only what it is showing.
-  const shown = useMemo(
-    () => groupNotifications(tab === 'unread' ? notifications.filter((n) => !n.read) : notifications),
+
+  // Read/unread narrows first; the category counts then describe what that tab
+  // actually holds, so "Chat 3" on the unread tab means three unread chat items.
+  const inTab = useMemo(
+    () => (tab === 'unread' ? notifications.filter((n) => !n.read) : notifications),
     [notifications, tab],
+  )
+
+  // Only categories with something in them get a chip — an inbox of empty
+  // filters is worse than no filters.
+  const categoryChips = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const n of inTab) {
+      const key = categoryForType(n.type).key
+      counts.set(key, (counts.get(key) ?? 0) + 1)
+    }
+    return [
+      { key: 'all', label: 'All', count: inTab.length },
+      ...INBOX_CATEGORIES
+        .filter((c) => counts.has(c.key))
+        .map((c) => ({ key: c.key, label: c.label, count: counts.get(c.key) ?? 0 })),
+    ]
+  }, [inTab])
+
+  // Switching to Unread can empty the category you were on; fall back to All
+  // rather than showing a blank list with no chip lit up.
+  const activeCategory = categoryChips.some((c) => c.key === category) ? category : 'all'
+
+  // Group last, so a run of "3 task updates" never spans two categories.
+  const shown = useMemo(
+    () => groupNotifications(
+      activeCategory === 'all' ? inTab : inTab.filter((n) => categoryForType(n.type).key === activeCategory),
+    ),
+    [inTab, activeCategory],
   )
 
   const open = (group: NotificationGroup) => {
@@ -62,16 +93,41 @@ export default function InboxPage() {
           )}
         </div>
 
-        <div className="flex items-center gap-1 bg-surface-1 border border-border-default rounded-lg p-1 w-fit">
-          {(['all', 'unread'] as const).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={cn('px-3 h-8 rounded-md font-ui font-medium text-[12.5px] capitalize transition-colors', tab === t ? 'bg-surface-3 text-text-1 shadow-sm' : 'text-text-3 hover:text-text-1')}
-            >
-              {t}
-            </button>
-          ))}
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-1 bg-surface-1 border border-border-default rounded-lg p-1 w-fit">
+            {(['all', 'unread'] as const).map((t) => (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className={cn('px-3 h-8 rounded-md font-ui font-medium text-[12.5px] capitalize transition-colors', tab === t ? 'bg-surface-3 text-text-1 shadow-sm' : 'text-text-3 hover:text-text-1')}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+
+          {/* Category filters — same buckets the notification settings screen uses. */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            {categoryChips.map((c) => {
+              const on = activeCategory === c.key
+              return (
+                <button
+                  key={c.key}
+                  onClick={() => setCategory(c.key)}
+                  aria-pressed={on}
+                  className={cn(
+                    'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-ui text-[12px] transition-colors',
+                    on
+                      ? 'border-brand-red/30 bg-brand-red/10 text-brand-red'
+                      : 'border-border-default bg-surface-1 text-text-3 hover:border-border-strong hover:text-text-1',
+                  )}
+                >
+                  {c.label}
+                  <span className={cn('font-mono text-[10px]', on ? 'text-brand-red/70' : 'text-text-4')}>{c.count}</span>
+                </button>
+              )
+            })}
+          </div>
         </div>
 
         {isLoading ? (
@@ -79,8 +135,14 @@ export default function InboxPage() {
         ) : shown.length === 0 ? (
           <div className="flex flex-col items-center gap-2 py-20 text-center">
             <span className="size-12 rounded-full bg-surface-2 flex items-center justify-center text-text-3"><InboxIcon size={22} /></span>
-            <p className="font-ui font-semibold text-[14px] text-text-1">You're all caught up</p>
-            <p className="font-ui text-[12px] text-text-4 max-w-sm">Mentions, new tasks, and comments on projects you're watching show up here.</p>
+            <p className="font-ui font-semibold text-[14px] text-text-1">
+              {activeCategory === 'all' ? "You're all caught up" : 'Nothing in this category'}
+            </p>
+            <p className="font-ui text-[12px] text-text-4 max-w-sm">
+              {activeCategory === 'all'
+                ? "Mentions, new tasks, and comments on projects you're watching show up here."
+                : 'Pick another category, or switch back to All.'}
+            </p>
           </div>
         ) : (
           <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
@@ -108,7 +170,12 @@ export default function InboxPage() {
                       {isUnread && <span className="size-1.5 rounded-full bg-brand-red shrink-0" />}
                     </span>
                     {n.body && <span className="block font-ui text-[12px] text-text-3 mt-0.5 line-clamp-2">{n.body}</span>}
-                    <span className="block font-mono text-[10px] text-text-4 mt-1">{formatRelativeTime(n.created_at)}{href ? ' · click to open' : ''}</span>
+                    <span className="mt-1 flex flex-wrap items-center gap-2">
+                      <span className="rounded-full border border-border-subtle bg-surface-2 px-1.5 py-0.5 font-mono text-[9.5px] uppercase tracking-wider text-text-4">
+                        {categoryForType(n.type).label}
+                      </span>
+                      <span className="font-mono text-[10px] text-text-4">{formatRelativeTime(n.created_at)}{href ? ' · click to open' : ''}</span>
+                    </span>
                   </span>
                 </button>
               )

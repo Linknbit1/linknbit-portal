@@ -91,6 +91,37 @@ export const NOTIFICATION_GROUPS: NotificationGroup[] = [
   },
 ]
 
+export interface NotificationCategory {
+  key: string
+  label: string
+}
+
+/**
+ * Inbox categories. The settings taxonomy above is the source of truth — a
+ * notification lands in the same bucket the toggle that controls it lives in,
+ * so the two screens can never disagree about what "Chat" means.
+ *
+ * Two buckets exist only here: `security`, because audit alerts deliberately
+ * have no preference toggle (an admin should not be able to mute the alarm on
+ * flagged actions), and `other`, so a type added by a future trigger still
+ * shows up somewhere instead of vanishing from a filtered view.
+ */
+export const INBOX_CATEGORIES: NotificationCategory[] = [
+  ...NOTIFICATION_GROUPS.map((g) => ({ key: g.key, label: g.label })),
+  { key: 'security', label: 'Security & audit' },
+  { key: 'other', label: 'Other' },
+]
+
+const CATEGORY_BY_TYPE: ReadonlyMap<string, NotificationCategory> = new Map(
+  NOTIFICATION_GROUPS.flatMap((g) => g.items.map((i) => [i.type, { key: g.key, label: g.label }] as const)),
+)
+
+/** Which inbox category a notification belongs to. Never returns undefined. */
+export function categoryForType(type: string | null | undefined): NotificationCategory {
+  if (type === 'audit_alert') return { key: 'security', label: 'Security & audit' }
+  return (type && CATEGORY_BY_TYPE.get(type)) || { key: 'other', label: 'Other' }
+}
+
 /** Groups (and items) this role can actually receive — drives the settings screen. */
 export function notificationGroupsFor(role: string | null | undefined): NotificationGroup[] {
   return NOTIFICATION_GROUPS
@@ -98,11 +129,22 @@ export function notificationGroupsFor(role: string | null | undefined): Notifica
     .filter((g) => g.items.length > 0)
 }
 
+export const PROJECT_TASK_QUERY_PARAM = 'task'
+export const TASK_PROJECT_REDIRECT_QUERY_PARAM = 'openInProject'
+
+export function projectTaskDrawerHref(projectId: string, taskId: string): string {
+  return `/admin/projects/${projectId}?${PROJECT_TASK_QUERY_PARAM}=${encodeURIComponent(taskId)}`
+}
+
+function taskNotificationHref(taskId: string): string {
+  return `/admin/tasks/${taskId}?${TASK_PROJECT_REDIRECT_QUERY_PARAM}=1`
+}
+
 /** Where a notification should take you when clicked. */
 export function notificationHref(resourceType: string | null, resourceId?: string | null): string | null {
   switch (resourceType) {
     case 'task':
-      return resourceId ? `/admin/tasks/${resourceId}` : '/inbox'
+      return resourceId ? taskNotificationHref(resourceId) : '/inbox'
     case 'project':
       return resourceId ? `/admin/projects/${resourceId}` : '/inbox'
     case 'leave_request':

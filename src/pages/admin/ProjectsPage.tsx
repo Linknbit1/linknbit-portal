@@ -22,7 +22,10 @@ import { formatDate, isOverdue, PROJECT_STATUS_LABELS } from '../../lib/utils'
 import { useDeleteProject, useProjectDeleteImpact, useProjects, useUpdateProjectStatus } from '../../hooks/useProjects'
 import { useServices } from '../../hooks/useServices'
 import { useToast } from '../../components/ui/toast-context'
+import { useMyProjectsFilter } from '../../hooks/useMeMode'
 import { TimeBacklog } from '../../components/shared/TimeBacklog'
+import { useStatusOverrides } from '../../hooks/useStatusLabels'
+import { MeModeNotice } from '../../components/shared/MeModeNotice'
 import { ProjectFormModal } from './ProjectFormModal'
 import type { ProjectListItem, ProjectStatus } from '../../api/projects'
 import type { ProjectStatus as AppProjectStatus } from '../../types'
@@ -40,7 +43,7 @@ const VIEWS: { key: ViewMode; label: string; icon: typeof List }[] = [
 const backlogVisible = (canViewBacklog: boolean) =>
   VIEWS.filter((v) => v.key !== 'backlog' || canViewBacklog)
 
-const KANBAN_COLUMNS: AppProjectStatus[] = ['in_progress', 'ongoing', 'awaiting_client', 'blocked', 'on_hold', 'completed']
+const KANBAN_COLUMNS: AppProjectStatus[] = ['todo', 'in_progress', 'ongoing', 'awaiting_client', 'blocked', 'on_hold', 'completed']
 const PROJECT_SORT = [
   { value: 'recent', label: 'Newest' },
   { value: 'deadline', label: 'Deadline' },
@@ -96,8 +99,13 @@ export default function ProjectsPage() {
     return sortProjects(list, sortBy)
   }, [projects, search, serviceFilter, statusFilter, managerFilter, deadlineFrom, deadlineTo, sortBy])
 
+  // Me Mode narrows to projects you are staffed on or manage.
+  const shown = useMyProjectsFilter(filtered)
+  // Renames from Settings → Statuses drive the filter and the board headings.
+  const projectStatusMeta = useStatusOverrides('project')
+
   const serviceOptions = [{ value: '', label: 'All services' }, ...services.map((s) => ({ value: s.slug, label: s.name, dot: s.color }))]
-  const statusOptions = [{ value: '', label: 'All statuses' }, ...KANBAN_COLUMNS.map((s) => ({ value: s, label: PROJECT_STATUS_LABELS[s] }))]
+  const statusOptions = [{ value: '', label: 'All statuses' }, ...KANBAN_COLUMNS.map((s) => ({ value: s, label: projectStatusMeta[s]?.label ?? PROJECT_STATUS_LABELS[s] }))]
   // Managers who have left but still hold projects are listed too — otherwise the
   // one filter that would find the projects needing a new owner can't name them.
   const departedManagers = useMemo(() => {
@@ -122,7 +130,7 @@ export default function ProjectsPage() {
         <div className="flex flex-wrap items-center gap-3">
           <div>
             <h2 className="font-display font-bold text-[22px] text-text-1">Projects</h2>
-            <p className="font-ui text-[13px] text-text-3">{filtered.length} of {projects.length} project{projects.length !== 1 ? 's' : ''}</p>
+            <p className="font-ui text-[13px] text-text-3">{shown.length} of {projects.length} project{projects.length !== 1 ? 's' : ''}</p>
           </div>
           {canManageProjects && (
             <Button size="sm" className="ml-auto" iconLeft={<Plus size={15} />} onClick={() => setShowNew(true)}>New Project</Button>
@@ -159,6 +167,8 @@ export default function ProjectsPage() {
           </button>
         </div>
 
+        <MeModeNotice shown={shown.length} total={filtered.length} />
+
         {showAdv && (
           <div className="flex flex-wrap items-center gap-2 bg-surface-1 border border-border-default rounded-lg p-2.5">
             <span className="font-mono text-[10px] uppercase tracking-wider text-text-4 self-center">Deadline between</span>
@@ -183,9 +193,9 @@ export default function ProjectsPage() {
           <EmptyState onNew={() => setShowNew(true)} canCreate={canManageProjects} />
         ) : (
           <>
-            {view === 'cards' && <CardsView projects={filtered} onOpen={(id) => navigate(`/admin/projects/${id}`)} onDelete={setPendingDelete} canDelete={canManageProjects} />}
-            {view === 'list' && <ListView projects={filtered} onOpen={(id) => navigate(`/admin/projects/${id}`)} onDelete={setPendingDelete} canDelete={canManageProjects} />}
-            {view === 'kanban' && <KanbanView projects={filtered} onOpen={(id) => navigate(`/admin/projects/${id}`)} />}
+            {view === 'cards' && <CardsView projects={shown} onOpen={(id) => navigate(`/admin/projects/${id}`)} onDelete={setPendingDelete} canDelete={canManageProjects} />}
+            {view === 'list' && <ListView projects={shown} onOpen={(id) => navigate(`/admin/projects/${id}`)} onDelete={setPendingDelete} canDelete={canManageProjects} />}
+            {view === 'kanban' && <KanbanView projects={shown} onOpen={(id) => navigate(`/admin/projects/${id}`)} />}
           </>
         )}
       </div>
@@ -427,6 +437,7 @@ function DeleteImpactMessage({
 function KanbanView({ projects, onOpen }: { projects: ProjectListItem[]; onOpen: (id: string) => void }) {
   const toast = useToast()
   const updateStatus = useUpdateProjectStatus()
+  const statusMeta = useStatusOverrides('project')
   const [dragId, setDragId] = useState<string | null>(null)
   const [dragOver, setDragOver] = useState<string | null>(null)
 
@@ -461,7 +472,9 @@ function KanbanView({ projects, onOpen }: { projects: ProjectListItem[]; onOpen:
             )}
           >
             <div className="flex shrink-0 items-center justify-between px-1 pb-2">
-              <span className="font-ui font-semibold text-[12px] text-text-2">{PROJECT_STATUS_LABELS[status]}</span>
+              <span className="font-ui font-semibold text-[12px] text-text-2">
+                {statusMeta[status]?.label ?? PROJECT_STATUS_LABELS[status]}
+              </span>
               <span className="font-mono text-[10.5px] text-text-4">{items.length}</span>
             </div>
             <div className="min-h-2 flex-1 space-y-2 overflow-y-auto overscroll-contain">

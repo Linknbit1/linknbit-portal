@@ -1,9 +1,8 @@
 import { useMemo } from 'react'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { Bell, Check, CheckCheck } from 'lucide-react'
 import { StackScreen } from '../components/layout/StackScreen'
 import { useAuthContext } from '../context/AuthContext'
-import { useIsDesktop } from '../hooks/useMediaQuery'
 import { useNotifications, useMarkGroupRead, useMarkAllRead } from '../hooks/useNotifications'
 import { notificationHref } from '../constants/notifications'
 import { groupNotifications, groupTitle } from '../lib/notificationGroups'
@@ -11,11 +10,11 @@ import { formatRelativeTime } from '../lib/utils'
 import { cn } from '../lib/cn'
 
 /**
- * Mobile notification list. Desktop reads notifications from the Topbar bell
- * dropdown, so this redirects there rather than shipping two competing surfaces.
+ * The full notification list, on every size. It used to bounce desktop visitors
+ * to /dashboard on the grounds that the bell dropdown was enough — but the
+ * dropdown is capped at a short scroll, so "View all" needs somewhere to land.
  */
 export default function NotificationsPage() {
-  const isDesktop = useIsDesktop()
   const navigate = useNavigate()
   const { profile } = useAuthContext()
   const profileId = profile?.id ?? ''
@@ -24,8 +23,6 @@ export default function NotificationsPage() {
   const groups = useMemo(() => groupNotifications(notifications), [notifications])
   const { mutate: markGroupRead } = useMarkGroupRead(profileId)
   const { mutate: markAllRead } = useMarkAllRead(profileId)
-
-  if (isDesktop) return <Navigate to="/dashboard" replace />
 
   const unread = notifications.filter((n) => !n.read).length
 

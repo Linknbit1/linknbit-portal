@@ -24,7 +24,7 @@ interface ProjectFormModalProps {
   onClose: () => void
 }
 
-const STATUS_ORDER: AppProjectStatus[] = ['in_progress', 'ongoing', 'awaiting_client', 'blocked', 'on_hold', 'completed']
+const STATUS_ORDER: AppProjectStatus[] = ['todo', 'in_progress', 'ongoing', 'awaiting_client', 'blocked', 'on_hold', 'completed']
 const isStatus = (v: string): v is ProjectStatus => (STATUS_ORDER as string[]).includes(v)
 
 export function ProjectFormModal({ project, onClose }: ProjectFormModalProps) {
@@ -45,7 +45,7 @@ export function ProjectFormModal({ project, onClose }: ProjectFormModalProps) {
   // Optional per-service starting pipeline, keyed by service id.
   const [templateByService, setTemplateByService] = useState<Record<string, string>>({})
   const [managerId, setManagerId] = useState(project?.manager_id ?? '')
-  const [status, setStatus] = useState<ProjectStatus>(project?.status ?? 'in_progress')
+  const [status, setStatus] = useState<ProjectStatus>(project?.status ?? 'todo')
   const [startDate, setStartDate] = useState(project?.start_date ?? '')
   const [deadline, setDeadline] = useState(project?.deadline ?? '')
   const [budget, setBudget] = useState(project?.budget != null ? String(project.budget) : '')
