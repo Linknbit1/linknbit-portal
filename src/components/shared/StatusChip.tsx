@@ -1,4 +1,5 @@
 import { cn } from '../../lib/cn'
+import { useStatusOverrides } from '../../hooks/useStatusLabels'
 import type { TaskStatus, ProjectStatus, ApprovalStatus } from '../../types'
 
 const TASK_STATUS_CONFIG: Record<TaskStatus, { label: string; classes: string }> = {
@@ -36,20 +37,33 @@ interface StatusChipProps {
 }
 
 export function StatusChip({ status, type = 'task', className }: StatusChipProps) {
+  // Approvals are a workflow state, not a status people name — no override scope.
+  const overrides = useStatusOverrides(type === 'project' ? 'project' : 'task')
+
   const configs = type === 'project' ? PROJECT_STATUS_CONFIG : type === 'approval' ? APPROVAL_STATUS_CONFIG : TASK_STATUS_CONFIG
   const config = (configs as Record<string, { label: string; classes: string }>)[status]
-  if (!config) return null
+  const custom = type === 'approval' ? undefined : overrides[status]
+  if (!config && !custom) return null
+
+  // A custom colour can't be a Tailwind class (it's arbitrary hex from an admin),
+  // so it drives inline CSS custom properties instead — the one case the styling
+  // rules allow, since the value is only known at runtime.
+  const tinted = !!custom?.color
+  const style = tinted
+    ? { color: custom.color, borderColor: `${custom.color}4D`, background: `${custom.color}1F` }
+    : undefined
 
   return (
     <span
       className={cn(
         'inline-flex items-center gap-1.5 py-0.75 px-2.25 rounded-full font-ui font-semibold text-[10.5px] uppercase tracking-[0.04em] leading-[1.4] whitespace-nowrap border',
-        config.classes,
+        !tinted && config?.classes,
         className,
       )}
+      style={style}
     >
       <span className="size-1.25 rounded-full bg-current shrink-0" />
-      {config.label}
+      {custom?.label ?? config?.label}
     </span>
   )
 }

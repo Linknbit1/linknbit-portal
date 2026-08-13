@@ -24,6 +24,7 @@ import { useServices } from '../../hooks/useServices'
 import { useToast } from '../../components/ui/toast-context'
 import { useMyProjectsFilter } from '../../hooks/useMeMode'
 import { TimeBacklog } from '../../components/shared/TimeBacklog'
+import { useStatusOverrides } from '../../hooks/useStatusLabels'
 import { MeModeNotice } from '../../components/shared/MeModeNotice'
 import { ProjectFormModal } from './ProjectFormModal'
 import type { ProjectListItem, ProjectStatus } from '../../api/projects'
@@ -100,9 +101,11 @@ export default function ProjectsPage() {
 
   // Me Mode narrows to projects you are staffed on or manage.
   const shown = useMyProjectsFilter(filtered)
+  // Renames from Settings → Statuses drive the filter and the board headings.
+  const projectStatusMeta = useStatusOverrides('project')
 
   const serviceOptions = [{ value: '', label: 'All services' }, ...services.map((s) => ({ value: s.slug, label: s.name, dot: s.color }))]
-  const statusOptions = [{ value: '', label: 'All statuses' }, ...KANBAN_COLUMNS.map((s) => ({ value: s, label: PROJECT_STATUS_LABELS[s] }))]
+  const statusOptions = [{ value: '', label: 'All statuses' }, ...KANBAN_COLUMNS.map((s) => ({ value: s, label: projectStatusMeta[s]?.label ?? PROJECT_STATUS_LABELS[s] }))]
   // Managers who have left but still hold projects are listed too — otherwise the
   // one filter that would find the projects needing a new owner can't name them.
   const departedManagers = useMemo(() => {
@@ -434,6 +437,7 @@ function DeleteImpactMessage({
 function KanbanView({ projects, onOpen }: { projects: ProjectListItem[]; onOpen: (id: string) => void }) {
   const toast = useToast()
   const updateStatus = useUpdateProjectStatus()
+  const statusMeta = useStatusOverrides('project')
   const [dragId, setDragId] = useState<string | null>(null)
   const [dragOver, setDragOver] = useState<string | null>(null)
 
@@ -468,7 +472,9 @@ function KanbanView({ projects, onOpen }: { projects: ProjectListItem[]; onOpen:
             )}
           >
             <div className="flex shrink-0 items-center justify-between px-1 pb-2">
-              <span className="font-ui font-semibold text-[12px] text-text-2">{PROJECT_STATUS_LABELS[status]}</span>
+              <span className="font-ui font-semibold text-[12px] text-text-2">
+                {statusMeta[status]?.label ?? PROJECT_STATUS_LABELS[status]}
+              </span>
               <span className="font-mono text-[10.5px] text-text-4">{items.length}</span>
             </div>
             <div className="min-h-2 flex-1 space-y-2 overflow-y-auto overscroll-contain">

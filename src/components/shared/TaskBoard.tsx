@@ -14,6 +14,7 @@ import { ConfirmDialog } from '../ui/ConfirmDialog'
 import { Popover } from '../ui/Popover'
 import { MoveTaskModal } from './MoveTaskModal'
 import { useCanAccess } from '../../hooks/useRoleFlags'
+import { useStatusOverrides } from '../../hooks/useStatusLabels'
 import { ProgressBar } from '../ui/ProgressBar'
 import { isOverdue, formatStamp } from '../../lib/utils'
 import { formatEstimate } from '../../lib/duration'
@@ -222,6 +223,8 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
   const [pendingDelete, setPendingDelete] = useState<TaskListItem | null>(null)
   const [pendingMove, setPendingMove] = useState<TaskListItem | null>(null)
   const canMoveTask = useCanAccess('can_manage_projects')
+  // Admin renames/recolours from Settings → Statuses win over the built-ins.
+  const statusMeta = useStatusOverrides('task')
   const boardRef = useDragScroll<HTMLDivElement>()
   // Optimistic status overrides so a dropped card moves instantly (no refetch flicker).
   const [optimistic, setOptimistic] = useState<Record<string, TaskStatus>>({})
@@ -288,7 +291,7 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
             <div className={cn('mb-2 flex shrink-0 items-center gap-2 rounded-md border px-2.5 py-2', col.header)}>
               <Icon size={14} className="shrink-0" />
               <span className="min-w-0 flex-1 truncate font-ui text-[11.5px] font-bold uppercase tracking-wider">
-                {col.label}
+                {statusMeta[col.status]?.label ?? col.label}
               </span>
               <span className="shrink-0 font-mono text-[11px] font-bold tabular-nums">{items.length}</span>
             </div>

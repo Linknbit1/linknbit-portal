@@ -3105,6 +3105,41 @@ export type Database = {
           },
         ]
       }
+      status_labels: {
+        Row: {
+          color: string
+          key: string
+          label: string
+          scope: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          color: string
+          key: string
+          label: string
+          scope: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          color?: string
+          key?: string
+          label?: string
+          scope?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "status_labels_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sticky_notes: {
         Row: {
           bold: boolean
