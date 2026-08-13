@@ -111,7 +111,7 @@ export function BdPrototypeProvider({ children }: { children: ReactNode }) {
               ...l,
               stage,
               // Closing clears the follow-up; reopening a closed lead clears the reason.
-              nextFollowUp: stage === 'won' || stage === 'lost' ? null : l.nextFollowUp,
+              nextFollowUp: stage === 'won' || stage === 'lost' || stage === 'unqualified' ? null : l.nextFollowUp,
               lostReason: stage === 'lost' ? (lostReason ?? l.lostReason ?? 'No response') : undefined,
             }
           : l,

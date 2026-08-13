@@ -38,6 +38,7 @@ import ReportsPage from './pages/admin/ReportsPage'
 import AuditLogPage from './pages/admin/AuditLogPage'
 import SettingsPage, { SettingsSectionScreen } from './pages/admin/SettingsPage'
 import AttendancePage from './pages/AttendancePage'
+import MyMeetingsPage from './pages/MyMeetingsPage'
 import BdLayout from './pages/bd/BdLayout'
 import BdSectionScreen from './pages/bd/BdSectionScreen'
 import BdProjectDetailPage from './pages/bd/BdProjectDetailPage'
@@ -150,6 +151,14 @@ export default function App() {
                 {/* Business Development — placeholder screens only. Same
                     devOnly + capability pair as the nav item, so the URL can no
                     more be reached in production than the sidebar row can. */}
+                {/* Open to all internal staff — an invitee holds no can_view_bd,
+                    so this cannot sit behind the BD guard. */}
+                {showWipFeatures && (
+                  <Route
+                    path="/my-meetings"
+                    element={<RoleGuard allowedRoles={SETTINGS_ROLES}><MyMeetingsPage /></RoleGuard>}
+                  />
+                )}
                 {showWipFeatures && (
                   <Route path="/bd" element={<RoleGuard feature="can_view_bd"><BdLayout /></RoleGuard>}>
                     <Route index element={<Navigate to="/bd/pipeline" replace />} />

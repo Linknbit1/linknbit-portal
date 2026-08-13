@@ -17,6 +17,7 @@ import { useToast } from '../../components/ui/toast-context'
 import { StatusChip } from '../../components/shared/StatusChip'
 import { ChannelChip } from '../../components/shared/BdChips'
 import { CHANNEL_CONFIG, CHANNEL_ORDER, BD_PROJECT_COLUMNS } from '../../constants/bd'
+import { FormField } from './FormField'
 import { useBd } from '../../context/BdPrototypeContext'
 import { randomUUID } from '../../lib/uuid'
 import { cn } from '../../lib/cn'
@@ -287,15 +288,16 @@ export default function BdProjectDetailPage() {
         {tab === 'settings' && (
           <div className="flex flex-col gap-4 rounded-lg border border-border-default bg-surface-1 p-4 lg:p-5">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Select
-                label="Owner"
-                value={project.ownerId}
-                onChange={(v) => {
+              <FormField label="Owner">
+                <Select
+                  value={project.ownerId}
+                  onChange={(v) => {
                   const rep = BD_REPS.find((r) => r.id === v)
                   patch({ ownerId: v, ownerName: rep?.name ?? project.ownerName })
-                }}
-                options={BD_REPS.map((r) => ({ value: r.id, label: r.name }))}
-              />
+                  }}
+                  options={BD_REPS.map((r) => ({ value: r.id, label: r.name }))}
+                />
+              </FormField>
               <div>
                 <p className="mb-1.5 font-ui text-[12px] font-medium text-text-2">Deadline</p>
                 <DatePicker

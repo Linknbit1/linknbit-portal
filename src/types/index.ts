@@ -402,10 +402,14 @@ export type LeadStage =
   | 'new'
   | 'contacted'
   | 'qualified'
+  /** A booked conversation — the step between qualifying and quoting. */
+  | 'meeting'
   | 'proposal_sent'
   | 'negotiation'
   | 'won'
   | 'lost'
+  /** Screened out rather than lost: never a fit, so it never really competed. */
+  | 'unqualified'
 
 /** Where a lead came from. Drives the per-channel reporting in Outreach. */
 export type BdChannel =
@@ -429,6 +433,7 @@ export interface Lead {
   contactName: string
   contactTitle: string
   email: string
+  phone: string
   channel: BdChannel
   /** Service slugs the prospect is interested in — finer-grained than delivery's three. */
   services: string[]
@@ -463,7 +468,11 @@ export interface BdMeeting {
   type: MeetingType
   hostId: string
   hostName: string
-  internalAttendees: string[]
+  /**
+   * Portal staff invited to the meeting — real profile ids, so an invitee can be
+   * shown their own schedule outside the BD module (they cannot open /bd/*).
+   */
+  internalAttendees: { id: string; name: string }[]
   clientAttendees: string
   platform: MeetingPlatform
   /** Absent until the meeting has happened. */

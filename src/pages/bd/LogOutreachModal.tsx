@@ -6,6 +6,7 @@ import { Select } from '../../components/ui/Select'
 import { DatePicker } from '../../components/ui/DatePicker'
 import { useToast } from '../../components/ui/toast-context'
 import { CHANNEL_CONFIG, CHANNEL_ORDER } from '../../constants/bd'
+import { FormField } from './FormField'
 import { useBd } from '../../context/BdPrototypeContext'
 import { cn } from '../../lib/cn'
 import { BD_REPS } from '../../data/bdMock'
@@ -117,16 +118,17 @@ export function LogOutreachModal({ open, channel: initialChannel, onClose }: Log
             <p className="mb-1.5 font-ui text-[12px] font-medium text-text-2">Date</p>
             <DatePicker value={date} onChange={setDate} />
           </div>
-          <Select
-            label="Logged by"
-            value={repId}
-            onChange={setRepId}
-            options={
+          <FormField label="Logged by">
+            <Select
+              value={repId}
+              onChange={setRepId}
+              options={
               canSeeAll
-                ? BD_REPS.map((r) => ({ value: r.id, label: r.name }))
-                : [{ value: viewerRepId, label: `${viewerName} (you)` }]
-            }
-          />
+              ? BD_REPS.map((r) => ({ value: r.id, label: r.name }))
+              : [{ value: viewerRepId, label: `${viewerName} (you)` }]
+              }
+            />
+          </FormField>
         </div>
 
         <div className="grid grid-cols-2 items-start gap-3 sm:grid-cols-4">

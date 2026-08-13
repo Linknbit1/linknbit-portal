@@ -12,6 +12,7 @@ import {
   Settings,
   UserCircle,
   CalendarCheck,
+  CalendarClock,
   ShieldAlert,
   Crown,
   StickyNote,
@@ -185,6 +186,11 @@ export const NAV_ITEMS: NavItem[] = [
   // A private pin-board. Gated on a capability rather than a role so it can be
   // handed to anyone from Settings; the notes themselves are owner-only in RLS.
   { label: 'My Notes', icon: StickyNote, to: '/notes', group: 'workspace', feature: 'can_use_sticky_notes' },
+  // Client meetings you host or were invited to. Deliberately outside the BD
+  // section and ungated: the people pulled into a negotiation — team leads, a
+  // PM — hold no can_view_bd, and an invitation they cannot see is no
+  // invitation. The page shows only the viewer's own schedule.
+  { label: 'My Meetings', icon: CalendarClock, to: '/my-meetings', group: 'workspace', devOnly: true, roles: SETTINGS_ROLES },
 
   // Delivery — winning the work, then doing it. Ordered by the lifecycle a piece
   // of work actually travels (lead → client → project → task) rather than by

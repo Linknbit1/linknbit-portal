@@ -6,6 +6,7 @@ import { Select } from '../../components/ui/Select'
 import { DatePicker } from '../../components/ui/DatePicker'
 import { useToast } from '../../components/ui/toast-context'
 import { CHANNEL_CONFIG, CHANNEL_ORDER, STAGE_CONFIG, STAGE_ORDER } from '../../constants/bd'
+import { FormField } from './FormField'
 import { useBd } from '../../context/BdPrototypeContext'
 import { randomUUID } from '../../lib/uuid'
 import { BD_REPS } from '../../data/bdMock'
@@ -43,7 +44,7 @@ function emptyLead(ownerId: string, ownerName: string): Lead {
   const today = new Date().toISOString().slice(0, 10)
   return {
     id: randomUUID(),
-    company: '', contactName: '', contactTitle: '', email: '',
+    company: '', contactName: '', contactTitle: '', email: '', phone: '',
     channel: 'linkedin', services: [], industry: 'Logistics', icpFit: 'partial',
     value: 0, stage: 'new', temperature: 'warm',
     ownerId, ownerName,
@@ -128,21 +129,29 @@ export function LeadFormModal({ open, lead, onClose }: LeadFormModalProps) {
           value={draft.email}
           onChange={(e) => set('email', e.target.value)}
           placeholder="henrik@nordicfreight.no"
-          className="sm:col-span-2"
+        />
+        <Input
+          label="Phone"
+          type="tel"
+          value={draft.phone}
+          onChange={(e) => set('phone', e.target.value)}
+          placeholder="+47 22 45 10 88"
         />
 
-        <Select
-          label="Source channel"
-          value={draft.channel}
-          onChange={(v) => set('channel', v as BdChannel)}
-          options={CHANNEL_ORDER.map((c) => ({ value: c, label: CHANNEL_CONFIG[c].label }))}
-        />
-        <Select
-          label="Industry"
-          value={draft.industry}
-          onChange={(v) => set('industry', v)}
-          options={INDUSTRIES.map((i) => ({ value: i, label: i }))}
-        />
+        <FormField label="Source channel">
+          <Select
+            value={draft.channel}
+            onChange={(v) => set('channel', v as BdChannel)}
+            options={CHANNEL_ORDER.map((c) => ({ value: c, label: CHANNEL_CONFIG[c].label }))}
+          />
+        </FormField>
+        <FormField label="Industry">
+          <Select
+            value={draft.industry}
+            onChange={(v) => set('industry', v)}
+            options={INDUSTRIES.map((i) => ({ value: i, label: i }))}
+          />
+        </FormField>
 
         <div className="sm:col-span-2">
           <p className="mb-1.5 font-ui text-[12px] font-medium text-text-2">Services interested in</p>
@@ -178,32 +187,36 @@ export function LeadFormModal({ open, lead, onClose }: LeadFormModalProps) {
           onChange={(e) => set('value', Number(e.target.value) || 0)}
           placeholder="1500000"
         />
-        <Select
-          label="Assigned rep"
-          value={draft.ownerId}
-          onChange={(v) => set('ownerId', v)}
-          options={BD_REPS.map((r) => ({ value: r.id, label: r.name }))}
-        />
+        <FormField label="Assigned rep">
+          <Select
+            value={draft.ownerId}
+            onChange={(v) => set('ownerId', v)}
+            options={BD_REPS.map((r) => ({ value: r.id, label: r.name }))}
+          />
+        </FormField>
 
-        <Select
-          label="Stage"
-          value={draft.stage}
-          onChange={(v) => set('stage', v as LeadStage)}
-          options={STAGE_ORDER.map((s) => ({ value: s, label: STAGE_CONFIG[s].label }))}
-        />
-        <Select
-          label="Priority"
-          value={draft.temperature}
-          onChange={(v) => set('temperature', v as LeadTemperature)}
-          options={TEMPERATURES}
-        />
+        <FormField label="Stage">
+          <Select
+            value={draft.stage}
+            onChange={(v) => set('stage', v as LeadStage)}
+            options={STAGE_ORDER.map((s) => ({ value: s, label: STAGE_CONFIG[s].label }))}
+          />
+        </FormField>
+        <FormField label="Priority">
+          <Select
+            value={draft.temperature}
+            onChange={(v) => set('temperature', v as LeadTemperature)}
+            options={TEMPERATURES}
+          />
+        </FormField>
 
-        <Select
-          label="ICP fit"
-          value={draft.icpFit}
-          onChange={(v) => set('icpFit', v as IcpFit)}
-          options={ICP_FITS}
-        />
+        <FormField label="ICP fit">
+          <Select
+            value={draft.icpFit}
+            onChange={(v) => set('icpFit', v as IcpFit)}
+            options={ICP_FITS}
+          />
+        </FormField>
         <div>
           <p className="mb-1.5 font-ui text-[12px] font-medium text-text-2">Next follow-up</p>
           <DatePicker

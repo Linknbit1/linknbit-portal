@@ -7,6 +7,7 @@ import { Select } from '../../components/ui/Select'
 import { useToast } from '../../components/ui/toast-context'
 import { usePeople } from '../../hooks/usePeople'
 import { useServices } from '../../hooks/useServices'
+import { FormField } from './FormField'
 import { useBd } from '../../context/BdPrototypeContext'
 import { randomUUID } from '../../lib/uuid'
 import { cn } from '../../lib/cn'
@@ -131,12 +132,13 @@ export function HandoffModal({ open, lead, onClose }: HandoffModalProps) {
           />
 
           <div>
-            <Select
-              label="Delivery service"
-              value={serviceSlug}
-              onChange={setServiceSlug}
-              options={services.map((s) => ({ value: s.slug, label: s.name, dot: s.color }))}
-            />
+            <FormField label="Delivery service">
+              <Select
+                value={serviceSlug}
+                onChange={setServiceSlug}
+                options={services.map((s) => ({ value: s.slug, label: s.name, dot: s.color }))}
+              />
+            </FormField>
             <p className="mt-1 font-ui text-[11.5px] text-text-4">
               BD sold: {lead.services.join(', ') || '—'}
             </p>
@@ -152,17 +154,18 @@ export function HandoffModal({ open, lead, onClose }: HandoffModalProps) {
           />
 
           <div className="sm:col-span-2">
-            <Select
-              label="Project manager"
-              value={managerId}
-              onChange={setManagerId}
-              placeholder="Choose who picks this up"
-              options={managers.map((m) => ({
+            <FormField label="Project manager">
+              <Select
+                value={managerId}
+                onChange={setManagerId}
+                placeholder="Choose who picks this up"
+                options={managers.map((m) => ({
                 value: m.id,
                 label: m.name,
                 avatar: { name: m.name, url: m.avatar_url },
-              }))}
-            />
+                }))}
+              />
+            </FormField>
             {managerError && <p className="mt-1 font-ui text-[11.5px] text-error">{managerError}</p>}
           </div>
         </div>

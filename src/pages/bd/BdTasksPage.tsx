@@ -176,9 +176,9 @@ export default function BdTasksPage() {
                 onChange={setAssigneeFilter}
                 size="sm"
                 options={[
-                  { value: 'me', label: 'My tasks' },
-                  { value: 'all', label: 'Whole team' },
-                  ...BD_REPS.filter((r) => r.id !== viewerRepId).map((r) => ({ value: r.id, label: r.name })),
+                { value: 'me', label: 'My tasks' },
+                { value: 'all', label: 'Whole team' },
+                ...BD_REPS.filter((r) => r.id !== viewerRepId).map((r) => ({ value: r.id, label: r.name })),
                 ]}
               />
             ) : (

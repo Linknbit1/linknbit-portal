@@ -6,6 +6,7 @@ import { Select } from '../../components/ui/Select'
 import { DatePicker } from '../../components/ui/DatePicker'
 import { useToast } from '../../components/ui/toast-context'
 import { CHANNEL_CONFIG, CHANNEL_ORDER, BD_PROJECT_COLUMNS } from '../../constants/bd'
+import { FormField } from './FormField'
 import { useBd } from '../../context/BdPrototypeContext'
 import { randomUUID } from '../../lib/uuid'
 import { cn } from '../../lib/cn'
@@ -100,18 +101,20 @@ export function BdProjectFormModal({ open, project, onClose }: BdProjectFormModa
           />
         </div>
 
-        <Select
-          label="Owner"
-          value={ownerId}
-          onChange={setOwnerId}
-          options={BD_REPS.map((r) => ({ value: r.id, label: r.name }))}
-        />
-        <Select
-          label="Status"
-          value={status}
-          onChange={(v) => setStatus(v as ProjectStatus)}
-          options={BD_PROJECT_COLUMNS.map((s) => ({ value: s, label: PROJECT_STATUS_LABELS[s] }))}
-        />
+        <FormField label="Owner">
+          <Select
+            value={ownerId}
+            onChange={setOwnerId}
+            options={BD_REPS.map((r) => ({ value: r.id, label: r.name }))}
+          />
+        </FormField>
+        <FormField label="Status">
+          <Select
+            value={status}
+            onChange={(v) => setStatus(v as ProjectStatus)}
+            options={BD_PROJECT_COLUMNS.map((s) => ({ value: s, label: PROJECT_STATUS_LABELS[s] }))}
+          />
+        </FormField>
 
         <div>
           <p className="mb-1.5 font-ui text-[12px] font-medium text-text-2">Deadline</p>

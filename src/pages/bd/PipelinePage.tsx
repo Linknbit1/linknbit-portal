@@ -38,7 +38,8 @@ const SORTS = [
   { value: 'company', label: 'Company A–Z' },
 ]
 
-const OPEN_STAGES: LeadStage[] = ['new', 'contacted', 'qualified', 'proposal_sent', 'negotiation']
+/** Still in play. Won, Lost and Unqualified are the three terminal stages. */
+const OPEN_STAGES: LeadStage[] = ['new', 'contacted', 'qualified', 'meeting', 'proposal_sent', 'negotiation']
 
 type FollowUpTone = 'overdue' | 'today' | 'soon' | 'later'
 
@@ -200,7 +201,7 @@ export default function PipelinePage() {
               const value = columnLeads.reduce((sum, l) => sum + l.value, 0)
               const StageIcon = config.icon
               const isCollapsed = collapsed.includes(stage)
-              const isTerminal = stage === 'won' || stage === 'lost'
+              const isTerminal = stage === 'won' || stage === 'lost' || stage === 'unqualified'
 
               if (isCollapsed) {
                 return (
@@ -408,7 +409,7 @@ interface LeadCardProps {
 function LeadCard({ lead, dragging, onDragStart, onDragEnd, onClick }: LeadCardProps) {
   const tone = followUpTone(lead.nextFollowUp)
   const stalled = daysSince(lead.lastContacted)
-  const isTerminal = lead.stage === 'won' || lead.stage === 'lost'
+  const isTerminal = lead.stage === 'won' || lead.stage === 'lost' || lead.stage === 'unqualified'
 
   return (
     <article
@@ -421,7 +422,7 @@ function LeadCard({ lead, dragging, onDragStart, onDragEnd, onClick }: LeadCardP
         'group cursor-grab rounded-md border bg-surface-1 p-3 active:cursor-grabbing',
         'transition-[transform,opacity,border-color] duration-150 hover:border-border-strong',
         dragging ? 'scale-[0.98] opacity-40' : 'opacity-100',
-        lead.stage === 'lost' ? 'border-border-subtle opacity-70' : 'border-border-default',
+        lead.stage === 'lost' || lead.stage === 'unqualified' ? 'border-border-subtle opacity-70' : 'border-border-default',
       )}
     >
       <div className="flex items-start gap-2">

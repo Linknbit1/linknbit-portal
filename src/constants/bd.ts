@@ -3,7 +3,7 @@ import {
   // "professional network" glyph available.
   Briefcase, ShoppingBag, Contact, Mail, Phone, Globe, Users,
   Circle, CircleDotDashed, BadgeCheck, FileText, Handshake, Trophy, XCircle,
-  Ban, CheckCircle2, Eye,
+  Ban, CheckCircle2, Eye, Video, CircleSlash as SlashIcon,
   type LucideIcon,
 } from 'lucide-react'
 import type { LeadStage, BdChannel, TaskStatus, ProjectStatus } from '../types'
@@ -41,6 +41,12 @@ export const STAGE_CONFIG: Record<LeadStage, { label: string; icon: LucideIcon; 
     chip: 'bg-[rgba(34,211,238,0.12)] text-[#22D3EE] border-[rgba(34,211,238,0.3)]',
     dropBorder: 'border-[#22D3EE]',
   },
+  meeting: {
+    label: 'Meeting', icon: Video,
+    accent: 'bg-[rgba(45,212,191,0.13)] text-[#2DD4BF] border-[rgba(45,212,191,0.3)]',
+    chip: 'bg-[rgba(45,212,191,0.12)] text-[#2DD4BF] border-[rgba(45,212,191,0.3)]',
+    dropBorder: 'border-[#2DD4BF]',
+  },
   proposal_sent: {
     label: 'Proposal Sent', icon: FileText,
     accent: 'bg-[rgba(167,139,250,0.14)] text-[#A78BFA] border-[rgba(167,139,250,0.3)]',
@@ -65,11 +71,20 @@ export const STAGE_CONFIG: Record<LeadStage, { label: string; icon: LucideIcon; 
     chip: 'bg-[rgba(244,54,76,0.1)] text-[#F4364C] border-[rgba(244,54,76,0.3)]',
     dropBorder: 'border-[#F4364C]',
   },
+  // Muted on purpose: screened out is not a loss, and it should not pull the eye
+  // the way Lost does.
+  unqualified: {
+    label: 'Unqualified', icon: SlashIcon,
+    accent: 'bg-[rgba(100,116,139,0.14)] text-[#64748B] border-[rgba(100,116,139,0.28)]',
+    chip: 'bg-[rgba(100,116,139,0.12)] text-[#64748B] border-[rgba(100,116,139,0.28)]',
+    dropBorder: 'border-[#64748B]',
+  },
 }
 
 /** Stages in pipeline order — the board's column order and the funnel's row order. */
 export const STAGE_ORDER: LeadStage[] = [
-  'new', 'contacted', 'qualified', 'proposal_sent', 'negotiation', 'won', 'lost',
+  'new', 'contacted', 'qualified', 'meeting', 'proposal_sent', 'negotiation',
+  'won', 'lost', 'unqualified',
 ]
 
 /**

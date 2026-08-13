@@ -402,9 +402,9 @@ function Field({ label, children, className }: { label: string; children: React.
 function StageStepper({ stage }: { stage: LeadStage }) {
   // Annotated: TS narrows a filtered union via predicate inference, which would
   // make indexOf() reject the two terminal stages this deliberately accepts.
-  const open: LeadStage[] = STAGE_ORDER.filter((s) => s !== 'won' && s !== 'lost')
+  const open: LeadStage[] = STAGE_ORDER.filter((s) => s !== 'won' && s !== 'lost' && s !== 'unqualified')
   const index = open.indexOf(stage)
-  const closed = stage === 'won' || stage === 'lost'
+  const closed = stage === 'won' || stage === 'lost' || stage === 'unqualified'
 
   return (
     <div className="flex items-center gap-1">
@@ -414,7 +414,7 @@ function StageStepper({ stage }: { stage: LeadStage }) {
           title={STAGE_CONFIG[s].label}
           className={cn(
             'h-1.5 flex-1 rounded-full transition-colors duration-200',
-            closed ? (stage === 'won' ? 'bg-success' : 'bg-error/60')
+            closed ? (stage === 'won' ? 'bg-success' : stage === 'lost' ? 'bg-error/60' : 'bg-surface-3')
               : i <= index ? 'bg-brand-red' : 'bg-surface-3',
           )}
         />

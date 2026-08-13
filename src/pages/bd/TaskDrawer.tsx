@@ -180,8 +180,8 @@ export function TaskDrawer({ task, onClose, onOpenLead }: TaskDrawerProps) {
               <Select
                 value={task.assigneeId}
                 onChange={(v) => {
-                  const rep = BD_REPS.find((r) => r.id === v)
-                  patch({ assigneeId: v, assigneeName: rep?.name ?? task.assigneeName })
+                const rep = BD_REPS.find((r) => r.id === v)
+                patch({ assigneeId: v, assigneeName: rep?.name ?? task.assigneeName })
                 }}
                 options={assigneeOptions}
                 size="sm"
@@ -209,8 +209,8 @@ export function TaskDrawer({ task, onClose, onOpenLead }: TaskDrawerProps) {
               <Select
                 value={task.projectId}
                 onChange={(v) => {
-                  const project = projects.find((p) => p.id === v)
-                  patch({ projectId: v, projectName: project?.name ?? task.projectName })
+                const project = projects.find((p) => p.id === v)
+                patch({ projectId: v, projectName: project?.name ?? task.projectName })
                 }}
                 options={projects.map((p) => ({ value: p.id, label: p.name }))}
                 size="sm"
@@ -221,8 +221,8 @@ export function TaskDrawer({ task, onClose, onOpenLead }: TaskDrawerProps) {
               <Select
                 value={task.leadId ?? NO_LEAD}
                 onChange={(v) => {
-                  const lead = leads.find((l) => l.id === v)
-                  patch({ leadId: lead?.id, leadCompany: lead?.company })
+                const lead = leads.find((l) => l.id === v)
+                patch({ leadId: lead?.id, leadCompany: lead?.company })
                 }}
                 options={[{ value: NO_LEAD, label: 'Not linked' }, ...leads.map((l) => ({ value: l.id, label: l.company }))]}
                 size="sm"
@@ -234,8 +234,8 @@ export function TaskDrawer({ task, onClose, onOpenLead }: TaskDrawerProps) {
                 value={task.channel ?? NO_CHANNEL}
                 onChange={(v) => patch({ channel: v === NO_CHANNEL ? undefined : (v as BdChannel) })}
                 options={[
-                  { value: NO_CHANNEL, label: 'General' },
-                  ...CHANNEL_ORDER.map((c) => ({ value: c, label: CHANNEL_CONFIG[c].label })),
+                { value: NO_CHANNEL, label: 'General' },
+                ...CHANNEL_ORDER.map((c) => ({ value: c, label: CHANNEL_CONFIG[c].label })),
                 ]}
                 size="sm"
               />

@@ -2,10 +2,13 @@ import { useState } from 'react'
 import { Modal } from '../../components/ui/Modal'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
+import { MultiSelectPeople } from '../../components/ui/MultiSelectPeople'
 import { Select } from '../../components/ui/Select'
 import { DatePicker } from '../../components/ui/DatePicker'
 import { TimePicker } from '../../components/ui/TimePicker'
 import { useToast } from '../../components/ui/toast-context'
+import { FormField } from './FormField'
+import { usePeople } from '../../hooks/usePeople'
 import { useBd } from '../../context/BdPrototypeContext'
 import { randomUUID } from '../../lib/uuid'
 import { BD_REPS } from '../../data/bdMock'
@@ -38,6 +41,7 @@ interface MeetingFormModalProps {
 export function MeetingFormModal({ open, meeting, onClose }: MeetingFormModalProps) {
   const toast = useToast()
   const { leads, saveMeeting, viewerRepId, viewerName } = useBd()
+  const { data: people = [] } = usePeople()
 
   const [leadId, setLeadId] = useState(meeting?.leadId ?? leads[0]?.id ?? '')
   const [date, setDate] = useState(() => (meeting ? meeting.scheduledAt.slice(0, 10) : new Date().toISOString().slice(0, 10)))
@@ -49,7 +53,7 @@ export function MeetingFormModal({ open, meeting, onClose }: MeetingFormModalPro
   const [platform, setPlatform] = useState<MeetingPlatform>(meeting?.platform ?? 'zoom')
   const [hostId, setHostId] = useState(meeting?.hostId ?? viewerRepId)
   const [clientAttendees, setClientAttendees] = useState(meeting?.clientAttendees ?? '')
-  const [internal, setInternal] = useState((meeting?.internalAttendees ?? []).join(', '))
+  const [attendeeIds, setAttendeeIds] = useState<string[]>((meeting?.internalAttendees ?? []).map((a) => a.id))
   const [outcome, setOutcome] = useState(meeting?.outcome ?? '')
   const [nextStep, setNextStep] = useState(meeting?.nextStep ?? '')
   const [touched, setTouched] = useState(false)
@@ -70,7 +74,9 @@ export function MeetingFormModal({ open, meeting, onClose }: MeetingFormModalPro
       type,
       hostId,
       hostName: host?.name ?? viewerName,
-      internalAttendees: internal.split(',').map((s) => s.trim()).filter(Boolean),
+      internalAttendees: people
+        .filter((p) => attendeeIds.includes(p.id))
+        .map((p) => ({ id: p.id, name: p.name })),
       clientAttendees: clientAttendees.trim(),
       platform,
       outcome: outcome.trim() || undefined,
@@ -94,42 +100,55 @@ export function MeetingFormModal({ open, meeting, onClose }: MeetingFormModalPro
       }
     >
       <div className="grid grid-cols-1 gap-4 p-5 sm:grid-cols-2">
-        <Select
-          label="Lead"
-          value={leadId}
-          onChange={setLeadId}
-          className="sm:col-span-2"
-          options={leads.map((l) => ({ value: l.id, label: l.company }))}
-        />
+        <FormField label="Lead">
+          <Select
+            value={leadId}
+            onChange={setLeadId}
+            className="sm:col-span-2"
+            options={leads.map((l) => ({ value: l.id, label: l.company }))}
+          />
+        </FormField>
 
-        <div>
-          <p className="mb-1.5 font-ui text-[12px] font-medium text-text-2">Date</p>
+        <FormField label="Date">
           <DatePicker value={date} onChange={setDate} />
-        </div>
+        </FormField>
         <div className="grid grid-cols-2 gap-3">
-          <div>
-            <p className="mb-1.5 font-ui text-[12px] font-medium text-text-2">Time</p>
+          <FormField label="Time">
             <TimePicker value={time} onChange={setTime} />
-          </div>
-          <Select label="Duration" value={duration} onChange={setDuration} options={DURATIONS} />
+          </FormField>
+          <FormField label="Duration">
+              <Select value={duration} onChange={setDuration} options={DURATIONS} />
+            </FormField>
         </div>
 
-        <Select label="Meeting type" value={type} onChange={(v) => setType(v as MeetingType)} options={TYPES} />
-        <Select label="Platform" value={platform} onChange={(v) => setPlatform(v as MeetingPlatform)} options={PLATFORMS} />
+        <FormField label="Meeting type">
+          <Select value={type} onChange={(v) => setType(v as MeetingType)} options={TYPES} />
+        </FormField>
+        <FormField label="Platform">
+          <Select value={platform} onChange={(v) => setPlatform(v as MeetingPlatform)} options={PLATFORMS} />
+        </FormField>
 
-        <Select
-          label="Hosted by"
-          value={hostId}
-          onChange={setHostId}
-          options={BD_REPS.map((r) => ({ value: r.id, label: r.name }))}
-        />
-        <Input
-          label="Also joining (internal)"
-          value={internal}
-          onChange={(e) => setInternal(e.target.value)}
-          placeholder="Ahmad Karimi, Sara Qureshi"
-          helper="Comma separated"
-        />
+        <FormField label="Hosted by">
+          <Select
+            value={hostId}
+            onChange={setHostId}
+            options={BD_REPS.map((r) => ({ value: r.id, label: r.name }))}
+          />
+        </FormField>
+        <FormField
+          label="Invite colleagues"
+          hint="— anyone in the portal"
+          helper="They see it under Workspace → My Meetings"
+        >
+          <MultiSelectPeople
+            value={attendeeIds}
+            onChange={setAttendeeIds}
+            options={people
+              .filter((p) => p.is_active)
+              .map((p) => ({ id: p.id, name: p.name, avatar_url: p.avatar_url }))}
+            placeholder="Nobody invited yet"
+          />
+        </FormField>
 
         <Input
           label="Client attendees"

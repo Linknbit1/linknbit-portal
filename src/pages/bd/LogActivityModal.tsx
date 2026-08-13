@@ -5,6 +5,7 @@ import { Button } from '../../components/ui/Button'
 import { Select } from '../../components/ui/Select'
 import { DatePicker } from '../../components/ui/DatePicker'
 import { useToast } from '../../components/ui/toast-context'
+import { FormField } from './FormField'
 import { useBd } from '../../context/BdPrototypeContext'
 import { cn } from '../../lib/cn'
 import type { Lead, BdActivityType, BdActivityOutcome } from '../../types'
@@ -114,11 +115,12 @@ export function LogActivityModal({ open, lead, onClose }: LogActivityModalProps)
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Select label="Outcome" value={outcome} onChange={(v) => setOutcome(v as BdActivityOutcome)} options={OUTCOMES} />
-          <div>
-            <p className="mb-1.5 font-ui text-[12px] font-medium text-text-2">When</p>
+          <FormField label="Outcome">
+            <Select value={outcome} onChange={(v) => setOutcome(v as BdActivityOutcome)} options={OUTCOMES} />
+          </FormField>
+          <FormField label="When">
             <DatePicker value={date} onChange={setDate} />
-          </div>
+          </FormField>
         </div>
 
         <div>

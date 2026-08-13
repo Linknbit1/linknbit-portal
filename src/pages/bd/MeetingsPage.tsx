@@ -215,7 +215,7 @@ function MeetingRow({ meeting, onClick }: { meeting: BdMeeting; onClick: () => v
 
       {meeting.internalAttendees.length > 0 && (
         <p className="font-ui text-[11.5px] text-text-4 pl-0 sm:pl-[80px]">
-          Also joining: {meeting.internalAttendees.join(', ')}
+          Also joining: {meeting.internalAttendees.map((a) => a.name).join(', ')}
         </p>
       )}
 
