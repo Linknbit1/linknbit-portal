@@ -37,6 +37,8 @@ export const BD_KEYS = {
   leads: ['bd', 'leads'] as const,
   activities: ['bd', 'activities'] as const,
   meetings: ['bd', 'meetings'] as const,
+  /** The viewer's own schedule — a different question, and a different policy path. */
+  myMeetings: ['bd', 'myMeetings'] as const,
   tasks: ['bd', 'tasks'] as const,
   projects: ['bd', 'projects'] as const,
   updates: ['bd', 'updates'] as const,
@@ -80,7 +82,29 @@ export function useBdMeetings() {
  * overwrite the other.
  */
 export function useMyMeetings() {
-  return useQuery({ queryKey: ['bd', 'myMeetings'] as const, queryFn: bd.fetchMyMeetings, staleTime: STALE })
+  return useQuery({ queryKey: BD_KEYS.myMeetings, queryFn: bd.fetchMyMeetings, staleTime: STALE })
+}
+
+/**
+ * How many of the viewer's meetings are still ahead of them — the sidebar badge.
+ *
+ * Reads the same cache entry as `useMyMeetings`, narrowed with `select`, so the
+ * always-mounted sidebar costs no extra request. `staleTime` alone would let the
+ * count sit stale all afternoon, so this also refetches on an interval: a badge
+ * that still says 1 after the meeting has passed is worse than no badge.
+ */
+export function useMyUpcomingMeetingCount(enabled: boolean) {
+  return useQuery({
+    queryKey: BD_KEYS.myMeetings,
+    queryFn: bd.fetchMyMeetings,
+    enabled,
+    staleTime: STALE,
+    refetchInterval: 5 * 60_000,
+    select: (meetings) => {
+      const now = Date.now()
+      return meetings.filter((m) => new Date(m.scheduledAt).getTime() >= now).length
+    },
+  })
 }
 
 export function useBdTasks() {
@@ -274,7 +298,9 @@ export function useLogActivity() {
 export function useSaveMeeting() {
   const actorId = useActorId()
   return useOptimisticMutation<{ meeting: BdMeeting }>({
-    keys: [BD_KEYS.meetings],
+    // The viewer's own schedule can change too — they may have put themselves on
+    // it, or taken themselves off — and that is a separate cache entry.
+    keys: [BD_KEYS.meetings, BD_KEYS.myMeetings],
     optimistic: (qc, { meeting }) => {
       qc.setQueryData<BdMeeting[]>(BD_KEYS.meetings, (cur = []) => {
         const next = cur.some((m) => m.id === meeting.id)
@@ -285,15 +311,24 @@ export function useSaveMeeting() {
         return next.sort((a, b) => a.scheduledAt.localeCompare(b.scheduledAt))
       })
     },
-    run: ({ meeting }) => bd.saveMeeting(meeting, actorId),
+    run: async ({ meeting }) => {
+      const { addedAttendeeIds } = await bd.saveMeeting(meeting, actorId)
+      // Not awaited into the failure path on purpose: the meeting is saved and
+      // the in-portal notification has fired by now, so a mail problem must not
+      // roll the UI back. The invitee still has the notification either way.
+      void bd.sendMeetingInvites(meeting.id, addedAttendeeIds).catch(() => {})
+    },
     errorMessage: 'Could not save the meeting — your change has been undone.',
   })
 }
 
 export function useDeleteMeeting() {
   return useOptimisticMutation<{ id: string }>({
-    keys: [BD_KEYS.meetings],
-    optimistic: (qc, { id }) => removeFrom<BdMeeting>(qc, BD_KEYS.meetings, id),
+    keys: [BD_KEYS.meetings, BD_KEYS.myMeetings],
+    optimistic: (qc, { id }) => {
+      removeFrom<BdMeeting>(qc, BD_KEYS.meetings, id)
+      removeFrom<BdMeeting>(qc, BD_KEYS.myMeetings, id)
+    },
     run: ({ id }) => bd.deleteMeeting(id),
     errorMessage: 'Could not delete the meeting — it has been restored.',
   })

@@ -491,6 +491,12 @@ export interface BdMeeting {
   internalAttendees: { id: string; name: string }[]
   clientAttendees: string
   platform: MeetingPlatform
+  /**
+   * The joining link — a Zoom/Meet URL, or a dial-in string. Free text: meeting
+   * links are wildly inconsistent, and rejecting a real one is worse than
+   * accepting an odd one.
+   */
+  joinUrl?: string
   /** Absent until the meeting has happened. */
   outcome?: string
   nextStep?: string

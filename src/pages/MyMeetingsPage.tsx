@@ -152,9 +152,23 @@ export default function MyMeetingsPage() {
                         </div>
 
                         <div className="flex shrink-0 items-center gap-3">
-                          <span className="flex items-center gap-1.5 font-ui text-[11.5px] text-text-3">
-                            <PlatformIcon size={13} className="text-text-4" /> {platform.label}
-                          </span>
+                          {/* The link is the point of the card on the morning of
+                              the call, so it outranks the platform label rather
+                              than sitting beside it. */}
+                          {meeting.joinUrl ? (
+                            <a
+                              href={meeting.joinUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1.5 rounded-sm border border-brand-red/30 bg-brand-red/10 px-2.5 py-1 font-ui text-[11.5px] font-medium text-brand-red transition-colors hover:bg-brand-red/15"
+                            >
+                              <PlatformIcon size={13} /> Join
+                            </a>
+                          ) : (
+                            <span className="flex items-center gap-1.5 font-ui text-[11.5px] text-text-3">
+                              <PlatformIcon size={13} className="text-text-4" /> {platform.label}
+                            </span>
+                          )}
                           <span className="flex items-center gap-1.5">
                             <Avatar name={meeting.hostName} size="xs" />
                             <span className="hidden font-ui text-[12px] text-text-2 sm:inline">{meeting.hostName}</span>

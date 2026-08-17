@@ -29,6 +29,7 @@ import { useAuditNewCount } from '../../hooks/useAuditLog'
 import { useNotifications } from '../../hooks/useNotifications'
 import { useChatUnreadTotal } from '../../hooks/useChatUnreadCount'
 import { useTeams } from '../../hooks/useTeams'
+import { useMyUpcomingMeetingCount } from '../../hooks/useBd'
 import {
   useAllLeaveRequests,
   useAllWfhRequests,
@@ -301,6 +302,9 @@ export function useNavItems(): NavItem[] {
   // auto-closed, so a plain open-count would include expired/full quests).
   // Claimable by everyone internal, so the badge shows for all.
   const { data: questCount = 0 } = useClaimableQuestCount(!!profile)
+  // Meetings still ahead of you, hosting or invited. Ungated like the page
+  // itself — anyone can be pulled into a client call, so this is not a BD count.
+  const { data: upcomingMeetings = 0 } = useMyUpcomingMeetingCount(!!profile)
 
   const devicesPending = devices.filter((d) => !d.approved_by && d.is_active).length
   const attendanceByPath: Record<string, number> = {
@@ -322,6 +326,7 @@ export function useNavItems(): NavItem[] {
     if (item.to === '/admin/audit' && auditNewCount) return [{ ...item, badge: auditNewCount }]
     if (item.to === '/chat' && chatUnread) return [{ ...item, badge: chatUnread }]
     if (item.to === '/inbox' && inboxUnread) return [{ ...item, badge: inboxUnread }]
+    if (item.to === '/my-meetings' && upcomingMeetings) return [{ ...item, badge: upcomingMeetings }]
     if (item.matchPrefix === '/attendance') {
       const withChildren = withChildBadges(item, attendanceByPath)
       return [attendanceTotal > 0 ? { ...withChildren, badge: attendanceTotal } : withChildren]

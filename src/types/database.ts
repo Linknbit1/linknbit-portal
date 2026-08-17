@@ -912,6 +912,7 @@ export type Database = {
           duration_minutes: number
           host_id: string | null
           id: string
+          join_url: string | null
           lead_id: string | null
           next_step: string | null
           outcome: string | null
@@ -927,6 +928,7 @@ export type Database = {
           duration_minutes?: number
           host_id?: string | null
           id?: string
+          join_url?: string | null
           lead_id?: string | null
           next_step?: string | null
           outcome?: string | null
@@ -942,6 +944,7 @@ export type Database = {
           duration_minutes?: number
           host_id?: string | null
           id?: string
+          join_url?: string | null
           lead_id?: string | null
           next_step?: string | null
           outcome?: string | null
@@ -4862,6 +4865,7 @@ export type Database = {
           host_id: string
           host_name: string
           id: string
+          join_url: string
           next_step: string
           outcome: string
           platform: string

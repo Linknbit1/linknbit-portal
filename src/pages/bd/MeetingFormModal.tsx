@@ -51,6 +51,7 @@ export function MeetingFormModal({ open, meeting, onClose }: MeetingFormModalPro
   const [type, setType] = useState<MeetingType>(meeting?.type ?? 'discovery')
   const [platform, setPlatform] = useState<MeetingPlatform>(meeting?.platform ?? 'zoom')
   const [hostId, setHostId] = useState(meeting?.hostId ?? viewerRepId)
+  const [joinUrl, setJoinUrl] = useState(meeting?.joinUrl ?? '')
   const [clientAttendees, setClientAttendees] = useState(meeting?.clientAttendees ?? '')
   const [attendeeIds, setAttendeeIds] = useState<string[]>((meeting?.internalAttendees ?? []).map((a) => a.id))
   const [outcome, setOutcome] = useState(meeting?.outcome ?? '')
@@ -61,6 +62,15 @@ export function MeetingFormModal({ open, meeting, onClose }: MeetingFormModalPro
   const attendeesError = touched && !clientAttendees.trim() ? 'Who is joining from the client side?' : undefined
   const leadError = touched && !lead
     ? (leads.length === 0 ? 'Add a lead to the pipeline first — a meeting is booked against one.' : 'Choose the lead this is about.')
+    : undefined
+
+  /** Phone and in-person meetings have nothing to link to. */
+  const needsLink = platform === 'zoom' || platform === 'meet'
+  // Advisory only — it never blocks saving. A meeting link can legitimately be a
+  // dial-in string, and refusing to save because it does not start with https
+  // would be the tool arguing with the person who was on the call.
+  const joinUrlError = joinUrl.trim() && !/^https?:\/\//i.test(joinUrl.trim())
+    ? 'That does not look like a link — it will be saved as typed.'
     : undefined
 
   const submit = () => {
@@ -81,10 +91,21 @@ export function MeetingFormModal({ open, meeting, onClose }: MeetingFormModalPro
         .map((p) => ({ id: p.id, name: p.name })),
       clientAttendees: clientAttendees.trim(),
       platform,
+      joinUrl: joinUrl.trim() || undefined,
       outcome: outcome.trim() || undefined,
       nextStep: nextStep.trim() || undefined,
     })
-    toast(meeting ? 'Meeting updated' : `Meeting scheduled with ${lead.company}`, 'success')
+    // Names the side effect: people are about to receive a calendar invitation,
+    // and the sender should know that before they wonder whether to also message them.
+    const invited = attendeeIds.length
+    toast(
+      meeting
+        ? 'Meeting updated'
+        : invited > 0
+          ? `Meeting scheduled — ${invited} colleague${invited === 1 ? '' : 's'} invited`
+          : `Meeting scheduled with ${lead.company}`,
+      'success',
+    )
     onClose()
   }
 
@@ -132,6 +153,20 @@ export function MeetingFormModal({ open, meeting, onClose }: MeetingFormModalPro
         <FormField label="Platform">
           <Select value={platform} onChange={(v) => setPlatform(v as MeetingPlatform)} options={PLATFORMS} />
         </FormField>
+
+        {/* Only where there is something to join. An in-person meeting has no
+            link, and a field that is permanently blank teaches people to skip it. */}
+        {needsLink && (
+          <Input
+            label="Meeting link"
+            value={joinUrl}
+            onChange={(e) => setJoinUrl(e.target.value)}
+            error={joinUrlError}
+            helper="Optional. Goes into the calendar invitation and the Join button."
+            placeholder={platform === 'zoom' ? 'https://zoom.us/j/…' : 'https://meet.google.com/…'}
+            className="sm:col-span-2"
+          />
+        )}
 
         <FormField label="Hosted by">
           <Select

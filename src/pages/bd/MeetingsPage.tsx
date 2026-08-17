@@ -201,10 +201,24 @@ function MeetingRow({ meeting, onClick }: { meeting: BdMeeting; onClick: () => v
         </div>
 
         <div className="flex items-center gap-3 shrink-0">
-          <span className="flex items-center gap-1.5 font-ui text-[11.5px] text-text-3">
-            <PlatformIcon size={13} className="text-text-4" />
-            {platform.label}
-          </span>
+          {/* stopPropagation: the whole row opens the edit form, and clicking
+              Join must not do both. */}
+          {meeting.joinUrl ? (
+            <a
+              href={meeting.joinUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="flex items-center gap-1.5 rounded-sm border border-brand-red/30 bg-brand-red/10 px-2.5 py-1 font-ui text-[11.5px] font-medium text-brand-red transition-colors hover:bg-brand-red/15"
+            >
+              <PlatformIcon size={13} /> Join
+            </a>
+          ) : (
+            <span className="flex items-center gap-1.5 font-ui text-[11.5px] text-text-3">
+              <PlatformIcon size={13} className="text-text-4" />
+              {platform.label}
+            </span>
+          )}
           <span className="flex items-center gap-1.5">
             <Avatar name={meeting.hostName} size="xs" />
             <span className="font-ui text-[12px] text-text-2 hidden sm:inline">{meeting.hostName}</span>

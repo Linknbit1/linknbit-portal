@@ -141,6 +141,37 @@ export const DOC_CHAPTERS: DocChapter[] = [
         notes: ['Clicking a notification takes you straight to the task, message or request it refers to.'],
       },
       {
+        // Ungated on purpose. The people most likely to need this are the ones
+        // pulled into a client call from outside sales — they cannot open the
+        // Business development chapter, so it cannot be explained only there.
+        id: 'my-meetings',
+        title: 'My Meetings',
+        summary:
+          'Client meetings you are hosting or have been invited to, newest first. The number beside it in the sidebar is how many you still have coming up.',
+        where: 'Workspace → My Meetings',
+        procedures: [
+          {
+            title: 'Join a meeting',
+            steps: [
+              'Open Workspace → My Meetings and find it under Upcoming.',
+              'Press Join. If the organiser did not add a link, the card shows the platform instead and they will send one.',
+            ],
+          },
+          {
+            title: 'Put it in your own calendar',
+            steps: [
+              'Open the invitation email and use its attachment.',
+              'Outlook, Gmail and Apple Mail all offer “Add to calendar” from it, with a reminder 15 minutes before.',
+            ],
+          },
+        ],
+        notes: [
+          'You are notified in the portal when someone adds you, and again if the meeting is moved or cancelled. You can turn either off under Settings → Notifications → Meetings.',
+          'You see only your own meetings here, and only the time, platform and who else is coming — never the deal behind them.',
+          'The sidebar count covers meetings that have not started yet. It drops off on its own once one has passed.',
+        ],
+      },
+      {
         id: 'chat',
         title: 'Chat',
         summary:
@@ -724,7 +755,9 @@ export const DOC_CHAPTERS: DocChapter[] = [
             steps: [
               'Press New meeting and choose the lead it is about.',
               'Set the date, time and platform, and name who is attending from the client side.',
+              'Paste the Zoom or Meet link into “Meeting link” so everyone can join from the card.',
               'Invite colleagues under “Invite colleagues” — anyone in the portal, not only BD.',
+              'Save. Everyone you invited is notified in the portal and emailed a calendar invitation.',
             ],
           },
           {
@@ -737,6 +770,9 @@ export const DOC_CHAPTERS: DocChapter[] = [
         ],
         notes: [
           'People you invite see the meeting under Workspace → My Meetings, even though they cannot open the BD module itself. They see the time, platform and who else is coming — nothing else about the deal.',
+          'Only people newly added are emailed. Editing a meeting you already invited someone to does not send them a second invitation.',
+          'Moving a meeting notifies everyone on it, and so does cancelling one that has not happened yet. Tidying up past meetings notifies nobody.',
+          'The meeting link field appears for Zoom and Google Meet. Phone and in-person meetings have nothing to link to, so it is hidden.',
         ],
       },
       {

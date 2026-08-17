@@ -33,7 +33,15 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'added',
-        text: 'A BD meeting you are invited to now shows under Workspace → My Meetings even if you have no access to the BD module itself.',
+        text: 'A BD meeting you are invited to now shows under Workspace → My Meetings even if you have no access to the BD module itself, with a count in the sidebar of how many you still have coming up.',
+      },
+      {
+        kind: 'added',
+        text: 'Being added to a client meeting now reaches you: a notification in the portal, and an email carrying a calendar invitation you can add to Outlook, Gmail or Apple Calendar in one click. You are told again if the meeting is moved or cancelled.',
+      },
+      {
+        kind: 'added',
+        text: 'Meetings carry a joining link. Paste the Zoom or Meet URL when you book one and everybody gets a Join button — on the meeting card, in the email, and in their calendar entry.',
       },
       {
         kind: 'improved',

@@ -261,6 +261,7 @@ export function mapMeeting(row: MeetingJoined): BdMeeting {
     internalAttendees: row.attendees.flatMap((a) => (a.profile ? [{ id: a.profile.id, name: a.profile.name }] : [])),
     clientAttendees: row.client_attendees,
     platform: narrow(MEETING_PLATFORMS, row.platform, 'meet'),
+    joinUrl: row.join_url ?? undefined,
     outcome: row.outcome ?? undefined,
     nextStep: row.next_step ?? undefined,
   }
@@ -278,11 +279,21 @@ export async function fetchMeetings(): Promise<BdMeeting[]> {
 /**
  * Insert-or-update in one call, plus the attendee rows.
  *
- * Attendees are replaced wholesale rather than diffed: the set is small, the
- * form hands over the final list, and a delete-then-insert cannot leave a
- * half-applied guest list the way three conditional statements can.
+ * Returns the ids of people **newly** added, so the caller can email exactly
+ * them and nobody else.
+ *
+ * ── Why the guest list is diffed rather than replaced ────────────────────────
+ * It used to be a delete-then-insert of the whole list, which was fine while
+ * nothing watched the table. It is not fine now: an AFTER INSERT trigger on
+ * bd_meeting_attendees notifies the invitee, so replacing the list would ping
+ * every attendee again every time somebody fixed a typo in the meeting's notes.
+ * Diffing means only a genuinely new row is written, and only a genuinely new
+ * guest hears about it.
  */
-export async function saveMeeting(meeting: BdMeeting, actorId: string | null): Promise<void> {
+export async function saveMeeting(
+  meeting: BdMeeting,
+  actorId: string | null,
+): Promise<{ addedAttendeeIds: string[] }> {
   const { error } = await supabase.from('bd_meetings').upsert({
     id: meeting.id,
     lead_id: meeting.leadId || null,
@@ -292,21 +303,56 @@ export async function saveMeeting(meeting: BdMeeting, actorId: string | null): P
     host_id: meeting.hostId || null,
     client_attendees: meeting.clientAttendees,
     platform: meeting.platform,
+    join_url: meeting.joinUrl?.trim() || null,
     outcome: meeting.outcome ?? null,
     next_step: meeting.nextStep ?? null,
     created_by: actorId,
   })
   if (error) throw error
 
-  const { error: delErr } = await supabase.from('bd_meeting_attendees').delete().eq('meeting_id', meeting.id)
-  if (delErr) throw delErr
+  const { data: existingRows, error: exErr } = await supabase
+    .from('bd_meeting_attendees')
+    .select('profile_id')
+    .eq('meeting_id', meeting.id)
+  if (exErr) throw exErr
 
-  if (meeting.internalAttendees.length > 0) {
+  const before = new Set((existingRows ?? []).map((r) => r.profile_id))
+  const after = new Set(meeting.internalAttendees.map((a) => a.id))
+
+  const removed = [...before].filter((id) => !after.has(id))
+  const added = [...after].filter((id) => !before.has(id))
+
+  if (removed.length > 0) {
+    const { error: delErr } = await supabase
+      .from('bd_meeting_attendees')
+      .delete()
+      .eq('meeting_id', meeting.id)
+      .in('profile_id', removed)
+    if (delErr) throw delErr
+  }
+
+  if (added.length > 0) {
     const { error: insErr } = await supabase
       .from('bd_meeting_attendees')
-      .insert(meeting.internalAttendees.map((a) => ({ meeting_id: meeting.id, profile_id: a.id })))
+      .insert(added.map((id) => ({ meeting_id: meeting.id, profile_id: id })))
     if (insErr) throw insErr
   }
+
+  return { addedAttendeeIds: added }
+}
+
+/**
+ * Email a calendar invitation to the people just added to a meeting.
+ *
+ * Best-effort and deliberately un-awaited by the caller's success path: the
+ * meeting is already saved and the in-portal notification already sent by the
+ * time this runs, so a mail outage must not surface as "could not save".
+ */
+export async function sendMeetingInvites(meetingId: string, recipientIds: string[]): Promise<void> {
+  if (recipientIds.length === 0) return
+  await supabase.functions.invoke('send-meeting-invite', {
+    body: { meeting_id: meetingId, recipient_ids: recipientIds },
+  })
 }
 
 /**
@@ -335,6 +381,7 @@ export async function fetchMyMeetings(): Promise<BdMeeting[]> {
     internalAttendees: parseAttendees(row.attendees),
     clientAttendees: row.client_attendees,
     platform: narrow(MEETING_PLATFORMS, row.platform, 'meet'),
+    joinUrl: row.join_url ?? undefined,
     outcome: row.outcome ?? undefined,
     nextStep: row.next_step ?? undefined,
   }))

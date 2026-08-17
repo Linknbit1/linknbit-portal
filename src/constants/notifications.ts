@@ -69,6 +69,16 @@ export const NOTIFICATION_GROUPS: NotificationGroup[] = [
     ],
   },
   {
+    key: 'meetings',
+    label: 'Meetings',
+    // Ungated: anyone can be pulled into a client call, BD access or not — which
+    // is the whole reason these notifications exist.
+    items: [
+      { type: 'meeting_invite',  label: 'Meeting invitations', description: 'When somebody adds you to a client meeting' },
+      { type: 'meeting_updated', label: 'Changes and cancellations', description: 'When a meeting you are on is moved or called off' },
+    ],
+  },
+  {
     key: 'chat',
     label: 'Chat',
     items: [
@@ -167,6 +177,22 @@ export function notificationHref(resourceType: string | null, resourceId?: strin
       return resourceId ? `/chat/${resourceId}` : '/chat'
     case 'enrolled_device':
       return '/settings/devices'
+    // Business Development. These land on the module's own screens rather than
+    // the delivery ones — a bd_task is not a task, and sending someone to
+    // /admin/tasks/<id> would 404.
+    case 'bd_task':
+      return '/bd/tasks'
+    case 'bd_lead':
+      return '/bd/pipeline'
+    case 'bd_project':
+      return resourceId ? `/bd/projects/${resourceId}` : '/bd/projects'
+    case 'bd_comment':
+      return '/bd/pipeline'
+    case 'bd_meeting':
+      // Deliberately the personal schedule, not /bd/meetings: most people
+      // notified about a meeting are invitees who hold no can_view_bd and would
+      // be bounced straight back out of the BD module.
+      return '/my-meetings'
     default:
       return null
   }
