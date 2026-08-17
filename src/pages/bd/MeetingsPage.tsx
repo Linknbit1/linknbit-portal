@@ -8,8 +8,7 @@ import { Select } from '../../components/ui/Select'
 import { Avatar } from '../../components/ui/Avatar'
 import { Tabs } from '../../components/ui/Tabs'
 import { cn } from '../../lib/cn'
-import { useBd } from '../../context/BdPrototypeContext'
-import { BD_REPS } from '../../data/bdMock'
+import { useBd } from '../../context/BdContext'
 import { MeetingFormModal } from './MeetingFormModal'
 import type { BdMeeting, MeetingType, MeetingPlatform } from '../../types'
 
@@ -27,11 +26,6 @@ const PLATFORM_CONFIG: Record<MeetingPlatform, { label: string; icon: typeof Vid
   phone:     { label: 'Phone',       icon: Phone },
   in_person: { label: 'In person',   icon: MapPin },
 }
-
-const HOST_OPTIONS = [
-  { value: 'all', label: 'All hosts' },
-  ...BD_REPS.map((r) => ({ value: r.id, label: r.name })),
-]
 
 const TABS = [
   { key: 'upcoming', label: 'Upcoming' },
@@ -55,7 +49,7 @@ function dayLabel(iso: string): string {
 }
 
 export default function MeetingsPage() {
-  const { meetings } = useBd()
+  const { meetings, people } = useBd()
   const [editing, setEditing] = useState<BdMeeting | null>(null)
   const [formOpen, setFormOpen] = useState(false)
   const [tab, setTab] = useState('upcoming')
@@ -76,6 +70,11 @@ export default function MeetingsPage() {
         .sort((a, b) => b.scheduledAt.localeCompare(a.scheduledAt)),
     }
   }, [host, now, meetings])
+
+  const hostOptions = useMemo(
+    () => [{ value: 'all', label: 'All hosts' }, ...people.map((p) => ({ value: p.id, label: p.name }))],
+    [people],
+  )
 
   const shown = tab === 'upcoming' ? upcoming : past
 
@@ -107,7 +106,7 @@ export default function MeetingsPage() {
             </p>
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <Select value={host} onChange={setHost} options={HOST_OPTIONS} size="sm" className="w-40" />
+            <Select value={host} onChange={setHost} options={hostOptions} size="sm" className="w-40" />
             <Button size="sm" iconLeft={<Plus size={15} />} onClick={() => { setEditing(null); setFormOpen(true) }}>Schedule</Button>
           </div>
         </div>

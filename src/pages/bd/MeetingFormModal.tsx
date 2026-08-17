@@ -9,9 +9,8 @@ import { TimePicker } from '../../components/ui/TimePicker'
 import { useToast } from '../../components/ui/toast-context'
 import { FormField } from './FormField'
 import { usePeople } from '../../hooks/usePeople'
-import { useBd } from '../../context/BdPrototypeContext'
+import { useBd } from '../../context/BdContext'
 import { randomUUID } from '../../lib/uuid'
-import { BD_REPS } from '../../data/bdMock'
 import { cn } from '../../lib/cn'
 import type { BdMeeting, MeetingType, MeetingPlatform } from '../../types'
 
@@ -40,7 +39,7 @@ interface MeetingFormModalProps {
 
 export function MeetingFormModal({ open, meeting, onClose }: MeetingFormModalProps) {
   const toast = useToast()
-  const { leads, saveMeeting, viewerRepId, viewerName } = useBd()
+  const { leads, saveMeeting, viewerRepId, viewerName, people: bdPeople } = useBd()
   const { data: people = [] } = usePeople()
 
   const [leadId, setLeadId] = useState(meeting?.leadId ?? leads[0]?.id ?? '')
@@ -60,11 +59,14 @@ export function MeetingFormModal({ open, meeting, onClose }: MeetingFormModalPro
 
   const lead = leads.find((l) => l.id === leadId)
   const attendeesError = touched && !clientAttendees.trim() ? 'Who is joining from the client side?' : undefined
+  const leadError = touched && !lead
+    ? (leads.length === 0 ? 'Add a lead to the pipeline first — a meeting is booked against one.' : 'Choose the lead this is about.')
+    : undefined
 
   const submit = () => {
     setTouched(true)
     if (!clientAttendees.trim() || !lead) return
-    const host = BD_REPS.find((r) => r.id === hostId)
+    const host = bdPeople.find((p) => p.id === hostId)
     saveMeeting({
       id: meeting?.id ?? randomUUID(),
       leadId: lead.id,
@@ -100,7 +102,10 @@ export function MeetingFormModal({ open, meeting, onClose }: MeetingFormModalPro
       }
     >
       <div className="grid grid-cols-1 gap-4 p-5 sm:grid-cols-2">
-        <FormField label="Lead">
+        {/* A meeting is always about a prospect, so with an empty pipeline there
+            is nothing to book against — say so rather than letting Save do
+            nothing visible. */}
+        <FormField label="Lead" error={leadError}>
           <Select
             value={leadId}
             onChange={setLeadId}
@@ -132,7 +137,7 @@ export function MeetingFormModal({ open, meeting, onClose }: MeetingFormModalPro
           <Select
             value={hostId}
             onChange={setHostId}
-            options={BD_REPS.map((r) => ({ value: r.id, label: r.name }))}
+            options={bdPeople.map((p) => ({ value: p.id, label: p.name }))}
           />
         </FormField>
         <FormField

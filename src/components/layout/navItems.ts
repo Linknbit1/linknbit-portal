@@ -190,7 +190,7 @@ export const NAV_ITEMS: NavItem[] = [
   // section and ungated: the people pulled into a negotiation — team leads, a
   // PM — hold no can_view_bd, and an invitation they cannot see is no
   // invitation. The page shows only the viewer's own schedule.
-  { label: 'My Meetings', icon: CalendarClock, to: '/my-meetings', group: 'workspace', devOnly: true, roles: SETTINGS_ROLES },
+  { label: 'My Meetings', icon: CalendarClock, to: '/my-meetings', group: 'workspace', roles: SETTINGS_ROLES },
 
   // Delivery — winning the work, then doing it. Ordered by the lifecycle a piece
   // of work actually travels (lead → client → project → task) rather than by
@@ -198,7 +198,7 @@ export const NAV_ITEMS: NavItem[] = [
   // "Business Dev", not the full name: at 248px the expanded sidebar truncates
   // "Business Development" to "Business Develo…" once the expand chevron takes
   // its share of the row. The pages themselves keep the full name.
-  { label: 'Business Dev', icon: TrendingUp, to: '/bd/pipeline', group: 'delivery', matchPrefix: '/bd', devOnly: true, feature: 'can_view_bd', children: BD_CHILDREN },
+  { label: 'Business Dev', icon: TrendingUp, to: '/bd/pipeline', group: 'delivery', matchPrefix: '/bd', feature: 'can_view_bd', children: BD_CHILDREN },
   { label: 'Clients', icon: UserCircle, to: '/admin/clients', group: 'delivery', feature: 'can_manage_clients' },
   { label: 'Projects', icon: FolderOpen, to: '/admin/projects', group: 'delivery' },
   { label: 'Tasks', icon: CheckSquare, to: '/admin/tasks', group: 'delivery' },

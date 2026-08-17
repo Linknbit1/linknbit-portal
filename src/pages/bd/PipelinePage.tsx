@@ -13,11 +13,10 @@ import { ResponsiveTable } from '../../components/ui/ResponsiveTable'
 import { useToast } from '../../components/ui/toast-context'
 import { StageChip, ChannelChip, TemperatureChip, IcpFitChip } from '../../components/shared/BdChips'
 import { STAGE_CONFIG, STAGE_ORDER } from '../../constants/bd'
-import { useBd } from '../../context/BdPrototypeContext'
+import { useBd } from '../../context/BdContext'
 import { useDragScroll } from '../../hooks/useDragScroll'
 import { cn } from '../../lib/cn'
 import { formatCompactCurrency, formatDate, getDaysUntil } from '../../lib/utils'
-import { BD_REPS } from '../../data/bdMock'
 import { LeadDrawer } from './LeadDrawer'
 import { LeadFormModal } from './LeadFormModal'
 import { LogActivityModal } from './LogActivityModal'
@@ -66,7 +65,7 @@ function daysSince(date: string): number {
 
 export default function PipelinePage() {
   const toast = useToast()
-  const { leads, moveLeadStage } = useBd()
+  const { leads, moveLeadStage, people } = useBd()
 
   const [search, setSearch] = useState('')
   const [owner, setOwner] = useState('all')
@@ -176,7 +175,7 @@ export default function PipelinePage() {
               onChange={setOwner}
               size="sm"
               className="w-36"
-              options={[{ value: 'all', label: 'All reps' }, ...BD_REPS.map((r) => ({ value: r.id, label: r.name }))]}
+              options={[{ value: 'all', label: 'All reps' }, ...people.map((p) => ({ value: p.id, label: p.name }))]}
             />
             <Select value={sort} onChange={setSort} options={SORTS} size="sm" className="w-44" />
             <ViewToggle value={view} onChange={setView} options={PIPELINE_VIEWS} className="hidden lg:flex" />

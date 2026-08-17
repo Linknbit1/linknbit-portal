@@ -3,7 +3,7 @@ import { CalendarClock, Video, Phone, MapPin, Users, ArrowRight } from 'lucide-r
 import { Topbar } from '../components/layout/Topbar'
 import { Avatar } from '../components/ui/Avatar'
 import { Tabs } from '../components/ui/Tabs'
-import { BdPrototypeProvider, useBd } from '../context/BdPrototypeContext'
+import { useMyMeetings } from '../hooks/useBd'
 import { useAuthContext } from '../context/AuthContext'
 import { cn } from '../lib/cn'
 import type { BdMeeting, MeetingType, MeetingPlatform } from '../types'
@@ -44,39 +44,15 @@ function dayLabel(iso: string): string {
  * their own schedule.
  */
 export default function MyMeetingsPage() {
-  return (
-    <BdPrototypeProvider>
-      <MyMeetings />
-    </BdPrototypeProvider>
-  )
-}
-
-function MyMeetings() {
   const { profile } = useAuthContext()
-  const { meetings, viewerRepId } = useBd()
+  // Its own scoped query, not the BD module's. Mounting BdProvider here would
+  // fire the whole department's reads for someone who is allowed none of them,
+  // and every one would come back empty.
+  const { data: mine = [] } = useMyMeetings()
   const [tab, setTab] = useState('upcoming')
   // Captured once per mount — reading the clock during render is impure and
   // would let a meeting jump between tabs on an unrelated re-render.
   const [now] = useState(() => Date.now())
-
-  /**
-   * Yours if you host it or were invited to it.
-   *
-   * Invitations carry real profile ids — that is what the picker writes. Hosts
-   * are matched on `viewerRepId` as well, the same signed-in-user → BD-rep
-   * mapping the rest of the module uses, so seeded meetings are visible to
-   * whoever is standing in for that rep.
-   */
-  const mine = useMemo(
-    () =>
-      meetings.filter(
-        (m) =>
-          m.hostId === profile?.id ||
-          m.hostId === viewerRepId ||
-          m.internalAttendees.some((a) => a.id === profile?.id),
-      ),
-    [meetings, profile?.id, viewerRepId],
-  )
 
   const { upcoming, past } = useMemo(
     () => ({

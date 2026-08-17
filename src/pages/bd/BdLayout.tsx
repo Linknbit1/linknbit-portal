@@ -1,17 +1,17 @@
 import { Outlet } from 'react-router-dom'
-import { BdPrototypeProvider } from '../../context/BdPrototypeContext'
+import { BdProvider } from '../../context/BdContext'
 
 /**
  * Layout route for everything under /bd.
  *
- * The prototype store lives here rather than on each screen so state survives
- * navigation inside the module — opening a project from the list and coming back
- * used to reset every unsaved change, because the provider remounted.
+ * The module's data is composed here rather than on each screen so it survives
+ * navigation inside the module — opening a campaign from the list and coming back
+ * would otherwise refetch the whole department, because the provider remounted.
  */
 export default function BdLayout() {
   return (
-    <BdPrototypeProvider>
+    <BdProvider>
       <Outlet />
-    </BdPrototypeProvider>
+    </BdProvider>
   )
 }

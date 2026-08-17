@@ -16,15 +16,52 @@ import {
   CHART_TOOLTIP_STYLE, CHART_AXIS_TICK, CHART_GRID_STROKE, CHART_LEGEND_STYLE, CHART_COLORS,
 } from '../../lib/chartTheme'
 import { CHANNEL_CONFIG, CHANNEL_ORDER } from '../../constants/bd'
-import { useBd } from '../../context/BdPrototypeContext'
-import { BD_REVENUE_TREND, BD_FUNNEL } from '../../data/bdMock'
+import { useBd } from '../../context/BdContext'
+import { useBdTargetTotals } from '../../hooks/useBd'
+import { STAGE_CONFIG } from '../../constants/bd'
 import { TargetsModal } from './TargetsModal'
-import type { BdTarget, ChannelStats } from '../../types'
+import type { BdTarget, ChannelStats, Lead, LeadStage } from '../../types'
 
 const PERIOD_OPTIONS = [
   { value: 'month', label: 'This month' },
   { value: 'quarter', label: 'This quarter' },
 ]
+
+/**
+ * The stages a lead climbs, in order. Lost and Unqualified are deliberately
+ * absent: they are exits from the funnel, not steps in it.
+ */
+const FUNNEL_STAGES: LeadStage[] = ['new', 'contacted', 'qualified', 'meeting', 'proposal_sent', 'negotiation', 'won']
+
+/** How many months of history the revenue chart shows. */
+const TREND_MONTHS = 6
+
+/**
+ * How far a lead got.
+ *
+ * Only the *current* stage is stored, so for a live lead this is exact — being
+ * at Negotiation means it passed everything before it. A lead that was lost or
+ * screened out is the one case we cannot answer: its stage records how it ended,
+ * not how far it climbed. Counting those only as having entered understates the
+ * middle of the funnel slightly, which is the safe direction to be wrong in —
+ * the alternative is inventing a drop-off point that never happened.
+ */
+function furthestStageIndex(lead: Lead): number {
+  const i = FUNNEL_STAGES.indexOf(lead.stage)
+  return i === -1 ? 0 : i
+}
+
+/** 'Aug' / '2026-08-01' for the last N months, oldest first. */
+function recentMonths(count: number): { key: string; label: string }[] {
+  const now = new Date()
+  return Array.from({ length: count }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - (count - 1 - i), 1)
+    return {
+      key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`,
+      label: d.toLocaleDateString('en-GB', { month: 'short' }),
+    }
+  })
+}
 
 /** Attainment as a percentage, clamped for the bar but reported raw in the label. */
 function pct(actual: number, target: number): number {
@@ -42,9 +79,12 @@ function attainmentVariant(percentage: number): 'success' | 'warning' | 'error' 
 const FUNNEL_COLORS = ['#8A93A3', '#60A5FA', '#22D3EE', '#A78BFA', '#F59E0B', '#22C55E']
 
 export default function TargetsPage() {
-  const { targets: BD_TARGETS, channelStats } = useBd()
+  const { targets: BD_TARGETS, channelStats, leads, canSeeAll } = useBd()
   const [editOpen, setEditOpen] = useState(false)
   const [period, setPeriod] = useState('month')
+
+  const months = useMemo(() => recentMonths(TREND_MONTHS), [])
+  const { data: quotas = [] } = useBdTargetTotals(months[0].key)
 
   const totals = useMemo(() => {
     const revenueTarget = BD_TARGETS.reduce((s, t) => s + t.revenueTarget, 0)
@@ -61,19 +101,40 @@ export default function TargetsPage() {
     }
   }, [BD_TARGETS])
 
+  /** Stage-by-stage conversion, counted off the live pipeline. */
   const funnel = useMemo(() => {
-    const top = BD_FUNNEL[0]?.count ?? 1
-    return BD_FUNNEL.map((step, i) => {
-      const previous = BD_FUNNEL[i - 1]?.count
-      return {
-        ...step,
-        /** Share of all leads that reached this stage. */
-        ofTotal: Math.round((step.count / top) * 100),
-        /** Conversion from the stage before — where leads actually drop. */
-        fromPrevious: previous ? Math.round((step.count / previous) * 100) : null,
-      }
-    })
-  }, [])
+    const counts = FUNNEL_STAGES.map(
+      (_, i) => leads.filter((l) => furthestStageIndex(l) >= i).length,
+    )
+    const top = counts[0] || 1
+    return FUNNEL_STAGES.map((stage, i) => ({
+      stage: STAGE_CONFIG[stage].label,
+      count: counts[i],
+      /** Share of all leads that reached this stage. */
+      ofTotal: Math.round((counts[i] / top) * 100),
+      /** Conversion from the stage before — where leads actually drop. */
+      fromPrevious: i === 0 || counts[i - 1] === 0 ? null : Math.round((counts[i] / counts[i - 1]) * 100),
+    }))
+  }, [leads])
+
+  /**
+   * Revenue closed per month against that month's quota.
+   *
+   * Actual is the value of leads that reached Won *in that month* — which is why
+   * bd_leads carries `closed_at`: booking a deal to the month its lead was
+   * created would credit the wrong quarter for anything that took more than a
+   * few weeks to close.
+   */
+  const revenueTrend = useMemo(() => {
+    const quotaByMonth = new Map(quotas.map((q) => [q.periodMonth, q.revenueTarget]))
+    return months.map(({ key, label }) => ({
+      month: label,
+      target: quotaByMonth.get(key) ?? 0,
+      actual: leads
+        .filter((l) => l.stage === 'won' && l.closedAt?.slice(0, 7) === key.slice(0, 7))
+        .reduce((n, l) => n + l.value, 0),
+    }))
+  }, [months, quotas, leads])
 
   const byRevenue = useMemo(
     () =>
@@ -83,13 +144,16 @@ export default function TargetsPage() {
     [channelStats],
   )
 
-  const worstStep = useMemo(
-    () =>
-      funnel
-        .filter((f) => f.fromPrevious !== null)
-        .reduce((worst, step) => (step.fromPrevious! < worst.fromPrevious! ? step : worst)),
-    [funnel],
-  )
+  /**
+   * The step that loses the most leads. Null on an empty pipeline — every
+   * conversion is undefined then, and "0% at New Lead" would read as a crisis
+   * rather than as no data.
+   */
+  const worstStep = useMemo(() => {
+    const measurable = funnel.filter((f): f is typeof f & { fromPrevious: number } => f.fromPrevious !== null)
+    if (measurable.length === 0) return null
+    return measurable.reduce((worst, step) => (step.fromPrevious < worst.fromPrevious ? step : worst))
+  }, [funnel])
 
   const channelRevenue = byRevenue.reduce((n, c) => n + c.revenue, 0)
   const channelWon = byRevenue.reduce((n, c) => n + c.won, 0)
@@ -110,7 +174,11 @@ export default function TargetsPage() {
             <Select value={period} onChange={setPeriod} options={PERIOD_OPTIONS} size="sm" className="w-36" />
             <Button size="sm" variant="secondary" iconLeft={<Filter size={14} />}>Filters</Button>
             <Button size="sm" variant="secondary" iconLeft={<FileDown size={15} />}>Export</Button>
-            <Button size="sm" iconLeft={<Pencil size={14} />} onClick={() => setEditOpen(true)}>Set targets</Button>
+            {/* Nobody sets their own quota — RLS on bd_targets is manager-only,
+                so offering the button to a rep would only produce a rollback. */}
+            {canSeeAll && (
+              <Button size="sm" iconLeft={<Pencil size={14} />} onClick={() => setEditOpen(true)}>Set targets</Button>
+            )}
           </div>
         </div>
 
@@ -174,7 +242,7 @@ export default function TargetsPage() {
           />
           <div className="p-4 lg:p-5">
             <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={BD_REVENUE_TREND} barGap={4}>
+              <BarChart data={revenueTrend} barGap={4}>
                 <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_STROKE} />
                 <XAxis dataKey="month" tick={CHART_AXIS_TICK} axisLine={false} tickLine={false} />
                 <YAxis
@@ -249,7 +317,7 @@ export default function TargetsPage() {
                     <span className="text-text-4"> of all</span>
                   </p>
                   {step.fromPrevious !== null && (
-                    <p className={cn('font-mono text-[10.5px]', step.stage === worstStep.stage ? 'text-warning' : 'text-text-4')}>
+                    <p className={cn('font-mono text-[10.5px]', step.stage === worstStep?.stage ? 'text-warning' : 'text-text-4')}>
                       {step.fromPrevious}% carried
                     </p>
                   )}
@@ -286,10 +354,14 @@ export default function TargetsPage() {
               <span className="font-semibold text-text-1">Channels have produced {formatCompactCurrency(channelRevenue)}</span>{' '}
               across {channelWon} of {channelLeads} leads. {byRevenue[0] ? `${CHANNEL_CONFIG[byRevenue[0].channel].label} leads on revenue.` : ''}
             </p>
-            <p>
-              <span className="font-semibold text-text-1">The gap is at {worstStep.stage}.</span> Only{' '}
-              {worstStep.fromPrevious}% of leads carry through from the stage before it, the steepest drop in the funnel.
-            </p>
+            {worstStep ? (
+              <p>
+                <span className="font-semibold text-text-1">The gap is at {worstStep.stage}.</span> Only{' '}
+                {worstStep.fromPrevious}% of leads carry through from the stage before it, the steepest drop in the funnel.
+              </p>
+            ) : (
+              <p>Add leads to the pipeline and this summary will start reporting where they drop off.</p>
+            )}
           </div>
         </div>
       </div>

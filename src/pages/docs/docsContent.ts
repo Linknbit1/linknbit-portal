@@ -572,6 +572,210 @@ export const DOC_CHAPTERS: DocChapter[] = [
       },
     ],
   },
+
+  // ── Business Development ─────────────────────────────────────────────────────
+  // Gated on the same capability as the nav item and the route guard, so nobody
+  // is shown instructions for a module they cannot open.
+  {
+    id: 'business-development',
+    title: 'Business development',
+    blurb: 'Working the pipeline: leads, outreach, meetings, campaigns and targets.',
+    feature: 'can_view_bd',
+    topics: [
+      {
+        id: 'bd-pipeline',
+        title: 'Working the pipeline',
+        summary:
+          'Every prospect is a lead sitting at one of nine stages. Drag a card between columns to move it; the funnel, the channel report and your target all update from the same records, so there is nothing to reconcile afterwards.',
+        where: 'Business Dev → Pipeline',
+        feature: 'can_view_bd',
+        procedures: [
+          {
+            title: 'Add a lead',
+            steps: [
+              'Press New Lead.',
+              'Fill in the company and contact, and pick the channel it came from — the channel is what the outreach report is built on, so it is worth getting right.',
+              'Set the estimated value and who owns it. Save.',
+            ],
+          },
+          {
+            title: 'Move a lead forward',
+            steps: [
+              'Drag its card to the next column, or open the lead and change Stage.',
+              'Marking a lead Lost asks you for a reason before it commits — that reason is what makes the channel win-rate meaningful.',
+              'Marking a lead Won offers to hand it to delivery straight away.',
+            ],
+          },
+          {
+            title: 'Keep notes on a prospect',
+            steps: [
+              'Open the lead and choose the Notes tab.',
+              'Type as you would anywhere else in the portal: “/” for formatting, “@” to tag a colleague.',
+              'Notes save when you click away — there is no Save button.',
+            ],
+          },
+        ],
+        notes: [
+          'You can see the whole department’s pipeline but can only edit leads you own, unless you manage BD.',
+          'Deleting a lead also removes its logged activity, which changes the outreach totals for that channel.',
+          'Changes are saved as you make them. If one fails you get a toast and the screen puts itself back the way it was — nothing is left half-applied.',
+        ],
+      },
+      {
+        id: 'bd-comments',
+        title: 'Discussing a lead, task or campaign',
+        summary:
+          'Leads, BD tasks and campaigns each carry a comment thread. Comments appear for everyone with the record open as they are posted, so two people working the same deal see one conversation.',
+        where: 'Business Dev → any lead, task or campaign',
+        feature: 'can_view_bd',
+        procedures: [
+          {
+            title: 'Post a comment',
+            steps: [
+              'Open the record and go to its Comments tab (Discussion, on a campaign).',
+              'Type “@” and a name to tag someone — they get a notification.',
+              'Press Enter to send. Shift+Enter starts a new line instead.',
+            ],
+          },
+          {
+            title: 'Fix or remove your own comment',
+            steps: [
+              'Hover your comment and choose the pencil to edit it, or the bin to delete it.',
+              'An edited comment is marked “edited” so the thread stays honest.',
+            ],
+          },
+        ],
+        notes: [
+          'You can only edit your own comments. Whoever manages BD can delete anyone’s, but cannot edit them.',
+          'Tagging the same person twice in one thread does not notify them twice.',
+          'Anyone with BD access can be tagged, whether or not they are on the lead.',
+        ],
+      },
+      {
+        id: 'bd-outreach',
+        title: 'Logging outreach',
+        summary:
+          'Every unit of effort is one record, whether it is a single call on a named prospect or twenty Upwork proposals. That is why the Outreach page and a lead’s own log can never disagree — they are two views of the same list.',
+        where: 'Business Dev → Outreach',
+        feature: 'can_view_bd',
+        procedures: [
+          {
+            title: 'Log a batch of outreach',
+            steps: [
+              'Press Log outreach and choose the channel.',
+              'Enter how many you sent and how many replied.',
+              'Save. The channel’s totals and your own activity target move immediately.',
+            ],
+          },
+          {
+            title: 'Log a touchpoint on a named lead',
+            steps: [
+              'Open the lead and press Log activity.',
+              'Pick what it was — call, email, message — and the outcome.',
+              'Save. It joins the lead’s timeline and updates when it was last contacted.',
+            ],
+          },
+        ],
+        notes: [
+          'Website and referral are treated as passive: nobody sends on them, so what you log there counts as enquiries received, not messages sent.',
+          'The trend beside each channel compares this month against last month. A channel with no history last month shows no trend rather than a misleading jump.',
+        ],
+      },
+      {
+        id: 'bd-campaigns',
+        title: 'Campaigns and BD tasks',
+        summary:
+          'A campaign is an outreach initiative that tasks hang off — the BD equivalent of a delivery project. Its board uses the same six columns as the delivery board.',
+        where: 'Business Dev → Projects, Business Dev → Tasks',
+        feature: 'can_view_bd',
+        procedures: [
+          {
+            title: 'Start a campaign',
+            steps: [
+              'Open Business Dev → Projects and press New project.',
+              'Name it, pick the channels it targets and who is on it.',
+              'Open it and use the Brief tab to write down what it is going after.',
+            ],
+          },
+          {
+            title: 'Add work to it',
+            steps: [
+              'On the campaign’s Board tab, press Add task in the column you want it in.',
+              'The task opens straight away — every field is edited in place, so there is no separate form.',
+              'Drag cards between columns as the work moves.',
+            ],
+          },
+        ],
+        notes: [
+          'A campaign’s progress bar is calculated from its tasks. There is no progress field to type into, because a typed number goes stale the moment a task moves.',
+          'Assigning a task to someone notifies them.',
+        ],
+      },
+      {
+        id: 'bd-meetings',
+        title: 'Client meetings',
+        summary:
+          'Meetings booked against a lead, with colleagues from anywhere in the company invited.',
+        where: 'Business Dev → Meetings',
+        feature: 'can_view_bd',
+        procedures: [
+          {
+            title: 'Book a meeting',
+            steps: [
+              'Press New meeting and choose the lead it is about.',
+              'Set the date, time and platform, and name who is attending from the client side.',
+              'Invite colleagues under “Invite colleagues” — anyone in the portal, not only BD.',
+            ],
+          },
+          {
+            title: 'Record what came of it',
+            steps: [
+              'Open the meeting after it has happened.',
+              'Write the outcome and the next step. Both show on the lead’s Meetings tab.',
+            ],
+          },
+        ],
+        notes: [
+          'People you invite see the meeting under Workspace → My Meetings, even though they cannot open the BD module itself. They see the time, platform and who else is coming — nothing else about the deal.',
+        ],
+      },
+      {
+        id: 'bd-targets',
+        title: 'Targets and performance',
+        summary:
+          'Revenue, outreach and meeting quotas per person for the month, measured against what the pipeline actually shows.',
+        where: 'Business Dev → Performance',
+        feature: 'can_view_bd',
+        notes: [
+          'Attainment is never typed in. Revenue counts closed-won deals, outreach counts what you logged, meetings counts what you hosted.',
+          'The revenue chart books a deal to the month it closed, not the month the lead arrived — so a deal that took a quarter to land credits the right month.',
+          'Everyone in BD can read the department’s numbers. Only whoever manages BD can set the quotas, so the Set targets button is not shown to reps.',
+        ],
+      },
+      {
+        id: 'bd-handoff',
+        title: 'Handing a won deal to delivery',
+        summary:
+          'A won lead is passed to a project manager with the budget, the service and the context that was agreed.',
+        where: 'Business Dev → Pipeline → the lead',
+        feature: 'can_view_bd',
+        procedures: [
+          {
+            title: 'Hand over',
+            steps: [
+              'Move the lead to Won — the handoff opens by itself.',
+              'Choose the delivery service, name the project and confirm the budget.',
+              'Pick the manager who will run it and add anything they need to know. Confirm.',
+            ],
+          },
+        ],
+        notes: [
+          'The lead stays in BD history afterwards and shows what it became, so nothing disappears when it leaves the pipeline.',
+          'The handoff is recorded on the lead’s timeline as well, alongside the calls and emails that got it there.',
+        ],
+      },
+    ],
+  },
 ]
 
 /** Answers a capability question — supplied by the caller so this stays pure. */

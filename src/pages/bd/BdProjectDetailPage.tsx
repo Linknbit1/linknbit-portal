@@ -2,7 +2,7 @@ import { useMemo, useState, type ReactNode } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   Columns, Users, Send, SlidersHorizontal, Pencil, Trash2, Plus, Calendar,
-  UserCircle, CheckSquare, Target, type LucideIcon,
+  UserCircle, CheckSquare, Target, FileText, MessageSquare, type LucideIcon,
 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Button } from '../../components/ui/Button'
@@ -16,19 +16,24 @@ import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { useToast } from '../../components/ui/toast-context'
 import { StatusChip } from '../../components/shared/StatusChip'
 import { ChannelChip } from '../../components/shared/BdChips'
+import { BdCommentThread } from '../../components/shared/BdCommentThread'
+import { BdDocEditor } from '../../components/editor/BdDocEditor'
 import { CHANNEL_CONFIG, CHANNEL_ORDER, BD_PROJECT_COLUMNS } from '../../constants/bd'
 import { FormField } from './FormField'
-import { useBd } from '../../context/BdPrototypeContext'
+import { useBd } from '../../context/BdContext'
+import { nextPosition, useBdComments } from '../../hooks/useBd'
 import { randomUUID } from '../../lib/uuid'
 import { cn } from '../../lib/cn'
+import { plainTextToDoc, toDbDoc } from '../../lib/richText'
 import { formatCompactCurrency, formatDate, isOverdue, PROJECT_STATUS_LABELS } from '../../lib/utils'
-import { BD_REPS } from '../../data/bdMock'
 import { BdTaskBoard } from './BdTaskBoard'
 import { TaskDrawer } from './TaskDrawer'
 import type { BdChannel, BdProject, ProjectStatus, TaskStatus } from '../../types'
 
 const TABS = [
   { key: 'board', label: 'Board', icon: Columns },
+  { key: 'brief', label: 'Brief', icon: FileText },
+  { key: 'discussion', label: 'Discussion', icon: MessageSquare },
   { key: 'outreach', label: 'Outreach', icon: Send },
   { key: 'team', label: 'Team', icon: Users },
   { key: 'settings', label: 'Settings', icon: SlidersHorizontal },
@@ -103,7 +108,7 @@ export default function BdProjectDetailPage() {
   const toast = useToast()
   const {
     projects, tasks, activities, leads, patchProject, deleteProject, saveTask,
-    viewerRepId, viewerName,
+    viewerRepId, viewerName, people,
   } = useBd()
 
   const [tab, setTab] = useState<ProjectTab>('board')
@@ -118,6 +123,16 @@ export default function BdProjectDetailPage() {
     if (!project) return []
     return activities.filter((a) => project.channels.includes(a.channel))
   }, [activities, project])
+
+  /** Anyone in BD is taggable in the brief and in the discussion. */
+  const mentionItems = useMemo(
+    () => people.map((p) => ({ id: p.id, name: p.name, avatar_url: p.avatar_url })),
+    [people],
+  )
+
+  // Read only for the tab badge — the thread fetches and subscribes when opened,
+  // off the same cache entry, so this costs no extra request.
+  const { data: comments = [] } = useBdComments('project', id)
 
   if (!project) {
     return (
@@ -146,6 +161,8 @@ export default function BdProjectDetailPage() {
       projectId: project.id,
       projectName: project.name,
       recurrence: 'once',
+      // Head of its lane: a task you just created is the one you are about to work on.
+      position: nextPosition(tasks, status),
       createdBy: viewerName,
       checklist: [],
     })
@@ -160,7 +177,7 @@ export default function BdProjectDetailPage() {
     })
 
   const toggleMember = (repId: string) => {
-    const rep = BD_REPS.find((r) => r.id === repId)
+    const rep = people.find((p) => p.id === repId)
     if (!rep) return
     patch({
       members: project.members.some((m) => m.id === repId)
@@ -229,7 +246,10 @@ export default function BdProjectDetailPage() {
           tabs={TABS.map((t) => ({
             key: t.key,
             label: t.label,
-            badge: t.key === 'board' ? projectTasks.length : t.key === 'team' ? project.members.length : undefined,
+            badge: t.key === 'board' ? projectTasks.length
+              : t.key === 'team' ? project.members.length
+              : t.key === 'discussion' ? comments.length
+              : undefined,
           }))}
           activeKey={tab}
           onChange={(k) => setTab(k as ProjectTab)}
@@ -249,13 +269,37 @@ export default function BdProjectDetailPage() {
           )
         )}
 
+        {tab === 'brief' && (
+          <div className="rounded-lg border border-border-default bg-surface-1 p-4 lg:p-5">
+            <p className="mb-2 font-ui text-[12px] font-medium text-text-2">Campaign brief</p>
+            <div className="rounded-md border border-border-default bg-surface-inset px-3 py-2.5 focus-within:border-border-focus">
+              <BdDocEditor
+                key={project.id}
+                // Falls back to the plain column so a description written in the
+                // create form still shows up here.
+                value={project.doc ?? toDbDoc(plainTextToDoc(project.description ?? ''))}
+                onSave={(doc, plain) => patch({ doc, description: plain ?? undefined })}
+                mentionItems={mentionItems}
+                source={{ type: 'bd_project', id: project.id }}
+                placeholder="What this campaign is targeting, and how… type / for commands, @ to mention"
+              />
+            </div>
+          </div>
+        )}
+
+        {tab === 'discussion' && (
+          <div className="overflow-hidden rounded-lg border border-border-default bg-surface-1">
+            <BdCommentThread parentType="project" parentId={project.id} />
+          </div>
+        )}
+
         {tab === 'outreach' && <OutreachTab project={project} activity={campaignActivity} leads={leads} />}
 
         {tab === 'team' && (
           <div className="rounded-lg border border-border-default bg-surface-1 p-4 lg:p-5">
             <p className="mb-3 font-ui text-[12px] font-medium text-text-2">Who is on this campaign</p>
             <div className="flex flex-col gap-1.5">
-              {BD_REPS.map((rep) => {
+              {people.map((rep) => {
                 const on = project.members.some((m) => m.id === rep.id)
                 const repTasks = projectTasks.filter((t) => t.assigneeId === rep.id).length
                 return (
@@ -267,14 +311,16 @@ export default function BdProjectDetailPage() {
                       on ? 'border-brand-red/30 bg-brand-red/8' : 'border-border-default bg-surface-2/40 hover:border-border-strong',
                     )}
                   >
-                    <Avatar name={rep.name} size="sm" />
+                    <Avatar name={rep.name} src={rep.avatar_url ?? undefined} size="sm" />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate font-ui text-[13px] text-text-1">{rep.name}</span>
-                      <span className="block font-ui text-[11.5px] text-text-4">{rep.role}</span>
+                      {/* Their load on THIS campaign, not their job title: BD access is
+                          carried by a secondary role, so profiles.role reads "Employee"
+                          for everyone here and tells the reader nothing. */}
+                      <span className="block font-ui text-[11.5px] text-text-4">
+                        {repTasks === 0 ? 'No tasks here' : `${repTasks} task${repTasks === 1 ? '' : 's'} on this campaign`}
+                      </span>
                     </span>
-                    {repTasks > 0 && (
-                      <span className="font-mono text-[11px] text-text-4">{repTasks} task{repTasks === 1 ? '' : 's'}</span>
-                    )}
                     <span className={cn('font-ui text-[11.5px]', on ? 'text-brand-red' : 'text-text-4')}>
                       {on ? 'On campaign' : 'Add'}
                     </span>
@@ -292,10 +338,10 @@ export default function BdProjectDetailPage() {
                 <Select
                   value={project.ownerId}
                   onChange={(v) => {
-                  const rep = BD_REPS.find((r) => r.id === v)
+                  const rep = people.find((p) => p.id === v)
                   patch({ ownerId: v, ownerName: rep?.name ?? project.ownerName })
                   }}
-                  options={BD_REPS.map((r) => ({ value: r.id, label: r.name }))}
+                  options={people.map((p) => ({ value: p.id, label: p.name }))}
                 />
               </FormField>
               <div>

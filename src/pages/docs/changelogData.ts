@@ -13,11 +13,46 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: 'v1.5',
+    date: '2026-08-17',
+    title: 'Business Development goes live',
+    highlight:
+      'The BD module now saves. Your pipeline, outreach and campaigns are shared with the department and kept between sessions, and every record carries a live comment thread.',
+    entries: [
+      {
+        kind: 'added',
+        text: 'Business Development is no longer a preview. Leads, outreach, meetings, campaigns, tasks, daily check-ins and targets are all saved and shared — what you change, your colleagues see.',
+      },
+      {
+        kind: 'added',
+        text: 'Comment threads on leads, BD tasks and campaigns. Type “@” to tag a colleague and they are notified; comments from other people appear as they are posted, without reloading.',
+      },
+      {
+        kind: 'added',
+        text: 'Lead notes, BD task descriptions and campaign briefs are now written with the same editor as the rest of the portal — formatting, links and @mentions included.',
+      },
+      {
+        kind: 'added',
+        text: 'A BD meeting you are invited to now shows under Workspace → My Meetings even if you have no access to the BD module itself.',
+      },
+      {
+        kind: 'improved',
+        text: 'Every BD change applies the moment you make it — dragging a card, ticking a step, editing a field. Nothing waits on a spinner, and if a save is refused the screen puts itself back and tells you.',
+      },
+      {
+        kind: 'improved',
+        text: 'The people pickers throughout BD now list your actual colleagues rather than sample names, and reassigning a lead or a task notifies whoever picks it up.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Performance reporting is now measured off real records: the funnel counts your live pipeline, and the revenue chart books each deal to the month it closed rather than the month the lead arrived.',
+      },
+    ],
+  },
+  {
     version: 'v1.4',
     date: '2026-08-10',
     title: 'The task timer replaces the daily standup',
-    highlight:
-      'Start the timer on the task you are working on and stop it when you move on — that is your day reported. Writing a daily standup is no longer required.',
     entries: [
       {
         kind: 'added',

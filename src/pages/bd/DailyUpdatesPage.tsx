@@ -6,8 +6,7 @@ import { Select } from '../../components/ui/Select'
 import { Avatar } from '../../components/ui/Avatar'
 import { ChannelChip } from '../../components/shared/BdChips'
 import { cn } from '../../lib/cn'
-import { useBd } from '../../context/BdPrototypeContext'
-import { BD_REPS } from '../../data/bdMock'
+import { useBd } from '../../context/BdContext'
 import { DailyUpdateModal } from './DailyUpdateModal'
 import type { BdDailyUpdate, BdChannel } from '../../types'
 
@@ -23,7 +22,7 @@ function isoDay(offset: number): string {
 }
 
 export default function DailyUpdatesPage() {
-  const { updates, activities, meetings, viewerRepId } = useBd()
+  const { updates, activities, meetings, viewerRepId, people } = useBd()
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<BdDailyUpdate | null>(null)
   const [dayOffset, setDayOffset] = useState('0')
@@ -39,7 +38,7 @@ export default function DailyUpdatesPage() {
   const { submitted, missing } = useMemo(() => {
     const date = isoDay(Number(dayOffset))
 
-    const derived = BD_REPS.map((rep) => {
+    const derived = people.map((rep) => {
       const mine = activities.filter((a) => a.byId === rep.id && a.at.slice(0, 10) === date)
       const myMeetings = meetings.filter((m) => m.hostId === rep.id && m.scheduledAt.slice(0, 10) === date)
       const note = updates.find((u) => u.repId === rep.id && u.date === date)
@@ -62,7 +61,7 @@ export default function DailyUpdatesPage() {
       submitted: derived.filter((d) => d.activityCount > 0 || d.meetingsHeld > 0),
       missing: derived.filter((d) => d.activityCount === 0 && d.meetingsHeld === 0).map((d) => d.rep),
     }
-  }, [dayOffset, updates, activities, meetings])
+  }, [dayOffset, updates, activities, meetings, people])
 
   const totals = useMemo(
     () => ({
@@ -109,7 +108,7 @@ export default function DailyUpdatesPage() {
           <div className="flex items-center gap-2 px-0.5">
             <h3 className="font-ui text-[11px] font-semibold uppercase tracking-widest text-text-4">Team feed</h3>
             <span className="font-mono text-[11px] text-text-4">
-              {submitted.length}/{BD_REPS.length} checked in · {totals.proposals} proposals · {totals.calls} calls · {totals.leads} leads
+              {submitted.length}/{people.length} checked in · {totals.proposals} proposals · {totals.calls} calls · {totals.leads} leads
             </span>
           </div>
 

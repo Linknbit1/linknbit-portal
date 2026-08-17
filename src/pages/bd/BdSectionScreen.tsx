@@ -14,9 +14,9 @@ import PerformancePage from './TargetsPage'
  * Keys mirror the `to` paths in BD_CHILDREN (navItems.ts) exactly; an unknown
  * key bounces to Pipeline rather than rendering a blank shell.
  *
- * Every screen renders from the prototype store, not an API. The provider is a
- * layout route above this one (BdLayout), so state survives moving between BD
- * screens and only resets on leaving the module.
+ * Every screen reads the same composed data (BdProvider), mounted as a layout
+ * route above this one, so moving between BD screens costs no refetch and the
+ * live subscription is opened once rather than per page.
  */
 const BD_SECTIONS: Record<string, ComponentType> = {
   pipeline: PipelinePage,

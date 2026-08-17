@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import {
   Trash2, Check, Pencil, Plus, X, CircleDot, UserRound, CalendarDays, Flag,
   Repeat, Building2, Radio, FolderKanban, ListChecks, type LucideIcon,
@@ -12,12 +12,14 @@ import { Avatar } from '../../components/ui/Avatar'
 import { ProgressBar } from '../../components/ui/ProgressBar'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { useToast } from '../../components/ui/toast-context'
+import { BdDocEditor } from '../../components/editor/BdDocEditor'
+import { BdCommentThread } from '../../components/shared/BdCommentThread'
 import { CHANNEL_CONFIG, CHANNEL_ORDER } from '../../constants/bd'
-import { useBd } from '../../context/BdPrototypeContext'
+import { useBd } from '../../context/BdContext'
 import { randomUUID } from '../../lib/uuid'
 import { cn } from '../../lib/cn'
+import { plainTextToDoc, toDbDoc } from '../../lib/richText'
 import { PRIORITY_LABELS, STATUS_LABELS } from '../../lib/utils'
-import { BD_REPS } from '../../data/bdMock'
 import {
   BD_TASK_STATUSES,
   type BdTask, type TaskStatus, type Priority, type BdTaskRecurrence, type BdChannel,
@@ -105,17 +107,23 @@ interface TaskDrawerProps {
  * The BD task record.
  *
  * Every field edits in place — no Edit button, no form modal — matching the
- * delivery task drawer. Writes land on the prototype store immediately, so the
- * board behind the panel updates as you type.
+ * delivery task drawer. Every write is optimistic, so the board behind the panel
+ * updates as you type and only snaps back if the server refuses it.
  */
 export function TaskDrawer({ task, onClose, onOpenLead }: TaskDrawerProps) {
   const toast = useToast()
   const {
     leads, projects, patchTask, toggleChecklistItem, deleteTask,
-    canSeeAll, viewerRepId, viewerName,
+    canSeeAll, viewerRepId, viewerName, people,
   } = useBd()
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [newItem, setNewItem] = useState('')
+
+  /** Anyone in BD is taggable in the description and in the thread. */
+  const mentionItems = useMemo(
+    () => people.map((p) => ({ id: p.id, name: p.name, avatar_url: p.avatar_url })),
+    [people],
+  )
 
   if (!task) return null
 
@@ -132,7 +140,7 @@ export function TaskDrawer({ task, onClose, onOpenLead }: TaskDrawerProps) {
 
   // A rep who cannot see the department cannot hand their work to someone else.
   const assigneeOptions = canSeeAll
-    ? BD_REPS.map((r) => ({ value: r.id, label: r.name }))
+    ? people.map((p) => ({ value: p.id, label: p.name }))
     : [{ value: viewerRepId, label: `${viewerName} (you)` }]
 
   return (
@@ -180,7 +188,7 @@ export function TaskDrawer({ task, onClose, onOpenLead }: TaskDrawerProps) {
               <Select
                 value={task.assigneeId}
                 onChange={(v) => {
-                const rep = BD_REPS.find((r) => r.id === v)
+                const rep = people.find((p) => p.id === v)
                 patch({ assigneeId: v, assigneeName: rep?.name ?? task.assigneeName })
                 }}
                 options={assigneeOptions}
@@ -266,21 +274,22 @@ export function TaskDrawer({ task, onClose, onOpenLead }: TaskDrawerProps) {
           )}
 
           {/* ── Description ── */}
+          {/* Chromeless until hovered or focused, like the delivery task drawer. */}
           <div>
-            <label htmlFor="bd-task-description" className="mb-1.5 block font-ui text-[12.5px] font-medium text-text-2">
-              Description
-            </label>
-            <textarea
-              id="bd-task-description"
-              value={task.description ?? ''}
-              onChange={(e) => patch({ description: e.target.value || undefined })}
-              rows={3}
-              placeholder="Any detail the assignee needs to start without asking…"
-              className={cn(
-                'w-full resize-y rounded-md border border-border-default bg-surface-inset px-3 py-2.5',
-                'font-ui text-[13px] text-text-1 placeholder:text-text-4 focus:outline-none focus:shadow-ring-focus',
-              )}
-            />
+            <p className="mb-1.5 font-ui text-[12.5px] font-medium text-text-2">Description</p>
+            <div className="-mx-3 rounded-md border border-transparent px-3 py-2 transition-colors hover:border-border-default focus-within:border-border-focus focus-within:bg-surface-inset">
+              <BdDocEditor
+                key={task.id}
+                // Descriptions typed before rich text existed only wrote the plain
+                // column, so fall back to it — otherwise the editor looks empty on
+                // a task that plainly has a description.
+                value={task.doc ?? toDbDoc(plainTextToDoc(task.description ?? ''))}
+                onSave={(doc, plain) => patch({ doc, description: plain ?? undefined })}
+                mentionItems={mentionItems}
+                source={{ type: 'bd_task', id: task.id }}
+                placeholder="Add description… type / for commands, @ to mention"
+              />
+            </div>
           </div>
 
           {/* ── Checklist ── */}
@@ -347,6 +356,13 @@ export function TaskDrawer({ task, onClose, onOpenLead }: TaskDrawerProps) {
           <p className="flex items-center gap-2 border-t border-border-subtle pt-4 font-mono text-[10.5px] text-text-4">
             <Avatar name={task.createdBy} size="xs" /> Created by {task.createdBy}
           </p>
+
+          {/* ── Discussion ── */}
+          {/* Negative margins so the thread's own dividers run the full width of
+              the drawer rather than sitting inside its padding. */}
+          <div className="-mx-5 -mb-5 border-t border-border-default">
+            <BdCommentThread parentType="task" parentId={task.id} />
+          </div>
         </div>
       </Drawer>
 

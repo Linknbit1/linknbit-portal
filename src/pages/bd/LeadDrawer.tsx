@@ -11,10 +11,14 @@ import { Tabs } from '../../components/ui/Tabs'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { useToast } from '../../components/ui/toast-context'
 import { TemperatureChip, IcpFitChip, ChannelChip } from '../../components/shared/BdChips'
+import { BdCommentThread } from '../../components/shared/BdCommentThread'
+import { BdDocEditor } from '../../components/editor/BdDocEditor'
 import { STAGE_CONFIG, STAGE_ORDER } from '../../constants/bd'
-import { useBd } from '../../context/BdPrototypeContext'
+import { useBd } from '../../context/BdContext'
+import { useBdComments } from '../../hooks/useBd'
 import { HandoffModal } from './HandoffModal'
 import { cn } from '../../lib/cn'
+import { plainTextToDoc, toDbDoc } from '../../lib/richText'
 import { formatCompactCurrency, formatDate, formatRelativeTime, getDaysUntil } from '../../lib/utils'
 import type { Lead, LeadStage, BdActivityType } from '../../types'
 
@@ -58,7 +62,7 @@ interface LeadDrawerProps {
  */
 export function LeadDrawer({ lead, onClose, onEdit, onLogActivity }: LeadDrawerProps) {
   const toast = useToast()
-  const { activities, meetings, tasks, handoffs, moveLeadStage, deleteLead } = useBd()
+  const { activities, meetings, tasks, handoffs, moveLeadStage, deleteLead, patchLead, people } = useBd()
   const [tab, setTab] = useState('activity')
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [pendingLost, setPendingLost] = useState<string | null>(null)
@@ -76,6 +80,16 @@ export function LeadDrawer({ lead, onClose, onEdit, onLogActivity }: LeadDrawerP
     () => (lead ? tasks.filter((t) => t.leadId === lead.id) : []),
     [tasks, lead],
   )
+
+  /** Anyone in BD is taggable in the notes and in the thread. */
+  const mentionItems = useMemo(
+    () => people.map((p) => ({ id: p.id, name: p.name, avatar_url: p.avatar_url })),
+    [people],
+  )
+
+  // Read only for the tab badge — the thread itself fetches (and subscribes) when
+  // opened. Same cache entry either way, so this costs no extra request.
+  const { data: leadComments = [] } = useBdComments('lead', lead?.id)
 
   if (!lead) return null
 
@@ -242,6 +256,8 @@ export function LeadDrawer({ lead, onClose, onEdit, onLogActivity }: LeadDrawerP
             <Tabs
               tabs={[
                 { key: 'activity', label: 'Activity', badge: leadActivities.length },
+                { key: 'notes', label: 'Notes' },
+                { key: 'comments', label: 'Comments', badge: leadComments.length },
                 { key: 'meetings', label: 'Meetings', badge: leadMeetings.length },
                 { key: 'tasks', label: 'Tasks', badge: leadTasks.length },
               ]}
@@ -250,7 +266,30 @@ export function LeadDrawer({ lead, onClose, onEdit, onLogActivity }: LeadDrawerP
             />
           </div>
 
-          <div className="px-5 py-4">
+          {/* The thread carries its own full-width dividers and composer, so it
+              sits outside the padded tab body rather than inside it. */}
+          {tab === 'comments' && (
+            <div className="mt-3 border-t border-border-default">
+              <BdCommentThread parentType="lead" parentId={lead.id} />
+            </div>
+          )}
+
+          <div className={cn('px-5 py-4', tab === 'comments' && 'hidden')}>
+            {tab === 'notes' && (
+              <div className="rounded-md border border-border-default bg-surface-inset px-3 py-2.5 focus-within:border-border-focus">
+                <BdDocEditor
+                  key={lead.id}
+                  // Falls back to the plain column so a note written before rich
+                  // text existed still shows up in the editor.
+                  value={lead.doc ?? toDbDoc(plainTextToDoc(lead.description ?? ''))}
+                  onSave={(doc, plain) => patchLead(lead.id, { doc, description: plain ?? undefined })}
+                  mentionItems={mentionItems}
+                  source={{ type: 'bd_lead', id: lead.id }}
+                  placeholder="What matters about this prospect… type / for commands, @ to mention"
+                />
+              </div>
+            )}
+
             {tab === 'activity' && (
               leadActivities.length === 0 ? (
                 <EmptyHint

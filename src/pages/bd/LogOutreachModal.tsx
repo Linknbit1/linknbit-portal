@@ -7,9 +7,8 @@ import { DatePicker } from '../../components/ui/DatePicker'
 import { useToast } from '../../components/ui/toast-context'
 import { CHANNEL_CONFIG, CHANNEL_ORDER } from '../../constants/bd'
 import { FormField } from './FormField'
-import { useBd } from '../../context/BdPrototypeContext'
+import { useBd } from '../../context/BdContext'
 import { cn } from '../../lib/cn'
-import { BD_REPS } from '../../data/bdMock'
 import type { BdChannel } from '../../types'
 
 interface LogOutreachModalProps {
@@ -29,7 +28,7 @@ interface LogOutreachModalProps {
  */
 export function LogOutreachModal({ open, channel: initialChannel, onClose }: LogOutreachModalProps) {
   const toast = useToast()
-  const { logBatch, viewerRepId, viewerName, canSeeAll } = useBd()
+  const { logBatch, viewerRepId, viewerName, canSeeAll, people } = useBd()
 
   const [channel, setChannel] = useState<BdChannel>(initialChannel ?? 'upwork')
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10))
@@ -52,7 +51,7 @@ export function LogOutreachModal({ open, channel: initialChannel, onClose }: Log
     setTouched(true)
     if (volume <= 0) return
     if (!passive && responses > volume) return
-    const rep = BD_REPS.find((r) => r.id === repId)
+    const rep = people.find((p) => p.id === repId)
     logBatch({
       channel,
       at: new Date(`${date}T12:00:00`).toISOString(),
@@ -124,7 +123,7 @@ export function LogOutreachModal({ open, channel: initialChannel, onClose }: Log
               onChange={setRepId}
               options={
               canSeeAll
-              ? BD_REPS.map((r) => ({ value: r.id, label: r.name }))
+              ? people.map((p) => ({ value: p.id, label: p.name }))
               : [{ value: viewerRepId, label: `${viewerName} (you)` }]
               }
             />

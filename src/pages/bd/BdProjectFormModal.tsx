@@ -7,11 +7,10 @@ import { DatePicker } from '../../components/ui/DatePicker'
 import { useToast } from '../../components/ui/toast-context'
 import { CHANNEL_CONFIG, CHANNEL_ORDER, BD_PROJECT_COLUMNS } from '../../constants/bd'
 import { FormField } from './FormField'
-import { useBd } from '../../context/BdPrototypeContext'
+import { useBd } from '../../context/BdContext'
 import { randomUUID } from '../../lib/uuid'
 import { cn } from '../../lib/cn'
 import { PROJECT_STATUS_LABELS } from '../../lib/utils'
-import { BD_REPS } from '../../data/bdMock'
 import type { BdProject, BdChannel, ProjectStatus } from '../../types'
 
 interface BdProjectFormModalProps {
@@ -23,13 +22,12 @@ interface BdProjectFormModalProps {
 
 export function BdProjectFormModal({ open, project, onClose }: BdProjectFormModalProps) {
   const toast = useToast()
-  const { saveProject, viewerRepId, viewerName } = useBd()
+  const { saveProject, viewerRepId, viewerName, people } = useBd()
 
   const [name, setName] = useState(project?.name ?? '')
   const [description, setDescription] = useState(project?.description ?? '')
   const [ownerId, setOwnerId] = useState(project?.ownerId ?? viewerRepId)
   const [status, setStatus] = useState<ProjectStatus>(project?.status ?? 'in_progress')
-  const [progress, setProgress] = useState(project?.progress ?? 0)
   const [deadline, setDeadline] = useState(project?.deadline ?? '')
   const [channels, setChannels] = useState<BdChannel[]>(project?.channels ?? [])
   const [memberIds, setMemberIds] = useState<string[]>(project?.members.map((m) => m.id) ?? [viewerRepId])
@@ -43,7 +41,7 @@ export function BdProjectFormModal({ open, project, onClose }: BdProjectFormModa
   const submit = () => {
     setTouched(true)
     if (!name.trim()) return
-    const owner = BD_REPS.find((r) => r.id === ownerId)
+    const owner = people.find((p) => p.id === ownerId)
     saveProject({
       id: project?.id ?? randomUUID(),
       name: name.trim(),
@@ -51,10 +49,11 @@ export function BdProjectFormModal({ open, project, onClose }: BdProjectFormModa
       ownerId,
       ownerName: owner?.name ?? viewerName,
       status,
-      progress: Math.max(0, Math.min(100, progress)),
+      // Derived from the campaign's tasks on read; the value sent here is ignored.
+      progress: 0,
       deadline: deadline || null,
       channels,
-      members: BD_REPS.filter((r) => memberIds.includes(r.id)).map((r) => ({ id: r.id, name: r.name })),
+      members: people.filter((p) => memberIds.includes(p.id)).map((p) => ({ id: p.id, name: p.name })),
       taskCount: project?.taskCount ?? 0,
     })
     toast(project ? `${name.trim()} updated` : `${name.trim()} created`, 'success')
@@ -105,7 +104,7 @@ export function BdProjectFormModal({ open, project, onClose }: BdProjectFormModa
           <Select
             value={ownerId}
             onChange={setOwnerId}
-            options={BD_REPS.map((r) => ({ value: r.id, label: r.name }))}
+            options={people.map((p) => ({ value: p.id, label: p.name }))}
           />
         </FormField>
         <FormField label="Status">
@@ -120,15 +119,8 @@ export function BdProjectFormModal({ open, project, onClose }: BdProjectFormModa
           <p className="mb-1.5 font-ui text-[12px] font-medium text-text-2">Deadline</p>
           <DatePicker value={deadline} onChange={setDeadline} placeholder="No deadline" />
         </div>
-        <Input
-          label="Progress (%)"
-          type="number"
-          min={0}
-          max={100}
-          step={5}
-          value={progress}
-          onChange={(e) => setProgress(Number(e.target.value) || 0)}
-        />
+        {/* No progress field: a campaign's progress is its tasks' completion, so
+            typing a number here would be a control that quietly does nothing. */}
 
         <div className="sm:col-span-2">
           <p className="mb-1.5 font-ui text-[12px] font-medium text-text-2">Channels</p>
@@ -161,7 +153,7 @@ export function BdProjectFormModal({ open, project, onClose }: BdProjectFormModa
         <div className="sm:col-span-2">
           <p className="mb-1.5 font-ui text-[12px] font-medium text-text-2">Team</p>
           <div className="flex flex-wrap gap-1.5">
-            {BD_REPS.map((rep) => {
+            {people.map((rep) => {
               const active = memberIds.includes(rep.id)
               return (
                 <button

@@ -4,7 +4,7 @@ import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Avatar } from '../../components/ui/Avatar'
 import { useToast } from '../../components/ui/toast-context'
-import { useBd } from '../../context/BdPrototypeContext'
+import { useBd } from '../../context/BdContext'
 import { formatCompactCurrency } from '../../lib/utils'
 import type { BdTarget } from '../../types'
 

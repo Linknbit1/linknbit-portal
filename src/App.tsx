@@ -148,25 +148,24 @@ export default function App() {
                 {showWipFeatures && (
                   <Route path="/admin/reports" element={<RoleGuard feature="can_view_reports"><ReportsPage /></RoleGuard>} />
                 )}
-                {/* Business Development — placeholder screens only. Same
-                    devOnly + capability pair as the nav item, so the URL can no
-                    more be reached in production than the sidebar row can. */}
-                {/* Open to all internal staff — an invitee holds no can_view_bd,
-                    so this cannot sit behind the BD guard. */}
-                {showWipFeatures && (
-                  <Route
-                    path="/my-meetings"
-                    element={<RoleGuard allowedRoles={SETTINGS_ROLES}><MyMeetingsPage /></RoleGuard>}
-                  />
-                )}
-                {showWipFeatures && (
-                  <Route path="/bd" element={<RoleGuard feature="can_view_bd"><BdLayout /></RoleGuard>}>
-                    <Route index element={<Navigate to="/bd/pipeline" replace />} />
-                    {/* Before the :section catch-all, or "projects" would swallow it. */}
-                    <Route path="projects/:id" element={<BdProjectDetailPage />} />
-                    <Route path=":section" element={<BdSectionScreen />} />
-                  </Route>
-                )}
+                {/* Your own client meetings. Open to all internal staff and not
+                    behind the BD guard on purpose: an invitee holds no
+                    can_view_bd, and an invitation you cannot see is none. The
+                    page reads a scoped RPC, so it shows the viewer's schedule
+                    and nothing else about the pipeline. */}
+                <Route
+                  path="/my-meetings"
+                  element={<RoleGuard allowedRoles={SETTINGS_ROLES}><MyMeetingsPage /></RoleGuard>}
+                />
+                {/* Business Development. Guarded by the same capability as the
+                    sidebar row, so the URL can no more be reached without it
+                    than the row can be seen. */}
+                <Route path="/bd" element={<RoleGuard feature="can_view_bd"><BdLayout /></RoleGuard>}>
+                  <Route index element={<Navigate to="/bd/pipeline" replace />} />
+                  {/* Before the :section catch-all, or "projects" would swallow it. */}
+                  <Route path="projects/:id" element={<BdProjectDetailPage />} />
+                  <Route path=":section" element={<BdSectionScreen />} />
+                </Route>
 
                 {/* Legacy path redirects */}
                 <Route path="/admin/dashboard" element={<Navigate to="/dashboard" replace />} />

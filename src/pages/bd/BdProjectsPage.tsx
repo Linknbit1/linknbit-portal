@@ -16,10 +16,9 @@ import { StatusChip } from '../../components/shared/StatusChip'
 import { ChannelChip } from '../../components/shared/BdChips'
 import { useToast } from '../../components/ui/toast-context'
 import { CHANNEL_CONFIG, CHANNEL_ORDER, BD_PROJECT_COLUMNS } from '../../constants/bd'
-import { useBd } from '../../context/BdPrototypeContext'
+import { useBd } from '../../context/BdContext'
 import { cn } from '../../lib/cn'
 import { formatDate, isOverdue, PROJECT_STATUS_LABELS } from '../../lib/utils'
-import { BD_REPS } from '../../data/bdMock'
 import { BdProjectFormModal } from './BdProjectFormModal'
 import type { BdProject, BdChannel, ProjectStatus } from '../../types'
 
@@ -53,7 +52,7 @@ function sortProjects(list: BdProject[], sort: string): BdProject[] {
 export default function BdProjectsPage() {
   const navigate = useNavigate()
   const toast = useToast()
-  const { projects, tasks, deleteProject, viewerRepId, canSeeAll } = useBd()
+  const { projects, tasks, deleteProject, viewerRepId, canSeeAll, people } = useBd()
 
   const [view, setView] = useState<ViewMode>('cards')
   const [search, setSearch] = useState('')
@@ -90,7 +89,7 @@ export default function BdProjectsPage() {
 
   const channelOptions = [{ value: '', label: 'All channels' }, ...CHANNEL_ORDER.map((c) => ({ value: c, label: CHANNEL_CONFIG[c].label }))]
   const statusOptions = [{ value: '', label: 'All statuses' }, ...BD_PROJECT_COLUMNS.map((s) => ({ value: s, label: PROJECT_STATUS_LABELS[s] }))]
-  const ownerOptions = [{ value: '', label: 'All owners' }, ...BD_REPS.map((r) => ({ value: r.id, label: r.name }))]
+  const ownerOptions = [{ value: '', label: 'All owners' }, ...people.map((p) => ({ value: p.id, label: p.name }))]
 
   const openNew = () => { setEditing(null); setShowForm(true) }
   // Opens the project's own page — the form modal is now create-only, the same

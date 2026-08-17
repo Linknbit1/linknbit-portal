@@ -8,7 +8,7 @@ import { useToast } from '../../components/ui/toast-context'
 import { usePeople } from '../../hooks/usePeople'
 import { useServices } from '../../hooks/useServices'
 import { FormField } from './FormField'
-import { useBd } from '../../context/BdPrototypeContext'
+import { useBd } from '../../context/BdContext'
 import { randomUUID } from '../../lib/uuid'
 import { cn } from '../../lib/cn'
 import { formatCompactCurrency } from '../../lib/utils'
@@ -187,10 +187,13 @@ export function HandoffModal({ open, lead, onClose }: HandoffModalProps) {
           />
         </div>
 
-        {/* Honest about the prototype boundary rather than implying a write. */}
+        {/* States exactly what confirming does. The handoff is saved and linked
+            to the lead; turning it into a Delivery project is still a manual
+            step, and pretending otherwise would leave someone waiting for a
+            project that never appears. */}
         <p className="rounded-md border border-border-subtle bg-surface-2 px-3 py-2 font-ui text-[11.5px] text-text-4">
-          Records the handoff against the lead. Creating the client and project in Delivery happens once
-          Business Development is wired to the database.
+          Saves the handoff against the lead and puts it on the lead’s timeline. The client and project
+          in Delivery are still created there by hand.
         </p>
       </div>
     </Modal>

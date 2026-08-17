@@ -13,10 +13,10 @@ import { ChannelChip } from '../../components/shared/BdChips'
 import { ViewToggle, type ViewToggleOption } from '../../components/ui/ViewToggle'
 import { useToast } from '../../components/ui/toast-context'
 import { CHANNEL_CONFIG, CHANNEL_ORDER } from '../../constants/bd'
-import { useBd } from '../../context/BdPrototypeContext'
+import { useBd } from '../../context/BdContext'
+import { nextPosition } from '../../hooks/useBd'
 import { cn } from '../../lib/cn'
 import { formatDate, isOverdue, STATUS_LABELS, PRIORITY_LABELS } from '../../lib/utils'
-import { BD_REPS } from '../../data/bdMock'
 import { BdTaskBoard } from './BdTaskBoard'
 import { TaskDrawer } from './TaskDrawer'
 import { randomUUID } from '../../lib/uuid'
@@ -53,7 +53,7 @@ function sortTasks(list: BdTask[], sort: string): BdTask[] {
 
 export default function BdTasksPage() {
   const toast = useToast()
-  const { tasks, projects, saveTask, deleteTask, viewerRepId, viewerName, canSeeAll } = useBd()
+  const { tasks, projects, saveTask, deleteTask, viewerRepId, viewerName, canSeeAll, people } = useBd()
 
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
@@ -81,6 +81,15 @@ export default function BdTasksPage() {
    * be a second, divergent copy of the same controls.
    */
   const createTask = (status: TaskStatus = 'todo') => {
+    // A BD task always belongs to a campaign, so there is nothing to create one
+    // against until there is at least one. Say so rather than writing a record
+    // the database will refuse.
+    const project = projects.find((p) => p.id === projectFilter) ?? projects[0]
+    if (!project) {
+      toast('Create a campaign first — every BD task belongs to one.', 'warning')
+      return
+    }
+
     const id = randomUUID()
     saveTask({
       id,
@@ -90,9 +99,11 @@ export default function BdTasksPage() {
       status,
       priority: 'medium',
       dueDate: null,
-      projectId: projects[0]?.id ?? '',
-      projectName: projects[0]?.name ?? '',
+      projectId: project.id,
+      projectName: project.name,
       recurrence: 'once',
+      // Head of its lane: a task you just created is the one you are about to work on.
+      position: nextPosition(tasks, status),
       createdBy: viewerName,
       checklist: [],
     })
@@ -178,7 +189,7 @@ export default function BdTasksPage() {
                 options={[
                 { value: 'me', label: 'My tasks' },
                 { value: 'all', label: 'Whole team' },
-                ...BD_REPS.filter((r) => r.id !== viewerRepId).map((r) => ({ value: r.id, label: r.name })),
+                ...people.filter((p) => p.id !== viewerRepId).map((p) => ({ value: p.id, label: p.name })),
                 ]}
               />
             ) : (

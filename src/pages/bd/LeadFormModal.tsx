@@ -7,9 +7,8 @@ import { DatePicker } from '../../components/ui/DatePicker'
 import { useToast } from '../../components/ui/toast-context'
 import { CHANNEL_CONFIG, CHANNEL_ORDER, STAGE_CONFIG, STAGE_ORDER } from '../../constants/bd'
 import { FormField } from './FormField'
-import { useBd } from '../../context/BdPrototypeContext'
+import { useBd } from '../../context/BdContext'
 import { randomUUID } from '../../lib/uuid'
-import { BD_REPS } from '../../data/bdMock'
 import { cn } from '../../lib/cn'
 import type { Lead, LeadStage, BdChannel, LeadTemperature, IcpFit } from '../../types'
 
@@ -48,7 +47,7 @@ function emptyLead(ownerId: string, ownerName: string): Lead {
     channel: 'linkedin', services: [], industry: 'Logistics', icpFit: 'partial',
     value: 0, stage: 'new', temperature: 'warm',
     ownerId, ownerName,
-    addedOn: today, lastContacted: today, nextFollowUp: null,
+    addedOn: today, lastContacted: today, nextFollowUp: null, closedAt: null,
     activityCount: 0,
   }
 }
@@ -62,7 +61,7 @@ interface LeadFormModalProps {
 
 export function LeadFormModal({ open, lead, onClose }: LeadFormModalProps) {
   const toast = useToast()
-  const { saveLead, viewerRepId, viewerName } = useBd()
+  const { saveLead, viewerRepId, viewerName, people } = useBd()
   const [draft, setDraft] = useState<Lead>(() => lead ?? emptyLead(viewerRepId, viewerName))
   const [touched, setTouched] = useState(false)
 
@@ -75,7 +74,7 @@ export function LeadFormModal({ open, lead, onClose }: LeadFormModalProps) {
   const submit = () => {
     setTouched(true)
     if (!draft.company.trim()) return
-    const owner = BD_REPS.find((r) => r.id === draft.ownerId)
+    const owner = people.find((p) => p.id === draft.ownerId)
     saveLead({ ...draft, ownerName: owner?.name ?? draft.ownerName })
     toast(lead ? `${draft.company} updated` : `${draft.company} added to the pipeline`, 'success')
     onClose()
@@ -191,7 +190,7 @@ export function LeadFormModal({ open, lead, onClose }: LeadFormModalProps) {
           <Select
             value={draft.ownerId}
             onChange={(v) => set('ownerId', v)}
-            options={BD_REPS.map((r) => ({ value: r.id, label: r.name }))}
+            options={people.map((p) => ({ value: p.id, label: p.name }))}
           />
         </FormField>
 

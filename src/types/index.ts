@@ -2,6 +2,8 @@
    Linknbit Unified Operations Portal — Core Types
    ========================================================= */
 
+import type { Json } from './database'
+
 export type UserRole =
   | 'super_admin'
   | 'admin'
@@ -448,10 +450,24 @@ export interface Lead {
   addedOn: string
   lastContacted: string
   nextFollowUp: string | null
+  /**
+   * When the lead reached a terminal stage, stamped by the database. Null while
+   * it is still open. This — not `addedOn` — is what revenue-by-month plots
+   * against, so a deal that took three months books to the month it closed.
+   */
+  closedAt: string | null
   /** Only set once the lead reaches `lost`. */
   lostReason?: string
   /** Set once a won lead has been handed to delivery — SRS §3.6. */
   handoffId?: string
+  /**
+   * Rich notes on the prospect — the same ProseMirror document the delivery
+   * project description uses, so @mentions and links work identically.
+   */
+  doc?: Json | null
+  /** Plain-text mirror of `doc`, for card excerpts and anything that can't read ProseMirror JSON. */
+  description?: string
+  /** Derived from the lead's activities at read time, never stored. */
   activityCount: number
 }
 
@@ -584,7 +600,10 @@ export type BdTaskRecurrence = 'once' | 'daily' | 'weekly' | 'monthly'
 export interface BdTask {
   id: string
   title: string
+  /** Plain-text mirror of `doc` — board card excerpts and search read this. */
   description?: string
+  /** The rich description document, edited with the same editor as a delivery task. */
+  doc?: Json | null
   assigneeId: string
   assigneeName: string
   status: TaskStatus
@@ -598,6 +617,11 @@ export interface BdTask {
   leadCompany?: string
   channel?: BdChannel
   recurrence: BdTaskRecurrence
+  /**
+   * Sort key within a board lane. Fractional: a card dropped between two others
+   * takes the midpoint of its neighbours, so a reorder writes one row.
+   */
+  position: number
   createdBy: string
   checklist: { id: string; label: string; done: boolean }[]
 }
@@ -613,10 +637,14 @@ export interface BdTask {
 export interface BdProject {
   id: string
   name: string
+  /** Plain-text mirror of `doc`. */
   description?: string
+  /** The campaign brief, as a rich document. */
+  doc?: Json | null
   ownerId: string
   ownerName: string
   status: ProjectStatus
+  /** Derived from the campaign's tasks at read time, never stored. */
   progress: number
   deadline: string | null
   channels: BdChannel[]

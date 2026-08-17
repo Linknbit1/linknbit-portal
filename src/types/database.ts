@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       approvals: {
@@ -554,6 +529,746 @@ export type Database = {
         }
         Relationships: []
       }
+      bd_activities: {
+        Row: {
+          by_id: string | null
+          channel: string
+          created_at: string
+          id: string
+          lead_id: string | null
+          leads_created: number
+          meetings_booked: number
+          note: string
+          occurred_at: string
+          outcome: string | null
+          responses: number
+          type: string
+          volume: number
+        }
+        Insert: {
+          by_id?: string | null
+          channel: string
+          created_at?: string
+          id?: string
+          lead_id?: string | null
+          leads_created?: number
+          meetings_booked?: number
+          note?: string
+          occurred_at?: string
+          outcome?: string | null
+          responses?: number
+          type?: string
+          volume?: number
+        }
+        Update: {
+          by_id?: string | null
+          channel?: string
+          created_at?: string
+          id?: string
+          lead_id?: string | null
+          leads_created?: number
+          meetings_booked?: number
+          note?: string
+          occurred_at?: string
+          outcome?: string | null
+          responses?: number
+          type?: string
+          volume?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bd_activities_by_id_fkey"
+            columns: ["by_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bd_activities_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "bd_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bd_comments: {
+        Row: {
+          author_id: string | null
+          content: string
+          created_at: string
+          doc: Json | null
+          id: string
+          lead_id: string | null
+          project_id: string | null
+          task_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          author_id?: string | null
+          content?: string
+          created_at?: string
+          doc?: Json | null
+          id?: string
+          lead_id?: string | null
+          project_id?: string | null
+          task_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string | null
+          content?: string
+          created_at?: string
+          doc?: Json | null
+          id?: string
+          lead_id?: string | null
+          project_id?: string | null
+          task_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bd_comments_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bd_comments_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "bd_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bd_comments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "bd_projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bd_comments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "bd_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bd_daily_updates: {
+        Row: {
+          calls_made: number
+          created_at: string
+          id: string
+          leads_added: number
+          meetings_held: number
+          platforms: string[]
+          proposals_sent: number
+          rep_id: string
+          submitted_at: string | null
+          summary: string
+          update_date: string
+          updated_at: string
+        }
+        Insert: {
+          calls_made?: number
+          created_at?: string
+          id?: string
+          leads_added?: number
+          meetings_held?: number
+          platforms?: string[]
+          proposals_sent?: number
+          rep_id: string
+          submitted_at?: string | null
+          summary?: string
+          update_date?: string
+          updated_at?: string
+        }
+        Update: {
+          calls_made?: number
+          created_at?: string
+          id?: string
+          leads_added?: number
+          meetings_held?: number
+          platforms?: string[]
+          proposals_sent?: number
+          rep_id?: string
+          submitted_at?: string | null
+          summary?: string
+          update_date?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bd_daily_updates_rep_id_fkey"
+            columns: ["rep_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bd_handoffs: {
+        Row: {
+          budget: number
+          by_id: string | null
+          handed_at: string
+          id: string
+          lead_id: string
+          manager_id: string | null
+          notes: string | null
+          project_id: string | null
+          project_name: string
+          service_slug: string
+        }
+        Insert: {
+          budget?: number
+          by_id?: string | null
+          handed_at?: string
+          id?: string
+          lead_id: string
+          manager_id?: string | null
+          notes?: string | null
+          project_id?: string | null
+          project_name: string
+          service_slug: string
+        }
+        Update: {
+          budget?: number
+          by_id?: string | null
+          handed_at?: string
+          id?: string
+          lead_id?: string
+          manager_id?: string | null
+          notes?: string | null
+          project_id?: string | null
+          project_name?: string
+          service_slug?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bd_handoffs_by_id_fkey"
+            columns: ["by_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bd_handoffs_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "bd_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bd_handoffs_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bd_handoffs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bd_leads: {
+        Row: {
+          added_on: string
+          channel: string
+          closed_at: string | null
+          company: string
+          contact_name: string
+          contact_title: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          doc: Json | null
+          email: string
+          icp_fit: string
+          id: string
+          industry: string
+          last_contacted: string | null
+          lost_reason: string | null
+          next_follow_up: string | null
+          owner_id: string | null
+          phone: string
+          services: string[]
+          stage: string
+          temperature: string
+          updated_at: string
+          value: number
+        }
+        Insert: {
+          added_on?: string
+          channel?: string
+          closed_at?: string | null
+          company: string
+          contact_name?: string
+          contact_title?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          doc?: Json | null
+          email?: string
+          icp_fit?: string
+          id?: string
+          industry?: string
+          last_contacted?: string | null
+          lost_reason?: string | null
+          next_follow_up?: string | null
+          owner_id?: string | null
+          phone?: string
+          services?: string[]
+          stage?: string
+          temperature?: string
+          updated_at?: string
+          value?: number
+        }
+        Update: {
+          added_on?: string
+          channel?: string
+          closed_at?: string | null
+          company?: string
+          contact_name?: string
+          contact_title?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          doc?: Json | null
+          email?: string
+          icp_fit?: string
+          id?: string
+          industry?: string
+          last_contacted?: string | null
+          lost_reason?: string | null
+          next_follow_up?: string | null
+          owner_id?: string | null
+          phone?: string
+          services?: string[]
+          stage?: string
+          temperature?: string
+          updated_at?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bd_leads_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bd_leads_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bd_meeting_attendees: {
+        Row: {
+          meeting_id: string
+          profile_id: string
+        }
+        Insert: {
+          meeting_id: string
+          profile_id: string
+        }
+        Update: {
+          meeting_id?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bd_meeting_attendees_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "bd_meetings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bd_meeting_attendees_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bd_meetings: {
+        Row: {
+          client_attendees: string
+          created_at: string
+          created_by: string | null
+          duration_minutes: number
+          host_id: string | null
+          id: string
+          lead_id: string | null
+          next_step: string | null
+          outcome: string | null
+          platform: string
+          scheduled_at: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          client_attendees?: string
+          created_at?: string
+          created_by?: string | null
+          duration_minutes?: number
+          host_id?: string | null
+          id?: string
+          lead_id?: string | null
+          next_step?: string | null
+          outcome?: string | null
+          platform?: string
+          scheduled_at: string
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          client_attendees?: string
+          created_at?: string
+          created_by?: string | null
+          duration_minutes?: number
+          host_id?: string | null
+          id?: string
+          lead_id?: string | null
+          next_step?: string | null
+          outcome?: string | null
+          platform?: string
+          scheduled_at?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bd_meetings_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bd_meetings_host_id_fkey"
+            columns: ["host_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bd_meetings_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "bd_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bd_mentions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          profile_id: string
+          source_id: string
+          source_type: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          profile_id: string
+          source_id: string
+          source_type: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          profile_id?: string
+          source_id?: string
+          source_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bd_mentions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bd_mentions_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bd_project_members: {
+        Row: {
+          profile_id: string
+          project_id: string
+        }
+        Insert: {
+          profile_id: string
+          project_id: string
+        }
+        Update: {
+          profile_id?: string
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bd_project_members_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bd_project_members_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "bd_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bd_projects: {
+        Row: {
+          channels: string[]
+          created_at: string
+          created_by: string | null
+          deadline: string | null
+          description: string | null
+          doc: Json | null
+          id: string
+          name: string
+          owner_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          channels?: string[]
+          created_at?: string
+          created_by?: string | null
+          deadline?: string | null
+          description?: string | null
+          doc?: Json | null
+          id?: string
+          name: string
+          owner_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          channels?: string[]
+          created_at?: string
+          created_by?: string | null
+          deadline?: string | null
+          description?: string | null
+          doc?: Json | null
+          id?: string
+          name?: string
+          owner_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bd_projects_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bd_projects_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bd_targets: {
+        Row: {
+          id: string
+          meetings_target: number
+          outreach_target: number
+          period_month: string
+          rep_id: string
+          revenue_target: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          id?: string
+          meetings_target?: number
+          outreach_target?: number
+          period_month: string
+          rep_id: string
+          revenue_target?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          id?: string
+          meetings_target?: number
+          outreach_target?: number
+          period_month?: string
+          rep_id?: string
+          revenue_target?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bd_targets_rep_id_fkey"
+            columns: ["rep_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bd_targets_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bd_task_checklist: {
+        Row: {
+          done: boolean
+          id: string
+          label: string
+          position: number
+          task_id: string
+        }
+        Insert: {
+          done?: boolean
+          id?: string
+          label: string
+          position?: number
+          task_id: string
+        }
+        Update: {
+          done?: boolean
+          id?: string
+          label?: string
+          position?: number
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bd_task_checklist_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "bd_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bd_tasks: {
+        Row: {
+          assignee_id: string | null
+          channel: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          doc: Json | null
+          due_date: string | null
+          id: string
+          lead_id: string | null
+          position: number
+          priority: string
+          project_id: string
+          recurrence: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assignee_id?: string | null
+          channel?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          doc?: Json | null
+          due_date?: string | null
+          id?: string
+          lead_id?: string | null
+          position?: number
+          priority?: string
+          project_id: string
+          recurrence?: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assignee_id?: string | null
+          channel?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          doc?: Json | null
+          due_date?: string | null
+          id?: string
+          lead_id?: string | null
+          position?: number
+          priority?: string
+          project_id?: string
+          recurrence?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bd_tasks_assignee_id_fkey"
+            columns: ["assignee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bd_tasks_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bd_tasks_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "bd_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bd_tasks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "bd_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       biometric_punches: {
         Row: {
           created_at: string
@@ -668,6 +1383,38 @@ export type Database = {
         }
         Relationships: []
       }
+      channel_categories: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          position: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          position?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          position?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channel_categories_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       channel_members: {
         Row: {
           added_via_role: string | null
@@ -754,6 +1501,7 @@ export type Database = {
       }
       channels: {
         Row: {
+          category_id: string | null
           created_at: string
           created_by: string | null
           description: string | null
@@ -765,6 +1513,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          category_id?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -776,6 +1525,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          category_id?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -787,6 +1537,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "channels_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "channel_categories"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "channels_created_by_fkey"
             columns: ["created_by"]
@@ -3822,6 +4579,17 @@ export type Database = {
         Args: { p_badge_id: string; p_profile_id: string }
         Returns: undefined
       }
+      bd_can_manage: { Args: never; Returns: boolean }
+      bd_can_view: { Args: never; Returns: boolean }
+      bd_people: {
+        Args: never
+        Returns: {
+          avatar_url: string
+          id: string
+          name: string
+          role: string
+        }[]
+      }
       can_access_task: { Args: { p_task_id: string }; Returns: boolean }
       can_govern_gamification: { Args: never; Returns: boolean }
       can_grant_role: { Args: { p_role: string }; Returns: boolean }
@@ -3830,6 +4598,7 @@ export type Database = {
         Args: { p_team_id: string }
         Returns: boolean
       }
+      can_oversee_channel: { Args: { p_channel_id: string }; Returns: boolean }
       can_recognize: { Args: never; Returns: boolean }
       can_view_confidential_scope: {
         Args: { p_scope: string }
@@ -4083,6 +4852,23 @@ export type Database = {
           affected_dates: string[]
         }[]
       }
+      my_bd_meetings: {
+        Args: never
+        Returns: {
+          attendees: Json
+          client_attendees: string
+          company: string
+          duration_minutes: number
+          host_id: string
+          host_name: string
+          id: string
+          next_step: string
+          outcome: string
+          platform: string
+          scheduled_at: string
+          type: string
+        }[]
+      }
       my_permissions: { Args: never; Returns: string[] }
       open_reward_pool: { Args: { p_reward_id: string }; Returns: string }
       redeem_reward: {
@@ -4323,9 +5109,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       queue_status: ["pending", "processing", "done", "failed"],
