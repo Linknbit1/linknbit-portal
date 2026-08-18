@@ -249,8 +249,9 @@ async function reconcileDay(
     return
   }
 
-  // ── First punch = the arrival. Status from its time (late-arrival exception
-  //    still widens the cutoff; schedule-window-off job types are never late).
+  // ── First punch = the arrival. Status from its time (a first-half day off
+  //    moves the cutoff to the second half; a late-arrival exception still widens
+  //    it; schedule-window-off job types are never late).
   const first = rows[0]
   const extraIds = rows.slice(1).map((p) => p.id)
 

@@ -307,6 +307,7 @@ export type Database = {
           checkout_buffer_min: number
           early_checkin_min: number
           grace_period_min: number
+          half_day_start_time: string
           min_excluded_gap_min: number
           office_ip_auto_update: boolean
           office_ip_cidr: string | null
@@ -327,6 +328,7 @@ export type Database = {
           checkout_buffer_min?: number
           early_checkin_min?: number
           grace_period_min?: number
+          half_day_start_time?: string
           min_excluded_gap_min?: number
           office_ip_auto_update?: boolean
           office_ip_cidr?: string | null
@@ -347,6 +349,7 @@ export type Database = {
           checkout_buffer_min?: number
           early_checkin_min?: number
           grace_period_min?: number
+          half_day_start_time?: string
           min_excluded_gap_min?: number
           office_ip_auto_update?: boolean
           office_ip_cidr?: string | null
@@ -4648,6 +4651,10 @@ export type Database = {
         Returns: {
           profile_id: string
         }[]
+      }
+      fn_arrival_status: {
+        Args: { p_check_in: string; p_day_part: string }
+        Returns: string
       }
       fn_audit_describe: {
         Args: {

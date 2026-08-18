@@ -18,6 +18,8 @@ export interface PolicySettings {
   timezone: string
   work_start_time: string
   work_end_time: string
+  /** When the second half of the day begins; the cutoff for a first-half day off. */
+  half_day_start_time: string
   grace_period_min: number
   early_checkin_min: number | null
   saturday_working: boolean
@@ -147,7 +149,8 @@ export interface CutoffResult {
 
 /**
  * Resolves the on-time boundary for one employee on one date, layering:
- *   work_start + grace  →  profiles.allowed_check_in  →  approved late_arrival
+ *   work_start + grace  →  profiles.allowed_check_in  →  first-half day off
+ *   (half_day_start + grace)  →  approved late_arrival
  * Each later source replaces the earlier one entirely rather than stacking, so
  * a per-employee allowance does not also get the grace period on top.
  */
@@ -164,6 +167,27 @@ export async function resolveCutoffs(
 
   let lateCutoff = startMinutes + settings.grace_period_min
   if (allowedCheckIn) lateCutoff = minutesOf(allowedCheckIn)
+
+  // Off for the FIRST half: not due in until the second half starts, so measure
+  // from there. Without this the cutoff stayed at work_start + grace and every
+  // such arrival was late by definition, however early they actually turned up.
+  // Read from the attendance row rather than a parameter so no call site can
+  // forget it — the leave/WFH sync has already stamped day_part by the time an
+  // arrival is recorded. Keyed on day_part alone, so a partial WFH counts too.
+  //
+  // This replaces the per-employee allowance rather than stacking with it: the
+  // allowance describes a normal day, and this is not one. An approved
+  // late-arrival exception below still wins, being specific to this date.
+  const { data: dayRow } = await db
+    .from('attendance')
+    .select('day_part')
+    .eq('profile_id', profileId)
+    .eq('date', today)
+    .maybeSingle()
+
+  if (dayRow?.day_part === 'first_half') {
+    lateCutoff = minutesOf(settings.half_day_start_time) + settings.grace_period_min
+  }
 
   let lowerBoundActive = true
   const { data: lateExc } = await db

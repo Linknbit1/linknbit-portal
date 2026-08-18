@@ -44,6 +44,14 @@ export const RELEASES: ChangelogRelease[] = [
         text: 'Meetings carry a joining link. Paste the Zoom or Meet URL when you book one and everybody gets a Join button — on the meeting card, in the email, and in their calendar entry.',
       },
       {
+        kind: 'fixed',
+        text: 'Coming in for the second half of a day off is no longer recorded as late. Lateness on a first-half leave is now measured from the time the second half starts, and the attendance records that were wrongly marked late have been corrected.',
+      },
+      {
+        kind: 'improved',
+        text: 'Leave and WFH now appear under every day they cover, so you can see who is off on a given date. Each remains one request — the Approve and Reject buttons sit on its first day only.',
+      },
+      {
         kind: 'improved',
         text: 'A WFH request now takes a date range, so a whole week working remotely is one request and one approval instead of five.',
       },

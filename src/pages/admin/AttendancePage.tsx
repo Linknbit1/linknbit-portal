@@ -889,6 +889,37 @@ export function DailyRecordsTab() {
   );
 }
 
+/**
+ * A multi-day request is listed under EVERY day it covers, so "who is off on
+ * this date" is answerable at a glance. It is still ONE request and one
+ * decision, so only the first day shown carries the Approve/Reject buttons;
+ * the rest identify themselves as a continuation. Listing the buttons on all
+ * of them made a twelve-day WFH look like ten separate requests to approve.
+ */
+function spanInfo(
+  startDate: string,
+  endDate: string,
+  groupDate: string,
+  inMonth: (d: string) => boolean,
+): { dayNum: number; total: number; isFirstShown: boolean } {
+  const all = datesInRange(startDate, endDate);
+  const shown = all.filter(inMonth);
+  return {
+    dayNum: all.indexOf(groupDate) + 1,
+    total: all.length,
+    isFirstShown: shown.length === 0 || groupDate === shown[0],
+  };
+}
+
+/** The muted "this is day N of an already-listed request" marker. */
+function SpanContinuation({ dayNum, total }: { dayNum: number; total: number }) {
+  return (
+    <span className="inline-flex items-center px-2 py-0.5 rounded-xs border border-border-default bg-surface-2 text-text-3 text-[11px] font-mono shrink-0 whitespace-nowrap">
+      Day {dayNum} of {total}
+    </span>
+  );
+}
+
 /* ── Grant WFH modal ──────────────────────────────────────────────────────── */
 function GrantWfhModal({
   open,
@@ -1077,17 +1108,12 @@ export function WFHRequestsTab() {
   const filtered = requests.filter(
     (r) => statusFilter === "all" || r.status === statusFilter,
   );
-  // ONE row per request, whatever its length. Listing it under every day it
-  // covers (which is what the Leave tab does, to answer "who is off today")
-  // turned a two-week WFH into ten identical rows each carrying its own
-  // Approve button — a range is a single decision, so it gets a single row.
-  // The bucket is the first covered day INSIDE the selected month, not simply
-  // start_date, so a request spanning a month boundary still appears — exactly
-  // once — in both months.
-  const groups = groupByDate(filtered, (r) => {
-    const covered = datesInRange(r.start_date, r.end_date).filter(monthFilter.inMonth);
-    return covered.length > 0 ? [covered[0]] : [];
-  });
+  // Listed under every day it covers, so the roster question ("who is remote on
+  // the 18th") is answerable from this page. Only the first day shown carries
+  // the Approve/Reject buttons — see spanInfo.
+  const groups = groupByDate(filtered, (r) =>
+    datesInRange(r.start_date, r.end_date).filter(monthFilter.inMonth),
+  );
 
   const approve = async (id: string) => {
     try {
@@ -1223,6 +1249,9 @@ export function WFHRequestsTab() {
                 <div className="divide-y divide-border-subtle">
                   {group.items.map((req) => {
                     const isExpanded = expandedId === req.id;
+                    const span = spanInfo(
+                      req.start_date, req.end_date, group.date, monthFilter.inMonth,
+                    );
                     return (
                       <div
                         key={req.id}
@@ -1263,7 +1292,9 @@ export function WFHRequestsTab() {
                             Requested {formatRequestedAt(req.created_at)}
                           </div>
                           <WFHStatusChip status={req.status} />
-                          {req.status === "pending" ? (
+                          {span.total > 1 && !span.isFirstShown ? (
+                            <SpanContinuation dayNum={span.dayNum} total={span.total} />
+                          ) : req.status === "pending" ? (
                             req.profile_id === profile?.id ? (
                               <OwnRequestChip />
                             ) : (
@@ -1793,17 +1824,12 @@ export function LeaveTab() {
   const filtered = requests.filter(
     (r) => statusFilter === "all" || r.status === statusFilter,
   );
-  // ONE row per request, matching the WFH tab. This used to list a leave under
-  // every day it covered so "who is off on this date" was answerable at a
-  // glance, but a two-week leave then became ten identical rows each carrying
-  // its own Approve button — and a range is a single decision. The row still
-  // shows the full range, and Reports/Records answer the per-day question
-  // properly. Bucketed at the first covered day INSIDE the selected month, so a
-  // request crossing a month boundary still appears — once — in both months.
-  const groups = groupByDate(filtered, (r) => {
-    const covered = datesInRange(r.start_date, r.end_date).filter(monthFilter.inMonth);
-    return covered.length > 0 ? [covered[0]] : [];
-  });
+  // Listed under every day it covers, so "who is off on the 18th" is answerable
+  // from this page. Only the first day shown carries the Approve/Reject
+  // buttons — see spanInfo.
+  const groups = groupByDate(filtered, (r) =>
+    datesInRange(r.start_date, r.end_date).filter(monthFilter.inMonth),
+  );
 
   const fmtRange = (start: string, end: string) => {
     const opts: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
@@ -1906,7 +1932,11 @@ export function LeaveTab() {
                   count={group.items.length}
                 />
                 <div className="divide-y divide-border-subtle">
-                  {group.items.map((req) => (
+                  {group.items.map((req) => {
+                    const span = spanInfo(
+                      req.start_date, req.end_date, group.date, monthFilter.inMonth,
+                    );
+                    return (
                     <div
                       key={req.id}
                       className="flex items-start gap-3 px-5 py-3.5"
@@ -1960,7 +1990,22 @@ export function LeaveTab() {
                           </p>
                         )}
                       </div>
-                      {req.status === "pending" ? (
+                      {/* Status shows on every day of the span; only the
+                          Approve/Reject pair is confined to the first, so a
+                          three-day leave is not three decisions. */}
+                      {span.total > 1 && !span.isFirstShown ? (
+                        <>
+                          <span
+                            className={cn(
+                              "inline-flex items-center px-2 py-0.5 rounded-xs border text-[11px] font-mono font-semibold shrink-0 mt-0.5",
+                              LEAVE_STATUS_CLS[req.status] ?? LEAVE_STATUS_CLS.pending,
+                            )}
+                          >
+                            {req.status}
+                          </span>
+                          <SpanContinuation dayNum={span.dayNum} total={span.total} />
+                        </>
+                      ) : req.status === "pending" ? (
                         // On-behalf (entered_by) entries can only be approved by an
                         // admin/super_admin — and nobody reviews their own request.
                         (req.entered_by && !isAdmin) || req.profile_id === profile?.id ? (
@@ -2007,7 +2052,8 @@ export function LeaveTab() {
                         </button>
                       )}
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             ))}
@@ -5578,6 +5624,9 @@ function SettingsForm({ settings }: { settings: AttendanceSettings }) {
   const [workEnd, setWorkEnd] = useState(() =>
     settings.work_end_time.slice(0, 5),
   );
+  const [halfDayStart, setHalfDayStart] = useState(() =>
+    settings.half_day_start_time.slice(0, 5),
+  );
   const [grace, setGrace] = useState(() => String(settings.grace_period_min));
   const [earlyCheckin, setEarlyCheckin] = useState(() =>
     String(settings.early_checkin_min),
@@ -5598,6 +5647,7 @@ function SettingsForm({ settings }: { settings: AttendanceSettings }) {
       await updateMutation.mutateAsync({
         work_start_time: workStart,
         work_end_time: workEnd,
+        half_day_start_time: halfDayStart,
         grace_period_min: parseInt(grace, 10),
         early_checkin_min: parseInt(earlyCheckin, 10),
         timezone: tz,
@@ -5653,6 +5703,22 @@ function SettingsForm({ settings }: { settings: AttendanceSettings }) {
               minTime={workStart || undefined}
               placeholder="Select end time…"
             />
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">
+              Second Half Starts
+            </label>
+            <TimePicker
+              value={halfDayStart}
+              onChange={setHalfDayStart}
+              minTime={workStart || undefined}
+              placeholder="Select time…"
+            />
+            <p className="text-[11px] font-ui text-text-4 mt-1">
+              Someone off for the first half is due in at {halfDayStart || "?"}, so that
+              is what their arrival is judged against instead of the work start time.
+            </p>
           </div>
 
           <div>

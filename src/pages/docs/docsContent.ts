@@ -372,6 +372,8 @@ export const DOC_CHAPTERS: DocChapter[] = [
         ],
         notes: [
           'An approved leave or WFH day updates your attendance record for that day automatically.',
+          'On a first-half day off you are not due in until the second half starts, so your arrival is judged against that time plus the usual grace — coming in before it counts as on time, not late.',
+          'A multi-day request is listed under every day it covers, so the team can see who is off on a given date. It is still one request: the Approve and Reject buttons appear only on its first day.',
           'A WFH request covers a date range, so a whole week away from the office is one request and one approval.',
           'A partial WFH day is not a day off: you work one half from home and the other half from the office, so check in as normal for the office half. Because it splits a single day, it cannot span a range.',
           'You can edit or withdraw a request while it is still pending.',

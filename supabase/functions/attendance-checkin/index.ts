@@ -129,7 +129,8 @@ Deno.serve(async (req: Request) => {
     return json({ error: dayGate.message, code: dayGate.code }, 422)
   }
 
-  // 4c. Late cutoff, layering per-employee allowance and approved late arrival.
+  // 4c. Late cutoff, layering per-employee allowance, a first-half day off and
+  //     an approved late arrival.
   const { lateCutoff, openMinutes, endMinutes, lowerBoundActive } = await resolveCutoffs(
     supabase, profileId, today, settings, callerProfile?.allowed_check_in ?? null,
   )
