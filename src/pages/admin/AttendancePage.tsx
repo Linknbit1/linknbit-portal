@@ -1077,11 +1077,17 @@ export function WFHRequestsTab() {
   const filtered = requests.filter(
     (r) => statusFilter === "all" || r.status === statusFilter,
   );
-  // Grouped under every date the WFH is FOR (not when it was requested), so a
-  // multi-day request answers "who is remote on this date" under each of them.
-  const groups = groupByDate(filtered, (r) =>
-    datesInRange(r.start_date, r.end_date).filter(monthFilter.inMonth),
-  );
+  // ONE row per request, whatever its length. Listing it under every day it
+  // covers (which is what the Leave tab does, to answer "who is off today")
+  // turned a two-week WFH into ten identical rows each carrying its own
+  // Approve button — a range is a single decision, so it gets a single row.
+  // The bucket is the first covered day INSIDE the selected month, not simply
+  // start_date, so a request spanning a month boundary still appears — exactly
+  // once — in both months.
+  const groups = groupByDate(filtered, (r) => {
+    const covered = datesInRange(r.start_date, r.end_date).filter(monthFilter.inMonth);
+    return covered.length > 0 ? [covered[0]] : [];
+  });
 
   const approve = async (id: string) => {
     try {
