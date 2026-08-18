@@ -376,7 +376,7 @@ function OverviewTab({ person, teams, projects, tasks, activeTasks, canSeeSalary
         {projects.length === 0 ? <Empty label="Not on any projects." /> : (
           <div className="-my-2 flex flex-col divide-y divide-border-subtle">
             {projects.map((p) => (
-              <Link key={p.id} to={`/admin/projects/${p.id}`} className="group flex items-center gap-3 py-2.5">
+              <Link key={p.project_service_id} to={`/admin/projects/${p.id}`} className="group flex items-center gap-3 py-2.5">
                 <ServiceChip service={p.service_type} />
                 <span className="min-w-0 flex-1 truncate font-ui text-[13px] text-text-1 transition-colors group-hover:text-brand-red">{p.name}</span>
                 <StatusChip status={p.status} type="project" />

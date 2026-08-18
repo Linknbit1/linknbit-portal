@@ -110,8 +110,18 @@ export async function fetchProjects(filters: ProjectFilters = {}): Promise<Proje
   return filters.service ? shaped.filter((p) => p.services.some((s) => s.slug === filters.service)) : shaped
 }
 
+// Soft-deleted projects read as missing, matching fetchProjects. Without this a
+// deleted project stayed reachable by direct URL or a stale link and rendered as
+// a perfectly normal project — every action on it then failed down in the RPC
+// with `project_not_found`, which reads as a broken portal rather than a deleted
+// project. There is no restore UI, so nothing needs to load one.
 export async function fetchProject(id: string): Promise<ProjectListItem | null> {
-  const { data, error } = await supabase.from('projects').select(PROJECT_SELECT).eq('id', id).maybeSingle()
+  const { data, error } = await supabase
+    .from('projects')
+    .select(PROJECT_SELECT)
+    .eq('id', id)
+    .is('deleted_at', null)
+    .maybeSingle()
   if (error) throw error
   if (!data) return null
   return shapeProject(data)
