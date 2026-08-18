@@ -1793,11 +1793,17 @@ export function LeaveTab() {
   const filtered = requests.filter(
     (r) => statusFilter === "all" || r.status === statusFilter,
   );
-  // A leave spanning several days is listed under each day it covers, so "who is
-  // off on this date" is answerable at a glance; the row still shows the range.
-  const groups = groupByDate(filtered, (r) =>
-    datesInRange(r.start_date, r.end_date).filter(monthFilter.inMonth),
-  );
+  // ONE row per request, matching the WFH tab. This used to list a leave under
+  // every day it covered so "who is off on this date" was answerable at a
+  // glance, but a two-week leave then became ten identical rows each carrying
+  // its own Approve button — and a range is a single decision. The row still
+  // shows the full range, and Reports/Records answer the per-day question
+  // properly. Bucketed at the first covered day INSIDE the selected month, so a
+  // request crossing a month boundary still appears — once — in both months.
+  const groups = groupByDate(filtered, (r) => {
+    const covered = datesInRange(r.start_date, r.end_date).filter(monthFilter.inMonth);
+    return covered.length > 0 ? [covered[0]] : [];
+  });
 
   const fmtRange = (start: string, end: string) => {
     const opts: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };

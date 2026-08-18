@@ -11,6 +11,7 @@ import { FileViewerProvider } from '../shared/FileViewer'
 import { ImpersonationBanner } from './ImpersonationBanner'
 import { MeModeProvider } from '../../context/MeModeContext'
 import { RunningTimerWidget } from '../shared/RunningTimerWidget'
+import { ErrorBoundary } from '../ui/ErrorBoundary'
 
 export function AppShell() {
   const location = useLocation()
@@ -81,7 +82,13 @@ export function AppShell() {
                 !hasBack && 'pb-safe-nav',
               )}
             >
-              <Outlet />
+              {/* Scoped to the routed page, so a crash leaves the sidebar, tab
+                  bar and topbar alive and the user can navigate out of it.
+                  Keyed on the path: moving to another screen clears the error
+                  rather than stranding them until they reload. */}
+              <ErrorBoundary variant="page" resetKey={location.pathname}>
+                <Outlet />
+              </ErrorBoundary>
             </main>
             <BottomTabBar />
           </div>

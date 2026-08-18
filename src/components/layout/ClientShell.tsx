@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { NavLink, Outlet, useNavigate, Link } from 'react-router-dom'
+import { NavLink, Outlet, useNavigate, Link, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { Variants } from 'framer-motion'
 import {
@@ -25,6 +25,7 @@ import { APPROVALS } from '../../data/mock'
 import { formatRelativeTime } from '../../lib/utils'
 import { useClickOutside } from '../../hooks/useClickOutside'
 import { LinknbitMark } from '../brand/LinknbitLogo'
+import { ErrorBoundary } from '../ui/ErrorBoundary'
 
 const dropdownVariants: Variants = {
   hidden: { opacity: 0, y: -8, scale: 0.97 },
@@ -93,6 +94,7 @@ const CLIENT_NAV: ClientNavItem[] = [
 
 export function ClientShell() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [notifOpen, setNotifOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const [dismissed, setDismissed] = useState<Set<string>>(new Set())
@@ -422,7 +424,11 @@ export function ClientShell() {
 
       {/* Content */}
       <main className="max-w-content-client mx-auto px-4 lg:px-10 pb-20 lg:pb-0">
-        <Outlet />
+        {/* Clients get a contained failure and the nav bar too — and in the
+            warm palette, which is a separate token set from the internal one. */}
+        <ErrorBoundary variant="page" theme="client" resetKey={location.pathname}>
+          <Outlet />
+        </ErrorBoundary>
       </main>
 
       {/* Bottom tab bar (mobile) */}

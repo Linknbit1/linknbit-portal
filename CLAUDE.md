@@ -405,12 +405,43 @@ supabase gen types typescript --local > src/types/database.ts
 
 `src/types/database.ts` is always generated — never hand-edited. If a type looks wrong, fix the migration and regenerate.
 
+### Breaking changes: expand, migrate, contract
+
+**A migration that removes or renames something a deployed client still reads must ship in
+three steps, not one.** The database updates the instant the migration runs; browsers do not.
+Any tab or installed PWA opened before the deploy keeps running its old bundle, so between the
+migration and that tab's next reload it is asking for a column that no longer exists — and a
+missing field usually surfaces as `undefined`, several layers away from the cause.
+
+This is not hypothetical: renaming `wfh_requests.date` → `start_date` in one step took the WFH
+page down for every open session with `Cannot read properties of undefined (reading 'startsWith')`.
+
+For a rename, a drop, a narrowed `CHECK`, a tightened `NOT NULL`, or an RPC signature change:
+
+1. **Expand** — add the new column/function alongside the old one. Backfill it, and keep both
+   in sync (a trigger, or write both from the app). Nothing is removed yet, so old and new
+   clients both work.
+2. **Migrate** — deploy the front end that reads and writes the new shape. Wait for it to
+   actually be live, not merely merged.
+3. **Contract** — a second migration drops the old column/function once no client uses it.
+
+The cost is one extra migration and one extra deploy. The alternative is a window in which
+every unreloaded session is broken, and the length of that window is decided by when people
+happen to reload.
+
+**Only skip this for additive changes** — a new nullable column, a new table, a new function.
+Those cannot break a client that does not know about them.
+
+Regardless: bump `CACHE_NAME` in `public/sw.js` on any release that changes the data shape, so
+installed clients drop the cached bundle instead of serving it from disk.
+
 ### Hard rules
 
 - Never apply SQL directly in the Supabase dashboard SQL editor
 - Never edit an existing migration file — create a new corrective migration instead
 - Never run `supabase db push` on the production project manually — CI/CD only
 - A migration is not done until `src/types/database.ts` is regenerated and committed alongside it
+- Never rename or drop in a single migration what a deployed client still reads — expand, migrate, contract
 
 ---
 
