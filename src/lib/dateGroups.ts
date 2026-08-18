@@ -22,6 +22,17 @@ export function datesInRange(start: string, end: string): string[] {
   return out
 }
 
+/**
+ * "Aug 18" for a single day, "Aug 18 – Aug 22" for a span. Used by every request
+ * list that shows a range (leave, WFH), so they read identically.
+ */
+export function formatDayRange(start: string, end: string): string {
+  const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' }
+  const s = new Date(start + 'T00:00:00').toLocaleDateString('en-US', opts)
+  if (start === end) return s
+  return `${s} – ${new Date(end + 'T00:00:00').toLocaleDateString('en-US', opts)}`
+}
+
 export interface DateGroup<T> {
   date: string
   items: T[]

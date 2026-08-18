@@ -9,7 +9,8 @@
 //   • Required target = Σ over ELAPSED working days of daily_expected
 //     (= work_end − work_start). Approved full leave → 0 expected that day.
 //     Half-day leave (day_type='leave', day_part<>'full') → half expected, and
-//     credit for the half they worked is capped at that half. WFH → credited.
+//     credit for the half they worked is capped at that half. WFH → credited;
+//     a partial WFH credits the remote half and clocks the office half.
 //     Absent / no record on an elapsed working day → full expected, 0 worked.
 //     Holiday / non-working / future → excluded.
 //   • Worked = work_end − effective_start − excluded_minutes. Early arrival is
@@ -38,7 +39,7 @@ export interface AttendanceLike {
   status: string | null
   /** work | leave | wfh | holiday. */
   day_type: string
-  /** full | first_half | second_half. Only leave is ever partial. */
+  /** full | first_half | second_half. Only leave and WFH are ever partial. */
   day_part: string
   check_in: string | null
   excluded_minutes?: number
@@ -127,11 +128,19 @@ export function computeEmployeeHours(args: ComputeHoursArgs): EmployeeHours {
         workedMin: Math.min(worked, dailyExpected / 2),
       })
     } else if (rec?.day_type === 'wfh') {
+      // A remote day is credited without a clock event — there is no office
+      // network to check in from. A PARTIAL WFH is only half remote, so only
+      // that half is credited outright; the office half is measured from the
+      // clock and capped at a half, exactly like a half-day leave.
+      const remote = rec.day_part === 'full' ? dailyExpected : dailyExpected / 2
+      const inOffice = rec.day_part === 'full'
+        ? 0
+        : Math.min(clocked(rec).worked, dailyExpected / 2)
       days.push({
         date: dateStr,
         kind: 'wfh',
         expectedMin: dailyExpected,
-        workedMin: dailyExpected,
+        workedMin: remote + inOffice,
       })
     } else if (rec?.day_type === 'holiday') {
       days.push({ date: dateStr, kind: 'holiday', expectedMin: 0, workedMin: 0 })

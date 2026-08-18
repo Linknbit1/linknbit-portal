@@ -3,7 +3,7 @@ import { cn } from '../../lib/cn'
 /**
  * Attendance is two independent facts, so it renders as two independent chips:
  *
- *   DAY         what kind of day it was    — Leave / Half Day · 1st / WFH / Holiday
+ *   DAY         what kind of day it was    — Leave / Half Day · 1st / WFH · 2nd / Holiday
  *   ATTENDANCE  whether they turned up     — Present / Late / No show
  *
  * They used to share one column, which meant whichever was written last erased
@@ -61,11 +61,14 @@ export function DayTypeChip({ facts, className }: { facts: AttendanceFacts; clas
   const { day_type, day_part } = facts
   if (day_type === 'work') return null
 
-  const half = day_type === 'leave' && day_part !== 'full'
-  const meta = half ? HALF_META : DAY_META[day_type]
+  // A partial day gets a suffix whichever kind it is; only leave swaps its label
+  // for "Half Day", because a partial WFH is not a day off — it is half a day
+  // spent at home and half in the office, and both halves are worked.
+  const partial = day_part !== 'full'
+  const meta = partial && day_type === 'leave' ? HALF_META : DAY_META[day_type]
   if (!meta) return null
 
-  const suffix = half ? dayPartSuffix(day_part) : null
+  const suffix = partial ? dayPartSuffix(day_part) : null
   return (
     <span className={cn(CHIP_BASE, meta.cls, className)}>
       {meta.label}
@@ -75,9 +78,10 @@ export function DayTypeChip({ facts, className }: { facts: AttendanceFacts; clas
 }
 
 /**
- * The attendance chip. `absent` deliberately reads "No show" on a half day —
- * "Absent" next to an approved Half Day chip looks like an accusation, when it
- * only means they did not work the half they were due to.
+ * The attendance chip. `absent` deliberately reads "No show" on a partial day —
+ * "Absent" next to an approved Half Day or partial WFH chip looks like an
+ * accusation, when it only means they did not turn up for the half they were
+ * due in for.
  */
 export function AttendanceStatusChip({ facts, className }: { facts: AttendanceFacts; className?: string }) {
   const { status } = facts
@@ -85,7 +89,7 @@ export function AttendanceStatusChip({ facts, className }: { facts: AttendanceFa
   const meta = STATUS_META[status]
   if (!meta) return null
 
-  const onHalfDay = facts.day_type === 'leave' && facts.day_part !== 'full'
+  const onHalfDay = facts.day_part !== 'full'
   const label = status === 'absent' && onHalfDay ? 'No show' : meta.label
 
   return <span className={cn(CHIP_BASE, meta.cls, className)}>{label}</span>

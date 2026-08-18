@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase'
 import type { Tables, TablesInsert, TablesUpdate } from '../types/database'
+import type { AttendanceDayPart } from '../types'
 
 export type AttendanceRow = Tables<'attendance'>
 export type AttendanceSettings = Tables<'attendance_settings'>
@@ -738,12 +739,25 @@ export interface WfhRequestWithProfile extends WfhRequest {
   profiles: { name: string; avatar_url: string | null } | null
 }
 
-export async function submitWfhRequest(payload: { date: string; reason: string }): Promise<WfhRequest> {
+/**
+ * How much of a day a WFH request covers. A partial day means the other half is
+ * worked from the office, so it is always a single day — the same rule (and the
+ * same vocabulary) as a half-day leave.
+ */
+export interface SubmitWfhPayload {
+  start_date: string
+  end_date: string
+  reason: string
+  /** Defaults to 'full'. A partial day must be a single day. */
+  day_part?: DayPart
+}
+
+export async function submitWfhRequest(payload: SubmitWfhPayload): Promise<WfhRequest> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
   const { data, error } = await supabase
     .from('wfh_requests')
-    .insert({ profile_id: user.id, date: payload.date, reason: payload.reason })
+    .insert({ ...payload, day_part: payload.day_part ?? 'full', profile_id: user.id })
     .select()
     .single()
   if (error) throw error
@@ -753,11 +767,17 @@ export async function submitWfhRequest(payload: { date: string; reason: string }
 // Employee edits their own WFH request while it's still pending (RLS-gated).
 export async function updateWfhRequest(
   id: string,
-  payload: { date: string; reason: string },
+  payload: SubmitWfhPayload,
 ): Promise<WfhRequest> {
   const { data, error } = await supabase
     .from('wfh_requests')
-    .update({ date: payload.date, reason: payload.reason, updated_at: new Date().toISOString() })
+    .update({
+      start_date: payload.start_date,
+      end_date: payload.end_date,
+      day_part: payload.day_part ?? 'full',
+      reason: payload.reason,
+      updated_at: new Date().toISOString(),
+    })
     .eq('id', id)
     .select()
     .single()
@@ -772,7 +792,7 @@ export async function fetchMyWfhRequests(): Promise<WfhRequest[]> {
     .from('wfh_requests')
     .select('*')
     .eq('profile_id', user.id)
-    .order('date', { ascending: false })
+    .order('start_date', { ascending: false })
   if (error) throw error
   return data
 }
@@ -818,18 +838,20 @@ export async function deleteWfhRequest(id: string): Promise<void> {
   if (error) throw error
 }
 
+export interface GrantWfhPayload extends SubmitWfhPayload {
+  /** The employee the WFH is granted to. */
+  profile_id: string
+}
+
 export async function grantWfh(
-  profileId: string,
-  date: string,
-  reason: string,
+  payload: GrantWfhPayload,
   grantedBy: string,
 ): Promise<WfhRequest> {
   const { data, error } = await supabase
     .from('wfh_requests')
     .insert({
-      profile_id: profileId,
-      date,
-      reason,
+      ...payload,
+      day_part: payload.day_part ?? 'full',
       status: 'approved',
       granted_directly: true,
       reviewed_by: grantedBy,
@@ -904,7 +926,9 @@ export interface LeaveRequestWithProfile extends LeaveRequest {
   entered_by_profile: { name: string } | null
 }
 
-export type LeaveDayPart = 'full' | 'first_half' | 'second_half'
+/** How much of a day a request covers. Shared by leave and WFH. */
+export type DayPart = AttendanceDayPart
+export type LeaveDayPart = DayPart
 
 export interface SubmitLeavePayload {
   leave_type_id: string
@@ -1033,7 +1057,7 @@ export async function fetchWfhByProfile(profileId: string): Promise<WfhRequest[]
     .from('wfh_requests')
     .select('*')
     .eq('profile_id', profileId)
-    .order('date', { ascending: false })
+    .order('start_date', { ascending: false })
   if (error) throw error
   return data
 }

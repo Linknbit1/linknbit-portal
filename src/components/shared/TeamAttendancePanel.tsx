@@ -11,6 +11,7 @@ import { SectionToolbar } from '../ui/SectionToolbar'
 import { MonthStepper } from './MonthFilter'
 import { useMonthFilter } from '../../hooks/useMonthFilter'
 import { formatDate } from '../../lib/utils'
+import { DAY_PART_LABEL } from '../../lib/dayParts'
 import {
   useAllAttendance,
   useMonthlyAttendance,
@@ -170,14 +171,15 @@ export function TeamRoster({ memberIds }: TeamScope = {}) {
         present: 0, late: 0, wfh: 0, leave: 0, absent: 0,
       }
       // A worked half day is half an attendance and half a leave, so it counts
-      // 0.5 to each rather than a whole day to both.
+      // 0.5 to each rather than a whole day to both. A partial WFH splits the
+      // same way: half remote, half in the office.
       const isLeave = r.day_type === 'leave'
-      const isHalf = isLeave && r.day_part !== 'full'
-      if (isHalf) t.leave += 0.5
-      else if (isLeave) t.leave += 1
-      else if (r.day_type === 'wfh') t.wfh += 1
+      const isWfh = r.day_type === 'wfh'
+      const isPartial = (isLeave || isWfh) && r.day_part !== 'full'
+      if (isLeave) t.leave += isPartial ? 0.5 : 1
+      else if (isWfh) t.wfh += isPartial ? 0.5 : 1
 
-      const w = isHalf ? 0.5 : 1
+      const w = isPartial ? 0.5 : 1
       if (r.status === 'present') t.present += w
       else if (r.status === 'late') t.late += w
       else if (r.status === 'absent') t.absent += w
@@ -241,7 +243,9 @@ export function TeamRoster({ memberIds }: TeamScope = {}) {
 export function TeamWfhList({ memberIds }: TeamScope = {}) {
   const filter = useMonthFilter()
   const wfh = useAllWfhRequests()
-  const rows = (wfh.data ?? []).filter((r) => inScope({ memberIds }, r.profile_id) && filter.inMonth(r.date))
+  // A WFH range spanning a month boundary belongs to both months, same as leave.
+  const rows = (wfh.data ?? []).filter((r) =>
+    inScope({ memberIds }, r.profile_id) && (filter.inMonth(r.start_date) || filter.inMonth(r.end_date)))
 
   return (
     <div>
@@ -253,7 +257,8 @@ export function TeamWfhList({ memberIds }: TeamScope = {}) {
           {rows.map((r) => (
             <Row key={r.id} name={r.profiles?.name ?? '—'} avatar={r.profiles?.avatar_url ?? null} personId={r.profile_id}
               status={<Pill status={r.status} map={REQUEST_STATUS} />}>
-              <span className="text-text-1">{fmtDay(r.date)}</span>
+              <span className="text-text-1">{fmtRange(r.start_date, r.end_date)}</span>
+              {r.day_part !== 'full' && <span>{DAY_PART_LABEL[r.day_part]}</span>}
               <span className="text-text-3 normal-case font-ui truncate max-w-50">{r.reason}</span>
             </Row>
           ))}

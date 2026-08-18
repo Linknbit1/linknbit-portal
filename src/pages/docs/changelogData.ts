@@ -45,6 +45,14 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'improved',
+        text: 'A WFH request now takes a date range, so a whole week working remotely is one request and one approval instead of five.',
+      },
+      {
+        kind: 'added',
+        text: 'Partial WFH: request half a day from home and work the other half from the office. Say which half — it shows on your attendance as WFH · 1st or WFH · 2nd, and both halves count as worked.',
+      },
+      {
+        kind: 'improved',
         text: 'Every BD change applies the moment you make it — dragging a card, ticking a step, editing a field. Nothing waits on a spinner, and if a save is refused the screen puts itself back and tells you.',
       },
       {

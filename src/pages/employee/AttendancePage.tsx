@@ -54,7 +54,9 @@ import { useAuthContext } from '../../context/AuthContext'
 import { useToast } from '../../components/ui/toast-context'
 import { cn } from '../../lib/cn'
 import { AttendanceChips } from '../../components/shared/AttendanceChips'
-import type { AttendanceRow, AttendanceException } from '../../api/attendance'
+import type { AttendanceRow, AttendanceException, DayPart } from '../../api/attendance'
+import { DAY_PART_LABEL, DAY_PART_OPTIONS, toDayPart } from '../../lib/dayParts'
+import { formatDayRange as fmtDayRange } from '../../lib/dateGroups'
 import { ModalShell } from '../../components/ui/ModalShell'
 import { showsInlineTeamAttendance } from '../../lib/roles'
 
@@ -805,36 +807,55 @@ export function WfhSection() {
   const toast = useToast()
   const [modalOpen, setModalOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [date, setDate] = useState(localToday)
+  const [dayPart, setDayPart] = useState<DayPart>('full')
+  const [startDate, setStartDate] = useState(localToday)
+  const [endDate, setEndDate] = useState(localToday)
   const [reason, setReason] = useState('')
   const { data: requests = [], isLoading } = useMyWfhRequests()
   const submitMut = useSubmitWfh()
   const updateMut = useUpdateWfh()
   const saving = submitMut.isPending || updateMut.isPending
 
-  const openCreate = () => { setEditingId(null); setDate(localToday()); setReason(''); setModalOpen(true) }
-  const openEdit = (req: { id: string; date: string; reason: string }) => {
-    setEditingId(req.id); setDate(req.date); setReason(req.reason); setModalOpen(true)
+  const isPartial = dayPart !== 'full'
+  // Half the day is spent in the office, so a partial day cannot span days.
+  const effectiveEnd = isPartial ? startDate : endDate
+  const invalid = !reason.trim() || effectiveEnd < startDate
+
+  const resetForm = () => {
+    setReason(''); setDayPart('full')
+    setStartDate(localToday()); setEndDate(localToday())
+  }
+  const openCreate = () => { setEditingId(null); resetForm(); setModalOpen(true) }
+  const openEdit = (req: { id: string; start_date: string; end_date: string; day_part: string; reason: string }) => {
+    setEditingId(req.id)
+    setDayPart(toDayPart(req.day_part))
+    setStartDate(req.start_date); setEndDate(req.end_date); setReason(req.reason)
+    setModalOpen(true)
   }
   const closeModal = () => { setModalOpen(false); setEditingId(null) }
 
   const handleSubmit = async () => {
-    if (!reason.trim()) return
+    if (invalid) return
+    const payload = {
+      start_date: startDate,
+      end_date: effectiveEnd,
+      reason: reason.trim(),
+      day_part: dayPart,
+    }
     try {
       if (editingId) {
-        await updateMut.mutateAsync({ id: editingId, payload: { date, reason: reason.trim() } })
+        await updateMut.mutateAsync({ id: editingId, payload })
         toast('WFH request updated', 'success')
       } else {
-        await submitMut.mutateAsync({ date, reason: reason.trim() })
+        await submitMut.mutateAsync(payload)
         toast('WFH request submitted — awaiting approval', 'success')
       }
-      closeModal(); setReason(''); setDate(localToday())
+      closeModal(); resetForm()
     } catch {
       toast(editingId ? 'Failed to update WFH request' : 'Failed to submit WFH request', 'error')
     }
   }
 
-  const fmtDate = (d: string) => new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
   const todayStr = localToday()
 
   return (
@@ -863,7 +884,12 @@ export function WfhSection() {
               <div key={req.id} className="flex items-start gap-3 px-5 py-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                    <span className="font-ui font-medium text-[13px] text-text-1">{fmtDate(req.date)}</span>
+                    <span className="font-ui font-medium text-[13px] text-text-1">{fmtDayRange(req.start_date, req.end_date)}</span>
+                    {req.day_part !== 'full' && (
+                      <span className="px-1.5 py-0.5 rounded-xs bg-service-design/10 border border-service-design/25 text-service-design text-[10px] font-mono font-semibold">
+                        {DAY_PART_LABEL[req.day_part] ?? 'Partial'}
+                      </span>
+                    )}
                     {req.granted_directly && (
                       <span className="text-[10px] font-mono bg-service-dev/10 text-service-dev border border-service-dev/20 px-1.5 py-0.5 rounded-xs uppercase tracking-wide">HR Granted</span>
                     )}
@@ -898,9 +924,35 @@ export function WfhSection() {
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Date</label>
-                <DatePicker value={date} onChange={setDate} minDate={todayStr} />
+                <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Duration</label>
+                <Select
+                  value={dayPart}
+                  onChange={(v) => setDayPart(toDayPart(v))}
+                  options={DAY_PART_OPTIONS}
+                />
+                {isPartial && (
+                  <p className="text-[11px] font-ui text-text-4 mt-1">
+                    You work the other half from the office, so a partial day applies to a single date.
+                  </p>
+                )}
               </div>
+              {isPartial ? (
+                <div>
+                  <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Date</label>
+                  <DatePicker value={startDate} onChange={setStartDate} minDate={todayStr} />
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">From</label>
+                    <DatePicker value={startDate} onChange={(v) => { setStartDate(v); if (endDate < v) setEndDate(v) }} minDate={todayStr} />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">To</label>
+                    <DatePicker value={endDate} onChange={setEndDate} minDate={startDate} />
+                  </div>
+                </div>
+              )}
               <div>
                 <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Reason</label>
                 <textarea
@@ -914,7 +966,7 @@ export function WfhSection() {
             </div>
             <div className="flex gap-2.5 mt-5">
               <Button variant="ghost" size="sm" className="flex-1" onClick={closeModal}>Cancel</Button>
-              <Button size="sm" className="flex-1" onClick={handleSubmit} disabled={!reason.trim() || saving}>
+              <Button size="sm" className="flex-1" onClick={handleSubmit} disabled={invalid || saving}>
                 <Check size={14} /> {editingId ? 'Save' : 'Submit'}
               </Button>
             </div>

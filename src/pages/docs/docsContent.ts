@@ -356,7 +356,8 @@ export const DOC_CHAPTERS: DocChapter[] = [
             title: 'Request time off or a remote day',
             steps: [
               'Open People → Attendance and pick the request you need — Leave, WFH or Overtime.',
-              'Choose the date or range. For a half day, pick which half.',
+              'Choose the duration: a full day (or range of days), or half a day.',
+              'For a half day, pick which half — first or second.',
               'Add a reason and submit.',
             ],
           },
@@ -371,6 +372,8 @@ export const DOC_CHAPTERS: DocChapter[] = [
         ],
         notes: [
           'An approved leave or WFH day updates your attendance record for that day automatically.',
+          'A WFH request covers a date range, so a whole week away from the office is one request and one approval.',
+          'A partial WFH day is not a day off: you work one half from home and the other half from the office, so check in as normal for the office half. Because it splits a single day, it cannot span a range.',
           'You can edit or withdraw a request while it is still pending.',
           'Nobody can approve their own request, whatever their role.',
         ],

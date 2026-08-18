@@ -4415,7 +4415,8 @@ export type Database = {
       wfh_requests: {
         Row: {
           created_at: string
-          date: string
+          day_part: string
+          end_date: string
           granted_directly: boolean
           id: string
           profile_id: string
@@ -4423,12 +4424,14 @@ export type Database = {
           review_note: string | null
           reviewed_at: string | null
           reviewed_by: string | null
+          start_date: string
           status: string
           updated_at: string
         }
         Insert: {
           created_at?: string
-          date: string
+          day_part?: string
+          end_date: string
           granted_directly?: boolean
           id?: string
           profile_id: string
@@ -4436,12 +4439,14 @@ export type Database = {
           review_note?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          start_date: string
           status?: string
           updated_at?: string
         }
         Update: {
           created_at?: string
-          date?: string
+          day_part?: string
+          end_date?: string
           granted_directly?: boolean
           id?: string
           profile_id?: string
@@ -4449,6 +4454,7 @@ export type Database = {
           review_note?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          start_date?: string
           status?: string
           updated_at?: string
         }
@@ -4677,6 +4683,10 @@ export type Database = {
       fn_extract_mention_ids: { Args: { p_doc: Json }; Returns: string[] }
       fn_fmt_day: { Args: { d: string }; Returns: string }
       fn_fmt_minutes: { Args: { p_minutes: number }; Returns: string }
+      fn_fmt_span: {
+        Args: { p_end: string; p_part?: string; p_start: string }
+        Returns: string
+      }
       fn_get_or_create_dm: {
         Args: { p_other_profile_id: string }
         Returns: string

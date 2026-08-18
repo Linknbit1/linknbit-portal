@@ -299,7 +299,7 @@ export interface Client {
 export type AttendanceStatus = 'present' | 'late' | 'absent'
 /** What kind of day it was, independent of whether the person turned up. */
 export type AttendanceDayType = 'work' | 'leave' | 'wfh' | 'holiday'
-/** How much of the day day_type covers. Only leave is ever partial. */
+/** How much of the day day_type covers. Only leave and WFH are ever partial. */
 export type AttendanceDayPart = 'full' | 'first_half' | 'second_half'
 
 export interface AttendanceRecord {

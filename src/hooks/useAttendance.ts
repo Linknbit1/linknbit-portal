@@ -70,6 +70,8 @@ import type {
   LeaveTypePayload,
   SubmitLeavePayload,
   EnterLeavePayload,
+  SubmitWfhPayload,
+  GrantWfhPayload,
 } from '../api/attendance'
 import type { TablesUpdate } from '../types/database'
 
@@ -505,7 +507,7 @@ export function useAllWfhRequests(status?: string, enabled = true) {
 export function useSubmitWfh() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (payload: { date: string; reason: string }) => submitWfhRequest(payload),
+    mutationFn: (payload: SubmitWfhPayload) => submitWfhRequest(payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['attendance', 'wfh'] })
     },
@@ -515,7 +517,7 @@ export function useSubmitWfh() {
 export function useUpdateWfh() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: { date: string; reason: string } }) =>
+    mutationFn: ({ id, payload }: { id: string; payload: SubmitWfhPayload }) =>
       updateWfhRequest(id, payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['attendance', 'wfh'] })
@@ -553,9 +555,8 @@ export function useDeleteWfh() {
 export function useGrantWfh() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ profileId, date, reason, grantedBy }: {
-      profileId: string; date: string; reason: string; grantedBy: string
-    }) => grantWfh(profileId, date, reason, grantedBy),
+    mutationFn: ({ payload, grantedBy }: { payload: GrantWfhPayload; grantedBy: string }) =>
+      grantWfh(payload, grantedBy),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['attendance', 'wfh'] })
       qc.invalidateQueries({ queryKey: ['attendance', 'all'] })

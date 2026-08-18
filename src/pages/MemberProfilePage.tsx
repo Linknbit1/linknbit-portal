@@ -35,6 +35,7 @@ import { AttendanceChips } from '../components/shared/AttendanceChips'
 import type { Person, PersonTeam, PersonProject } from '../api/people'
 import type { TaskListItem } from '../api/tasks'
 import type { LeaveRequestWithType, WfhRequest } from '../api/attendance'
+import { DAY_PART_LABEL } from '../lib/dayParts'
 
 const GOVERNOR_ROLES = ['super_admin', 'admin', 'hr', 'project_manager']
 const HR_ADMIN_ROLES = ['super_admin', 'admin', 'hr']
@@ -419,16 +420,17 @@ function AttendanceTab({ personId, leave, wfh }: {
 
   // Counted in days. A half-day leave that was worked is half an attendance and
   // half a leave, so it contributes 0.5 to each rather than a whole day to both.
+  // A partial WFH splits the same way: half remote, half in the office.
   const tally = (() => {
     const t = { present: 0, late: 0, absent: 0, leave: 0, wfh: 0, half_day: 0 }
     for (const r of records) {
       const isLeave = r.day_type === 'leave'
-      const isHalf = isLeave && r.day_part !== 'full'
-      if (isHalf) t.half_day += 0.5
-      else if (isLeave) t.leave += 1
-      else if (r.day_type === 'wfh') t.wfh += 1
+      const isWfh = r.day_type === 'wfh'
+      const isPartial = (isLeave || isWfh) && r.day_part !== 'full'
+      if (isLeave) t[isPartial ? 'half_day' : 'leave'] += isPartial ? 0.5 : 1
+      else if (isWfh) t.wfh += isPartial ? 0.5 : 1
 
-      const w = isHalf ? 0.5 : 1
+      const w = isPartial ? 0.5 : 1
       if (r.status === 'present') t.present += w
       else if (r.status === 'late') t.late += w
       else if (r.status === 'absent') t.absent += w
@@ -458,7 +460,8 @@ function AttendanceTab({ personId, leave, wfh }: {
   const { data: overtime = [] } = useOvertimeByProfile(personId)
 
   const monthLeave = leave.filter((l) => mf.inMonth(l.start_date))
-  const monthWfh = wfh.filter((w) => mf.inMonth(w.date))
+  // A WFH range straddling a month boundary shows in both months.
+  const monthWfh = wfh.filter((w) => mf.inMonth(w.start_date) || mf.inMonth(w.end_date))
   const monthExc = exceptions.filter((e) => mf.inMonth(e.date))
   const monthOt = overtime.filter((o) => mf.inMonth(o.date))
 
@@ -574,7 +577,10 @@ function AttendanceTab({ personId, leave, wfh }: {
               {monthWfh.map((w) => (
                 <div key={w.id} className="flex items-start gap-2">
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-ui text-[12.5px] text-text-1">{fmtDay(w.date)}</p>
+                    <p className="truncate font-ui text-[12.5px] text-text-1">
+                      {fmtDay(w.start_date)}{w.end_date !== w.start_date ? ` – ${fmtDay(w.end_date)}` : ''}
+                      {w.day_part !== 'full' && ` · ${DAY_PART_LABEL[w.day_part]}`}
+                    </p>
                     {w.reason && <p className="wrap-break-word font-ui text-[11.5px] text-text-4">{w.reason}</p>}
                   </div>
                   <span className={cn('shrink-0 rounded-xs border px-1.5 py-0.5 font-mono text-[10px] font-semibold capitalize', REQ_STATUS[w.status] ?? REQ_STATUS.pending)}>{w.status}</span>

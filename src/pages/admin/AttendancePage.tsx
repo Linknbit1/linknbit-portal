@@ -53,9 +53,11 @@ import { useMonthFilter } from "../../hooks/useMonthFilter";
 import {
   groupByDate,
   datesInRange,
+  formatDayRange,
   formatRequestedAt,
   formatDayHeading,
 } from "../../lib/dateGroups";
+import { DAY_PART_LABEL, DAY_PART_OPTIONS, toDayPart } from "../../lib/dayParts";
 import { ipInCidr } from "../../lib/officeIp";
 import { useToast } from "../../components/ui/toast-context";
 import { useAuthContext } from "../../context/AuthContext";
@@ -100,6 +102,7 @@ import type {
   AttendanceExceptionWithProfile,
   AttendanceSettings,
   WfhRequestWithProfile,
+  DayPart,
   LeaveRequestWithProfile,
   LeaveType,
   LeaveDayPart,
@@ -477,19 +480,22 @@ export function DailyRecordsTab() {
   // Counted in DAYS, not rows, so the tiles still sum to the number of working
   // days covered. A half-day leave that was worked contributes 0.5 to Half Day
   // and 0.5 to whichever attendance bucket it earned — it is genuinely half of
-  // each, and counting it as a whole in both would inflate the totals.
+  // each, and counting it as a whole in both would inflate the totals. A partial
+  // WFH splits the same way: half remote, half in the office.
   const stats = (() => {
     const s = { present: 0, late: 0, absent: 0, half_day: 0, leave: 0 };
     for (const r of records) {
       const isLeave = r.day_type === "leave";
-      const isHalf = isLeave && r.day_part !== "full";
+      const isPartial =
+        (isLeave || r.day_type === "wfh") && r.day_part !== "full";
+      const isHalf = isLeave && isPartial;
 
       if (isHalf) s.half_day += 0.5;
       else if (isLeave) s.leave += 1;
 
-      // Weight the attendance half of a half day, and skip rows with no
+      // Weight the attendance half of a partial day, and skip rows with no
       // attendance fact at all (full leave, holiday, nothing recorded yet).
-      const weight = isHalf ? 0.5 : 1;
+      const weight = isPartial ? 0.5 : 1;
       if (r.status === "present") s.present += weight;
       else if (r.status === "late") s.late += weight;
       else if (r.status === "absent") s.absent += weight;
@@ -545,7 +551,10 @@ export function DailyRecordsTab() {
           ? r.day_part === "full" ? "Leave"
           : r.day_part === "first_half" ? "Half Day (1st)"
           : "Half Day (2nd)"
-          : r.day_type === "wfh" ? "WFH"
+          : r.day_type === "wfh"
+          ? r.day_part === "full" ? "WFH"
+          : r.day_part === "first_half" ? "WFH (1st half)"
+          : "WFH (2nd half)"
           : r.day_type === "holiday" ? "Holiday"
           : "Work",
         r.status ?? "",
@@ -893,23 +902,36 @@ function GrantWfhModal({
   const grantMut = useGrantWfh();
   const { data: people = [] } = useActiveProfiles();
   const [profileId, setProfileId] = useState("");
-  const [date, setDate] = useState(localToday);
+  const [dayPart, setDayPart] = useState<DayPart>("full");
+  const [startDate, setStartDate] = useState(localToday);
+  const [endDate, setEndDate] = useState(localToday);
   const [reason, setReason] = useState("");
 
+  const isPartial = dayPart !== "full";
+  // Half the day is worked from the office, so a partial grant is one day.
+  const effectiveEnd = isPartial ? startDate : endDate;
+  const invalid = !profileId || !reason.trim() || effectiveEnd < startDate;
+
   const handleGrant = async () => {
-    if (!profileId || !reason.trim()) return;
+    if (invalid) return;
     try {
       await grantMut.mutateAsync({
-        profileId,
-        date,
-        reason: reason.trim(),
+        payload: {
+          profile_id: profileId,
+          start_date: startDate,
+          end_date: effectiveEnd,
+          day_part: dayPart,
+          reason: reason.trim(),
+        },
         grantedBy: profile?.id ?? "",
       });
       toast("WFH granted — marked on attendance", "success");
       onClose();
       setProfileId("");
       setReason("");
-      setDate(localToday());
+      setDayPart("full");
+      setStartDate(localToday());
+      setEndDate(localToday());
     } catch {
       toast("Failed to grant WFH", "error");
     }
@@ -951,10 +973,43 @@ function GrantWfhModal({
         </div>
         <div>
           <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">
-            Date
+            Duration
           </label>
-          <DatePicker value={date} onChange={setDate} />
+          <Select
+            value={dayPart}
+            onChange={(v) => setDayPart(toDayPart(v))}
+            options={DAY_PART_OPTIONS}
+          />
         </div>
+        {isPartial ? (
+          <div>
+            <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">
+              Date
+            </label>
+            <DatePicker value={startDate} onChange={setStartDate} />
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">
+                From
+              </label>
+              <DatePicker
+                value={startDate}
+                onChange={(v) => {
+                  setStartDate(v);
+                  if (endDate < v) setEndDate(v);
+                }}
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">
+                To
+              </label>
+              <DatePicker value={endDate} onChange={setEndDate} minDate={startDate} />
+            </div>
+          </div>
+        )}
         <div>
           <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">
             Reason
@@ -976,7 +1031,7 @@ function GrantWfhModal({
           size="sm"
           className="flex-1"
           onClick={handleGrant}
-          disabled={!profileId || !reason.trim() || grantMut.isPending}
+          disabled={invalid || grantMut.isPending}
         >
           <Check size={14} /> Grant
         </Button>
@@ -1022,9 +1077,10 @@ export function WFHRequestsTab() {
   const filtered = requests.filter(
     (r) => statusFilter === "all" || r.status === statusFilter,
   );
-  // Grouped under the date the WFH is FOR (not when it was requested).
+  // Grouped under every date the WFH is FOR (not when it was requested), so a
+  // multi-day request answers "who is remote on this date" under each of them.
   const groups = groupByDate(filtered, (r) =>
-    monthFilter.inMonth(r.date) ? [r.date] : [],
+    datesInRange(r.start_date, r.end_date).filter(monthFilter.inMonth),
   );
 
   const approve = async (id: string) => {
@@ -1190,7 +1246,12 @@ export function WFHRequestsTab() {
                           </div>
                           <div className="flex items-center gap-1.5 text-[12px] font-mono text-text-2 shrink-0">
                             <Calendar size={12} className="text-text-4" />
-                            For {req.date}
+                            For {formatDayRange(req.start_date, req.end_date)}
+                            {req.day_part !== "full" && (
+                              <span className="px-1.5 py-0.5 rounded-xs bg-service-design/10 border border-service-design/25 text-service-design text-[10px] font-semibold">
+                                {DAY_PART_LABEL[req.day_part]}
+                              </span>
+                            )}
                           </div>
                           <div className="shrink-0 text-[11.5px] font-mono text-text-4">
                             Requested {formatRequestedAt(req.created_at)}
@@ -5306,7 +5367,11 @@ export function ReportsTab() {
                                         ? "Half Day · 2nd"
                                         : "Leave"
                                     : r.day_type === "wfh"
-                                      ? "WFH"
+                                      ? r.day_part === "first_half"
+                                        ? "WFH · 1st"
+                                        : r.day_part === "second_half"
+                                          ? "WFH · 2nd"
+                                          : "WFH"
                                       : r.day_type === "holiday"
                                         ? "Holiday"
                                         : null;
