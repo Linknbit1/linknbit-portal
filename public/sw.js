@@ -1,7 +1,10 @@
-// Bumped for the app-icon fix: the old cache holds the previous manifest, which
-// pointed the icons at splash art. Without a new name, installed clients would
-// keep serving the stale manifest and the banner icon with it.
-const CACHE_NAME = 'linknbit-portal-v7'
+// Bumped for the WFH date-range release. Assets are served cache-first below and
+// never revalidated, so a hashed bundle stays in the cache forever once it lands
+// there. When a release renames a DB column, a client booting that stale bundle
+// runs code against a shape that no longer exists — which is exactly how the WFH
+// page white-screened on `r.date` being undefined. A new name drops the old
+// cache on activate, so the offline fallback cannot resurrect the previous app.
+const CACHE_NAME = 'linknbit-portal-v8'
 const PRECACHE_URLS = [
   '/',
   '/index.html',
