@@ -39,6 +39,82 @@
   margin: 0;
 }
 
+/* Block content: lists, headings, quotes, rules.
+ *
+ * Both selectors again, for two different reasons this time. In VIEW mode the
+ * static renderer emits bare <ul>/<ol>/<h1>, which Tailwind's preflight has
+ * stripped of markers, padding and margin — without these rules a bulleted note
+ * shows its text with no bullets. In EDIT mode the app-wide `.ProseMirror ul`
+ * and `.ProseMirror h1` rules in editor.css reach into the note and style it for
+ * the dark portal instead: display-font headings at 1.35rem, 0.3em list margins.
+ * Restating both here keeps a note looking the same on either side of a
+ * double-click, which is the whole contract of this file.
+ *
+ * Headings stay in the note's handwriting face (font-family: inherit) and lists
+ * keep zero margin, matching the tight line rhythm `p { margin: 0 }` sets above. */
+.note-prose ul,
+.note-prose.ProseMirror ul {
+  list-style: disc;
+  padding-left: 1.1em;
+  margin: 0;
+}
+
+.note-prose ol,
+.note-prose.ProseMirror ol {
+  list-style: decimal;
+  padding-left: 1.1em;
+  margin: 0;
+}
+
+.note-prose li,
+.note-prose.ProseMirror li {
+  margin: 0;
+}
+
+/* A list item wraps its text in a paragraph, which must not add a line of space. */
+.note-prose li p,
+.note-prose.ProseMirror li p {
+  margin: 0;
+}
+
+.note-prose h1,
+.note-prose h2,
+.note-prose h3,
+.note-prose.ProseMirror h1,
+.note-prose.ProseMirror h2,
+.note-prose.ProseMirror h3 {
+  font-family: inherit;
+  font-weight: 700;
+  margin: 0;
+  line-height: inherit;
+}
+
+.note-prose h1, .note-prose.ProseMirror h1 { font-size: 1.25em; }
+.note-prose h2, .note-prose.ProseMirror h2 { font-size: 1.1em; }
+.note-prose h3, .note-prose.ProseMirror h3 { font-size: 1em; }
+
+.note-prose blockquote,
+.note-prose.ProseMirror blockquote {
+  border-left: 2px solid color-mix(in srgb, var(--color-note-ink) 40%, transparent);
+  padding-left: 0.5em;
+  margin: 0;
+}
+
+.note-prose pre,
+.note-prose.ProseMirror pre {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.8em;
+  white-space: pre-wrap;
+  margin: 0;
+}
+
+.note-prose hr,
+.note-prose.ProseMirror hr {
+  border: none;
+  border-top: 1px solid color-mix(in srgb, var(--color-note-ink) 35%, transparent);
+  margin: 0.35em 0;
+}
+
 /* Placeholder: the empty-note prompt, same tint as the read-only "double-click
  * to write…" text. TipTap's Placeholder extension tags the first empty node. */
 .note-prose p.is-editor-empty:first-child::before {

@@ -68,18 +68,66 @@ function docHasText(node: JSONContent): boolean {
 
 type Mark = { type?: string }
 
-/** Render a doc's inline text nodes, wrapping each in its marks. */
-function renderInline(nodes: JSONContent[]): ReactNode[] {
-  return nodes.map((n, i) => {
-    if (n.type !== 'text' || !n.text) return null
-    let el: ReactNode = n.text
-    for (const m of (n.marks as Mark[] | undefined) ?? []) {
-      if (m.type === 'bold') el = <strong key="b">{el}</strong>
-      else if (m.type === 'italic') el = <em key="i">{el}</em>
-      else if (m.type === 'strike') el = <s key="s">{el}</s>
+/** Text alignment attr, set by the TextAlign extension on paragraphs and headings. */
+const alignOf = (node: JSONContent): React.CSSProperties | undefined => {
+  const align = node.attrs?.textAlign as React.CSSProperties['textAlign'] | null | undefined
+  return align ? { textAlign: align } : undefined
+}
+
+/**
+ * Render one node of a TipTap doc, block or inline.
+ *
+ * Every node type StarterKit can PRODUCE must be handled here, not just the ones
+ * the toolbar offers. Typing "- " turns a paragraph into a bulletList through an
+ * input rule, with the text buried under listItem → paragraph → text; the
+ * original renderer only understood text nodes at one level, so a bulleted note
+ * rendered blank in view mode and reappeared the moment TipTap took over in edit
+ * mode. `hardBreak` (Shift+Enter) was being dropped the same silent way.
+ *
+ * The default branch therefore renders a node's children rather than returning
+ * null: an unrecognised wrapper costs its styling, never its text.
+ */
+function renderNode(node: JSONContent, key: number): ReactNode {
+  const kids = node.content ?? []
+  const children = kids.length ? kids.map((n, i) => renderNode(n, i)) : null
+
+  switch (node.type) {
+    case 'text': {
+      if (!node.text) return null
+      let el: ReactNode = node.text
+      for (const m of (node.marks as Mark[] | undefined) ?? []) {
+        if (m.type === 'bold') el = <strong>{el}</strong>
+        else if (m.type === 'italic') el = <em>{el}</em>
+        else if (m.type === 'strike') el = <s>{el}</s>
+        else if (m.type === 'code') el = <code>{el}</code>
+      }
+      return <span key={key}>{el}</span>
     }
-    return <span key={i}>{el}</span>
-  })
+    case 'hardBreak':
+      return <br key={key} />
+    case 'horizontalRule':
+      return <hr key={key} />
+    // An empty paragraph is a deliberate blank line, so it keeps its <br>.
+    case 'paragraph':
+      return <p key={key} style={alignOf(node)}>{children ?? <br />}</p>
+    case 'heading': {
+      const level = Math.min(3, Math.max(1, Number(node.attrs?.level) || 1))
+      const Tag = `h${level}` as 'h1' | 'h2' | 'h3'
+      return <Tag key={key} style={alignOf(node)}>{children}</Tag>
+    }
+    case 'bulletList':
+      return <ul key={key}>{children}</ul>
+    case 'orderedList':
+      return <ol key={key}>{children}</ol>
+    case 'listItem':
+      return <li key={key}>{children}</li>
+    case 'blockquote':
+      return <blockquote key={key}>{children}</blockquote>
+    case 'codeBlock':
+      return <pre key={key}><code>{children}</code></pre>
+    default:
+      return children ? <span key={key}>{children}</span> : null
+  }
 }
 
 /**
@@ -103,14 +151,7 @@ function StaticNoteText({ doc, style }: { doc: JSONContent; style: React.CSSProp
       style={style}
     >
       <div className="note-prose">
-        {(doc.content ?? []).map((block, i) => (
-          <p
-            key={i}
-            style={{ textAlign: (block.attrs?.textAlign as React.CSSProperties['textAlign']) ?? 'left' }}
-          >
-            {block.content && block.content.length ? renderInline(block.content) : <br />}
-          </p>
-        ))}
+        {(doc.content ?? []).map((block, i) => renderNode(block, i))}
       </div>
     </div>
   )
