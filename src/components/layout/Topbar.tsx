@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Bell, Search, Check, CheckCheck, ChevronDown, ChevronRight, UserCircle, LogOut, ChevronLeft, UserRound } from 'lucide-react'
+import { Bell, Search, Check, CheckCheck, ChevronDown, ChevronRight, UserCircle, LogOut, ChevronLeft, UserRound, Settings as SettingsIcon } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { showWipFeatures } from '../../lib/featureFlags'
 import { Avatar } from '../ui/Avatar'
@@ -13,6 +13,7 @@ import { notificationHref } from '../../constants/notifications'
 import { groupNotifications, groupTitle } from '../../lib/notificationGroups'
 import { formatRelativeTime } from '../../lib/utils'
 import { isUserRole } from '../../lib/peopleAccess'
+import { SETTINGS_ROLES } from '../../constants/roles'
 
 /**
  * Me Mode — narrows task views to what you are assigned to or tagged in. Lives in
@@ -286,13 +287,12 @@ export function Topbar({ title, breadcrumb, className, back, actions }: TopbarPr
                 <span className="font-ui font-semibold text-[12.5px] text-text-1 whitespace-nowrap">
                   {profile.name}
                 </span>
-                {/* Inline text, not badges — the trigger has to stay one line wide. */}
-                <ProfileRoles
-                  profileId={profile.id}
-                  fallbackRole={profile.role}
-                  variant="text"
-                  className="font-ui text-[11px] text-text-3 whitespace-nowrap"
-                />
+                {/* The email identifies WHICH account is signed in, which is the
+                    question this chip actually gets asked — roles are still in
+                    the menu below, where there is room for the full set. */}
+                <span className="font-ui text-[11px] text-text-3 whitespace-nowrap max-w-50 truncate">
+                  {profile.email}
+                </span>
               </div>
               <ChevronDown size={14} className="text-text-3 ml-0.5 hidden sm:block" />
             </button>
@@ -307,12 +307,23 @@ export function Topbar({ title, breadcrumb, className, back, actions }: TopbarPr
                   <p className="font-mono text-[10.5px] text-text-4 truncate">{profile.email}</p>
                   <ProfileRoles profileId={profile.id} fallbackRole={profile.role} className="mt-1.5" />
                 </div>
+                {/* Gated on the same key as the /members/:id route guard, so the
+                    entry never appears to someone the guard would turn away. */}
+                {SETTINGS_ROLES.includes(profile.role) && (
+                  <button
+                    role="menuitem"
+                    onClick={() => { setMenuOpen(false); navigate(`/members/${profile.id}`) }}
+                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[12.5px] font-ui font-medium text-text-2 hover:bg-surface-2 hover:text-text-1 transition-colors"
+                  >
+                    <UserCircle size={15} className="text-text-3" /> My Profile
+                  </button>
+                )}
                 <button
                   role="menuitem"
                   onClick={() => { setMenuOpen(false); navigate('/profile') }}
                   className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[12.5px] font-ui font-medium text-text-2 hover:bg-surface-2 hover:text-text-1 transition-colors"
                 >
-                  <UserCircle size={15} className="text-text-3" /> My Profile
+                  <SettingsIcon size={15} className="text-text-3" /> Settings
                 </button>
                 <button
                   role="menuitem"

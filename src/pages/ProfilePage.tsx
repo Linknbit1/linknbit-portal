@@ -133,7 +133,7 @@ export default function ProfilePage() {
 
   return (
     <div className="flex flex-col flex-1">
-      <Topbar title="My Profile" back="/more" />
+      <Topbar title="Settings" back="/more" />
 
       <div className="px-4 py-6 lg:p-6 flex flex-col gap-6 max-w-3xl mx-auto w-full">
         {/* Identity header */}
