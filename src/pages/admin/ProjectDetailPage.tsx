@@ -10,6 +10,7 @@ import { ProgressBar } from '../../components/ui/ProgressBar'
 import { Avatar, AvatarGroup } from '../../components/ui/Avatar'
 import { PersonLink } from '../../components/shared/PersonLink'
 import { Skeleton } from '../../components/ui/Skeleton'
+import { Count } from '../../components/ui/Count'
 import { Select } from '../../components/ui/Select'
 import { DepartedBadge } from '../../components/ui/DepartedBadge'
 import { Popover } from '../../components/ui/Popover'
@@ -368,13 +369,9 @@ export default function ProjectDetailPage() {
                     </span>
                     {/* Both numbers labelled — an unlabelled "0" read as "no tasks"
                         when it actually meant "nobody staffed". */}
-                    <span className="flex items-center gap-2 font-mono text-[10px] text-text-4">
-                      <span className="flex items-center gap-0.5" title={`${taskCount} task${taskCount === 1 ? '' : 's'}`}>
-                        <CheckCircle2 size={10} /> {taskCount}
-                      </span>
-                      <span className="flex items-center gap-0.5" title={`${memberCount} member${memberCount === 1 ? '' : 's'}`}>
-                        <Users size={10} /> {memberCount}
-                      </span>
+                    <span className="flex items-center gap-1.5">
+                      <Count value={taskCount} icon={CheckCircle2} label={`${taskCount} task${taskCount === 1 ? '' : 's'}`} />
+                      <Count value={memberCount} icon={Users} label={`${memberCount} member${memberCount === 1 ? '' : 's'}`} />
                     </span>
                   </button>
                   {canManage && services.length > 1 && (
@@ -409,7 +406,9 @@ export default function ProjectDetailPage() {
                   activeTab === t.key ? 'bg-surface-3 text-text-1 shadow-sm' : 'text-text-3 hover:text-text-1',
                 )}
               >
-                <t.icon size={13} /> {t.label}{t.key === 'team' ? ` (${members.length})` : t.key === 'files' && projectFiles.length ? ` (${projectFiles.length})` : ''}
+                <t.icon size={13} /> {t.label}
+                {t.key === 'team' && <Count value={members.length} label={`${members.length} member${members.length === 1 ? '' : 's'}`} />}
+                {t.key === 'files' && projectFiles.length > 0 && <Count value={projectFiles.length} label={`${projectFiles.length} file${projectFiles.length === 1 ? '' : 's'}`} />}
               </button>
             ))}
           </div>

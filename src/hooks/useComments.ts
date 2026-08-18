@@ -1,5 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { fetchComments, createComment, deleteComment, type CreateCommentArgs } from '../api/comments'
+import {
+  fetchComments, createComment, updateComment, deleteComment,
+  type CreateCommentArgs, type UpdateCommentArgs,
+} from '../api/comments'
 import { TASK_KEYS } from './useTasks'
 
 export const COMMENT_KEYS = {
@@ -22,6 +25,16 @@ export function useCreateComment() {
     onSuccess: (row) => {
       qc.invalidateQueries({ queryKey: COMMENT_KEYS.byTask(row.task_id) })
       qc.invalidateQueries({ queryKey: TASK_KEYS.all })
+    },
+  })
+}
+
+export function useUpdateComment() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, args }: { id: string; args: UpdateCommentArgs; taskId: string }) => updateComment(id, args),
+    onSuccess: (_r, v) => {
+      qc.invalidateQueries({ queryKey: COMMENT_KEYS.byTask(v.taskId) })
     },
   })
 }

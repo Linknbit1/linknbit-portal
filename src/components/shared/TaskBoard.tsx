@@ -19,6 +19,7 @@ import { ProgressBar } from '../ui/ProgressBar'
 import { isOverdue, formatStamp } from '../../lib/utils'
 import { formatEstimate } from '../../lib/duration'
 import type { TaskListItem } from '../../api/tasks'
+import { SIGN_OFF_STATUSES } from '../../types'
 import type { TaskStatus } from '../../types'
 
 interface Column {
@@ -223,6 +224,7 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
   const [pendingDelete, setPendingDelete] = useState<TaskListItem | null>(null)
   const [pendingMove, setPendingMove] = useState<TaskListItem | null>(null)
   const canMoveTask = useCanAccess('can_manage_projects')
+  const canSignOff = useCanAccess('can_approve_tasks')
   // Admin renames/recolours from Settings → Statuses win over the built-ins.
   const statusMeta = useStatusOverrides('task')
   const boardRef = useDragScroll<HTMLDivElement>()
@@ -250,6 +252,10 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
     const id = dragId
     setDragId(null)
     if (!id) return
+    if (SIGN_OFF_STATUSES.includes(col.status) && !canSignOff) {
+      toast('Only a project manager or team lead can mark a task approved or completed', 'error')
+      return
+    }
     const task = tasks.find((t) => t.id === id)
     if (!task || statusOf(task) === col.status) return
     setOptimistic((o) => ({ ...o, [id]: col.status }))
@@ -275,7 +281,11 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
         return (
           <div
             key={col.status}
-            onDragOver={(e) => { e.preventDefault(); setDragOver(col.status) }}
+            onDragOver={(e) => {
+              e.preventDefault()
+              if (SIGN_OFF_STATUSES.includes(col.status) && !canSignOff) return
+              setDragOver(col.status)
+            }}
             onDragLeave={() => setDragOver((c) => (c === col.status ? null : c))}
             onDrop={() => handleDrop(col)}
             className={cn(

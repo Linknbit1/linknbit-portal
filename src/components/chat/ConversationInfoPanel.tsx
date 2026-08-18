@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Hash, Users as UsersIcon, Settings2 } from 'lucide-react'
 import { Avatar } from '../ui/Avatar'
+import { Count } from '../ui/Count'
 import { ChannelFilesPanel } from './ChannelFilesPanel'
 import { ChannelMembersModal } from './ChannelMembersModal'
 import { UserProfileBody } from '../shared/UserProfileBody'
@@ -78,7 +79,7 @@ function MemberList({ channelId, kind }: { channelId: string; kind: ChannelListI
       <div className="flex items-center gap-2 px-4 py-2.5">
         <UsersIcon size={13} className="text-text-3" />
         <h4 className="font-display text-[13px] font-bold text-text-1">Members</h4>
-        <span className="font-mono text-[10.5px] text-text-4">{members.length}</span>
+        <Count value={members.length} label={`${members.length} member${members.length === 1 ? '' : 's'}`} />
         {canManage && (
           <button
             onClick={() => setManageOpen(true)}

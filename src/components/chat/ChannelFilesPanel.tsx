@@ -35,7 +35,7 @@ interface ChannelFilesPanelProps {
 export function ChannelFilesPanel({ channelId }: ChannelFilesPanelProps) {
   const toast = useToast()
   const { profile } = useAuthContext()
-  const canDeleteAny = useCanAccess('can_delete_any_message')
+  const canDeleteAny = useCanAccess('can_administer_channels')
   const [tab, setTab] = useState<Tab>('media')
   const [confirming, setConfirming] = useState<MessageAttachmentRow | null>(null)
   const { data: attachments = [], isLoading } = useMessageAttachments(channelId)

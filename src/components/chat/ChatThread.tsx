@@ -30,7 +30,7 @@ export function ChatThread({ channelId, hideHeader }: ChatThreadProps) {
   const { profile } = useAuthContext()
   const { data: channel } = useChannel(channelId)
   const { data: members = [] } = useChannelMembers(channelId)
-  const canModerate = useCanAccess('can_delete_any_message')
+  const canModerate = useCanAccess('can_administer_channels')
 
   const { messages, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } = useFlatMessages(channelId)
   const { mutate: sendMessage } = useSendMessage()

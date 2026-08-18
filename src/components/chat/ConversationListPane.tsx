@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState, type ReactNode } from 'react'
-import { Plus, Search, Hash, MessageSquarePlus, Loader2 } from 'lucide-react'
+import { Plus, Search, Hash, MessageSquarePlus, Loader2, ChevronRight } from 'lucide-react'
 import { Input } from '../ui/Input'
 import { Skeleton } from '../ui/Skeleton'
 import { Popover } from '../ui/Popover'
@@ -7,7 +7,9 @@ import { ConversationListRow } from './ConversationListRow'
 import { cn } from '../../lib/cn'
 import { formatRelativeTime } from '../../lib/utils'
 import { channelTitle } from './chatUtils'
+import { Count } from '../ui/Count'
 import { useChannels } from '../../hooks/useChannels'
+import { useChannelCategories } from '../../hooks/useChannelCategories'
 import { useMessageSearch } from '../../hooks/useMessages'
 import { useChatUnreadMap } from '../../hooks/useChatUnreadCount'
 import { useCanAccess } from '../../hooks/useRoleFlags'
@@ -35,8 +37,9 @@ interface ConversationListPaneProps {
 export function ConversationListPane({ activeChannelId, onSelect, onNewChannel, onNewDM, onRemoved }: ConversationListPaneProps) {
   const { profile } = useAuthContext()
   const { data: channels = [], isLoading } = useChannels()
+  const { data: categories = [] } = useChannelCategories()
   const unreadMap = useChatUnreadMap()
-  const canCreateChannels = useCanAccess('can_create_channels')
+  const canCreateChannels = useCanAccess('can_administer_channels')
   // DMs first: direct conversations are what people open chat for, and the tab
   // order already leads with them.
   const [filter, setFilter] = useState<Filter>('dms')
@@ -89,6 +92,29 @@ export function ConversationListPane({ activeChannelId, onSelect, onNewChannel, 
       return [{ hit, channel, title: channelTitle(channel, profile?.id) }]
     })
   }, [messageHits, channels, query, profile?.id])
+
+  /**
+   * Sidebar shape: named channels grouped under their category heading, then
+   * anything uncategorised, then DMs. Searching flattens the lot — when you are
+   * hunting for a name, headings only get in the way.
+   */
+  const grouped = useMemo(() => {
+    const dms = shown.filter((c) => c.kind !== 'channel')
+    const rooms = shown.filter((c) => c.kind === 'channel')
+    const sections = categories
+      .map((cat) => ({ id: cat.id, label: cat.name, items: rooms.filter((c) => c.category_id === cat.id) }))
+      .filter((sec) => sec.items.length > 0)
+
+    // A channel with no category — or one pointing at a category this viewer
+    // cannot see — still has to appear somewhere.
+    const loose = rooms.filter((c) => !c.category_id || !categories.some((cat) => cat.id === c.category_id))
+    if (loose.length > 0) sections.push({ id: '__none__', label: 'Uncategorised', items: loose })
+    if (dms.length > 0) sections.push({ id: '__dms__', label: 'Direct messages', items: dms })
+    return sections
+  }, [shown, categories])
+
+  // Collapsed headings, by section id. Empty = everything open.
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
 
   return (
     <div className="flex flex-col h-full min-h-0 bg-surface-1 border-r border-border-default">
@@ -171,9 +197,10 @@ export function ConversationListPane({ activeChannelId, onSelect, onNewChannel, 
           </p>
         ) : (
           <>
-            {shown.length > 0 && (
+            {shown.length > 0 && (query ? (
+              // Searching: one flat list. Headings only get in the way of a hunt.
               <>
-                {query && <SectionLabel>Conversations</SectionLabel>}
+                <SectionLabel>Conversations</SectionLabel>
                 {shown.map((c) => (
                   <ConversationListRow
                     key={c.id}
@@ -186,7 +213,46 @@ export function ConversationListPane({ activeChannelId, onSelect, onNewChannel, 
                   />
                 ))}
               </>
-            )}
+            ) : (
+              grouped.map((section) => {
+                const isShut = !!collapsed[section.id]
+                // Unread inside a collapsed heading still has to be visible.
+                const hidden = isShut
+                  ? section.items.reduce((n, c) => n + (unreadMap.get(c.id) ?? 0), 0)
+                  : 0
+
+                return (
+                  <div key={section.id}>
+                    <button
+                      onClick={() => setCollapsed((prev) => ({ ...prev, [section.id]: !prev[section.id] }))}
+                      aria-expanded={!isShut}
+                      className="flex w-full items-center gap-1 px-3 pb-1 pt-3 font-mono text-[10px] font-semibold uppercase tracking-wider text-text-4 transition-colors hover:text-text-2"
+                    >
+                      <ChevronRight size={11} className={cn('shrink-0 transition-transform', !isShut && 'rotate-90')} />
+                      <span className="min-w-0 truncate">{section.label}</span>
+                      <Count value={section.items.length} />
+                      {hidden > 0 && (
+                        <span className="ml-auto rounded-full bg-brand-red px-1.5 font-ui text-[9.5px] font-bold text-white">
+                          {hidden > 99 ? '99+' : hidden}
+                        </span>
+                      )}
+                    </button>
+
+                    {!isShut && section.items.map((c) => (
+                      <ConversationListRow
+                        key={c.id}
+                        channel={c}
+                        myProfileId={profile?.id}
+                        unread={unreadMap.get(c.id) ?? 0}
+                        active={c.id === activeChannelId}
+                        onClick={() => onSelect(c.id)}
+                        onRemoved={onRemoved}
+                      />
+                    ))}
+                  </div>
+                )
+              })
+            ))}
 
             {query.length >= 2 && (
               <>

@@ -12,6 +12,7 @@ import { renderSuggestion } from './suggestionUtils'
 import { SuggestionList } from './SuggestionList'
 import type { PersonMini } from '../../api/projects'
 import { fileRefExtension, type FileMentionItem } from './fileMention'
+import { EVERYONE_MENTION_ID } from '../../lib/richText'
 import { useFileRefClick } from './useFileRefClick'
 
 interface RichEditorProps {
@@ -22,6 +23,8 @@ interface RichEditorProps {
   placeholder?: string
   /** People available to @mention (kept fresh via a ref). */
   mentionItems?: PersonMini[]
+  /** Offer @everyone in the mention list. Chat only — a task doc has no room to tag. */
+  allowEveryone?: boolean
   /** Project files/links taggable with # (kept fresh via a ref). */
   fileItems?: FileMentionItem[]
   /** Compact composer mode: Enter submits (Shift+Enter = newline). */
@@ -34,10 +37,12 @@ interface RichEditorProps {
 }
 
 export function RichEditor({
-  value, onChange, onBlur, placeholder, mentionItems = [], fileItems, compact, onSubmit, className, autoFocus, onEditorReady,
+  value, onChange, onBlur, placeholder, mentionItems = [], allowEveryone, fileItems, compact, onSubmit, className, autoFocus, onEditorReady,
 }: RichEditorProps) {
   const mentionsRef = useRef(mentionItems)
   useEffect(() => { mentionsRef.current = mentionItems }, [mentionItems])
+  const everyoneRef = useRef(allowEveryone)
+  useEffect(() => { everyoneRef.current = allowEveryone }, [allowEveryone])
   const filesRef = useRef(fileItems ?? [])
   useEffect(() => { filesRef.current = fileItems ?? [] }, [fileItems])
   const enableFileRefs = fileItems !== undefined
@@ -66,11 +71,17 @@ export function RichEditor({
         HTMLAttributes: { class: 'mention' },
         suggestion: {
           char: '@',
-          items: ({ query }) =>
-            mentionsRef.current
-              .filter((p) => p.name.toLowerCase().includes(query.toLowerCase()))
+          items: ({ query }) => {
+            const q = query.toLowerCase()
+            const people = mentionsRef.current
+              .filter((p) => p.name.toLowerCase().includes(q))
               .slice(0, 8)
-              .map((p) => ({ id: p.id, label: p.name, avatar: { name: p.name, url: p.avatar_url } })),
+              .map((p) => ({ id: p.id, label: p.name, avatar: { name: p.name, url: p.avatar_url } }))
+            // Pinned to the top, the way Discord lists it.
+            return everyoneRef.current && 'everyone'.startsWith(q)
+              ? [{ id: EVERYONE_MENTION_ID, label: 'everyone', avatar: { name: '@', url: null } }, ...people]
+              : people
+          },
           render: renderSuggestion(SuggestionList),
         },
       }),

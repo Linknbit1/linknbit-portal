@@ -34,6 +34,27 @@ export async function createComment(taskId: string, args: CreateCommentArgs): Pr
   return data
 }
 
+export interface UpdateCommentArgs {
+  content: string
+  doc: Json | null
+}
+
+/**
+ * Edit a comment's body. RLS (p_comments_update) already limits this to the
+ * author or a can_moderate_comments holder, so there is no check to repeat here.
+ * `updated_at` is what the UI reads to mark a comment as edited.
+ */
+export async function updateComment(id: string, args: UpdateCommentArgs): Promise<CommentRow> {
+  const { data, error } = await supabase
+    .from('comments')
+    .update({ content: args.content, doc: args.doc, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
 export async function deleteComment(id: string): Promise<void> {
   const { error } = await supabase.from('comments').delete().eq('id', id)
   if (error) throw error
