@@ -76,6 +76,10 @@ export const RELEASES: ChangelogRelease[] = [
         text: 'You can now file a lead or a campaign for a colleague. Choosing anyone but yourself as the owner used to refuse the save; the record is now created and stays yours to edit as well as theirs.',
       },
       {
+        kind: 'fixed',
+        text: 'Last contacted no longer shows the day a lead was added. It stays blank until outreach is actually logged, and a lead nobody has contacted reads “Not contacted” rather than appearing to have been spoken to today.',
+      },
+      {
         kind: 'added',
         text: 'A deal can be quoted in any currency — 166 of them, covering every country that has one. Pick it beside the estimated value, search the list by country if the code escapes you, and the lead keeps showing that currency everywhere while the pipeline totals convert it to PKR. Rates refresh daily, and the one used is shown as you type and frozen onto the lead when you save.',
       },

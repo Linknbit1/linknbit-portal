@@ -667,6 +667,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
           'On import, dates must be written as YYYY-MM-DD. 03/04/2026 is March in one country and April in the next, so the portal refuses it rather than guessing.',
           'An imported row whose Owner column names a colleague is filed to them. Leave that column empty and the lead is yours. A name that matches nobody in BD fails the row instead of quietly assigning it to you.',
           'Importing does not check for duplicates — it flags them. A company already in your pipeline is marked in the preview, and still imported if you go ahead.',
+          'Last contacted stays blank until outreach is logged against the lead — it is not filled in when the lead is created. A card that has never been contacted says so instead of counting quiet days from the day it was filed.',
           'Deleting a lead also removes its logged activity, which changes the outreach totals for that channel.',
           'Changes are saved as you make them. If one fails you get a toast and the screen puts itself back the way it was — nothing is left half-applied.',
         ],

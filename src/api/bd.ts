@@ -128,7 +128,7 @@ export function mapLead(row: LeadJoined): Lead {
     ownerId: row.owner_id ?? '',
     ownerName: personName(row.owner),
     addedOn: row.added_on,
-    lastContacted: row.last_contacted ?? row.added_on,
+    lastContacted: row.last_contacted,
     nextFollowUp: row.next_follow_up,
     closedAt: row.closed_at,
     lostReason: row.lost_reason ?? undefined,

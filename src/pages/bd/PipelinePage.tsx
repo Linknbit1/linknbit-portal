@@ -100,7 +100,9 @@ export default function PipelinePage() {
     const sorted = [...rows]
     if (sort === 'value') sorted.sort((a, b) => b.value - a.value)
     if (sort === 'company') sorted.sort((a, b) => a.company.localeCompare(b.company))
-    if (sort === 'recent') sorted.sort((a, b) => b.lastContacted.localeCompare(a.lastContacted))
+    // Never contacted sinks to the bottom rather than sorting as "longest ago",
+    // mirroring the follow-up sort. An empty string loses to every real date.
+    if (sort === 'recent') sorted.sort((a, b) => (b.lastContacted ?? '').localeCompare(a.lastContacted ?? ''))
     if (sort === 'followup') {
       // Leads with no follow-up sink to the bottom rather than sorting as "oldest".
       sorted.sort((a, b) => (a.nextFollowUp ?? '9999').localeCompare(b.nextFollowUp ?? '9999'))
@@ -420,7 +422,7 @@ interface LeadCardProps {
 
 function LeadCard({ lead, dragging, onDragStart, onDragEnd, onClick }: LeadCardProps) {
   const tone = followUpTone(lead.nextFollowUp)
-  const stalled = daysSince(lead.lastContacted)
+  const stalled = lead.lastContacted ? daysSince(lead.lastContacted) : null
   const isTerminal = lead.stage === 'won' || lead.stage === 'lost' || lead.stage === 'unqualified'
 
   return (
@@ -482,8 +484,8 @@ function LeadCard({ lead, dragging, onDragStart, onDragEnd, onClick }: LeadCardP
             {formatDate(lead.nextFollowUp)}
           </p>
         ) : (
-          <p className={cn('mt-2 font-mono text-[10.5px]', stalled > 10 ? 'text-warning' : 'text-text-4')}>
-            Quiet {stalled} day{stalled === 1 ? '' : 's'}
+          <p className={cn('mt-2 font-mono text-[10.5px]', stalled === null || stalled > 10 ? 'text-warning' : 'text-text-4')}>
+            {stalled === null ? 'Not contacted' : `Quiet ${stalled} day${stalled === 1 ? '' : 's'}`}
           </p>
         )
       )}

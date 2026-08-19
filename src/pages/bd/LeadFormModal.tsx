@@ -25,7 +25,7 @@ function emptyLead(ownerId: string, ownerName: string): Lead {
     channel: 'linkedin', services: [], industry: 'Logistics', icpFit: 'partial',
     value: 0, valueCurrency: 'PKR', valueEntered: 0, valueFxRate: 1, stage: 'new', temperature: 'warm',
     ownerId, ownerName,
-    addedOn: today, lastContacted: today, nextFollowUp: null, closedAt: null,
+    addedOn: today, lastContacted: null, nextFollowUp: null, closedAt: null,
     activityCount: 0,
   }
 }

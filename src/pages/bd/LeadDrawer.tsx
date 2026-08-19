@@ -235,7 +235,9 @@ export function LeadDrawer({ lead, onClose, onEdit, onLogActivity }: LeadDrawerP
               <span className="font-mono text-[12.5px] text-text-2">{formatDate(lead.addedOn)}</span>
             </Field>
             <Field label="Last contacted">
-              <span className="font-mono text-[12.5px] text-text-2">{formatDate(lead.lastContacted)}</span>
+              <span className={cn('font-mono text-[12.5px]', lead.lastContacted ? 'text-text-2' : 'text-text-4')}>
+                {lead.lastContacted ? formatDate(lead.lastContacted) : 'Not contacted yet'}
+              </span>
             </Field>
             <Field label="Services" className="col-span-2">
               <span className="flex flex-wrap gap-1">

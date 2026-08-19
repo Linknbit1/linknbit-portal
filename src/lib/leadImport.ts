@@ -50,7 +50,7 @@ export const LEAD_IMPORT_COLUMNS: LeadImportColumn[] = [
   { key: 'temperature', accepts: 'Hot, Warm, Cold', fallback: 'Warm' },
   { key: 'owner', aliases: ['owner_name', 'rep'], accepts: 'The full name of someone in BD', fallback: 'You' },
   { key: 'added_on', aliases: ['date_added'], accepts: 'YYYY-MM-DD', fallback: 'Today' },
-  { key: 'last_contacted', accepts: 'YYYY-MM-DD', fallback: 'Same as added_on' },
+  { key: 'last_contacted', accepts: 'YYYY-MM-DD', fallback: 'Empty — until outreach is logged' },
   { key: 'next_follow_up', aliases: ['follow_up'], accepts: 'YYYY-MM-DD', fallback: 'Empty' },
   { key: 'notes', aliases: ['description'], accepts: 'Any text', fallback: 'Empty' },
 ]
@@ -296,7 +296,7 @@ export function parseLeadCsv(text: string, ctx: LeadImportContext): LeadImportRe
               ownerId,
               ownerName,
               addedOn,
-              lastContacted: dates.last_contacted ?? addedOn,
+              lastContacted: dates.last_contacted,
               nextFollowUp: dates.next_follow_up,
               closedAt: null,
               description: notes || undefined,

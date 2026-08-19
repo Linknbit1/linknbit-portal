@@ -467,7 +467,13 @@ export interface Lead {
   ownerId: string
   ownerName: string
   addedOn: string
-  lastContacted: string
+  /**
+   * The date of the most recent logged activity, and nothing else. Null until
+   * somebody actually makes contact — it deliberately does not fall back to
+   * `addedOn`, because "added today" is not "spoken to today", and the stalled
+   * counter and the Recently-contacted sort both read this.
+   */
+  lastContacted: string | null
   nextFollowUp: string | null
   /**
    * When the lead reached a terminal stage, stamped by the database. Null while
