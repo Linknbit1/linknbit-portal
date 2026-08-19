@@ -76,6 +76,14 @@ export const RELEASES: ChangelogRelease[] = [
         text: 'You can now file a lead or a campaign for a colleague. Choosing anyone but yourself as the owner used to refuse the save; the record is now created and stays yours to edit as well as theirs.',
       },
       {
+        kind: 'improved',
+        text: 'Leave, WFH Requests, Exceptions and Overtime now look and work the same: one list on each, with the same filters in the same places and the pending count on the panel header. The stat cards that sat above each list are gone — they repeated what the list already shows and pushed the actual requests below the fold.',
+      },
+      {
+        kind: 'added',
+        text: 'Admins can remove an enrolled device outright, for a replaced handset or a duplicate enrolment that blocking alone never cleared off the list. Attendance history is untouched and the owner can enrol again.',
+      },
+      {
         kind: 'fixed',
         text: 'Profile photos now appear throughout Business Development. Lead cards, the pipeline table, the task board, meetings, targets and daily check-ins were all drawing initials even for people who had uploaded a picture.',
       },

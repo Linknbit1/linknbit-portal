@@ -29,7 +29,6 @@ import {
   Minus,
   Palmtree,
   Hourglass,
-  Star,
   Plane,
   Trash2,
   Pencil,
@@ -113,7 +112,10 @@ import {
   useEnrolledDevices,
   useApproveDevice,
   useDeactivateDevice,
+  useDeleteDevice,
+  type EnrolledDeviceWithProfile,
 } from "../../hooks/useEnrolledDevices";
+import { useCanAccess } from "../../hooks/useRoleFlags";
 import type { AttendanceWithProfile } from "../../api/attendance";
 import { downloadCsv } from "../../lib/csv";
 import { cn } from "../../lib/cn";
@@ -1102,8 +1104,6 @@ export function WFHRequestsTab() {
   const monthFilter = useMonthFilter();
 
   const pending = requests.filter((r) => r.status === "pending").length;
-  const approved = requests.filter((r) => r.status === "approved").length;
-  const rejected = requests.filter((r) => r.status === "rejected").length;
 
   const filtered = requests.filter(
     (r) => statusFilter === "all" || r.status === statusFilter,
@@ -1163,60 +1163,8 @@ export function WFHRequestsTab() {
 
   return (
     <div className="flex flex-col gap-5">
-      {/* Summary */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {[
-          {
-            label: "Pending Review",
-            value: pending,
-            icon: Clock,
-            color: "text-warning",
-            bg: "bg-warning/10 border-warning/20",
-          },
-          {
-            label: "Approved",
-            value: approved,
-            icon: CheckCircle2,
-            color: "text-success",
-            bg: "bg-success/10 border-success/20",
-          },
-          {
-            label: "Rejected",
-            value: rejected,
-            icon: AlertTriangle,
-            color: "text-error",
-            bg: "bg-error/10 border-error/20",
-          },
-        ].map(({ label, value, icon: Icon, color, bg }) => (
-          <div
-            key={label}
-            className="bg-surface-1 border border-border-default rounded-xl p-4 flex items-center gap-4"
-          >
-            <div
-              className={cn(
-                "size-10 rounded-lg border flex items-center justify-center shrink-0",
-                bg,
-              )}
-            >
-              <Icon size={18} className={color} />
-            </div>
-            <div>
-              <p
-                className={cn(
-                  "font-display font-bold text-[26px] leading-none",
-                  color,
-                )}
-              >
-                {value}
-              </p>
-              <p className="font-ui text-[12px] text-text-3 mt-1">{label}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-
       <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
-        <SectionToolbar icon={ClipboardList} title="WFH Requests">
+        <SectionToolbar icon={ClipboardList} title="WFH Requests" badge={pending}>
           <MonthStepper filter={monthFilter} />
           <Select
             size="sm"
@@ -1805,6 +1753,7 @@ export function LeaveTab() {
   const { profile } = useAuthContext();
   const { data: types = [] } = useLeaveTypes();
   const { data: requests = [] } = useAllLeaveRequests();
+  const pendingLeaveCount = requests.filter((r) => r.status === "pending").length;
   const deleteTypeMut = useDeleteLeaveType();
   const reviewMut = useReviewLeave();
   const deleteMut = useDeleteLeave();
@@ -1899,10 +1848,9 @@ export function LeaveTab() {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-5 items-start">
-      {/* Leave requests review (main) */}
+    <div className="flex flex-col gap-5">
       <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
-        <SectionToolbar icon={ClipboardList} title="Leave Requests">
+        <SectionToolbar icon={ClipboardList} title="Leave Requests" badge={pendingLeaveCount}>
           <MonthStepper filter={monthFilter} />
           <Select
             size="sm"
@@ -2061,20 +2009,13 @@ export function LeaveTab() {
         )}
       </div>
 
-      {/* Leave types (compact sidebar) */}
-      <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden lg:sticky lg:top-6">
-        <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-border-subtle">
-          <span className="flex items-center gap-2 font-ui font-semibold text-[13px] text-text-1">
-            <Plane size={14} className="text-text-3" /> Leave Types
-          </span>
-          <button
-            onClick={openNewType}
-            className="size-6 rounded-sm flex items-center justify-center text-text-3 hover:text-text-1 hover:bg-surface-2"
-            aria-label="Add leave type"
-          >
-            <Plus size={14} />
-          </button>
-        </div>
+      {/* Leave types — the catalogue the requests above draw from. */}
+      <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
+        <SectionToolbar icon={Plane} title="Leave Types">
+          <Button size="sm" variant="secondary" onClick={openNewType}>
+            <Plus size={13} /> Add Type
+          </Button>
+        </SectionToolbar>
         {types.length === 0 ? (
           <div className="py-8 px-4 text-center font-ui text-[12px] text-text-4">
             No leave types yet.
@@ -2221,6 +2162,13 @@ export function EnrolledDevicesTab() {
   const { data: devices = [], isLoading } = useEnrolledDevices();
   const approveMutation = useApproveDevice();
   const deactivateMutation = useDeactivateDevice();
+  const deleteMutation = useDeleteDevice();
+  // Deleting an enrolment is the admin half of this screen: HR approve and block
+  // devices, an admin removes them. Same permission that governs destroying
+  // attendance records, so the two cannot drift apart.
+  const canDeleteDevices = useCanAccess("can_delete_attendance_records");
+  const [deleteTarget, setDeleteTarget] =
+    useState<EnrolledDeviceWithProfile | null>(null);
 
   const pending = devices.filter((d) => !d.approved_by && d.is_active);
   const approved = devices.filter((d) => d.approved_by && d.is_active);
@@ -2269,11 +2217,22 @@ export function EnrolledDevicesTab() {
     }
   };
 
+  const confirmDeleteDevice = async () => {
+    if (!deleteTarget) return;
+    try {
+      await deleteMutation.mutateAsync(deleteTarget.id);
+      toast("Device removed", "success");
+      setDeleteTarget(null);
+    } catch {
+      toast("Failed to remove device", "error");
+    }
+  };
+
   const handleReactivate = async (deviceId: string) => {
     if (!profile) return;
     try {
       await approveMutation.mutateAsync({ deviceId, approvedBy: profile.id });
-      toast("Device reactivated — employee can check in again", "success");
+      toast("Device reactivated", "success");
     } catch {
       toast("Failed to reactivate device", "error");
     }
@@ -2390,6 +2349,16 @@ export function EnrolledDevicesTab() {
                   ? "You can’t approve your own device"
                   : "Admin approval required"}
               </span>
+            )}
+            {canDeleteDevices && (
+              <button
+                onClick={() => setDeleteTarget(d)}
+                aria-label={`Remove ${d.profiles?.name ?? "device"}'s device`}
+                title="Remove this enrolment"
+                className="size-7 rounded-sm flex items-center justify-center text-text-4 hover:text-error hover:bg-error/10 transition-colors"
+              >
+                <Trash2 size={13} />
+              </button>
             )}
           </div>
         </td>
@@ -2512,6 +2481,29 @@ export function EnrolledDevicesTab() {
           </table>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="Remove this device?"
+        message={
+          <>
+            <span className="font-semibold text-text-1">
+              {deleteTarget?.profiles?.name ?? "This member"}
+            </span>{" "}
+            will no longer be able to check in from{" "}
+            <span className="font-semibold text-text-1">
+              {deleteTarget?.device_name ?? "this device"}
+            </span>
+            . Their attendance history is not affected, and they can enrol the
+            device again if they need to.
+          </>
+        }
+        confirmLabel="Remove device"
+        pendingLabel="Removing…"
+        isPending={deleteMutation.isPending}
+        onConfirm={confirmDeleteDevice}
+        onClose={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }
@@ -2577,12 +2569,6 @@ export function ExceptionsTab() {
   const deleteMut = useDeleteException();
 
   const pendingCount = exceptions.filter((e) => e.status === "pending").length;
-  const approvedCount = exceptions.filter(
-    (e) => e.status === "approved",
-  ).length;
-  const rejectedCount = exceptions.filter(
-    (e) => e.status === "rejected",
-  ).length;
 
   // Grouped under the date the exception is FOR (not when it was raised).
   const excGroups = groupByDate(exceptions, (e) =>
@@ -2656,61 +2642,9 @@ export function ExceptionsTab() {
 
   return (
     <div className="flex flex-col gap-5">
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {[
-          {
-            label: "Pending Review",
-            value: pendingCount,
-            icon: Clock,
-            color: "text-warning",
-            bg: "bg-warning/10 border-warning/20",
-          },
-          {
-            label: "Approved",
-            value: approvedCount,
-            icon: CheckCircle2,
-            color: "text-success",
-            bg: "bg-success/10 border-success/20",
-          },
-          {
-            label: "Rejected",
-            value: rejectedCount,
-            icon: AlertTriangle,
-            color: "text-error",
-            bg: "bg-error/10 border-error/20",
-          },
-        ].map(({ label, value, icon: Icon, color, bg }) => (
-          <div
-            key={label}
-            className="bg-surface-1 border border-border-default rounded-xl p-4 flex items-center gap-4"
-          >
-            <div
-              className={cn(
-                "size-10 rounded-lg border flex items-center justify-center shrink-0",
-                bg,
-              )}
-            >
-              <Icon size={18} className={color} />
-            </div>
-            <div>
-              <p
-                className={cn(
-                  "font-display font-bold text-[26px] leading-none",
-                  color,
-                )}
-              >
-                {value}
-              </p>
-              <p className="font-ui text-[12px] text-text-3 mt-1">{label}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-
       {/* Table */}
       <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
-        <SectionToolbar icon={AlertCircle} title="Exception Requests">
+        <SectionToolbar icon={AlertCircle} title="Exception Requests" badge={pendingCount}>
           <MonthStepper filter={monthFilter} />
           <Select
             size="sm"
@@ -4032,12 +3966,6 @@ export function OvertimeTab() {
   ];
 
   const pending = scoped.filter((r) => r.status === "pending").length;
-  const approved = scoped.filter((r) => r.status === "approved").length;
-  const rejected = scoped.filter((r) => r.status === "rejected").length;
-
-  const totalApprovedHours = scoped
-    .filter((r) => r.status === "approved")
-    .reduce((acc, r) => acc + r.hours, 0);
 
   const handleApprove = async (id: string) => {
     if (!profile) return;
@@ -4096,65 +4024,6 @@ export function OvertimeTab() {
 
   return (
     <div className="flex flex-col gap-5">
-      {/* Summary cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          {
-            label: "Pending Review",
-            value: pending,
-            icon: Clock,
-            color: "text-warning",
-            bg: "bg-warning/10 border-warning/20",
-          },
-          {
-            label: "Approved",
-            value: approved,
-            icon: CheckCircle2,
-            color: "text-success",
-            bg: "bg-success/10 border-success/20",
-          },
-          {
-            label: "Rejected",
-            value: rejected,
-            icon: AlertTriangle,
-            color: "text-error",
-            bg: "bg-error/10 border-error/20",
-          },
-          {
-            label: "Approved Hours",
-            value: `${totalApprovedHours.toFixed(1)}h`,
-            icon: Star,
-            color: "text-service-mkt",
-            bg: "bg-service-mkt/10 border-service-mkt/20",
-          },
-        ].map(({ label, value, icon: Icon, color, bg }) => (
-          <div
-            key={label}
-            className="bg-surface-1 border border-border-default rounded-xl p-4 flex items-center gap-4"
-          >
-            <div
-              className={cn(
-                "size-10 rounded-lg border flex items-center justify-center shrink-0",
-                bg,
-              )}
-            >
-              <Icon size={18} className={color} />
-            </div>
-            <div>
-              <p
-                className={cn(
-                  "font-display font-bold text-[22px] leading-none",
-                  color,
-                )}
-              >
-                {value}
-              </p>
-              <p className="font-ui text-[12px] text-text-3 mt-1">{label}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-
       {/* Table */}
       <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
         <SectionToolbar

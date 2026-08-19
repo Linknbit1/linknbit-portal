@@ -297,6 +297,20 @@ export async function deactivateDevice(deviceId: string): Promise<EnrolledDevice
   return data
 }
 
+/**
+ * Remove an enrolment outright.
+ *
+ * Deactivating is the everyday action — it blocks check-in while keeping the
+ * record of what was enrolled. Deleting is for a row that should not exist at
+ * all: a replaced handset, a duplicate, the stale half of a shared fingerprint.
+ * Nothing references enrolled_devices, so the row is all that goes; the owner
+ * re-enrols if they still need the device.
+ */
+export async function deleteDevice(deviceId: string): Promise<void> {
+  const { error } = await supabase.from('enrolled_devices').delete().eq('id', deviceId)
+  if (error) throw error
+}
+
 // ── Attendance exceptions ─────────────────────────────────────────────────────
 
 export interface FetchExceptionsFilters {

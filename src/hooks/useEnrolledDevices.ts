@@ -4,6 +4,7 @@ import {
   fetchMyEnrolledDevices,
   approveDevice,
   deactivateDevice,
+  deleteDevice,
   registerDevice,
   type EnrolledDeviceWithProfile,
 } from '../api/attendance'
@@ -55,6 +56,14 @@ export function useDeactivateDevice() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (deviceId: string) => deactivateDevice(deviceId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: DEVICE_KEYS.all }),
+  })
+}
+
+export function useDeleteDevice() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (deviceId: string) => deleteDevice(deviceId),
     onSuccess: () => qc.invalidateQueries({ queryKey: DEVICE_KEYS.all }),
   })
 }
