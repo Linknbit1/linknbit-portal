@@ -75,6 +75,10 @@ export const RELEASES: ChangelogRelease[] = [
         kind: 'fixed',
         text: 'You can now file a lead or a campaign for a colleague. Choosing anyone but yourself as the owner used to refuse the save; the record is now created and stays yours to edit as well as theirs.',
       },
+      {
+        kind: 'added',
+        text: 'Import a list of prospects into the pipeline from a spreadsheet. Pipeline → Import CSV takes the file, shows you exactly what it is about to create, and lists any row it could not read with its line number — the rows it can read still go in.',
+      },
     ],
   },
   {

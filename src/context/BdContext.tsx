@@ -8,7 +8,7 @@ import { currentPeriodMonth, type BdPerson } from '../api/bd'
 import {
   useBdPeople, useBdLeads, useBdActivities, useBdMeetings, useBdTasks, useBdProjects,
   useBdUpdates, useBdTargets, useBdHandoffs,
-  useSaveLead, usePatchLead, useDeleteLead, useLogActivity,
+  useSaveLead, useImportLeads, usePatchLead, useDeleteLead, useLogActivity,
   useSaveMeeting, useDeleteMeeting,
   useSaveBdTask, usePatchBdTask, useDeleteBdTask, useToggleBdChecklistItem, useMoveBdTask,
   useSaveBdProject, usePatchBdProject, useDeleteBdProject,
@@ -66,6 +66,8 @@ interface BdContextValue {
 
   moveLeadStage: (leadId: string, stage: LeadStage, lostReason?: string) => void
   saveLead: (lead: Lead) => void
+  /** Bulk create from the CSV importer. Resolves once the rows are stored, so the modal can report a count. */
+  importLeads: (leads: Lead[]) => Promise<void>
   patchLead: (leadId: string, patch: Partial<Lead>) => void
   deleteLead: (leadId: string) => void
   logActivity: (activity: Omit<BdActivity, 'id'>) => void
@@ -120,6 +122,7 @@ export function BdProvider({ children }: { children: ReactNode }) {
   useRealtimeBd(true)
 
   const saveLeadM = useSaveLead()
+  const importLeadsM = useImportLeads()
   const patchLeadM = usePatchLead()
   const deleteLeadM = useDeleteLead()
   const logActivityM = useLogActivity()
@@ -274,6 +277,10 @@ export function BdProvider({ children }: { children: ReactNode }) {
     saveLeadM.mutate({ lead, isNew: !rawLeads.some((l) => l.id === lead.id) })
   }, [saveLeadM, rawLeads])
 
+  const importLeads = useCallback(async (batch: Lead[]) => {
+    await importLeadsM.mutateAsync({ leads: batch })
+  }, [importLeadsM])
+
   const patchLead = useCallback((leadId: string, patch: Partial<Lead>) => {
     patchLeadM.mutate({ id: leadId, patch })
   }, [patchLeadM])
@@ -378,7 +385,7 @@ export function BdProvider({ children }: { children: ReactNode }) {
       leads, activities, meetings, tasks, projects, updates, handoffs, targets, people,
       channelStats, isLoading,
       viewerRepId, viewerName, canSeeAll,
-      moveLeadStage, saveLead, patchLead, deleteLead, logActivity,
+      moveLeadStage, saveLead, importLeads, patchLead, deleteLead, logActivity,
       saveMeeting, deleteMeeting,
       saveTask, patchTask, moveTaskStatus, moveTask: moveTaskM, toggleChecklistItem, deleteTask,
       saveProject, patchProject, moveProjectStatus, deleteProject,
@@ -388,7 +395,7 @@ export function BdProvider({ children }: { children: ReactNode }) {
       leads, activities, meetings, tasks, projects, updates, handoffs, targets, people,
       channelStats, isLoading,
       viewerRepId, viewerName, canSeeAll,
-      moveLeadStage, saveLead, patchLead, deleteLead, logActivity,
+      moveLeadStage, saveLead, importLeads, patchLead, deleteLead, logActivity,
       saveMeeting, deleteMeeting,
       saveTask, patchTask, moveTaskStatus, moveTaskM, toggleChecklistItem, deleteTask,
       saveProject, patchProject, moveProjectStatus, deleteProject,

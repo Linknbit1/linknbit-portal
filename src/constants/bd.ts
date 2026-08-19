@@ -6,7 +6,7 @@ import {
   Ban, CheckCircle2, Eye, Video, CircleSlash as SlashIcon,
   type LucideIcon,
 } from 'lucide-react'
-import type { LeadStage, BdChannel, TaskStatus, ProjectStatus } from '../types'
+import type { LeadStage, BdChannel, LeadTemperature, IcpFit, TaskStatus, ProjectStatus } from '../types'
 
 /**
  * Business Development lookup tables.
@@ -159,4 +159,37 @@ export const BD_BOARD_COLUMNS: BdBoardColumn[] = [
 /** BD project board columns — the delivery project statuses, unchanged. */
 export const BD_PROJECT_COLUMNS: ProjectStatus[] = [
   'in_progress', 'ongoing', 'awaiting_client', 'blocked', 'on_hold', 'completed',
+]
+
+/* ── Lead vocabularies ─────────────────────────────────────────────────────── */
+//
+// Shared by the lead form and the CSV importer. They live here rather than in
+// LeadFormModal because an importer that accepted a value the form cannot show
+// would write leads whose industry or services silently vanish on the next edit.
+
+/**
+ * Services the BD team sells. Finer-grained than delivery's three service types
+ * on purpose — a prospect asks for "branding", not for "design" — and mapped
+ * down to a delivery service only at handoff.
+ */
+export const BD_SERVICES = [
+  'Web Dev', 'App Dev', 'UX/UI Design', 'Branding',
+  'Digital Marketing', 'Project Management', 'Business Analysis', 'Workflow Automation',
+]
+
+export const BD_INDUSTRIES = [
+  'Logistics', 'Healthcare', 'Manufacturing', 'Retail / FMCG', 'Professional Services',
+  'Education', 'Energy', 'Real Estate', 'SaaS', 'Fitness & Wellness', 'Automotive', 'Other',
+]
+
+export const LEAD_TEMPERATURES: { value: LeadTemperature; label: string }[] = [
+  { value: 'hot', label: 'Hot' },
+  { value: 'warm', label: 'Warm' },
+  { value: 'cold', label: 'Cold' },
+]
+
+export const ICP_FITS: { value: IcpFit; label: string }[] = [
+  { value: 'strong', label: 'Strong fit' },
+  { value: 'partial', label: 'Partial fit' },
+  { value: 'none', label: 'Not a fit' },
 ]

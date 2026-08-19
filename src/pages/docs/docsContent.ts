@@ -635,6 +635,15 @@ export const DOC_CHAPTERS: DocChapter[] = [
             ],
           },
           {
+            title: 'Import a list of leads from a spreadsheet',
+            steps: [
+              'Press Import CSV, then Download sample CSV and open it in Excel or Google Sheets.',
+              'Replace the example rows with yours, keeping the header row exactly as it is. Only the company column has to be filled in — every other column falls back to the same default the New Lead form uses.',
+              'Save the sheet as CSV, then drop it on the Import CSV box.',
+              'Check the preview, then press Import. Rows the portal could not read are listed with their line number and skipped — the rest still go in.',
+            ],
+          },
+          {
             title: 'Move a lead forward',
             steps: [
               'Drag its card to the next column, or open the lead and change Stage.',
@@ -653,6 +662,9 @@ export const DOC_CHAPTERS: DocChapter[] = [
         ],
         notes: [
           'You can see the whole department’s pipeline but can only edit leads you own, unless you manage BD.',
+          'On import, dates must be written as YYYY-MM-DD. 03/04/2026 is March in one country and April in the next, so the portal refuses it rather than guessing.',
+          'An imported row whose Owner column names a colleague is filed to them. Leave that column empty and the lead is yours. A name that matches nobody in BD fails the row instead of quietly assigning it to you.',
+          'Importing does not check for duplicates — it flags them. A company already in your pipeline is marked in the preview, and still imported if you go ahead.',
           'Deleting a lead also removes its logged activity, which changes the outreach totals for that channel.',
           'Changes are saved as you make them. If one fails you get a toast and the screen puts itself back the way it was — nothing is left half-applied.',
         ],

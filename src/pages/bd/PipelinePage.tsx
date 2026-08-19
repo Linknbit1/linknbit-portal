@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import {
   Plus, Search, Target, Columns3, Table2, CalendarClock,
-  AlertTriangle, MessageSquare, ChevronLeft, SlidersHorizontal,
+  AlertTriangle, MessageSquare, ChevronLeft, SlidersHorizontal, Upload,
 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Button } from '../../components/ui/Button'
@@ -19,6 +19,7 @@ import { cn } from '../../lib/cn'
 import { formatCompactCurrency, formatDate, getDaysUntil } from '../../lib/utils'
 import { LeadDrawer } from './LeadDrawer'
 import { LeadFormModal } from './LeadFormModal'
+import { LeadImportModal } from './LeadImportModal'
 import { LogActivityModal } from './LogActivityModal'
 import { HandoffModal } from './HandoffModal'
 import type { Lead, LeadStage } from '../../types'
@@ -75,6 +76,7 @@ export default function PipelinePage() {
 
   const [openLeadId, setOpenLeadId] = useState<string | null>(null)
   const [formOpen, setFormOpen] = useState(false)
+  const [importOpen, setImportOpen] = useState(false)
   const [editing, setEditing] = useState<Lead | null>(null)
   const [activityFor, setActivityFor] = useState<Lead | null>(null)
   // Winning a deal is the one stage change with a next step attached.
@@ -179,6 +181,14 @@ export default function PipelinePage() {
             />
             <Select value={sort} onChange={setSort} options={SORTS} size="sm" className="w-44" />
             <ViewToggle value={view} onChange={setView} options={PIPELINE_VIEWS} className="hidden lg:flex" />
+            <Button
+              variant="secondary"
+              size="sm"
+              iconLeft={<Upload size={15} />}
+              onClick={() => setImportOpen(true)}
+            >
+              Import CSV
+            </Button>
             <Button size="sm" iconLeft={<Plus size={15} />} onClick={() => { setEditing(null); setFormOpen(true) }}>
               New Lead
             </Button>
@@ -314,6 +324,9 @@ export default function PipelinePage() {
           onClose={() => { setFormOpen(false); setEditing(null) }}
         />
       )}
+
+      {/* Remounted per open so a previous file's parse never survives a reopen. */}
+      {importOpen && <LeadImportModal open onClose={() => setImportOpen(false)} />}
 
       <LogActivityModal
         key={activityFor?.id ?? 'none'}

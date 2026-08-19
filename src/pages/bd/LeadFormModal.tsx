@@ -5,39 +5,15 @@ import { Input } from '../../components/ui/Input'
 import { Select } from '../../components/ui/Select'
 import { DatePicker } from '../../components/ui/DatePicker'
 import { useToast } from '../../components/ui/toast-context'
-import { CHANNEL_CONFIG, CHANNEL_ORDER, STAGE_CONFIG, STAGE_ORDER } from '../../constants/bd'
+import {
+  CHANNEL_CONFIG, CHANNEL_ORDER, STAGE_CONFIG, STAGE_ORDER,
+  BD_SERVICES, BD_INDUSTRIES, LEAD_TEMPERATURES, ICP_FITS,
+} from '../../constants/bd'
 import { FormField } from './FormField'
 import { useBd } from '../../context/BdContext'
 import { randomUUID } from '../../lib/uuid'
 import { cn } from '../../lib/cn'
 import type { Lead, LeadStage, BdChannel, LeadTemperature, IcpFit } from '../../types'
-
-/**
- * Services the BD team sells. Finer-grained than delivery's three service types
- * on purpose — a prospect asks for "branding", not for "design" — and mapped
- * down to a delivery service only at handoff.
- */
-const SERVICES = [
-  'Web Dev', 'App Dev', 'UX/UI Design', 'Branding',
-  'Digital Marketing', 'Project Management', 'Business Analysis', 'Workflow Automation',
-]
-
-const TEMPERATURES: { value: LeadTemperature; label: string }[] = [
-  { value: 'hot', label: 'Hot' },
-  { value: 'warm', label: 'Warm' },
-  { value: 'cold', label: 'Cold' },
-]
-
-const ICP_FITS: { value: IcpFit; label: string }[] = [
-  { value: 'strong', label: 'Strong fit' },
-  { value: 'partial', label: 'Partial fit' },
-  { value: 'none', label: 'Not a fit' },
-]
-
-const INDUSTRIES = [
-  'Logistics', 'Healthcare', 'Manufacturing', 'Retail / FMCG', 'Professional Services',
-  'Education', 'Energy', 'Real Estate', 'SaaS', 'Fitness & Wellness', 'Automotive', 'Other',
-]
 
 function emptyLead(ownerId: string, ownerName: string): Lead {
   const today = new Date().toISOString().slice(0, 10)
@@ -148,14 +124,14 @@ export function LeadFormModal({ open, lead, onClose }: LeadFormModalProps) {
           <Select
             value={draft.industry}
             onChange={(v) => set('industry', v)}
-            options={INDUSTRIES.map((i) => ({ value: i, label: i }))}
+            options={BD_INDUSTRIES.map((i) => ({ value: i, label: i }))}
           />
         </FormField>
 
         <div className="sm:col-span-2">
           <p className="mb-1.5 font-ui text-[12px] font-medium text-text-2">Services interested in</p>
           <div className="flex flex-wrap gap-1.5">
-            {SERVICES.map((service) => {
+            {BD_SERVICES.map((service) => {
               const active = draft.services.includes(service)
               return (
                 <button
@@ -205,7 +181,7 @@ export function LeadFormModal({ open, lead, onClose }: LeadFormModalProps) {
           <Select
             value={draft.temperature}
             onChange={(v) => set('temperature', v as LeadTemperature)}
-            options={TEMPERATURES}
+            options={LEAD_TEMPERATURES}
           />
         </FormField>
 

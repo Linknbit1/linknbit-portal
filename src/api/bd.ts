@@ -176,6 +176,21 @@ export async function createLead(lead: Lead, createdBy: string | null): Promise<
   if (error) throw error
 }
 
+/**
+ * Insert a batch of leads in one round trip.
+ *
+ * One statement, not a loop: a CSV import is all-or-nothing on purpose, so a
+ * connection dropped halfway cannot leave half a spreadsheet in the pipeline
+ * with no way to tell which half. Rows are validated before they get here.
+ */
+export async function importLeads(leads: Lead[], createdBy: string | null): Promise<void> {
+  if (leads.length === 0) return
+  const { error } = await supabase
+    .from('bd_leads')
+    .insert(leads.map((lead) => ({ id: lead.id, ...leadPatchToRow(lead), company: lead.company, created_by: createdBy })))
+  if (error) throw error
+}
+
 export async function updateLead(id: string, patch: Partial<Lead>): Promise<void> {
   const { error } = await supabase.from('bd_leads').update(leadPatchToRow(patch)).eq('id', id)
   if (error) throw error

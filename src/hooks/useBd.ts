@@ -23,6 +23,10 @@ import type {
  * the optimistic row and the stored row are the same row, so the reconciling
  * refetch in `onSettled` changes nothing visible.
  *
+ * The one exception is {@link useImportLeads}. A CSV import is not an
+ * interaction to keep responsive — it is a batch the operator waits on and
+ * wants a count back from — so it is a plain mutation with a pending state.
+ *
  * ── Query keys ───────────────────────────────────────────────────────────────
  * The module's records are read together on almost every screen (the pipeline
  * needs activities, the board needs projects, targets need all three), so each
@@ -241,6 +245,23 @@ export function useSaveLead() {
     optimistic: (qc, { lead }) => upsertIn(qc, BD_KEYS.leads, lead),
     run: ({ lead, isNew }) => (isNew ? bd.createLead(lead, actorId) : bd.updateLead(lead.id, lead)),
     errorMessage: 'Could not save the lead — your change has been undone.',
+  })
+}
+
+/**
+ * Bulk insert from the CSV importer.
+ *
+ * Deliberately not optimistic, unlike every other write in this file: the
+ * modal stays open until the server has taken the rows, because "42 leads
+ * imported" is a claim worth only making once it is true. Failure surfaces in
+ * the modal rather than as a toast over a screen the user already left.
+ */
+export function useImportLeads() {
+  const qc = useQueryClient()
+  const actorId = useActorId()
+  return useMutation<void, Error, { leads: Lead[] }>({
+    mutationFn: ({ leads }) => bd.importLeads(leads, actorId),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: BD_KEYS.leads }) },
   })
 }
 
