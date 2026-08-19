@@ -71,6 +71,10 @@ export const RELEASES: ChangelogRelease[] = [
         kind: 'fixed',
         text: 'Performance reporting is now measured off real records: the funnel counts your live pipeline, and the revenue chart books each deal to the month it closed rather than the month the lead arrived.',
       },
+      {
+        kind: 'fixed',
+        text: 'You can now file a lead or a campaign for a colleague. Choosing anyone but yourself as the owner used to refuse the save; the record is now created and stays yours to edit as well as theirs.',
+      },
     ],
   },
   {

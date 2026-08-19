@@ -745,6 +745,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
         notes: [
           'A campaign’s progress bar is calculated from its tasks. There is no progress field to type into, because a typed number goes stale the moment a task moves.',
           'Assigning a task to someone notifies them.',
+          'You can hand a campaign to a colleague by naming them as its owner — including at the moment you create it. It stays editable by you as well as by them, so setting up a campaign for someone else does not lock you out of it. The same goes for a lead.',
         ],
       },
       {
