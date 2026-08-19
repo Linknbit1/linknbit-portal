@@ -23,7 +23,7 @@ interface TargetsModalProps {
  */
 export function TargetsModal({ open, onClose }: TargetsModalProps) {
   const toast = useToast()
-  const { targets, saveTargets } = useBd()
+  const { targets, saveTargets, avatarOf } = useBd()
   const [draft, setDraft] = useState<BdTarget[]>(targets)
 
   const set = (repId: string, key: keyof BdTarget, value: number) =>
@@ -60,7 +60,7 @@ export function TargetsModal({ open, onClose }: TargetsModalProps) {
         {draft.map((row) => (
           <div key={row.repId} className="flex flex-col gap-3 px-5 py-4">
             <div className="flex items-center gap-2.5">
-              <Avatar name={row.repName} size="sm" />
+              <Avatar name={row.repName} src={avatarOf(row.repId)} size="sm" />
               <span className="font-ui text-[13.5px] font-medium text-text-1">{row.repName}</span>
             </div>
 

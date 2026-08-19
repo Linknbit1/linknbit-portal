@@ -53,7 +53,7 @@ function sortTasks(list: BdTask[], sort: string): BdTask[] {
 
 export default function BdTasksPage() {
   const toast = useToast()
-  const { tasks, projects, saveTask, deleteTask, viewerRepId, viewerName, canSeeAll, people } = useBd()
+  const { tasks, projects, saveTask, deleteTask, viewerRepId, viewerName, canSeeAll, people, avatarOf } = useBd()
 
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
@@ -247,7 +247,7 @@ export default function BdTasksPage() {
                     </td>
                     <td className="px-4 py-3">
                       <span className="flex items-center gap-2">
-                        <Avatar name={t.assigneeName} size="xs" />
+                        <Avatar name={t.assigneeName} src={avatarOf(t.assigneeId)} size="xs" />
                         <span className="font-ui text-[12px] text-text-2">{t.assigneeName}</span>
                       </span>
                     </td>

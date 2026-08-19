@@ -90,7 +90,7 @@ interface DropAt {
  */
 export function BdTaskBoard({ tasks, onOpenTask, onAddTask, showProject, reorderable = true }: BdTaskBoardProps) {
   const toast = useToast()
-  const { moveTask, deleteTask } = useBd()
+  const { moveTask, deleteTask, avatarOf } = useBd()
   const [dragId, setDragId] = useState<string | null>(null)
   const [dropAt, setDropAt] = useState<DropAt | null>(null)
   const [pendingDelete, setPendingDelete] = useState<BdTask | null>(null)
@@ -201,6 +201,7 @@ export function BdTaskBoard({ tasks, onOpenTask, onAddTask, showProject, reorder
                     {over && dropAt.index === slot && slot !== -1 && <InsertionLine />}
                     <TaskCard
                       task={t}
+                      assigneeAvatar={avatarOf(t.assigneeId)}
                       dragging={dragId === t.id}
                       showProject={showProject}
                       onDragStart={() => setDragId(t.id)}
@@ -309,6 +310,8 @@ function CollapsedLane({ col, active, onExpand, onDragOver, onDragLeave, onDrop 
 
 interface TaskCardProps {
   task: BdTask
+  /** Resolved by the board from the BD roster — a task carries an assignee id, not a photo. */
+  assigneeAvatar?: string
   dragging: boolean
   showProject?: boolean
   onDragStart: () => void
@@ -318,7 +321,7 @@ interface TaskCardProps {
   onDelete: () => void
 }
 
-function TaskCard({ task, dragging, showProject, onDragStart, onDragEnd, onDragOver, onClick, onDelete }: TaskCardProps) {
+function TaskCard({ task, assigneeAvatar, dragging, showProject, onDragStart, onDragEnd, onDragOver, onClick, onDelete }: TaskCardProps) {
   const overdue = !!task.dueDate && isOverdue(task.dueDate) && task.status !== 'completed' && task.status !== 'approved'
   const doneCount = task.checklist.filter((c) => c.done).length
   const progress = task.checklist.length === 0
@@ -366,7 +369,7 @@ function TaskCard({ task, dragging, showProject, onDragStart, onDragEnd, onDragO
         the first row rather than as empty pills.
       */}
       <div className="mt-2 flex items-center gap-1.5">
-        <Avatar name={task.assigneeName} size="xs" />
+        <Avatar name={task.assigneeName} src={assigneeAvatar} size="xs" />
 
         {task.dueDate && (
           <FieldPill

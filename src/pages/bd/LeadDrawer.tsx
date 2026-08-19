@@ -62,7 +62,7 @@ interface LeadDrawerProps {
  */
 export function LeadDrawer({ lead, onClose, onEdit, onLogActivity }: LeadDrawerProps) {
   const toast = useToast()
-  const { activities, meetings, tasks, handoffs, moveLeadStage, deleteLead, patchLead, people } = useBd()
+  const { activities, meetings, tasks, handoffs, moveLeadStage, deleteLead, patchLead, people, avatarOf } = useBd()
   const [tab, setTab] = useState('activity')
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [pendingLost, setPendingLost] = useState<string | null>(null)
@@ -212,7 +212,7 @@ export function LeadDrawer({ lead, onClose, onEdit, onLogActivity }: LeadDrawerP
           <dl className="grid grid-cols-2 gap-x-4 gap-y-3.5 border-b border-border-subtle px-5 py-4">
             <Field label="Owner">
               <span className="flex items-center gap-2">
-                <Avatar name={lead.ownerName} size="xs" />
+                <Avatar name={lead.ownerName} src={avatarOf(lead.ownerId)} size="xs" />
                 <span className="truncate font-ui text-[12.5px] text-text-2">{lead.ownerName}</span>
               </span>
             </Field>
@@ -384,7 +384,7 @@ export function LeadDrawer({ lead, onClose, onEdit, onLogActivity }: LeadDrawerP
                       <span className={cn('min-w-0 flex-1 truncate font-ui text-[12.5px]', t.status === 'completed' ? 'text-text-4 line-through' : 'text-text-2')}>
                         {t.title}
                       </span>
-                      <Avatar name={t.assigneeName} size="xs" />
+                      <Avatar name={t.assigneeName} src={avatarOf(t.assigneeId)} size="xs" />
                     </li>
                   ))}
                 </ul>

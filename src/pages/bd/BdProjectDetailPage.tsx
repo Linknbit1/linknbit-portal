@@ -456,6 +456,7 @@ function OutreachTab({
   activity: ReturnType<typeof useBd>['activities']
   leads: ReturnType<typeof useBd>['leads']
 }) {
+  const { avatarOf } = useBd()
   if (project.channels.length === 0) {
     return (
       <EmptyTab
@@ -525,7 +526,7 @@ function OutreachTab({
                   <span className="min-w-0 flex-1 truncate font-ui text-[13px] text-text-1">{lead.company}</span>
                   <StatusChip status={lead.stage === 'won' ? 'completed' : lead.stage === 'lost' ? 'blocked' : 'in_progress'} />
                   <span className="font-mono text-[12px] tabular-nums text-text-2">{formatCompactCurrency(lead.valueEntered, lead.valueCurrency)}</span>
-                  <AvatarGroup users={[{ id: lead.ownerId, name: lead.ownerName }]} max={1} size="xs" />
+                  <AvatarGroup users={[{ id: lead.ownerId, name: lead.ownerName, avatarUrl: avatarOf(lead.ownerId) }]} max={1} size="xs" />
                 </div>
               ))}
             </div>

@@ -77,6 +77,10 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'fixed',
+        text: 'Profile photos now appear throughout Business Development. Lead cards, the pipeline table, the task board, meetings, targets and daily check-ins were all drawing initials even for people who had uploaded a picture.',
+      },
+      {
+        kind: 'fixed',
         text: 'Last contacted no longer shows the day a lead was added. It stays blank until outreach is actually logged, and a lead nobody has contacted reads “Not contacted” rather than appearing to have been spoken to today.',
       },
       {

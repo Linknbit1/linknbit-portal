@@ -22,7 +22,7 @@ function isoDay(offset: number): string {
 }
 
 export default function DailyUpdatesPage() {
-  const { updates, activities, meetings, viewerRepId, people } = useBd()
+  const { updates, activities, meetings, viewerRepId, people, avatarOf } = useBd()
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<BdDailyUpdate | null>(null)
   const [dayOffset, setDayOffset] = useState('0')
@@ -125,6 +125,7 @@ export default function DailyUpdatesPage() {
                 key={row.rep.id}
                 row={row}
                 onAddNote={row.rep.id === viewerRepId ? () => { setEditing(null); setFormOpen(true) } : undefined}
+                avatarOf={avatarOf}
               />
             ))
           )}
@@ -161,7 +162,11 @@ interface DerivedRow {
  * counts from activities and meetings. The note is the only free text, and it
  * is optional by design.
  */
-function DerivedUpdateCard({ row, onAddNote }: { row: DerivedRow; onAddNote?: () => void }) {
+function DerivedUpdateCard({ row, onAddNote, avatarOf }: {
+  row: DerivedRow
+  onAddNote?: () => void
+  avatarOf: (id: string | null | undefined) => string | undefined
+}) {
   const numbers = [
     { icon: Send, label: 'proposals', value: row.proposalsSent },
     { icon: Phone, label: 'calls', value: row.callsMade },
@@ -172,7 +177,7 @@ function DerivedUpdateCard({ row, onAddNote }: { row: DerivedRow; onAddNote?: ()
   return (
     <article className="flex flex-col gap-3.5 rounded-lg border border-border-default bg-surface-1 p-4 lg:p-5">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-        <Avatar name={row.rep.name} size="sm" />
+        <Avatar name={row.rep.name} src={avatarOf(row.rep.id)} size="sm" />
         <div className="min-w-0">
           <h4 className="truncate font-ui text-[14px] font-semibold text-text-1">{row.rep.name}</h4>
           <p className="flex items-center gap-1.5 font-mono text-[10.5px] text-text-4">

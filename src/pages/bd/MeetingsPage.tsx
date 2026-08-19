@@ -49,7 +49,7 @@ function dayLabel(iso: string): string {
 }
 
 export default function MeetingsPage() {
-  const { meetings, people } = useBd()
+  const { meetings, people, avatarOf } = useBd()
   const [editing, setEditing] = useState<BdMeeting | null>(null)
   const [formOpen, setFormOpen] = useState(false)
   const [tab, setTab] = useState('upcoming')
@@ -146,6 +146,7 @@ export default function MeetingsPage() {
                     key={meeting.id}
                     meeting={meeting}
                     onClick={() => { setEditing(meeting); setFormOpen(true) }}
+                    avatarOf={avatarOf}
                   />
                 ))}
               </section>
@@ -166,7 +167,11 @@ export default function MeetingsPage() {
   )
 }
 
-function MeetingRow({ meeting, onClick }: { meeting: BdMeeting; onClick: () => void }) {
+function MeetingRow({ meeting, onClick, avatarOf }: {
+  meeting: BdMeeting
+  onClick: () => void
+  avatarOf: (id: string | null | undefined) => string | undefined
+}) {
   const type = TYPE_CONFIG[meeting.type]
   const platform = PLATFORM_CONFIG[meeting.platform]
   const PlatformIcon = platform.icon
@@ -220,7 +225,7 @@ function MeetingRow({ meeting, onClick }: { meeting: BdMeeting; onClick: () => v
             </span>
           )}
           <span className="flex items-center gap-1.5">
-            <Avatar name={meeting.hostName} size="xs" />
+            <Avatar name={meeting.hostName} src={avatarOf(meeting.hostId)} size="xs" />
             <span className="font-ui text-[12px] text-text-2 hidden sm:inline">{meeting.hostName}</span>
           </span>
         </div>

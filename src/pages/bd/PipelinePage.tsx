@@ -66,7 +66,7 @@ function daysSince(date: string): number {
 
 export default function PipelinePage() {
   const toast = useToast()
-  const { leads, moveLeadStage, people } = useBd()
+  const { leads, moveLeadStage, people, avatarOf } = useBd()
 
   const [search, setSearch] = useState('')
   const [owner, setOwner] = useState('all')
@@ -293,6 +293,7 @@ export default function PipelinePage() {
                         <LeadCard
                           key={lead.id}
                           lead={lead}
+                          ownerAvatar={avatarOf(lead.ownerId)}
                           dragging={dragId === lead.id}
                           onDragStart={() => setDragId(lead.id)}
                           onDragEnd={() => { setDragId(null); setDragOver(null) }}
@@ -306,7 +307,12 @@ export default function PipelinePage() {
             })}
           </div>
         ) : (
-          <LeadTable leads={filtered} onOpen={setOpenLeadId} onNew={() => { setEditing(null); setFormOpen(true) }} />
+          <LeadTable
+            leads={filtered}
+            onOpen={setOpenLeadId}
+            onNew={() => { setEditing(null); setFormOpen(true) }}
+            avatarOf={avatarOf}
+          />
         )}
       </div>
 
@@ -414,13 +420,15 @@ function FunnelStrip({ byStage, stats }: FunnelStripProps) {
 
 interface LeadCardProps {
   lead: Lead
+  /** Resolved by the page from the BD roster — a lead record has no photo of its own. */
+  ownerAvatar?: string
   dragging: boolean
   onDragStart: () => void
   onDragEnd: () => void
   onClick: () => void
 }
 
-function LeadCard({ lead, dragging, onDragStart, onDragEnd, onClick }: LeadCardProps) {
+function LeadCard({ lead, ownerAvatar, dragging, onDragStart, onDragEnd, onClick }: LeadCardProps) {
   const tone = followUpTone(lead.nextFollowUp)
   const stalled = lead.lastContacted ? daysSince(lead.lastContacted) : null
   const isTerminal = lead.stage === 'won' || lead.stage === 'lost' || lead.stage === 'unqualified'
@@ -471,7 +479,7 @@ function LeadCard({ lead, dragging, onDragStart, onDragEnd, onClick }: LeadCardP
           <MessageSquare size={9} /> {lead.activityCount}
         </span>
         <ChannelChip channel={lead.channel} compact />
-        <Avatar name={lead.ownerName} size="xs" />
+        <Avatar name={lead.ownerName} src={ownerAvatar} size="xs" />
       </div>
 
       {/* Only one time signal per card: the next action if there is one, else how
@@ -500,7 +508,15 @@ function LeadCard({ lead, dragging, onDragStart, onDragEnd, onClick }: LeadCardP
 const TABLE_COLS =
   'grid grid-cols-[minmax(0,2fr)_minmax(0,1.4fr)_120px_110px_110px_minmax(0,1fr)_110px] items-center gap-3'
 
-function LeadTable({ leads, onOpen, onNew }: { leads: Lead[]; onOpen: (id: string) => void; onNew: () => void }) {
+interface LeadTableProps {
+  leads: Lead[]
+  onOpen: (id: string) => void
+  onNew: () => void
+  /** Photo lookup from the BD roster — a lead row carries an owner id, not a picture. */
+  avatarOf: (personId: string | null | undefined) => string | undefined
+}
+
+function LeadTable({ leads, onOpen, onNew, avatarOf }: LeadTableProps) {
   if (leads.length === 0) {
     return (
       <div className="flex flex-col items-center gap-3 py-16 text-center">
@@ -556,7 +572,7 @@ function LeadTable({ leads, onOpen, onNew }: { leads: Lead[]; onOpen: (id: strin
                 </span>
                 <ChannelChip channel={lead.channel} />
                 <span className="flex min-w-0 items-center gap-2">
-                  <Avatar name={lead.ownerName} size="xs" />
+                  <Avatar name={lead.ownerName} src={avatarOf(lead.ownerId)} size="xs" />
                   <span className="truncate font-ui text-[12.5px] text-text-2">{lead.ownerName}</span>
                 </span>
                 <span className={cn('font-mono text-[11.5px]', tone ? FOLLOW_UP_CLASSES[tone] : 'text-text-4')}>

@@ -28,7 +28,7 @@ function responseRate(stat: ChannelStats): number | null {
 }
 
 export default function OutreachPage() {
-  const { channelStats, activities } = useBd()
+  const { channelStats, activities, avatarOf } = useBd()
   const [period, setPeriod] = useState('month')
   const [logFor, setLogFor] = useState<BdChannel | null>(null)
   const [logOpen, setLogOpen] = useState(false)
@@ -146,7 +146,7 @@ export default function OutreachPage() {
                       <span className="min-w-0 flex-1 truncate font-ui text-[12px] text-text-4">{log.note}</span>
                     )}
                     <span className="ml-auto flex items-center gap-2">
-                      <Avatar name={log.byName} size="xs" />
+                      <Avatar name={log.byName} src={avatarOf(log.byId)} size="xs" />
                       <span className="font-mono text-[11px] text-text-4">{formatDate(log.at.slice(0, 10))}</span>
                     </span>
                   </div>

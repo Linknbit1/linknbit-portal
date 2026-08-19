@@ -79,7 +79,7 @@ function attainmentVariant(percentage: number): 'success' | 'warning' | 'error' 
 const FUNNEL_COLORS = ['#8A93A3', '#60A5FA', '#22D3EE', '#A78BFA', '#F59E0B', '#22C55E']
 
 export default function TargetsPage() {
-  const { targets: BD_TARGETS, channelStats, leads, canSeeAll } = useBd()
+  const { targets: BD_TARGETS, channelStats, leads, canSeeAll, avatarOf } = useBd()
   const [editOpen, setEditOpen] = useState(false)
   const [period, setPeriod] = useState('month')
 
@@ -274,7 +274,7 @@ export default function TargetsPage() {
             badge={BD_TARGETS.length}
           />
           <div className="p-4 lg:p-5">
-            <RepTable targets={BD_TARGETS} />
+            <RepTable targets={BD_TARGETS} avatarOf={avatarOf} />
           </div>
         </div>
 
@@ -373,7 +373,10 @@ export default function TargetsPage() {
 
 const COLS = 'grid grid-cols-[minmax(0,1.3fr)_minmax(0,1.5fr)_minmax(0,1.1fr)_minmax(0,1.1fr)_90px] gap-4 items-center'
 
-function RepTable({ targets }: { targets: BdTarget[] }) {
+function RepTable({ targets, avatarOf }: {
+  targets: BdTarget[]
+  avatarOf: (id: string | null | undefined) => string | undefined
+}) {
   return (
     <ResponsiveTable
       desktop={
@@ -393,7 +396,7 @@ function RepTable({ targets }: { targets: BdTarget[] }) {
           {targets.map((t) => (
             <div key={t.repId} className={cn(COLS, 'px-3 py-3.5 border-b border-border-subtle last:border-0')}>
               <span className="flex items-center gap-2.5 min-w-0">
-                <Avatar name={t.repName} size="sm" />
+                <Avatar name={t.repName} src={avatarOf(t.repId)} size="sm" />
                 <span className="font-ui text-[13px] text-text-1 truncate">{t.repName}</span>
               </span>
               <QuotaCell actual={formatCompactCurrency(t.revenueActual)} target={formatCompactCurrency(t.revenueTarget)} percentage={pct(t.revenueActual, t.revenueTarget)} />
@@ -411,7 +414,7 @@ function RepTable({ targets }: { targets: BdTarget[] }) {
       mobile={targets.map((t) => (
         <div key={t.repId} className="rounded-md border border-border-default bg-surface-2 p-4 flex flex-col gap-3">
           <span className="flex items-center gap-2.5">
-            <Avatar name={t.repName} size="sm" />
+            <Avatar name={t.repName} src={avatarOf(t.repId)} size="sm" />
             <span className="font-ui font-semibold text-[13.5px] text-text-1">{t.repName}</span>
             <span className="ml-auto font-mono text-[12px] tabular-nums">
               <span className="text-success">{t.wins}W</span>

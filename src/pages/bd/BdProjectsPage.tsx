@@ -231,6 +231,7 @@ function CardsView({ projects, taskCountOf, onOpen, onDelete }: ViewProps) {
 }
 
 function ProjectCard({ project: p, taskCount, onOpen, onDelete }: { project: BdProject; taskCount: number; onOpen: (p: BdProject) => void; onDelete: (p: BdProject) => void }) {
+  const { avatarOf } = useBd()
   const overdue = !!p.deadline && isOverdue(p.deadline) && p.status !== 'completed'
 
   return (
@@ -292,7 +293,7 @@ function ProjectCard({ project: p, taskCount, onOpen, onDelete }: { project: BdP
 
         <div className="mt-auto flex items-center justify-between gap-2 border-t border-border-subtle pt-3">
           {p.members.length > 0 ? (
-            <AvatarGroup users={p.members.map((m) => ({ id: m.id, name: m.name }))} max={4} size="xs" />
+            <AvatarGroup users={p.members.map((m) => ({ id: m.id, name: m.name, avatarUrl: avatarOf(m.id) }))} max={4} size="xs" />
           ) : (
             <span className="flex items-center gap-1.5 font-ui text-[11.5px] text-text-4"><Users size={12} /> No members</span>
           )}
@@ -305,6 +306,7 @@ function ProjectCard({ project: p, taskCount, onOpen, onDelete }: { project: BdP
 
 // ── List view ────────────────────────────────────────────────────────
 function ListView({ projects, taskCountOf, onOpen, onDelete }: ViewProps) {
+  const { avatarOf } = useBd()
   return (
     <div className="overflow-x-auto rounded-md border border-border-default bg-surface-1">
       <table className="w-full min-w-[860px] text-left">
@@ -349,7 +351,7 @@ function ListView({ projects, taskCountOf, onOpen, onDelete }: ViewProps) {
                 </td>
                 <td className="px-4 py-3">
                   {p.members.length > 0
-                    ? <AvatarGroup users={p.members.map((m) => ({ id: m.id, name: m.name }))} max={4} size="xs" />
+                    ? <AvatarGroup users={p.members.map((m) => ({ id: m.id, name: m.name, avatarUrl: avatarOf(m.id) }))} max={4} size="xs" />
                     : <span className="text-[12px] text-text-4">—</span>}
                 </td>
                 <td className="px-4 py-3 text-right">

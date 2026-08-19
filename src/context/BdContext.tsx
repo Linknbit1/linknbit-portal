@@ -52,6 +52,14 @@ interface BdContextValue {
   handoffs: BdHandoff[]
   /** Everyone with BD access — the source for every owner/assignee/host picker. */
   people: BdPerson[]
+  /**
+   * A member's photo by id.
+   *
+   * The module's records carry an owner/assignee id and name but no photo — the
+   * roster is the only thing that has one — so every avatar in BD resolves it
+   * through here rather than each screen joining the roster for itself.
+   */
+  avatarOf: (personId: string | null | undefined) => string | undefined
   /** Derived from `activities` + `leads` — never stored, so it cannot drift. */
   channelStats: ChannelStats[]
 
@@ -149,6 +157,15 @@ export function BdProvider({ children }: { children: ReactNode }) {
   const rawTargets = useMemo(() => targetsQ.data ?? [], [targetsQ.data])
   const handoffs = useMemo(() => handoffsQ.data ?? [], [handoffsQ.data])
   const people = useMemo(() => peopleQ.data ?? [], [peopleQ.data])
+
+  const avatarById = useMemo(
+    () => new Map(people.map((p) => [p.id, p.avatar_url ?? undefined])),
+    [people],
+  )
+  const avatarOf = useCallback(
+    (personId: string | null | undefined) => (personId ? avatarById.get(personId) : undefined),
+    [avatarById],
+  )
 
   const viewerRepId = profile?.id ?? ''
   const viewerName = profile?.name ?? 'You'
@@ -382,7 +399,7 @@ export function BdProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<BdContextValue>(
     () => ({
-      leads, activities, meetings, tasks, projects, updates, handoffs, targets, people,
+      leads, activities, meetings, tasks, projects, updates, handoffs, targets, people, avatarOf,
       channelStats, isLoading,
       viewerRepId, viewerName, canSeeAll,
       moveLeadStage, saveLead, importLeads, patchLead, deleteLead, logActivity,
@@ -392,7 +409,7 @@ export function BdProvider({ children }: { children: ReactNode }) {
       saveUpdate, saveTargets, logBatch, recordHandoff,
     }),
     [
-      leads, activities, meetings, tasks, projects, updates, handoffs, targets, people,
+      leads, activities, meetings, tasks, projects, updates, handoffs, targets, people, avatarOf,
       channelStats, isLoading,
       viewerRepId, viewerName, canSeeAll,
       moveLeadStage, saveLead, importLeads, patchLead, deleteLead, logActivity,
