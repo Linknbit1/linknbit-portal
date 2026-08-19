@@ -5,6 +5,7 @@
 
 import { CHANNEL_CONFIG, CHANNEL_ORDER, STAGE_CONFIG, STAGE_ORDER, BD_SERVICES, BD_INDUSTRIES } from '../constants/bd'
 import { parseCsv } from './csv'
+import { isSupportedCurrency, toPkr } from './currency'
 import { randomUUID } from './uuid'
 import type { Lead, LeadStage, BdChannel, LeadTemperature, IcpFit } from '../types'
 
@@ -43,7 +44,8 @@ export const LEAD_IMPORT_COLUMNS: LeadImportColumn[] = [
   { key: 'services', accepts: `${BD_SERVICES.join(', ')} — separate several with ;`, fallback: 'None' },
   { key: 'industry', accepts: BD_INDUSTRIES.join(', '), fallback: 'Other' },
   { key: 'icp_fit', aliases: ['fit'], accepts: 'Strong fit, Partial fit, Not a fit', fallback: 'Partial fit' },
-  { key: 'value', aliases: ['deal_value', 'amount'], accepts: 'A number in PKR — 450000 or 450,000', fallback: '0' },
+  { key: 'value', aliases: ['deal_value', 'amount'], accepts: 'A number — 450000 or 450,000', fallback: '0' },
+  { key: 'currency', accepts: 'A currency code — PKR, USD, GBP, EUR…', fallback: 'PKR' },
   { key: 'stage', accepts: STAGE_ORDER.map((s) => STAGE_CONFIG[s].label).join(', '), fallback: 'New Lead' },
   { key: 'temperature', accepts: 'Hot, Warm, Cold', fallback: 'Warm' },
   { key: 'owner', aliases: ['owner_name', 'rep'], accepts: 'The full name of someone in BD', fallback: 'You' },
@@ -64,18 +66,18 @@ export const LEAD_IMPORT_SAMPLE_ROWS: string[][] = [
   [
     'Nordic Freight Systems', 'Henrik Sølvberg', 'Head of Operations',
     'henrik@nordicfreight.no', '+47 22 44 51 90', 'LinkedIn',
-    'Web Dev; Workflow Automation', 'Logistics', 'Strong fit', '1250000',
+    'Web Dev; Workflow Automation', 'Logistics', 'Strong fit', '1250000', 'PKR',
     'Qualified', 'Hot', '', '2026-08-04', '2026-08-14', '2026-08-21',
     'Wants the driver app rebuilt before their Q4 freight peak.',
   ],
   [
     'Meridian Health Group', 'Sara Qureshi', 'Marketing Director',
     'sara@meridianhealth.pk', '+92 21 3456 7788', 'Referral',
-    'Digital Marketing', 'Healthcare', 'Partial fit', '380,000',
+    'Digital Marketing', 'Healthcare', 'Partial fit', '1,400', 'USD',
     'Contacted', 'Warm', '', '2026-08-11', '2026-08-11', '',
     'Introduced by the Cricket Sansar team.',
   ],
-  ['Starlight Interiors', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
+  ['Starlight Interiors', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
 ]
 
 export const LEAD_IMPORT_HEADERS = LEAD_IMPORT_COLUMNS.map((c) => c.key)
@@ -228,8 +230,14 @@ export function parseLeadCsv(text: string, ctx: LeadImportContext): LeadImportRe
     if (!industry) errors.push(`industry “${industryRaw}” is not one of the accepted values`)
 
     const valueRaw = cell('value').replace(/[,\s]/g, '')
-    const value = valueRaw === '' ? 0 : Number(valueRaw)
-    if (!Number.isFinite(value) || value < 0) errors.push(`value “${cell('value')}” is not a number`)
+    const valueEntered = valueRaw === '' ? 0 : Number(valueRaw)
+    if (!Number.isFinite(valueEntered) || valueEntered < 0) errors.push(`value “${cell('value')}” is not a number`)
+
+    const currencyRaw = cell('currency')
+    const valueCurrency = currencyRaw ? currencyRaw.trim().toUpperCase() : 'PKR'
+    if (currencyRaw && !isSupportedCurrency(valueCurrency)) {
+      errors.push(`currency “${currencyRaw}” is not a currency code we hold a rate for`)
+    }
 
     // Blank owner means the importer; a name that matches nobody is an error
     // rather than a silent fallback, or a typo quietly reassigns the lead.
@@ -277,7 +285,9 @@ export function parseLeadCsv(text: string, ctx: LeadImportContext): LeadImportRe
               services: services.values,
               industry,
               icpFit,
-              value,
+              value: toPkr(valueEntered, valueCurrency),
+              valueCurrency,
+              valueEntered,
               stage,
               temperature,
               ownerId,

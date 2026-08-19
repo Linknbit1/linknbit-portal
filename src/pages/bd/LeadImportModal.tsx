@@ -320,7 +320,7 @@ function PreviewTable({ result }: { result: LeadImportResult }) {
                 <td className="px-3 py-2">{row.lead && <ChannelChip channel={row.lead.channel} />}</td>
                 <td className="whitespace-nowrap px-3 py-2 font-ui text-[12px] text-text-3">{row.lead?.ownerName}</td>
                 <td className="whitespace-nowrap px-3 py-2 text-right font-mono text-[12px] tabular-nums text-text-2">
-                  {formatCompactCurrency(row.lead?.value ?? 0)}
+                  {formatCompactCurrency(row.lead?.valueEntered ?? 0, row.lead?.valueCurrency)}
                 </td>
               </tr>
             ))}

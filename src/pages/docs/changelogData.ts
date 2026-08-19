@@ -77,6 +77,10 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'added',
+        text: 'A deal can be quoted in any currency. Pick it beside the estimated value and the lead keeps showing that currency everywhere, while the pipeline totals and your target convert it to PKR at the rate on the day you saved it.',
+      },
+      {
+        kind: 'added',
         text: 'Import a list of prospects into the pipeline from a spreadsheet. Pipeline → Import CSV takes the file, shows you exactly what it is about to create, and lists any row it could not read with its line number — the rows it can read still go in.',
       },
     ],

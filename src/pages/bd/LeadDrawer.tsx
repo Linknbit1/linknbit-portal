@@ -161,7 +161,7 @@ export function LeadDrawer({ lead, onClose, onEdit, onLogActivity }: LeadDrawerP
               </div>
               <div className="text-right">
                 <p className="font-display text-[19px] font-bold tabular-nums text-text-1">
-                  {formatCompactCurrency(lead.value)}
+                  {formatCompactCurrency(lead.valueEntered, lead.valueCurrency)}
                 </p>
                 <p className="font-ui text-[10.5px] uppercase tracking-widest text-text-4">Deal value</p>
               </div>

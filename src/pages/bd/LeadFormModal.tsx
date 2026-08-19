@@ -12,6 +12,7 @@ import {
 import { FormField } from './FormField'
 import { useBd } from '../../context/BdContext'
 import { randomUUID } from '../../lib/uuid'
+import { CURRENCY_CODES, currencyLabel, formatMoney, toPkr } from '../../lib/currency'
 import { cn } from '../../lib/cn'
 import type { Lead, LeadStage, BdChannel, LeadTemperature, IcpFit } from '../../types'
 
@@ -21,7 +22,7 @@ function emptyLead(ownerId: string, ownerName: string): Lead {
     id: randomUUID(),
     company: '', contactName: '', contactTitle: '', email: '', phone: '',
     channel: 'linkedin', services: [], industry: 'Logistics', icpFit: 'partial',
-    value: 0, stage: 'new', temperature: 'warm',
+    value: 0, valueCurrency: 'PKR', valueEntered: 0, stage: 'new', temperature: 'warm',
     ownerId, ownerName,
     addedOn: today, lastContacted: today, nextFollowUp: null, closedAt: null,
     activityCount: 0,
@@ -44,6 +45,14 @@ export function LeadFormModal({ open, lead, onClose }: LeadFormModalProps) {
   // Remount per lead (key on the caller) keeps this simple: no effect syncing.
   const set = <K extends keyof Lead>(key: K, value: Lead[K]) =>
     setDraft((d) => ({ ...d, [key]: value }))
+
+  /**
+   * Amount and currency are one edit, not two: `value` is the PKR figure every
+   * report sums, so it is recomputed whenever either half changes rather than
+   * left to drift behind the number on screen.
+   */
+  const setValue = (entered: number, currency: string) =>
+    setDraft((d) => ({ ...d, valueEntered: entered, valueCurrency: currency, value: toPkr(entered, currency) }))
 
   const companyError = touched && !draft.company.trim() ? 'Company name is required' : undefined
 
@@ -153,15 +162,31 @@ export function LeadFormModal({ open, lead, onClose }: LeadFormModalProps) {
           </div>
         </div>
 
-        <Input
-          label="Estimated value (PKR)"
-          type="number"
-          min={0}
-          step={50_000}
-          value={draft.value || ''}
-          onChange={(e) => set('value', Number(e.target.value) || 0)}
-          placeholder="1500000"
-        />
+        <div className="grid grid-cols-[1fr_auto] gap-2">
+          <Input
+            label="Estimated value"
+            type="number"
+            min={0}
+            step={draft.valueCurrency === 'PKR' ? 50_000 : 100}
+            value={draft.valueEntered || ''}
+            onChange={(e) => setValue(Number(e.target.value) || 0, draft.valueCurrency)}
+            placeholder={draft.valueCurrency === 'PKR' ? '1500000' : '5000'}
+            helper={
+              draft.valueCurrency === 'PKR' || !draft.valueEntered
+                ? undefined
+                : `≈ ${formatMoney(toPkr(draft.valueEntered, draft.valueCurrency), 'PKR')} — what the pipeline totals count`
+            }
+          />
+          <FormField label="Currency">
+            <Select
+              value={draft.valueCurrency}
+              onChange={(v) => setValue(draft.valueEntered, v)}
+              searchable
+              className="w-32"
+              options={CURRENCY_CODES.map((c) => ({ value: c, label: currencyLabel(c) }))}
+            />
+          </FormField>
+        </div>
         <FormField label="Assigned rep">
           <Select
             value={draft.ownerId}

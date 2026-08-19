@@ -807,6 +807,9 @@ export type Database = {
           temperature: string
           updated_at: string
           value: number
+          value_currency: string
+          value_entered: number | null
+          value_fx_rate: number | null
         }
         Insert: {
           added_on?: string
@@ -833,6 +836,9 @@ export type Database = {
           temperature?: string
           updated_at?: string
           value?: number
+          value_currency?: string
+          value_entered?: number | null
+          value_fx_rate?: number | null
         }
         Update: {
           added_on?: string
@@ -859,6 +865,9 @@ export type Database = {
           temperature?: string
           updated_at?: string
           value?: number
+          value_currency?: string
+          value_entered?: number | null
+          value_fx_rate?: number | null
         }
         Relationships: [
           {

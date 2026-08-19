@@ -118,7 +118,7 @@ export function HandoffModal({ open, lead, onClose }: HandoffModalProps) {
             <span className="text-text-4">· {lead.email}</span>
           </span>
           <span className="ml-auto flex items-center gap-2 font-mono text-[13px] text-success">
-            <Wallet size={14} /> {formatCompactCurrency(lead.value)}
+            <Wallet size={14} /> {formatCompactCurrency(lead.valueEntered, lead.valueCurrency)}
           </span>
         </div>
 

@@ -463,7 +463,7 @@ function LeadCard({ lead, dragging, onDragStart, onDragEnd, onClick }: LeadCardP
 
       <div className="mt-2.5 flex items-center gap-2 border-t border-border-subtle pt-2.5">
         <span className="font-mono text-[13px] font-semibold tabular-nums text-text-1">
-          {formatCompactCurrency(lead.value)}
+          {formatCompactCurrency(lead.valueEntered, lead.valueCurrency)}
         </span>
         <span className="ml-auto flex items-center gap-1 font-mono text-[10px] text-text-4">
           <MessageSquare size={9} /> {lead.activityCount}
@@ -550,7 +550,7 @@ function LeadTable({ leads, onOpen, onNew }: { leads: Lead[]; onOpen: (id: strin
                 </span>
                 <StageChip stage={lead.stage} />
                 <span className="text-right font-mono text-[12.5px] tabular-nums text-text-1">
-                  {formatCompactCurrency(lead.value)}
+                  {formatCompactCurrency(lead.valueEntered, lead.valueCurrency)}
                 </span>
                 <ChannelChip channel={lead.channel} />
                 <span className="flex min-w-0 items-center gap-2">

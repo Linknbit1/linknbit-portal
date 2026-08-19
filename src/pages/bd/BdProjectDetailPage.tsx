@@ -524,7 +524,7 @@ function OutreachTab({
                 <div key={lead.id} className="flex flex-wrap items-center gap-x-3 gap-y-1.5 py-2.5">
                   <span className="min-w-0 flex-1 truncate font-ui text-[13px] text-text-1">{lead.company}</span>
                   <StatusChip status={lead.stage === 'won' ? 'completed' : lead.stage === 'lost' ? 'blocked' : 'in_progress'} />
-                  <span className="font-mono text-[12px] tabular-nums text-text-2">{formatCompactCurrency(lead.value)}</span>
+                  <span className="font-mono text-[12px] tabular-nums text-text-2">{formatCompactCurrency(lead.valueEntered, lead.valueCurrency)}</span>
                   <AvatarGroup users={[{ id: lead.ownerId, name: lead.ownerName }]} max={1} size="xs" />
                 </div>
               ))}

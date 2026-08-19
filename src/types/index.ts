@@ -448,8 +448,15 @@ export interface Lead {
   services: string[]
   industry: string
   icpFit: IcpFit
-  /** Estimated deal value in PKR. */
+  /**
+   * Estimated deal value in PKR — the only figure any total, funnel or target
+   * actual is allowed to sum, because a sum across currencies means nothing.
+   */
   value: number
+  /** The currency it was quoted in (ISO 4217). PKR when it was never anything else. */
+  valueCurrency: string
+  /** The amount as typed, in `valueCurrency`. Equal to `value` for a PKR deal. */
+  valueEntered: number
   stage: LeadStage
   temperature: LeadTemperature
   ownerId: string

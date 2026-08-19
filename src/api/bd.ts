@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import { pkrRate, toPkr } from '../lib/currency'
 import type { Tables, TablesUpdate, Json } from '../types/database'
 import type {
   Lead, LeadStage, LeadTemperature, IcpFit, BdChannel,
@@ -119,6 +120,9 @@ export function mapLead(row: LeadJoined): Lead {
     industry: row.industry,
     icpFit: narrow(ICP_FITS, row.icp_fit, 'partial'),
     value: Number(row.value),
+    valueCurrency: row.value_currency || 'PKR',
+    // Rows predating the currency column were entered in PKR by definition.
+    valueEntered: row.value_entered === null ? Number(row.value) : Number(row.value_entered),
     stage: narrow(STAGES, row.stage, 'new'),
     temperature: narrow(TEMPERATURES, row.temperature, 'warm'),
     ownerId: row.owner_id ?? '',
@@ -156,7 +160,18 @@ export function leadPatchToRow(patch: Partial<Lead>): TablesUpdate<'bd_leads'> {
   if (patch.services !== undefined) row.services = patch.services
   if (patch.industry !== undefined) row.industry = patch.industry
   if (patch.icpFit !== undefined) row.icp_fit = patch.icpFit
-  if (patch.value !== undefined) row.value = patch.value
+  // The three value columns move together: `value` is the PKR figure reports
+  // sum, and the other two are the receipt for how it was arrived at. Writing
+  // one without the others is what would let a card claim $1,550 while the
+  // funnel counted 1,550.
+  if (patch.valueEntered !== undefined || patch.value !== undefined) {
+    const currency = patch.valueCurrency ?? 'PKR'
+    const entered = patch.valueEntered ?? patch.value ?? 0
+    row.value_currency = currency
+    row.value_entered = entered
+    row.value_fx_rate = pkrRate(currency)
+    row.value = toPkr(entered, currency)
+  }
   if (patch.stage !== undefined) row.stage = patch.stage
   if (patch.temperature !== undefined) row.temperature = patch.temperature
   if (patch.ownerId !== undefined) row.owner_id = patch.ownerId || null
