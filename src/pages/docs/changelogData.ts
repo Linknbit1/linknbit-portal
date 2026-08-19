@@ -77,7 +77,7 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'improved',
-        text: 'Leave, WFH Requests, Exceptions and Overtime now look and work the same: one list on each, with the same filters in the same places and the pending count on the panel header. The stat cards that sat above each list are gone — they repeated what the list already shows and pushed the actual requests below the fold.',
+        text: 'Leave, WFH Requests, Exceptions and Overtime now look and work the same. All four are one list grouped by date — Exceptions and Overtime were tables, which meant the same request looked different depending on which screen you reviewed it from — and all four now use the same status pill, so an approved request no longer reads “Approved” on one screen and “approved” on another. The stat cards above each list are gone; they repeated what the list already shows and pushed the requests below the fold.',
       },
       {
         kind: 'added',

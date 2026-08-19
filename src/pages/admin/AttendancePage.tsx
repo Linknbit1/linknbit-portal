@@ -54,7 +54,6 @@ import {
   datesInRange,
   formatDayRange,
   formatRequestedAt,
-  formatDayHeading,
 } from "../../lib/dateGroups";
 import { DAY_PART_LABEL, DAY_PART_OPTIONS, toDayPart } from "../../lib/dayParts";
 import { ipInCidr } from "../../lib/officeIp";
@@ -185,7 +184,15 @@ const STATUS_META: Record<string, { label: string; cls: string; dot: string }> =
     },
   };
 
-const WFH_META: Record<string, { label: string; cls: string; dot: string }> = {
+/**
+ * Pending / approved / rejected, for every request screen.
+ *
+ * One map and one component on purpose: WFH, Leave, Exceptions and Overtime are
+ * the same decision about four different things, and they had drifted — three
+ * carried this pill while Leave printed the raw column value ("approved",
+ * lowercase) in a square mono box.
+ */
+const REQUEST_STATUS_META: Record<string, { label: string; cls: string; dot: string }> = {
   pending: {
     label: "Pending",
     cls: "bg-warning/10 text-warning border-warning/30",
@@ -203,13 +210,12 @@ const WFH_META: Record<string, { label: string; cls: string; dot: string }> = {
   },
 };
 
-
-function WFHStatusChip({ status }: { status: string }) {
-  const m = WFH_META[status] ?? WFH_META.pending;
+function RequestStatusChip({ status }: { status: string }) {
+  const m = REQUEST_STATUS_META[status] ?? REQUEST_STATUS_META.pending;
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-ui font-semibold border",
+        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-ui font-semibold border shrink-0",
         m.cls,
       )}
     >
@@ -1239,7 +1245,7 @@ export function WFHRequestsTab() {
                           <div className="shrink-0 text-[11.5px] font-mono text-text-4">
                             Requested {formatRequestedAt(req.created_at)}
                           </div>
-                          <WFHStatusChip status={req.status} />
+                          <RequestStatusChip status={req.status} />
                           {span.total > 1 && !span.isFirstShown ? (
                             <SpanContinuation dayNum={span.dayNum} total={span.total} />
                           ) : req.status === "pending" ? (
@@ -1543,12 +1549,6 @@ function LeaveTypeForm({
 }
 
 /* ── Leave tab (types + quotas + request review) ──────────────────────────── */
-const LEAVE_STATUS_CLS: Record<string, string> = {
-  pending: "bg-warning/10 text-warning border-warning/25",
-  approved: "bg-success/10 text-success border-success/25",
-  rejected: "bg-error/10 text-error border-error/25",
-};
-
 // Static class lookups so Tailwind JIT sees literal class names (no dynamic `bg-${color}`).
 const LEAVE_COLOR_CLS: Record<string, { dot: string; chip: string }> = {
   "service-dev": {
@@ -1943,14 +1943,7 @@ export function LeaveTab() {
                           three-day leave is not three decisions. */}
                       {span.total > 1 && !span.isFirstShown ? (
                         <>
-                          <span
-                            className={cn(
-                              "inline-flex items-center px-2 py-0.5 rounded-xs border text-[11px] font-mono font-semibold shrink-0 mt-0.5",
-                              LEAVE_STATUS_CLS[req.status] ?? LEAVE_STATUS_CLS.pending,
-                            )}
-                          >
-                            {req.status}
-                          </span>
+                          <RequestStatusChip status={req.status} />
                           <SpanContinuation dayNum={span.dayNum} total={span.total} />
                         </>
                       ) : req.status === "pending" ? (
@@ -1980,15 +1973,7 @@ export function LeaveTab() {
                           </div>
                         )
                       ) : (
-                        <span
-                          className={cn(
-                            "inline-flex items-center px-2 py-0.5 rounded-xs border text-[11px] font-mono font-semibold shrink-0 mt-0.5",
-                            LEAVE_STATUS_CLS[req.status] ??
-                              LEAVE_STATUS_CLS.pending,
-                          )}
-                        >
-                          {req.status}
-                        </span>
+                        <RequestStatusChip status={req.status} />
                       )}
                       {isAdmin && (
                         <button
@@ -2509,42 +2494,6 @@ export function EnrolledDevicesTab() {
 }
 
 /* ── Exception status chip ───────────────────────────────────────────────── */
-const EXC_STATUS_META: Record<
-  string,
-  { label: string; cls: string; dot: string }
-> = {
-  pending: {
-    label: "Pending",
-    cls: "bg-warning/10 text-warning border-warning/30",
-    dot: "#F59E0B",
-  },
-  approved: {
-    label: "Approved",
-    cls: "bg-success/10 text-success border-success/30",
-    dot: "#22C55E",
-  },
-  rejected: {
-    label: "Rejected",
-    cls: "bg-error/10 text-error border-error/30",
-    dot: "#F4364C",
-  },
-};
-
-function ExcStatusChip({ status }: { status: string }) {
-  const m = EXC_STATUS_META[status] ?? EXC_STATUS_META["pending"];
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-ui font-semibold border",
-        m.cls,
-      )}
-    >
-      <span className="size-1.5 rounded-full" style={{ background: m.dot }} />
-      {m.label}
-    </span>
-  );
-}
-
 /* ── Exceptions tab ───────────────────────────────────────────────────────── */
 export function ExceptionsTab() {
   const toast = useToast();
@@ -2634,12 +2583,6 @@ export function ExceptionsTab() {
           minute: "2-digit",
         })
       : "—";
-  const fmtDate = (d: string) =>
-    new Date(d + "T00:00:00").toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    });
-
   return (
     <div className="flex flex-col gap-5">
       {/* Table */}
@@ -2670,143 +2613,75 @@ export function ExceptionsTab() {
           />
         </SectionToolbar>
 
-        <div className="overflow-x-auto">
-          <table className="w-full whitespace-nowrap lg:whitespace-normal">
-            <thead>
-              <tr className="border-b border-border-subtle bg-surface-2">
-                {[
-                  "Employee",
-                  "Date",
-                  "Type",
-                  "Requested Time",
-                  "Reason",
-                  "Status",
-                  "OOO Tracking",
-                  "Actions",
-                ].map((h) => (
-                  <th
-                    key={h}
-                    className="px-4 py-2.5 text-left font-ui font-semibold text-[10.5px] text-text-3 uppercase tracking-wider"
-                  >
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                <tr>
-                  <td
-                    colSpan={8}
-                    className="px-4 py-12 text-center font-mono text-[12px] text-text-4"
-                  >
-                    Loading…
-                  </td>
-                </tr>
-              ) : excGroups.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={8}
-                    className="px-4 py-12 text-center font-mono text-[12px] text-text-4"
-                  >
-                    No exception requests for this period.
-                  </td>
-                </tr>
-              ) : (
-                excGroups.flatMap((group) => [
-                  <tr
-                    key={`h-${group.date}`}
-                    className="bg-surface-2 border-y border-border-subtle"
-                  >
-                    <td colSpan={8} className="px-4 py-2">
-                      <span className="font-display font-semibold text-[12.5px] text-text-1">
-                        {formatDayHeading(group.date).label}
-                      </span>
-                      {formatDayHeading(group.date).relative && (
-                        <span className="ml-2 px-1.5 py-0.5 rounded-xs bg-brand-red/10 border border-brand-red/20 text-brand-red text-[10px] font-mono font-semibold uppercase tracking-wide">
-                          {formatDayHeading(group.date).relative}
-                        </span>
-                      )}
-                      <span className="ml-2 font-mono text-[11px] text-text-4">
-                        {group.items.length}
-                      </span>
-                    </td>
-                  </tr>,
-                  ...group.items.map((exc) => {
+        {isLoading ? (
+          <div className="py-16 text-center font-mono text-[12px] text-text-4">
+            Loading…
+          </div>
+        ) : excGroups.length === 0 ? (
+          <div className="py-16 text-center font-ui text-[13px] text-text-4">
+            No exception requests for this period.
+          </div>
+        ) : (
+          <div>
+            {excGroups.map((group) => (
+              <div key={group.date}>
+                <DateGroupHeading date={group.date} count={group.items.length} />
+                <div className="divide-y divide-border-subtle">
+                  {group.items.map((exc) => {
                     const typeMeta =
-                      TYPE_META[exc.exception_type] ??
-                      TYPE_META["late_arrival"];
+                      TYPE_META[exc.exception_type] ?? TYPE_META.late_arrival;
                     const excWp = exc as AttendanceExceptionWithProfile;
                     return (
-                      <tr
-                        key={exc.id}
-                        className="border-b border-border-subtle hover:bg-white/1.5 transition-colors"
-                      >
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2.5">
-                            <Avatar
-                              name={excWp.profiles?.name ?? "?"}
-                              src={excWp.profiles?.avatar_url ?? undefined}
-                              size="sm"
-                              personId={excWp.profile_id}
-                            />
-                            <span className="font-ui font-medium text-[13px] text-text-1">
-                              {excWp.profiles?.name ??
-                                exc.profile_id.slice(0, 8)}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          <span className="block font-mono text-[12px] text-text-2">
-                            For {fmtDate(exc.date)}
-                          </span>
-                          <span className="block font-mono text-[10.5px] text-text-4">
-                            Requested {formatRequestedAt(exc.created_at)}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <span
-                            className={cn(
-                              "inline-flex items-center px-2 py-0.5 rounded-xs border text-[11px] font-mono font-semibold whitespace-nowrap",
-                              typeMeta.cls,
-                            )}
-                          >
-                            {typeMeta.label}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 font-mono text-[12px] text-text-1 whitespace-nowrap">
-                          {fmtTimeStr(exc.requested_time)}
-                          {exc.return_time && (
-                            <span className="text-text-4 ml-1">
-                              → {fmtTimeStr(exc.return_time)}
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3 font-ui text-[12px] text-text-2 max-w-60">
-                          <span className="wrap-break-word">{exc.reason}</span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <ExcStatusChip status={exc.status} />
-                        </td>
-                        <td className="px-4 py-3">
-                          {exc.exception_type === "out_of_office" ? (
-                            <div className="text-[11px] font-mono text-text-3 space-y-0.5">
-                              <div>Out: {fmtTs(exc.actual_departure)}</div>
-                              <div>Back: {fmtTs(exc.actual_return)}</div>
+                      <div key={exc.id} className="hover:bg-white/1.5 transition-colors">
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-5 py-3.5">
+                          <Avatar
+                            name={excWp.profiles?.name ?? "?"}
+                            src={excWp.profiles?.avatar_url ?? undefined}
+                            size="sm"
+                            personId={excWp.profile_id}
+                          />
+                          <div className="flex-1 min-w-40">
+                            <div className="flex items-center gap-2 mb-0.5">
+                              <span className="font-ui font-medium text-[13px] text-text-1">
+                                {excWp.profiles?.name ?? exc.profile_id.slice(0, 8)}
+                              </span>
+                              <span
+                                className={cn(
+                                  "inline-flex items-center px-2 py-0.5 rounded-xs border text-[11px] font-mono font-semibold whitespace-nowrap",
+                                  typeMeta.cls,
+                                )}
+                              >
+                                {typeMeta.label}
+                              </span>
                             </div>
-                          ) : (
-                            <span className="font-mono text-[11px] text-text-4">
-                              —
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-1.5">
-                            {exc.status === "pending" ? (
-                              exc.profile_id === profile?.id ? (
-                                <OwnRequestChip />
-                              ) : (
-                              <>
+                            <p className="text-[12px] font-ui text-text-3 wrap-break-word">
+                              {exc.reason}
+                            </p>
+                            {exc.exception_type === "out_of_office" && (
+                              <p className="text-[11px] font-mono text-text-4 mt-0.5">
+                                Out: {fmtTs(exc.actual_departure)} · Back:{" "}
+                                {fmtTs(exc.actual_return)}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1.5 text-[12px] font-mono text-text-2 shrink-0">
+                            <Clock size={12} className="text-text-4" />
+                            {fmtTimeStr(exc.requested_time)}
+                            {exc.return_time && (
+                              <span className="text-text-4">
+                                → {fmtTimeStr(exc.return_time)}
+                              </span>
+                            )}
+                          </div>
+                          <div className="shrink-0 text-[11.5px] font-mono text-text-4">
+                            Requested {formatRequestedAt(exc.created_at)}
+                          </div>
+                          <RequestStatusChip status={exc.status} />
+                          {exc.status === "pending" ? (
+                            exc.profile_id === profile?.id ? (
+                              <OwnRequestChip />
+                            ) : (
+                              <div className="flex items-center gap-1.5 ml-1">
                                 <button
                                   onClick={() => handleApprove(exc.id)}
                                   disabled={reviewMutation.isPending}
@@ -2821,39 +2696,37 @@ export function ExceptionsTab() {
                                 >
                                   <ThumbsDown size={12} /> Reject
                                 </button>
-                              </>
-                              )
-                            ) : (
-                              <span className="font-mono text-[11px] text-text-4">
-                                {exc.reviewed_at
-                                  ? new Date(
-                                      exc.reviewed_at,
-                                    ).toLocaleDateString("en-US", {
-                                      month: "short",
-                                      day: "numeric",
-                                    })
-                                  : "—"}
-                              </span>
-                            )}
-                            {isAdmin && (
-                              <button
-                                onClick={() => setDeleteTarget(excWp)}
-                                className="ml-0.5 text-text-4 hover:text-error transition-colors"
-                                aria-label="Delete exception"
-                              >
-                                <Trash2 size={14} />
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
+                              </div>
+                            )
+                          ) : (
+                            <span className="font-mono text-[11px] text-text-4 shrink-0">
+                              Reviewed{" "}
+                              {exc.reviewed_at
+                                ? new Date(exc.reviewed_at).toLocaleDateString("en-US", {
+                                    month: "short",
+                                    day: "numeric",
+                                  })
+                                : "—"}
+                            </span>
+                          )}
+                          {isAdmin && (
+                            <button
+                              onClick={() => setDeleteTarget(excWp)}
+                              className="ml-0.5 text-text-4 hover:text-error transition-colors shrink-0"
+                              aria-label="Delete exception"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
                     );
-                  }),
-                ])
-              )}
-            </tbody>
-          </table>
-        </div>
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Reject modal */}
@@ -3885,27 +3758,6 @@ export function HolidaysTab() {
 
 /* ── Overtime tab ─────────────────────────────────────────────────────────── */
 
-const OT_STATUS_META: Record<
-  string,
-  { label: string; cls: string; dot: string }
-> = {
-  pending: {
-    label: "Pending",
-    cls: "bg-warning/10 text-warning border-warning/30",
-    dot: "#F59E0B",
-  },
-  approved: {
-    label: "Approved",
-    cls: "bg-success/10 text-success border-success/30",
-    dot: "#22C55E",
-  },
-  rejected: {
-    label: "Rejected",
-    cls: "bg-error/10 text-error border-error/30",
-    dot: "#F4364C",
-  },
-};
-
 export function OvertimeTab() {
   const toast = useToast();
   const { profile } = useAuthContext();
@@ -3967,6 +3819,10 @@ export function OvertimeTab() {
 
   const pending = scoped.filter((r) => r.status === "pending").length;
 
+  // Grouped under the day the overtime was worked — the same date heading WFH
+  // and Leave use, so all four lists read identically.
+  const otGroups = groupByDate(scoped, (r) => [r.date]);
+
   const handleApprove = async (id: string) => {
     if (!profile) return;
     try {
@@ -4008,13 +3864,6 @@ export function OvertimeTab() {
       toast("Failed to delete overtime request", "error");
     }
   };
-
-  const fmtDate = (d: string) =>
-    new Date(d + "T00:00:00").toLocaleDateString("en-US", {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-    });
 
   const fmtTime = (t: string) => {
     const [h, m] = t.split(":").map(Number);
@@ -4088,98 +3937,52 @@ export function OvertimeTab() {
             .
           </div>
         ) : (
-          <>
-            {/* Desktop table */}
-            <div className="overflow-x-auto hidden lg:block">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-border-subtle bg-surface-2">
-                    {[
-                      "Employee",
-                      "Date",
-                      "Time",
-                      "Hours",
-                      "Reason",
-                      "Status",
-                      "Actions",
-                    ].map((h) => (
-                      <th
-                        key={h}
-                        className="px-4 py-2.5 text-left font-ui font-semibold text-[10.5px] text-text-3 uppercase tracking-wider"
-                      >
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {scoped.map((req) => {
-                    const meta =
-                      OT_STATUS_META[req.status] ?? OT_STATUS_META["pending"];
+          <div>
+            {otGroups.map((group) => (
+              <div key={group.date}>
+                <DateGroupHeading date={group.date} count={group.items.length} />
+                <div className="divide-y divide-border-subtle">
+                  {group.items.map((req) => {
                     const r = req as typeof req & {
-                      profiles?: {
-                        name: string;
-                        avatar_url: string | null;
-                      } | null;
+                      profiles?: { name: string; avatar_url: string | null } | null;
                     };
                     return (
-                      <tr
-                        key={req.id}
-                        className="border-b border-border-subtle hover:bg-white/1.5 transition-colors"
-                      >
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2.5">
-                            <Avatar
-                              name={r.profiles?.name ?? "?"}
-                              src={r.profiles?.avatar_url ?? undefined}
-                              size="sm"
-                              personId={r.profile_id}
-                            />
-                            <span className="font-ui font-medium text-[13px] text-text-1">
+                      <div key={req.id} className="hover:bg-white/1.5 transition-colors">
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-5 py-3.5">
+                          <Avatar
+                            name={r.profiles?.name ?? "?"}
+                            src={r.profiles?.avatar_url ?? undefined}
+                            size="sm"
+                            personId={r.profile_id}
+                          />
+                          <div className="flex-1 min-w-40">
+                            <div className="font-ui font-medium text-[13px] text-text-1">
                               {r.profiles?.name ?? req.profile_id.slice(0, 8)}
+                            </div>
+                            {req.reason && (
+                              <p className="text-[12px] font-ui text-text-3 wrap-break-word">
+                                {req.reason}
+                              </p>
+                            )}
+                            {req.review_note && (
+                              <p className="text-[11px] font-ui text-text-4 italic wrap-break-word">
+                                "{req.review_note}"
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1.5 text-[12px] font-mono text-text-2 shrink-0">
+                            <Clock size={12} className="text-text-4" />
+                            {fmtTime(req.start_time)} – {fmtTime(req.end_time)}
+                            <span className="font-display font-bold text-[14px] text-service-mkt ml-1">
+                              {req.hours}h
                             </span>
                           </div>
-                        </td>
-                        <td className="px-4 py-3 font-mono text-[12px] text-text-2 whitespace-nowrap">
-                          {fmtDate(req.date)}
-                        </td>
-                        <td className="px-4 py-3 font-mono text-[12px] text-text-1 whitespace-nowrap">
-                          {fmtTime(req.start_time)} – {fmtTime(req.end_time)}
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className="font-display font-bold text-[15px] text-service-mkt">
-                            {req.hours}h
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 font-ui text-[12px] text-text-2 max-w-60">
-                          <span className="wrap-break-word">{req.reason}</span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <span
-                            className={cn(
-                              "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-ui font-semibold border",
-                              meta.cls,
-                            )}
-                          >
-                            <span
-                              className="size-1.5 rounded-full"
-                              style={{ background: meta.dot }}
-                            />
-                            {meta.label}
-                          </span>
-                          {req.review_note && (
-                            <p className="font-ui text-[10.5px] text-text-4 mt-0.5 max-w-40 wrap-break-word italic">
-                              "{req.review_note}"
-                            </p>
-                          )}
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-1.5">
-                            {req.status === "pending" ? (
-                              req.profile_id === profile?.id ? (
-                                <OwnRequestChip />
-                              ) : (
-                              <>
+                          <RequestStatusChip status={req.status} />
+                          {req.status === "pending" ? (
+                            req.profile_id === profile?.id ? (
+                              <OwnRequestChip />
+                            ) : (
+                              <div className="flex items-center gap-1.5 ml-1">
                                 <button
                                   onClick={() => handleApprove(req.id)}
                                   disabled={reviewMutation.isPending}
@@ -4194,153 +3997,41 @@ export function OvertimeTab() {
                                 >
                                   <ThumbsDown size={12} /> Reject
                                 </button>
-                              </>
-                              )
-                            ) : (
-                              <span className="font-mono text-[11px] text-text-4">
-                                {req.reviewed_at
-                                  ? new Date(
-                                      req.reviewed_at,
-                                    ).toLocaleDateString("en-US", {
-                                      month: "short",
-                                      day: "numeric",
-                                    })
-                                  : "—"}
-                              </span>
-                            )}
-                            {isAdmin && (
-                              <button
-                                onClick={() =>
-                                  setDeleteTarget({
-                                    id: req.id,
-                                    name: r.profiles?.name ?? "this employee",
+                              </div>
+                            )
+                          ) : (
+                            <span className="font-mono text-[11px] text-text-4 shrink-0">
+                              Reviewed{" "}
+                              {req.reviewed_at
+                                ? new Date(req.reviewed_at).toLocaleDateString("en-US", {
+                                    month: "short",
+                                    day: "numeric",
                                   })
-                                }
-                                className="ml-0.5 text-text-4 hover:text-error transition-colors"
-                                aria-label="Delete overtime request"
-                              >
-                                <Trash2 size={14} />
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
+                                : "—"}
+                            </span>
+                          )}
+                          {isAdmin && (
+                            <button
+                              onClick={() =>
+                                setDeleteTarget({
+                                  id: req.id,
+                                  name: r.profiles?.name ?? "this employee",
+                                })
+                              }
+                              className="ml-0.5 text-text-4 hover:text-error transition-colors shrink-0"
+                              aria-label="Delete overtime request"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
                     );
                   })}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile cards */}
-            <div className="lg:hidden flex flex-col">
-              {scoped.map((req) => {
-                const meta =
-                  OT_STATUS_META[req.status] ?? OT_STATUS_META["pending"];
-                const r = req as typeof req & {
-                  profiles?: { name: string; avatar_url: string | null } | null;
-                };
-                return (
-                  <div
-                    key={req.id}
-                    className="px-4 py-3.5 border-b border-border-subtle last:border-0 flex flex-col gap-2.5"
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <Avatar
-                          name={r.profiles?.name ?? "?"}
-                          src={r.profiles?.avatar_url ?? undefined}
-                          size="sm"
-                          personId={r.profile_id}
-                        />
-                        <span className="font-ui font-medium text-[13px] text-text-1 truncate">
-                          {r.profiles?.name ?? req.profile_id.slice(0, 8)}
-                        </span>
-                      </div>
-                      <span
-                        className={cn(
-                          "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-ui font-semibold border shrink-0",
-                          meta.cls,
-                        )}
-                      >
-                        <span
-                          className="size-1.5 rounded-full"
-                          style={{ background: meta.dot }}
-                        />
-                        {meta.label}
-                      </span>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[12px] text-text-2 pl-10.5">
-                      <span className="text-text-1">{fmtDate(req.date)}</span>
-                      <span>
-                        {fmtTime(req.start_time)} – {fmtTime(req.end_time)}
-                      </span>
-                      <span className="font-display font-bold text-service-mkt">
-                        {req.hours}h
-                      </span>
-                    </div>
-                    {req.reason && (
-                      <p className="font-ui text-[12px] text-text-3 pl-10.5">
-                        {req.reason}
-                      </p>
-                    )}
-                    {req.review_note && (
-                      <p className="font-ui text-[11px] text-text-4 pl-10.5 italic">
-                        "{req.review_note}"
-                      </p>
-                    )}
-                    <div className="flex items-center gap-1.5 pl-10.5">
-                      {req.status === "pending" ? (
-                        req.profile_id === profile?.id ? (
-                          <OwnRequestChip />
-                        ) : (
-                        <>
-                          <button
-                            onClick={() => handleApprove(req.id)}
-                            disabled={reviewMutation.isPending}
-                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-sm bg-success/10 border border-success/30 text-success text-[11.5px] font-ui font-semibold hover:bg-success/20 transition-colors"
-                          >
-                            <ThumbsUp size={12} /> Approve
-                          </button>
-                          <button
-                            onClick={() => setRejectTarget(req.id)}
-                            disabled={reviewMutation.isPending}
-                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-sm bg-error/10 border border-error/30 text-error text-[11.5px] font-ui font-semibold hover:bg-error/20 transition-colors"
-                          >
-                            <ThumbsDown size={12} /> Reject
-                          </button>
-                        </>
-                        )
-                      ) : (
-                        <span className="font-mono text-[11px] text-text-4">
-                          Reviewed{" "}
-                          {req.reviewed_at
-                            ? new Date(req.reviewed_at).toLocaleDateString(
-                                "en-US",
-                                { month: "short", day: "numeric" },
-                              )
-                            : "—"}
-                        </span>
-                      )}
-                      {isAdmin && (
-                        <button
-                          onClick={() =>
-                            setDeleteTarget({
-                              id: req.id,
-                              name: r.profiles?.name ?? "this employee",
-                            })
-                          }
-                          className="ml-auto text-text-4 hover:text-error transition-colors"
-                          aria-label="Delete overtime request"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </>
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </div>
 
