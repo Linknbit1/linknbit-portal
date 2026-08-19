@@ -457,6 +457,11 @@ export interface Lead {
   valueCurrency: string
   /** The amount as typed, in `valueCurrency`. Equal to `value` for a PKR deal. */
   valueEntered: number
+  /**
+   * PKR per 1 unit at the moment the value was entered. Frozen: refreshing the
+   * rate table never restates a deal that was already priced.
+   */
+  valueFxRate: number
   stage: LeadStage
   temperature: LeadTemperature
   ownerId: string

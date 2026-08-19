@@ -5,7 +5,7 @@
 
 import { CHANNEL_CONFIG, CHANNEL_ORDER, STAGE_CONFIG, STAGE_ORDER, BD_SERVICES, BD_INDUSTRIES } from '../constants/bd'
 import { parseCsv } from './csv'
-import { isSupportedCurrency, toPkr } from './currency'
+import { isSupportedCurrency, pkrRate, toPkr, type CurrencyRates } from './currency'
 import { randomUUID } from './uuid'
 import type { Lead, LeadStage, BdChannel, LeadTemperature, IcpFit } from '../types'
 
@@ -111,6 +111,8 @@ export interface LeadImportContext {
   viewerName: string
   /** Company names already in the pipeline, for the duplicate flag. */
   existingCompanies: string[]
+  /** Live FX rates, so an imported USD quote converts at today's rate, not a bundled one. */
+  rates: CurrencyRates
 }
 
 /** Headers, enum labels and person names all match on this — case and spacing are noise. */
@@ -285,9 +287,10 @@ export function parseLeadCsv(text: string, ctx: LeadImportContext): LeadImportRe
               services: services.values,
               industry,
               icpFit,
-              value: toPkr(valueEntered, valueCurrency),
+              value: toPkr(valueEntered, valueCurrency, ctx.rates),
               valueCurrency,
               valueEntered,
+              valueFxRate: pkrRate(valueCurrency, ctx.rates),
               stage,
               temperature,
               ownerId,

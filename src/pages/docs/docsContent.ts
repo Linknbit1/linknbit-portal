@@ -662,7 +662,8 @@ export const DOC_CHAPTERS: DocChapter[] = [
         ],
         notes: [
           'You can see the whole department’s pipeline but can only edit leads you own, unless you manage BD.',
-          'Quote a deal in whatever currency the client was given — dollars, pounds, dirhams, anything. The card keeps showing that currency, while the funnel, the channel report and your target convert it to PKR so the totals add up. The rate is fixed at the moment you save it, so a lead never silently changes value later.',
+          'Quote a deal in whatever currency the client was given — every currency in use anywhere is in the list, and you can search it by country as well as by code, so typing “Denmark” finds the krone. The card keeps showing that currency, while the funnel, the channel report and your target convert it to PKR so the totals add up.',
+          'Exchange rates refresh daily and the field shows the one it is using as you type. The rate is fixed onto the lead at the moment you save it, so a deal you priced last month is never quietly restated by today’s rate.',
           'On import, dates must be written as YYYY-MM-DD. 03/04/2026 is March in one country and April in the next, so the portal refuses it rather than guessing.',
           'An imported row whose Owner column names a colleague is filed to them. Leave that column empty and the lead is yours. A name that matches nobody in BD fails the row instead of quietly assigning it to you.',
           'Importing does not check for duplicates — it flags them. A company already in your pipeline is marked in the preview, and still imported if you go ahead.',

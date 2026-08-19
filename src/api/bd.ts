@@ -1,5 +1,4 @@
 import { supabase } from '../lib/supabase'
-import { pkrRate, toPkr } from '../lib/currency'
 import type { Tables, TablesUpdate, Json } from '../types/database'
 import type {
   Lead, LeadStage, LeadTemperature, IcpFit, BdChannel,
@@ -123,6 +122,7 @@ export function mapLead(row: LeadJoined): Lead {
     valueCurrency: row.value_currency || 'PKR',
     // Rows predating the currency column were entered in PKR by definition.
     valueEntered: row.value_entered === null ? Number(row.value) : Number(row.value_entered),
+    valueFxRate: row.value_fx_rate === null ? 1 : Number(row.value_fx_rate),
     stage: narrow(STAGES, row.stage, 'new'),
     temperature: narrow(TEMPERATURES, row.temperature, 'warm'),
     ownerId: row.owner_id ?? '',
@@ -160,17 +160,18 @@ export function leadPatchToRow(patch: Partial<Lead>): TablesUpdate<'bd_leads'> {
   if (patch.services !== undefined) row.services = patch.services
   if (patch.industry !== undefined) row.industry = patch.industry
   if (patch.icpFit !== undefined) row.icp_fit = patch.icpFit
-  // The three value columns move together: `value` is the PKR figure reports
-  // sum, and the other two are the receipt for how it was arrived at. Writing
-  // one without the others is what would let a card claim $1,550 while the
-  // funnel counted 1,550.
+  // The four value columns move together: `value` is the PKR figure reports sum,
+  // and the rest are the receipt for how it was arrived at. Writing one without
+  // the others is what would let a card claim $1,550 while the funnel counted
+  // 1,550. The conversion itself happens where the live rates are — see
+  // useCurrencyRates — so this layer only records the answer.
   if (patch.valueEntered !== undefined || patch.value !== undefined) {
-    const currency = patch.valueCurrency ?? 'PKR'
+    const rate = patch.valueFxRate ?? 1
     const entered = patch.valueEntered ?? patch.value ?? 0
-    row.value_currency = currency
+    row.value_currency = patch.valueCurrency ?? 'PKR'
     row.value_entered = entered
-    row.value_fx_rate = pkrRate(currency)
-    row.value = toPkr(entered, currency)
+    row.value_fx_rate = rate
+    row.value = patch.value ?? Math.round(entered * rate)
   }
   if (patch.stage !== undefined) row.stage = patch.stage
   if (patch.temperature !== undefined) row.temperature = patch.temperature

@@ -18,6 +18,16 @@ export interface SelectOption {
    * "needs reassigning" rather than silently falling back to the placeholder.
    */
   departed?: boolean
+  /**
+   * Second line under the label, for a list where the label alone is not enough
+   * to choose from — a currency code needs the countries that spend it.
+   */
+  description?: string
+  /**
+   * Extra text the search matches but never shows. Lets an option be found by
+   * something that would be too long to display beside it.
+   */
+  keywords?: string
 }
 
 interface SelectProps {
@@ -54,7 +64,7 @@ function SelectMenu({ options, value, searchable, onPick, onClose }: SelectMenuP
   // Matches the avatar name too: a person's option label is sometimes their role
   // or email, and people search by the name they can see.
   const filtered = useMemo(
-    () => options.filter((o) => matchesQuery(query, o.label, o.avatar?.name)),
+    () => options.filter((o) => matchesQuery(query, o.label, o.avatar?.name, o.description, o.keywords)),
     [options, query],
   )
 
@@ -119,7 +129,8 @@ function SelectMenu({ options, value, searchable, onPick, onClose }: SelectMenuP
             onClick={() => onPick(opt.value)}
             onMouseEnter={() => setActive(i)}
             className={cn(
-              'w-full flex items-center gap-2.5 px-3 py-2 text-left text-[13px] font-ui font-medium text-text-1 transition-colors',
+              'w-full flex gap-2.5 px-3 py-2 text-left text-[13px] font-ui font-medium text-text-1 transition-colors',
+              opt.description ? 'items-start' : 'items-center',
               i === activeIndex && 'bg-surface-3',
             )}
           >
@@ -129,9 +140,14 @@ function SelectMenu({ options, value, searchable, onPick, onClose }: SelectMenuP
             {opt.dot && (
               <span className="size-2 rounded-full shrink-0" style={{ background: opt.dot }} />
             )}
-            <span className={cn('min-w-0 flex-1 truncate', opt.departed && 'text-text-3')}>{opt.label}</span>
+            <span className="min-w-0 flex-1">
+              <span className={cn('block truncate', opt.departed && 'text-text-3')}>{opt.label}</span>
+              {opt.description && (
+                <span className="mt-0.5 block truncate font-normal text-[11px] text-text-4">{opt.description}</span>
+              )}
+            </span>
             {opt.departed && <DepartedBadge />}
-            {opt.value === value && <Check size={13} className="shrink-0 text-brand-red" />}
+            {opt.value === value && <Check size={13} className="mt-0.5 shrink-0 text-brand-red" />}
           </button>
         ))}
 

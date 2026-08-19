@@ -77,7 +77,7 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'added',
-        text: 'A deal can be quoted in any currency. Pick it beside the estimated value and the lead keeps showing that currency everywhere, while the pipeline totals and your target convert it to PKR at the rate on the day you saved it.',
+        text: 'A deal can be quoted in any currency — 166 of them, covering every country that has one. Pick it beside the estimated value, search the list by country if the code escapes you, and the lead keeps showing that currency everywhere while the pipeline totals convert it to PKR. Rates refresh daily, and the one used is shown as you type and frozen onto the lead when you save.',
       },
       {
         kind: 'added',

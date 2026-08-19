@@ -12,7 +12,8 @@ import {
 import { FormField } from './FormField'
 import { useBd } from '../../context/BdContext'
 import { randomUUID } from '../../lib/uuid'
-import { CURRENCY_CODES, currencyLabel, formatMoney, toPkr } from '../../lib/currency'
+import { CURRENCY_CODES, currencyLabel, currencyCountries, currencySearchText, formatMoney, pkrRate, toPkr } from '../../lib/currency'
+import { useCurrencyRates, useRatesFreshness } from '../../hooks/useCurrency'
 import { cn } from '../../lib/cn'
 import type { Lead, LeadStage, BdChannel, LeadTemperature, IcpFit } from '../../types'
 
@@ -22,7 +23,7 @@ function emptyLead(ownerId: string, ownerName: string): Lead {
     id: randomUUID(),
     company: '', contactName: '', contactTitle: '', email: '', phone: '',
     channel: 'linkedin', services: [], industry: 'Logistics', icpFit: 'partial',
-    value: 0, valueCurrency: 'PKR', valueEntered: 0, stage: 'new', temperature: 'warm',
+    value: 0, valueCurrency: 'PKR', valueEntered: 0, valueFxRate: 1, stage: 'new', temperature: 'warm',
     ownerId, ownerName,
     addedOn: today, lastContacted: today, nextFollowUp: null, closedAt: null,
     activityCount: 0,
@@ -39,6 +40,8 @@ interface LeadFormModalProps {
 export function LeadFormModal({ open, lead, onClose }: LeadFormModalProps) {
   const toast = useToast()
   const { saveLead, viewerRepId, viewerName, people } = useBd()
+  const rates = useCurrencyRates()
+  const freshness = useRatesFreshness()
   const [draft, setDraft] = useState<Lead>(() => lead ?? emptyLead(viewerRepId, viewerName))
   const [touched, setTouched] = useState(false)
 
@@ -52,7 +55,13 @@ export function LeadFormModal({ open, lead, onClose }: LeadFormModalProps) {
    * left to drift behind the number on screen.
    */
   const setValue = (entered: number, currency: string) =>
-    setDraft((d) => ({ ...d, valueEntered: entered, valueCurrency: currency, value: toPkr(entered, currency) }))
+    setDraft((d) => ({
+      ...d,
+      valueEntered: entered,
+      valueCurrency: currency,
+      valueFxRate: pkrRate(currency, rates),
+      value: toPkr(entered, currency, rates),
+    }))
 
   const companyError = touched && !draft.company.trim() ? 'Company name is required' : undefined
 
@@ -174,7 +183,11 @@ export function LeadFormModal({ open, lead, onClose }: LeadFormModalProps) {
             helper={
               draft.valueCurrency === 'PKR' || !draft.valueEntered
                 ? undefined
-                : `≈ ${formatMoney(toPkr(draft.valueEntered, draft.valueCurrency), 'PKR')} — what the pipeline totals count`
+                : [
+                    `≈ ${formatMoney(toPkr(draft.valueEntered, draft.valueCurrency, rates), 'PKR')}`,
+                    `at ${formatMoney(pkrRate(draft.valueCurrency, rates), 'PKR')}/${draft.valueCurrency}`,
+                    freshness.stale ? `— ${freshness.reason}` : '— what the pipeline totals count',
+                  ].join(' ')
             }
           />
           <FormField label="Currency">
@@ -183,7 +196,12 @@ export function LeadFormModal({ open, lead, onClose }: LeadFormModalProps) {
               onChange={(v) => setValue(draft.valueEntered, v)}
               searchable
               className="w-32"
-              options={CURRENCY_CODES.map((c) => ({ value: c, label: currencyLabel(c) }))}
+              options={CURRENCY_CODES.map((c) => ({
+                value: c,
+                label: currencyLabel(c),
+                description: currencyCountries(c),
+                keywords: currencySearchText(c),
+              }))}
             />
           </FormField>
         </div>

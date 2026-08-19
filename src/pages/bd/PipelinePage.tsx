@@ -150,11 +150,11 @@ export default function PipelinePage() {
     setCollapsed((c) => (c.includes(stage) ? c.filter((s) => s !== stage) : [...c, stage]))
 
   return (
-    <div className="flex flex-1 flex-col">
+    <div className={cn('flex flex-1 flex-col', view === 'board' && 'min-h-0')}>
       <Topbar title="Pipeline" />
-      <div className="flex flex-col gap-6 p-4 lg:px-8 lg:py-7">
+      <div className={cn('flex flex-col gap-6 p-4 lg:px-8 lg:py-7', view === 'board' && 'min-h-0 flex-1')}>
         {/* ── Header ── */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex shrink-0 flex-wrap items-center gap-3">
           <div>
             <h2 className="font-display text-[20px] font-bold text-text-1">Pipeline</h2>
             <p className="font-ui text-[13px] text-text-3">
@@ -202,7 +202,7 @@ export default function PipelinePage() {
         {view === 'board' ? (
           <div
             ref={boardRef}
-            className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-3 no-scrollbar lg:mx-0 lg:px-0"
+            className="-mx-4 flex min-h-80 flex-1 gap-3 overflow-x-auto px-4 pb-3 no-scrollbar lg:mx-0 lg:px-0"
           >
             {STAGE_ORDER.map((stage) => {
               const config = STAGE_CONFIG[stage]
@@ -222,7 +222,7 @@ export default function PipelinePage() {
                     onDrop={() => handleDrop(stage)}
                     aria-label={`Expand ${config.label}`}
                     className={cn(
-                      'flex w-12 shrink-0 flex-col items-center gap-3 rounded-lg border py-3 transition-colors duration-150',
+                      'flex h-full w-12 shrink-0 flex-col items-center gap-3 rounded-lg border py-3 transition-colors duration-150',
                       dragOver === stage ? cn(config.dropBorder, 'bg-surface-2/40') : 'border-border-default bg-surface-1/50 hover:border-border-strong',
                     )}
                   >
@@ -248,14 +248,14 @@ export default function PipelinePage() {
                   onDragLeave={() => setDragOver((c) => (c === stage ? null : c))}
                   onDrop={() => handleDrop(stage)}
                   className={cn(
-                    'flex w-[84vw] shrink-0 flex-col gap-2.5 rounded-lg border p-2.5 transition-colors duration-150',
+                    'flex h-full w-[84vw] shrink-0 flex-col gap-2.5 rounded-lg border p-2.5 transition-colors duration-150',
                     'sm:w-80',
                     dragOver === stage
                       ? cn(config.dropBorder, 'bg-surface-2/40')
                       : isTerminal ? 'border-border-subtle bg-surface-1/30' : 'border-border-default bg-surface-1/50',
                   )}
                 >
-                  <header className={cn('flex items-center gap-2 rounded-md border px-2.5 py-2', config.accent)}>
+                  <header className={cn('flex shrink-0 items-center gap-2 rounded-md border px-2.5 py-2', config.accent)}>
                     <StageIcon size={14} className="shrink-0" />
                     <span className="min-w-0 flex-1 truncate font-ui text-[11.5px] font-bold uppercase tracking-wider">
                       {config.label}
@@ -270,7 +270,7 @@ export default function PipelinePage() {
                     </button>
                   </header>
 
-                  <div className="flex items-baseline justify-between px-1">
+                  <div className="flex shrink-0 items-baseline justify-between px-1">
                     <span className="font-mono text-[11px] tabular-nums text-text-3">
                       {value > 0 ? formatCompactCurrency(value) : '—'}
                     </span>
@@ -281,7 +281,7 @@ export default function PipelinePage() {
                     )}
                   </div>
 
-                  <div className="flex flex-col gap-2">
+                  <div className="flex min-h-2 flex-1 flex-col gap-2 overflow-y-auto overscroll-y-contain">
                     {columnLeads.length === 0 ? (
                       <p className="rounded-md border border-dashed border-border-subtle py-7 text-center font-ui text-[11.5px] text-text-4">
                         Drag a lead here
@@ -365,7 +365,7 @@ function FunnelStrip({ byStage, stats }: FunnelStripProps) {
   if (total === 0) return null
 
   return (
-    <div className="flex flex-col gap-2 rounded-lg border border-border-default bg-surface-1 px-4 py-3.5">
+    <div className="flex shrink-0 flex-col gap-2 rounded-lg border border-border-default bg-surface-1 px-4 py-3.5">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
         <SlidersHorizontal size={13} className="shrink-0 text-text-4" />
         <span className="font-ui text-[11px] font-semibold uppercase tracking-widest text-text-3">

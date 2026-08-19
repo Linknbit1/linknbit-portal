@@ -5,6 +5,7 @@ import { Button } from '../../components/ui/Button'
 import { useToast } from '../../components/ui/toast-context'
 import { StageChip, ChannelChip } from '../../components/shared/BdChips'
 import { useBd } from '../../context/BdContext'
+import { useCurrencyRates } from '../../hooks/useCurrency'
 import { downloadCsv } from '../../lib/csv'
 import {
   parseLeadCsv, LEAD_IMPORT_COLUMNS, LEAD_IMPORT_HEADERS, LEAD_IMPORT_SAMPLE_ROWS,
@@ -30,6 +31,7 @@ interface LeadImportModalProps {
 export function LeadImportModal({ open, onClose }: LeadImportModalProps) {
   const toast = useToast()
   const { leads, people, viewerRepId, viewerName, importLeads } = useBd()
+  const rates = useCurrencyRates()
 
   const inputRef = useRef<HTMLInputElement>(null)
   const [dragOver, setDragOver] = useState(false)
@@ -69,6 +71,7 @@ export function LeadImportModal({ open, onClose }: LeadImportModalProps) {
         viewerId: viewerRepId,
         viewerName,
         existingCompanies: leads.map((l) => l.company),
+        rates,
       }),
     )
   }

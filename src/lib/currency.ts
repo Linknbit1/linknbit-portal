@@ -5,16 +5,25 @@
 // means nothing. What the rep actually typed is kept beside it (`valueEntered` +
 // `valueCurrency`) together with the rate used, so a quote of $1,550 still reads
 // as $1,550 on the card a year later even after the rate has moved.
+//
+// Live rates come from the `currency_rates` table, refreshed daily in the
+// database (see the live_currency_rates migration) and read through
+// `useCurrencyRates`. Every function here takes that map as an argument rather
+// than reaching for a global, which is what keeps this file pure and testable.
+
+import { CURRENCY_META } from './currencyMeta'
+
+/** PKR per 1 unit, keyed by ISO 4217 code. */
+export type CurrencyRates = Record<string, number>
 
 /**
- * PKR per 1 unit, from open.er-api.com on Wed, 19 Aug 2026 00:02:31 +0000.
+ * The rates as they stood when this file was generated, kept only as a floor.
  *
- * A snapshot, not a feed: the rate that matters is the one stamped on the lead
- * when its value was entered, and that is stored per row. Refresh this table
- * when it drifts far enough to bother you — old leads keep their own rate and
- * do not move.
+ * Used while the live table is still loading, and if it cannot be read at all.
+ * Never the preferred source — {@link useCurrencyRates} serves the live map and
+ * falls back to this one.
  */
-export const PKR_PER_UNIT: Record<string, number> = {
+export const FALLBACK_RATES: CurrencyRates = {
   PKR: 1,
   USD: 277.777778,
   GBP: 375.798572,
@@ -184,33 +193,46 @@ export const PKR_PER_UNIT: Record<string, number> = {
   ZWL: 10.400092,
 }
 
-/** Offered at the top of the picker — the currencies this agency is actually quoted in. */
-export const COMMON_CURRENCIES = ["PKR", "USD", "GBP", "EUR", "AED", "SAR", "CAD", "AUD", "SGD", "DKK"]
 
-/** Every currency we hold a rate for, commons first, then the rest alphabetically. */
+/** Offered at the top of the picker — the currencies this agency is actually quoted in. */
+export const COMMON_CURRENCIES = ['PKR', 'USD', 'GBP', 'EUR', 'AED', 'SAR', 'CAD', 'AUD', 'SGD', 'DKK']
+
+/** Every currency we can convert, commons first, then the rest alphabetically. */
 export const CURRENCY_CODES: string[] = [
   ...COMMON_CURRENCIES,
-  ...Object.keys(PKR_PER_UNIT).filter((c) => !COMMON_CURRENCIES.includes(c)).sort(),
+  ...Object.keys(CURRENCY_META).filter((c) => !COMMON_CURRENCIES.includes(c)).sort(),
 ]
 
-/** True when we can convert this code — the picker only ever offers these. */
 export function isSupportedCurrency(code: string): boolean {
-  return code in PKR_PER_UNIT
+  return code in CURRENCY_META
 }
 
 /**
- * The rate to stamp on a lead priced in `code`.
+ * The rate to stamp on a deal priced in `code`.
  *
- * Falls back to 1 for a code we do not know, which makes the amount its own PKR
- * value rather than silently zeroing a deal.
+ * Falls back to the bundled snapshot, then to 1. A rate of 1 makes the amount
+ * its own PKR value, which is visibly wrong rather than silently zero — the
+ * failure an operator can spot.
  */
-export function pkrRate(code: string): number {
-  return PKR_PER_UNIT[code] ?? 1
+export function pkrRate(code: string, rates: CurrencyRates): number {
+  return rates[code] ?? FALLBACK_RATES[code] ?? 1
 }
 
-/** Convert an entered amount to the PKR figure the reports add up. */
-export function toPkr(amount: number, code: string): number {
-  return Math.round(amount * pkrRate(code))
+/** Convert an entered amount into the PKR figure the reports add up. */
+export function toPkr(amount: number, code: string, rates: CurrencyRates): number {
+  return Math.round(amount * pkrRate(code, rates))
+}
+
+/** The other direction, for showing what a PKR figure is worth to the client. */
+export function fromPkr(amountPkr: number, code: string, rates: CurrencyRates): number {
+  const rate = pkrRate(code, rates)
+  return rate === 0 ? 0 : amountPkr / rate
+}
+
+/** Convert straight between two currencies, via PKR. */
+export function convert(amount: number, from: string, to: string, rates: CurrencyRates): number {
+  if (from === to) return amount
+  return fromPkr(amount * pkrRate(from, rates), to, rates)
 }
 
 /**
@@ -218,11 +240,26 @@ export function toPkr(amount: number, code: string): number {
  * currencies, and a pipeline that mixes them has to say which.
  */
 export function formatMoney(amount: number, code = 'PKR'): string {
-  return `${code} ${new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(amount)}`
+  const decimals = Math.abs(amount) > 0 && Math.abs(amount) < 100 ? 2 : 0
+  return `${code} ${new Intl.NumberFormat('en-US', { maximumFractionDigits: decimals }).format(amount)}`
 }
 
-/** The label a currency gets in the picker: `USD — US Dollar` where the browser knows the name. */
+/** `USD — US Dollar`, for the picker's closed state and its option rows. */
 export function currencyLabel(code: string): string {
-  const name = new Intl.DisplayNames(['en'], { type: 'currency' }).of(code)
-  return name && name !== code ? `${code} — ${name}` : code
+  const name = CURRENCY_META[code]?.name
+  return name ? `${code} — ${name}` : code
+}
+
+/**
+ * What the picker matches a search against: the code, the currency name, and
+ * every country that spends it, so "Denmark" finds DKK and "Emirates" finds AED.
+ */
+export function currencySearchText(code: string): string {
+  const meta = CURRENCY_META[code]
+  return meta ? `${code} ${meta.name} ${meta.countries.join(' ')}` : code
+}
+
+/** The places that spend it, for the option's second line. Empty for none. */
+export function currencyCountries(code: string): string {
+  return CURRENCY_META[code]?.countries.join(', ') ?? ''
 }

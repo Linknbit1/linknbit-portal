@@ -1754,6 +1754,51 @@ export type Database = {
           },
         ]
       }
+      currency_rate_sync: {
+        Row: {
+          id: boolean
+          last_error: string | null
+          rate_date: string | null
+          request_id: number | null
+          requested_at: string | null
+          succeeded_at: string | null
+        }
+        Insert: {
+          id?: boolean
+          last_error?: string | null
+          rate_date?: string | null
+          request_id?: number | null
+          requested_at?: string | null
+          succeeded_at?: string | null
+        }
+        Update: {
+          id?: boolean
+          last_error?: string | null
+          rate_date?: string | null
+          request_id?: number | null
+          requested_at?: string | null
+          succeeded_at?: string | null
+        }
+        Relationships: []
+      }
+      currency_rates: {
+        Row: {
+          code: string
+          pkr_per_unit: number
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          pkr_per_unit: number
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          pkr_per_unit?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       designations: {
         Row: {
           created_at: string
@@ -4651,6 +4696,7 @@ export type Database = {
       }
       delete_task_cascade: { Args: { p_task_id: string }; Returns: string[] }
       expire_reward_pools: { Args: never; Returns: undefined }
+      fn_absorb_currency_rates: { Args: never; Returns: undefined }
       fn_add_channel_role: {
         Args: { p_channel_id: string; p_role: string }
         Returns: undefined
@@ -4752,6 +4798,7 @@ export type Database = {
           profile_id: string
         }[]
       }
+      fn_request_currency_rates: { Args: never; Returns: undefined }
       fn_set_channel_muted: {
         Args: { p_channel_id: string; p_muted: boolean }
         Returns: undefined
