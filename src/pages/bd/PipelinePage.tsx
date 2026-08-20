@@ -429,14 +429,17 @@ export default function PipelinePage() {
                                   )
                                   const id = lead.id
                                   const height = rect.height
-                                  // Deferred by a frame on purpose. Hiding the source
+                                  // Deferred a tick on purpose. Hiding the source
                                   // element inside dragstart — which is what setting
-                                  // dragId does — cancels the drag the browser is still
-                                  // setting up, and nothing moves at all.
-                                  requestAnimationFrame(() => {
+                                  // dragId does — cancels the drag the browser is
+                                  // still setting up, and nothing moves at all. A
+                                  // timer rather than rAF: frames can stall inside a
+                                  // native drag loop, and this must not depend on the
+                                  // page painting.
+                                  setTimeout(() => {
                                     setDragHeight(height)
                                     setDragId(id)
-                                  })
+                                  }, 0)
                                 }}
                                 onDragEnd={endDrag}
                                 onClick={() => setOpenLeadId(lead.id)}
