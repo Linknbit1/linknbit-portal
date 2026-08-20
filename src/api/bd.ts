@@ -1,7 +1,8 @@
 import { supabase } from '../lib/supabase'
+import { randomUUID } from '../lib/uuid'
 import type { Tables, TablesUpdate, Json } from '../types/database'
 import type {
-  Lead, LeadStage, LeadTemperature, IcpFit, BdChannel,
+  Lead, LeadSocial, LeadDocument, LeadStage, LeadTemperature, IcpFit, BdChannel,
   BdActivity, BdActivityType, BdActivityOutcome,
   BdMeeting, MeetingType, MeetingPlatform,
   BdTask, BdTaskRecurrence, BdProject, BdDailyUpdate, BdTarget, BdHandoff,
@@ -102,6 +103,44 @@ function narrowAll<T extends string>(allowed: T[], values: string[]): T[] {
 
 /* ── Leads ───────────────────────────────────────────────────────────────── */
 
+/**
+ * Read a repeater column back out of jsonb.
+ *
+ * The column is a `Json` as far as the generated types are concerned, so every
+ * row is checked rather than asserted: a hand-edited record, or one written by
+ * an older client, must not take the pipeline down with it. Rows that do not
+ * carry the fields this repeater needs are dropped, not rendered blank.
+ */
+function readRepeater<T>(value: Json, build: (row: Record<string, unknown>) => T | null): T[] {
+  if (!Array.isArray(value)) return []
+  return value.flatMap((row) => {
+    if (typeof row !== 'object' || row === null || Array.isArray(row)) return []
+    const built = build(row as Record<string, unknown>)
+    return built ? [built] : []
+  })
+}
+
+const str = (v: unknown): string => (typeof v === 'string' ? v : '')
+
+function readSocials(value: Json): LeadSocial[] {
+  return readRepeater(value, (row) => {
+    const url = str(row.url).trim()
+    return url ? { id: str(row.id) || randomUUID(), url } : null
+  })
+}
+
+function readDocuments(value: Json): LeadDocument[] {
+  return readRepeater(value, (row) => {
+    const url = str(row.url).trim()
+    const title = str(row.title).trim()
+    // Either half is enough. A title-less row is still a link worth opening, and
+    // a link-less one still records that the document exists — which is exactly
+    // the shape the department's proposal sheet is in, where the Drive column
+    // names the file without giving its URL.
+    return url || title ? { id: str(row.id) || randomUUID(), title, url } : null
+  })
+}
+
 type LeadJoined = LeadRow & { owner: PersonRef | null }
 
 const LEAD_SELECT = '*, owner:profiles!bd_leads_owner_id_fkey(id,name)'
@@ -135,6 +174,12 @@ export function mapLead(row: LeadJoined): Lead {
     lostReason: row.lost_reason ?? undefined,
     doc: row.doc,
     description: row.description ?? undefined,
+    website: row.website ?? '',
+    country: row.country ?? '',
+    city: row.city ?? '',
+    source: row.source ?? '',
+    socials: readSocials(row.socials),
+    documents: readDocuments(row.documents),
     // Filled in by the composition layer from the activity list — see the file header.
     activityCount: 0,
   }
@@ -187,6 +232,22 @@ export function leadPatchToRow(patch: Partial<Lead>): TablesUpdate<'bd_leads'> {
   if (patch.lostReason !== undefined) row.lost_reason = patch.lostReason ?? null
   if (patch.doc !== undefined) row.doc = patch.doc
   if (patch.description !== undefined) row.description = patch.description ?? null
+  if (patch.website !== undefined) row.website = patch.website
+  if (patch.country !== undefined) row.country = patch.country
+  if (patch.city !== undefined) row.city = patch.city
+  if (patch.source !== undefined) row.source = patch.source
+  // Both repeaters are written whole. Empty rows are dropped on the way out, so
+  // a half-filled row left behind in the form never reaches the database.
+  if (patch.socials !== undefined) {
+    row.socials = patch.socials
+      .filter((s) => s.url.trim())
+      .map((s) => ({ id: s.id, url: s.url.trim() }))
+  }
+  if (patch.documents !== undefined) {
+    row.documents = patch.documents
+      .filter((d) => d.url.trim() || d.title.trim())
+      .map((d) => ({ id: d.id, title: d.title.trim(), url: d.url.trim() }))
+  }
   return row
 }
 

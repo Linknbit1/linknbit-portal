@@ -498,8 +498,35 @@ export interface Lead {
   doc?: Json | null
   /** Plain-text mirror of `doc`, for card excerpts and anything that can't read ProseMirror JSON. */
   description?: string
+  /** The prospect's own site. Stored as typed; a missing scheme is assumed https when linked. */
+  website: string
+  country: string
+  city: string
+  /**
+   * Where the lead came from before it was a record here — the Drive folder, the
+   * Fiverr archive. Provenance, not a taxonomy: `channel` is the field reports read.
+   */
+  source: string
+  /** Repeater. The platform behind each link is derived from the URL, never stored. */
+  socials: LeadSocial[]
+  /** Repeater — proposals, decks and anything else that lives in Drive. */
+  documents: LeadDocument[]
   /** Derived from the lead's activities at read time, never stored. */
   activityCount: number
+}
+
+/** One row of the lead form's social-links repeater. */
+export interface LeadSocial {
+  /** Client-minted, so a row survives reordering and re-render without remounting. */
+  id: string
+  url: string
+}
+
+/** One row of the lead form's documents repeater. */
+export interface LeadDocument {
+  id: string
+  title: string
+  url: string
 }
 
 export type MeetingType = 'discovery' | 'proposal' | 'negotiation' | 'kickoff' | 'other'

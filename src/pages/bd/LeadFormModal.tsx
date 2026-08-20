@@ -9,6 +9,8 @@ import {
   CHANNEL_CONFIG, CHANNEL_ORDER, STAGE_CONFIG, STAGE_ORDER,
   BD_SERVICES, BD_INDUSTRIES, LEAD_TEMPERATURES, ICP_FITS,
 } from '../../constants/bd'
+import { Repeater } from '../../components/ui/Repeater'
+import { SocialBadge } from '../../components/shared/SocialBadge'
 import { FormField } from './FormField'
 import { useBd } from '../../context/BdContext'
 import { randomUUID } from '../../lib/uuid'
@@ -28,6 +30,8 @@ function emptyLead(ownerId: string, ownerName: string): Lead {
     position: 0,
     ownerId, ownerName,
     addedOn: today, lastContacted: null, nextFollowUp: null, closedAt: null,
+    website: '', country: '', city: '', source: '',
+    socials: [], documents: [],
     activityCount: 0,
   }
 }
@@ -131,6 +135,26 @@ export function LeadFormModal({ open, lead, onClose }: LeadFormModalProps) {
           value={draft.phone}
           onChange={(e) => set('phone', e.target.value)}
           placeholder="+47 22 45 10 88"
+        />
+        <Input
+          label="Website"
+          value={draft.website}
+          onChange={(e) => set('website', e.target.value)}
+          placeholder="nordicfreight.no"
+          helper="https:// is added for you if you leave it off"
+          className="sm:col-span-2"
+        />
+        <Input
+          label="Country"
+          value={draft.country}
+          onChange={(e) => set('country', e.target.value)}
+          placeholder="Norway"
+        />
+        <Input
+          label="City"
+          value={draft.city}
+          onChange={(e) => set('city', e.target.value)}
+          placeholder="Oslo"
         />
 
         <FormField label="Source channel">
@@ -243,6 +267,73 @@ export function LeadFormModal({ open, lead, onClose }: LeadFormModalProps) {
             value={draft.nextFollowUp ?? ''}
             onChange={(v) => set('nextFollowUp', v || null)}
             placeholder="Pick a date"
+          />
+        </div>
+
+        <Input
+          label="Where this lead came from"
+          value={draft.source}
+          onChange={(e) => set('source', e.target.value)}
+          placeholder="Sales drive, Fiverr archive, referral from…"
+          helper="Free text, for provenance. Reports read Source channel above, not this."
+          className="sm:col-span-2"
+        />
+
+        {/* ── Social profiles ── */}
+        <div className="sm:col-span-2">
+          <Repeater
+            label="Social profiles"
+            hint="The platform is recognised from the link"
+            addLabel="Add profile"
+            rows={draft.socials}
+            onAdd={() => set('socials', [...draft.socials, { id: randomUUID(), url: '' }])}
+            onRemove={(id) => set('socials', draft.socials.filter((s) => s.id !== id))}
+            renderRow={(row) => (
+              <div className="flex items-center gap-2">
+                <SocialBadge url={row.url} />
+                <Input
+                  aria-label="Profile link"
+                  value={row.url}
+                  onChange={(e) =>
+                    set('socials', draft.socials.map((s) => (s.id === row.id ? { ...s, url: e.target.value } : s)))
+                  }
+                  placeholder="https://linkedin.com/company/nordic-freight"
+                  className="flex-1"
+                />
+              </div>
+            )}
+          />
+        </div>
+
+        {/* ── Documents ── */}
+        <div className="sm:col-span-2">
+          <Repeater
+            label="Documents"
+            hint="Proposals, decks and anything else in Drive"
+            addLabel="Add document"
+            rows={draft.documents}
+            onAdd={() => set('documents', [...draft.documents, { id: randomUUID(), title: '', url: '' }])}
+            onRemove={(id) => set('documents', draft.documents.filter((d) => d.id !== id))}
+            renderRow={(row) => (
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)]">
+                <Input
+                  aria-label="Document title"
+                  value={row.title}
+                  onChange={(e) =>
+                    set('documents', draft.documents.map((d) => (d.id === row.id ? { ...d, title: e.target.value } : d)))
+                  }
+                  placeholder="Website Redesign Proposal"
+                />
+                <Input
+                  aria-label="Document link"
+                  value={row.url}
+                  onChange={(e) =>
+                    set('documents', draft.documents.map((d) => (d.id === row.id ? { ...d, url: e.target.value } : d)))
+                  }
+                  placeholder="https://docs.google.com/document/d/…"
+                />
+              </div>
+            )}
           />
         </div>
       </div>

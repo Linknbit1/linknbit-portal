@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import {
   Mail, Phone, Building2, Trash2, Pencil, Plus, CalendarClock, ArrowRight,
   MessageSquare, FileText, StickyNote, GitCommitHorizontal, Video, CheckCircle2,
+  Globe, MapPin, ExternalLink,
 } from 'lucide-react'
 import { Drawer } from '../../components/ui/Drawer'
 import { Button } from '../../components/ui/Button'
@@ -12,6 +13,8 @@ import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { useToast } from '../../components/ui/toast-context'
 import { TemperatureChip, IcpFitChip, ChannelChip } from '../../components/shared/BdChips'
 import { BdCommentThread } from '../../components/shared/BdCommentThread'
+import { SocialBadge } from '../../components/shared/SocialBadge'
+import { externalHref, prettyUrl, socialPlatform } from '../../lib/socialLinks'
 import { BdDocEditor } from '../../components/editor/BdDocEditor'
 import { STAGE_CONFIG, STAGE_ORDER } from '../../constants/bd'
 import { useBd } from '../../context/BdContext'
@@ -111,6 +114,9 @@ export function LeadDrawer({ lead, onClose, onEdit, onLogActivity }: LeadDrawerP
   }
 
   const daysUntilFollowUp = lead.nextFollowUp ? getDaysUntil(lead.nextFollowUp) : null
+  const websiteHref = externalHref(lead.website)
+  // "Oslo, Norway", or whichever half was recorded.
+  const location = [lead.city, lead.country].filter(Boolean).join(', ')
   const handoff = handoffs.find((h) => h.leadId === lead.id)
 
   return (
@@ -251,6 +257,86 @@ export function LeadDrawer({ lead, onClose, onEdit, onLogActivity }: LeadDrawerP
                 ))}
               </span>
             </Field>
+
+            {/* Only rendered when there is something to show — an empty grid of
+                em-dashes is noise on a record nobody has filled in yet. */}
+            {websiteHref && (
+              <Field label="Website" className="col-span-2">
+                <a
+                  href={websiteHref}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="flex items-center gap-1.5 truncate font-ui text-[12.5px] text-service-dev hover:underline"
+                >
+                  <Globe size={12} className="shrink-0" />
+                  {prettyUrl(lead.website)}
+                  <ExternalLink size={11} className="shrink-0 opacity-60" />
+                </a>
+              </Field>
+            )}
+            {location && (
+              <Field label="Location">
+                <span className="flex items-center gap-1.5 font-ui text-[12.5px] text-text-2">
+                  <MapPin size={12} className="shrink-0 text-text-4" />
+                  {location}
+                </span>
+              </Field>
+            )}
+            {lead.source && (
+              <Field label="Came from">
+                <span className="font-ui text-[12.5px] text-text-2">{lead.source}</span>
+              </Field>
+            )}
+            {lead.socials.length > 0 && (
+              <Field label="Social profiles" className="col-span-2">
+                <span className="flex flex-wrap items-center gap-1.5">
+                  {lead.socials.map((s) => {
+                    const href = externalHref(s.url)
+                    const platform = socialPlatform(s.url)
+                    return href ? (
+                      <a
+                        key={s.id}
+                        href={href}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        title={`${platform?.label ?? 'Link'} — ${prettyUrl(s.url)}`}
+                        className="transition-opacity hover:opacity-80"
+                      >
+                        <SocialBadge url={s.url} size="sm" />
+                      </a>
+                    ) : (
+                      <SocialBadge key={s.id} url={s.url} size="sm" />
+                    )
+                  })}
+                </span>
+              </Field>
+            )}
+            {lead.documents.length > 0 && (
+              <Field label="Documents" className="col-span-2">
+                <span className="flex flex-col gap-1">
+                  {lead.documents.map((d) => {
+                    const href = externalHref(d.url)
+                    const text = d.title || prettyUrl(d.url)
+                    return href ? (
+                      <a
+                        key={d.id}
+                        href={href}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        title={prettyUrl(d.url)}
+                        className="flex items-center gap-1.5 truncate font-ui text-[12.5px] text-service-dev hover:underline"
+                      >
+                        <FileText size={12} className="shrink-0" />
+                        <span className="truncate">{text}</span>
+                        <ExternalLink size={11} className="shrink-0 opacity-60" />
+                      </a>
+                    ) : (
+                      <span key={d.id} className="truncate font-ui text-[12.5px] text-text-3">{text}</span>
+                    )
+                  })}
+                </span>
+              </Field>
+            )}
           </dl>
 
           {/* ── Tabs ── */}

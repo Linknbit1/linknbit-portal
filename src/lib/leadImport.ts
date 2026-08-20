@@ -7,7 +7,7 @@ import { CHANNEL_CONFIG, CHANNEL_ORDER, STAGE_CONFIG, STAGE_ORDER, BD_SERVICES, 
 import { parseCsv } from './csv'
 import { isSupportedCurrency, pkrRate, toPkr, type CurrencyRates } from './currency'
 import { randomUUID } from './uuid'
-import type { Lead, LeadStage, BdChannel, LeadTemperature, IcpFit } from '../types'
+import type { Lead, LeadSocial, LeadDocument, LeadStage, BdChannel, LeadTemperature, IcpFit } from '../types'
 
 /* ── The column contract ───────────────────────────────────────────────────── */
 
@@ -53,6 +53,17 @@ export const LEAD_IMPORT_COLUMNS: LeadImportColumn[] = [
   { key: 'last_contacted', accepts: 'YYYY-MM-DD', fallback: 'Empty — until outreach is logged' },
   { key: 'next_follow_up', aliases: ['follow_up'], accepts: 'YYYY-MM-DD', fallback: 'Empty' },
   { key: 'notes', aliases: ['description'], accepts: 'Any text', fallback: 'Empty' },
+  { key: 'website', aliases: ['url', 'site'], accepts: 'A web address — with or without https://', fallback: 'Empty' },
+  { key: 'country', accepts: 'Any text', fallback: 'Empty' },
+  { key: 'city', accepts: 'Any text', fallback: 'Empty' },
+  // Not `source`: that is already an alias of `channel`, and a sheet carrying
+  // both would be ambiguous about which one it meant.
+  { key: 'source_folder', aliases: ['origin'], accepts: 'Any text — where the lead came from', fallback: 'Empty' },
+  { key: 'socials', aliases: ['social_media'], accepts: 'Profile links — separate several with ;', fallback: 'None' },
+  {
+    key: 'documents', aliases: ['document_links', 'drive_links'],
+    accepts: 'Title | link — separate several with ;', fallback: 'None',
+  },
 ]
 
 /**
@@ -69,6 +80,9 @@ export const LEAD_IMPORT_SAMPLE_ROWS: string[][] = [
     'Web Dev; Workflow Automation', 'Logistics', 'Strong fit', '1250000', 'PKR',
     'Qualified', 'Hot', '', '2026-08-04', '2026-08-14', '2026-08-21',
     'Wants the driver app rebuilt before their Q4 freight peak.',
+    'nordicfreight.no', 'Norway', 'Oslo', 'Sales drive',
+    'https://linkedin.com/company/nordic-freight; https://instagram.com/nordicfreight',
+    'Driver App Proposal | https://docs.google.com/document/d/example',
   ],
   [
     'Meridian Health Group', 'Sara Qureshi', 'Marketing Director',
@@ -76,11 +90,47 @@ export const LEAD_IMPORT_SAMPLE_ROWS: string[][] = [
     'Digital Marketing', 'Healthcare', 'Partial fit', '1,400', 'USD',
     'Contacted', 'Warm', '', '2026-08-11', '2026-08-11', '',
     'Introduced by the Cricket Sansar team.',
+    'https://meridianhealth.pk', 'Pakistan', 'Karachi', '', '', '',
   ],
-  ['Starlight Interiors', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
+  ['Starlight Interiors', ...Array<string>(23).fill('')],
 ]
 
 export const LEAD_IMPORT_HEADERS = LEAD_IMPORT_COLUMNS.map((c) => c.key)
+
+/* ── Repeater cells ────────────────────────────────────────────────────────── */
+
+/** `"https://linkedin.com/x; https://instagram.com/y"` → two social rows. */
+function parseSocials(cell: string): LeadSocial[] {
+  return cell
+    .split(';')
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map((url) => ({ id: randomUUID(), url }))
+}
+
+/**
+ * `"Proposal | https://…; Deck | https://…"` → two document rows.
+ *
+ * The pipe separates title from link. A cell with no pipe is taken as a bare
+ * link — a spreadsheet full of Drive URLs is the common case, and refusing it
+ * over a missing title would reject the very sheet this exists to read.
+ */
+function parseDocuments(cell: string): LeadDocument[] {
+  return cell
+    .split(';')
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map((entry) => {
+      const at = entry.indexOf('|')
+      if (at === -1) return { id: randomUUID(), title: '', url: entry }
+      return {
+        id: randomUUID(),
+        title: entry.slice(0, at).trim(),
+        url: entry.slice(at + 1).trim(),
+      }
+    })
+    .filter((d) => d.url)
+}
 
 /* ── Parsing ───────────────────────────────────────────────────────────────── */
 
@@ -302,6 +352,12 @@ export function parseLeadCsv(text: string, ctx: LeadImportContext): LeadImportRe
               nextFollowUp: dates.next_follow_up,
               closedAt: null,
               description: notes || undefined,
+              website: cell('website'),
+              country: cell('country'),
+              city: cell('city'),
+              source: cell('source_folder'),
+              socials: parseSocials(cell('socials')),
+              documents: parseDocuments(cell('documents')),
               activityCount: 0,
             },
     })

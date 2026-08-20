@@ -121,6 +121,14 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'added',
+        text: 'A lead now holds the rest of what you know about a prospect: their website, country and city, as many social profiles as they have, and the documents you sent them — each with a title and a link. Social links need no picking from a list; paste the address and the platform is recognised from it. All of it shows on the lead beneath Services.',
+      },
+      {
+        kind: 'improved',
+        text: 'The CSV importer takes the new fields too — website, country, city, where the lead came from, social links and documents — so a spreadsheet no longer has to leave half of itself behind at the door.',
+      },
+      {
+        kind: 'added',
         text: 'Pipeline cards can be dragged up and down inside a column, not just across to the next stage. The card lifts out, the ones below close up, and an empty slot follows your cursor so you can see exactly where it will land. The order you set is saved for the whole department. It works under the new Manual order sort, which is now the default — the other sorts arrange the column for you, so dragging within one is not offered there.',
       },
       {

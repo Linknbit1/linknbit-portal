@@ -785,14 +785,17 @@ export type Database = {
         Row: {
           added_on: string
           channel: string
+          city: string
           closed_at: string | null
           company: string
           contact_name: string
           contact_title: string
+          country: string
           created_at: string
           created_by: string | null
           description: string | null
           doc: Json | null
+          documents: Json
           email: string
           icp_fit: string
           id: string
@@ -804,6 +807,8 @@ export type Database = {
           phone: string
           position: number
           services: string[]
+          socials: Json
+          source: string
           stage: string
           temperature: string
           updated_at: string
@@ -811,18 +816,22 @@ export type Database = {
           value_currency: string
           value_entered: number | null
           value_fx_rate: number | null
+          website: string
         }
         Insert: {
           added_on?: string
           channel?: string
+          city?: string
           closed_at?: string | null
           company: string
           contact_name?: string
           contact_title?: string
+          country?: string
           created_at?: string
           created_by?: string | null
           description?: string | null
           doc?: Json | null
+          documents?: Json
           email?: string
           icp_fit?: string
           id?: string
@@ -834,6 +843,8 @@ export type Database = {
           phone?: string
           position?: number
           services?: string[]
+          socials?: Json
+          source?: string
           stage?: string
           temperature?: string
           updated_at?: string
@@ -841,18 +852,22 @@ export type Database = {
           value_currency?: string
           value_entered?: number | null
           value_fx_rate?: number | null
+          website?: string
         }
         Update: {
           added_on?: string
           channel?: string
+          city?: string
           closed_at?: string | null
           company?: string
           contact_name?: string
           contact_title?: string
+          country?: string
           created_at?: string
           created_by?: string | null
           description?: string | null
           doc?: Json | null
+          documents?: Json
           email?: string
           icp_fit?: string
           id?: string
@@ -864,6 +879,8 @@ export type Database = {
           phone?: string
           position?: number
           services?: string[]
+          socials?: Json
+          source?: string
           stage?: string
           temperature?: string
           updated_at?: string
@@ -871,6 +888,7 @@ export type Database = {
           value_currency?: string
           value_entered?: number | null
           value_fx_rate?: number | null
+          website?: string
         }
         Relationships: [
           {
