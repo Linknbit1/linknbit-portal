@@ -25,6 +25,8 @@ import {
   createReward,
   updateReward,
   deleteReward,
+  uploadRewardImage,
+  deleteRewardImage,
   redeemReward,
   fetchMyRedemptions,
   fetchRedemptionQueue,
@@ -255,11 +257,27 @@ export function useAllRewards() {
   return useQuery({ queryKey: GAMIFICATION_KEYS.allRewards(), queryFn: fetchAllRewards, staleTime: 30_000 })
 }
 
+/** Fields the reward modal writes; `image_url` is derived from the picked file. */
+export type RewardFields = Pick<
+  RewardRow,
+  'name' | 'description' | 'xp_cost' | 'quantity' | 'tier' | 'is_cash' | 'group_size'
+>
+
 export function useCreateReward(actorId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (reward: Pick<RewardRow, 'name' | 'description' | 'xp_cost' | 'quantity' | 'tier' | 'is_cash' | 'group_size'>) =>
-      createReward(reward, actorId),
+    // The upload runs inside the mutation so a storage failure aborts the whole
+    // create — a reward is never written pointing at an image that never landed.
+    mutationFn: async ({ reward, imageFile }: { reward: RewardFields; imageFile?: File | null }) => {
+      const image_url = imageFile ? await uploadRewardImage(imageFile) : null
+      try {
+        return await createReward({ ...reward, image_url }, actorId)
+      } catch (e) {
+        // Row insert failed — don't leave the just-uploaded file orphaned.
+        await deleteRewardImage(image_url)
+        throw e
+      }
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.rewards() })
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.allRewards() })
@@ -270,7 +288,35 @@ export function useCreateReward(actorId: string) {
 export function useUpdateReward() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, updates }: { id: string; updates: Partial<RewardRow> }) => updateReward(id, updates),
+    /**
+     * `imageFile` replaces the artwork, `removeImage` clears it. The previous
+     * file is deleted only after the row update succeeds, so a failed save
+     * leaves the reward showing the image it still points at.
+     */
+    mutationFn: async ({ id, updates, imageFile, removeImage, previousImageUrl }: {
+      id: string
+      updates: Partial<RewardRow>
+      imageFile?: File | null
+      removeImage?: boolean
+      previousImageUrl?: string | null
+    }) => {
+      let nextUpdates = updates
+      let uploadedUrl: string | null = null
+      if (imageFile) {
+        uploadedUrl = await uploadRewardImage(imageFile)
+        nextUpdates = { ...updates, image_url: uploadedUrl }
+      } else if (removeImage) {
+        nextUpdates = { ...updates, image_url: null }
+      }
+      try {
+        const row = await updateReward(id, nextUpdates)
+        if (imageFile || removeImage) await deleteRewardImage(previousImageUrl ?? null)
+        return row
+      } catch (e) {
+        await deleteRewardImage(uploadedUrl)
+        throw e
+      }
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.rewards() })
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.allRewards() })
@@ -281,7 +327,7 @@ export function useUpdateReward() {
 export function useDeleteReward() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => deleteReward(id),
+    mutationFn: ({ id, imageUrl }: { id: string; imageUrl?: string | null }) => deleteReward(id, imageUrl),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.rewards() })
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.allRewards() })

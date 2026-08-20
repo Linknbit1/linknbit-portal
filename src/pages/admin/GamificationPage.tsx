@@ -1,9 +1,9 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
 import {
   Trophy, Zap, Star, Plus, X, Gift, Loader2, AlertCircle, ShieldAlert,
   Check, Pencil, Trash2, ClipboardCheck, Send, Award, Coins, Lock, Ban, History,
-  Users, UserPlus, LogOut, Calendar,
+  Users, UserPlus, LogOut, Calendar, Image as ImageIcon, Upload, Inbox,
 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { HubRow } from '../../components/layout/MobileHub'
@@ -42,6 +42,8 @@ import {
 import { formatRelativeTime } from '../../lib/utils'
 import { cn } from '../../lib/cn'
 import { groupByDate, isoDayKey, formatDayHeading } from '../../lib/dateGroups'
+import { MAX_REWARD_IMAGE_MB } from '../../api/gamification'
+import { validateImageFile, ACCEPTED_IMAGE_TYPES } from '../../lib/imageFile'
 import type {
   RewardRow, QuestTaskRow, ShoutoutRow, QuestTaskClaimRow, RewardPoolWithMembers,
 } from '../../api/gamification'
@@ -498,6 +500,42 @@ function SubmitProofModal({ claim, taskTitle, profileId, onClose }: {
   )
 }
 
+// ── Reward artwork ─────────────────────────────────────────────────────────────
+
+/**
+ * A reward's image is optional and its URL is just a stored string, so it can
+ * 404 long after the file was removed — every path falls back to the gift icon
+ * rather than rendering a broken image.
+ */
+function RewardThumb({ reward, size, className }: {
+  reward: RewardRow
+  size: 'sm' | 'banner'
+  className?: string
+}) {
+  const [failed, setFailed] = useState(false)
+  const src = failed ? null : reward.image_url
+
+  if (size === 'banner') {
+    if (!src) return null
+    return (
+      <img
+        src={src}
+        alt={reward.name}
+        loading="lazy"
+        onError={() => setFailed(true)}
+        className={cn('w-full h-28 object-cover rounded-md border border-border-subtle mb-3', className)}
+      />
+    )
+  }
+  return (
+    <div className={cn('size-9 rounded-md overflow-hidden border border-border-subtle bg-surface-2 flex items-center justify-center shrink-0', className)}>
+      {src
+        ? <img src={src} alt="" loading="lazy" onError={() => setFailed(true)} className="size-full object-cover" />
+        : <Gift size={15} className="text-text-4" />}
+    </div>
+  )
+}
+
 // ── Reward create / edit modal ─────────────────────────────────────────────────
 
 interface RewardModalProps {
@@ -526,6 +564,43 @@ function RewardModal({ actorId, editRow, onClose }: RewardModalProps) {
     editRow && editRow.group_size >= 2 ? String(editRow.group_size) : '3',
   )
 
+  // Artwork: `imageFile` is a new pick, `removeImage` clears an existing one.
+  // `preview` is an object URL for a fresh pick and the stored URL otherwise.
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [removeImage, setRemoveImage] = useState(false)
+  const [objectUrl, setObjectUrl] = useState<string | null>(null)
+  const [imageError, setImageError] = useState<string | null>(null)
+  const storedImage = removeImage ? null : editRow?.image_url ?? null
+  const preview = objectUrl ?? storedImage
+
+  // Object URLs are only freed on unmount — replacing a pick revokes the old one
+  // inline, so this just catches the last one still held when the modal closes.
+  useEffect(() => () => { if (objectUrl) URL.revokeObjectURL(objectUrl) }, [objectUrl])
+
+  const onPickImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    // Reset immediately so re-picking the same file after an error still fires.
+    e.target.value = ''
+    if (!file) return
+    const err = validateImageFile(file, MAX_REWARD_IMAGE_MB)
+    if (err) { setImageError(err); return }
+    if (objectUrl) URL.revokeObjectURL(objectUrl)
+    setImageError(null)
+    setImageFile(file)
+    setObjectUrl(URL.createObjectURL(file))
+    setRemoveImage(false)
+  }
+
+  const clearImage = () => {
+    if (objectUrl) URL.revokeObjectURL(objectUrl)
+    setObjectUrl(null)
+    setImageFile(null)
+    setImageError(null)
+    // Only an existing stored image needs an explicit removal on save.
+    setRemoveImage(!!editRow?.image_url)
+  }
+
   const perPerson = parseInt(cost, 10)
   const size = parseInt(groupSize, 10)
   const groupSizeValid = !isGroup || (!isNaN(size) && size >= 2)
@@ -545,16 +620,28 @@ function RewardModal({ actorId, editRow, onClose }: RewardModalProps) {
       is_cash: isGroup ? false : isCash,
       group_size: isGroup ? size : 1,
     }
+    const failed = (verb: string) => (e: Error) => {
+      // Storage rejects on size/type/permission; the row write fails on anything
+      // else. Say which half broke so the fix is obvious.
+      const isUpload = /storage|bucket|mime|payload|exceeded/i.test(e.message)
+      toast(isUpload ? `Image upload failed — ${e.message}` : `Failed to ${verb} reward`, 'error')
+    }
     if (editRow) {
       // is_active is owned by the Enable/Disable action, so it's left untouched here.
-      update({ id: editRow.id, updates: fields }, {
+      update({
+        id: editRow.id,
+        updates: fields,
+        imageFile,
+        removeImage,
+        previousImageUrl: editRow.image_url,
+      }, {
         onSuccess: () => { toast(`Reward "${name}" updated`, 'success'); onClose() },
-        onError: () => toast('Failed to update reward', 'error'),
+        onError: failed('update'),
       })
     } else {
-      create(fields, {
+      create({ reward: fields, imageFile }, {
         onSuccess: () => { toast(`Reward "${name}" created`, 'success'); onClose() },
-        onError: () => toast('Failed to create reward', 'error'),
+        onError: failed('create'),
       })
     }
   }
@@ -575,6 +662,54 @@ function RewardModal({ actorId, editRow, onClose }: RewardModalProps) {
             <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Description</label>
             <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2}
               className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-ui text-text-1 placeholder:text-text-4 outline-none focus:border-border-focus resize-none" />
+          </div>
+          {/* Artwork — optional; the shop card falls back to a gift icon. */}
+          <div>
+            <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Image</label>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className={cn(
+                  'size-20 shrink-0 rounded-lg border overflow-hidden flex items-center justify-center transition-colors',
+                  preview
+                    ? 'border-border-default'
+                    : 'border-dashed border-border-strong bg-surface-inset hover:border-border-focus',
+                )}
+                aria-label={preview ? 'Replace reward image' : 'Add reward image'}
+              >
+                {preview
+                  ? <img src={preview} alt={name || 'Reward artwork'} className="size-full object-cover" />
+                  : <ImageIcon size={20} className="text-text-4" />}
+              </button>
+              <div className="flex flex-col gap-1.5 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <Button type="button" size="sm" variant="ghost" onClick={() => fileInputRef.current?.click()}>
+                    <Upload size={12} /> {preview ? 'Replace' : 'Upload'}
+                  </Button>
+                  {preview && (
+                    <Button type="button" size="sm" variant="ghost" onClick={clearImage}>
+                      <Trash2 size={12} /> Remove
+                    </Button>
+                  )}
+                </div>
+                <p className="font-mono text-[10.5px] text-text-4">
+                  JPG, PNG, WebP or GIF · max {MAX_REWARD_IMAGE_MB} MB
+                </p>
+              </div>
+            </div>
+            {imageError && (
+              <p className="mt-1.5 flex items-center gap-1.5 font-ui text-[11.5px] text-error">
+                <AlertCircle size={12} /> {imageError}
+              </p>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept={ACCEPTED_IMAGE_TYPES.join(',')}
+              className="hidden"
+              onChange={onPickImage}
+            />
           </div>
           {/* Group reward toggle: requires N employees to pool equal shares. */}
           <label className="flex items-center gap-2.5 cursor-pointer">
@@ -660,9 +795,13 @@ function RedeemModal({ reward, myLP, onClose, onConfirm, isPending }: {
   const canAfford = myLP >= reward.xp_cost && !cashBlocked
   return (
     <ModalShell onClose={onClose} size="sm" contentClassName="p-5 sm:p-6">
-        <div className="size-14 rounded-xl bg-coin-gold/15 border border-coin-gold/30 flex items-center justify-center mx-auto mb-3">
-          <Gift size={24} className="text-coin-gold" />
-        </div>
+        {reward.image_url
+          ? <RewardThumb reward={reward} size="banner" />
+          : (
+            <div className="size-14 rounded-xl bg-coin-gold/15 border border-coin-gold/30 flex items-center justify-center mx-auto mb-3">
+              <Gift size={24} className="text-coin-gold" />
+            </div>
+          )}
         <h3 className="font-display font-bold text-[17px] text-text-1 mb-1">{reward.name}</h3>
         <p className="font-ui text-[13px] text-text-3 mb-4">{reward.description}</p>
         <p className="font-mono text-[13px] text-coin-gold font-bold mb-1">{lp(reward.xp_cost)} · You have {lp(myLP)}</p>
@@ -688,6 +827,7 @@ const GAMIFICATION_SECTIONS = [
   { key: 'badges',      label: 'Badges',        icon: Award },
   { key: 'rewards',     label: 'Rewards Shop',  icon: Gift },
   { key: 'history',     label: 'Points History', icon: History },
+  { key: 'approvals',   label: 'Approvals',     icon: Inbox },
   { key: 'admin',       label: 'Settings',      icon: ShieldAlert },
 ] as const
 
@@ -702,7 +842,11 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
   const isRecognizer = useCanRecognize()
   const canFulfill = useCanFulfillPayouts()
   const isParticipant = canParticipate(role)
-  const showAdmin = isRecognizer || canFulfill
+  // Approvals holds queues for all three capabilities; Settings holds quest
+  // management (recognizers) and catalog/governance (governors) — a pure
+  // fulfiller has nothing to do there, so it stays hidden for them.
+  const showApprovals = isGovernor || isRecognizer || canFulfill
+  const showSettings = isGovernor || isRecognizer
 
   const [mainTab, setMainTab] = useState('leaderboard')
 
@@ -856,7 +1000,13 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
   const poolBusy = openingPool || joiningPool || leavingPool || cancellingPool
 
   const ranked = leaderboard.map((e, i) => ({ ...e, rank: i + 1, isMe: e.profile_id === profileId }))
-  const reviewCount = claimsReview.length + pendingShouts.length + redemptionQueue.filter((r) => r.status === 'pending').length + reviewPools.filter((p) => p.status === 'pending').length
+  // Only count what this viewer can actually act on — a fulfiller must not be
+  // nudged by shoutouts they cannot see.
+  const reviewCount =
+    (isRecognizer ? claimsReview.length : 0) +
+    (isGovernor ? pendingShouts.length : 0) +
+    (canFulfill ? redemptionQueue.filter((r) => r.status === 'pending' || r.status === 'approved').length : 0) +
+    (canFulfill ? reviewPools.filter((p) => p.status === 'pending' || p.status === 'approved').length : 0)
   // Single render-stable "now" for deadline checks (avoids impure Date.now() in the task loop).
   const nowMs = new Date().getTime()
 
@@ -976,7 +1126,8 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
     { key: 'badges',      label: 'Badges' },
     { key: 'rewards',     label: 'Rewards Shop' },
     { key: 'history',     label: 'Points History' },
-    ...(showAdmin ? [{ key: 'admin', label: `Settings${reviewCount > 0 ? ` (${reviewCount})` : ''}` }] : []),
+    ...(showApprovals ? [{ key: 'approvals', label: `Approvals${reviewCount > 0 ? ` (${reviewCount})` : ''}` }] : []),
+    ...(showSettings ? [{ key: 'admin', label: 'Settings' }] : []),
   ]
 
   // Mobile: /gamification is a hub of rows; /gamification/:section is one stack screen.
@@ -1011,13 +1162,15 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
         {/* Mobile hub list (root) vs desktop tab strip */}
         {showHub ? (
           <div className="flex flex-col gap-2.5">
-            {GAMIFICATION_SECTIONS.filter((s) => s.key !== 'admin' || showAdmin).map((s) => (
+            {GAMIFICATION_SECTIONS.filter((s) =>
+              s.key === 'admin' ? showSettings : s.key === 'approvals' ? showApprovals : true,
+            ).map((s) => (
               <HubRow
                 key={s.key}
                 to={`/gamification/${s.key}`}
                 label={s.label}
                 icon={s.icon}
-                badge={s.key === 'admin' ? reviewCount : undefined}
+                badge={s.key === 'approvals' ? reviewCount : undefined}
               />
             ))}
           </div>
@@ -1345,7 +1498,14 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
         {/* ── REWARDS SHOP ── */}
         {!showHub && activeTab === 'rewards' && (
           <div className="flex flex-col gap-5">
-            <h2 className="font-display font-bold text-[22px] text-text-1">{sectionLabel}</h2>
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="font-display font-bold text-[22px] text-text-1">{sectionLabel}</h2>
+              {isGovernor && (
+                <Button size="sm" className="shrink-0" onClick={() => setRewardModal('new')}>
+                  <Plus size={13} /> Add Reward
+                </Button>
+              )}
+            </div>
             <div className="flex items-center gap-4 bg-surface-1 border border-border-default rounded-xl px-6 py-4">
               <div className="size-12 rounded-xl bg-coin-gold/15 border border-coin-gold/30 flex items-center justify-center"><Coins size={20} className="text-coin-gold" /></div>
               <div><p className="font-display font-bold text-[28px] text-coin-gold leading-none">{myLP.toLocaleString()}</p><p className="font-ui text-[12px] text-text-3 mt-0.5">XP available · resets monthly</p></div>
@@ -1360,10 +1520,15 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
                   const out = r.quantity === 0
                   return (
                     <div key={r.id} className={cn('bg-surface-1 border rounded-xl p-5 flex flex-col transition-all', canAfford && !out ? 'border-border-default hover:border-coin-gold/35' : 'border-border-subtle opacity-60')}>
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="size-10 rounded-lg bg-surface-2 flex items-center justify-center"><Gift size={18} className={canAfford && !out ? 'text-coin-gold' : 'text-text-4'} /></div>
-                        {r.tier === 'premium' && <span className="font-mono text-[9px] text-service-design bg-service-design/10 px-1.5 py-0.5 rounded-xs uppercase">Premium</span>}
-                      </div>
+                      <RewardThumb reward={r} size="banner" />
+                      {/* With artwork the gift icon is redundant; the row is dropped
+                          entirely when there is nothing left to put in it. */}
+                      {(!r.image_url || r.tier === 'premium') && (
+                        <div className="flex items-start justify-between mb-3">
+                          {!r.image_url && <div className="size-10 rounded-lg bg-surface-2 flex items-center justify-center"><Gift size={18} className={canAfford && !out ? 'text-coin-gold' : 'text-text-4'} /></div>}
+                          {r.tier === 'premium' && <span className="ml-auto font-mono text-[9px] text-service-design bg-service-design/10 px-1.5 py-0.5 rounded-xs uppercase">Premium</span>}
+                        </div>
+                      )}
                       <h4 className="font-display font-bold text-[13.5px] text-text-1 mb-1 leading-tight">{r.name}</h4>
                       <p className="font-ui text-caption/relaxed text-text-3 flex-1 mb-3">{r.description}</p>
                       {r.quantity !== -1 && r.quantity !== null && <p className="font-mono text-[10px] text-text-4 mb-2">{r.quantity} remaining</p>}
@@ -1405,7 +1570,9 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
                       <div key={r.id} className="bg-surface-1 border border-border-default rounded-xl p-5 flex flex-col gap-3">
                         <div className="flex items-start justify-between">
                           <div className="flex items-center gap-2.5 min-w-0">
-                            <div className="size-10 rounded-lg bg-service-design/10 border border-service-design/20 flex items-center justify-center shrink-0"><Users size={18} className="text-service-design" /></div>
+                            {r.image_url
+                              ? <RewardThumb reward={r} size="sm" className="size-10 rounded-lg" />
+                              : <div className="size-10 rounded-lg bg-service-design/10 border border-service-design/20 flex items-center justify-center shrink-0"><Users size={18} className="text-service-design" /></div>}
                             <div className="min-w-0">
                               <h4 className="font-display font-bold text-body/tight text-text-1 truncate">{r.name}</h4>
                               <p className="font-mono text-[11px] text-text-3">Group of {size} · {lp(perPerson)} each · total {lp(perPerson * size)}</p>
@@ -1470,14 +1637,56 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
                 </div>
               </div>
             )}
+
+            {/* Catalog management (governors) — the shop above is what everyone sees. */}
+            {isGovernor && (
+              <section className="mt-2">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-display font-bold text-[15px] text-text-1 flex items-center gap-2">
+                    <Gift size={15} className="text-text-3" /> Manage Catalog
+                    <span className="font-mono text-[11px] text-text-4 font-normal">{allRewards.length} total · inactive included</span>
+                  </h3>
+                  <Button size="sm" variant="ghost" onClick={() => setRewardModal('new')}><Plus size={13} /> Add Reward</Button>
+                </div>
+                <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
+                  {allRewards.length === 0 && <div className="px-5 py-8 text-center text-text-4 font-ui text-[13px]">No rewards yet — add the first one.</div>}
+                  {allRewards.map((r) => (
+                    <div key={r.id} className="grid grid-cols-[auto_1fr_90px_70px_90px_120px] gap-3 items-center px-5 py-3 border-b border-border-subtle last:border-0">
+                      <RewardThumb reward={r} size="sm" />
+                      <div className="min-w-0"><p className="font-ui font-semibold text-[13px] text-text-1 truncate">{r.name}{r.is_cash && <span className="ml-1.5 font-mono text-[9px] text-service-mkt">CASH</span>}{(r.group_size ?? 1) >= 2 && <span className="ml-1.5 font-mono text-[9px] text-service-design">GROUP ×{r.group_size}</span>}</p></div>
+                      <span className="font-mono text-[12px] text-coin-gold font-bold">{lp(r.xp_cost)}</span>
+                      <span className="font-mono text-[12px] text-text-2">{r.quantity === -1 ? '∞' : r.quantity ?? '∞'}</span>
+                      <span className={cn('font-mono text-[10px] px-1.5 py-0.5 rounded-xs w-fit', r.is_active ? 'text-success bg-success/10' : 'text-text-4 bg-surface-2')}>{r.is_active ? 'Active' : 'Inactive'}</span>
+                      {confirmDelete === r.id ? (
+                        <div className="flex items-center gap-1.5">
+                          <button disabled={deletingReward} onClick={() => { deleteReward({ id: r.id, imageUrl: r.image_url }, { onSuccess: () => toast('Reward deleted', 'success'), onError: () => toast('Failed to delete reward', 'error') }); setConfirmDelete(null) }} className="font-mono text-[10.5px] text-error font-bold">Confirm</button>
+                          <span className="text-text-4 text-[10px]">/</span>
+                          <button onClick={() => setConfirmDelete(null)} className="font-mono text-[10.5px] text-text-3">Cancel</button>
+                        </div>
+                      ) : (
+                        <div className="flex gap-1.5">
+                          <Button size="sm" variant="ghost" onClick={() => updateReward({ id: r.id, updates: { is_active: !r.is_active } }, { onSuccess: () => toast(r.is_active ? 'Deactivated' : 'Activated', 'success') })}>{r.is_active ? 'Disable' : 'Enable'}</Button>
+                          <button onClick={() => setRewardModal(r)} className="p-1.5 text-text-4 hover:text-text-1" title="Edit reward"><Pencil size={13} /></button>
+                          <button onClick={() => setConfirmDelete(r.id)} className="p-1.5 text-text-4 hover:text-error" title="Delete"><Trash2 size={13} /></button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
           </div>
         )}
 
-        {/* ── MANAGE (governance) ── */}
-        {!showHub && activeTab === 'admin' && showAdmin && (
+        {/* ── APPROVALS (review queues) ── */}
+        {!showHub && activeTab === 'approvals' && showApprovals && (
           <div className="flex flex-col gap-8">
-            <h2 className="font-display font-bold text-[22px] text-text-1">{sectionLabel}</h2>
-
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h2 className="font-display font-bold text-[22px] text-text-1">{sectionLabel}</h2>
+              <p className="font-mono text-[11.5px] text-text-4">
+                {reviewCount > 0 ? `${reviewCount} item${reviewCount === 1 ? '' : 's'} awaiting action` : 'Everything is reviewed'}
+              </p>
+            </div>
             {/* Task submissions to review */}
             {isRecognizer && (
               <section>
@@ -1579,6 +1788,13 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
                 </div>
               </section>
             )}
+          </div>
+        )}
+
+        {/* ── SETTINGS (catalog & governance) ── */}
+        {!showHub && activeTab === 'admin' && showSettings && (
+          <div className="flex flex-col gap-8">
+            <h2 className="font-display font-bold text-[22px] text-text-1">{sectionLabel}</h2>
 
             {/* Quest task management */}
             {isRecognizer && (
@@ -1617,39 +1833,6 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
                     </div>
                     )
                   })}
-                </div>
-              </section>
-            )}
-
-            {/* Rewards management (governors) */}
-            {isGovernor && (
-              <section>
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="font-display font-bold text-[16px] text-text-1 flex items-center gap-2"><Gift size={16} className="text-text-3" /> Rewards Catalog</h2>
-                  <Button size="sm" onClick={() => setRewardModal('new')}><Plus size={13} /> Create Reward</Button>
-                </div>
-                <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
-                  {allRewards.map((r) => (
-                    <div key={r.id} className="grid grid-cols-[1fr_90px_70px_90px_120px] gap-3 items-center px-5 py-3 border-b border-border-subtle last:border-0">
-                      <div className="min-w-0"><p className="font-ui font-semibold text-[13px] text-text-1 truncate">{r.name}{r.is_cash && <span className="ml-1.5 font-mono text-[9px] text-service-mkt">CASH</span>}{(r.group_size ?? 1) >= 2 && <span className="ml-1.5 font-mono text-[9px] text-service-design">GROUP ×{r.group_size}</span>}</p></div>
-                      <span className="font-mono text-[12px] text-coin-gold font-bold">{lp(r.xp_cost)}</span>
-                      <span className="font-mono text-[12px] text-text-2">{r.quantity === -1 ? '∞' : r.quantity ?? '∞'}</span>
-                      <span className={cn('font-mono text-[10px] px-1.5 py-0.5 rounded-xs w-fit', r.is_active ? 'text-success bg-success/10' : 'text-text-4 bg-surface-2')}>{r.is_active ? 'Active' : 'Inactive'}</span>
-                      {confirmDelete === r.id ? (
-                        <div className="flex items-center gap-1.5">
-                          <button disabled={deletingReward} onClick={() => { deleteReward(r.id, { onSuccess: () => toast('Reward deleted', 'success') }); setConfirmDelete(null) }} className="font-mono text-[10.5px] text-error font-bold">Confirm</button>
-                          <span className="text-text-4 text-[10px]">/</span>
-                          <button onClick={() => setConfirmDelete(null)} className="font-mono text-[10.5px] text-text-3">Cancel</button>
-                        </div>
-                      ) : (
-                        <div className="flex gap-1.5">
-                          <Button size="sm" variant="ghost" onClick={() => updateReward({ id: r.id, updates: { is_active: !r.is_active } }, { onSuccess: () => toast(r.is_active ? 'Deactivated' : 'Activated', 'success') })}>{r.is_active ? 'Disable' : 'Enable'}</Button>
-                          <button onClick={() => setRewardModal(r)} className="p-1.5 text-text-4 hover:text-text-1" title="Edit reward"><Pencil size={13} /></button>
-                          <button onClick={() => setConfirmDelete(r.id)} className="p-1.5 text-text-4 hover:text-error" title="Delete"><Trash2 size={13} /></button>
-                        </div>
-                      )}
-                    </div>
-                  ))}
                 </div>
               </section>
             )}
@@ -1787,7 +1970,10 @@ export function GamificationSectionScreen() {
   if (!section || !valid) return <Navigate to="/gamification" replace />
   // Guard by capability, not just key validity — otherwise /gamification/admin renders
   // an empty shell for anyone who types the URL (every panel inside is role-gated).
-  if (section === 'admin' && !(canGovern || canRecog || canFulfil)) {
+  if (section === 'approvals' && !(canGovern || canRecog || canFulfil)) {
+    return <Navigate to="/gamification" replace />
+  }
+  if (section === 'admin' && !(canGovern || canRecog)) {
     return <Navigate to="/gamification" replace />
   }
   return <GamificationPage mobileSection={section} />

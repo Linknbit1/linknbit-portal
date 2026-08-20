@@ -285,8 +285,52 @@ export async function fetchAllRewards(): Promise<RewardRow[]> {
   return data
 }
 
+/** Public bucket holding reward artwork — writes are governor-only via RLS. */
+const REWARD_IMAGE_BUCKET = 'reward-images'
+
+export const MAX_REWARD_IMAGE_MB = 5
+
+/**
+ * Upload reward artwork and return its public URL. The path is a flat uuid
+ * because a brand-new reward has no id yet while the create modal uploads.
+ */
+export async function uploadRewardImage(file: File): Promise<string> {
+  const ext = file.name.split('.').pop()?.toLowerCase() || 'png'
+  const path = `${crypto.randomUUID()}.${ext}`
+  const { error } = await supabase.storage
+    .from(REWARD_IMAGE_BUCKET)
+    .upload(path, file, { cacheControl: '3600', contentType: file.type })
+  if (error) throw error
+  const { data } = supabase.storage.from(REWARD_IMAGE_BUCKET).getPublicUrl(path)
+  return data.publicUrl
+}
+
+/**
+ * Storage path behind a public reward-image URL, or null when the URL points
+ * somewhere else (an externally hosted image we must not try to delete).
+ */
+function rewardImagePath(publicUrl: string): string | null {
+  const marker = `/${REWARD_IMAGE_BUCKET}/`
+  const at = publicUrl.indexOf(marker)
+  if (at === -1) return null
+  const path = publicUrl.slice(at + marker.length).split('?')[0]
+  return path ? decodeURIComponent(path) : null
+}
+
+/**
+ * Remove reward artwork from storage. Best-effort: a reward row must never be
+ * left unsaved because its old file could not be deleted, so callers ignore the
+ * outcome and a failed delete only leaves an orphaned object behind.
+ */
+export async function deleteRewardImage(publicUrl: string | null): Promise<void> {
+  if (!publicUrl) return
+  const path = rewardImagePath(publicUrl)
+  if (!path) return
+  await supabase.storage.from(REWARD_IMAGE_BUCKET).remove([path])
+}
+
 export async function createReward(
-  reward: Pick<RewardRow, 'name' | 'description' | 'xp_cost' | 'quantity' | 'tier' | 'is_cash' | 'group_size'>,
+  reward: Pick<RewardRow, 'name' | 'description' | 'xp_cost' | 'quantity' | 'tier' | 'is_cash' | 'group_size' | 'image_url'>,
   createdBy: string,
 ): Promise<RewardRow> {
   const payload: TablesInsert<'rewards'> = { ...reward, created_by: createdBy, is_active: true }
@@ -304,9 +348,12 @@ export async function updateReward(
   return data
 }
 
-export async function deleteReward(id: string): Promise<void> {
+export async function deleteReward(id: string, imageUrl?: string | null): Promise<void> {
   const { error } = await supabase.from('rewards').delete().eq('id', id)
   if (error) throw error
+  // Only after the row is gone — a failed delete would otherwise strand the row
+  // pointing at an image that no longer exists.
+  await deleteRewardImage(imageUrl ?? null)
 }
 
 export async function redeemReward(profileId: string, rewardId: string): Promise<string> {

@@ -121,7 +121,11 @@ const GAMIFICATION_CHILDREN: NavItem[] = [
   { label: 'Badges',         icon: Trophy, to: '/gamification/badges' },
   { label: 'Rewards Shop',   icon: Trophy, to: '/gamification/rewards' },
   { label: 'Points History', icon: Trophy, to: '/gamification/history' },
-  // Governors run the catalog/approvals; recognizers post quests & review submissions.
+  // Review queues: recognizers review quest proofs, governors review shoutouts and
+  // redemptions, finance fulfils them — so all three capabilities open this page.
+  { label: 'Approvals',      icon: Trophy, to: '/gamification/approvals',
+    feature: ['can_govern_gamification', 'can_recognize', 'can_fulfill_payouts'] },
+  // Governors run the catalog; recognizers manage the quests they post.
   { label: 'Settings',       icon: Trophy, to: '/gamification/admin',
     feature: ['can_govern_gamification', 'can_recognize'] },
 ]

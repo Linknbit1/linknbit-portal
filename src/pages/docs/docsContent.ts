@@ -504,6 +504,37 @@ export const DOC_CHAPTERS: DocChapter[] = [
         ],
       },
       {
+        id: 'rewards-catalog',
+        title: 'Running the rewards catalog',
+        summary:
+          'The catalog is edited from the shop itself, so you can see what everyone else sees while you change it. A reward can carry a picture.',
+        where: 'People → Gamification → Rewards Shop',
+        feature: 'can_govern_gamification',
+        procedures: [
+          {
+            title: 'Add a reward',
+            steps: [
+              'Open the Rewards Shop and press Add Reward.',
+              'Give it a name and a points cost. Turn on Group reward if several people should club together — the cost then means per person.',
+              'Optionally upload a picture. JPG, PNG, WebP or GIF, up to 5 MB.',
+              'Create it. It appears in the shop straight away.',
+            ],
+          },
+          {
+            title: 'Change or remove a picture',
+            steps: [
+              'In Manage Catalog below the shop, press the pencil on the reward.',
+              'Use Replace to swap the picture, or Remove to go back to the plain gift icon.',
+              'Save. The old file is deleted once the change is stored.',
+            ],
+          },
+        ],
+        notes: [
+          'Disable takes a reward out of the shop but keeps it — use it for something seasonal instead of deleting it.',
+          'Deleting a reward also deletes its picture. Redemptions already made are unaffected.',
+        ],
+      },
+      {
         id: 'leaderboard',
         title: 'Leaderboard and points history',
         summary:
@@ -520,6 +551,28 @@ export const DOC_CHAPTERS: DocChapter[] = [
     blurb: 'For leads and managers: the decisions that come to you.',
     roles: REVIEWER_ROLES,
     topics: [
+      {
+        id: 'gamification-approvals',
+        title: 'Gamification approvals',
+        summary:
+          'Everything waiting on you across gamification sits on one screen — quest proofs, shoutouts, and reward redemptions including group pools. The tab carries a count of what is yours to act on.',
+        where: 'People → Gamification → Approvals',
+        feature: ['can_govern_gamification', 'can_recognize', 'can_fulfill_payouts'],
+        procedures: [
+          {
+            title: 'Clear the queue',
+            steps: [
+              'Open People → Gamification → Approvals.',
+              'Work down the sections — you only see the queues you can act on.',
+              'Approve or reject each item. You can attach a note explaining the decision.',
+            ],
+          },
+        ],
+        notes: [
+          'Rejecting a redemption refunds the points; rejecting a group pool refunds every member.',
+          'Approving a quest proof awards its points immediately.',
+        ],
+      },
       {
         id: 'approving-requests',
         title: 'Approving time-off requests',

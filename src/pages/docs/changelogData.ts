@@ -107,6 +107,22 @@ export const RELEASES: ChangelogRelease[] = [
         kind: 'added',
         text: 'Import a list of prospects into the pipeline from a spreadsheet. Pipeline → Import CSV takes the file, shows you exactly what it is about to create, and lists any row it could not read with its line number — the rows it can read still go in.',
       },
+      {
+        kind: 'added',
+        text: 'Rewards can carry a picture. Upload one when you add or edit a reward — JPG, PNG, WebP or GIF up to 5 MB — and it shows on the card in the shop; replace or remove it at any time, and the plain gift icon comes back.',
+      },
+      {
+        kind: 'improved',
+        text: 'Rewards are now added from the Rewards Shop itself. The Add Reward button and the full catalog — including anything currently disabled — sit under the shop, so you edit the list while looking at what everyone else sees.',
+      },
+      {
+        kind: 'improved',
+        text: 'Gamification approvals moved off the Settings page onto their own Approvals screen: quest proofs, shoutouts and reward redemptions in one place, with a count of what is waiting on you. Settings now holds only the quest list, granting XP, who takes part, and Employee of the Month.',
+      },
+      {
+        kind: 'improved',
+        text: 'Holidays are listed newest first, and one that has not happened yet is marked Upcoming — Today on the day itself — so the next day off is at the top instead of buried under the year so far.',
+      },
     ],
   },
   {
