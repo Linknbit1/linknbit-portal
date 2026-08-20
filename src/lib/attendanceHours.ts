@@ -168,3 +168,24 @@ export function computeEmployeeHours(args: ComputeHoursArgs): EmployeeHours {
     days,
   }
 }
+
+/**
+ * A decimal hour count as hours and minutes.
+ *
+ * Overtime is stored as a fraction of an hour, so 40 minutes lands in the
+ * column as 0.67 — a number nobody typed and nobody wants to read back. This
+ * turns it into "40m", and 1.5 into "1h 30m".
+ *
+ * Rounded to the nearest minute, because the stored value is itself rounded and
+ * showing 40.2 would imply a precision the request never had.
+ */
+export function formatHoursMinutes(hours: number | null | undefined): string {
+  const totalMinutes = Math.round((hours ?? 0) * 60)
+  if (totalMinutes <= 0) return '0m'
+
+  const h = Math.floor(totalMinutes / 60)
+  const m = totalMinutes % 60
+  if (h === 0) return `${m}m`
+  if (m === 0) return `${h}h`
+  return `${h}h ${m}m`
+}

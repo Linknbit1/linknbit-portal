@@ -36,6 +36,7 @@ import type { Person, PersonTeam, PersonProject } from '../api/people'
 import type { TaskListItem } from '../api/tasks'
 import type { LeaveRequestWithType, WfhRequest } from '../api/attendance'
 import { DAY_PART_LABEL } from '../lib/dayParts'
+import { formatHoursMinutes } from '../lib/attendanceHours'
 
 const GOVERNOR_ROLES = ['super_admin', 'admin', 'hr', 'project_manager']
 const HR_ADMIN_ROLES = ['super_admin', 'admin', 'hr']
@@ -628,7 +629,7 @@ function AttendanceTab({ personId, leave, wfh }: {
                     </p>
                     {o.reason && <p className="wrap-break-word font-ui text-[11.5px] text-text-4">{o.reason}</p>}
                   </div>
-                  <span className="shrink-0 font-display text-[14px] font-bold text-service-mkt">{o.hours}h</span>
+                  <span className="shrink-0 font-display text-[14px] font-bold text-service-mkt">{formatHoursMinutes(o.hours)}</span>
                   <span className={cn('shrink-0 rounded-xs border px-1.5 py-0.5 font-mono text-[10px] font-semibold capitalize', REQ_STATUS[o.status] ?? REQ_STATUS.pending)}>{o.status}</span>
                 </div>
               ))}

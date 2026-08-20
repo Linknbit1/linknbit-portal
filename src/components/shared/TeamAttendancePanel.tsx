@@ -12,6 +12,7 @@ import { MonthStepper } from './MonthFilter'
 import { useMonthFilter } from '../../hooks/useMonthFilter'
 import { formatDate } from '../../lib/utils'
 import { DAY_PART_LABEL } from '../../lib/dayParts'
+import { formatHoursMinutes } from '../../lib/attendanceHours'
 import {
   useAllAttendance,
   useMonthlyAttendance,
@@ -309,7 +310,7 @@ export function TeamOvertimeList({ memberIds }: TeamScope = {}) {
             <Row key={r.id} name={r.profiles?.name ?? '—'} avatar={r.profiles?.avatar_url ?? null} personId={r.profile_id}
               status={<Pill status={r.status} map={REQUEST_STATUS} />}>
               <span className="text-text-1">{fmtDay(r.date)}</span>
-              <span>{r.start_time}–{r.end_time} · {r.hours}h</span>
+              <span>{r.start_time}–{r.end_time} · {formatHoursMinutes(r.hours)}</span>
             </Row>
           ))}
         </div>

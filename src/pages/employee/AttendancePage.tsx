@@ -58,6 +58,7 @@ import type { AttendanceRow, AttendanceException, DayPart } from '../../api/atte
 import { DAY_PART_LABEL, DAY_PART_OPTIONS, toDayPart } from '../../lib/dayParts'
 import { formatDayRange as fmtDayRange } from '../../lib/dateGroups'
 import { ModalShell } from '../../components/ui/ModalShell'
+import { formatHoursMinutes } from '../../lib/attendanceHours'
 import { showsInlineTeamAttendance } from '../../lib/roles'
 
 function localToday(): string {
@@ -706,7 +707,7 @@ export function OvertimeSection() {
                     <span className="font-mono text-[11px] text-text-3">
                       {fmtT(req.start_time)} – {fmtT(req.end_time)}
                     </span>
-                    <span className="font-display font-bold text-[13px] text-service-mkt">{req.hours}h</span>
+                    <span className="font-display font-bold text-[13px] text-service-mkt">{formatHoursMinutes(req.hours)}</span>
                   </div>
                   <p className="font-ui text-[12px] text-text-3 truncate">{req.reason}</p>
                   {req.review_note && (

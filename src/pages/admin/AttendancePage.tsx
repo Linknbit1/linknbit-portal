@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import {
   CheckCircle2,
   Clock,
@@ -119,7 +119,7 @@ import type { AttendanceWithProfile } from "../../api/attendance";
 import { downloadCsv } from "../../lib/csv";
 import { cn } from "../../lib/cn";
 import { zonedWallTimeToIso, isoToZonedMinutes } from "../../lib/timezone";
-import { computeEmployeeHours } from "../../lib/attendanceHours";
+import { computeEmployeeHours, formatHoursMinutes } from "../../lib/attendanceHours";
 import { AttendanceChips } from "../../components/shared/AttendanceChips";
 import { ModalShell } from "../../components/ui/ModalShell";
 import { ConfirmDialog } from "../../components/ui/ConfirmDialog";
@@ -209,6 +209,83 @@ const REQUEST_STATUS_META: Record<string, { label: string; cls: string; dot: str
     dot: "#F4364C",
   },
 };
+
+/**
+ * A request's reason, clamped to three lines with a Read more toggle.
+ *
+ * The row is the unit of scanning here — a reviewer runs down a column of names
+ * and dates — so one person writing an essay must not push the next request off
+ * the screen. Measured rather than guessed from character count, because how
+ * many lines a reason takes depends on the column width, which changes.
+ */
+function ExpandableText({ text, className }: { text: string; className?: string }) {
+  const ref = useRef<HTMLParagraphElement>(null);
+  const [expanded, setExpanded] = useState(false);
+  const [clamped, setClamped] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || expanded) return;
+    // Re-measure on resize: a narrower column turns a two-line reason into four.
+    const check = () => setClamped(el.scrollHeight > el.clientHeight + 1);
+    check();
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [text, expanded]);
+
+  if (!text) return null;
+
+  return (
+    <>
+      <p
+        ref={ref}
+        className={cn("wrap-break-word", !expanded && "line-clamp-3", className)}
+      >
+        {text}
+      </p>
+      {(clamped || expanded) && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setExpanded((v) => !v);
+          }}
+          className="mt-0.5 font-ui text-[11px] font-semibold text-text-3 hover:text-text-1 transition-colors"
+        >
+          {expanded ? "Show less" : "… Read more"}
+        </button>
+      )}
+    </>
+  );
+}
+
+/**
+ * When it was asked for, and when it was decided.
+ *
+ * Both on the row rather than behind an expander: "how long has this been
+ * sitting there" is the question a reviewer opens these screens to answer, and
+ * it was previously only visible after a click — or not at all.
+ */
+function RequestMeta({
+  createdAt,
+  reviewedAt,
+  status,
+}: {
+  createdAt: string;
+  reviewedAt?: string | null;
+  status: string;
+}) {
+  const decided = status !== "pending" && reviewedAt;
+  return (
+    <div className="shrink-0 text-right font-mono text-label/snug text-text-4">
+      <div>Requested {formatRequestedAt(createdAt)}</div>
+      <div className={cn(!decided && "text-text-4/60")}>
+        {decided ? `Reviewed ${formatRequestedAt(reviewedAt)}` : "Not reviewed"}
+      </div>
+    </div>
+  );
+}
 
 function RequestStatusChip({ status }: { status: string }) {
   const m = REQUEST_STATUS_META[status] ?? REQUEST_STATUS_META.pending;
@@ -1106,7 +1183,6 @@ export function WFHRequestsTab() {
   const [deleteTarget, setDeleteTarget] =
     useState<WfhRequestWithProfile | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [expandedId, setExpandedId] = useState<string | null>(null);
   const monthFilter = useMonthFilter();
 
   const pending = requests.filter((r) => r.status === "pending").length;
@@ -1159,14 +1235,6 @@ export function WFHRequestsTab() {
     }
   };
 
-  const fmt = (iso: string) =>
-    new Date(iso).toLocaleString("en-US", {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-
   return (
     <div className="flex flex-col gap-5">
       <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
@@ -1202,7 +1270,6 @@ export function WFHRequestsTab() {
                 />
                 <div className="divide-y divide-border-subtle">
                   {group.items.map((req) => {
-                    const isExpanded = expandedId === req.id;
                     const span = spanInfo(
                       req.start_date, req.end_date, group.date, monthFilter.inMonth,
                     );
@@ -1229,9 +1296,15 @@ export function WFHRequestsTab() {
                                 </span>
                               )}
                             </div>
-                            <p className="text-[12px] font-ui text-text-3 wrap-break-word">
-                              {req.reason}
-                            </p>
+                            <ExpandableText
+                              text={req.reason ?? ""}
+                              className="text-[12px] font-ui text-text-3"
+                            />
+                            {req.review_note && (
+                              <p className="mt-0.5 font-ui text-[11px] text-text-4 italic wrap-break-word">
+                                "{req.review_note}"
+                              </p>
+                            )}
                           </div>
                           <div className="flex items-center gap-1.5 text-[12px] font-mono text-text-2 shrink-0">
                             <Calendar size={12} className="text-text-4" />
@@ -1242,78 +1315,48 @@ export function WFHRequestsTab() {
                               </span>
                             )}
                           </div>
-                          <div className="shrink-0 text-[11.5px] font-mono text-text-4">
-                            Requested {formatRequestedAt(req.created_at)}
-                          </div>
-                          <RequestStatusChip status={req.status} />
-                          {span.total > 1 && !span.isFirstShown ? (
-                            <SpanContinuation dayNum={span.dayNum} total={span.total} />
-                          ) : req.status === "pending" ? (
+                          <RequestMeta
+                            createdAt={req.created_at}
+                            reviewedAt={req.reviewed_at}
+                            status={req.status}
+                          />
+                          {span.total > 1 && !span.isFirstShown ? null : req.status ===
+                            "pending" ? (
                             req.profile_id === profile?.id ? (
                               <OwnRequestChip />
                             ) : (
-                            <div className="flex items-center gap-1.5 ml-1">
-                              <button
-                                onClick={() => approve(req.id)}
-                                className="flex items-center gap-1 px-2.5 py-1.5 rounded-sm bg-success/10 border border-success/30 text-success text-[11.5px] font-ui font-semibold hover:bg-success/20 transition-colors"
-                              >
-                                <ThumbsUp size={12} /> Approve
-                              </button>
-                              <button
-                                onClick={() => setRejectTarget(req)}
-                                className="flex items-center gap-1 px-2.5 py-1.5 rounded-sm bg-error/10 border border-error/30 text-error text-[11.5px] font-ui font-semibold hover:bg-error/20 transition-colors"
-                              >
-                                <ThumbsDown size={12} /> Reject
-                              </button>
-                            </div>
+                              <div className="flex items-center gap-1.5">
+                                <button
+                                  onClick={() => approve(req.id)}
+                                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-sm bg-success/10 border border-success/30 text-success text-[11.5px] font-ui font-semibold hover:bg-success/20 transition-colors"
+                                >
+                                  <ThumbsUp size={12} /> Approve
+                                </button>
+                                <button
+                                  onClick={() => setRejectTarget(req)}
+                                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-sm bg-error/10 border border-error/30 text-error text-[11.5px] font-ui font-semibold hover:bg-error/20 transition-colors"
+                                >
+                                  <ThumbsDown size={12} /> Reject
+                                </button>
+                              </div>
                             )
-                          ) : (
-                            <button
-                              onClick={() =>
-                                setExpandedId(isExpanded ? null : req.id)
-                              }
-                              className="ml-1 text-text-4 hover:text-text-1 transition-colors"
-                            >
-                              <ChevronDown
-                                size={15}
-                                className={cn(
-                                  "transition-transform",
-                                  isExpanded && "rotate-180",
-                                )}
-                              />
-                            </button>
+                          ) : null}
+                          {/* Day N of M reads as a qualifier on the status, so it
+                              sits immediately left of it. */}
+                          {span.total > 1 && (
+                            <SpanContinuation dayNum={span.dayNum} total={span.total} />
                           )}
+                          <RequestStatusChip status={req.status} />
                           {isAdmin && (
                             <button
                               onClick={() => setDeleteTarget(req)}
-                              className="ml-0.5 text-text-4 hover:text-error transition-colors"
+                              className="text-text-4 hover:text-error transition-colors shrink-0"
                               aria-label="Delete request"
                             >
                               <Trash2 size={14} />
                             </button>
                           )}
                         </div>
-                        {isExpanded && req.status !== "pending" && (
-                          <div className="px-5 pb-3.5 pt-0">
-                            <div className="bg-surface-2 rounded-md px-4 py-3 text-[12px] font-ui text-text-3 flex gap-4 flex-wrap">
-                              {req.reviewed_at && (
-                                <span>
-                                  <span className="text-text-4 font-mono">
-                                    Reviewed at
-                                  </span>{" "}
-                                  <span className="text-text-2">
-                                    {fmt(req.reviewed_at)}
-                                  </span>
-                                </span>
-                              )}
-                              {req.review_note && (
-                                <span className="w-full text-text-2 italic">
-                                  "{req.review_note}"
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        )}
                       </div>
                     );
                   })}
@@ -1925,32 +1968,30 @@ export function LeaveTab() {
                             </span>
                           )}
                         </div>
-                        <p className="font-ui text-[12px] text-text-3 wrap-break-word">
-                          {req.reason}
-                        </p>
-                        <p className="font-mono text-[10.5px] text-text-4 mt-0.5">
-                          For {fmtRange(req.start_date, req.end_date)} ·
-                          Requested {formatRequestedAt(req.created_at)}
-                        </p>
+                        <ExpandableText
+                          text={req.reason ?? ""}
+                          className="font-ui text-[12px] text-text-3"
+                        />
                         {req.review_note && (
-                          <p className="font-ui text-[11px] text-error mt-0.5 italic">
+                          <p className="font-ui text-[11px] text-text-4 mt-0.5 italic wrap-break-word">
                             "{req.review_note}"
                           </p>
                         )}
                       </div>
-                      {/* Status shows on every day of the span; only the
-                          Approve/Reject pair is confined to the first, so a
-                          three-day leave is not three decisions. */}
-                      {span.total > 1 && !span.isFirstShown ? (
-                        <>
-                          <RequestStatusChip status={req.status} />
-                          <SpanContinuation dayNum={span.dayNum} total={span.total} />
-                        </>
-                      ) : req.status === "pending" ? (
+                      <RequestMeta
+                        createdAt={req.created_at}
+                        reviewedAt={req.reviewed_at}
+                        status={req.status}
+                      />
+                      {/* Approve/Reject is confined to the first day shown, so a
+                          three-day leave is not three decisions. The status and
+                          its Day N of M qualifier show on every day. */}
+                      {span.total > 1 && !span.isFirstShown ? null : req.status ===
+                        "pending" ? (
                         // On-behalf (entered_by) entries can only be approved by an
                         // admin/super_admin — and nobody reviews their own request.
                         (req.entered_by && !isAdmin) || req.profile_id === profile?.id ? (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-xs border border-warning/25 bg-warning/10 text-warning text-[11px] font-mono font-semibold shrink-0 mt-0.5 whitespace-nowrap">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-xs border border-warning/25 bg-warning/10 text-warning text-[11px] font-mono font-semibold shrink-0 whitespace-nowrap">
                             Awaiting admin
                           </span>
                         ) : (
@@ -1972,13 +2013,15 @@ export function LeaveTab() {
                             </button>
                           </div>
                         )
-                      ) : (
-                        <RequestStatusChip status={req.status} />
+                      ) : null}
+                      {span.total > 1 && (
+                        <SpanContinuation dayNum={span.dayNum} total={span.total} />
                       )}
+                      <RequestStatusChip status={req.status} />
                       {isAdmin && (
                         <button
                           onClick={() => setDeleteTarget(req)}
-                          className="shrink-0 mt-0.5 text-text-4 hover:text-error transition-colors"
+                          className="shrink-0 text-text-4 hover:text-error transition-colors"
                           aria-label="Delete request"
                         >
                           <Trash2 size={14} />
@@ -2654,9 +2697,10 @@ export function ExceptionsTab() {
                                 {typeMeta.label}
                               </span>
                             </div>
-                            <p className="text-[12px] font-ui text-text-3 wrap-break-word">
-                              {exc.reason}
-                            </p>
+                            <ExpandableText
+                              text={exc.reason ?? ""}
+                              className="text-[12px] font-ui text-text-3"
+                            />
                             {exc.exception_type === "out_of_office" && (
                               <p className="text-[11px] font-mono text-text-4 mt-0.5">
                                 Out: {fmtTs(exc.actual_departure)} · Back:{" "}
@@ -2673,15 +2717,16 @@ export function ExceptionsTab() {
                               </span>
                             )}
                           </div>
-                          <div className="shrink-0 text-[11.5px] font-mono text-text-4">
-                            Requested {formatRequestedAt(exc.created_at)}
-                          </div>
-                          <RequestStatusChip status={exc.status} />
+                          <RequestMeta
+                            createdAt={exc.created_at}
+                            reviewedAt={exc.reviewed_at}
+                            status={exc.status}
+                          />
                           {exc.status === "pending" ? (
                             exc.profile_id === profile?.id ? (
                               <OwnRequestChip />
                             ) : (
-                              <div className="flex items-center gap-1.5 ml-1">
+                              <div className="flex items-center gap-1.5">
                                 <button
                                   onClick={() => handleApprove(exc.id)}
                                   disabled={reviewMutation.isPending}
@@ -2698,21 +2743,12 @@ export function ExceptionsTab() {
                                 </button>
                               </div>
                             )
-                          ) : (
-                            <span className="font-mono text-[11px] text-text-4 shrink-0">
-                              Reviewed{" "}
-                              {exc.reviewed_at
-                                ? new Date(exc.reviewed_at).toLocaleDateString("en-US", {
-                                    month: "short",
-                                    day: "numeric",
-                                  })
-                                : "—"}
-                            </span>
-                          )}
+                          ) : null}
+                          <RequestStatusChip status={exc.status} />
                           {isAdmin && (
                             <button
                               onClick={() => setDeleteTarget(excWp)}
-                              className="ml-0.5 text-text-4 hover:text-error transition-colors shrink-0"
+                              className="text-text-4 hover:text-error transition-colors shrink-0"
                               aria-label="Delete exception"
                             >
                               <Trash2 size={14} />
@@ -2928,6 +2964,7 @@ export function HolidaysTab() {
   const [wfhReason, setWfhReason] = useState("");
   const [wfhDeleteTarget, setWfhDeleteTarget] = useState<string | null>(null);
 
+  const { data: settings } = useAttendanceSettings();
   const { data: holidays = [], isLoading } = useHolidays(year);
   const { data: workingSaturdays = [] } = useWorkingSaturdays(year);
   const { data: companyWfhDays = [] } = useCompanyWfhDays(year);
@@ -3081,13 +3118,20 @@ export function HolidaysTab() {
     "Dec",
   ];
 
-  // Group by month for display
+  const todayStr = new Intl.DateTimeFormat("en-CA", {
+    timeZone: settings?.timezone ?? "Asia/Karachi",
+  }).format(now);
+
+  // Group by month for display — newest first, so upcoming/recent holidays lead
   const byMonth = MONTH_NAMES.map((m, i) => ({
     month: m,
-    items: holidays.filter(
-      (h) => new Date(h.date + "T00:00:00").getMonth() === i,
-    ),
-  })).filter((g) => g.items.length > 0);
+    items: holidays
+      .filter((h) => new Date(h.date + "T00:00:00").getMonth() === i)
+      .slice()
+      .sort((a, b) => b.date.localeCompare(a.date)),
+  }))
+    .filter((g) => g.items.length > 0)
+    .reverse();
 
   return (
     <div className="flex flex-col gap-5">
@@ -3175,15 +3219,34 @@ export function HolidaysTab() {
                     const meta =
                       HOLIDAY_TYPE_META[h.type] ??
                       HOLIDAY_TYPE_META["public_holiday"];
+                    const isToday = h.date === todayStr;
+                    const isUpcoming = h.date > todayStr;
                     return (
                       <div
                         key={h.id}
-                        className="flex items-center gap-4 px-5 py-3 hover:bg-white/1.5 transition-colors"
+                        className={cn(
+                          "flex items-center gap-4 px-5 py-3 hover:bg-white/1.5 transition-colors",
+                          !isToday && !isUpcoming && "opacity-60",
+                        )}
                       >
                         <div className="flex-1 min-w-0">
-                          <p className="font-ui font-semibold text-[13px] text-text-1 truncate">
-                            {h.name}
-                          </p>
+                          <div className="flex items-center gap-2 min-w-0">
+                            <p className="font-ui font-semibold text-[13px] text-text-1 truncate">
+                              {h.name}
+                            </p>
+                            {(isToday || isUpcoming) && (
+                              <span
+                                className={cn(
+                                  "shrink-0 px-2 py-0.5 rounded-full text-[10px] font-ui font-semibold border uppercase tracking-wide",
+                                  isToday
+                                    ? "bg-brand-red/13 text-brand-red border-brand-red/30"
+                                    : "bg-success/10 text-success border-success/25",
+                                )}
+                              >
+                                {isToday ? "Today" : "Upcoming"}
+                              </span>
+                            )}
+                          </div>
                           <p className="font-mono text-[11px] text-text-4 mt-0.5">
                             {fmtDate(h.date)}
                           </p>
@@ -3959,13 +4022,12 @@ export function OvertimeTab() {
                             <div className="font-ui font-medium text-[13px] text-text-1">
                               {r.profiles?.name ?? req.profile_id.slice(0, 8)}
                             </div>
-                            {req.reason && (
-                              <p className="text-[12px] font-ui text-text-3 wrap-break-word">
-                                {req.reason}
-                              </p>
-                            )}
+                            <ExpandableText
+                              text={req.reason ?? ""}
+                              className="text-[12px] font-ui text-text-3"
+                            />
                             {req.review_note && (
-                              <p className="text-[11px] font-ui text-text-4 italic wrap-break-word">
+                              <p className="mt-0.5 text-[11px] font-ui text-text-4 italic wrap-break-word">
                                 "{req.review_note}"
                               </p>
                             )}
@@ -3974,15 +4036,19 @@ export function OvertimeTab() {
                             <Clock size={12} className="text-text-4" />
                             {fmtTime(req.start_time)} – {fmtTime(req.end_time)}
                             <span className="font-display font-bold text-[14px] text-service-mkt ml-1">
-                              {req.hours}h
+                              {formatHoursMinutes(req.hours)}
                             </span>
                           </div>
-                          <RequestStatusChip status={req.status} />
+                          <RequestMeta
+                            createdAt={req.created_at}
+                            reviewedAt={req.reviewed_at}
+                            status={req.status}
+                          />
                           {req.status === "pending" ? (
                             req.profile_id === profile?.id ? (
                               <OwnRequestChip />
                             ) : (
-                              <div className="flex items-center gap-1.5 ml-1">
+                              <div className="flex items-center gap-1.5">
                                 <button
                                   onClick={() => handleApprove(req.id)}
                                   disabled={reviewMutation.isPending}
@@ -3999,17 +4065,8 @@ export function OvertimeTab() {
                                 </button>
                               </div>
                             )
-                          ) : (
-                            <span className="font-mono text-[11px] text-text-4 shrink-0">
-                              Reviewed{" "}
-                              {req.reviewed_at
-                                ? new Date(req.reviewed_at).toLocaleDateString("en-US", {
-                                    month: "short",
-                                    day: "numeric",
-                                  })
-                                : "—"}
-                            </span>
-                          )}
+                          ) : null}
+                          <RequestStatusChip status={req.status} />
                           {isAdmin && (
                             <button
                               onClick={() =>
@@ -4018,7 +4075,7 @@ export function OvertimeTab() {
                                   name: r.profiles?.name ?? "this employee",
                                 })
                               }
-                              className="ml-0.5 text-text-4 hover:text-error transition-colors shrink-0"
+                              className="text-text-4 hover:text-error transition-colors shrink-0"
                               aria-label="Delete overtime request"
                             >
                               <Trash2 size={14} />

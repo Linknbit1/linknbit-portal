@@ -77,6 +77,14 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'improved',
+        text: 'Every request row now shows when it was raised and when it was decided, side by side, instead of hiding the review date behind an expander. A long reason is trimmed to three lines with a Read more, so one person’s essay no longer pushes the next request off the screen, and the status sits at the far right of every row with its “Day 2 of 3” marker beside it.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Overtime is shown in hours and minutes. A 40-minute request read as “0.67h” everywhere it appeared — on the review screen, your own attendance page, a member’s profile and the team panel — and now reads “40m”.',
+      },
+      {
+        kind: 'improved',
         text: 'Leave, WFH Requests, Exceptions and Overtime now look and work the same. All four are one list grouped by date — Exceptions and Overtime were tables, which meant the same request looked different depending on which screen you reviewed it from — and all four now use the same status pill, so an approved request no longer reads “Approved” on one screen and “approved” on another. The stat cards above each list are gone; they repeated what the list already shows and pushed the requests below the fold.',
       },
       {
