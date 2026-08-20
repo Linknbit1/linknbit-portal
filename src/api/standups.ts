@@ -62,11 +62,35 @@ export async function updateStandupSettings(
   return data
 }
 
+/**
+ * A task the caller plausibly worked on today, from the timer, the board or
+ * their own comments. Used to prefill the standup form.
+ */
+export interface StandupSuggestion {
+  task_id: string
+  project_id: string | null
+  task_title: string
+  project_name: string | null
+  /** Strongest signal first: a running timer beats a board status. */
+  source: 'timer' | 'in_progress' | 'commented'
+  /** Minutes the timer recorded. Shown as a hint — never written into the form. */
+  tracked_minutes: number
+}
+
+export async function fetchStandupSuggestions(): Promise<StandupSuggestion[]> {
+  const { data, error } = await supabase.rpc('standup_suggestions')
+  if (error) throw error
+  return (data ?? []) as StandupSuggestion[]
+}
+
 export interface StandupEntryInput {
+  /** Empty for ad-hoc work that belongs to no project — `title` carries it instead. */
   project_id: string
   task_id?: string | null
   /** Plain-text mirror of `work_done_doc` — what the length rule is measured on. */
   work_done: string
+  /** Subject for work with no project behind it. Ignored when `project_id` is set. */
+  title?: string | null
   /** Formatted description: bold, italic, lists and links. */
   work_done_doc?: Json | null
   minutes_spent: number
@@ -108,6 +132,7 @@ const toRpcEntries = (entries: StandupEntryInput[]) =>
   entries.map((e) => ({
     project_id: e.project_id,
     task_id: e.task_id ?? '',
+    title: e.title ?? '',
     work_done: e.work_done,
     work_done_doc: e.work_done_doc ?? null,
     minutes_spent: e.minutes_spent,

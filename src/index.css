@@ -348,6 +348,18 @@
 @layer utilities {
   .text-balance { text-wrap: balance; }
 
+  /* Number inputs without the stepper arrows.
+     The tiny up/down chevrons are a hazard on a duration field: they are easy to
+     hit by accident, they nudge by one when nobody wants a one-minute change,
+     and a stray scroll over a focused input silently rewrites the value. */
+  .no-spinner { appearance: textfield; -moz-appearance: textfield; }
+  .no-spinner::-webkit-outer-spin-button,
+  .no-spinner::-webkit-inner-spin-button {
+    appearance: none;
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
   /* XP gradient background — used as bg-xp-gradient */
   .bg-xp-gradient {
     background-image: linear-gradient(90deg, #FBBF24 0%, #F472B6 50%, #A78BFA 100%);

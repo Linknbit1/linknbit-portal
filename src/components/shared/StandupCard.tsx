@@ -54,8 +54,10 @@ export function StandupCard({ standup, showPerson = true }: StandupCardProps) {
         {standup.entries.map((e) => {
           // Prefer the live project/task name; fall back to the snapshot captured
           // at submission so a deleted project/task still shows in the backlog.
-          const projectLabel = e.project?.name ?? e.project_name ?? 'Project'
-          const projectGone = !e.project && !!e.project_name
+          // An ad-hoc entry has no project — its own title is the heading.
+          const isAdhoc = !e.project_id && !!e.title
+          const projectLabel = isAdhoc ? e.title! : (e.project?.name ?? e.project_name ?? 'Project')
+          const projectGone = !isAdhoc && !e.project && !!e.project_name
           const taskLabel = e.task?.title ?? e.task_name
           const taskGone = !e.task && !!e.task_name
           return (
@@ -63,6 +65,11 @@ export function StandupCard({ standup, showPerson = true }: StandupCardProps) {
             <div className="flex items-center gap-2 flex-wrap">
               {e.task?.project_service?.service && <ServiceChip service={e.task.project_service.service.slug} />}
               <span className="font-ui font-semibold text-[12.5px] text-text-1">{projectLabel}</span>
+              {isAdhoc && (
+                <span className="rounded-xs border border-border-subtle bg-surface-2 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wide text-text-4">
+                  Other
+                </span>
+              )}
               {projectGone && <span className="font-mono text-[10px] text-text-4" title="This project has been deleted">(deleted)</span>}
               {taskLabel && (
                 <span className="font-ui text-[11.5px] text-text-3 truncate">

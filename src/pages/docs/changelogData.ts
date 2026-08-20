@@ -124,6 +124,14 @@ export const RELEASES: ChangelogRelease[] = [
         text: 'The standup now asks you to account for your whole day. The form shows how many hours that is — your working day less the new lunch break — and the bar turns green when what you have logged matches it. Time off is taken off the total for you: half a day of leave, a late arrival or an approved trip out each reduce what you owe, and overlapping ones only count once.',
       },
       {
+        kind: 'added',
+        text: 'The standup fills itself in. Open it and a banner lists the tasks you actually worked on today — anything you ran a timer on, anything assigned to you and in progress, anything you commented on — and one press drops them into the form. Times and descriptions stay blank, because the timer rarely covers a whole day and a wrong number is slower to fix than an empty one.',
+      },
+      {
+        kind: 'added',
+        text: 'Work that belongs to no project now has somewhere to go. “Add other work” takes a title, a description and the time — for the errand, the interview panel, the afternoon lost to a fire drill. It counts towards your hours like anything else, and has nothing to do with quests or XP.',
+      },
+      {
         kind: 'improved',
         text: 'Standups are written project by project, with a row for each task you worked on and its own description — no more cramming three tasks into one box. Descriptions take bold, italic, lists and links.',
       },

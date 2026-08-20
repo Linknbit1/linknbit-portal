@@ -288,7 +288,9 @@ export const DOC_CHAPTERS: DocChapter[] = [
             title: 'Submit one (while it is still required of you)',
             steps: [
               'Open Workspace → Standup during the submission window. The top of the form shows how much of the day you have to account for.',
-              'Pick a project, then add a row for each task you worked on it — “Add another task on this project”.',
+              'If you tracked time or moved tasks today, a banner offers to fill them in — press “Fill them in” and the rows appear, ready for their times and descriptions. Delete any that are wrong.',
+              'Otherwise pick a project, then add a row for each task you worked on it — “Add another task on this project”.',
+              'For work with no project behind it — an errand, an interview panel, a fire drill — press “Add other work” and give it a title of its own.',
               'Give each task the time it took and a description of what you actually did. Bold, italic, lists and links are available.',
               'Repeat with “Add another project” until the logged total matches the hours shown at the top.',
               'Submit. You can correct it for as long as the window stays open.',
@@ -298,6 +300,8 @@ export const DOC_CHAPTERS: DocChapter[] = [
         notes: [
           'The hours you log have to add up to your working day exactly — the day less the lunch break. The bar at the top turns green when they match.',
           'Time off comes out of that total automatically. Half a day of leave, a late arrival or an approved trip out of the office each reduce what you owe, and overlapping ones are only counted once.',
+          'The tasks offered are the ones you ran a timer on, are assigned and in progress, or commented on today. Times are never guessed for you — the timer usually covers less than half a day, so a filled-in number would be wrong more often than right.',
+          'Work with no project still counts towards your hours. “Other work” is time accounting only — it earns no XP and has nothing to do with quests.',
           'Each task needs a real description — the minimum length is set by your admins and the counter under the box shows how far off you are.',
           'Submitting before the on-time cutoff earns XP; after it, the entry is saved but marked late and earns nothing. The amount and the cutoff are both configurable.',
           'If your role or your account has been excluded, the page tells you no standup is expected today.',

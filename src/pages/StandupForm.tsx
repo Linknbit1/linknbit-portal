@@ -1,13 +1,15 @@
 import { useMemo, useState } from 'react'
 import type { JSONContent } from '@tiptap/react'
-import { Plus, Trash2, Send, AlertTriangle, Save, Check, FolderPlus } from 'lucide-react'
+import { Plus, Trash2, Send, AlertTriangle, Save, Check, FolderPlus, Sparkles, Timer } from 'lucide-react'
 import { Button } from '../components/ui/Button'
 import { Select } from '../components/ui/Select'
 import { cn } from '../lib/cn'
 import { useToast } from '../components/ui/toast-context'
 import { useProjects } from '../hooks/useProjects'
 import { useTasks } from '../hooks/useTasks'
-import { useSubmitStandup, useUpdateStandup, useStandupWindow } from '../hooks/useStandups'
+import {
+  useSubmitStandup, useUpdateStandup, useStandupWindow, useStandupSuggestions,
+} from '../hooks/useStandups'
 import { StandupEntryEditor } from '../components/editor/StandupEntryEditor'
 import { formatMinutes } from '../lib/duration'
 import { fromDbDoc } from '../lib/richText'
@@ -19,10 +21,12 @@ const MIN_BLOCKER = 10
 /** Fallback until the window loads; the server value always wins. */
 const DEFAULT_MIN_CHARS = 100
 
-/** One task worked on, inside a project group. */
+/** One task worked on, inside a project group — or one ad-hoc item. */
 interface TaskRow {
   key: string
   taskId: string
+  /** Ad-hoc rows only: the subject, since there is no task to name it. */
+  title: string
   hours: string
   minutes: string
   workDone: string
@@ -30,18 +34,28 @@ interface TaskRow {
   blocker: string
 }
 
-/** One project, and everything done on it today. */
+/**
+ * One card in the form. Either a project and the tasks done on it, or the
+ * "Other work" card holding things with no project behind them at all —
+ * fetching the cake, an interview panel, a fire drill. Real hours that the
+ * eight-hour rule would otherwise have nowhere to put.
+ */
 interface ProjectGroup {
   key: string
+  kind: 'project' | 'adhoc'
   projectId: string
   tasks: TaskRow[]
 }
 
 const emptyTask = (): TaskRow => ({
-  key: randomUUID(), taskId: '', hours: '', minutes: '', workDone: '', workDoneDoc: null, blocker: '',
+  key: randomUUID(), taskId: '', title: '', hours: '', minutes: '', workDone: '', workDoneDoc: null, blocker: '',
 })
 
-const emptyGroup = (): ProjectGroup => ({ key: randomUUID(), projectId: '', tasks: [emptyTask()] })
+const emptyGroup = (): ProjectGroup =>
+  ({ key: randomUUID(), kind: 'project', projectId: '', tasks: [emptyTask()] })
+
+const emptyAdhocGroup = (): ProjectGroup =>
+  ({ key: randomUUID(), kind: 'adhoc', projectId: '', tasks: [emptyTask()] })
 
 /**
  * Reopens a submitted standup as editable groups.
@@ -55,18 +69,20 @@ function groupsFrom(standup: StandupDetail): ProjectGroup[] {
     // Null when the linked project was hard-deleted — reopen empty so the editor
     // must re-pick a current project (the original stays in the saved snapshot).
     const projectId = e.project_id ?? ''
+    const kind: ProjectGroup['kind'] = e.project_id ? 'project' : 'adhoc'
     const last = groups[groups.length - 1]
     const row: TaskRow = {
       key: e.id,
       taskId: e.task_id ?? '',
+      title: e.title ?? '',
       hours: String(Math.floor(e.minutes_spent / 60) || ''),
       minutes: String(e.minutes_spent % 60 || ''),
       workDone: e.work_done,
       workDoneDoc: fromDbDoc(e.work_done_doc),
       blocker: e.blocker ?? '',
     }
-    if (last && last.projectId === projectId) last.tasks.push(row)
-    else groups.push({ key: randomUUID(), projectId, tasks: [row] })
+    if (last && last.kind === kind && last.projectId === projectId) last.tasks.push(row)
+    else groups.push({ key: randomUUID(), kind, projectId, tasks: [row] })
   }
   return groups.length > 0 ? groups : [emptyGroup()]
 }
@@ -74,7 +90,8 @@ function groupsFrom(standup: StandupDetail): ProjectGroup[] {
 const rowMinutes = (t: TaskRow): number =>
   (parseInt(t.hours || '0', 10) || 0) * 60 + (parseInt(t.minutes || '0', 10) || 0)
 
-function rowError(t: TaskRow, minChars: number): string | null {
+function rowError(t: TaskRow, minChars: number, kind: ProjectGroup['kind']): string | null {
+  if (kind === 'adhoc' && t.title.trim().length < 3) return 'Give this a title'
   const mins = rowMinutes(t)
   if (mins < 5) return 'Log at least 5 minutes'
   if (mins > 960) return 'That is more than 16 hours'
@@ -104,9 +121,38 @@ export function StandupForm({ onDone, editing, onCancel }: StandupFormProps) {
   const isEditing = !!editing
   const pending = submit.isPending || update.isPending
 
+  // Only for a fresh standup — reopening one to correct it must show what was
+  // submitted, not what the timer thinks happened.
+  const { data: suggestions = [] } = useStandupSuggestions(!editing)
+
   const [groups, setGroups] = useState<ProjectGroup[]>(() => (editing ? groupsFrom(editing) : [emptyGroup()]))
   const [notes, setNotes] = useState(editing?.notes ?? '')
   const [showErrors, setShowErrors] = useState(false)
+  const [seeded, setSeeded] = useState(false)
+
+  /**
+   * Fill the form with today's tasks, grouped by project.
+   *
+   * Times are left empty on purpose. Measured across the last month the timer
+   * accounts for under four hours of an eight-hour day, so a prefilled duration
+   * would be wrong more often than right — and correcting a wrong number is
+   * slower than typing into an empty one.
+   */
+  const applySuggestions = () => {
+    if (suggestions.length === 0) return
+    const byProject = new Map<string, ProjectGroup>()
+    for (const sug of suggestions) {
+      const pid = sug.project_id ?? ''
+      let group = byProject.get(pid)
+      if (!group) {
+        group = { key: randomUUID(), kind: 'project', projectId: pid, tasks: [] }
+        byProject.set(pid, group)
+      }
+      group.tasks.push({ ...emptyTask(), taskId: sug.task_id })
+    }
+    setGroups([...byProject.values()])
+    setSeeded(true)
+  }
 
   const minChars = window?.min_work_done_chars ?? DEFAULT_MIN_CHARS
   const requiredMinutes = window?.required_minutes ?? 0
@@ -130,8 +176,8 @@ export function StandupForm({ onDone, editing, onCancel }: StandupFormProps) {
 
   const errors = useMemo(
     () => groups.map((g) => ({
-      project: g.projectId ? null : 'Choose a project',
-      tasks: g.tasks.map((t) => rowError(t, minChars)),
+      project: g.kind === 'adhoc' || g.projectId ? null : 'Choose a project',
+      tasks: g.tasks.map((t) => rowError(t, minChars, g.kind)),
     })),
     [groups, minChars],
   )
@@ -155,8 +201,9 @@ export function StandupForm({ onDone, editing, onCancel }: StandupFormProps) {
 
     const entries: StandupEntryInput[] = groups.flatMap((g) =>
       g.tasks.map((t) => ({
-        project_id: g.projectId,
-        task_id: t.taskId || null,
+        project_id: g.kind === 'adhoc' ? '' : g.projectId,
+        task_id: g.kind === 'adhoc' ? null : (t.taskId || null),
+        title: g.kind === 'adhoc' ? t.title.trim() : null,
         work_done: t.workDone.trim(),
         work_done_doc: (t.workDoneDoc as Json | null) ?? null,
         minutes_spent: rowMinutes(t),
@@ -187,6 +234,26 @@ export function StandupForm({ onDone, editing, onCancel }: StandupFormProps) {
         enforced={enforceHours}
       />
 
+      {/* What today looked like, offered rather than imposed — the form is still
+          the person's account of their day, not the timer's. */}
+      {!editing && !seeded && suggestions.length > 0 && (
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-service-dev/30 bg-service-dev/5 px-4 py-3">
+          <Timer size={15} className="shrink-0 text-service-dev" />
+          <div className="min-w-0 flex-1">
+            <p className="font-ui text-[12.5px] font-medium text-text-1">
+              {suggestions.length} task{suggestions.length === 1 ? '' : 's'} you worked on today
+            </p>
+            <p className="mt-0.5 truncate font-ui text-[11.5px] text-text-4">
+              {suggestions.slice(0, 3).map((s) => s.task_title).join(' · ')}
+              {suggestions.length > 3 && ` · +${suggestions.length - 3} more`}
+            </p>
+          </div>
+          <Button size="sm" variant="secondary" onClick={applySuggestions}>
+            Fill them in
+          </Button>
+        </div>
+      )}
+
       {groups.map((g, gi) => {
         const groupErr = showErrors ? errors[gi].project : null
         const tasksForProject = allTasks.filter((t) => t.project_id === g.projectId)
@@ -203,23 +270,36 @@ export function StandupForm({ onDone, editing, onCancel }: StandupFormProps) {
               groupErr ? 'border-error/50' : 'border-border-default',
             )}
           >
-            {/* Project header */}
+            {/* Card header — a project picker, or the ad-hoc heading */}
             <header className="flex flex-wrap items-center gap-3 border-b border-border-subtle bg-surface-2/40 px-4 py-3">
               <div className="min-w-0 flex-1">
-                <label className="mb-1.5 block font-ui text-[11px] font-semibold uppercase tracking-wider text-text-3">
-                  Project
-                </label>
-                <Select
-                  value={g.projectId}
-                  onChange={(v) => patchGroup(g.key, {
-                    projectId: v,
-                    // Tasks belong to the old project; their descriptions do not.
-                    tasks: g.tasks.map((t) => ({ ...t, taskId: '' })),
-                  })}
-                  options={projectOptions}
-                  placeholder="Select project…"
-                  className="max-w-sm"
-                />
+                {g.kind === 'adhoc' ? (
+                  <>
+                    <p className="flex items-center gap-1.5 font-ui text-[13px] font-semibold text-text-1">
+                      <Sparkles size={13} className="text-text-3" /> Other work
+                    </p>
+                    <p className="mt-0.5 font-ui text-[11.5px] text-text-4">
+                      Anything with no project behind it — an errand, an interview, a fire drill.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <label className="mb-1.5 block font-ui text-[11px] font-semibold uppercase tracking-wider text-text-3">
+                      Project
+                    </label>
+                    <Select
+                      value={g.projectId}
+                      onChange={(v) => patchGroup(g.key, {
+                        projectId: v,
+                        // Tasks belong to the old project; their descriptions do not.
+                        tasks: g.tasks.map((t) => ({ ...t, taskId: '' })),
+                      })}
+                      options={projectOptions}
+                      placeholder="Select project…"
+                      className="max-w-sm"
+                    />
+                  </>
+                )}
               </div>
               <span className="font-mono text-[11.5px] text-text-3">
                 {groupMinutes > 0 ? formatMinutes(groupMinutes) : '—'}
@@ -257,14 +337,23 @@ export function StandupForm({ onDone, editing, onCancel }: StandupFormProps) {
                     <div className="flex flex-wrap items-end gap-3">
                       <div className="min-w-0 flex-1">
                         <label className="mb-1.5 block font-ui text-[11px] font-semibold uppercase tracking-wider text-text-3">
-                          Task
+                          {g.kind === 'adhoc' ? 'Title' : 'Task'}
                         </label>
-                        <Select
-                          value={t.taskId}
-                          onChange={(v) => patchTask(g.key, t.key, { taskId: v })}
-                          options={taskOptions}
-                          placeholder={g.projectId ? 'No specific task' : 'Pick a project first'}
-                        />
+                        {g.kind === 'adhoc' ? (
+                          <input
+                            value={t.title}
+                            onChange={(e) => patchTask(g.key, t.key, { title: e.target.value })}
+                            placeholder="e.g. Collected the cake from the bakery"
+                            className="h-9 w-full rounded-md border border-border-default bg-surface-inset px-3 font-ui text-[13px] text-text-1 outline-none placeholder:text-text-4 focus:border-border-focus"
+                          />
+                        ) : (
+                          <Select
+                            value={t.taskId}
+                            onChange={(v) => patchTask(g.key, t.key, { taskId: v })}
+                            options={taskOptions}
+                            placeholder={g.projectId ? 'No specific task' : 'Pick a project first'}
+                          />
+                        )}
                       </div>
                       <div>
                         <label className="mb-1.5 block font-ui text-[11px] font-semibold uppercase tracking-wider text-text-3">
@@ -275,14 +364,14 @@ export function StandupForm({ onDone, editing, onCancel }: StandupFormProps) {
                             type="number" min={0} max={16} value={t.hours}
                             onChange={(e) => patchTask(g.key, t.key, { hours: e.target.value })}
                             placeholder="0" aria-label="Hours"
-                            className="h-9 w-16 rounded-md border border-border-default bg-surface-inset px-2.5 text-center font-mono text-[13px] text-text-1 outline-none focus:border-border-focus"
+                            className="no-spinner h-9 w-16 rounded-md border border-border-default bg-surface-inset px-2.5 text-center font-mono text-[13px] text-text-1 outline-none focus:border-border-focus"
                           />
                           <span className="font-ui text-[11.5px] text-text-4">h</span>
                           <input
                             type="number" min={0} max={59} step={5} value={t.minutes}
                             onChange={(e) => patchTask(g.key, t.key, { minutes: e.target.value })}
                             placeholder="0" aria-label="Minutes"
-                            className="h-9 w-16 rounded-md border border-border-default bg-surface-inset px-2.5 text-center font-mono text-[13px] text-text-1 outline-none focus:border-border-focus"
+                            className="no-spinner h-9 w-16 rounded-md border border-border-default bg-surface-inset px-2.5 text-center font-mono text-[13px] text-text-1 outline-none focus:border-border-focus"
                           />
                           <span className="font-ui text-[11.5px] text-text-4">m</span>
                         </div>
@@ -357,10 +446,19 @@ export function StandupForm({ onDone, editing, onCancel }: StandupFormProps) {
         )
       })}
 
-      <Button variant="secondary" size="sm" iconLeft={<FolderPlus size={14} />}
-        onClick={() => setGroups((gs) => [...gs, emptyGroup()])}>
-        Add another project
-      </Button>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button variant="secondary" size="sm" iconLeft={<FolderPlus size={14} />}
+          onClick={() => setGroups((gs) => [...gs, emptyGroup()])}>
+          Add another project
+        </Button>
+        {/* One "Other work" card is enough — everything without a project goes in it. */}
+        {!groups.some((g) => g.kind === 'adhoc') && (
+          <Button variant="ghost" size="sm" iconLeft={<Sparkles size={14} />}
+            onClick={() => setGroups((gs) => [...gs, emptyAdhocGroup()])}>
+            Add other work
+          </Button>
+        )}
+      </div>
 
       <div className="space-y-1.5">
         <label className="text-label font-ui font-semibold uppercase tracking-wider text-text-2">

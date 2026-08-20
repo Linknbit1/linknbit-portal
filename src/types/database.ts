@@ -3792,6 +3792,7 @@ export type Database = {
           standup_id: string
           task_id: string | null
           task_name: string | null
+          title: string | null
           work_done: string
           work_done_doc: Json | null
         }
@@ -3806,6 +3807,7 @@ export type Database = {
           standup_id: string
           task_id?: string | null
           task_name?: string | null
+          title?: string | null
           work_done: string
           work_done_doc?: Json | null
         }
@@ -3820,6 +3822,7 @@ export type Database = {
           standup_id?: string
           task_id?: string | null
           task_name?: string | null
+          title?: string | null
           work_done?: string
           work_done_doc?: Json | null
         }
@@ -4906,6 +4909,17 @@ export type Database = {
         Args: { p_date: string; p_profile: string }
         Returns: number
       }
+      fn_standup_suggestions: {
+        Args: { p_date: string; p_profile: string }
+        Returns: {
+          project_id: string
+          project_name: string
+          source: string
+          task_id: string
+          task_title: string
+          tracked_minutes: number
+        }[]
+      }
       fn_standup_window: {
         Args: { p_profile: string }
         Returns: {
@@ -5126,6 +5140,17 @@ export type Database = {
           role: string
           standup_id: string
           submitted_at: string
+        }[]
+      }
+      standup_suggestions: {
+        Args: never
+        Returns: {
+          project_id: string
+          project_name: string
+          source: string
+          task_id: string
+          task_title: string
+          tracked_minutes: number
         }[]
       }
       standup_window: {

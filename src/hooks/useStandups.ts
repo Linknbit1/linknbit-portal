@@ -4,7 +4,7 @@ import {
   fetchStandupWindow, submitStandup, updateStandup, fetchStandupsByDate, fetchMyStandups,
   fetchMyStandup, fetchStandupRoster, fetchStandupRoleSettings, fetchStandupParticipants,
   setStandupRoleRequirement, setStandupParticipation,
-  fetchStandupSettings, updateStandupSettings,
+  fetchStandupSettings, updateStandupSettings, fetchStandupSuggestions,
   type StandupEntryInput, type ParticipationMode,
 } from '../api/standups'
 import type { TablesUpdate } from '../types/database'
@@ -18,6 +18,22 @@ export const STANDUP_KEYS = {
   roleSettings: ['standup', 'settings', 'roles'] as const,
   participants: ['standup', 'settings', 'participants'] as const,
   rules: ['standup', 'settings', 'rules'] as const,
+  suggestions: ['standup', 'suggestions'] as const,
+}
+
+/**
+ * What the caller worked on today, for prefilling the form.
+ *
+ * Short staleTime: someone who stops a timer and opens the standup a minute
+ * later should see that task waiting for them.
+ */
+export function useStandupSuggestions(enabled = true) {
+  return useQuery({
+    queryKey: STANDUP_KEYS.suggestions,
+    queryFn: fetchStandupSuggestions,
+    enabled,
+    staleTime: 30_000,
+  })
 }
 
 /**
