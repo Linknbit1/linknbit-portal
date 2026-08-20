@@ -133,7 +133,7 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'added',
-        text: 'Backlog rows expand. Open a project to see which people put the hours in, or a person to see which projects they went to — timer, standup and variance for each, the same three columns as everywhere else.',
+        text: 'Backlog rows open into a screen of their own. A project shows which people put the hours in; a person shows which projects they went to — timer, standup and variance for each, plus their own CSV export. The range you were reading carries across in the link, so it is worth pasting to a colleague.',
       },
       {
         kind: 'improved',

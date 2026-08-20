@@ -350,7 +350,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
         ],
         notes: [
           'Two clocks are shown side by side and never added together. Timer is time tracked against a task; Standup is what people wrote up at day’s end. They measure the same hours differently and often disagree.',
-          'Expand any row to see the breakdown — a project by the people who worked on it, a person by the projects they worked on.',
+          'Click any row to open it in full — a project by the people who worked on it, a person by the projects they went to. Each of those screens has its own CSV export, and the range you were reading follows you across, so the link is worth sending to somebody.',
           'Make-up is unpaid time from an approved exception that has not been worked back yet. It clears itself as the person logs over their requirement, and the CSV carries the unpaid, made-up and outstanding figures separately.',
           'Somebody who is not asked for a standup owes nothing, so their required hours read zero rather than a full month.',
           'The variance column is the point: a project showing far more standup time than timer time is being worked on without the timer running, and the reverse means work nobody wrote up.',

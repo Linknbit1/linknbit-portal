@@ -35,6 +35,7 @@ import PeoplePage from './pages/admin/PeoplePage'
 import TasksPage from './pages/admin/TasksPage'
 import ReportsPage from './pages/admin/ReportsPage'
 import TimesheetPage from './pages/admin/TimesheetPage'
+import ProjectBacklogDetailPage, { EmployeeBacklogDetailPage } from './pages/admin/BacklogDetailPage'
 import AuditLogPage from './pages/admin/AuditLogPage'
 import SettingsPage, { SettingsSectionScreen } from './pages/admin/SettingsPage'
 import AttendancePage from './pages/AttendancePage'
@@ -150,6 +151,10 @@ export default function App() {
                     lives in the RPCs: leads and PMs see their own team,
                     management sees everyone, an employee sees themselves. */}
                 <Route path="/admin/reports" element={<RoleGuard feature="can_view_reports"><ReportsPage /></RoleGuard>} />
+                {/* One project / one person in full. Both read the same scoped
+                    RPCs as the summary tables, so a URL cannot widen access. */}
+                <Route path="/admin/reports/project/:id" element={<RoleGuard feature="can_view_reports"><ProjectBacklogDetailPage /></RoleGuard>} />
+                <Route path="/admin/reports/employee/:id" element={<RoleGuard feature="can_view_reports"><EmployeeBacklogDetailPage /></RoleGuard>} />
                 <Route path="/timesheet" element={<RoleGuard feature="can_view_reports"><TimesheetPage /></RoleGuard>} />
                 {/* Your own client meetings. Open to all internal staff and not
                     behind the BD guard on purpose: an invitee holds no

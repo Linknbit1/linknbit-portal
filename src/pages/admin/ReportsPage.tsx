@@ -1,20 +1,30 @@
-import { Fragment, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { FolderKanban, Users, Clock, Info, Search, ChevronRight, Loader2 } from 'lucide-react'
+import { FolderKanban, Users, Clock, Info, Search, ChevronRight } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Tabs } from '../../components/ui/Tabs'
 import { Avatar } from '../../components/ui/Avatar'
 import { Skeleton } from '../../components/ui/Skeleton'
-import { PersonLink } from '../../components/shared/PersonLink'
 import { useToast } from '../../components/ui/toast-context'
-import {
-  useProjectBacklog, useEmployeeBacklog, useProjectDetail, useEmployeeDetail,
-} from '../../hooks/useReports'
+import { useProjectBacklog, useEmployeeBacklog } from '../../hooks/useReports'
 import { downloadCsv } from '../../lib/csv'
 import { formatMinutes } from '../../lib/duration'
 import { cn } from '../../lib/cn'
 import { RangePicker, VarianceChip, ExportButton } from '../../components/reports/ReportControls'
-import { useReportRange } from '../../components/reports/reportRange'
+import { useReportRange, type DateRange, type RangePreset } from '../../components/reports/reportRange'
+
+/**
+ * Carry the range through to the detail screen, so opening a project keeps the
+ * window you were reading — and the resulting URL is worth pasting to somebody.
+ */
+function detailHref(base: string, preset: RangePreset, custom: DateRange): string {
+  const params = new URLSearchParams({ preset })
+  if (preset === 'custom') {
+    params.set('from', custom.from)
+    params.set('to', custom.to)
+  }
+  return `${base}?${params.toString()}`
+}
 
 type Tab = 'projects' | 'people'
 
@@ -80,7 +90,6 @@ function ProjectBacklog() {
   const { preset, setPreset, custom, setCustom, range } = useReportRange('month')
   const { data: rows = [], isLoading } = useProjectBacklog(range.from, range.to)
   const [search, setSearch] = useState('')
-  const [openId, setOpenId] = useState<string | null>(null)
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -151,33 +160,22 @@ function ProjectBacklog() {
             </thead>
             <tbody>
               {filtered.map((r) => (
-                <Fragment key={r.project_id}>
-                <tr className="border-b border-border-subtle last:border-0 hover:bg-surface-2/40">
+                <tr key={r.project_id} className="group border-b border-border-subtle last:border-0 hover:bg-surface-2/40">
                   <td className="px-4 py-3">
-                    <span className="flex items-center gap-2">
-                      <button
-                        onClick={() => setOpenId((c) => (c === r.project_id ? null : r.project_id))}
-                        aria-label={openId === r.project_id ? 'Hide who worked on it' : 'Show who worked on it'}
-                        aria-expanded={openId === r.project_id}
-                        className="flex size-5 shrink-0 items-center justify-center rounded-xs text-text-4 hover:bg-surface-2 hover:text-text-1"
-                      >
-                        <ChevronRight
-                          size={13}
-                          className={cn('transition-transform', openId === r.project_id && 'rotate-90')}
-                        />
-                      </button>
-                      <span className="min-w-0">
-                        <Link
-                          to={`/admin/projects/${r.project_id}`}
-                          className="block truncate font-ui text-[13px] font-medium text-text-1 hover:text-brand-red"
-                        >
+                    <Link
+                      to={detailHref(`/admin/reports/project/${r.project_id}`, preset, custom)}
+                      className="flex items-center gap-2"
+                    >
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-ui text-[13px] font-medium text-text-1 group-hover:text-brand-red">
                           {r.project_name}
-                        </Link>
+                        </span>
                         {r.client_name && (
                           <span className="block font-ui text-[11px] text-text-4">{r.client_name}</span>
                         )}
                       </span>
-                    </span>
+                      <ChevronRight size={14} className="shrink-0 text-text-4 group-hover:text-brand-red" />
+                    </Link>
                   </td>
                   <Td>{formatMinutes(r.timer_minutes)}</Td>
                   <Td>{formatMinutes(r.standup_minutes)}</Td>
@@ -188,10 +186,6 @@ function ProjectBacklog() {
                       margin is implied by showing the budget beside the hours. */}
                   <Td muted>{r.budget ? Number(r.budget).toLocaleString() : '—'}</Td>
                 </tr>
-                {openId === r.project_id && (
-                  <ProjectPeopleRow projectId={r.project_id} from={range.from} to={range.to} />
-                )}
-                </Fragment>
               ))}
             </tbody>
           </table>
@@ -206,7 +200,6 @@ function EmployeeBacklog() {
   const { preset, setPreset, custom, setCustom, range } = useReportRange('month')
   const { data: rows = [], isLoading } = useEmployeeBacklog(range.from, range.to)
   const [search, setSearch] = useState('')
-  const [openId, setOpenId] = useState<string | null>(null)
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -283,31 +276,23 @@ function EmployeeBacklog() {
                 // owes nothing and must not read as a 100% shortfall.
                 const shortfall = r.required_minutes > 0 ? r.standup_minutes - r.required_minutes : 0
                 return (
-                  <Fragment key={r.profile_id}>
-                  <tr className="border-b border-border-subtle last:border-0 hover:bg-surface-2/40">
+                  <tr key={r.profile_id} className="group border-b border-border-subtle last:border-0 hover:bg-surface-2/40">
                     <td className="px-4 py-3">
-                      <span className="flex items-center gap-2.5">
-                        <button
-                          onClick={() => setOpenId((c) => (c === r.profile_id ? null : r.profile_id))}
-                          aria-label={openId === r.profile_id ? 'Hide their projects' : 'Show their projects'}
-                          aria-expanded={openId === r.profile_id}
-                          className="flex size-5 shrink-0 items-center justify-center rounded-xs text-text-4 hover:bg-surface-2 hover:text-text-1"
-                        >
-                          <ChevronRight
-                            size={13}
-                            className={cn('transition-transform', openId === r.profile_id && 'rotate-90')}
-                          />
-                        </button>
+                      <Link
+                        to={detailHref(`/admin/reports/employee/${r.profile_id}`, preset, custom)}
+                        className="flex items-center gap-2.5"
+                      >
                         <Avatar name={r.profile_name ?? ''} src={r.avatar_url ?? undefined} size="sm" personId={r.profile_id} />
-                        <span className="min-w-0">
-                          <PersonLink personId={r.profile_id} className="block truncate font-ui text-[13px] font-medium text-text-1">
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate font-ui text-[13px] font-medium text-text-1 group-hover:text-brand-red">
                             {r.profile_name}
-                          </PersonLink>
+                          </span>
                           <span className="font-mono text-[10px] capitalize text-text-4">
                             {r.role?.replace(/_/g, ' ')}
                           </span>
                         </span>
-                      </span>
+                        <ChevronRight size={14} className="shrink-0 text-text-4 group-hover:text-brand-red" />
+                      </Link>
                     </td>
                     <Td>{formatMinutes(r.timer_minutes)}</Td>
                     <Td>{formatMinutes(r.standup_minutes)}</Td>
@@ -349,10 +334,6 @@ function EmployeeBacklog() {
                     </Td>
                     <Td muted>{r.projects}</Td>
                   </tr>
-                  {openId === r.profile_id && (
-                    <EmployeeProjectsRow profileId={r.profile_id} from={range.from} to={range.to} />
-                  )}
-                  </Fragment>
                 )
               })}
             </tbody>
@@ -431,111 +412,5 @@ function EmptyState({ label }: { label: string }) {
     <div className="rounded-xl border border-dashed border-border-default py-14 text-center font-ui text-[13px] text-text-4">
       {label}
     </div>
-  )
-}
-
-/* ── Drill-downs ─────────────────────────────────────────────────────────── */
-
-/**
- * The nested breakdown under an expanded row.
- *
- * Rendered as a full-width cell rather than a nested table, so the child rows
- * inherit the parent's column widths and the two read as one grid instead of a
- * table awkwardly inside a table.
- */
-function DetailShell({ colSpan, loading, empty, children }: {
-  colSpan: number
-  loading: boolean
-  empty: boolean
-  children: React.ReactNode
-}) {
-  return (
-    <tr className="border-b border-border-subtle bg-surface-2/30 last:border-0">
-      <td colSpan={colSpan} className="px-4 py-3">
-        {loading ? (
-          <span className="flex items-center gap-2 font-ui text-[12px] text-text-4">
-            <Loader2 size={12} className="animate-spin" /> Loading the breakdown…
-          </span>
-        ) : empty ? (
-          <span className="font-ui text-[12px] text-text-4">Nothing recorded in this range.</span>
-        ) : (
-          <div className="overflow-hidden rounded-md border border-border-subtle bg-surface-1">
-            {children}
-          </div>
-        )}
-      </td>
-    </tr>
-  )
-}
-
-/** Header row shared by both breakdowns. */
-function DetailHead({ first }: { first: string }) {
-  return (
-    <div className="grid grid-cols-[1fr_6rem_6rem_7rem_4rem] gap-2 border-b border-border-subtle bg-surface-2/50 px-3 py-2">
-      <span className="font-ui text-[10.5px] font-semibold uppercase tracking-wider text-text-4">{first}</span>
-      <span className="text-right font-ui text-[10.5px] font-semibold uppercase tracking-wider text-text-4">Timer</span>
-      <span className="text-right font-ui text-[10.5px] font-semibold uppercase tracking-wider text-text-4">Standup</span>
-      <span className="text-right font-ui text-[10.5px] font-semibold uppercase tracking-wider text-text-4">Variance</span>
-      <span className="text-right font-ui text-[10.5px] font-semibold uppercase tracking-wider text-text-4">Tasks</span>
-    </div>
-  )
-}
-
-/** One project, by the people who worked on it. */
-function ProjectPeopleRow({ projectId, from, to }: { projectId: string; from: string; to: string }) {
-  const { data = [], isLoading } = useProjectDetail(projectId, from, to)
-  return (
-    <DetailShell colSpan={7} loading={isLoading} empty={data.length === 0}>
-      <DetailHead first="Person" />
-      {data.map((d) => (
-        <div
-          key={d.profile_id}
-          className="grid grid-cols-[1fr_6rem_6rem_7rem_4rem] items-center gap-2 border-b border-border-subtle px-3 py-2 last:border-0"
-        >
-          <span className="flex min-w-0 items-center gap-2">
-            <Avatar name={d.profile_name ?? ''} src={d.avatar_url ?? undefined} size="xs" personId={d.profile_id} />
-            <PersonLink personId={d.profile_id} className="truncate font-ui text-[12px] text-text-2">
-              {d.profile_name}
-            </PersonLink>
-          </span>
-          <span className="text-right font-mono text-[12px] text-text-1">{formatMinutes(d.timer_minutes)}</span>
-          <span className="text-right font-mono text-[12px] text-text-1">{formatMinutes(d.standup_minutes)}</span>
-          <span className="text-right"><VarianceChip minutes={d.variance_minutes} /></span>
-          <span className="text-right font-mono text-[12px] text-text-3">{d.tasks}</span>
-        </div>
-      ))}
-    </DetailShell>
-  )
-}
-
-/** One person, by the projects they worked on. */
-function EmployeeProjectsRow({ profileId, from, to }: { profileId: string; from: string; to: string }) {
-  const { data = [], isLoading } = useEmployeeDetail(profileId, from, to)
-  return (
-    <DetailShell colSpan={8} loading={isLoading} empty={data.length === 0}>
-      <DetailHead first="Project" />
-      {data.map((d) => (
-        <div
-          key={d.project_id ?? 'other'}
-          className="grid grid-cols-[1fr_6rem_6rem_7rem_4rem] items-center gap-2 border-b border-border-subtle px-3 py-2 last:border-0"
-        >
-          <span className="min-w-0">
-            {d.project_id ? (
-              <Link to={`/admin/projects/${d.project_id}`} className="block truncate font-ui text-[12px] text-text-2 hover:text-brand-red">
-                {d.project_name}
-              </Link>
-            ) : (
-              /* Ad-hoc standup work — real hours with no project behind them. */
-              <span className="block truncate font-ui text-[12px] italic text-text-3">{d.project_name}</span>
-            )}
-            {d.client_name && <span className="block font-ui text-[10.5px] text-text-4">{d.client_name}</span>}
-          </span>
-          <span className="text-right font-mono text-[12px] text-text-1">{formatMinutes(d.timer_minutes)}</span>
-          <span className="text-right font-mono text-[12px] text-text-1">{formatMinutes(d.standup_minutes)}</span>
-          <span className="text-right"><VarianceChip minutes={d.variance_minutes} /></span>
-          <span className="text-right font-mono text-[12px] text-text-3">{d.tasks}</span>
-        </div>
-      ))}
-    </DetailShell>
   )
 }
