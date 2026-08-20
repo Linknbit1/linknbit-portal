@@ -225,7 +225,7 @@ export function Topbar({ title, breadcrumb, className, back, actions }: TopbarPr
                         onClick={() => {
                           if (isUnread) markGroupRead(group.ids)
                           // Take them to where the thing actually is, when we know.
-                          const href = notificationHref(notif.resource_type, notif.resource_id)
+                          const href = notificationHref(notif.resource_type, notif.resource_id, notif.type)
                           if (href) { setBellOpen(false); navigate(href) }
                         }}
                         className={cn(

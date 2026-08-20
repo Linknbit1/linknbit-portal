@@ -37,7 +37,7 @@ import {
   useAllOvertimeRequests,
 } from '../../hooks/useAttendance'
 import { useEnrolledDevices } from '../../hooks/useEnrolledDevices'
-import { useClaimableQuestCount } from '../../hooks/useGamification'
+import { useClaimableQuestCount, useGamificationPendingCount } from '../../hooks/useGamification'
 import { useAuthContext } from '../../context/AuthContext'
 
 /**
@@ -125,9 +125,9 @@ const GAMIFICATION_CHILDREN: NavItem[] = [
   // redemptions, finance fulfils them — so all three capabilities open this page.
   { label: 'Approvals',      icon: Trophy, to: '/gamification/approvals',
     feature: ['can_govern_gamification', 'can_recognize', 'can_fulfill_payouts'] },
-  // Governors run the catalog; recognizers manage the quests they post.
+  // Governance only: granting XP, who takes part, Employee of the Month.
   { label: 'Settings',       icon: Trophy, to: '/gamification/admin',
-    feature: ['can_govern_gamification', 'can_recognize'] },
+    feature: 'can_govern_gamification' },
 ]
 
 /**
@@ -306,6 +306,12 @@ export function useNavItems(): NavItem[] {
   // auto-closed, so a plain open-count would include expired/full quests).
   // Claimable by everyone internal, so the badge shows for all.
   const { data: questCount = 0 } = useClaimableQuestCount(!!profile)
+  // Gamification items waiting on a reviewer. Scoped server-side to the caller's
+  // capabilities, so the number equals the queues they can actually open — and
+  // gated here so an employee never fires it.
+  const canReviewGamification =
+    can('can_govern_gamification') || can('can_recognize') || can('can_fulfill_payouts')
+  const { data: gamificationPending = 0 } = useGamificationPendingCount(!!profile && canReviewGamification)
   // Meetings still ahead of you, hosting or invited. Ungated like the page
   // itself — anyone can be pulled into a client call, so this is not a BD count.
   const { data: upcomingMeetings = 0 } = useMyUpcomingMeetingCount(!!profile)
@@ -319,7 +325,10 @@ export function useNavItems(): NavItem[] {
     '/attendance/devices': devicesPending,
   }
   const attendanceTotal = Object.values(attendanceByPath).reduce((a, n) => a + n, 0)
-  const gamificationByPath: Record<string, number> = { '/gamification/board': questCount }
+  const gamificationByPath: Record<string, number> = {
+    '/gamification/board': questCount,
+    '/gamification/approvals': gamificationPending,
+  }
   const inboxUnread = notifications.filter((n) => !n.read).length
 
   // Surface live counts on the relevant items (parent shows the section total).
@@ -337,7 +346,9 @@ export function useNavItems(): NavItem[] {
     }
     if (item.matchPrefix === '/gamification') {
       const withChildren = withChildBadges(item, gamificationByPath)
-      return [questCount > 0 ? { ...withChildren, badge: questCount } : withChildren]
+      // Parent badge is the section total, matching how Attendance behaves.
+      const total = questCount + gamificationPending
+      return [total > 0 ? { ...withChildren, badge: total } : withChildren]
     }
     return [item]
   })

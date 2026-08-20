@@ -469,6 +469,8 @@ export const DOC_CHAPTERS: DocChapter[] = [
         notes: [
           'Who claimed a quest is public. What they submitted as proof is not.',
           'A quest can cap how many people may claim it.',
+          'If you post quests, you edit and delete them from the board card itself — there is no separate list.',
+          'Submitting proof notifies the reviewers, so nothing waits on somebody happening to look.',
         ],
       },
       {
@@ -571,6 +573,8 @@ export const DOC_CHAPTERS: DocChapter[] = [
         notes: [
           'Rejecting a redemption refunds the points; rejecting a group pool refunds every member.',
           'Approving a quest proof awards its points immediately.',
+          'A red count beside Approvals in the sidebar tells you how many items are waiting on you — it counts only the queues you can act on.',
+          'You are notified when quest proof is submitted, when somebody gives a shoutout, and when a reward is redeemed. Each notification opens this screen. Mute any of the three under Settings → Notifications.',
         ],
       },
       {

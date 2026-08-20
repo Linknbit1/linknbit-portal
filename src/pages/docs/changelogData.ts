@@ -120,6 +120,18 @@ export const RELEASES: ChangelogRelease[] = [
         text: 'Gamification approvals moved off the Settings page onto their own Approvals screen: quest proofs, shoutouts and reward redemptions in one place, with a count of what is waiting on you. Settings now holds only the quest list, granting XP, who takes part, and Employee of the Month.',
       },
       {
+        kind: 'added',
+        text: 'Gamification reviewers are now told when something needs them: quest proof submitted, a shoutout given, a reward redeemed or a group reward filled. Each notification opens the Approvals screen, and a red count beside Approvals in the sidebar shows how many items are waiting on you.',
+      },
+      {
+        kind: 'improved',
+        text: 'Recognition notifications now open the screen they are about — a badge opens Badges, a redemption opens the Rewards Shop — instead of dropping you on the leaderboard to find it yourself.',
+      },
+      {
+        kind: 'improved',
+        text: 'Quests are managed entirely from the Quest Board now: post, edit and delete on the card itself. The duplicate list under Settings is gone.',
+      },
+      {
         kind: 'improved',
         text: 'Holidays are listed newest first, and one that has not happened yet is marked Upcoming — Today on the day itself — so the next day off is at the top instead of buried under the year so far.',
       },

@@ -842,11 +842,11 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
   const isRecognizer = useCanRecognize()
   const canFulfill = useCanFulfillPayouts()
   const isParticipant = canParticipate(role)
-  // Approvals holds queues for all three capabilities; Settings holds quest
-  // management (recognizers) and catalog/governance (governors) — a pure
-  // fulfiller has nothing to do there, so it stays hidden for them.
+  // Approvals holds queues for all three capabilities. Settings is governance
+  // only — granting XP, who takes part, Employee of the Month — so a recognizer
+  // or fulfiller would find it empty and never sees the tab.
   const showApprovals = isGovernor || isRecognizer || canFulfill
-  const showSettings = isGovernor || isRecognizer
+  const showSettings = isGovernor
 
   const [mainTab, setMainTab] = useState('leaderboard')
 
@@ -1332,7 +1332,19 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
                         <div className="flex items-center gap-1.5 shrink-0">
                           <span className={cn('font-mono text-[9px] px-1.5 py-0.5 rounded-xs uppercase', meta.cls)}>{meta.label}</span>
                           {isRecognizer && (
-                            <button onClick={() => setTaskModal(t)} title="Edit quest" className="p-1 -mr-1 text-text-4 hover:text-text-1 transition-colors"><Pencil size={12} /></button>
+                            confirmDelete === t.id ? (
+                              <span className="flex items-center gap-1.5">
+                                <button onClick={() => { deleteTask(t.id, { onSuccess: () => toast('Quest deleted', 'success'), onError: () => toast('Could not delete quest', 'error') }); setConfirmDelete(null) }}
+                                  className="font-mono text-[10.5px] text-error font-bold">Delete</button>
+                                <span className="text-text-4 text-[10px]">/</span>
+                                <button onClick={() => setConfirmDelete(null)} className="font-mono text-[10.5px] text-text-3">Cancel</button>
+                              </span>
+                            ) : (
+                              <>
+                                <button onClick={() => setTaskModal(t)} title="Edit quest" className="p-1 text-text-4 hover:text-text-1 transition-colors"><Pencil size={12} /></button>
+                                <button onClick={() => setConfirmDelete(t.id)} title="Delete quest" className="p-1 -mr-1 text-text-4 hover:text-error transition-colors"><Trash2 size={12} /></button>
+                              </>
+                            )
                           )}
                         </div>
                       </div>
@@ -1796,47 +1808,6 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
           <div className="flex flex-col gap-8">
             <h2 className="font-display font-bold text-[22px] text-text-1">{sectionLabel}</h2>
 
-            {/* Quest task management */}
-            {isRecognizer && (
-              <section>
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="font-display font-bold text-[16px] text-text-1 flex items-center gap-2"><Trophy size={16} className="text-text-3" /> Quest Tasks</h2>
-                  {/* Create from the Quest Board's "Post Task"; this section manages existing tasks. */}
-                </div>
-                <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
-                  {tasks.length === 0 && <div className="px-5 py-8 text-center text-text-4 font-ui text-[13px]">No tasks yet.</div>}
-                  {tasks.map((t) => {
-                    const claimed = claimantsByTask.get(t.id) ?? []
-                    return (
-                    <div key={t.id} className="grid grid-cols-[1fr_90px_80px_140px_120px] gap-3 items-center px-5 py-3 border-b border-border-subtle last:border-0">
-                      <div className="min-w-0"><p className="font-ui font-semibold text-[13px] text-text-1 truncate">{t.title}</p><p className="font-mono text-[11px] text-text-3 capitalize">{t.difficulty}</p></div>
-                      <span className="font-mono text-[12px] text-coin-gold font-bold">+{lp(t.lp_value)}</span>
-                      <span className={cn('font-mono text-[10px] px-1.5 py-0.5 rounded-xs w-fit', t.status === 'open' ? 'text-success bg-success/10' : 'text-text-4 bg-surface-2')}>{t.status}</span>
-                      <div className="flex items-center gap-2 min-w-0" title={claimed.map((c) => c.name).join(', ')}>
-                        {claimed.length > 0
-                          ? <AvatarGroup users={claimed.map((c) => ({ id: c.claim_id, name: c.name, avatarUrl: c.avatar_url }))} max={3} size="xs" />
-                          : <span className="font-mono text-[10px] text-text-4">—</span>}
-                        <span className="font-mono text-[10px] text-text-3 shrink-0">{claimed.length}/{t.max_claims}</span>
-                      </div>
-                      {confirmDelete === t.id ? (
-                        <div className="flex items-center gap-1.5">
-                          <button onClick={() => { deleteTask(t.id, { onSuccess: () => toast('Task deleted', 'success') }); setConfirmDelete(null) }} className="font-mono text-[10.5px] text-error font-bold">Confirm</button>
-                          <span className="text-text-4 text-[10px]">/</span>
-                          <button onClick={() => setConfirmDelete(null)} className="font-mono text-[10.5px] text-text-3">Cancel</button>
-                        </div>
-                      ) : (
-                        <div className="flex gap-1.5">
-                          <button onClick={() => setTaskModal(t)} className="p-1.5 text-text-3 hover:text-text-1" title="Edit"><Pencil size={13} /></button>
-                          <button onClick={() => setConfirmDelete(t.id)} className="p-1.5 text-text-4 hover:text-error" title="Delete"><Trash2 size={13} /></button>
-                        </div>
-                      )}
-                    </div>
-                    )
-                  })}
-                </div>
-              </section>
-            )}
-
             {/* Grant LP + restriction (governors) */}
             {isGovernor && (
               <section className="grid grid-cols-2 gap-5">
@@ -1973,7 +1944,7 @@ export function GamificationSectionScreen() {
   if (section === 'approvals' && !(canGovern || canRecog || canFulfil)) {
     return <Navigate to="/gamification" replace />
   }
-  if (section === 'admin' && !(canGovern || canRecog)) {
+  if (section === 'admin' && !canGovern) {
     return <Navigate to="/gamification" replace />
   }
   return <GamificationPage mobileSection={section} />

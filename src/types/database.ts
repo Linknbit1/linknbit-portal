@@ -4803,6 +4803,12 @@ export type Database = {
         Args: { p_channel_id: string; p_muted: boolean }
         Returns: undefined
       }
+      fn_staff_with_permission: {
+        Args: { p_key: string }
+        Returns: {
+          profile_id: string
+        }[]
+      }
       fn_standup_participant: { Args: { p_profile: string }; Returns: boolean }
       fn_standup_required: {
         Args: { p_date: string; p_profile: string }
@@ -4875,6 +4881,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      gamification_pending_count: { Args: never; Returns: number }
       get_my_terminal_gate: {
         Args: never
         Returns: {

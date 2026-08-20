@@ -5,6 +5,7 @@ import {
   fetchProfileDirectory,
   fetchOpenQuestTasks,
   fetchClaimableQuestCount,
+  fetchGamificationPendingCount,
   fetchAllQuestTasks,
   fetchMyClaims,
   fetchClaimsToReview,
@@ -58,6 +59,7 @@ export const GAMIFICATION_KEYS = {
   questTasksOpen:   () => ['quest_tasks', 'open'] as const,
   questTasksAll:    () => ['quest_tasks', 'all'] as const,
   claimableCount:   () => ['quest_tasks', 'claimable-count'] as const,
+  pendingCount:     () => ['gamification', 'pending-count'] as const,
   myClaims:         (profileId: string) => ['quest_claims', 'mine', profileId] as const,
   claimsToReview:   () => ['quest_claims', 'review'] as const,
   questClaimants:   () => ['quest_claims', 'claimants'] as const,
@@ -100,6 +102,16 @@ export function useOpenQuestTasks(enabled = true) {
 /** Sidebar badge: count of quests the caller can actually claim right now. */
 export function useClaimableQuestCount(enabled = true) {
   return useQuery({ queryKey: GAMIFICATION_KEYS.claimableCount(), queryFn: fetchClaimableQuestCount, staleTime: 30_000, enabled })
+}
+
+/** Pending review count for the Approvals sidebar badge. */
+export function useGamificationPendingCount(enabled = true) {
+  return useQuery({
+    queryKey: GAMIFICATION_KEYS.pendingCount(),
+    queryFn: fetchGamificationPendingCount,
+    staleTime: 30_000,
+    enabled,
+  })
 }
 
 export function useAllQuestTasks() {
@@ -195,6 +207,7 @@ export function useSubmitQuestTask(profileId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.myClaims(profileId) })
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.claimsToReview() })
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.pendingCount() })
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.questClaimants() })
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.claimableCount() })
     },
@@ -208,6 +221,7 @@ export function useReviewQuestTask() {
       reviewQuestTask(claimId, approve, note),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.claimsToReview() })
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.pendingCount() })
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.questClaimants() })
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.claimableCount() })
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.leaderboard() })
@@ -230,7 +244,10 @@ export function useGiveShoutout() {
   return useMutation({
     mutationFn: ({ toProfileId, category, message, impact, lpValue }: { toProfileId: string; category: string; message: string; impact: 'standard' | 'high'; lpValue?: number | null }) =>
       giveShoutout(toProfileId, category, message, impact, lpValue),
-    onSuccess: () => qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.shoutoutsPending() }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.shoutoutsPending() })
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.pendingCount() })
+    },
   })
 }
 
@@ -241,6 +258,7 @@ export function useReviewShoutout() {
       reviewShoutout(id, approve, note),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.shoutoutsPending() })
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.pendingCount() })
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.shoutoutsFeed() })
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.leaderboard() })
     },
@@ -343,6 +361,7 @@ export function useRedeemReward(profileId: string) {
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.rewards() })
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.myRedemptions(profileId) })
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.redemptionQueue() })
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.pendingCount() })
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.leaderboard() })
     },
   })
@@ -367,6 +386,7 @@ export function useReviewRedemption() {
       reviewRedemption(id, action, note),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.redemptionQueue() })
+      qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.pendingCount() })
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.rewards() })
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.allRewards() })
       qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.leaderboard() })
@@ -388,6 +408,7 @@ export function useRewardPools(statuses?: string[]) {
 // pools, the leaderboard (drives displayed balance), and the reward catalog.
 function invalidateAfterPoolChange(qc: ReturnType<typeof useQueryClient>) {
   qc.invalidateQueries({ queryKey: ['reward_pools'] })
+  qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.pendingCount() })
   qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.leaderboard() })
   qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.rewards() })
   qc.invalidateQueries({ queryKey: GAMIFICATION_KEYS.allRewards() })

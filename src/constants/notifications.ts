@@ -96,6 +96,9 @@ export const NOTIFICATION_GROUPS: NotificationGroup[] = [
       { type: 'request_exception_submitted', label: 'Exception requests', description: 'When your team requests an exception',      roles: APPROVERS },
       { type: 'request_overtime_submitted',  label: 'Overtime requests',  description: 'When your team logs overtime',              roles: APPROVERS },
       { type: 'quest_claimed',               label: 'Quest claimed',      description: 'When someone claims a quest',               roles: GOVERNORS },
+      { type: 'quest_submitted',             label: 'Quest submissions',  description: 'When someone submits quest proof for review', roles: APPROVERS },
+      { type: 'shoutout_pending',            label: 'Shoutouts to review', description: 'When a colleague gives someone a shoutout', roles: GOVERNORS },
+      { type: 'redemption_pending',          label: 'Reward redemptions', description: 'When someone redeems a reward or a group fills', roles: GOVERNORS },
       { type: 'device_approval',             label: 'Device approvals',   description: 'When someone registers a device',           roles: ADMINS },
     ],
   },
@@ -150,8 +153,22 @@ function taskNotificationHref(taskId: string): string {
   return `/admin/tasks/${taskId}?${TASK_PROJECT_REDIRECT_QUERY_PARAM}=1`
 }
 
+/**
+ * Notification types that are a reviewer being told a queue filled up. They all
+ * land on the Approvals screen, whatever resource they point at — the resource
+ * type alone cannot tell "your quest was approved" from "a quest needs review".
+ */
+const GAMIFICATION_REVIEW_TYPES: readonly string[] = [
+  'quest_claimed', 'quest_submitted', 'shoutout_pending', 'redemption_pending',
+]
+
 /** Where a notification should take you when clicked. */
-export function notificationHref(resourceType: string | null, resourceId?: string | null): string | null {
+export function notificationHref(
+  resourceType: string | null,
+  resourceId?: string | null,
+  type?: string | null,
+): string | null {
+  if (type && GAMIFICATION_REVIEW_TYPES.includes(type)) return '/gamification/approvals'
   switch (resourceType) {
     case 'task':
       return resourceId ? taskNotificationHref(resourceId) : '/inbox'
@@ -165,13 +182,19 @@ export function notificationHref(resourceType: string | null, resourceId?: strin
     case 'company_wfh_day':
     case 'working_saturday':
       return '/attendance'
+    // /gamification only redirects to the leaderboard, so each resource names
+    // the sub-page that actually shows it.
     case 'quest_task':
+      return '/gamification/board'
     case 'shoutout':
+      return '/gamification/shoutouts'
     case 'badge':
+      return '/gamification/badges'
     case 'redemption':
     case 'reward_pool':
+      return '/gamification/rewards'
     case 'employee_of_the_month':
-      return '/gamification'
+      return '/gamification/leaderboard'
     case 'channel':
       // resource_id is the conversation, so a chat notification opens the thread.
       return resourceId ? `/chat/${resourceId}` : '/chat'

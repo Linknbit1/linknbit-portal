@@ -75,7 +75,7 @@ export default function InboxPage() {
   const open = (group: NotificationGroup) => {
     // One write for the whole run; re-marking an already-read id is a no-op.
     if (group.unreadCount > 0) markGroupRead(group.ids)
-    const href = notificationHref(group.latest.resource_type, group.latest.resource_id)
+    const href = notificationHref(group.latest.resource_type, group.latest.resource_id, group.latest.type)
     if (href) navigate(href)
   }
 
@@ -149,7 +149,7 @@ export default function InboxPage() {
             {shown.map((group) => {
               const n = group.latest
               const Icon = iconFor(n)
-              const href = notificationHref(n.resource_type, n.resource_id)
+              const href = notificationHref(n.resource_type, n.resource_id, n.type)
               const isUnread = group.unreadCount > 0
               return (
                 <button

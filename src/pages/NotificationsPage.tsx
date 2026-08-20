@@ -64,7 +64,7 @@ export default function NotificationsPage() {
                   key={group.key}
                   onClick={() => {
                     if (isUnread) markGroupRead(group.ids)
-                    const href = notificationHref(notif.resource_type, notif.resource_id)
+                    const href = notificationHref(notif.resource_type, notif.resource_id, notif.type)
                     if (href) navigate(href)
                   }}
                   className={cn(

@@ -107,6 +107,17 @@ export async function fetchClaimableQuestCount(): Promise<number> {
   return data ?? 0
 }
 
+/**
+ * How many gamification items are waiting on the caller, scoped server-side to
+ * the capabilities they hold. One round-trip, because the sidebar that shows it
+ * is mounted on every screen.
+ */
+export async function fetchGamificationPendingCount(): Promise<number> {
+  const { data, error } = await supabase.rpc('gamification_pending_count')
+  if (error) throw error
+  return data ?? 0
+}
+
 export async function fetchAllQuestTasks(): Promise<QuestTaskRow[]> {
   const { data, error } = await supabase
     .from('quest_tasks')
