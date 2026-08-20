@@ -121,6 +121,26 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'added',
+        text: 'The standup now asks you to account for your whole day. The form shows how many hours that is — your working day less the new lunch break — and the bar turns green when what you have logged matches it. Time off is taken off the total for you: half a day of leave, a late arrival or an approved trip out each reduce what you owe, and overlapping ones only count once.',
+      },
+      {
+        kind: 'improved',
+        text: 'Standups are written project by project, with a row for each task you worked on and its own description — no more cramming three tasks into one box. Descriptions take bold, italic, lists and links.',
+      },
+      {
+        kind: 'added',
+        text: 'A lunch break can be set under Settings → Attendance. It is unpaid, so it comes off the working day, and that is what decides how much work a standup has to account for — 09:00 to 18:00 with an hour for lunch is eight hours, not nine.',
+      },
+      {
+        kind: 'improved',
+        text: 'Attendance, Standup and Gamification settings now live as tabs in the main Settings screen instead of being scattered through their own modules, and all three are laid out the same way. The day-to-day screens — registers, approvals, the quest board — stay exactly where they were.',
+      },
+      {
+        kind: 'added',
+        text: 'The standup rules are configurable at last. When it opens (a set number of minutes before the day ends, or a fixed time), how long it stays “on time”, what an on-time standup is worth, and the minimum length of a task description — all of it was previously fixed in code.',
+      },
+      {
+        kind: 'added',
         text: 'A lead now holds the rest of what you know about a prospect: their website, country and city, as many social profiles as they have, and the documents you sent them — each with a title and a link. Social links need no picking from a list; paste the address and the platform is recognised from it. All of it shows on the lead beneath Services.',
       },
       {

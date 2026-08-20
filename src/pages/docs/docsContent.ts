@@ -287,14 +287,19 @@ export const DOC_CHAPTERS: DocChapter[] = [
           {
             title: 'Submit one (while it is still required of you)',
             steps: [
-              'Open Workspace → Standup during the submission window.',
-              'Add a line per project you worked on, with the time spent and anything that blocked you.',
+              'Open Workspace → Standup during the submission window. The top of the form shows how much of the day you have to account for.',
+              'Pick a project, then add a row for each task you worked on it — “Add another task on this project”.',
+              'Give each task the time it took and a description of what you actually did. Bold, italic, lists and links are available.',
+              'Repeat with “Add another project” until the logged total matches the hours shown at the top.',
               'Submit. You can correct it for as long as the window stays open.',
             ],
           },
         ],
         notes: [
-          'Submitting before the on-time cutoff earns 5 XP; after it, the entry is marked late.',
+          'The hours you log have to add up to your working day exactly — the day less the lunch break. The bar at the top turns green when they match.',
+          'Time off comes out of that total automatically. Half a day of leave, a late arrival or an approved trip out of the office each reduce what you owe, and overlapping ones are only counted once.',
+          'Each task needs a real description — the minimum length is set by your admins and the counter under the box shows how far off you are.',
+          'Submitting before the on-time cutoff earns XP; after it, the entry is saved but marked late and earns nothing. The amount and the cutoff are both configurable.',
           'If your role or your account has been excluded, the page tells you no standup is expected today.',
         ],
       },
@@ -616,22 +621,42 @@ export const DOC_CHAPTERS: DocChapter[] = [
       },
       {
         id: 'standup-settings',
-        title: 'Turning standups off',
+        title: 'Standup rules and who submits',
         summary:
-          'Now that the task timer records the day, standups can be switched off — for a whole role, or for one person.',
-        where: 'Workspace → Standup → Settings',
+          'When the standup opens, what it is worth, how much has to be written, and which roles or people have to submit one.',
+        where: 'Settings → Standup',
         feature: 'can_manage_standups',
         procedures: [
           {
+            title: 'Change when the standup opens',
+            steps: [
+              'Open Settings → Standup.',
+              'Choose “Minutes before the day ends” to have it follow the working day automatically, or “A fixed time” to pin it to the clock.',
+              'Set the on-time window — how long after opening a standup still counts as on time.',
+              'Save. The preview above each field shows the times your choices produce.',
+            ],
+          },
+          {
+            title: 'Change what a standup is worth, or how much must be written',
+            steps: [
+              'Set the XP for an on-time standup. Zero stops rewarding them.',
+              'Set the minimum characters per task. It applies to each task on its own, not the whole standup.',
+              'Leave “Require the full day to be accounted for” on to enforce the hours, or turn it off to show them as guidance only.',
+            ],
+          },
+          {
             title: 'Stop requiring standups',
             steps: [
-              'Open Workspace → Standup → Settings.',
-              'Turn off the requirement for each role that no longer needs it.',
+              'On the same screen, turn off the requirement for each role that no longer needs it.',
               'For individual exceptions, set that person’s participation to Excluded — a per-person setting always beats the role default.',
             ],
           },
         ],
-        notes: ['People who are excluded stop appearing on the team standup board and are never marked late.'],
+        notes: [
+          'People who are excluded stop appearing on the team standup board and are never marked late.',
+          'The hours a standup must account for come from Settings → Attendance: the working day, less the lunch break. Change the break and every standup follows.',
+          'A fixed opening time does not move when the working day does. The screen warns you when the two have drifted more than two hours apart.',
+        ],
       },
       {
         id: 'managing-people',

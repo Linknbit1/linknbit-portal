@@ -120,6 +120,7 @@ import { downloadCsv } from "../../lib/csv";
 import { cn } from "../../lib/cn";
 import { zonedWallTimeToIso, isoToZonedMinutes } from "../../lib/timezone";
 import { computeEmployeeHours, formatHoursMinutes } from "../../lib/attendanceHours";
+import { formatMinutes } from "../../lib/duration";
 import { AttendanceChips } from "../../components/shared/AttendanceChips";
 import { ModalShell } from "../../components/ui/ModalShell";
 import { ConfirmDialog } from "../../components/ui/ConfirmDialog";
@@ -5244,6 +5245,12 @@ function SettingsForm({ settings }: { settings: AttendanceSettings }) {
   const [halfDayStart, setHalfDayStart] = useState(() =>
     settings.half_day_start_time.slice(0, 5),
   );
+  const [breakStart, setBreakStart] = useState(() =>
+    settings.break_start_time?.slice(0, 5) ?? "",
+  );
+  const [breakEnd, setBreakEnd] = useState(() =>
+    settings.break_end_time?.slice(0, 5) ?? "",
+  );
   const [grace, setGrace] = useState(() => String(settings.grace_period_min));
   const [earlyCheckin, setEarlyCheckin] = useState(() =>
     String(settings.early_checkin_min),
@@ -5259,12 +5266,39 @@ function SettingsForm({ settings }: { settings: AttendanceSettings }) {
     () => settings.auto_checkout,
   );
 
+  /** Minutes in a working day with these times — what a standup must account for. */
+  const toMin = (hhmm: string): number | null => {
+    const m = /^(\d{1,2}):(\d{2})$/.exec(hhmm)
+    return m ? Number(m[1]) * 60 + Number(m[2]) : null
+  }
+  const startMin = toMin(workStart)
+  const endMin = toMin(workEnd)
+  const bStart = toMin(breakStart)
+  const bEnd = toMin(breakEnd)
+  // One of the pair filled in, or an end before its start.
+  const breakInvalid =
+    (!!breakStart !== !!breakEnd) ||
+    (bStart !== null && bEnd !== null && bEnd <= bStart)
+  const workingDayMinutes = Math.max(
+    0,
+    (startMin !== null && endMin !== null ? endMin - startMin : 0) -
+      (bStart !== null && bEnd !== null && bEnd > bStart ? bEnd - bStart : 0),
+  )
+
   const handleSave = async () => {
+    if (breakInvalid) {
+      toast("Set both break times, and end after start", "error");
+      return;
+    }
     try {
       await updateMutation.mutateAsync({
         work_start_time: workStart,
         work_end_time: workEnd,
         half_day_start_time: halfDayStart,
+        // Both or neither — a half-configured break subtracts nothing, or a
+        // negative amount, from the working day. The DB says the same thing.
+        break_start_time: breakStart || null,
+        break_end_time: breakEnd || null,
         grace_period_min: parseInt(grace, 10),
         early_checkin_min: parseInt(earlyCheckin, 10),
         timezone: tz,
@@ -5337,6 +5371,44 @@ function SettingsForm({ settings }: { settings: AttendanceSettings }) {
               is what their arrival is judged against instead of the work start time.
             </p>
           </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">
+                Lunch Break Starts
+              </label>
+              <TimePicker
+                value={breakStart}
+                onChange={setBreakStart}
+                minTime={workStart || undefined}
+                placeholder="Select time…"
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">
+                Lunch Break Ends
+              </label>
+              <TimePicker
+                value={breakEnd}
+                onChange={setBreakEnd}
+                minTime={breakStart || workStart || undefined}
+                placeholder="Select time…"
+              />
+            </div>
+          </div>
+          <p className="text-[11px] font-ui text-text-4 -mt-2">
+            The break is unpaid, so it comes off the working day.{" "}
+            <span className="text-text-2 font-medium">
+              {workStart || "?"}–{workEnd || "?"} less this break is{" "}
+              {formatMinutes(workingDayMinutes)}
+            </span>{" "}
+            — and that is how much work each person has to account for in their standup.
+          </p>
+          {breakInvalid && (
+            <p className="flex items-center gap-1.5 text-[11px] font-ui text-error -mt-2">
+              <AlertTriangle size={11} /> Set both break times, and end after start.
+            </p>
+          )}
 
           <div>
             <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">

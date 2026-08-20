@@ -314,6 +314,8 @@ export type Database = {
       attendance_settings: {
         Row: {
           auto_checkout: boolean
+          break_end_time: string | null
+          break_start_time: string | null
           checkout_buffer_min: number
           early_checkin_min: number
           grace_period_min: number
@@ -335,6 +337,8 @@ export type Database = {
         }
         Insert: {
           auto_checkout?: boolean
+          break_end_time?: string | null
+          break_start_time?: string | null
           checkout_buffer_min?: number
           early_checkin_min?: number
           grace_period_min?: number
@@ -356,6 +360,8 @@ export type Database = {
         }
         Update: {
           auto_checkout?: boolean
+          break_end_time?: string | null
+          break_start_time?: string | null
           checkout_buffer_min?: number
           early_checkin_min?: number
           grace_period_min?: number
@@ -3787,6 +3793,7 @@ export type Database = {
           task_id: string | null
           task_name: string | null
           work_done: string
+          work_done_doc: Json | null
         }
         Insert: {
           blocker?: string | null
@@ -3800,6 +3807,7 @@ export type Database = {
           task_id?: string | null
           task_name?: string | null
           work_done: string
+          work_done_doc?: Json | null
         }
         Update: {
           blocker?: string | null
@@ -3813,6 +3821,7 @@ export type Database = {
           task_id?: string | null
           task_name?: string | null
           work_done?: string
+          work_done_doc?: Json | null
         }
         Relationships: [
           {
@@ -3899,6 +3908,53 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "standup_role_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      standup_settings: {
+        Row: {
+          enforce_required_hours: boolean
+          min_work_done_chars: number
+          on_time_window_min: number
+          singleton: boolean
+          unlock_mode: string
+          unlock_offset_min: number
+          unlock_time: string
+          updated_at: string
+          updated_by: string | null
+          xp_on_time: number
+        }
+        Insert: {
+          enforce_required_hours?: boolean
+          min_work_done_chars?: number
+          on_time_window_min?: number
+          singleton?: boolean
+          unlock_mode?: string
+          unlock_offset_min?: number
+          unlock_time?: string
+          updated_at?: string
+          updated_by?: string | null
+          xp_on_time?: number
+        }
+        Update: {
+          enforce_required_hours?: boolean
+          min_work_done_chars?: number
+          on_time_window_min?: number
+          singleton?: boolean
+          unlock_mode?: string
+          unlock_offset_min?: number
+          unlock_time?: string
+          updated_at?: string
+          updated_by?: string | null
+          xp_on_time?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "standup_settings_updated_by_fkey"
             columns: ["updated_by"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -4840,10 +4896,15 @@ export type Database = {
           profile_id: string
         }[]
       }
+      fn_standup_opens_at: { Args: { p_date: string }; Returns: string }
       fn_standup_participant: { Args: { p_profile: string }; Returns: boolean }
       fn_standup_required: {
         Args: { p_date: string; p_profile: string }
         Returns: boolean
+      }
+      fn_standup_required_minutes: {
+        Args: { p_date: string; p_profile: string }
+        Returns: number
       }
       fn_standup_window: {
         Args: { p_profile: string }
@@ -4851,16 +4912,20 @@ export type Database = {
           already_done: boolean
           can_edit: boolean
           closes_at: string
+          enforce_required_hours: boolean
           is_open: boolean
           is_required: boolean
           is_working_day: boolean
+          min_work_done_chars: number
           my_standup_id: string
           on_time_until: string
           opens_at: string
+          required_minutes: number
           server_now: string
           standup_date: string
           timezone: string
           work_end_time: string
+          xp_on_time: number
         }[]
       }
       fn_sync_channel_role: {
@@ -4911,6 +4976,15 @@ export type Database = {
           p_reward_name: string
         }
         Returns: undefined
+      }
+      fn_validate_standup_entries: {
+        Args: { p_date: string; p_entries: Json; p_profile: string }
+        Returns: undefined
+      }
+      fn_working_day_minutes: { Args: never; Returns: number }
+      fn_working_overlap_minutes: {
+        Args: { p_from: string; p_to: string }
+        Returns: number
       }
       gamification_pending_count: { Args: never; Returns: number }
       get_my_terminal_gate: {
@@ -5060,16 +5134,20 @@ export type Database = {
           already_done: boolean
           can_edit: boolean
           closes_at: string
+          enforce_required_hours: boolean
           is_open: boolean
           is_required: boolean
           is_working_day: boolean
+          min_work_done_chars: number
           my_standup_id: string
           on_time_until: string
           opens_at: string
+          required_minutes: number
           server_now: string
           standup_date: string
           timezone: string
           work_end_time: string
+          xp_on_time: number
         }[]
       }
       submit_quest_task: {

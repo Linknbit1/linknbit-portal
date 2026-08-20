@@ -40,6 +40,8 @@ interface SelectProps {
   size?: 'sm' | 'md'
   /** Opt a picker out of the search box; on everywhere by default. */
   searchable?: boolean
+  /** Renders dimmed and refuses to open — matches TimePicker and Toggle. */
+  disabled?: boolean
 }
 
 interface SelectMenuProps {
@@ -160,7 +162,7 @@ function SelectMenu({ options, value, searchable, onPick, onClose }: SelectMenuP
 }
 
 export function Select({
-  value, onChange, options, placeholder, label, className, size = 'md', searchable,
+  value, onChange, options, placeholder, label, className, size = 'md', searchable, disabled,
 }: SelectProps) {
   const [open, setOpen] = useState(false)
   const triggerRef = useRef<HTMLButtonElement>(null)
@@ -176,13 +178,15 @@ export function Select({
       <button
         ref={triggerRef}
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => { if (!disabled) setOpen((v) => !v) }}
+        disabled={disabled}
         aria-haspopup="listbox"
         aria-expanded={open}
         className={cn(
           'w-full flex items-center gap-2 bg-surface-inset border border-border-default rounded-sm text-text-1 cursor-pointer whitespace-nowrap hover:bg-surface-2 transition-colors',
           size === 'sm' ? 'h-8 px-2.5 text-[11.5px]' : 'h-9 px-3 text-[13px]',
           open && 'border-border-focus',
+          disabled && 'cursor-not-allowed opacity-60 hover:bg-surface-inset',
         )}
       >
         {label && <span className="text-text-3 font-ui font-medium">{label}</span>}

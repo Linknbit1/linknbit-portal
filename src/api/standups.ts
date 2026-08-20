@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase'
-import type { Tables } from '../types/database'
+import type { Tables, TablesUpdate, Json } from '../types/database'
 
 export type StandupRow = Tables<'standups'>
 export type StandupEntryRow = Tables<'standup_entries'>
@@ -15,7 +15,7 @@ export interface StandupWindow {
   standup_date: string
   opens_at: string
   closes_at: string
-  /** On-time cutoff — submit by this to earn 5 XP; after it's late (no points). */
+  /** On-time cutoff — submit by this to earn the XP; after it, late and unpaid. */
   on_time_until: string
   is_open: boolean
   is_working_day: boolean
@@ -27,12 +27,48 @@ export interface StandupWindow {
   can_edit: boolean
   work_end_time: string
   timezone: string
+  /**
+   * Minutes this person must account for today: the working day less the break,
+   * less any leave or approved exception. Zero when nothing is owed.
+   */
+  required_minutes: number
+  /** Shortest acceptable description for one entry, from the standup settings. */
+  min_work_done_chars: number
+  /** Whether the logged total has to match `required_minutes` exactly. */
+  enforce_required_hours: boolean
+  /** What an on-time standup is worth today. */
+  xp_on_time: number
+}
+
+/** The standup rules, as configured in Settings → Standup. */
+export type StandupSettingsRow = Tables<'standup_settings'>
+
+export async function fetchStandupSettings(): Promise<StandupSettingsRow> {
+  const { data, error } = await supabase.from('standup_settings').select('*').limit(1).single()
+  if (error) throw error
+  return data
+}
+
+export async function updateStandupSettings(
+  patch: TablesUpdate<'standup_settings'>,
+): Promise<StandupSettingsRow> {
+  const { data, error } = await supabase
+    .from('standup_settings')
+    .update(patch)
+    .eq('singleton', true)
+    .select()
+    .single()
+  if (error) throw error
+  return data
 }
 
 export interface StandupEntryInput {
   project_id: string
   task_id?: string | null
+  /** Plain-text mirror of `work_done_doc` — what the length rule is measured on. */
   work_done: string
+  /** Formatted description: bold, italic, lists and links. */
+  work_done_doc?: Json | null
   minutes_spent: number
   blocker?: string | null
 }
@@ -73,6 +109,7 @@ const toRpcEntries = (entries: StandupEntryInput[]) =>
     project_id: e.project_id,
     task_id: e.task_id ?? '',
     work_done: e.work_done,
+    work_done_doc: e.work_done_doc ?? null,
     minutes_spent: e.minutes_spent,
     blocker: e.blocker ?? '',
   }))

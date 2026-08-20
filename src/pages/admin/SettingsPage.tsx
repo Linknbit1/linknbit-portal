@@ -1,6 +1,9 @@
 import React, { useMemo, useState } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
-import { Shield, ChevronRight, CircleDot, Loader2, Shapes, IdCard, Plus, Trash2, Smartphone, Bell, Eye, type LucideIcon } from 'lucide-react'
+import {
+  Shield, ChevronRight, CircleDot, Loader2, Shapes, IdCard, Plus, Trash2, Smartphone, Bell, Eye,
+  CalendarCheck, ClipboardList, Trophy, type LucideIcon,
+} from 'lucide-react'
 import { useStatusLabels, useStatusOverrides, useSaveStatusLabel, useResetStatusLabel } from '../../hooks/useStatusLabels'
 import { STATUS_LABELS, PROJECT_STATUS_LABELS } from '../../lib/utils'
 import type { StatusScope } from '../../api/statusLabels'
@@ -30,10 +33,16 @@ import {
 import type { Service } from '../../api/services'
 import type { Designation } from '../../api/designations'
 import type { PermissionRow } from '../../api/permissions'
+import { AttendanceRulesPanel } from '../../components/settings/AttendanceRulesPanel'
+import { StandupSettingsPanel } from '../../components/settings/StandupSettingsPanel'
+import { GamificationRulesPanel } from '../../components/settings/GamificationRulesPanel'
 import { isPermissionLocked, LOCKED_REASON } from '../../lib/roleLocks'
 import { cn } from '../../lib/cn'
 
-type Tab = 'devices' | 'notifications' | 'services' | 'statuses' | 'designations' | 'permissions'
+type Tab =
+  | 'devices' | 'notifications'
+  | 'attendance' | 'standup' | 'gamification'
+  | 'services' | 'statuses' | 'designations' | 'permissions'
 
 // Mobile section metadata: drives the hub rows + stack-screen titles. Visibility is
 // role-gated (see visibleSectionsFor): Services → super_admin/admin; Designations →
@@ -43,6 +52,12 @@ const SETTINGS_SECTIONS: { key: Tab; label: string; icon: LucideIcon }[] = [
   { key: 'devices',       label: 'My Devices',    icon: Smartphone },
   { key: 'notifications', label: 'Notifications', icon: Bell },
   // Administrative — role-filtered below.
+  // The three rule-sets that used to live inside their own modules. Only the
+  // configuration moved — the registers, approvals and quest board stay where
+  // the work happens.
+  { key: 'attendance',   label: 'Attendance',   icon: CalendarCheck },
+  { key: 'standup',      label: 'Standup',      icon: ClipboardList },
+  { key: 'gamification', label: 'Gamification', icon: Trophy },
   { key: 'services',     label: 'Services',     icon: Shapes },
   { key: 'statuses',     label: 'Statuses',     icon: CircleDot },
   { key: 'designations', label: 'Designations', icon: IdCard },
@@ -52,6 +67,9 @@ const SETTINGS_SECTIONS: { key: Tab; label: string; icon: LucideIcon }[] = [
 function visibleSectionsFor(role: string | undefined): typeof SETTINGS_SECTIONS {
   return SETTINGS_SECTIONS.filter(({ key }) => {
     if (key === 'devices' || key === 'notifications') return !!role
+    if (key === 'attendance')   return role === 'super_admin' || role === 'admin' || role === 'hr'
+    if (key === 'standup')      return role === 'super_admin' || role === 'admin' || role === 'hr'
+    if (key === 'gamification') return role === 'super_admin' || role === 'admin' || role === 'hr'
     if (key === 'services')     return role === 'super_admin' || role === 'admin'
     if (key === 'statuses')     return role === 'super_admin' || role === 'admin'
     if (key === 'designations') return role === 'super_admin' || role === 'admin' || role === 'hr'
@@ -571,7 +589,11 @@ export default function SettingsPage({ mobileSection }: { mobileSection?: string
 
   // The personal panels are already made of Cards, so they render bare — the
   // shared panel wrapper would nest a card inside a card.
-  const isPersonalPanel = (tab: Tab) => tab === 'devices' || tab === 'notifications'
+  const isPersonalPanel = (tab: Tab) =>
+    tab === 'devices' || tab === 'notifications' ||
+    // The rule panels are built from SettingsGroup cards already, so the shared
+    // wrapper would nest a card inside a card.
+    tab === 'attendance' || tab === 'standup' || tab === 'gamification'
 
   const renderPanel = (tab: Tab) =>
     tab === 'devices' ? (
@@ -581,6 +603,9 @@ export default function SettingsPage({ mobileSection }: { mobileSection?: string
       </div>
     )
     : tab === 'notifications' ? <NotificationPreferencesCard />
+    : tab === 'attendance'   ? <AttendanceRulesPanel />
+    : tab === 'standup'      ? <StandupSettingsPanel />
+    : tab === 'gamification' ? <GamificationRulesPanel />
     : tab === 'services'     ? <ServicesPanel canManage={canEditFlags} />
     : tab === 'statuses'     ? <StatusesPanel canManage={canEditFlags} />
     : tab === 'designations' ? <DesignationsPanel canManage={canManageDesignations} />

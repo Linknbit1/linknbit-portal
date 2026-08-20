@@ -4,8 +4,10 @@ import {
   fetchStandupWindow, submitStandup, updateStandup, fetchStandupsByDate, fetchMyStandups,
   fetchMyStandup, fetchStandupRoster, fetchStandupRoleSettings, fetchStandupParticipants,
   setStandupRoleRequirement, setStandupParticipation,
+  fetchStandupSettings, updateStandupSettings,
   type StandupEntryInput, type ParticipationMode,
 } from '../api/standups'
+import type { TablesUpdate } from '../types/database'
 
 export const STANDUP_KEYS = {
   window: ['standup', 'window'] as const,
@@ -15,6 +17,34 @@ export const STANDUP_KEYS = {
   roster: (date: string) => ['standups', 'roster', date] as const,
   roleSettings: ['standup', 'settings', 'roles'] as const,
   participants: ['standup', 'settings', 'participants'] as const,
+  rules: ['standup', 'settings', 'rules'] as const,
+}
+
+/**
+ * The standup rules — unlock time, on-time window, XP, minimum description.
+ *
+ * Read by everyone, not just the people who can change them: the form uses the
+ * minimum length and the required-hours rule to explain itself before anything
+ * is submitted.
+ */
+export function useStandupSettings() {
+  return useQuery({
+    queryKey: STANDUP_KEYS.rules,
+    queryFn: fetchStandupSettings,
+    staleTime: 5 * 60_000,
+  })
+}
+
+export function useUpdateStandupSettings() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (patch: TablesUpdate<'standup_settings'>) => updateStandupSettings(patch),
+    onSuccess: (row) => {
+      qc.setQueryData(STANDUP_KEYS.rules, row)
+      // The window is computed from these, so it is stale the moment they change.
+      qc.invalidateQueries({ queryKey: STANDUP_KEYS.window })
+    },
+  })
 }
 
 /**

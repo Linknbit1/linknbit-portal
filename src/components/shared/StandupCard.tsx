@@ -6,6 +6,8 @@ import { ServiceChip } from './ServiceChip'
 import { formatRelativeTime } from '../../lib/utils'
 import { fmtMinutes } from '../../lib/standup'
 import type { StandupDetail } from '../../api/standups'
+import { RichRenderer } from '../editor/RichRenderer'
+import { fromDbDoc } from '../../lib/richText'
 
 interface StandupCardProps {
   standup: StandupDetail
@@ -69,7 +71,13 @@ export function StandupCard({ standup, showPerson = true }: StandupCardProps) {
               )}
               <span className="ml-auto font-mono text-[11px] text-text-3 shrink-0">{fmtMinutes(e.minutes_spent)}</span>
             </div>
-            <p className="font-ui text-[13px] text-text-2 whitespace-pre-wrap">{e.work_done}</p>
+            {/* Formatted when it was written that way; the plain mirror covers
+                every standup submitted before rich text existed. */}
+            {e.work_done_doc ? (
+              <RichRenderer doc={fromDbDoc(e.work_done_doc)} className="font-ui text-[13px] text-text-2" />
+            ) : (
+              <p className="font-ui text-[13px] text-text-2 whitespace-pre-wrap">{e.work_done}</p>
+            )}
             {e.blocker && (
               <p className="flex items-start gap-1.5 font-ui text-[12.5px] text-warning bg-warning/8 border border-warning/20 rounded-md px-2.5 py-1.5">
                 <AlertTriangle size={12} className="shrink-0 mt-0.5" /> <span>{e.blocker}</span>
