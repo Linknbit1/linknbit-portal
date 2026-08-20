@@ -205,7 +205,13 @@ export function AttachmentUploader({ projectId, leadId, taskId, canManage = true
       )}
 
       {linkOpen && (
-        <AddLinkModal projectId={projectId} leadId={leadId} taskId={taskId ?? null} canMarkConfidential={canSeeConfidential} onClose={() => setLinkOpen(false)} />
+        <AddLinkModal
+          projectId={projectId}
+          leadId={leadId}
+          taskId={taskId ?? null}
+          canMarkConfidential={canSeeConfidential && !!projectId}
+          onClose={() => setLinkOpen(false)}
+        />
       )}
 
       <ConfirmDialog

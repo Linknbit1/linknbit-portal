@@ -744,7 +744,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
           'Website, location, social profiles and documents show on the lead itself, under Services. Each section only appears once it has something in it, so a half-filled record is not a wall of dashes.',
           'Documents live on the saved lead, not in the New Lead form — a file has to belong to something before it can be uploaded.',
           'A title the portal cannot read usually means the document needs sign-in to open. Share it with the team, or type the title yourself.',
-          'Documents on a lead are visible to everyone who can open Business Dev, and to nobody in the client portal. Only the lead’s owner and BD managers can add or remove them.',
+          'Documents on a lead are visible to everyone who can open Business Dev, and to nobody in the client portal. Only the lead’s owner and BD managers can add or remove them. There is no confidential setting here — unlike a project file, a lead document has only one audience.',
           'On import, list several social links in one cell separated by semicolons, and write a document as “Title | link”, again separated by semicolons for more than one.',
           'Quote a deal in whatever currency the client was given — every currency in use anywhere is in the list, and you can search it by country as well as by code, so typing “Denmark” finds the krone. The card keeps showing that currency, while the funnel, the channel report and your target convert it to PKR so the totals add up.',
           'Exchange rates refresh daily and the field shows the one it is using as you type. The rate is fixed onto the lead at the moment you save it, so a deal you priced last month is never quietly restated by today’s rate.',
