@@ -690,7 +690,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
               'Fill in the company and contact, and pick the channel it came from — the channel is what the outreach report is built on, so it is worth getting right.',
               'Add the website, country and city if you know them. The website accepts a bare domain; https:// is added for you.',
               'Under Social profiles, press Add profile and paste the link. The platform is recognised from the address, so there is nothing to pick.',
-              'Under Documents, press Add document and give it a title and a link — the proposal, the deck, whatever lives in Drive.',
+              'Save it, then open the lead and use its Documents tab to attach proposals and decks.',
               'Set the estimated value, pick the currency it was quoted in, and choose who owns it. Save.',
             ],
           },
@@ -720,6 +720,15 @@ export const DOC_CHAPTERS: DocChapter[] = [
             ],
           },
           {
+            title: 'Attach a proposal or a Google Doc',
+            steps: [
+              'Open the lead and choose the Documents tab.',
+              'Drop a file on the upload box, or press Add link for something that lives in Drive.',
+              'For a link, paste the address first — the title fills itself in from the document. Type over it if you would rather call it something else.',
+              'Press the eye to preview. Google Docs, Sheets and Slides open inside the portal; so do PDFs, images and spreadsheets you have uploaded.',
+            ],
+          },
+          {
             title: 'Keep notes on a prospect',
             steps: [
               'Open the lead and choose the Notes tab.',
@@ -733,7 +742,9 @@ export const DOC_CHAPTERS: DocChapter[] = [
           'Cards can only be dragged up and down under Manual order. Choose Highest value or any other sort and the column is arranged for you, so a placement would be thrown away — you can still drag a card to a different column.',
           'A new lead, and anything you import, goes to the top of its column rather than the bottom.',
           'Website, location, social profiles and documents show on the lead itself, under Services. Each section only appears once it has something in it, so a half-filled record is not a wall of dashes.',
-          'A document can be saved with a title and no link. Where a proposal is named but its Drive address was never recorded, the name is still worth keeping.',
+          'Documents live on the saved lead, not in the New Lead form — a file has to belong to something before it can be uploaded.',
+          'A title the portal cannot read usually means the document needs sign-in to open. Share it with the team, or type the title yourself.',
+          'Documents on a lead are visible to everyone who can open Business Dev, and to nobody in the client portal. Only the lead’s owner and BD managers can add or remove them.',
           'On import, list several social links in one cell separated by semicolons, and write a document as “Title | link”, again separated by semicolons for more than one.',
           'Quote a deal in whatever currency the client was given — every currency in use anywhere is in the list, and you can search it by country as well as by code, so typing “Denmark” finds the krone. The card keeps showing that currency, while the funnel, the channel report and your target convert it to PKR so the totals add up.',
           'Exchange rates refresh daily and the field shows the one it is using as you type. The rate is fixed onto the lead at the moment you save it, so a deal you priced last month is never quietly restated by today’s rate.',

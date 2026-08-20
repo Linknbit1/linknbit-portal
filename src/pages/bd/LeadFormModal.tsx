@@ -305,37 +305,15 @@ export function LeadFormModal({ open, lead, onClose }: LeadFormModalProps) {
           />
         </div>
 
-        {/* ── Documents ── */}
-        <div className="sm:col-span-2">
-          <Repeater
-            label="Documents"
-            hint="Proposals, decks and anything else in Drive"
-            addLabel="Add document"
-            rows={draft.documents}
-            onAdd={() => set('documents', [...draft.documents, { id: randomUUID(), title: '', url: '' }])}
-            onRemove={(id) => set('documents', draft.documents.filter((d) => d.id !== id))}
-            renderRow={(row) => (
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)]">
-                <Input
-                  aria-label="Document title"
-                  value={row.title}
-                  onChange={(e) =>
-                    set('documents', draft.documents.map((d) => (d.id === row.id ? { ...d, title: e.target.value } : d)))
-                  }
-                  placeholder="Website Redesign Proposal"
-                />
-                <Input
-                  aria-label="Document link"
-                  value={row.url}
-                  onChange={(e) =>
-                    set('documents', draft.documents.map((d) => (d.id === row.id ? { ...d, url: e.target.value } : d)))
-                  }
-                  placeholder="https://docs.google.com/document/d/…"
-                />
-              </div>
-            )}
-          />
-        </div>
+        {/* Documents are not here on purpose: uploading one needs a lead that
+            already exists, so they live on the saved record — open the lead and
+            use its Documents tab. */}
+        {lead && (
+          <p className="font-ui text-[11.5px] text-text-4 sm:col-span-2">
+            Documents live on the lead itself — open it and choose the Documents tab to upload a
+            file or link a Google Doc.
+          </p>
+        )}
       </div>
     </Modal>
   )

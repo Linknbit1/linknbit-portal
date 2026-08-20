@@ -124,6 +124,14 @@ export const RELEASES: ChangelogRelease[] = [
         text: 'A lead now holds the rest of what you know about a prospect: their website, country and city, as many social profiles as they have, and the documents you sent them — each with a title and a link. Social links need no picking from a list; paste the address and the platform is recognised from it. All of it shows on the lead beneath Services.',
       },
       {
+        kind: 'added',
+        text: 'Leads have a Documents tab, the same one projects have had: drop a file to upload it, or link a Google Doc, Sheet, Slide deck or Drive file. Press the eye and it opens inside the portal — Google documents, PDFs, images and spreadsheets all preview in place rather than sending you off to another tab.',
+      },
+      {
+        kind: 'added',
+        text: 'Document titles fill themselves in. Paste a link and the portal reads the document’s own name off it — “Q3 Proposal”, not “docs.google.com/document/d/1a2b3c”. Upload a file and its filename is used. Either way you can type over it. A document that needs sign-in cannot be read, and the portal says so instead of guessing.',
+      },
+      {
         kind: 'improved',
         text: 'The CSV importer takes the new fields too — website, country, city, where the lead came from, social links and documents — so a spreadsheet no longer has to leave half of itself behind at the door.',
       },

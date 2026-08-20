@@ -89,9 +89,10 @@ export type Database = {
           id: string
           is_confidential: boolean
           kind: string
+          lead_id: string | null
           link_url: string | null
           mime_type: string | null
-          project_id: string
+          project_id: string | null
           storage_path: string | null
           task_id: string | null
           uploader_id: string | null
@@ -106,9 +107,10 @@ export type Database = {
           id?: string
           is_confidential?: boolean
           kind?: string
+          lead_id?: string | null
           link_url?: string | null
           mime_type?: string | null
-          project_id: string
+          project_id?: string | null
           storage_path?: string | null
           task_id?: string | null
           uploader_id?: string | null
@@ -123,14 +125,22 @@ export type Database = {
           id?: string
           is_confidential?: boolean
           kind?: string
+          lead_id?: string | null
           link_url?: string | null
           mime_type?: string | null
-          project_id?: string
+          project_id?: string | null
           storage_path?: string | null
           task_id?: string | null
           uploader_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "attachments_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "bd_leads"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "attachments_project_id_fkey"
             columns: ["project_id"]

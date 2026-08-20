@@ -7,7 +7,7 @@ import { cn } from '../../lib/cn'
 import { validateAttachmentFile, formatFileSize, fileKind, type FileKind } from '../../lib/attachment'
 import { getAttachmentUrl, type AttachmentWithUploader } from '../../api/attachments'
 import {
-  useTaskAttachments, useProjectAttachments, useUploadAttachment, useDeleteAttachment,
+  useTaskAttachments, useProjectAttachments, useLeadAttachments, useUploadAttachment, useDeleteAttachment,
   useToggleAttachmentVisibility, useSetAttachmentConfidential,
 } from '../../hooks/useAttachments'
 import { useCanViewConfidential } from '../../hooks/useRoleFlags'
@@ -26,7 +26,12 @@ const KIND_ICON: Record<FileKind, typeof FileIcon> = {
 }
 
 interface AttachmentUploaderProps {
-  projectId: string
+  /**
+   * Exactly one owner. A project (optionally narrowed to one of its tasks) or a
+   * BD lead — the same list, upload box and viewer serve both.
+   */
+  projectId?: string
+  leadId?: string
   /** When set, files are scoped to this task; otherwise they're project-level files. */
   taskId?: string
   /** Whether the current user may upload / add links / delete / toggle. */
@@ -34,7 +39,7 @@ interface AttachmentUploaderProps {
   className?: string
 }
 
-export function AttachmentUploader({ projectId, taskId, canManage = true, className }: AttachmentUploaderProps) {
+export function AttachmentUploader({ projectId, leadId, taskId, canManage = true, className }: AttachmentUploaderProps) {
   const toast = useToast()
   const { openAttachment } = useFileViewer()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -44,8 +49,9 @@ export function AttachmentUploader({ projectId, taskId, canManage = true, classN
   const [linkOpen, setLinkOpen] = useState(false)
 
   const taskQuery = useTaskAttachments(taskId)
-  const projectQuery = useProjectAttachments(taskId ? undefined : projectId)
-  const { data: files = [], isLoading } = taskId ? taskQuery : projectQuery
+  const projectQuery = useProjectAttachments(taskId || leadId ? undefined : projectId)
+  const leadQuery = useLeadAttachments(leadId)
+  const { data: files = [], isLoading } = leadId ? leadQuery : taskId ? taskQuery : projectQuery
 
   const upload = useUploadAttachment()
   const remove = useDeleteAttachment()
@@ -59,7 +65,7 @@ export function AttachmentUploader({ projectId, taskId, canManage = true, classN
       const error = validateAttachmentFile(file)
       if (error) { toast(`${file.name}: ${error}`, 'error'); continue }
       upload.mutate(
-        { file, args: { projectId, taskId: taskId ?? null } },
+        { file, args: { projectId, leadId, taskId: taskId ?? null } },
         {
           onSuccess: () => toast(`Uploaded ${file.name}`, 'success'),
           onError: (e) => toast(e instanceof Error ? e.message : 'Upload failed', 'error'),
@@ -153,7 +159,12 @@ export function AttachmentUploader({ projectId, taskId, canManage = true, classN
                   </p>
                 </div>
 
-                {canManage && canSeeConfidential && (
+                {/* Delivery only. A lead's documents are already scoped to the
+                    one audience that exists for them — everybody with BD access,
+                    nobody in the client portal — and `confidential_scope` is a
+                    delivery permission, so applying it here would hand control of
+                    BD visibility to a flag that has nothing to do with BD. */}
+                {canManage && canSeeConfidential && projectId && (
                   <button
                     onClick={() => setConfidential.mutate({ id: file.id, isConfidential: !file.is_confidential }, { onError: () => toast('Could not change confidentiality', 'error') })}
                     className={cn('flex size-7 shrink-0 items-center justify-center rounded-sm transition-colors',
@@ -164,8 +175,9 @@ export function AttachmentUploader({ projectId, taskId, canManage = true, classN
                     <Lock size={13} />
                   </button>
                 )}
-                {/* Independent of confidential. */}
-                {canManage && (
+                {/* Independent of confidential. Delivery only — a lead has no
+                    client-portal side for a document to be visible on. */}
+                {canManage && projectId && (
                   <ClientVisibility visible={file.client_visible} onChange={(v) => toggleVisibility.mutate({ id: file.id, clientVisible: v, projectId, taskId: file.task_id })} />
                 )}
                 <button
@@ -193,7 +205,7 @@ export function AttachmentUploader({ projectId, taskId, canManage = true, classN
       )}
 
       {linkOpen && (
-        <AddLinkModal projectId={projectId} taskId={taskId ?? null} canMarkConfidential={canSeeConfidential} onClose={() => setLinkOpen(false)} />
+        <AddLinkModal projectId={projectId} leadId={leadId} taskId={taskId ?? null} canMarkConfidential={canSeeConfidential} onClose={() => setLinkOpen(false)} />
       )}
 
       <ConfirmDialog
@@ -206,7 +218,7 @@ export function AttachmentUploader({ projectId, taskId, canManage = true, classN
         onConfirm={() => {
           if (!pendingDelete) return
           remove.mutate(
-            { id: pendingDelete.id, storagePath: pendingDelete.storage_path, projectId, taskId: pendingDelete.task_id },
+            { id: pendingDelete.id, storagePath: pendingDelete.storage_path, projectId, leadId, taskId: pendingDelete.task_id },
             {
               onSuccess: () => { toast(pendingDelete.kind === 'link' ? 'Link removed' : 'File deleted', 'success'); setPendingDelete(null) },
               onError: (e) => toast(e instanceof Error ? e.message : 'Delete failed', 'error'),

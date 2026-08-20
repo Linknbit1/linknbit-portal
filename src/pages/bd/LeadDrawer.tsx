@@ -14,6 +14,8 @@ import { useToast } from '../../components/ui/toast-context'
 import { TemperatureChip, IcpFitChip, ChannelChip } from '../../components/shared/BdChips'
 import { BdCommentThread } from '../../components/shared/BdCommentThread'
 import { SocialBadge } from '../../components/shared/SocialBadge'
+import { AttachmentUploader } from '../../components/shared/AttachmentUploader'
+import { useLeadAttachments } from '../../hooks/useAttachments'
 import { externalHref, prettyUrl, socialPlatform } from '../../lib/socialLinks'
 import { BdDocEditor } from '../../components/editor/BdDocEditor'
 import { STAGE_CONFIG, STAGE_ORDER } from '../../constants/bd'
@@ -65,7 +67,14 @@ interface LeadDrawerProps {
  */
 export function LeadDrawer({ lead, onClose, onEdit, onLogActivity }: LeadDrawerProps) {
   const toast = useToast()
-  const { activities, meetings, tasks, handoffs, moveLeadStage, deleteLead, patchLead, people, avatarOf } = useBd()
+  const {
+    activities, meetings, tasks, handoffs, moveLeadStage, deleteLead, patchLead, people, avatarOf,
+    canSeeAll: canManageBd, viewerRepId,
+  } = useBd()
+  // Its own query rather than a slice of the BD context: documents are read only
+  // when this drawer is open, so loading them with the whole module would be a
+  // request every pipeline visitor pays for and almost nobody uses.
+  const { data: leadDocuments = [] } = useLeadAttachments(lead?.id)
   const [tab, setTab] = useState('activity')
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [pendingLost, setPendingLost] = useState<string | null>(null)
@@ -311,32 +320,6 @@ export function LeadDrawer({ lead, onClose, onEdit, onLogActivity }: LeadDrawerP
                 </span>
               </Field>
             )}
-            {lead.documents.length > 0 && (
-              <Field label="Documents" className="col-span-2">
-                <span className="flex flex-col gap-1">
-                  {lead.documents.map((d) => {
-                    const href = externalHref(d.url)
-                    const text = d.title || prettyUrl(d.url)
-                    return href ? (
-                      <a
-                        key={d.id}
-                        href={href}
-                        target="_blank"
-                        rel="noreferrer noopener"
-                        title={prettyUrl(d.url)}
-                        className="flex items-center gap-1.5 truncate font-ui text-[12.5px] text-service-dev hover:underline"
-                      >
-                        <FileText size={12} className="shrink-0" />
-                        <span className="truncate">{text}</span>
-                        <ExternalLink size={11} className="shrink-0 opacity-60" />
-                      </a>
-                    ) : (
-                      <span key={d.id} className="truncate font-ui text-[12.5px] text-text-3">{text}</span>
-                    )
-                  })}
-                </span>
-              </Field>
-            )}
           </dl>
 
           {/* ── Tabs ── */}
@@ -346,6 +329,7 @@ export function LeadDrawer({ lead, onClose, onEdit, onLogActivity }: LeadDrawerP
                 { key: 'activity', label: 'Activity', badge: leadActivities.length },
                 { key: 'notes', label: 'Notes' },
                 { key: 'comments', label: 'Comments', badge: leadComments.length },
+                { key: 'documents', label: 'Documents', badge: leadDocuments.length },
                 { key: 'meetings', label: 'Meetings', badge: leadMeetings.length },
                 { key: 'tasks', label: 'Tasks', badge: leadTasks.length },
               ]}
@@ -363,6 +347,35 @@ export function LeadDrawer({ lead, onClose, onEdit, onLogActivity }: LeadDrawerP
           )}
 
           <div className={cn('px-5 py-4', tab === 'comments' && 'hidden')}>
+            {tab === 'documents' && (
+              <div className="space-y-4">
+                <AttachmentUploader
+                  leadId={lead.id}
+                  // Same rule the lead itself follows: its owner, whoever filed it,
+                  // or anyone who runs BD. RLS says the same thing again server-side.
+                  canManage={canManageBd || lead.ownerId === viewerRepId}
+                />
+
+                {/* Documents the sales sheet named but never gave an address for.
+                    Kept visible rather than quietly dropped — knowing a proposal
+                    exists is worth something even without the link. */}
+                {lead.documents.length > 0 && (
+                  <div className="rounded-md border border-dashed border-border-default px-3 py-2.5">
+                    <p className="font-ui text-[11px] font-semibold uppercase tracking-widest text-text-4">
+                      Named in the sales sheet · no link recorded
+                    </p>
+                    <ul className="mt-2 space-y-1">
+                      {lead.documents.map((d) => (
+                        <li key={d.id} className="flex items-center gap-1.5 font-ui text-[12px] text-text-3">
+                          <FileText size={12} className="shrink-0 text-text-4" />
+                          <span className="truncate">{d.title || prettyUrl(d.url)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
             {tab === 'notes' && (
               <div className="rounded-md border border-border-default bg-surface-inset px-3 py-2.5 focus-within:border-border-focus">
                 <BdDocEditor

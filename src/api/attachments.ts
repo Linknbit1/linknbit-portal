@@ -31,7 +31,9 @@ export async function fetchProjectFiles(projectId: string): Promise<ProjectFile[
 }
 
 export interface UploadAttachmentArgs {
-  projectId: string
+  /** Exactly one of `projectId` / `leadId` — the CHECK on the table enforces it. */
+  projectId?: string
+  leadId?: string
   taskId?: string | null
   clientVisible?: boolean
   /** What the file is for, in the uploader's words. */
@@ -40,13 +42,17 @@ export interface UploadAttachmentArgs {
 
 const BUCKET = 'attachments'
 
-export async function fetchAttachments(args: { taskId?: string; projectId?: string }): Promise<AttachmentWithUploader[]> {
+export async function fetchAttachments(
+  args: { taskId?: string; projectId?: string; leadId?: string },
+): Promise<AttachmentWithUploader[]> {
   let query = supabase
     .from('attachments')
     .select('*, uploader:profiles!attachments_uploader_id_fkey(id,name,avatar_url)')
     .order('created_at', { ascending: false })
 
   if (args.taskId) query = query.eq('task_id', args.taskId)
+  // A lead's documents. No task dimension here — a lead has no sub-records.
+  else if (args.leadId) query = query.eq('lead_id', args.leadId)
   // Project-level files only (no task) when listing a project's files tab.
   else if (args.projectId) query = query.eq('project_id', args.projectId).is('task_id', null)
 
@@ -59,8 +65,11 @@ export async function fetchAttachments(args: { taskId?: string; projectId?: stri
 export async function uploadAttachment(file: File, args: UploadAttachmentArgs): Promise<AttachmentRow> {
   const { data: auth } = await supabase.auth.getUser()
   const uploaderId = auth.user?.id ?? null
-  const scope = args.taskId ?? 'project'
-  const path = `${args.projectId}/${scope}/${randomUUID()}-${file.name}`
+  // Lead files live under their own prefix, so a bucket listing still reads as
+  // "whose is this" without joining back to the table.
+  const path = args.leadId
+    ? `leads/${args.leadId}/${randomUUID()}-${file.name}`
+    : `${args.projectId}/${args.taskId ?? 'project'}/${randomUUID()}-${file.name}`
 
   const { error: uploadError } = await supabase.storage
     .from(BUCKET)
@@ -70,7 +79,8 @@ export async function uploadAttachment(file: File, args: UploadAttachmentArgs): 
   const { data, error } = await supabase
     .from('attachments')
     .insert({
-      project_id: args.projectId,
+      project_id: args.projectId ?? null,
+      lead_id: args.leadId ?? null,
       task_id: args.taskId ?? null,
       uploader_id: uploaderId,
       file_name: file.name,
@@ -124,7 +134,9 @@ export async function deleteAttachment(id: string, storagePath: string | null): 
 }
 
 export interface AddLinkArgs {
-  projectId: string
+  /** Exactly one of `projectId` / `leadId` — the CHECK on the table enforces it. */
+  projectId?: string
+  leadId?: string
   taskId?: string | null
   title: string
   url: string
@@ -142,10 +154,12 @@ export async function addAttachmentLink(args: AddLinkArgs): Promise<AttachmentRo
   const { data, error } = await supabase
     .from('attachments')
     .insert({
-      project_id: args.projectId,
+      project_id: args.projectId ?? null,
+      lead_id: args.leadId ?? null,
       task_id: args.taskId ?? null,
       uploader_id: auth.user?.id ?? null,
-      file_name: args.title.trim(),
+      // Falls back to the address itself, so a link is never listed as "".
+      file_name: args.title.trim() || args.url.trim(),
       kind: 'link',
       link_url: args.url.trim(),
       is_confidential: args.isConfidential ?? false,
@@ -155,6 +169,29 @@ export async function addAttachmentLink(args: AddLinkArgs): Promise<AttachmentRo
     .single()
   if (error) throw error
   return data
+}
+
+/**
+ * The title behind a pasted link, so the Add-document form can fill it in.
+ *
+ * Runs through the `link-title` edge function because the browser cannot read
+ * the <title> of docs.google.com — no CORS headers — and because a URL supplied
+ * by a user must be fetched somewhere that can refuse to call our own network.
+ *
+ * Returns null whenever the page cannot be read or the title is a sign-in wall.
+ * That is an ordinary outcome, not an error: the user types the title instead.
+ */
+export async function fetchLinkTitle(url: string): Promise<string | null> {
+  try {
+    const { data, error } = await supabase.functions.invoke<{ title: string | null }>(
+      'link-title',
+      { body: { url } },
+    )
+    if (error) return null
+    return data?.title ?? null
+  } catch {
+    return null
+  }
 }
 
 // Guarded server-side by trg_guard_attachment_confidential: callers without
