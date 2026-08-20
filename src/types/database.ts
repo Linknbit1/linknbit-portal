@@ -4704,6 +4704,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      active_timers: {
+        Args: never
+        Returns: {
+          avatar_url: string
+          profile_id: string
+          profile_name: string
+          project_id: string
+          project_name: string
+          running_minutes: number
+          started_at: string
+          task_id: string
+          task_title: string
+        }[]
+      }
       admin_run_monthly_reset: { Args: never; Returns: undefined }
       admin_set_profile_active: {
         Args: { p_active: boolean; p_profile_id: string }
@@ -4814,12 +4828,22 @@ export type Database = {
       }
       fn_auto_checkout_missing: { Args: never; Returns: undefined }
       fn_award_badges: { Args: { p_profile_id: string }; Returns: undefined }
+      fn_can_report_on: { Args: { p_profile: string }; Returns: boolean }
       fn_chat_unread_counts: {
         Args: never
         Returns: {
           channel_id: string
           unread_count: number
         }[]
+      }
+      fn_clamped_minutes: {
+        Args: {
+          p_ended: string
+          p_from: string
+          p_started: string
+          p_to: string
+        }
+        Returns: number
       }
       fn_create_channel: {
         Args: {
@@ -4845,6 +4869,14 @@ export type Database = {
       }
       fn_hide_channel: { Args: { p_channel_id: string }; Returns: undefined }
       fn_is_working_day: { Args: { d: string }; Returns: boolean }
+      fn_makeup_balance: {
+        Args: { p_from: string; p_profile: string; p_to: string }
+        Returns: {
+          balance_minutes: number
+          made_up_minutes: number
+          owed_minutes: number
+        }[]
+      }
       fn_mark_absent_for_date: { Args: { d: string }; Returns: undefined }
       fn_mark_absent_today: { Args: never; Returns: undefined }
       fn_mark_channel_read: {
@@ -4930,6 +4962,7 @@ export type Database = {
           is_open: boolean
           is_required: boolean
           is_working_day: boolean
+          makeup_owed_minutes: number
           min_work_done_chars: number
           my_standup_id: string
           on_time_until: string
@@ -4983,6 +5016,10 @@ export type Database = {
       fn_toggle_reaction: {
         Args: { p_emoji: string; p_message_id: string }
         Returns: boolean
+      }
+      fn_unpaid_exception_minutes: {
+        Args: { p_date: string; p_profile: string }
+        Returns: number
       }
       fn_unwind_reward_pool: {
         Args: {
@@ -5083,6 +5120,64 @@ export type Database = {
         Args: { p_project_service_id: string }
         Returns: undefined
       }
+      report_employee_backlog: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          avatar_url: string
+          made_up_minutes: number
+          makeup_balance_minutes: number
+          profile_id: string
+          profile_name: string
+          projects: number
+          required_minutes: number
+          role: string
+          standup_minutes: number
+          standups_late: number
+          standups_submitted: number
+          timer_minutes: number
+          unpaid_minutes: number
+          variance_minutes: number
+        }[]
+      }
+      report_employee_detail: {
+        Args: { p_from: string; p_profile: string; p_to: string }
+        Returns: {
+          client_name: string
+          project_id: string
+          project_name: string
+          standup_minutes: number
+          tasks: number
+          timer_minutes: number
+          variance_minutes: number
+        }[]
+      }
+      report_project_backlog: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          budget: number
+          client_name: string
+          people: number
+          project_id: string
+          project_name: string
+          standup_minutes: number
+          status: string
+          tasks: number
+          timer_minutes: number
+          variance_minutes: number
+        }[]
+      }
+      report_project_detail: {
+        Args: { p_from: string; p_project: string; p_to: string }
+        Returns: {
+          avatar_url: string
+          profile_id: string
+          profile_name: string
+          standup_minutes: number
+          tasks: number
+          timer_minutes: number
+          variance_minutes: number
+        }[]
+      }
       review_quest_task: {
         Args: { p_approve: boolean; p_claim_id: string; p_note?: string }
         Returns: undefined
@@ -5163,6 +5258,7 @@ export type Database = {
           is_open: boolean
           is_required: boolean
           is_working_day: boolean
+          makeup_owed_minutes: number
           min_work_done_chars: number
           my_standup_id: string
           on_time_until: string
@@ -5186,6 +5282,22 @@ export type Database = {
       submit_standup: {
         Args: { p_entries: Json; p_notes?: string }
         Returns: string
+      }
+      timesheet_segments: {
+        Args: { p_date: string; p_profile?: string }
+        Returns: {
+          avatar_url: string
+          ended_at: string
+          is_running: boolean
+          minutes: number
+          profile_id: string
+          profile_name: string
+          project_id: string
+          project_name: string
+          started_at: string
+          task_id: string
+          task_title: string
+        }[]
       }
       top_role_position: { Args: { p_profile: string }; Returns: number }
       unlink_zk_enrollment: {

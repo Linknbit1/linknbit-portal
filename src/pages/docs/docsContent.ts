@@ -300,11 +300,61 @@ export const DOC_CHAPTERS: DocChapter[] = [
         notes: [
           'The hours you log have to add up to your working day exactly — the day less the lunch break. The bar at the top turns green when they match.',
           'Time off comes out of that total automatically. Half a day of leave, a late arrival or an approved trip out of the office each reduce what you owe, and overlapping ones are only counted once.',
+          'An exception is unpaid time, so those hours are owed back. The day you take it, you write up less — but the same hours appear as make-up time, and you clear them by logging over the requirement on a later day. The form tells you how much is outstanding and how far you may go over.',
           'The tasks offered are the ones you ran a timer on, are assigned and in progress, or commented on today. Times are never guessed for you — the timer usually covers less than half a day, so a filled-in number would be wrong more often than right.',
           'Work with no project still counts towards your hours. “Other work” is time accounting only — it earns no XP and has nothing to do with quests.',
           'Each task needs a real description — the minimum length is set by your admins and the counter under the box shows how far off you are.',
           'Submitting before the on-time cutoff earns XP; after it, the entry is saved but marked late and earns nothing. The amount and the cutoff are both configurable.',
           'If your role or your account has been excluded, the page tells you no standup is expected today.',
+        ],
+      },
+      {
+        id: 'timesheet',
+        title: 'Timesheet',
+        summary:
+          'Who has a timer running right now, and how each day was actually spent — one bar per person, one block per stretch of tracked work.',
+        where: 'Delivery → Timesheet',
+        feature: 'can_view_reports',
+        procedures: [
+          {
+            title: 'See what a day looked like',
+            steps: [
+              'Open Delivery → Timesheet.',
+              'Pick a date, or step back a day at a time with the arrows.',
+              'Hover any block to see the task, the project, the exact times and how long it ran.',
+              'Export CSV gives you every segment of that day.',
+            ],
+          },
+        ],
+        notes: [
+          'Only tracked time is drawn. A gap means no timer was running — not necessarily that nobody was working, so read the bar as a record of tracking rather than of effort.',
+          'You see your own day; leads and project managers see their team; admins and HR see everybody.',
+        ],
+      },
+      {
+        id: 'backlog-reports',
+        title: 'Backlog reports',
+        summary:
+          'Where the hours went, by project and by person, over any range you choose — with a CSV of whatever you are looking at.',
+        where: 'Admin → Reports',
+        feature: 'can_view_reports',
+        procedures: [
+          {
+            title: 'Pull a backlog',
+            steps: [
+              'Open Admin → Reports and choose Project backlog or Employee backlog.',
+              'Pick Today, This week, This month, or Custom for any range of dates.',
+              'Search to narrow the table, then Export CSV to take it away.',
+            ],
+          },
+        ],
+        notes: [
+          'Two clocks are shown side by side and never added together. Timer is time tracked against a task; Standup is what people wrote up at day’s end. They measure the same hours differently and often disagree.',
+          'Expand any row to see the breakdown — a project by the people who worked on it, a person by the projects they worked on.',
+          'Make-up is unpaid time from an approved exception that has not been worked back yet. It clears itself as the person logs over their requirement, and the CSV carries the unpaid, made-up and outstanding figures separately.',
+          'Somebody who is not asked for a standup owes nothing, so their required hours read zero rather than a full month.',
+          'The variance column is the point: a project showing far more standup time than timer time is being worked on without the timer running, and the reverse means work nobody wrote up.',
+          'Money appears only where it already exists — a project’s budget, when one is set. There is no cost-per-hour anywhere in the portal, so no profit or margin is calculated.',
         ],
       },
       {

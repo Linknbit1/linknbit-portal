@@ -5,6 +5,7 @@ import {
   UserCog,
   CheckSquare,
   BarChart2,
+  Clock3,
   Trophy,
   Inbox,
   MessageCircle,
@@ -207,6 +208,13 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Clients', icon: UserCircle, to: '/admin/clients', group: 'delivery', feature: 'can_manage_clients' },
   { label: 'Projects', icon: FolderOpen, to: '/admin/projects', group: 'delivery' },
   { label: 'Tasks', icon: CheckSquare, to: '/admin/tasks', group: 'delivery' },
+  // Sits with the work rather than under Admin: a lead opens it to see who is on
+  // what, not to administer anything. The RPCs scope it to their own team.
+  { label: 'Timesheet', icon: Clock3, to: '/timesheet', group: 'delivery', feature: 'can_view_reports' },
+  // With Delivery rather than Admin: a PM reading where the hours went is doing
+  // delivery work, not governance. No longer dev-only either — it reads real
+  // timer and standup data now, not the mock arrays it shipped with.
+  { label: 'Reports', icon: BarChart2, to: '/admin/reports', group: 'delivery', feature: 'can_view_reports' },
 
   // People — who works here, when, and how they are recognised. The three
   // directory views sit together at the top; the two heavy sections with their
@@ -225,10 +233,8 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Gamification', icon: Trophy, to: '/gamification/leaderboard', group: 'people', matchPrefix: '/gamification', primaryMobile: true, children: GAMIFICATION_CHILDREN },
 
   // Admin — governance only, so the section genuinely disappears for the five
-  // roles that have none of it. Audit Log leads because it is the one that ships;
-  // Reports is still dev-only.
+  // roles that have none of it.
   { label: 'Audit Log', icon: ShieldAlert, to: '/admin/audit', group: 'admin', feature: 'can_view_audit_log' },
-  { label: 'Reports', icon: BarChart2, to: '/admin/reports', group: 'admin', devOnly: true, feature: 'can_view_reports' },
 
   // Pinned to the footer — see NAV_GROUPS. Personal for most roles (My Devices,
   // Notifications); the admin-only sections filter themselves in-page.

@@ -124,6 +124,38 @@ export const RELEASES: ChangelogRelease[] = [
         text: 'The standup now asks you to account for your whole day. The form shows how many hours that is — your working day less the new lunch break — and the bar turns green when what you have logged matches it. Time off is taken off the total for you: half a day of leave, a late arrival or an approved trip out each reduce what you owe, and overlapping ones only count once.',
       },
       {
+        kind: 'fixed',
+        text: 'The employee backlog no longer demands hours from people who are never asked for a standup. Admins, HR and anyone excluded from the routine were each showing a full month of required hours, and a full month of shortfall against it. Holidays and leave were always handled correctly; participation was the piece missing.',
+      },
+      {
+        kind: 'added',
+        text: 'Exceptions are now unpaid time you work back, rather than hours that simply disappear. Take two hours out and that day asks for six — you were not there — but the same two hours are recorded as make-up time. Log over the requirement on any later day and the balance comes down. The standup shows what you owe and how far over you may go; the backlog and its CSV carry unpaid, made-up and outstanding as their own figures.',
+      },
+      {
+        kind: 'added',
+        text: 'Backlog rows expand. Open a project to see which people put the hours in, or a person to see which projects they went to — timer, standup and variance for each, the same three columns as everywhere else.',
+      },
+      {
+        kind: 'improved',
+        text: 'Reports moved from Admin to Delivery, beside the Timesheet — reading where the hours went is delivery work, not governance.',
+      },
+      {
+        kind: 'improved',
+        text: 'The timesheet bar shows its detail in a proper card that appears the moment you hover, instead of waiting on the browser’s own tooltip. Task, project, exact times and duration, styled like the rest of the portal.',
+      },
+      {
+        kind: 'added',
+        text: 'A Timesheet screen under Delivery: who has a timer running this minute, and a bar of each person’s day showing which task ran from when to when. Hover a block for the detail, step through days with the arrows, export the lot as CSV. Only tracked time is drawn — the gaps are left as gaps, because a filled-in guess is not a record.',
+      },
+      {
+        kind: 'added',
+        text: 'Reports is real. Project backlog and Employee backlog over today, this week, this month or any custom range, each with search and a CSV export. It replaces the sample charts that were there before.',
+      },
+      {
+        kind: 'improved',
+        text: 'Backlog reports show the timer and the standup side by side and never add them together — they measure the same hours two different ways and routinely disagree. The variance between them is its own column, and it is the number worth reading: far more standup time than timer time means work is happening without the timer, and the reverse means work nobody wrote up.',
+      },
+      {
         kind: 'added',
         text: 'The standup fills itself in. Open it and a banner lists the tasks you actually worked on today — anything you ran a timer on, anything assigned to you and in progress, anything you commented on — and one press drops them into the form. Times and descriptions stay blank, because the timer rarely covers a whole day and a wrong number is slower to fix than an empty one.',
       },

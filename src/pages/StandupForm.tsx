@@ -157,6 +157,9 @@ export function StandupForm({ onDone, editing, onCancel }: StandupFormProps) {
   const minChars = window?.min_work_done_chars ?? DEFAULT_MIN_CHARS
   const requiredMinutes = window?.required_minutes ?? 0
   const enforceHours = (window?.enforce_required_hours ?? false) && requiredMinutes > 0
+  // Unpaid time from an approved exception earlier this month. Today may run
+  // over by up to this much — that is how the debt gets worked off.
+  const makeupOwed = window?.makeup_owed_minutes ?? 0
 
   const projectOptions = projects.map((p) => ({ value: p.id, label: p.name }))
   const loggedMinutes = groups.reduce(
@@ -183,7 +186,9 @@ export function StandupForm({ onDone, editing, onCancel }: StandupFormProps) {
   )
 
   const structureValid = errors.every((e) => e.project === null && e.tasks.every((t) => t === null))
-  const hoursValid = !enforceHours || loggedMinutes === requiredMinutes
+  const hoursValid =
+    !enforceHours ||
+    (loggedMinutes >= requiredMinutes && loggedMinutes <= requiredMinutes + makeupOwed)
   const isValid = structureValid && hoursValid && groups.length > 0
 
   const handleSubmit = () => {
@@ -193,7 +198,7 @@ export function StandupForm({ onDone, editing, onCancel }: StandupFormProps) {
       toast(
         difference < 0
           ? `${formatMinutes(-difference)} still to account for`
-          : `${formatMinutes(difference)} more than today's hours`,
+          : `${formatMinutes(loggedMinutes - requiredMinutes - makeupOwed)} more than today allows`,
         'error',
       )
       return
@@ -232,6 +237,7 @@ export function StandupForm({ onDone, editing, onCancel }: StandupFormProps) {
         required={requiredMinutes}
         logged={loggedMinutes}
         enforced={enforceHours}
+        makeupOwed={makeupOwed}
       />
 
       {/* What today looked like, offered rather than imposed — the form is still
@@ -502,10 +508,12 @@ export function StandupForm({ onDone, editing, onCancel }: StandupFormProps) {
  * eight hours" is only a fair rule if the person can see where they are against
  * it while they type.
  */
-function HoursMeter({ required, logged, enforced }: {
+function HoursMeter({ required, logged, enforced, makeupOwed }: {
   required: number
   logged: number
   enforced: boolean
+  /** Unpaid exception time still owed — today may run over by up to this much. */
+  makeupOwed: number
 }) {
   if (required <= 0) {
     return (
@@ -518,9 +526,12 @@ function HoursMeter({ required, logged, enforced }: {
   }
 
   const difference = logged - required
+  const ceiling = required + makeupOwed
   const pct = Math.min(100, Math.round((logged / required) * 100))
-  const exact = difference === 0
-  const over = difference > 0
+  // "Right" is anywhere from the requirement up to the requirement plus
+  // whatever make-up is outstanding.
+  const exact = logged >= required && logged <= ceiling
+  const over = logged > ceiling
 
   return (
     <div
@@ -547,7 +558,11 @@ function HoursMeter({ required, logged, enforced }: {
               · {over ? `${formatMinutes(difference)} over` : `${formatMinutes(-difference)} to go`}
             </span>
           )}
-          {exact && <span className="ml-1.5 font-normal">· exactly right</span>}
+          {exact && (
+            <span className="ml-1.5 font-normal">
+              {difference > 0 ? `· ${formatMinutes(difference)} toward make-up` : '· exactly right'}
+            </span>
+          )}
         </p>
       </div>
 
@@ -562,10 +577,21 @@ function HoursMeter({ required, logged, enforced }: {
       </div>
 
       <p className="mt-2 font-ui text-[11px] text-text-4">
-        {enforced
-          ? 'Your working day, less the lunch break and any approved leave or exception. The total has to match exactly.'
-          : 'Your working day, less the lunch break and any approved leave or exception.'}
+        Your working day, less the lunch break and any approved leave or exception.
+        {enforced && ' The total has to match exactly.'}
       </p>
+
+      {makeupOwed > 0 && (
+        <p className="mt-2 flex items-start gap-1.5 rounded-md border border-warning/25 bg-warning/8 px-2.5 py-1.5 font-ui text-[11px] text-warning">
+          <AlertTriangle size={11} className="mt-0.5 shrink-0" />
+          <span>
+            You owe <span className="font-semibold">{formatMinutes(makeupOwed)}</span> of make-up time
+            from an approved exception — unpaid hours you agreed to work back. Log up to{' '}
+            <span className="font-semibold">{formatMinutes(ceiling)}</span> today and the extra comes
+            off that balance.
+          </span>
+        </p>
+      )}
     </div>
   )
 }

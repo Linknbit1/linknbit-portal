@@ -38,6 +38,12 @@ export interface StandupWindow {
   enforce_required_hours: boolean
   /** What an on-time standup is worth today. */
   xp_on_time: number
+  /**
+   * Unpaid minutes from an approved exception earlier this month that have not
+   * been worked back yet. Today may run over its requirement by up to this much
+   * — that is the only way the balance is ever paid down.
+   */
+  makeup_owed_minutes: number
 }
 
 /** The standup rules, as configured in Settings → Standup. */

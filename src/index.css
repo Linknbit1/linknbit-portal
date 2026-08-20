@@ -348,6 +348,15 @@
 @layer utilities {
   .text-balance { text-wrap: balance; }
 
+  /* Hover cards appear immediately — no delay before the fade, because the card
+     carries the data rather than a hint about it. The movement is 3px and
+     120ms: enough to read as "this arrived", not enough to wait for. */
+  @keyframes hover-card-in {
+    from { opacity: 0; transform: translate(-50%, calc(-100% - 5px)); }
+    to   { opacity: 1; transform: translate(-50%, calc(-100% - 8px)); }
+  }
+  .animate-hover-card { animation: hover-card-in 120ms ease-out; }
+
   /* Number inputs without the stepper arrows.
      The tiny up/down chevrons are a hazard on a duration field: they are easy to
      hit by accident, they nudge by one when nobody wants a one-minute change,

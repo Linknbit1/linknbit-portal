@@ -6,7 +6,6 @@ import { PrivateRoute, HomeRedirect } from './components/layout/PrivateRoute'
 import { RoleGuard } from './components/layout/RoleGuard'
 import { AppShell } from './components/layout/AppShell'
 import { ClientShell } from './components/layout/ClientShell'
-import { showWipFeatures } from './lib/featureFlags'
 import { SETTINGS_ROLES, CLIENT_ROLES, STANDUP_REVIEW_ROLES } from './constants/roles'
 
 import LoginPage from './pages/auth/LoginPage'
@@ -35,6 +34,7 @@ import TeamDetailPage from './pages/admin/TeamDetailPage'
 import PeoplePage from './pages/admin/PeoplePage'
 import TasksPage from './pages/admin/TasksPage'
 import ReportsPage from './pages/admin/ReportsPage'
+import TimesheetPage from './pages/admin/TimesheetPage'
 import AuditLogPage from './pages/admin/AuditLogPage'
 import SettingsPage, { SettingsSectionScreen } from './pages/admin/SettingsPage'
 import AttendancePage from './pages/AttendancePage'
@@ -144,10 +144,13 @@ export default function App() {
                 <Route path="/admin/clients" element={<RoleGuard feature="can_manage_clients"><ClientsPage /></RoleGuard>} />
                 <Route path="/admin/audit" element={<RoleGuard feature="can_view_audit_log"><AuditLogPage /></RoleGuard>} />
 
-                {/* Still work-in-progress — only routable in development builds */}
-                {showWipFeatures && (
-                  <Route path="/admin/reports" element={<RoleGuard feature="can_view_reports"><ReportsPage /></RoleGuard>} />
-                )}
+                {/* Backlog reporting and the timesheet. Out of the WIP gate now
+                    that both read real timer and standup data rather than the
+                    mock arrays the prototype shipped with. Row-level scoping
+                    lives in the RPCs: leads and PMs see their own team,
+                    management sees everyone, an employee sees themselves. */}
+                <Route path="/admin/reports" element={<RoleGuard feature="can_view_reports"><ReportsPage /></RoleGuard>} />
+                <Route path="/timesheet" element={<RoleGuard feature="can_view_reports"><TimesheetPage /></RoleGuard>} />
                 {/* Your own client meetings. Open to all internal staff and not
                     behind the BD guard on purpose: an invitee holds no
                     can_view_bd, and an invitation you cannot see is none. The
