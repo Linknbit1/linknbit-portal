@@ -6,6 +6,7 @@ import * as bd from '../api/bd'
 import type { BdComment, BdCommentParent, BdPerson } from '../api/bd'
 import type {
   Lead, BdActivity, BdMeeting, BdTask, BdProject, BdDailyUpdate, BdTarget, BdHandoff, TaskStatus,
+  LeadStage,
 } from '../types'
 
 /**
@@ -274,6 +275,31 @@ export function usePatchLead() {
   })
 }
 
+/**
+ * Drag-to-position in the pipeline.
+ *
+ * Its own mutation rather than `patchLead({ stage, position })` because a move
+ * must reorder the cache as well as patch the row — otherwise the card lands in
+ * its new column at its old rank and jumps when the refetch arrives.
+ *
+ * `lostReason` and `closedAt` ride along so a drag into Won/Lost still stamps
+ * what a stage change stamps; the pipeline passes what moveLeadStage would.
+ */
+export function useMoveLeadMutation() {
+  return useOptimisticMutation<{ id: string; patch: Partial<Lead> }>({
+    keys: [BD_KEYS.leads],
+    optimistic: (qc, { id, patch }) => {
+      qc.setQueryData<Lead[]>(BD_KEYS.leads, (cur) =>
+        cur
+          ?.map((l) => (l.id === id ? { ...l, ...patch } : l))
+          .sort((a, b) => a.position - b.position),
+      )
+    },
+    run: ({ id, patch }) => bd.updateLead(id, patch),
+    errorMessage: 'Could not move the lead — it is back where it was.',
+  })
+}
+
 export function useDeleteLead() {
   return useOptimisticMutation<{ id: string }>({
     // Activities cascade with the lead in the database, so the cache has to as
@@ -417,6 +443,34 @@ export function useToggleBdChecklistItem() {
  */
 const POSITION_GAP = 1024
 
+/** Anything the lane maths below can order: a card with an id and a position. */
+interface Positioned {
+  id: string
+  position: number
+}
+
+/**
+ * Where a card dropped before `beforeId` should sort within an already-filtered
+ * lane. The lane must exclude the card being moved, so an index maps straight to
+ * a slot.
+ */
+function positionInLane(lane: Positioned[], beforeId: string | null): number {
+  if (lane.length === 0) return POSITION_GAP
+
+  const idx = beforeId ? lane.findIndex((c) => c.id === beforeId) : -1
+  // No anchor, or an anchor that has since moved: append.
+  if (idx === -1) return lane[lane.length - 1].position + POSITION_GAP
+  // Dropped at the head.
+  if (idx === 0) return lane[0].position - POSITION_GAP
+  return (lane[idx - 1].position + lane[idx].position) / 2
+}
+
+/** The head of a lane — where a newly created card goes. */
+function headOfLane(lane: Positioned[]): number {
+  if (lane.length === 0) return POSITION_GAP
+  return Math.min(...lane.map((c) => c.position)) - POSITION_GAP
+}
+
 /**
  * Where a card dropped into `status` before `beforeId` should sort.
  *
@@ -424,18 +478,10 @@ const POSITION_GAP = 1024
  * is even called — the drop has to land under the cursor, not after a round trip.
  */
 export function positionFor(tasks: BdTask[], status: TaskStatus, beforeId: string | null, movingId: string): number {
-  const lane = tasks
-    .filter((t) => t.status === status && t.id !== movingId)
-    .sort((a, b) => a.position - b.position)
-
-  if (lane.length === 0) return POSITION_GAP
-
-  const idx = beforeId ? lane.findIndex((t) => t.id === beforeId) : -1
-  // No anchor, or an anchor that has since moved: append.
-  if (idx === -1) return lane[lane.length - 1].position + POSITION_GAP
-  // Dropped at the head.
-  if (idx === 0) return lane[0].position - POSITION_GAP
-  return (lane[idx - 1].position + lane[idx].position) / 2
+  return positionInLane(
+    tasks.filter((t) => t.status === status && t.id !== movingId).sort((a, b) => a.position - b.position),
+    beforeId,
+  )
 }
 
 /**
@@ -445,9 +491,19 @@ export function positionFor(tasks: BdTask[], status: TaskStatus, beforeId: strin
  * drawer that opens on it would be scrolled off-screen behind the board.
  */
 export function nextPosition(tasks: BdTask[], status: TaskStatus): number {
-  const lane = tasks.filter((t) => t.status === status)
-  if (lane.length === 0) return POSITION_GAP
-  return Math.min(...lane.map((t) => t.position)) - POSITION_GAP
+  return headOfLane(tasks.filter((t) => t.status === status))
+}
+
+/** The pipeline equivalents — a lead's lane is its stage. */
+export function leadPositionFor(leads: Lead[], stage: LeadStage, beforeId: string | null, movingId: string): number {
+  return positionInLane(
+    leads.filter((l) => l.stage === stage && l.id !== movingId).sort((a, b) => a.position - b.position),
+    beforeId,
+  )
+}
+
+export function nextLeadPosition(leads: Lead[], stage: LeadStage): number {
+  return headOfLane(leads.filter((l) => l.stage === stage))
 }
 
 /**

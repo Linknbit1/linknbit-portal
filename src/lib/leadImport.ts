@@ -279,6 +279,8 @@ export function parseLeadCsv(text: string, ctx: LeadImportContext): LeadImportRe
           : {
               id: randomUUID(),
               company,
+              // Overwritten per row by importLeads, which knows the board.
+              position: 0,
               contactName: cell('contact_name'),
               contactTitle: cell('contact_title'),
               email: cell('email'),

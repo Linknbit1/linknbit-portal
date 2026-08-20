@@ -9,12 +9,20 @@ import {
   useBdPeople, useBdLeads, useBdActivities, useBdMeetings, useBdTasks, useBdProjects,
   useBdUpdates, useBdTargets, useBdHandoffs,
   useSaveLead, useImportLeads, usePatchLead, useDeleteLead, useLogActivity,
+  useMoveLeadMutation, leadPositionFor, nextLeadPosition,
   useSaveMeeting, useDeleteMeeting,
   useSaveBdTask, usePatchBdTask, useDeleteBdTask, useToggleBdChecklistItem, useMoveBdTask,
   useSaveBdProject, usePatchBdProject, useDeleteBdProject,
   useSaveBdUpdate, useSaveBdTargets, useRecordHandoff,
 } from '../hooks/useBd'
 import { useRealtimeBd } from '../hooks/realtime/useRealtimeBd'
+
+/**
+ * Gap between consecutive rows of a CSV import. Small enough that a 500-row file
+ * still sits above whatever was already in New, wide enough to drag a card
+ * between any two of the imported ones afterwards.
+ */
+const IMPORT_POSITION_STEP = 1
 import type {
   Lead, LeadStage, BdActivity, BdMeeting, BdTask, BdProject,
   TaskStatus, ProjectStatus, BdDailyUpdate, BdTarget, ChannelStats, BdHandoff,
@@ -73,6 +81,11 @@ interface BdContextValue {
   canSeeAll: boolean
 
   moveLeadStage: (leadId: string, stage: LeadStage, lostReason?: string) => void
+  /**
+   * Drag-to-position on the pipeline board: move a lead into `stage`, inserted
+   * before `beforeId` (or at the foot of that column when null).
+   */
+  moveLead: (leadId: string, stage: LeadStage, beforeId: string | null, lostReason?: string) => void
   saveLead: (lead: Lead) => void
   /** Bulk create from the CSV importer. Resolves once the rows are stored, so the modal can report a count. */
   importLeads: (leads: Lead[]) => Promise<void>
@@ -132,6 +145,7 @@ export function BdProvider({ children }: { children: ReactNode }) {
   const saveLeadM = useSaveLead()
   const importLeadsM = useImportLeads()
   const patchLeadM = usePatchLead()
+  const moveLeadM = useMoveLeadMutation()
   const deleteLeadM = useDeleteLead()
   const logActivityM = useLogActivity()
   const saveMeetingM = useSaveMeeting()
@@ -273,30 +287,58 @@ export function BdProvider({ children }: { children: ReactNode }) {
 
   /* ── Writes ────────────────────────────────────────────────────────────── */
 
-  const moveLeadStage = useCallback((leadId: string, stage: LeadStage, lostReason?: string) => {
+  /**
+   * What changing a lead's stage writes, beyond the stage itself. Shared so a
+   * drag that also reorders stamps exactly what a plain stage change stamps.
+   */
+  const stagePatch = useCallback((stage: LeadStage, lostReason?: string): Partial<Lead> => {
     const closing = stage === 'won' || stage === 'lost' || stage === 'unqualified'
-    patchLeadM.mutate({
-      id: leadId,
-      patch: {
-        stage,
-        // Closing clears the follow-up; reopening a closed lead clears the reason.
-        ...(closing ? { nextFollowUp: null } : {}),
-        lostReason: stage === 'lost' ? (lostReason ?? 'No response') : undefined,
-        // Mirrors the DB trigger that actually stamps this, so the revenue chart
-        // moves with the drop instead of a beat later. The refetch overwrites it
-        // with the authoritative timestamp.
-        closedAt: closing ? new Date().toISOString() : null,
-      },
-    })
-  }, [patchLeadM])
+    return {
+      stage,
+      // Closing clears the follow-up; reopening a closed lead clears the reason.
+      ...(closing ? { nextFollowUp: null } : {}),
+      lostReason: stage === 'lost' ? (lostReason ?? 'No response') : undefined,
+      // Mirrors the DB trigger that actually stamps this, so the revenue chart
+      // moves with the drop instead of a beat later. The refetch overwrites it
+      // with the authoritative timestamp.
+      closedAt: closing ? new Date().toISOString() : null,
+    }
+  }, [])
+
+  const moveLeadStage = useCallback((leadId: string, stage: LeadStage, lostReason?: string) => {
+    patchLeadM.mutate({ id: leadId, patch: stagePatch(stage, lostReason) })
+  }, [patchLeadM, stagePatch])
+
+  /**
+   * Drag-to-position: put the lead in `stage`, immediately above `beforeId`
+   * (or at the foot of that column when null).
+   */
+  const moveLead = useCallback((leadId: string, stage: LeadStage, beforeId: string | null, lostReason?: string) => {
+    const lead = rawLeads.find((l) => l.id === leadId)
+    if (!lead) return
+    const position = leadPositionFor(rawLeads, stage, beforeId, leadId)
+    // A stage that has not changed must not restamp closedAt or clear the
+    // follow-up — reordering inside Won is not winning the deal again.
+    const patch = lead.stage === stage
+      ? { position }
+      : { ...stagePatch(stage, lostReason), position }
+    moveLeadM.mutate({ id: leadId, patch })
+  }, [moveLeadM, rawLeads, stagePatch])
 
   const saveLead = useCallback((lead: Lead) => {
-    saveLeadM.mutate({ lead, isNew: !rawLeads.some((l) => l.id === lead.id) })
+    const isNew = !rawLeads.some((l) => l.id === lead.id)
+    // A new card belongs at the top of its column, not below thirty closed ones.
+    const withPosition = isNew ? { ...lead, position: nextLeadPosition(rawLeads, lead.stage) } : lead
+    saveLeadM.mutate({ lead: withPosition, isNew })
   }, [saveLeadM, rawLeads])
 
   const importLeads = useCallback(async (batch: Lead[]) => {
-    await importLeadsM.mutateAsync({ leads: batch })
-  }, [importLeadsM])
+    // Number the batch downwards from the head so the spreadsheet's own order
+    // survives the import instead of every row sharing one position.
+    const head = nextLeadPosition(rawLeads, 'new')
+    const positioned = batch.map((lead, i) => ({ ...lead, position: head - i * IMPORT_POSITION_STEP }))
+    await importLeadsM.mutateAsync({ leads: positioned })
+  }, [importLeadsM, rawLeads])
 
   const patchLead = useCallback((leadId: string, patch: Partial<Lead>) => {
     patchLeadM.mutate({ id: leadId, patch })
@@ -402,7 +444,7 @@ export function BdProvider({ children }: { children: ReactNode }) {
       leads, activities, meetings, tasks, projects, updates, handoffs, targets, people, avatarOf,
       channelStats, isLoading,
       viewerRepId, viewerName, canSeeAll,
-      moveLeadStage, saveLead, importLeads, patchLead, deleteLead, logActivity,
+      moveLeadStage, moveLead, saveLead, importLeads, patchLead, deleteLead, logActivity,
       saveMeeting, deleteMeeting,
       saveTask, patchTask, moveTaskStatus, moveTask: moveTaskM, toggleChecklistItem, deleteTask,
       saveProject, patchProject, moveProjectStatus, deleteProject,
@@ -412,7 +454,7 @@ export function BdProvider({ children }: { children: ReactNode }) {
       leads, activities, meetings, tasks, projects, updates, handoffs, targets, people, avatarOf,
       channelStats, isLoading,
       viewerRepId, viewerName, canSeeAll,
-      moveLeadStage, saveLead, importLeads, patchLead, deleteLead, logActivity,
+      moveLeadStage, moveLead, saveLead, importLeads, patchLead, deleteLead, logActivity,
       saveMeeting, deleteMeeting,
       saveTask, patchTask, moveTaskStatus, moveTaskM, toggleChecklistItem, deleteTask,
       saveProject, patchProject, moveProjectStatus, deleteProject,

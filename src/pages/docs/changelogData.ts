@@ -121,6 +121,10 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'added',
+        text: 'Pipeline cards can be dragged up and down inside a column, not just across to the next stage. The card lifts out, the ones below close up, and an empty slot follows your cursor so you can see exactly where it will land. The order you set is saved for the whole department. It works under the new Manual order sort, which is now the default — the other sorts arrange the column for you, so dragging within one is not offered there.',
+      },
+      {
+        kind: 'added',
         text: 'Gamification reviewers are now told when something needs them: quest proof submitted, a shoutout given, a reward redeemed or a group reward filled. Each notification opens the Approvals screen, and a red count beside Approvals in the sidebar shows how many items are waiting on you.',
       },
       {

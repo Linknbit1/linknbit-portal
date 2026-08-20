@@ -463,6 +463,12 @@ export interface Lead {
    */
   valueFxRate: number
   stage: LeadStage
+  /**
+   * Where the card sits in its pipeline column under "Manual order". Sparse
+   * doubles, so an insert between two neighbours writes one midpoint instead of
+   * renumbering the column — same mechanism as BdTask.position.
+   */
+  position: number
   temperature: LeadTemperature
   ownerId: string
   ownerName: string

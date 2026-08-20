@@ -709,6 +709,14 @@ export const DOC_CHAPTERS: DocChapter[] = [
             ],
           },
           {
+            title: 'Put the cards in your own order',
+            steps: [
+              'Set Sort to Manual order — it is the default.',
+              'Drag a card up or down within its column. The cards move aside and an empty slot follows the cursor, showing exactly where it will land.',
+              'The order is saved for everyone, not just for you, and stays put until somebody moves it again.',
+            ],
+          },
+          {
             title: 'Keep notes on a prospect',
             steps: [
               'Open the lead and choose the Notes tab.',
@@ -719,6 +727,8 @@ export const DOC_CHAPTERS: DocChapter[] = [
         ],
         notes: [
           'You can see the whole department’s pipeline but can only edit leads you own, unless you manage BD.',
+          'Cards can only be dragged up and down under Manual order. Choose Highest value or any other sort and the column is arranged for you, so a placement would be thrown away — you can still drag a card to a different column.',
+          'A new lead, and anything you import, goes to the top of its column rather than the bottom.',
           'Quote a deal in whatever currency the client was given — every currency in use anywhere is in the list, and you can search it by country as well as by code, so typing “Denmark” finds the krone. The card keeps showing that currency, while the funnel, the channel report and your target convert it to PKR so the totals add up.',
           'Exchange rates refresh daily and the field shows the one it is using as you type. The rate is fixed onto the lead at the moment you save it, so a deal you priced last month is never quietly restated by today’s rate.',
           'On import, dates must be written as YYYY-MM-DD. 03/04/2026 is March in one country and April in the next, so the portal refuses it rather than guessing.',

@@ -24,6 +24,8 @@ function emptyLead(ownerId: string, ownerName: string): Lead {
     company: '', contactName: '', contactTitle: '', email: '', phone: '',
     channel: 'linkedin', services: [], industry: 'Logistics', icpFit: 'partial',
     value: 0, valueCurrency: 'PKR', valueEntered: 0, valueFxRate: 1, stage: 'new', temperature: 'warm',
+    // saveLead puts a new card at the head of its column; this is a placeholder.
+    position: 0,
     ownerId, ownerName,
     addedOn: today, lastContacted: null, nextFollowUp: null, closedAt: null,
     activityCount: 0,

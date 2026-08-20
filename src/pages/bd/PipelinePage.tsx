@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import {
   Plus, Search, Target, Columns3, Table2, CalendarClock,
   AlertTriangle, MessageSquare, ChevronLeft, SlidersHorizontal, Upload,
@@ -32,6 +32,10 @@ const PIPELINE_VIEWS: ViewToggleOption<PipelineView>[] = [
 ]
 
 const SORTS = [
+  // First and default: the stored board order, the only mode in which dragging a
+  // card up or down can stick. Every other option is computed, so a manual
+  // placement would be thrown away on the next render.
+  { value: 'manual', label: 'Manual order' },
   { value: 'value', label: 'Highest value' },
   { value: 'followup', label: 'Follow-up date' },
   { value: 'recent', label: 'Recently contacted' },
@@ -40,6 +44,38 @@ const SORTS = [
 
 /** Still in play. Won, Lost and Unqualified are the three terminal stages. */
 const OPEN_STAGES: LeadStage[] = ['new', 'contacted', 'qualified', 'meeting', 'proposal_sent', 'negotiation']
+
+/** Where a drop would land: a column, and the slot it would occupy. */
+interface DropAt {
+  stage: LeadStage
+  /** Index within the column, ignoring the card being dragged. */
+  index: number
+}
+
+/**
+ * Which slot the pointer is asking for, measured off the cards actually on
+ * screen: the first one whose middle is below the cursor, or the end.
+ *
+ * Reading live geometry is what keeps this stable. The slot is exactly as tall
+ * as the card in hand, so opening it never changes the column's total height —
+ * and when the slot does move past a card, that card shifts *away* from the
+ * cursor, which pushes the decision further into the answer it just gave rather
+ * than back the way it came.
+ */
+function dropIndexAt(list: HTMLElement, clientY: number, stage: LeadStage, dragId: string): DropAt {
+  const cards = Array.from(list.querySelectorAll<HTMLElement>('[data-lead-card]'))
+    .filter((el) => el.dataset.leadCard !== dragId)
+  for (let i = 0; i < cards.length; i++) {
+    const rect = cards[i].getBoundingClientRect()
+    if (clientY < rect.top + rect.height / 2) return { stage, index: i }
+  }
+  return { stage, index: cards.length }
+}
+
+/** True when two drop targets mean the same thing — used to skip no-op renders. */
+function sameDropAt(a: DropAt | null, b: DropAt): boolean {
+  return !!a && a.stage === b.stage && a.index === b.index
+}
 
 type FollowUpTone = 'overdue' | 'today' | 'soon' | 'later'
 
@@ -66,11 +102,11 @@ function daysSince(date: string): number {
 
 export default function PipelinePage() {
   const toast = useToast()
-  const { leads, moveLeadStage, people, avatarOf } = useBd()
+  const { leads, moveLead, people, avatarOf } = useBd()
 
   const [search, setSearch] = useState('')
   const [owner, setOwner] = useState('all')
-  const [sort, setSort] = useState('value')
+  const [sort, setSort] = useState('manual')
   const [view, setView] = useState<PipelineView>('board')
   const [collapsed, setCollapsed] = useState<LeadStage[]>([])
 
@@ -83,8 +119,29 @@ export default function PipelinePage() {
   const [handoffFor, setHandoffFor] = useState<Lead | null>(null)
 
   const [dragId, setDragId] = useState<string | null>(null)
-  const [dragOver, setDragOver] = useState<LeadStage | null>(null)
+  const [dropAt, setDropAt] = useState<DropAt | null>(null)
+  /** Height of the card in hand, so the slot it will drop into is its own size. */
+  const [dragHeight, setDragHeight] = useState(0)
   const boardRef = useDragScroll<HTMLDivElement>()
+
+  // Reordering is only offered under Manual order — see SORTS.
+  const reorderable = sort === 'manual'
+  const endDrag = () => { setDragId(null); setDropAt(null) }
+
+  // The card being dragged is taken out of the column, so the ones under it
+  // close up. If the pointer leaves the window and the button is released
+  // there, neither drop nor the card's own dragend reaches us — without this
+  // the board would keep a hole in it until the next click.
+  useEffect(() => {
+    if (!dragId) return
+    const end = () => endDrag()
+    window.addEventListener('dragend', end)
+    window.addEventListener('drop', end)
+    return () => {
+      window.removeEventListener('dragend', end)
+      window.removeEventListener('drop', end)
+    }
+  }, [dragId])
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -97,6 +154,8 @@ export default function PipelinePage() {
         lead.industry.toLowerCase().includes(q)
       )
     })
+    // 'manual' deliberately sorts nothing: fetchLeads already returns the board
+    // order, and re-sorting here is what would undo a drag.
     const sorted = [...rows]
     if (sort === 'value') sorted.sort((a, b) => b.value - a.value)
     if (sort === 'company') sorted.sort((a, b) => a.company.localeCompare(b.company))
@@ -136,16 +195,29 @@ export default function PipelinePage() {
 
   const openLead = openLeadId ? leads.find((l) => l.id === openLeadId) ?? null : null
 
-  const handleDrop = (stage: LeadStage) => {
-    setDragOver(null)
+  /** `lane` excludes the card in hand, so a drop index maps straight to a slot. */
+  const handleDrop = (stage: LeadStage, lane: Lead[]) => {
     const id = dragId
-    setDragId(null)
+    const at = dropAt
+    endDrag()
     if (!id) return
     const lead = leads.find((l) => l.id === id)
-    if (!lead || lead.stage === stage) return
-    moveLeadStage(id, stage, stage === 'lost' ? 'No response' : undefined)
-    toast(`${lead.company} → ${STAGE_CONFIG[stage].label}`, stage === 'won' ? 'success' : 'info')
-    if (stage === 'won' && !lead.handoffId) setHandoffFor({ ...lead, stage })
+    if (!lead) return
+
+    const sameStage = lead.stage === stage
+    // A drop inside the same column with nothing to reorder is not a move.
+    if (sameStage && !reorderable) return
+
+    // Under a computed sort the visible order is not the stored order, so a slot
+    // index would name the wrong neighbour — a cross-column drop appends instead.
+    const index = reorderable && at && at.stage === stage ? at.index : lane.length
+    const beforeId = lane[index]?.id ?? null
+
+    moveLead(id, stage, beforeId, stage === 'lost' ? 'No response' : undefined)
+    if (!sameStage) {
+      toast(`${lead.company} → ${STAGE_CONFIG[stage].label}`, stage === 'won' ? 'success' : 'info')
+      if (stage === 'won' && !lead.handoffId) setHandoffFor({ ...lead, stage })
+    }
   }
 
   const toggleColumn = (stage: LeadStage) =>
@@ -213,19 +285,28 @@ export default function PipelinePage() {
               const StageIcon = config.icon
               const isCollapsed = collapsed.includes(stage)
               const isTerminal = stage === 'won' || stage === 'lost' || stage === 'unqualified'
+              // The column as it will be once the dragged card leaves its old
+              // slot — this is what drop indices are measured against.
+              const lane = columnLeads.filter((l) => l.id !== dragId)
+              const over = dropAt?.stage === stage
+              // Where the empty slot opens. Under a computed sort there is no slot
+              // to promise — the column rearranges itself on drop — so that mode
+              // keeps the plain column highlight it always had.
+              const showSlot = over && !!dragId && reorderable
+              const slotIndex = showSlot ? Math.min(dropAt.index, lane.length) : -1
 
               if (isCollapsed) {
                 return (
                   <button
                     key={stage}
                     onClick={() => toggleColumn(stage)}
-                    onDragOver={(e) => { e.preventDefault(); setDragOver(stage) }}
-                    onDragLeave={() => setDragOver((c) => (c === stage ? null : c))}
-                    onDrop={() => handleDrop(stage)}
+                    onDragOver={(e) => { e.preventDefault(); setDropAt({ stage, index: 0 }) }}
+                    onDragLeave={() => setDropAt((c) => (c?.stage === stage ? null : c))}
+                    onDrop={() => handleDrop(stage, columnLeads.filter((l) => l.id !== dragId))}
                     aria-label={`Expand ${config.label}`}
                     className={cn(
                       'flex h-full w-12 shrink-0 flex-col items-center gap-3 rounded-lg border py-3 transition-colors duration-150',
-                      dragOver === stage ? cn(config.dropBorder, 'bg-surface-2/40') : 'border-border-default bg-surface-1/50 hover:border-border-strong',
+                      over ? cn(config.dropBorder, 'bg-surface-2/40') : 'border-border-default bg-surface-1/50 hover:border-border-strong',
                     )}
                   >
                     <span className={cn('flex size-7 items-center justify-center rounded-md border', config.accent)}>
@@ -246,13 +327,24 @@ export default function PipelinePage() {
               return (
                 <section
                   key={stage}
-                  onDragOver={(e) => { e.preventDefault(); setDragOver(stage) }}
-                  onDragLeave={() => setDragOver((c) => (c === stage ? null : c))}
-                  onDrop={() => handleDrop(stage)}
+                  onDragOver={(e) => {
+                    e.preventDefault()
+                    // Entering over the header or the totals row aims at the foot
+                    // of the column, but never overrides a slot the card list has
+                    // already worked out — that fight is what made the slot flicker.
+                    if (!dragId) return
+                    setDropAt((c) => (c?.stage === stage ? c : { stage, index: lane.length }))
+                  }}
+                  onDragLeave={(e) => {
+                    // Moving onto a card inside this column is not leaving it.
+                    if (e.currentTarget.contains(e.relatedTarget as Node | null)) return
+                    setDropAt((c) => (c?.stage === stage ? null : c))
+                  }}
+                  onDrop={() => handleDrop(stage, lane)}
                   className={cn(
                     'flex h-full w-[84vw] shrink-0 flex-col gap-2.5 rounded-lg border p-2.5 transition-colors duration-150',
                     'sm:w-80',
-                    dragOver === stage
+                    over
                       ? cn(config.dropBorder, 'bg-surface-2/40')
                       : isTerminal ? 'border-border-subtle bg-surface-1/30' : 'border-border-default bg-surface-1/50',
                   )}
@@ -283,24 +375,79 @@ export default function PipelinePage() {
                     )}
                   </div>
 
-                  <div className="flex min-h-2 flex-1 flex-col gap-2 overflow-y-auto overscroll-y-contain">
-                    {columnLeads.length === 0 ? (
+                  <div
+                    // One handler owns the slot for the whole column. Per-card
+                    // handlers left the gaps between cards uncovered, and the
+                    // event bubbling out of a gap moved the slot to the foot —
+                    // which shifted the cards, put a new one under the cursor,
+                    // and started the whole thing over.
+                    onDragOver={(e) => {
+                      if (!dragId || !reorderable) return
+                      e.preventDefault()
+                      const next = dropIndexAt(e.currentTarget, e.clientY, stage, dragId)
+                      // dragover fires continuously, cursor moving or not. Keeping
+                      // the same object when the answer has not changed stops the
+                      // column re-rendering dozens of times a second.
+                      setDropAt((c) => (sameDropAt(c, next) ? c : next))
+                    }}
+                    className="flex min-h-2 flex-1 flex-col gap-2 overflow-y-auto overscroll-y-contain"
+                  >
+                    {columnLeads.length === 0 && !showSlot ? (
                       <p className="rounded-md border border-dashed border-border-subtle py-7 text-center font-ui text-[11.5px] text-text-4">
                         Drag a lead here
                       </p>
                     ) : (
-                      columnLeads.map((lead) => (
-                        <LeadCard
-                          key={lead.id}
-                          lead={lead}
-                          ownerAvatar={avatarOf(lead.ownerId)}
-                          dragging={dragId === lead.id}
-                          onDragStart={() => setDragId(lead.id)}
-                          onDragEnd={() => { setDragId(null); setDragOver(null) }}
-                          onClick={() => setOpenLeadId(lead.id)}
-                        />
-                      ))
+                      columnLeads.map((lead) => {
+                        // Slot within the column as it will be once the card in
+                        // hand has left it; -1 for that card itself.
+                        const slot = lane.findIndex((l) => l.id === lead.id)
+                        const inHand = lead.id === dragId
+                        return (
+                          <Fragment key={lead.id}>
+                            {showSlot && slotIndex === slot && slot !== -1 && <DropSlot height={dragHeight} />}
+                            {/* The card in hand stays mounted but out of the flow:
+                                the column closes up behind it, and it is still
+                                there to receive its own dragend. */}
+                            <div data-lead-card={lead.id} className={cn(inHand && 'hidden')}>
+                              <LeadCard
+                                lead={lead}
+                                ownerAvatar={avatarOf(lead.ownerId)}
+                                dragging={inHand}
+                                onDragStart={(e) => {
+                                  const rect = e.currentTarget.getBoundingClientRect()
+                                  e.dataTransfer.effectAllowed = 'move'
+                                  // Firefox refuses to start a drag whose dataTransfer
+                                  // carries nothing.
+                                  e.dataTransfer.setData('text/plain', lead.id)
+                                  // Snapshot the card explicitly: it is about to leave
+                                  // the flow, and a browser that builds the ghost after
+                                  // this handler returns would drag an empty rectangle.
+                                  e.dataTransfer.setDragImage(
+                                    e.currentTarget,
+                                    e.clientX - rect.left,
+                                    e.clientY - rect.top,
+                                  )
+                                  const id = lead.id
+                                  const height = rect.height
+                                  // Deferred by a frame on purpose. Hiding the source
+                                  // element inside dragstart — which is what setting
+                                  // dragId does — cancels the drag the browser is still
+                                  // setting up, and nothing moves at all.
+                                  requestAnimationFrame(() => {
+                                    setDragHeight(height)
+                                    setDragId(id)
+                                  })
+                                }}
+                                onDragEnd={endDrag}
+                                onClick={() => setOpenLeadId(lead.id)}
+                              />
+                            </div>
+                          </Fragment>
+                        )
+                      })
                     )}
+                    {/* The tail slot, for a drop below the last card. */}
+                    {showSlot && slotIndex >= lane.length && <DropSlot height={dragHeight} />}
                   </div>
                 </section>
               )
@@ -418,12 +565,29 @@ function FunnelStrip({ byStage, stats }: FunnelStripProps) {
 
 /* ── Board card ─────────────────────────────────────────────────────────────── */
 
+/**
+ * The hole the dragged card will drop into.
+ *
+ * Sized to the card in hand so the column does not resize under the cursor as
+ * the slot moves between rows of different heights.
+ */
+function DropSlot({ height }: { height: number }) {
+  return (
+    <div
+      aria-hidden
+      className="shrink-0 rounded-md border border-dashed border-brand-red/40 bg-brand-red/5"
+      style={{ height: height || 96 }}
+    />
+  )
+}
+
 interface LeadCardProps {
   lead: Lead
   /** Resolved by the page from the BD roster — a lead record has no photo of its own. */
   ownerAvatar?: string
   dragging: boolean
-  onDragStart: () => void
+  /** Receives the event so the board can measure the card it is about to lift. */
+  onDragStart: (e: React.DragEvent<HTMLElement>) => void
   onDragEnd: () => void
   onClick: () => void
 }

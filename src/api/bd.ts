@@ -124,6 +124,7 @@ export function mapLead(row: LeadJoined): Lead {
     valueEntered: row.value_entered === null ? Number(row.value) : Number(row.value_entered),
     valueFxRate: row.value_fx_rate === null ? 1 : Number(row.value_fx_rate),
     stage: narrow(STAGES, row.stage, 'new'),
+    position: Number(row.position ?? 0),
     temperature: narrow(TEMPERATURES, row.temperature, 'warm'),
     ownerId: row.owner_id ?? '',
     ownerName: personName(row.owner),
@@ -143,6 +144,9 @@ export async function fetchLeads(): Promise<Lead[]> {
   const { data, error } = await supabase
     .from('bd_leads')
     .select(LEAD_SELECT)
+    // Board order first, so "Manual order" needs no client-side sort; created_at
+    // still decides between two cards that share a position (imported batches).
+    .order('position', { ascending: true })
     .order('created_at', { ascending: false })
   if (error) throw error
   return data.map(mapLead)
@@ -174,6 +178,7 @@ export function leadPatchToRow(patch: Partial<Lead>): TablesUpdate<'bd_leads'> {
     row.value = patch.value ?? Math.round(entered * rate)
   }
   if (patch.stage !== undefined) row.stage = patch.stage
+  if (patch.position !== undefined) row.position = patch.position
   if (patch.temperature !== undefined) row.temperature = patch.temperature
   if (patch.ownerId !== undefined) row.owner_id = patch.ownerId || null
   if (patch.addedOn !== undefined) row.added_on = patch.addedOn

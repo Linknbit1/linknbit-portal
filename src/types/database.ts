@@ -802,6 +802,7 @@ export type Database = {
           next_follow_up: string | null
           owner_id: string | null
           phone: string
+          position: number
           services: string[]
           stage: string
           temperature: string
@@ -831,6 +832,7 @@ export type Database = {
           next_follow_up?: string | null
           owner_id?: string | null
           phone?: string
+          position?: number
           services?: string[]
           stage?: string
           temperature?: string
@@ -860,6 +862,7 @@ export type Database = {
           next_follow_up?: string | null
           owner_id?: string | null
           phone?: string
+          position?: number
           services?: string[]
           stage?: string
           temperature?: string
