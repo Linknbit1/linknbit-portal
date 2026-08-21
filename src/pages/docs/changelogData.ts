@@ -20,6 +20,14 @@ export const RELEASES: ChangelogRelease[] = [
       'The BD module now saves. Your pipeline, outreach and campaigns are shared with the department and kept between sessions, and every record carries a live comment thread.',
     entries: [
       {
+        kind: 'added',
+        text: 'BD tasks now take documents. Open a task, scroll to Documents, and drop a file in or paste a Google Doc, Sheet or Drive link — the same uploader, preview and Drive support that leads and delivery tasks already had. Anyone who can open Business Dev can read them; adding and removing is limited to whoever the task is assigned to, whoever raised it, and anyone who runs BD.',
+      },
+      {
+        kind: 'fixed',
+        text: 'The BD Tasks screen was hiding most of the department’s work. It opened filtered to your own tasks, and the control doing it sat collapsed behind the Filters button with nothing to say it was on — so a campaign’s tasks were plainly listed on its own page but missing from the Tasks board. Tasks now opens on the whole team, and the people picker sits in the open beside the project filter.',
+      },
+      {
         kind: 'improved',
         text: 'The Timesheet now lists everybody, not only the people who pressed start. A person who worked all day without the timer, a person on leave and a person who never turned up used to look identical — all three were simply missing. Each now has a row, and the four tiles above the chart say how many hours were tracked, how many timers are running, how many people were due in with nothing logged, and how many are away.',
       },

@@ -31,9 +31,10 @@ export async function fetchProjectFiles(projectId: string): Promise<ProjectFile[
 }
 
 export interface UploadAttachmentArgs {
-  /** Exactly one of `projectId` / `leadId` — the CHECK on the table enforces it. */
+  /** Exactly one of `projectId` / `leadId` / `bdTaskId` — the CHECK on the table enforces it. */
   projectId?: string
   leadId?: string
+  bdTaskId?: string
   taskId?: string | null
   clientVisible?: boolean
   /** What the file is for, in the uploader's words. */
@@ -43,7 +44,7 @@ export interface UploadAttachmentArgs {
 const BUCKET = 'attachments'
 
 export async function fetchAttachments(
-  args: { taskId?: string; projectId?: string; leadId?: string },
+  args: { taskId?: string; projectId?: string; leadId?: string; bdTaskId?: string },
 ): Promise<AttachmentWithUploader[]> {
   let query = supabase
     .from('attachments')
@@ -53,6 +54,9 @@ export async function fetchAttachments(
   if (args.taskId) query = query.eq('task_id', args.taskId)
   // A lead's documents. No task dimension here — a lead has no sub-records.
   else if (args.leadId) query = query.eq('lead_id', args.leadId)
+  // A BD task's documents. `task_id` points at the delivery `tasks` table, so a
+  // BD task needs its own column rather than reusing it.
+  else if (args.bdTaskId) query = query.eq('bd_task_id', args.bdTaskId)
   // Project-level files only (no task) when listing a project's files tab.
   else if (args.projectId) query = query.eq('project_id', args.projectId).is('task_id', null)
 
@@ -69,7 +73,9 @@ export async function uploadAttachment(file: File, args: UploadAttachmentArgs): 
   // "whose is this" without joining back to the table.
   const path = args.leadId
     ? `leads/${args.leadId}/${randomUUID()}-${file.name}`
-    : `${args.projectId}/${args.taskId ?? 'project'}/${randomUUID()}-${file.name}`
+    : args.bdTaskId
+      ? `bd-tasks/${args.bdTaskId}/${randomUUID()}-${file.name}`
+      : `${args.projectId}/${args.taskId ?? 'project'}/${randomUUID()}-${file.name}`
 
   const { error: uploadError } = await supabase.storage
     .from(BUCKET)
@@ -81,6 +87,7 @@ export async function uploadAttachment(file: File, args: UploadAttachmentArgs): 
     .insert({
       project_id: args.projectId ?? null,
       lead_id: args.leadId ?? null,
+      bd_task_id: args.bdTaskId ?? null,
       task_id: args.taskId ?? null,
       uploader_id: uploaderId,
       file_name: file.name,
@@ -134,9 +141,10 @@ export async function deleteAttachment(id: string, storagePath: string | null): 
 }
 
 export interface AddLinkArgs {
-  /** Exactly one of `projectId` / `leadId` — the CHECK on the table enforces it. */
+  /** Exactly one of `projectId` / `leadId` / `bdTaskId` — the CHECK on the table enforces it. */
   projectId?: string
   leadId?: string
+  bdTaskId?: string
   taskId?: string | null
   title: string
   url: string
@@ -156,6 +164,7 @@ export async function addAttachmentLink(args: AddLinkArgs): Promise<AttachmentRo
     .insert({
       project_id: args.projectId ?? null,
       lead_id: args.leadId ?? null,
+      bd_task_id: args.bdTaskId ?? null,
       task_id: args.taskId ?? null,
       uploader_id: auth.user?.id ?? null,
       // Falls back to the address itself, so a link is never listed as "".

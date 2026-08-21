@@ -7,7 +7,7 @@ import { cn } from '../../lib/cn'
 import { validateAttachmentFile, formatFileSize, fileKind, type FileKind } from '../../lib/attachment'
 import { getAttachmentUrl, type AttachmentWithUploader } from '../../api/attachments'
 import {
-  useTaskAttachments, useProjectAttachments, useLeadAttachments, useUploadAttachment, useDeleteAttachment,
+  useTaskAttachments, useProjectAttachments, useLeadAttachments, useBdTaskAttachments, useUploadAttachment, useDeleteAttachment,
   useToggleAttachmentVisibility, useSetAttachmentConfidential,
 } from '../../hooks/useAttachments'
 import { useCanViewConfidential } from '../../hooks/useRoleFlags'
@@ -27,11 +27,12 @@ const KIND_ICON: Record<FileKind, typeof FileIcon> = {
 
 interface AttachmentUploaderProps {
   /**
-   * Exactly one owner. A project (optionally narrowed to one of its tasks) or a
-   * BD lead — the same list, upload box and viewer serve both.
+   * Exactly one owner. A project (optionally narrowed to one of its tasks), a
+   * BD lead, or a BD task — the same list, upload box and viewer serve all three.
    */
   projectId?: string
   leadId?: string
+  bdTaskId?: string
   /** When set, files are scoped to this task; otherwise they're project-level files. */
   taskId?: string
   /** Whether the current user may upload / add links / delete / toggle. */
@@ -39,7 +40,7 @@ interface AttachmentUploaderProps {
   className?: string
 }
 
-export function AttachmentUploader({ projectId, leadId, taskId, canManage = true, className }: AttachmentUploaderProps) {
+export function AttachmentUploader({ projectId, leadId, bdTaskId, taskId, canManage = true, className }: AttachmentUploaderProps) {
   const toast = useToast()
   const { openAttachment } = useFileViewer()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -49,9 +50,11 @@ export function AttachmentUploader({ projectId, leadId, taskId, canManage = true
   const [linkOpen, setLinkOpen] = useState(false)
 
   const taskQuery = useTaskAttachments(taskId)
-  const projectQuery = useProjectAttachments(taskId || leadId ? undefined : projectId)
+  const projectQuery = useProjectAttachments(taskId || leadId || bdTaskId ? undefined : projectId)
   const leadQuery = useLeadAttachments(leadId)
-  const { data: files = [], isLoading } = leadId ? leadQuery : taskId ? taskQuery : projectQuery
+  const bdTaskQuery = useBdTaskAttachments(bdTaskId)
+  const { data: files = [], isLoading } =
+    leadId ? leadQuery : bdTaskId ? bdTaskQuery : taskId ? taskQuery : projectQuery
 
   const upload = useUploadAttachment()
   const remove = useDeleteAttachment()
@@ -65,7 +68,7 @@ export function AttachmentUploader({ projectId, leadId, taskId, canManage = true
       const error = validateAttachmentFile(file)
       if (error) { toast(`${file.name}: ${error}`, 'error'); continue }
       upload.mutate(
-        { file, args: { projectId, leadId, taskId: taskId ?? null } },
+        { file, args: { projectId, leadId, bdTaskId, taskId: taskId ?? null } },
         {
           onSuccess: () => toast(`Uploaded ${file.name}`, 'success'),
           onError: (e) => toast(e instanceof Error ? e.message : 'Upload failed', 'error'),
@@ -208,6 +211,7 @@ export function AttachmentUploader({ projectId, leadId, taskId, canManage = true
         <AddLinkModal
           projectId={projectId}
           leadId={leadId}
+          bdTaskId={bdTaskId}
           taskId={taskId ?? null}
           canMarkConfidential={canSeeConfidential && !!projectId}
           onClose={() => setLinkOpen(false)}
@@ -224,7 +228,7 @@ export function AttachmentUploader({ projectId, leadId, taskId, canManage = true
         onConfirm={() => {
           if (!pendingDelete) return
           remove.mutate(
-            { id: pendingDelete.id, storagePath: pendingDelete.storage_path, projectId, leadId, taskId: pendingDelete.task_id },
+            { id: pendingDelete.id, storagePath: pendingDelete.storage_path, projectId, leadId, bdTaskId, taskId: pendingDelete.task_id },
             {
               onSuccess: () => { toast(pendingDelete.kind === 'link' ? 'Link removed' : 'File deleted', 'success'); setPendingDelete(null) },
               onError: (e) => toast(e instanceof Error ? e.message : 'Delete failed', 'error'),

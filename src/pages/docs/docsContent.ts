@@ -933,10 +933,21 @@ export const DOC_CHAPTERS: DocChapter[] = [
               'Drag cards between columns as the work moves.',
             ],
           },
+          {
+            title: 'Put documents on a task',
+            steps: [
+              'Open the task and scroll to Documents.',
+              'Drop a file in, or press Add document to paste a Google Doc, Sheet or Drive link.',
+              'A pasted link fills in its own title where the page allows it — type one yourself if it does not.',
+              'Press a document to preview it without leaving the task.',
+            ],
+          },
         ],
         notes: [
           'A campaign’s progress bar is calculated from its tasks. There is no progress field to type into, because a typed number goes stale the moment a task moves.',
           'Assigning a task to someone notifies them.',
+          'Task documents work the same way as documents on a lead or on a delivery task, and are stored the same way: uploads are private, links open where they live. Anyone who can open Business Dev can read them; adding and removing is limited to the person the task is assigned to, whoever raised it, and anyone who runs BD.',
+          'The Tasks screen opens on the whole team. Use the people picker beside the project filter to narrow it to your own work, or to one colleague.',
           'You can hand a campaign to a colleague by naming them as its owner — including at the moment you create it. It stays editable by you as well as by them, so setting up a campaign for someone else does not lock you out of it. The same goes for a lead.',
         ],
       },

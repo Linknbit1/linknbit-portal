@@ -687,6 +687,8 @@ export interface BdTask {
    */
   position: number
   createdBy: string
+  /** The creator's profile id. Undefined only on a locally-minted optimistic row. */
+  createdById?: string
   checklist: { id: string; label: string; done: boolean }[]
 }
 

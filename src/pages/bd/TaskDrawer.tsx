@@ -1,7 +1,7 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import {
   Trash2, Check, Pencil, Plus, X, CircleDot, UserRound, CalendarDays, Flag,
-  Repeat, Building2, Radio, FolderKanban, ListChecks, type LucideIcon,
+  Repeat, Building2, Radio, FolderKanban, ListChecks, Paperclip, type LucideIcon,
 } from 'lucide-react'
 import { Drawer } from '../../components/ui/Drawer'
 import { Button } from '../../components/ui/Button'
@@ -14,6 +14,7 @@ import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { useToast } from '../../components/ui/toast-context'
 import { BdDocEditor } from '../../components/editor/BdDocEditor'
 import { BdCommentThread } from '../../components/shared/BdCommentThread'
+import { AttachmentUploader } from '../../components/shared/AttachmentUploader'
 import { CHANNEL_CONFIG, CHANNEL_ORDER } from '../../constants/bd'
 import { useBd } from '../../context/BdContext'
 import { randomUUID } from '../../lib/uuid'
@@ -351,6 +352,20 @@ export function TaskDrawer({ task, onClose, onOpenLead }: TaskDrawerProps) {
               />
               <Button size="sm" variant="secondary" iconLeft={<Plus size={14} />} onClick={addChecklistItem}>Add</Button>
             </div>
+          </div>
+
+          {/* ── Documents ── */}
+          <div className="flex flex-col gap-2.5">
+            <span className="flex items-center gap-1.5 font-ui text-[12.5px] font-medium text-text-2">
+              <Paperclip size={13} className="text-text-4" /> Documents
+            </span>
+            <AttachmentUploader
+              bdTaskId={task.id}
+              // The same rule that decides who may edit the task: whoever it is
+              // assigned to, whoever raised it, or anyone who runs BD. RLS says
+              // the same thing again server-side.
+              canManage={canSeeAll || task.assigneeId === viewerRepId || task.createdById === viewerRepId}
+            />
           </div>
 
           <p className="flex items-center gap-2 border-t border-border-subtle pt-4 font-mono text-[10.5px] text-text-4">

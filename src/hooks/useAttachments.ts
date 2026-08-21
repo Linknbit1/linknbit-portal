@@ -12,6 +12,7 @@ export const ATTACHMENT_KEYS = {
   byProject: (projectId: string) => ['attachments', 'project', projectId] as const,
   allByProject: (projectId: string) => ['attachments', 'all', projectId] as const,
   byLead: (leadId: string) => ['attachments', 'lead', leadId] as const,
+  byBdTask: (bdTaskId: string) => ['attachments', 'bd-task', bdTaskId] as const,
 }
 
 /** Documents attached to a BD lead — uploads and Drive links alike. */
@@ -20,6 +21,16 @@ export function useLeadAttachments(leadId: string | undefined) {
     queryKey: ATTACHMENT_KEYS.byLead(leadId ?? ''),
     queryFn: () => fetchAttachments({ leadId }),
     enabled: !!leadId,
+    staleTime: 15_000,
+  })
+}
+
+/** Documents attached to a BD task — uploads and Drive links alike. */
+export function useBdTaskAttachments(bdTaskId: string | undefined) {
+  return useQuery({
+    queryKey: ATTACHMENT_KEYS.byBdTask(bdTaskId ?? ''),
+    queryFn: () => fetchAttachments({ bdTaskId }),
+    enabled: !!bdTaskId,
     staleTime: 15_000,
   })
 }
@@ -54,16 +65,22 @@ export function useProjectAttachments(projectId: string | undefined) {
 /**
  * Refresh whichever lists could be showing this attachment.
  *
- * A row hangs off a project or a lead, never both, so the owner decides which
- * keys are worth touching — invalidating the project keys for a lead document
- * would refetch every project file list in the cache for nothing.
+ * A row hangs off a project, a lead or a BD task — never more than one — so the
+ * owner decides which keys are worth touching. Invalidating the project keys for
+ * a lead document would refetch every project file list in the cache for nothing.
  */
 function invalidateAttachment(
   qc: ReturnType<typeof useQueryClient>,
-  owner: { projectId?: string | null; leadId?: string | null; taskId?: string | null },
+  owner: {
+    projectId?: string | null
+    leadId?: string | null
+    bdTaskId?: string | null
+    taskId?: string | null
+  },
 ) {
   if (owner.taskId) qc.invalidateQueries({ queryKey: ATTACHMENT_KEYS.byTask(owner.taskId) })
   if (owner.leadId) qc.invalidateQueries({ queryKey: ATTACHMENT_KEYS.byLead(owner.leadId) })
+  if (owner.bdTaskId) qc.invalidateQueries({ queryKey: ATTACHMENT_KEYS.byBdTask(owner.bdTaskId) })
   if (owner.projectId) {
     qc.invalidateQueries({ queryKey: ATTACHMENT_KEYS.byProject(owner.projectId) })
     qc.invalidateQueries({ queryKey: ATTACHMENT_KEYS.allByProject(owner.projectId) })
@@ -73,8 +90,17 @@ function invalidateAttachment(
 }
 
 /** The owner keys off a returned row, for the mutations that get one back. */
-const ownerOf = (row: { project_id: string | null; lead_id: string | null; task_id: string | null }) =>
-  ({ projectId: row.project_id, leadId: row.lead_id, taskId: row.task_id })
+const ownerOf = (row: {
+  project_id: string | null
+  lead_id: string | null
+  bd_task_id: string | null
+  task_id: string | null
+}) => ({
+  projectId: row.project_id,
+  leadId: row.lead_id,
+  bdTaskId: row.bd_task_id,
+  taskId: row.task_id,
+})
 
 export function useUploadAttachment() {
   const qc = useQueryClient()
@@ -119,9 +145,11 @@ export function useDeleteAttachment() {
       storagePath: string | null
       projectId?: string | null
       leadId?: string | null
+      bdTaskId?: string | null
       taskId?: string | null
     }) => deleteAttachment(id, storagePath),
-    onSuccess: (_, v) =>
-      invalidateAttachment(qc, { projectId: v.projectId, leadId: v.leadId, taskId: v.taskId }),
+    onSuccess: (_, v) => invalidateAttachment(qc, {
+      projectId: v.projectId, leadId: v.leadId, bdTaskId: v.bdTaskId, taskId: v.taskId,
+    }),
   })
 }

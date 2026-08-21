@@ -64,8 +64,15 @@ export default function BdTasksPage() {
    * Ownership scope. A rep without `can_manage_bd` is pinned to their own work:
    * the control is never rendered, and the filter below still forces
    * `viewerRepId`, so it is enforced rather than merely hidden.
+   *
+   * Anyone who CAN see the department opens on the whole department. It used to
+   * open on "My tasks", which meant a manager looking at the board saw only the
+   * handful of cards assigned to them and no sign that anything was hidden —
+   * while the same tasks were plainly listed on the campaign page, which has
+   * never filtered by assignee. A board is a shared artefact; it should show the
+   * board.
    */
-  const [assigneeFilter, setAssigneeFilter] = useState('me')
+  const [assigneeFilter, setAssigneeFilter] = useState('all')
   const [dueFrom, setDueFrom] = useState('')
   const [dueTo, setDueTo] = useState('')
   const [sortBy, setSortBy] = useState('manual')
@@ -165,6 +172,23 @@ export default function BdTasksPage() {
           <Select value={statusFilter} onChange={setStatusFilter} options={statusOptions} size="sm" />
           <Select value={priorityFilter} onChange={setPriorityFilter} options={priorityOptions} size="sm" />
           <Select value={projectFilter} onChange={setProjectFilter} options={projectOptions} size="sm" />
+          {canSeeAll ? (
+            <Select
+              value={assigneeFilter}
+              onChange={setAssigneeFilter}
+              size="sm"
+              options={[
+                { value: 'all', label: 'Whole team' },
+                { value: 'me', label: 'My tasks' },
+                ...people.filter((p) => p.id !== viewerRepId).map((p) => ({ value: p.id, label: p.name })),
+              ]}
+            />
+          ) : (
+            // Not a disabled control — a rep has no team view to be denied.
+            <span className="flex h-8 items-center gap-1.5 rounded-sm border border-border-subtle bg-surface-2 px-2.5 font-ui text-[12px] text-text-3">
+              <Lock size={12} className="text-text-4" /> {viewerName}
+            </span>
+          )}
           <Select value={sortBy} onChange={setSortBy} options={SORT_OPTIONS} size="sm" label="Sort" />
           <button
             onClick={() => setShowAdv((v) => !v)}
@@ -181,23 +205,6 @@ export default function BdTasksPage() {
             <DatePicker value={dueFrom} onChange={setDueFrom} placeholder="From" className="w-full sm:w-40" />
             <DatePicker value={dueTo} onChange={setDueTo} placeholder="To" minDate={dueFrom || undefined} className="w-full sm:w-40" />
             <Select value={channelFilter} onChange={setChannelFilter} options={channelOptions} size="sm" />
-            {canSeeAll ? (
-              <Select
-                value={assigneeFilter}
-                onChange={setAssigneeFilter}
-                size="sm"
-                options={[
-                { value: 'me', label: 'My tasks' },
-                { value: 'all', label: 'Whole team' },
-                ...people.filter((p) => p.id !== viewerRepId).map((p) => ({ value: p.id, label: p.name })),
-                ]}
-              />
-            ) : (
-              // Not a disabled control — a rep has no team view to be denied.
-              <span className="flex items-center gap-1.5 rounded-sm border border-border-subtle bg-surface-2 px-2.5 py-1.5 font-ui text-[12px] text-text-3">
-                <Lock size={12} className="text-text-4" /> {viewerName}
-              </span>
-            )}
             {(dueFrom || dueTo || channelFilter) && (
               <button onClick={() => { setDueFrom(''); setDueTo(''); setChannelFilter('') }} className="h-8 rounded-sm px-2.5 text-[11.5px] text-text-3 transition-colors hover:text-error">Clear</button>
             )}
@@ -205,7 +212,17 @@ export default function BdTasksPage() {
         )}
 
         {filtered.length === 0 ? (
-          <div className="py-16 text-center font-ui text-[13px] text-text-4">No tasks match your filters.</div>
+          <div className="py-16 text-center font-ui text-[13px] text-text-4">
+            No tasks match your filters.
+            {assigneeFilter !== 'all' && tasks.length > 0 && (
+              <button
+                onClick={() => setAssigneeFilter('all')}
+                className="ml-1 text-brand-red underline-offset-2 hover:underline"
+              >
+                Show the whole team.
+              </button>
+            )}
+          </div>
         ) : view === 'board' ? (
           <BdTaskBoard
             tasks={filtered}

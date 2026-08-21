@@ -14,6 +14,7 @@ interface AddLinkModalProps {
   /** Exactly one of these — the link belongs to a project or to a BD lead. */
   projectId?: string
   leadId?: string
+  bdTaskId?: string
   /** Attach the link to a specific task; omit for a project-level link. */
   taskId?: string | null
   /** Whether the "confidential" toggle is offered (needs can_view_confidential). */
@@ -22,7 +23,7 @@ interface AddLinkModalProps {
 }
 
 /** Attach an external document (Google Doc/Sheet/Slides, Drive, any URL). */
-export function AddLinkModal({ projectId, leadId, taskId, canMarkConfidential, onClose }: AddLinkModalProps) {
+export function AddLinkModal({ projectId, leadId, bdTaskId, taskId, canMarkConfidential, onClose }: AddLinkModalProps) {
   const toast = useToast()
   const addLink = useAddAttachmentLink()
   const [title, setTitle] = useState('')
@@ -84,7 +85,7 @@ export function AddLinkModal({ projectId, leadId, taskId, canMarkConfidential, o
   const submit = () => {
     if (!canSubmit) return
     addLink.mutate(
-      { projectId, leadId, taskId: taskId ?? null, title, url: trimmed, isConfidential: confidential },
+      { projectId, leadId, bdTaskId, taskId: taskId ?? null, title, url: trimmed, isConfidential: confidential },
       {
         onSuccess: () => { toast('Link added', 'success'); onClose() },
         onError: (e) => toast(e instanceof Error ? e.message : 'Could not add link', 'error'),

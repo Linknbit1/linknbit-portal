@@ -80,6 +80,7 @@ export type Database = {
       }
       attachments: {
         Row: {
+          bd_task_id: string | null
           client_visible: boolean
           confidential_scope: string
           created_at: string
@@ -98,6 +99,7 @@ export type Database = {
           uploader_id: string | null
         }
         Insert: {
+          bd_task_id?: string | null
           client_visible?: boolean
           confidential_scope?: string
           created_at?: string
@@ -116,6 +118,7 @@ export type Database = {
           uploader_id?: string | null
         }
         Update: {
+          bd_task_id?: string | null
           client_visible?: boolean
           confidential_scope?: string
           created_at?: string
@@ -134,6 +137,13 @@ export type Database = {
           uploader_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "attachments_bd_task_id_fkey"
+            columns: ["bd_task_id"]
+            isOneToOne: false
+            referencedRelation: "bd_tasks"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "attachments_lead_id_fkey"
             columns: ["lead_id"]

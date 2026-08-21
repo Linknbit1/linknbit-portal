@@ -622,6 +622,7 @@ export function mapTask(row: TaskJoined): BdTask {
     recurrence: narrow(RECURRENCES, row.recurrence, 'once'),
     position: row.position,
     createdBy: personName(row.creator, 'Someone'),
+    createdById: row.creator?.id,
     checklist: [...row.checklist]
       .sort((a, b) => a.position - b.position)
       .map((c) => ({ id: c.id, label: c.label, done: c.done })),
