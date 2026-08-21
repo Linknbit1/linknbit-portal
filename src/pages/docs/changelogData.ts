@@ -20,6 +20,14 @@ export const RELEASES: ChangelogRelease[] = [
       'The BD module now saves. Your pipeline, outreach and campaigns are shared with the department and kept between sessions, and every record carries a live comment thread.',
     entries: [
       {
+        kind: 'fixed',
+        text: 'Opening a row in the backlog reports now shows the breakdown. Both drill-downs — a project by the people who worked on it, and a person by the projects they went to — were failing on every single call since the day they shipped, and the screen was reporting the failure as “nobody recorded time in this range”. The hours were always there; the page could not read them.',
+      },
+      {
+        kind: 'improved',
+        text: 'A report that cannot load now says so, instead of showing an empty table. The backlog reports, the drill-downs and the Timesheet each used to treat a failure and a genuinely empty range as the same thing, which turned a fault into a statement about your team. They now tell you the difference.',
+      },
+      {
         kind: 'added',
         text: 'BD tasks now take documents. Open a task, scroll to Documents, and drop a file in or paste a Google Doc, Sheet or Drive link — the same uploader, preview and Drive support that leads and delivery tasks already had. Anyone who can open Business Dev can read them; adding and removing is limited to whoever the task is assigned to, whoever raised it, and anyone who runs BD.',
       },

@@ -7,6 +7,7 @@ import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Select } from '../../components/ui/Select'
 import { Skeleton } from '../../components/ui/Skeleton'
+import { QueryError } from '../../components/ui/QueryError'
 import { DatePicker } from '../../components/ui/DatePicker'
 import { HoverCard } from '../../components/ui/HoverCard'
 import { PersonLink } from '../../components/shared/PersonLink'
@@ -96,11 +97,12 @@ export default function TimesheetPage() {
   const tz = settings?.timezone ?? 'Asia/Karachi'
 
   const { data: active = [], isLoading: activeLoading } = useActiveTimers()
-  const { data: roster = [], isLoading: rosterLoading } = useTimesheetRoster(date)
-  const { data: segments = [], isLoading: segLoading } = useTimesheetSegments(date)
+  const { data: roster = [], isLoading: rosterLoading, error: rosterError } = useTimesheetRoster(date)
+  const { data: segments = [], isLoading: segLoading, error: segError } = useTimesheetSegments(date)
 
   const isToday = date === iso(new Date())
   const loading = rosterLoading || segLoading
+  const loadError = rosterError ?? segError
 
   /** The office schedule, as minutes past midnight. */
   const schedule = useMemo(() => ({
@@ -282,6 +284,8 @@ export default function TimesheetPage() {
 
         {loading ? (
           <Skeleton className="h-64" />
+        ) : loadError ? (
+          <QueryError error={loadError} label="The timesheet" />
         ) : visible.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border-default py-14 text-center font-ui text-[13px] text-text-4">
             {rows.length === 0

@@ -1,11 +1,11 @@
 # Graph Report - linknbit-portal  (2026-08-21)
 
 ## Corpus Check
-- 402 files · ~529,490 words
+- 403 files · ~529,973 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2860 nodes · 4038 edges · 77 communities detected
+- 2862 nodes · 4039 edges · 77 communities detected
 - Extraction: 82% EXTRACTED · 18% INFERRED · 0% AMBIGUOUS · INFERRED: 741 edges (avg confidence: 0.79)
 - Token cost: 0 input · 0 output
 
@@ -34,7 +34,7 @@
 - [[_COMMUNITY_Community 21|Community 21]]
 - [[_COMMUNITY_Community 22|Community 22]]
 - [[_COMMUNITY_Community 23|Community 23]]
-- [[_COMMUNITY_Community 24|Community 24]]
+- [[_COMMUNITY_Community 25|Community 25]]
 - [[_COMMUNITY_Community 26|Community 26]]
 - [[_COMMUNITY_Community 27|Community 27]]
 - [[_COMMUNITY_Community 28|Community 28]]
@@ -70,8 +70,7 @@
 - [[_COMMUNITY_Community 76|Community 76]]
 - [[_COMMUNITY_Community 77|Community 77]]
 - [[_COMMUNITY_Community 79|Community 79]]
-- [[_COMMUNITY_Community 166|Community 166]]
-- [[_COMMUNITY_Community 211|Community 211]]
+- [[_COMMUNITY_Community 167|Community 167]]
 - [[_COMMUNITY_Community 212|Community 212]]
 - [[_COMMUNITY_Community 213|Community 213]]
 - [[_COMMUNITY_Community 214|Community 214]]
@@ -87,6 +86,7 @@
 - [[_COMMUNITY_Community 224|Community 224]]
 - [[_COMMUNITY_Community 225|Community 225]]
 - [[_COMMUNITY_Community 226|Community 226]]
+- [[_COMMUNITY_Community 227|Community 227]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `select()` - 217 edges
@@ -116,7 +116,7 @@
 
 ### Community 0 - "Community 0"
 Cohesion: 0.01
-Nodes (197): fetchApprovals(), requestApproval(), reviewApproval(), inferContentType(), addAttachmentLink(), fetchAttachmentById(), fetchAttachments(), fetchProjectFiles() (+189 more)
+Nodes (203): fetchApprovals(), requestApproval(), reviewApproval(), inferContentType(), addAttachmentLink(), fetchAttachmentById(), fetchAttachments(), fetchProjectFiles() (+195 more)
 
 ### Community 1 - "Community 1"
 Cohesion: 0.02
@@ -124,23 +124,23 @@ Nodes (235): submit(), approve(), confirmDelete(), confirmDeleteDevice(), confir
 
 ### Community 2 - "Community 2"
 Cohesion: 0.02
-Nodes (61): AddProjectMemberModal(), useBd(), handleCreate(), handleUnlink(), mintSecret(), SecretReveal(), TerminalCard(), remove() (+53 more)
+Nodes (52): AddProjectMemberModal(), useBd(), remove(), ClientFormModal(), CreateChannelModal(), HandoffModal(), ImpersonationBanner(), LeadDrawer() (+44 more)
 
 ### Community 3 - "Community 3"
 Cohesion: 0.02
 Nodes (104): Always-active conventions (every phase), code:block1 (Phase 0: Project Setup), code:block10 (src/api/gamification.ts     — fetchXpTransactions(), fetchRe), code:block11 (src/hooks/useGamification.ts    — useXpTransactions(), useRe), code:block12 (src/lib/deviceUtils.ts), code:bash (supabase migration new create_teams_table), code:block14 (src/api/attendance.ts   — checkIn(), checkOut(), fetchMyAtte), code:block15 (src/hooks/useAttendance.ts   — useMyAttendance(), useAllAtte) (+96 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.03
-Nodes (65): fetchTargetTotals(), importLeads(), chatContentType(), safeStorageName(), validateChatAttachmentFile(), downloadCsv(), toCsv(), convert() (+57 more)
+Cohesion: 0.02
+Nodes (20): filterNavItems(), groupNavItems(), useMoreNavGroups(), useMoreNavItems(), useNavGroups(), useNavItems(), useAllAttendanceExceptions(), useAllLeaveRequests() (+12 more)
 
 ### Community 5 - "Community 5"
 Cohesion: 0.03
-Nodes (60): AppShell(), AttendancePage(), AuthProvider(), useAuthContext(), useMeMode(), PermissionDetailModal(), HomeRedirect(), PrivateRoute() (+52 more)
+Nodes (57): AppShell(), AttendancePage(), AuthProvider(), useAuthContext(), useMeMode(), PermissionDetailModal(), HomeRedirect(), PrivateRoute() (+49 more)
 
 ### Community 6 - "Community 6"
-Cohesion: 0.02
-Nodes (17): filterNavItems(), groupNavItems(), useMoreNavGroups(), useMoreNavItems(), useNavGroups(), useNavItems(), useAllAttendanceExceptions(), useAllLeaveRequests() (+9 more)
+Cohesion: 0.03
+Nodes (53): fileKind(), parseCsv(), previewMode(), validateAttachmentFile(), deleteAttachment(), getAttachmentUrl(), handleDownload(), handleFiles() (+45 more)
 
 ### Community 7 - "Community 7"
 Cohesion: 0.05
@@ -164,19 +164,19 @@ Nodes (68): 11. SaaS Scalability, 1. Architecture Overview, 2. Role-Based Access
 
 ### Community 12 - "Community 12"
 Cohesion: 0.04
-Nodes (28): patch(), showNewEntries(), saveEdit(), send(), BdDocEditor(), DocEditor(), addFiles(), onDrop() (+20 more)
+Nodes (43): createBdTask(), createLead(), fetchActivities(), fetchBdComments(), fetchBdProjects(), fetchBdTasks(), fetchDailyUpdates(), fetchHandoffs() (+35 more)
 
 ### Community 13 - "Community 13"
 Cohesion: 0.05
-Nodes (58): AI Collaboration Rules, API keys, Applying migrations, Approval Flow States, Architecture Discipline, Border Radius, ClickUp Integration UI, Client Portal (light mode — completely separate theme) (+50 more)
+Nodes (45): fetchTargetTotals(), datesInRange(), formatDayHeading(), groupByDate(), isoDayKey(), TODAY_KEY(), toDayKey(), formatClock() (+37 more)
 
 ### Community 14 - "Community 14"
-Cohesion: 0.05
-Nodes (38): saveMeeting(), addTask(), patch(), toggleChannel(), toggleMember(), submit(), createTask(), submit() (+30 more)
+Cohesion: 0.04
+Nodes (28): patch(), showNewEntries(), saveEdit(), send(), BdDocEditor(), DocEditor(), addFiles(), onDrop() (+20 more)
 
 ### Community 15 - "Community 15"
-Cohesion: 0.06
-Nodes (33): createBdTask(), createLead(), fetchActivities(), fetchBdComments(), fetchBdProjects(), fetchBdTasks(), fetchDailyUpdates(), fetchHandoffs() (+25 more)
+Cohesion: 0.05
+Nodes (58): AI Collaboration Rules, API keys, Applying migrations, Approval Flow States, Architecture Discipline, Border Radius, ClickUp Integration UI, Client Portal (light mode — completely separate theme) (+50 more)
 
 ### Community 16 - "Community 16"
 Cohesion: 0.05
@@ -187,12 +187,12 @@ Cohesion: 0.09
 Nodes (41): BdProvider(), headOfLane(), leadPositionFor(), nextLeadPosition(), positionFor(), positionInLane(), useActorId(), useBdActivities() (+33 more)
 
 ### Community 18 - "Community 18"
-Cohesion: 0.05
-Nodes (20): validateAvatarFile(), run(), dcExport(), dcFlatten(), DCSection(), DesignCanvas(), validateImageFile(), insertEmoji() (+12 more)
+Cohesion: 0.06
+Nodes (31): saveMeeting(), addTask(), patch(), toggleChannel(), toggleMember(), submit(), createTask(), submit() (+23 more)
 
 ### Community 19 - "Community 19"
 Cohesion: 0.05
-Nodes (21): fileKind(), parseCsv(), previewMode(), validateAttachmentFile(), deleteAttachment(), getAttachmentUrl(), handleDownload(), handleFiles() (+13 more)
+Nodes (20): validateAvatarFile(), run(), dcExport(), dcFlatten(), DCSection(), DesignCanvas(), validateImageFile(), insertEmoji() (+12 more)
 
 ### Community 20 - "Community 20"
 Cohesion: 0.05
@@ -210,17 +210,17 @@ Nodes (11): formatRelativeTime(), grantLp(), asDifficulty(), difficultyMeta(), h
 Cohesion: 0.07
 Nodes (27): Claude Design Prompt, code:md (Design a comprehensive UI design system for a product called), code:md (Using the Linknbit Unified Operations Portal design system, ), code:md (Using the Linknbit Unified Operations Portal design system, ), code:md (Using the Linknbit Unified Operations Portal design system, ), code:md (Using the Linknbit Unified Operations Portal design system, ), code:md (Design a comprehensive UI design system for a product called), code:md (Using the Linknbit Unified Operations Portal design system e) (+19 more)
 
-### Community 24 - "Community 24"
-Cohesion: 0.15
-Nodes (21): cleanTitle(), decodeEntities(), extractTitle(), fetchHtml(), isBlockedHost(), isSignInWall(), safeUrl(), _ask() (+13 more)
-
-### Community 26 - "Community 26"
+### Community 25 - "Community 25"
 Cohesion: 0.11
 Nodes (14): ProjectBacklogDetailPage(), useUrlRange(), iso(), resolvePreset(), at(), iso(), shiftDay(), TimesheetPage() (+6 more)
 
-### Community 27 - "Community 27"
+### Community 26 - "Community 26"
 Cohesion: 0.13
 Nodes (22): **1.10 Special Shoutouts (Examples)**, **1.11 System Discipline & Participation Restrictions**, **1.12 System Rules Summary**, **1.13 Simple Understanding of System**, **1.14 Final Note**, **1.1 Purpose of the System**, **1.2 System Overview**, **1.3 Currency System (Link Points \- LP)** (+14 more)
+
+### Community 27 - "Community 27"
+Cohesion: 0.1
+Nodes (9): handleCreate(), handleUnlink(), mintSecret(), SecretReveal(), TerminalCard(), clockSkewLabel(), terminalHealth(), useRotateTerminalSecret() (+1 more)
 
 ### Community 28 - "Community 28"
 Cohesion: 0.13
@@ -354,71 +354,71 @@ Nodes (2): afterCreate(), openChannel()
 Cohesion: 0.5
 Nodes (3): Answer, Q: Why does cn() connect Community 0 to Community 1, Community 10, Community 3, and Community 5?, Source Nodes
 
-### Community 166 - "Community 166"
+### Community 167 - "Community 167"
 Cohesion: 1.0
 Nodes (1): graphify
 
-### Community 211 - "Community 211"
+### Community 212 - "Community 212"
 Cohesion: 1.0
 Nodes (1): Configuration for the ZKTeco bridge.  Everything is environment-driven so the te
 
-### Community 212 - "Community 212"
+### Community 213 - "Community 213"
 Cohesion: 1.0
 Nodes (1): Minimal .env reader — avoids a python-dotenv dependency on the Pi.      Existing
 
-### Community 213 - "Community 213"
-Cohesion: 1.0
-Nodes (1): One device read: sync clock, pull the log into the spool, report health.
-
 ### Community 214 - "Community 214"
 Cohesion: 1.0
-Nodes (1): Send unacked punches in batches. Returns how many were acked.
+Nodes (1): One device read: sync clock, pull the log into the spool, report health.
 
 ### Community 215 - "Community 215"
 Cohesion: 1.0
-Nodes (1): Resolve the office's public IPv4 address from the Pi.  This is deliberately NOT
+Nodes (1): Send unacked punches in batches. Returns how many were acked.
 
 ### Community 216 - "Community 216"
 Cohesion: 1.0
-Nodes (1): Pin name resolution to A records for the duration of the block.      Belt and br
+Nodes (1): Resolve the office's public IPv4 address from the Pi.  This is deliberately NOT
 
 ### Community 217 - "Community 217"
 Cohesion: 1.0
-Nodes (1): Accept only a bare, globally routable IPv4 address.      A captive portal or a p
+Nodes (1): Pin name resolution to A records for the duration of the block.      Belt and br
 
 ### Community 218 - "Community 218"
 Cohesion: 1.0
-Nodes (1): Return the public IPv4 two providers agree on, or None.      Providers are tried
+Nodes (1): Accept only a bare, globally routable IPv4 address.      A captive portal or a p
 
 ### Community 219 - "Community 219"
 Cohesion: 1.0
-Nodes (1): HTTP client for the attendance-biometric-punch edge function.  All three Pi→serv
+Nodes (1): Return the public IPv4 two providers agree on, or None.      Providers are tried
 
 ### Community 220 - "Community 220"
 Cohesion: 1.0
-Nodes (1): Raised when a message could not be delivered after all retries.
+Nodes (1): HTTP client for the attendance-biometric-punch edge function.  All three Pi→serv
 
 ### Community 221 - "Community 221"
 Cohesion: 1.0
-Nodes (1): Deliver a batch. A 200 means every punch in it is durably stored.
+Nodes (1): Raised when a message could not be delivered after all retries.
 
 ### Community 222 - "Community 222"
 Cohesion: 1.0
-Nodes (1): Report terminal health, and let the server refresh the office IP.          `info
+Nodes (1): Deliver a batch. A 200 means every punch in it is durably stored.
 
 ### Community 223 - "Community 223"
 Cohesion: 1.0
-Nodes (1): Push enrolled users so admins can link enroll numbers by name.          Names tr
+Nodes (1): Report terminal health, and let the server refresh the office IP.          `info
 
 ### Community 224 - "Community 224"
 Cohesion: 1.0
-Nodes (1): One device read: sync clock, pull the log into the spool, report health.
+Nodes (1): Push enrolled users so admins can link enroll numbers by name.          Names tr
 
 ### Community 225 - "Community 225"
 Cohesion: 1.0
-Nodes (1): Send unacked punches in batches. Returns how many were acked.
+Nodes (1): One device read: sync clock, pull the log into the spool, report health.
 
 ### Community 226 - "Community 226"
+Cohesion: 1.0
+Nodes (1): Send unacked punches in batches. Returns how many were acked.
+
+### Community 227 - "Community 227"
 Cohesion: 1.0
 Nodes (1): Push enrolled users so admins can link enroll numbers by name.          Names tr
 
@@ -445,50 +445,50 @@ Nodes (1): Push enrolled users so admins can link enroll numbers by name.       
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 77`** (4 nodes): `afterCreate()`, `afterRemoved()`, `openChannel()`, `ChatPage.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 166`** (2 nodes): `AGENTS.md`, `graphify`
+- **Thin community `Community 167`** (2 nodes): `AGENTS.md`, `graphify`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 211`** (1 nodes): `Configuration for the ZKTeco bridge.  Everything is environment-driven so the te`
+- **Thin community `Community 212`** (1 nodes): `Configuration for the ZKTeco bridge.  Everything is environment-driven so the te`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 212`** (1 nodes): `Minimal .env reader — avoids a python-dotenv dependency on the Pi.      Existing`
+- **Thin community `Community 213`** (1 nodes): `Minimal .env reader — avoids a python-dotenv dependency on the Pi.      Existing`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 213`** (1 nodes): `One device read: sync clock, pull the log into the spool, report health.`
+- **Thin community `Community 214`** (1 nodes): `One device read: sync clock, pull the log into the spool, report health.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 214`** (1 nodes): `Send unacked punches in batches. Returns how many were acked.`
+- **Thin community `Community 215`** (1 nodes): `Send unacked punches in batches. Returns how many were acked.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 215`** (1 nodes): `Resolve the office's public IPv4 address from the Pi.  This is deliberately NOT`
+- **Thin community `Community 216`** (1 nodes): `Resolve the office's public IPv4 address from the Pi.  This is deliberately NOT`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 216`** (1 nodes): `Pin name resolution to A records for the duration of the block.      Belt and br`
+- **Thin community `Community 217`** (1 nodes): `Pin name resolution to A records for the duration of the block.      Belt and br`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 217`** (1 nodes): `Accept only a bare, globally routable IPv4 address.      A captive portal or a p`
+- **Thin community `Community 218`** (1 nodes): `Accept only a bare, globally routable IPv4 address.      A captive portal or a p`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 218`** (1 nodes): `Return the public IPv4 two providers agree on, or None.      Providers are tried`
+- **Thin community `Community 219`** (1 nodes): `Return the public IPv4 two providers agree on, or None.      Providers are tried`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 219`** (1 nodes): `HTTP client for the attendance-biometric-punch edge function.  All three Pi→serv`
+- **Thin community `Community 220`** (1 nodes): `HTTP client for the attendance-biometric-punch edge function.  All three Pi→serv`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 220`** (1 nodes): `Raised when a message could not be delivered after all retries.`
+- **Thin community `Community 221`** (1 nodes): `Raised when a message could not be delivered after all retries.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 221`** (1 nodes): `Deliver a batch. A 200 means every punch in it is durably stored.`
+- **Thin community `Community 222`** (1 nodes): `Deliver a batch. A 200 means every punch in it is durably stored.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 222`** (1 nodes): `Report terminal health, and let the server refresh the office IP.          `info`
+- **Thin community `Community 223`** (1 nodes): `Report terminal health, and let the server refresh the office IP.          `info`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 223`** (1 nodes): `Push enrolled users so admins can link enroll numbers by name.          Names tr`
+- **Thin community `Community 224`** (1 nodes): `Push enrolled users so admins can link enroll numbers by name.          Names tr`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 224`** (1 nodes): `One device read: sync clock, pull the log into the spool, report health.`
+- **Thin community `Community 225`** (1 nodes): `One device read: sync clock, pull the log into the spool, report health.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 225`** (1 nodes): `Send unacked punches in batches. Returns how many were acked.`
+- **Thin community `Community 226`** (1 nodes): `Send unacked punches in batches. Returns how many were acked.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 226`** (1 nodes): `Push enrolled users so admins can link enroll numbers by name.          Names tr`
+- **Thin community `Community 227`** (1 nodes): `Push enrolled users so admins can link enroll numbers by name.          Names tr`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `toast()` connect `Community 1` to `Community 33`, `Community 2`, `Community 4`, `Community 72`, `Community 40`, `Community 12`, `Community 14`, `Community 18`, `Community 19`, `Community 21`, `Community 54`, `Community 55`, `Community 22`, `Community 28`, `Community 29`?**
-  _High betweenness centrality (0.182) - this node is a cross-community bridge._
-- **Why does `select()` connect `Community 0` to `Community 4`, `Community 9`, `Community 43`, `Community 14`, `Community 15`, `Community 16`, `Community 53`, `Community 29`?**
-  _High betweenness centrality (0.151) - this node is a cross-community bridge._
-- **Why does `useToast()` connect `Community 2` to `Community 5`, `Community 10`, `Community 17`, `Community 19`, `Community 26`?**
-  _High betweenness centrality (0.087) - this node is a cross-community bridge._
+- **Why does `toast()` connect `Community 1` to `Community 33`, `Community 6`, `Community 72`, `Community 40`, `Community 12`, `Community 13`, `Community 14`, `Community 18`, `Community 19`, `Community 21`, `Community 54`, `Community 55`, `Community 22`, `Community 27`, `Community 28`, `Community 29`?**
+  _High betweenness centrality (0.167) - this node is a cross-community bridge._
+- **Why does `select()` connect `Community 0` to `Community 6`, `Community 9`, `Community 43`, `Community 12`, `Community 13`, `Community 16`, `Community 18`, `Community 53`, `Community 29`?**
+  _High betweenness centrality (0.149) - this node is a cross-community bridge._
+- **Why does `useToast()` connect `Community 2` to `Community 5`, `Community 6`, `Community 10`, `Community 17`, `Community 25`, `Community 27`?**
+  _High betweenness centrality (0.105) - this node is a cross-community bridge._
 - **Are the 215 inferred relationships involving `select()` (e.g. with `isDeactivated()` and `auditOnce()`) actually correct?**
   _`select()` has 215 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 63 inferred relationships involving `toast()` (e.g. with `add()` and `openFile()`) actually correct?**

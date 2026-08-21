@@ -4,6 +4,7 @@ import { ArrowLeft, Clock, Users, FolderKanban, AlertTriangle, Info } from 'luci
 import { Topbar } from '../../components/layout/Topbar'
 import { Avatar } from '../../components/ui/Avatar'
 import { Skeleton } from '../../components/ui/Skeleton'
+import { QueryError } from '../../components/ui/QueryError'
 import { PersonLink } from '../../components/shared/PersonLink'
 import { useToast } from '../../components/ui/toast-context'
 import {
@@ -68,7 +69,7 @@ export default function ProjectBacklogDetailPage() {
   const { preset, setPreset, custom, setCustom, range } = useUrlRange()
 
   const { data: summaryRows = [] } = useProjectBacklog(range.from, range.to)
-  const { data: rows = [], isLoading } = useProjectDetail(id, range.from, range.to)
+  const { data: rows = [], isLoading, error } = useProjectDetail(id, range.from, range.to)
   const summary = summaryRows.find((r) => r.project_id === id)
 
   const totals = useMemo(() => rows.reduce(
@@ -106,6 +107,8 @@ export default function ProjectBacklogDetailPage() {
     >
       {isLoading ? (
         <Skeleton className="h-64" />
+      ) : error ? (
+        <QueryError error={error} label="This report" />
       ) : rows.length === 0 ? (
         <Empty label="Nobody recorded time on this project in this range." />
       ) : (
@@ -140,7 +143,7 @@ export function EmployeeBacklogDetailPage() {
   const { preset, setPreset, custom, setCustom, range } = useUrlRange()
 
   const { data: summaryRows = [] } = useEmployeeBacklog(range.from, range.to)
-  const { data: rows = [], isLoading } = useEmployeeDetail(id, range.from, range.to)
+  const { data: rows = [], isLoading, error } = useEmployeeDetail(id, range.from, range.to)
   const summary = summaryRows.find((r) => r.profile_id === id)
 
   const exportCsv = () => {
@@ -199,6 +202,8 @@ export function EmployeeBacklogDetailPage() {
 
       {isLoading ? (
         <Skeleton className="h-64" />
+      ) : error ? (
+        <QueryError error={error} label="This report" />
       ) : rows.length === 0 ? (
         <Empty label="No time recorded in this range." />
       ) : (

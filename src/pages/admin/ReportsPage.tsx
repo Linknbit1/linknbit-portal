@@ -5,6 +5,7 @@ import { Topbar } from '../../components/layout/Topbar'
 import { Tabs } from '../../components/ui/Tabs'
 import { Avatar } from '../../components/ui/Avatar'
 import { Skeleton } from '../../components/ui/Skeleton'
+import { QueryError } from '../../components/ui/QueryError'
 import { useToast } from '../../components/ui/toast-context'
 import { useProjectBacklog, useEmployeeBacklog } from '../../hooks/useReports'
 import { downloadCsv } from '../../lib/csv'
@@ -88,7 +89,7 @@ function TwoClocksNote() {
 function ProjectBacklog() {
   const toast = useToast()
   const { preset, setPreset, custom, setCustom, range } = useReportRange('month')
-  const { data: rows = [], isLoading } = useProjectBacklog(range.from, range.to)
+  const { data: rows = [], isLoading, error } = useProjectBacklog(range.from, range.to)
   const [search, setSearch] = useState('')
 
   const filtered = useMemo(() => {
@@ -142,6 +143,8 @@ function ProjectBacklog() {
 
       {isLoading ? (
         <Skeleton className="h-64" />
+      ) : error ? (
+        <QueryError error={error} label="This report" />
       ) : filtered.length === 0 ? (
         <EmptyState label="No time recorded against any project in this range." />
       ) : (
@@ -198,7 +201,7 @@ function ProjectBacklog() {
 function EmployeeBacklog() {
   const toast = useToast()
   const { preset, setPreset, custom, setCustom, range } = useReportRange('month')
-  const { data: rows = [], isLoading } = useEmployeeBacklog(range.from, range.to)
+  const { data: rows = [], isLoading, error } = useEmployeeBacklog(range.from, range.to)
   const [search, setSearch] = useState('')
 
   const filtered = useMemo(() => {
@@ -253,6 +256,8 @@ function EmployeeBacklog() {
 
       {isLoading ? (
         <Skeleton className="h-64" />
+      ) : error ? (
+        <QueryError error={error} label="This report" />
       ) : filtered.length === 0 ? (
         <EmptyState label="Nobody has recorded time in this range." />
       ) : (
