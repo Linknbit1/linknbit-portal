@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import {
-  fetchActiveTimers, fetchTimesheetSegments, fetchProjectBacklog, fetchEmployeeBacklog,
+  fetchActiveTimers, fetchTimesheetSegments, fetchTimesheetRoster,
+  fetchProjectBacklog, fetchEmployeeBacklog,
   fetchProjectDetail, fetchEmployeeDetail,
 } from '../api/reports'
 
@@ -8,6 +9,7 @@ export const REPORT_KEYS = {
   activeTimers: ['reports', 'active-timers'] as const,
   timesheet: (date: string, profileId?: string) =>
     ['reports', 'timesheet', date, profileId ?? 'all'] as const,
+  timesheetRoster: (date: string) => ['reports', 'timesheet-roster', date] as const,
   projectBacklog: (from: string, to: string) => ['reports', 'project-backlog', from, to] as const,
   employeeBacklog: (from: string, to: string) => ['reports', 'employee-backlog', from, to] as const,
   projectDetail: (id: string, from: string, to: string) =>
@@ -63,6 +65,22 @@ export function useTimesheetSegments(date: string, profileId?: string, enabled =
     queryFn: () => fetchTimesheetSegments(date, profileId),
     enabled,
     // Today's bar keeps growing while a timer runs; a past day never changes.
+    refetchInterval: date === new Date().toISOString().slice(0, 10) ? 60_000 : false,
+    staleTime: 30_000,
+  })
+}
+
+/**
+ * Everybody the caller may see on that day, whether or not a timer ever ran.
+ *
+ * Refetched on the same cadence as the segments so the two halves of a row —
+ * the person and their bars — never disagree about a running timer.
+ */
+export function useTimesheetRoster(date: string, enabled = true) {
+  return useQuery({
+    queryKey: REPORT_KEYS.timesheetRoster(date),
+    queryFn: () => fetchTimesheetRoster(date),
+    enabled,
     refetchInterval: date === new Date().toISOString().slice(0, 10) ? 60_000 : false,
     staleTime: 30_000,
   })

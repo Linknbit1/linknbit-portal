@@ -20,6 +20,14 @@ export const RELEASES: ChangelogRelease[] = [
       'The BD module now saves. Your pipeline, outreach and campaigns are shared with the department and kept between sessions, and every record carries a live comment thread.',
     entries: [
       {
+        kind: 'improved',
+        text: 'The Timesheet now lists everybody, not only the people who pressed start. A person who worked all day without the timer, a person on leave and a person who never turned up used to look identical — all three were simply missing. Each now has a row, and the four tiles above the chart say how many hours were tracked, how many timers are running, how many people were due in with nothing logged, and how many are away.',
+      },
+      {
+        kind: 'improved',
+        text: 'Each Timesheet row now reads as a day rather than a strip of blocks. The scale is a twelve-hour clock running the whole day, midnight to midnight, so the same time sits in the same place on every row and every date instead of the chart rescaling itself to whatever happened; the lighter band behind the bar is the hours that person was due in for with the lunch break cut out of it; a thin line underneath is when they actually checked in and out; leave, holidays and days off are labelled on the bar; and an approved late arrival, early departure or trip out shows as an amber band you can hover for the reason. Filter to “No time logged” to see only the people who were in with nothing against them, and the CSV now carries every person and their day, not just the segments.',
+      },
+      {
         kind: 'added',
         text: 'Business Development is no longer a preview. Leads, outreach, meetings, campaigns, tasks, daily check-ins and targets are all saved and shared — what you change, your colleagues see.',
       },

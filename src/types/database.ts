@@ -5283,6 +5283,32 @@ export type Database = {
         Args: { p_entries: Json; p_notes?: string }
         Returns: string
       }
+      timesheet_roster: {
+        Args: { p_date: string }
+        Returns: {
+          att_status: string
+          avatar_url: string
+          check_in: string
+          check_out: string
+          day_part: string
+          day_type: string
+          exceptions: Json
+          expected_end: string
+          expected_start: string
+          holiday_name: string
+          is_working_day: boolean
+          job_title: string
+          leave_color: string
+          leave_type: string
+          profile_id: string
+          profile_name: string
+          required_minutes: number
+          role: string
+          segments: number
+          team_names: string[]
+          tracked_minutes: number
+        }[]
+      }
       timesheet_segments: {
         Args: { p_date: string; p_profile?: string }
         Returns: {

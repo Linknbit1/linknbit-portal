@@ -312,7 +312,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
         id: 'timesheet',
         title: 'Timesheet',
         summary:
-          'Who has a timer running right now, and how each day was actually spent — one bar per person, one block per stretch of tracked work.',
+          'Everybody’s day on one chart — who was due in, who turned up, who is on leave, and what the timer caught. Everyone you can see gets a row, whether or not they ever pressed start.',
         where: 'Delivery → Timesheet',
         feature: 'can_view_reports',
         procedures: [
@@ -321,14 +321,28 @@ export const DOC_CHAPTERS: DocChapter[] = [
             steps: [
               'Open Delivery → Timesheet.',
               'Pick a date, or step back a day at a time with the arrows.',
-              'Hover any block to see the task, the project, the exact times and how long it ran.',
-              'Export CSV gives you every segment of that day.',
+              'Read the four tiles for the shape of the day: hours tracked, timers running, how many people have logged nothing, and how many are away.',
+              'Hover any coloured block for the task, the project, the exact times and how long it ran. Hover the green line underneath for check-in and check-out.',
+              'Export CSV gives you every person, their day, and every segment they tracked.',
+            ],
+          },
+          {
+            title: 'Find the people with nothing logged',
+            steps: [
+              'Set the filter to “No time logged”.',
+              'The list narrows to people who were due in today and have no tracked time against them.',
+              'Type a name in the search box to jump straight to one person.',
             ],
           },
         ],
         notes: [
-          'Only tracked time is drawn. A gap means no timer was running — not necessarily that nobody was working, so read the bar as a record of tracking rather than of effort.',
-          'You see your own day; leads and project managers see their team; admins and HR see everybody.',
+          'Each row is two lanes. The upper lane is tracked time; the thin line underneath is the attendance record — green if they were on time, amber if late.',
+          'The lighter band behind the bar is the hours that person was due in for, with the lunch break cut out of it. A personal start time or half a day of leave moves that band, so it is not the same window for everyone.',
+          'Leave, holidays and days off are labelled on the bar rather than left blank — an empty bar on a day nobody was expected in is not a finding.',
+          'An amber band is an approved late arrival, early departure or trip out of the office. Hover it for the reason.',
+          'The scale is a twelve-hour clock running the whole day, midnight to midnight — it does not zoom to the working hours, so the same time sits in the same place on every row and on every date you open. On today, a red line marks the current time.',
+          'Only tracked time is drawn on the upper lane. A gap means no timer was running — not necessarily that nobody was working, so read it as a record of tracking rather than of effort.',
+          'You see your own day; leads and project managers see everyone who shares a team with them; admins and HR see everybody. The line under the page title tells you which of those applies to you.',
         ],
       },
       {
