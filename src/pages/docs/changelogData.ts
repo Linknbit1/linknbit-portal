@@ -20,6 +20,18 @@ export const RELEASES: ChangelogRelease[] = [
       'The BD module now saves. Your pipeline, outreach and campaigns are shared with the department and kept between sessions, and every record carries a live comment thread.',
     entries: [
       {
+        kind: 'added',
+        text: 'The backlog drill-downs now go all the way down to the task. Under the summary sits every task with both clocks against it, its status, who it is assigned to and the estimate where one was set — for a project, and for a person across the projects they went to. Each table has its own CSV.',
+      },
+      {
+        kind: 'added',
+        text: 'A project’s task breakdown also lists still-open tasks that recorded no time at all in the range, which is the thing a delivery lead most wants to spot and the one thing a table built from time entries can never show. One button hides them again.',
+      },
+      {
+        kind: 'improved',
+        text: 'The task breakdown adds up to the summary above it, and shows its working. Standup time written against a project without naming a task — about two thirds of it — gets its own line rather than being shared out across the tasks, and a deleted task that still carries logged time keeps its row, struck through and marked, instead of quietly vanishing and leaving the totals short.',
+      },
+      {
         kind: 'fixed',
         text: 'Opening a row in the backlog reports now shows the breakdown. Both drill-downs — a project by the people who worked on it, and a person by the projects they went to — were failing on every single call since the day they shipped, and the screen was reporting the failure as “nobody recorded time in this range”. The hours were always there; the page could not read them.',
       },

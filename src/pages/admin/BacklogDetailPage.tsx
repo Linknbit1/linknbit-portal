@@ -1,14 +1,17 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, Clock, Users, FolderKanban, AlertTriangle, Info } from 'lucide-react'
+import { ArrowLeft, Clock, Users, FolderKanban, AlertTriangle, Info, ListChecks, Trash2 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Avatar } from '../../components/ui/Avatar'
 import { Skeleton } from '../../components/ui/Skeleton'
 import { QueryError } from '../../components/ui/QueryError'
 import { PersonLink } from '../../components/shared/PersonLink'
+import { StatusChip } from '../../components/shared/StatusChip'
+import type { ProjectTaskRow } from '../../api/reports'
 import { useToast } from '../../components/ui/toast-context'
 import {
   useProjectBacklog, useEmployeeBacklog, useProjectDetail, useEmployeeDetail,
+  useProjectTasks, useEmployeeTasks,
 } from '../../hooks/useReports'
 import { RangePicker, VarianceChip, ExportButton } from '../../components/reports/ReportControls'
 import { resolvePreset, type DateRange, type RangePreset } from '../../components/reports/reportRange'
@@ -70,7 +73,33 @@ export default function ProjectBacklogDetailPage() {
 
   const { data: summaryRows = [] } = useProjectBacklog(range.from, range.to)
   const { data: rows = [], isLoading, error } = useProjectDetail(id, range.from, range.to)
+  const { data: taskRows = [], isLoading: tasksLoading, error: tasksError } =
+    useProjectTasks(id, range.from, range.to)
   const summary = summaryRows.find((r) => r.project_id === id)
+
+  // Open tasks that recorded nothing are the point of the report for some
+  // readers and noise for others, so the choice is theirs rather than the RPC's.
+  const [showIdle, setShowIdle] = useState(true)
+  const visibleTasks = useMemo(
+    () => (showIdle ? taskRows : taskRows.filter((t) => t.had_activity)),
+    [taskRows, showIdle],
+  )
+  const idleCount = useMemo(() => taskRows.filter((t) => !t.had_activity).length, [taskRows])
+
+  const exportTasks = () => {
+    if (taskRows.length === 0) { toast('Nothing to export', 'error'); return }
+    downloadCsv(
+      `project-tasks_${(summary?.project_name ?? 'project').replace(/\W+/g, '-')}_${range.from}_to_${range.to}.csv`,
+      ['Task', 'Service', 'Status', 'Assignees', 'Estimate (minutes)',
+       'Timer (minutes)', 'Standup (minutes)', 'Variance (minutes)', 'Deleted'],
+      taskRows.map((t) => [
+        t.task_title, t.service_name ?? '', t.status ?? '', (t.assignees ?? []).join(', '),
+        t.estimated_minutes ?? '', t.timer_minutes, t.standup_minutes, t.variance_minutes,
+        t.task_deleted ? 'yes' : '',
+      ]),
+    )
+    toast(`Exported ${taskRows.length} tasks`, 'success')
+  }
 
   const totals = useMemo(() => rows.reduce(
     (a, r) => ({ timer: a.timer + r.timer_minutes, standup: a.standup + r.standup_minutes }),
@@ -131,6 +160,62 @@ export default function ProjectBacklogDetailPage() {
           ))}
         </Table>
       )}
+
+      <SectionHead
+        icon={ListChecks}
+        title="Task by task"
+        hint={`${taskRows.length} ${taskRows.length === 1 ? 'task' : 'tasks'}`}
+        actions={
+          <>
+            {idleCount > 0 && (
+              <button
+                onClick={() => setShowIdle((v) => !v)}
+                className={cn(
+                  'h-8 rounded-sm border px-2.5 font-ui text-[11.5px] transition-colors',
+                  showIdle
+                    ? 'border-border-default text-text-3 hover:text-text-1'
+                    : 'border-border-focus bg-surface-2 text-text-1',
+                )}
+              >
+                {showIdle ? `Hide ${idleCount} with no time` : `Show ${idleCount} with no time`}
+              </button>
+            )}
+            <ExportButton onExport={exportTasks} disabled={taskRows.length === 0} />
+          </>
+        }
+      />
+
+      {tasksLoading ? (
+        <Skeleton className="h-48" />
+      ) : tasksError ? (
+        <QueryError error={tasksError} label="The task breakdown" />
+      ) : visibleTasks.length === 0 ? (
+        <Empty label="No tasks to show for this range." />
+      ) : (
+        <Table head={['Task', 'Status', 'Assignees', 'Estimate', 'Timer', 'Standup', 'Variance']}>
+          {visibleTasks.map((t) => (
+            <Row key={t.task_id ?? 'unattributed'}>
+              <Cell><TaskCell row={t} /></Cell>
+              <Cell align="right">
+                {t.status ? <StatusChip status={t.status} /> : <span className="text-text-4">—</span>}
+              </Cell>
+              <Cell align="right">
+                <span className="block truncate font-ui text-[12px] text-text-3">
+                  {(t.assignees ?? []).length > 0 ? (t.assignees ?? []).join(', ') : '—'}
+                </span>
+              </Cell>
+              <Num muted>{t.estimated_minutes ? formatMinutes(t.estimated_minutes) : '—'}</Num>
+              <Num muted={!t.had_activity}>{t.timer_minutes ? formatMinutes(t.timer_minutes) : '—'}</Num>
+              <Num muted={!t.had_activity}>{t.standup_minutes ? formatMinutes(t.standup_minutes) : '—'}</Num>
+              <Cell align="right">
+                {t.had_activity
+                  ? <VarianceChip minutes={t.variance_minutes} />
+                  : <span className="font-ui text-[11.5px] text-text-4">no time logged</span>}
+              </Cell>
+            </Row>
+          ))}
+        </Table>
+      )}
     </DetailShell>
   )
 }
@@ -144,7 +229,23 @@ export function EmployeeBacklogDetailPage() {
 
   const { data: summaryRows = [] } = useEmployeeBacklog(range.from, range.to)
   const { data: rows = [], isLoading, error } = useEmployeeDetail(id, range.from, range.to)
+  const { data: taskRows = [], isLoading: tasksLoading, error: tasksError } =
+    useEmployeeTasks(id, range.from, range.to)
   const summary = summaryRows.find((r) => r.profile_id === id)
+
+  const exportTasks = () => {
+    if (taskRows.length === 0) { toast('Nothing to export', 'error'); return }
+    downloadCsv(
+      `employee-tasks_${(summary?.profile_name ?? 'person').replace(/\W+/g, '-')}_${range.from}_to_${range.to}.csv`,
+      ['Task', 'Project', 'Service', 'Status',
+       'Timer (minutes)', 'Standup (minutes)', 'Variance (minutes)', 'Deleted'],
+      taskRows.map((t) => [
+        t.task_title, t.project_name ?? '', t.service_name ?? '', t.status ?? '',
+        t.timer_minutes, t.standup_minutes, t.variance_minutes, t.task_deleted ? 'yes' : '',
+      ]),
+    )
+    toast(`Exported ${taskRows.length} tasks`, 'success')
+  }
 
   const exportCsv = () => {
     if (rows.length === 0) { toast('Nothing to export', 'error'); return }
@@ -225,6 +326,38 @@ export function EmployeeBacklogDetailPage() {
               <Num>{formatMinutes(r.standup_minutes)}</Num>
               <Cell align="right"><VarianceChip minutes={r.variance_minutes} /></Cell>
               <Num muted>{r.tasks}</Num>
+            </Row>
+          ))}
+        </Table>
+      )}
+
+      <SectionHead
+        icon={ListChecks}
+        title="Task by task"
+        hint={`${taskRows.length} ${taskRows.length === 1 ? 'task' : 'tasks'}`}
+        actions={<ExportButton onExport={exportTasks} disabled={taskRows.length === 0} />}
+      />
+
+      {tasksLoading ? (
+        <Skeleton className="h-48" />
+      ) : tasksError ? (
+        <QueryError error={tasksError} label="The task breakdown" />
+      ) : taskRows.length === 0 ? (
+        <Empty label="No tasks to show for this range." />
+      ) : (
+        <Table head={['Task', 'Project', 'Status', 'Timer', 'Standup', 'Variance']}>
+          {taskRows.map((t) => (
+            <Row key={`${t.project_id ?? 'none'}-${t.task_id ?? 'unattributed'}`}>
+              <Cell><TaskCell row={t} /></Cell>
+              <Cell align="right">
+                <span className="block truncate font-ui text-[12px] text-text-3">{t.project_name}</span>
+              </Cell>
+              <Cell align="right">
+                {t.status ? <StatusChip status={t.status} /> : <span className="text-text-4">—</span>}
+              </Cell>
+              <Num>{t.timer_minutes ? formatMinutes(t.timer_minutes) : '—'}</Num>
+              <Num>{t.standup_minutes ? formatMinutes(t.standup_minutes) : '—'}</Num>
+              <Cell align="right"><VarianceChip minutes={t.variance_minutes} /></Cell>
             </Row>
           ))}
         </Table>
@@ -360,6 +493,70 @@ const Num = ({ children, muted }: { children: React.ReactNode; muted?: boolean }
     {children}
   </td>
 )
+
+/** A labelled band between two tables on the same screen. */
+function SectionHead({ icon: Icon, title, hint, actions }: {
+  icon: typeof ListChecks
+  title: string
+  hint?: string
+  actions?: React.ReactNode
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 pt-1">
+      <h3 className="flex items-center gap-2 font-display text-[15px] font-bold text-text-1">
+        <Icon size={15} className="text-text-4" /> {title}
+      </h3>
+      {hint && <span className="font-ui text-[11.5px] text-text-4">{hint}</span>}
+      {actions && <span className="ml-auto flex items-center gap-2">{actions}</span>}
+    </div>
+  )
+}
+
+/**
+ * The task title cell, shared by both breakdowns.
+ *
+ * The unattributed row has no task to link to and says so in its own words; a
+ * deleted task still links nowhere, but keeps its row because its minutes are
+ * counted in the total above.
+ */
+function TaskCell({ row }: { row: Pick<ProjectTaskRow, 'task_id' | 'task_title' | 'task_deleted' | 'service_name'> }) {
+  if (!row.task_id) {
+    return (
+      <span className="block">
+        <span className="font-ui text-[13px] italic text-text-3">{row.task_title}</span>
+        <span className="mt-0.5 block font-ui text-[11px] text-text-4">
+          Written up against the project without naming a task
+        </span>
+      </span>
+    )
+  }
+  return (
+    <span className="block min-w-0">
+      <span className="flex items-center gap-1.5">
+        {row.task_deleted ? (
+          <span className="truncate font-ui text-[13px] font-medium text-text-3 line-through">
+            {row.task_title}
+          </span>
+        ) : (
+          <Link
+            to={`/admin/tasks/${row.task_id}?openInProject=1`}
+            className="truncate font-ui text-[13px] font-medium text-text-1 hover:text-brand-red"
+          >
+            {row.task_title}
+          </Link>
+        )}
+        {row.task_deleted && (
+          <span className="flex shrink-0 items-center gap-1 rounded-xs border border-border-default bg-surface-2 px-1.5 py-px font-mono text-[9.5px] uppercase tracking-wider text-text-4">
+            <Trash2 size={9} /> deleted
+          </span>
+        )}
+      </span>
+      {row.service_name && (
+        <span className="mt-0.5 block font-ui text-[11px] text-text-4">{row.service_name}</span>
+      )}
+    </span>
+  )
+}
 
 function Empty({ label }: { label: string }) {
   return (

@@ -23,6 +23,8 @@ export type ProjectBacklogRow = Database['public']['Functions']['report_project_
 export type EmployeeBacklogRow = Database['public']['Functions']['report_employee_backlog']['Returns'][number]
 export type ProjectDetailRow = Database['public']['Functions']['report_project_detail']['Returns'][number]
 export type EmployeeDetailRow = Database['public']['Functions']['report_employee_detail']['Returns'][number]
+export type ProjectTaskRow = Database['public']['Functions']['report_project_tasks']['Returns'][number]
+export type EmployeeTaskRow = Database['public']['Functions']['report_employee_tasks']['Returns'][number]
 
 /** Timers running this instant. */
 export async function fetchActiveTimers(): Promise<ActiveTimer[]> {
@@ -144,4 +146,36 @@ function parseExceptions(value: Json): TimesheetException[] {
     })
   }
   return parsed
+}
+
+
+/**
+ * One project, task by task — the level below `fetchProjectDetail`.
+ *
+ * Returns more than the tasks that recorded time: still-open tasks with nothing
+ * against them come back with `had_activity = false`, because "open three weeks,
+ * no time logged" is the finding a lead opens this for. Soft-deleted tasks that
+ * still carry time are included and flagged rather than dropped — the parent
+ * report counts their minutes, so hiding them here would make the breakdown
+ * disagree with the total printed above it.
+ */
+export async function fetchProjectTasks(
+  projectId: string, from: string, to: string,
+): Promise<ProjectTaskRow[]> {
+  const { data, error } = await supabase.rpc('report_project_tasks', {
+    p_project: projectId, p_from: from, p_to: to,
+  })
+  if (error) throw error
+  return data ?? []
+}
+
+/** One person, task by task, grouped by the project each task sits under. */
+export async function fetchEmployeeTasks(
+  profileId: string, from: string, to: string,
+): Promise<EmployeeTaskRow[]> {
+  const { data, error } = await supabase.rpc('report_employee_tasks', {
+    p_profile: profileId, p_from: from, p_to: to,
+  })
+  if (error) throw error
+  return data ?? []
 }

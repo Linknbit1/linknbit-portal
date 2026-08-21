@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import {
   fetchActiveTimers, fetchTimesheetSegments, fetchTimesheetRoster,
   fetchProjectBacklog, fetchEmployeeBacklog,
-  fetchProjectDetail, fetchEmployeeDetail,
+  fetchProjectDetail, fetchEmployeeDetail, fetchProjectTasks, fetchEmployeeTasks,
 } from '../api/reports'
 
 export const REPORT_KEYS = {
@@ -16,6 +16,10 @@ export const REPORT_KEYS = {
     ['reports', 'project-detail', id, from, to] as const,
   employeeDetail: (id: string, from: string, to: string) =>
     ['reports', 'employee-detail', id, from, to] as const,
+  projectTasks: (id: string, from: string, to: string) =>
+    ['reports', 'project-tasks', id, from, to] as const,
+  employeeTasks: (id: string, from: string, to: string) =>
+    ['reports', 'employee-tasks', id, from, to] as const,
 }
 
 /**
@@ -37,6 +41,26 @@ export function useEmployeeDetail(profileId: string | null, from: string, to: st
   return useQuery({
     queryKey: REPORT_KEYS.employeeDetail(profileId ?? '', from, to),
     queryFn: () => fetchEmployeeDetail(profileId!, from, to),
+    enabled: !!profileId,
+    staleTime: 60_000,
+  })
+}
+
+/** The task-level breakdown under a project's backlog row. */
+export function useProjectTasks(projectId: string | null, from: string, to: string) {
+  return useQuery({
+    queryKey: REPORT_KEYS.projectTasks(projectId ?? '', from, to),
+    queryFn: () => fetchProjectTasks(projectId!, from, to),
+    enabled: !!projectId,
+    staleTime: 60_000,
+  })
+}
+
+/** The task-level breakdown under a person's backlog row. */
+export function useEmployeeTasks(profileId: string | null, from: string, to: string) {
+  return useQuery({
+    queryKey: REPORT_KEYS.employeeTasks(profileId ?? '', from, to),
+    queryFn: () => fetchEmployeeTasks(profileId!, from, to),
     enabled: !!profileId,
     staleTime: 60_000,
   })

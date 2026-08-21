@@ -365,6 +365,10 @@ export const DOC_CHAPTERS: DocChapter[] = [
         notes: [
           'Two clocks are shown side by side and never added together. Timer is time tracked against a task; Standup is what people wrote up at day’s end. They measure the same hours differently and often disagree.',
           'Click any row to open it in full — a project by the people who worked on it, a person by the projects they went to. Each of those screens has its own CSV export, and the range you were reading follows you across, so the link is worth sending to somebody.',
+          'Under that summary sits the full task-by-task breakdown, with both clocks against every task, who it is assigned to and the estimate where one was set. It has its own CSV.',
+          'A project’s breakdown also lists still-open tasks that recorded no time at all in the range — the thing you most want to spot. Use the button above the table to hide them.',
+          'A row reading “Standup time with no task named” is real work: about two thirds of standup entries name a project and stop there. It is shown as its own line rather than shared out across the tasks, which would be guesswork, and it is why the task rows add up to the totals above them.',
+          'A task somebody deleted still appears, struck through and marked, whenever time was logged against it. Its minutes are counted in the totals, so hiding it would make the breakdown disagree with the figures above it.',
           'Make-up is unpaid time from an approved exception that has not been worked back yet. It clears itself as the person logs over their requirement, and the CSV carries the unpaid, made-up and outstanding figures separately.',
           'Somebody who is not asked for a standup owes nothing, so their required hours read zero rather than a full month.',
           'The variance column is the point: a project showing far more standup time than timer time is being worked on without the timer running, and the reverse means work nobody wrote up.',

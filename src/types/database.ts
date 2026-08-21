@@ -5161,6 +5161,25 @@ export type Database = {
           variance_minutes: number
         }[]
       }
+      report_employee_tasks: {
+        Args: { p_from: string; p_profile: string; p_to: string }
+        Returns: {
+          due_date: string
+          last_activity: string
+          priority: string
+          project_id: string
+          project_name: string
+          service_name: string
+          service_slug: string
+          standup_minutes: number
+          status: string
+          task_deleted: boolean
+          task_id: string
+          task_title: string
+          timer_minutes: number
+          variance_minutes: number
+        }[]
+      }
       report_project_backlog: {
         Args: { p_from: string; p_to: string }
         Returns: {
@@ -5184,6 +5203,28 @@ export type Database = {
           profile_name: string
           standup_minutes: number
           tasks: number
+          timer_minutes: number
+          variance_minutes: number
+        }[]
+      }
+      report_project_tasks: {
+        Args: { p_from: string; p_project: string; p_to: string }
+        Returns: {
+          assignees: string[]
+          due_date: string
+          estimated_minutes: number
+          had_activity: boolean
+          last_activity: string
+          people: number
+          priority: string
+          service_name: string
+          service_slug: string
+          stage_name: string
+          standup_minutes: number
+          status: string
+          task_deleted: boolean
+          task_id: string
+          task_title: string
           timer_minutes: number
           variance_minutes: number
         }[]
