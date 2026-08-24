@@ -923,6 +923,29 @@ export const DOC_CHAPTERS: DocChapter[] = [
         ],
       },
       {
+        id: 'bd-updates',
+        title: 'Daily updates',
+        summary:
+          'The team feed for a day, built from what everyone already logged. Nobody retypes their day — the numbers come from your outreach, meetings and leads. A note is for the days the numbers do not explain.',
+        where: 'Business Dev → Daily Updates',
+        feature: 'can_view_bd',
+        procedures: [
+          {
+            title: 'Add a note about your day',
+            steps: [
+              'Open Business Dev → Daily Updates and press Add a note.',
+              'Write what the numbers do not show — a strategy call, a document you prepared, a day spent on something that logs nothing.',
+              'Save. Your card appears in the team feed straight away.',
+            ],
+          },
+        ],
+        notes: [
+          'You appear in the feed if you logged outreach, hosted a meeting, or wrote a note — any one is enough. A day spent on work that logs nothing is still a day you checked in.',
+          'Notes keep the line breaks you type, so a bulleted list stays a bulleted list.',
+          'Nobody is asked to type numbers that already exist. Proposals, calls, meetings and leads are counted from what you logged elsewhere.',
+        ],
+      },
+      {
         id: 'bd-campaigns',
         title: 'Campaigns and BD tasks',
         summary:

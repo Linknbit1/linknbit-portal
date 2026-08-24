@@ -56,10 +56,17 @@ export default function DailyUpdatesPage() {
       }
     })
 
+    // "Checked in" means the system can see the day: logged work, *or* a note
+    // written about it. Leaving the note out of this test silently discarded it
+    // — a rep whose day was meetings-about-strategy rather than logged outreach
+    // wrote a note, landed in `missing`, and `missing` renders names only. The
+    // note was stored correctly and shown to nobody, including its author.
+    const checkedIn = (d: typeof derived[number]) =>
+      d.activityCount > 0 || d.meetingsHeld > 0 || d.note.trim() !== ''
+
     return {
-      // "Checked in" now means "did any work the system can see" — not "wrote something".
-      submitted: derived.filter((d) => d.activityCount > 0 || d.meetingsHeld > 0),
-      missing: derived.filter((d) => d.activityCount === 0 && d.meetingsHeld === 0).map((d) => d.rep),
+      submitted: derived.filter(checkedIn),
+      missing: derived.filter((d) => !checkedIn(d)).map((d) => d.rep),
     }
   }, [dayOffset, updates, activities, meetings, people])
 
@@ -182,7 +189,11 @@ function DerivedUpdateCard({ row, onAddNote, avatarOf }: {
           <h4 className="truncate font-ui text-[14px] font-semibold text-text-1">{row.rep.name}</h4>
           <p className="flex items-center gap-1.5 font-mono text-[10.5px] text-text-4">
             <CheckCircle2 size={11} className="text-success" />
-            {row.activityCount} logged {row.activityCount === 1 ? 'activity' : 'activities'}
+            {row.activityCount > 0
+              ? `${row.activityCount} logged ${row.activityCount === 1 ? 'activity' : 'activities'}`
+              : row.meetingsHeld > 0
+                ? `${row.meetingsHeld} ${row.meetingsHeld === 1 ? 'meeting' : 'meetings'}`
+                : 'checked in with a note'}
           </p>
         </div>
 
@@ -194,7 +205,9 @@ function DerivedUpdateCard({ row, onAddNote, avatarOf }: {
       </div>
 
       {row.note ? (
-        <p className="font-ui text-body-sm/relaxed text-text-2">{row.note}</p>
+        // `whitespace-pre-line`: notes are typed as multi-line bullet lists, and
+        // HTML collapses those newlines into one run-on paragraph without it.
+        <p className="whitespace-pre-line font-ui text-body-sm/relaxed text-text-2">{row.note}</p>
       ) : (
         onAddNote && (
           <button

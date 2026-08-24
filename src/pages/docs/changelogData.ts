@@ -53,6 +53,14 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'fixed',
+        text: 'A note written on Daily Updates is now visible. If you logged no outreach and hosted no meetings that day, your note was stored correctly and then shown to nobody — not to your team, and not to you — because the feed only listed people with logged activity. Writing a note now counts as checking in.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Daily update notes keep their line breaks, so a note typed as a bulleted list no longer collapses into one run-on paragraph.',
+      },
+      {
+        kind: 'fixed',
         text: 'Editing a campaign no longer records you as the person who created it.',
       },
       {
