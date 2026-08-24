@@ -1014,7 +1014,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
         id: 'bd-handoff',
         title: 'Handing a won deal to delivery',
         summary:
-          'A won lead is passed to a project manager with the budget, the service and the context that was agreed.',
+          'A won lead becomes a real project — client, services, starting pipelines and the people on each one — without anybody retyping it.',
         where: 'Business Dev → Pipeline → the lead',
         feature: 'can_view_bd',
         procedures: [
@@ -1022,14 +1022,21 @@ export const DOC_CHAPTERS: DocChapter[] = [
             title: 'Hand over',
             steps: [
               'Move the lead to Won — the handoff opens by itself.',
-              'Choose the delivery service, name the project and confirm the budget.',
-              'Pick the manager who will run it and add anything they need to know. Confirm.',
+              'Name the project, pick the manager who will run it, and confirm the budget. Set a start date and deadline if they were agreed.',
+              'Tick every service the deal covers. The services you sold are ticked for you — add or remove any.',
+              'For each service, choose a starting pipeline and add the people who will work on it. Both can be left for the manager to do later.',
+              'Add anything delivery needs to know, then press Hand off & create project.',
             ],
           },
         ],
         notes: [
+          'Confirming builds the project immediately, with a service block for each service you ticked. It is in Projects for the manager and the team from that moment — you do not have to tell anyone to set it up.',
+          'The client is created for you from the lead, or reused if one with that company name already exists — you do not need to add it first.',
+          'Your notes become the project description, so what was promised in the negotiation is on the project rather than only in BD.',
+          'Everything is created together or not at all. If the handoff fails you get told why, and no half-built project is left behind.',
           'The lead stays in BD history afterwards and shows what it became, so nothing disappears when it leaves the pipeline.',
           'The handoff is recorded on the lead’s timeline as well, alongside the calls and emails that got it there.',
+          'Anyone who manages BD can hand a deal off — you do not need permission to manage projects, and handing off gives you no other access to Delivery.',
         ],
       },
     ],

@@ -4761,6 +4761,25 @@ export type Database = {
       }
       bd_can_manage: { Args: never; Returns: boolean }
       bd_can_view: { Args: never; Returns: boolean }
+      bd_handoff_to_project: {
+        Args: {
+          p_budget: number
+          p_deadline?: string
+          p_lead_id: string
+          p_manager_id: string
+          p_notes?: string
+          p_project_name: string
+          p_services: Json
+          p_start_date?: string
+        }
+        Returns: {
+          client_id: string
+          handoff_id: string
+          project_id: string
+          stages_created: number
+          tasks_created: number
+        }[]
+      }
       bd_people: {
         Args: never
         Returns: {
@@ -4789,6 +4808,13 @@ export type Database = {
         Returns: undefined
       }
       claim_quest_task: { Args: { p_task_id: string }; Returns: string }
+      copy_template_into_service: {
+        Args: { p_project_service_id: string; p_template_id: string }
+        Returns: {
+          stages_created: number
+          tasks_created: number
+        }[]
+      }
       count_open_claimable_quests: { Args: never; Returns: number }
       create_biometric_terminal: {
         Args: {

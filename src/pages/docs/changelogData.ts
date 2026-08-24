@@ -13,11 +13,38 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: 'v1.7',
+    date: '2026-08-24',
+    title: 'Won deals build their own projects',
+    highlight:
+      'Handing a won lead to delivery now creates the project itself — the client, every service the deal covers, a starting pipeline for each and the people who will work on it — instead of leaving somebody to build it by hand.',
+    entries: [
+      {
+        kind: 'improved',
+        text: 'The handoff on a won lead now builds the project rather than recording an intention to. Confirming it creates the client, the project, a service block for every service you ticked, the starting pipeline you chose for each, and the people you staffed onto them. The project is in Projects the moment the modal closes.',
+      },
+      {
+        kind: 'added',
+        text: 'A handoff can now cover several services at once. Every service the deal was sold against is ticked for you and each gets its own block, so a deal that bought design, development and marketing arrives as one project with three service blocks instead of three separate conversations.',
+      },
+      {
+        kind: 'added',
+        text: 'You can staff each service during the handoff, and set the project’s start date and deadline while you are there. Both are optional — leave them and the manager picks them up.',
+      },
+      {
+        kind: 'added',
+        text: 'The client is created from the lead automatically, or matched to an existing one with the same company name, so the same client does not end up in the list twice.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Handing off used to record the handoff on the lead and nothing else — the project it named was never created, and the lead’s timeline said it had been handed over regardless. Old handoffs that were left dangling this way still show on their leads; if one names a project that was later created by hand, ask an admin to link the two.',
+      },
+    ],
+  },
+  {
     version: 'v1.6',
     date: '2026-08-23',
     title: 'Linknbit 3.0 — the portal gets the new brand',
-    highlight:
-      'The portal now wears Linknbit 3.0: Poppins throughout, a near-black ground under the new brand red, and square corners on every card, chip and bar. Your own colour theme now lives in Profile → Appearance.',
     entries: [
       {
         kind: 'improved',

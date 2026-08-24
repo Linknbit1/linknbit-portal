@@ -5,7 +5,7 @@ import type {
   Lead, LeadSocial, LeadDocument, LeadStage, LeadTemperature, IcpFit, BdChannel,
   BdActivity, BdActivityType, BdActivityOutcome,
   BdMeeting, MeetingType, MeetingPlatform,
-  BdTask, BdTaskRecurrence, BdProject, BdDailyUpdate, BdTarget, BdHandoff,
+  BdTask, BdTaskRecurrence, BdProject, BdDailyUpdate, BdTarget, BdHandoff, HandoffServicePlan, HandoffOutcome,
   TaskStatus, ProjectStatus, Priority,
 } from '../types'
 
@@ -862,6 +862,7 @@ export function mapHandoff(row: HandoffJoined): BdHandoff {
     notes: row.notes ?? undefined,
     at: row.handed_at,
     byName: personName(row.by, 'Someone'),
+    projectId: row.project_id ?? undefined,
   }
 }
 
@@ -874,19 +875,53 @@ export async function fetchHandoffs(): Promise<BdHandoff[]> {
   return data.map(mapHandoff)
 }
 
-export async function createHandoff(handoff: BdHandoff, actorId: string | null): Promise<void> {
-  const { error } = await supabase.from('bd_handoffs').insert({
-    id: handoff.id,
-    lead_id: handoff.leadId,
-    service_slug: handoff.serviceSlug,
-    project_name: handoff.projectName,
-    budget: handoff.budget,
-    manager_id: handoff.managerId || null,
-    notes: handoff.notes ?? null,
-    handed_at: handoff.at,
-    by_id: actorId,
+export interface HandoffInput {
+  leadId: string
+  projectName: string
+  managerId: string
+  budget: number
+  services: HandoffServicePlan[]
+  notes?: string
+  startDate?: string
+  deadline?: string
+}
+
+/**
+ * Hand a won lead to delivery — client, project, service blocks, staffing and
+ * the handoff record, in one transaction.
+ *
+ * Everything happens inside `bd_handoff_to_project` rather than here because
+ * creating a project needs `can_manage_projects`, which BD roles deliberately do
+ * not hold; the function is SECURITY DEFINER and checks `bd_can_manage()`
+ * instead. Doing it in one call is also what stops a failure halfway through
+ * leaving an unstaffed project nobody knows is incomplete.
+ */
+export async function handoffToProject(input: HandoffInput): Promise<HandoffOutcome> {
+  const { data, error } = await supabase.rpc('bd_handoff_to_project', {
+    p_lead_id: input.leadId,
+    p_project_name: input.projectName,
+    p_manager_id: input.managerId,
+    p_budget: input.budget,
+    p_services: input.services.map((s) => ({
+      service_id: s.serviceId,
+      template_id: s.templateId ?? null,
+      member_ids: s.memberIds,
+    })),
+    p_notes: input.notes ?? undefined,
+    p_start_date: input.startDate || undefined,
+    p_deadline: input.deadline || undefined,
   })
   if (error) throw error
+
+  const row = data?.[0]
+  if (!row) throw new Error('The handoff did not come back — nothing was created.')
+  return {
+    projectId: row.project_id,
+    clientId: row.client_id,
+    handoffId: row.handoff_id,
+    stagesCreated: row.stages_created,
+    tasksCreated: row.tasks_created,
+  }
 }
 
 /* ── Comments ────────────────────────────────────────────────────────────── */

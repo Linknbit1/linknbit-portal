@@ -724,14 +724,14 @@ export interface BdProject {
  * A won lead handed over to delivery.
  *
  * Recorded on the BD side so the lead stays visible in BD history (read-only)
- * and linked to what it became — SRS §3.6. In the prototype this captures the
- * handoff intent; creating the real client + project is an API-layer job.
+ * and linked to what it became — SRS §3.6. The handoff provisions the client,
+ * project, services and staffing in one go; `projectId` is what it became.
  */
 export interface BdHandoff {
   id: string
   leadId: string
   company: string
-  /** Delivery service the BD services were mapped down to. */
+  /** Delivery service the BD services were mapped down to — the first one. */
   serviceSlug: string
   projectName: string
   budget: number
@@ -741,4 +741,30 @@ export interface BdHandoff {
   notes?: string
   at: string
   byName: string
+  /**
+   * The project this lead became. Null only on rows handed off before the
+   * handoff provisioned anything — those are notes about a project that was
+   * then created (or forgotten) by hand.
+   */
+  projectId?: string
+}
+
+/**
+ * One service block as the rep configured it in the handoff modal: which
+ * service, which starting pipeline, and who is on it. Array order becomes the
+ * order the service tabs appear in on the project page.
+ */
+export interface HandoffServicePlan {
+  serviceId: string
+  templateId?: string
+  memberIds: string[]
+}
+
+/** What `bd_handoff_to_project` actually built, for the confirmation toast. */
+export interface HandoffOutcome {
+  projectId: string
+  clientId: string
+  handoffId: string
+  stagesCreated: number
+  tasksCreated: number
 }

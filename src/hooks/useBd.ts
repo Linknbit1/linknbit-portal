@@ -3,9 +3,11 @@ import { useMutation, useQuery, useQueryClient, type QueryClient, type QueryKey 
 import { useToast } from '../components/ui/toast-context'
 import { useAuthContext } from '../context/AuthContext'
 import * as bd from '../api/bd'
+import { PROJECT_KEYS } from './useProjects'
+import { CLIENT_KEYS } from './useClients'
 import type { BdComment, BdCommentParent, BdPerson } from '../api/bd'
 import type {
-  Lead, BdActivity, BdMeeting, BdTask, BdProject, BdDailyUpdate, BdTarget, BdHandoff, TaskStatus,
+  Lead, BdActivity, BdMeeting, BdTask, BdProject, BdDailyUpdate, BdTarget, TaskStatus,
   LeadStage,
 } from '../types'
 
@@ -613,24 +615,34 @@ export function useSaveBdTargets(periodMonth: string) {
 /* ── Handoffs ────────────────────────────────────────────────────────────── */
 
 /**
- * Handing a won lead to delivery writes three things: the handoff, the stamp on
- * the lead, and a note on its timeline. All three go into the cache at once, so
- * the drawer behind the modal is already correct when it closes.
+ * Hand a won lead to delivery.
+ *
+ * Unlike every other mutation in this file this one is **not** optimistic. It
+ * provisions a client, a project, its service blocks and their staffing server
+ * side, and none of those ids exist until the RPC answers — painting a handoff
+ * into the cache first would be claiming a project that may not have been
+ * created. The modal shows a spinner and waits.
+ *
+ * The timeline note is written after the project exists, so it can name it.
  */
-export function useRecordHandoff() {
-  const actorId = useActorId()
-  return useOptimisticMutation<{ handoff: BdHandoff; activity: BdActivity }>({
-    keys: [BD_KEYS.handoffs, BD_KEYS.leads, BD_KEYS.activities],
-    optimistic: (qc, { handoff, activity }) => {
-      qc.setQueryData<BdHandoff[]>(BD_KEYS.handoffs, (cur = []) => [handoff, ...cur])
-      patchIn<Lead>(qc, BD_KEYS.leads, handoff.leadId, { handoffId: handoff.id })
-      qc.setQueryData<BdActivity[]>(BD_KEYS.activities, (cur = []) => [activity, ...cur])
+export function useHandoffToProject() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ input, activity }: { input: bd.HandoffInput; activity: BdActivity }) => {
+      const outcome = await bd.handoffToProject(input)
+      // The project exists by now, so a failed timeline note must not surface as
+      // "the handoff failed" — that would send someone off to create a second
+      // project. The handoff row itself already records what happened.
+      await bd.createActivity(activity).catch(() => undefined)
+      return outcome
     },
-    run: async ({ handoff, activity }) => {
-      await bd.createHandoff(handoff, actorId)
-      await bd.createActivity(activity)
+    onSuccess: () => {
+      // Delivery gained a client, a project and its tasks — those caches belong
+      // to other modules, so invalidate rather than patch.
+      for (const key of [BD_KEYS.handoffs, BD_KEYS.leads, BD_KEYS.activities, PROJECT_KEYS.all, CLIENT_KEYS.all]) {
+        qc.invalidateQueries({ queryKey: key })
+      }
     },
-    errorMessage: 'Could not record the handoff — nothing was changed.',
   })
 }
 

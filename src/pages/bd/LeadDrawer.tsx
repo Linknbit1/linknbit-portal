@@ -502,7 +502,7 @@ export function LeadDrawer({ lead, onClose, onEdit, onLogActivity }: LeadDrawerP
         confirmLabel="Delete lead"
       />
 
-      <HandoffModal open={handoffOpen} lead={lead} onClose={() => setHandoffOpen(false)} />
+      <HandoffModal key={lead.id} open={handoffOpen} lead={lead} onClose={() => setHandoffOpen(false)} />
 
       {/* Marking a lead lost is the one stage change that captures a reason, so
           the picker rides inside the confirm rather than opening a second step. */}

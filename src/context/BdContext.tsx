@@ -13,7 +13,7 @@ import {
   useSaveMeeting, useDeleteMeeting,
   useSaveBdTask, usePatchBdTask, useDeleteBdTask, useToggleBdChecklistItem, useMoveBdTask,
   useSaveBdProject, usePatchBdProject, useDeleteBdProject,
-  useSaveBdUpdate, useSaveBdTargets, useRecordHandoff,
+  useSaveBdUpdate, useSaveBdTargets, useHandoffToProject,
 } from '../hooks/useBd'
 import { useRealtimeBd } from '../hooks/realtime/useRealtimeBd'
 
@@ -23,9 +23,10 @@ import { useRealtimeBd } from '../hooks/realtime/useRealtimeBd'
  * between any two of the imported ones afterwards.
  */
 const IMPORT_POSITION_STEP = 1
+import type { HandoffInput } from '../api/bd'
 import type {
   Lead, LeadStage, BdActivity, BdMeeting, BdTask, BdProject,
-  TaskStatus, ProjectStatus, BdDailyUpdate, BdTarget, ChannelStats, BdHandoff,
+  TaskStatus, ProjectStatus, BdDailyUpdate, BdTarget, ChannelStats, BdHandoff, HandoffOutcome,
 } from '../types'
 
 /**
@@ -114,8 +115,12 @@ interface BdContextValue {
   saveTargets: (targets: BdTarget[]) => void
   /** Record a batch of outreach and roll it into that channel's totals. */
   logBatch: (entry: Omit<BdActivity, 'id' | 'leadId' | 'type'>) => void
-  /** Hand a won lead to delivery, and stamp the lead with what it became. */
-  recordHandoff: (handoff: BdHandoff) => void
+  /**
+   * Hand a won lead to delivery: provisions the client, project, its service
+   * blocks and their staffing, then stamps the lead with what it became.
+   * Awaited rather than optimistic — the caller needs the project id back.
+   */
+  handOffLead: (input: HandoffInput) => Promise<HandoffOutcome>
 }
 
 const BdContext = createContext<BdContextValue | null>(null)
@@ -160,7 +165,7 @@ export function BdProvider({ children }: { children: ReactNode }) {
   const deleteProjectM = useDeleteBdProject()
   const saveUpdateM = useSaveBdUpdate()
   const saveTargetsM = useSaveBdTargets(periodMonth)
-  const recordHandoffM = useRecordHandoff()
+  const handoffM = useHandoffToProject()
 
   const rawLeads = useMemo(() => leadsQ.data ?? [], [leadsQ.data])
   const activities = useMemo(() => activitiesQ.data ?? [], [activitiesQ.data])
@@ -418,23 +423,27 @@ export function BdProvider({ children }: { children: ReactNode }) {
     saveTargetsM.mutate({ targets: next })
   }, [saveTargetsM])
 
-  const recordHandoff = useCallback((handoff: BdHandoff) => {
+  const handOffLead = useCallback(async (input: HandoffInput) => {
     // The handoff is itself a touchpoint worth keeping on the lead's timeline.
-    const lead = rawLeads.find((l) => l.id === handoff.leadId)
-    recordHandoffM.mutate({
-      handoff,
+    const lead = rawLeads.find((l) => l.id === input.leadId)
+    const manager = people.find((p) => p.id === input.managerId)
+    const count = input.services.length
+    return handoffM.mutateAsync({
+      input,
       activity: {
         id: randomUUID(),
-        leadId: handoff.leadId,
+        leadId: input.leadId,
         channel: lead?.channel ?? 'referral',
         type: 'stage_change',
-        at: handoff.at,
-        note: `Handed to delivery as “${handoff.projectName}”, owned by ${handoff.managerName}.`,
+        at: new Date().toISOString(),
+        note:
+          `Handed to delivery as “${input.projectName}”, owned by ${manager?.name ?? 'delivery'}` +
+          ` — ${count} service${count === 1 ? '' : 's'}.`,
         volume: 1, responses: 0, meetingsBooked: 0, leadsCreated: 0,
         byId: viewerRepId, byName: viewerName,
       },
     })
-  }, [recordHandoffM, rawLeads, viewerRepId, viewerName])
+  }, [handoffM, rawLeads, people, viewerRepId, viewerName])
 
   const isLoading =
     leadsQ.isLoading || tasksQ.isLoading || projectsQ.isLoading || activitiesQ.isLoading || peopleQ.isLoading
@@ -448,7 +457,7 @@ export function BdProvider({ children }: { children: ReactNode }) {
       saveMeeting, deleteMeeting,
       saveTask, patchTask, moveTaskStatus, moveTask: moveTaskM, toggleChecklistItem, deleteTask,
       saveProject, patchProject, moveProjectStatus, deleteProject,
-      saveUpdate, saveTargets, logBatch, recordHandoff,
+      saveUpdate, saveTargets, logBatch, handOffLead,
     }),
     [
       leads, activities, meetings, tasks, projects, updates, handoffs, targets, people, avatarOf,
@@ -458,7 +467,7 @@ export function BdProvider({ children }: { children: ReactNode }) {
       saveMeeting, deleteMeeting,
       saveTask, patchTask, moveTaskStatus, moveTaskM, toggleChecklistItem, deleteTask,
       saveProject, patchProject, moveProjectStatus, deleteProject,
-      saveUpdate, saveTargets, logBatch, recordHandoff,
+      saveUpdate, saveTargets, logBatch, handOffLead,
     ],
   )
 
