@@ -57,7 +57,7 @@ const FILE_TYPE_LABELS: Record<string, string> = {
 
 const TYPE_ICON_CONFIG: Record<string, { bg: string; color: string; icon: React.ElementType }> = {
   figma: { bg: 'rgba(122,63,217,0.1)', color: '#7A3FD9', icon: Layers },
-  pdf: { bg: 'rgba(238,39,55,0.08)', color: '#EE2737', icon: FileText },
+  pdf: { bg: 'rgba(224,20,20,0.08)', color: '#E01414', icon: FileText },
   image: { bg: 'rgba(251,191,36,0.1)', color: '#B47700', icon: Image },
   doc: { bg: 'rgba(14,139,154,0.1)', color: '#0E8B9A', icon: FileText },
   spreadsheet: { bg: 'rgba(31,157,85,0.1)', color: '#1F9D55', icon: Archive },
@@ -147,7 +147,7 @@ export default function ClientFilesPage() {
         {[
           { label: 'Total Files', value: ALL_FILES.length, icon: FileText, color: '#0E8B9A' },
           { label: 'Figma Files', value: ALL_FILES.filter((f) => f.type === 'figma').length, icon: Folder, color: '#7A3FD9' },
-          { label: 'Documents', value: ALL_FILES.filter((f) => f.type === 'pdf').length, icon: Archive, color: '#EE2737' },
+          { label: 'Documents', value: ALL_FILES.filter((f) => f.type === 'pdf').length, icon: Archive, color: '#E01414' },
           { label: 'Added this week', value: recentCount, icon: Image, color: '#1F9D55' },
         ].map((s) => (
           <motion.div
@@ -343,7 +343,7 @@ function FileRow({ file }: { file: ClientFile }) {
         </button>
         <button
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-colors hover:opacity-80"
-          style={{ background: '#EE2737', color: 'white' }}
+          style={{ background: '#E01414', color: 'white' }}
         >
           <Download size={13} />
           Download

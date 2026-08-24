@@ -313,7 +313,7 @@ export function AttendanceCheckInCard() {
       {!todayHoliday && !isDayOff && !today && (
         <>
           {isWorkingSat && (
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-service-mkt/10 border border-service-mkt/25 text-[11px] font-mono font-semibold text-service-mkt">
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-sm bg-service-mkt/10 border border-service-mkt/25 text-[11px] font-mono font-semibold text-service-mkt">
               <Calendar size={11} /> Working Saturday
             </div>
           )}

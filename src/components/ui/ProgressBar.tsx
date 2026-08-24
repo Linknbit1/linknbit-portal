@@ -25,13 +25,13 @@ export function ProgressBar({
     <div className={cn('w-full', className)}>
       <div
         className={cn(
-          'w-full rounded-full bg-surface-3 overflow-hidden',
+          'w-full bg-surface-3 overflow-hidden',
           { 'h-1': size === 'xs', 'h-1.5': size === 'sm', 'h-2.5': size === 'md' },
         )}
       >
         <div
           className={cn(
-            'h-full rounded-full transition-all duration-500',
+            'h-full transition-all duration-500',
             animated && 'animate-pulse-subtle',
             {
               'bg-brand-red': variant === 'default',

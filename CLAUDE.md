@@ -56,39 +56,52 @@ Combines client project tracking, employee task management, gamified rewards, an
 
 ## Design Token Rules
 
-All design tokens are defined in `tailwind.config.js`. Never hardcode hex values or pixel sizes that exist as tokens.
+All design tokens are defined in the `@theme` block of `src/index.css` (Tailwind v4 — there is no
+`tailwind.config.js`). Never hardcode hex values or pixel sizes that exist as tokens: every colour in
+the portal must resolve through a `var(--color-…)`, because that is what makes the per-user themes work.
 
 ### Color Naming Convention
 
 | Token                                | Usage                               |
 | ------------------------------------ | ----------------------------------- |
-| `bg-base`                            | Page background (`#0B1018`)         |
-| `bg-canvas`                          | Content canvas (`#0F1620`)          |
+| `bg-base`                            | Page background (`#0A0A0A`)         |
+| `bg-canvas`                          | Content canvas (`#0F0F0F`)          |
 | `surface-1/2/3`                      | Cards, elevated cards, overlays     |
 | `surface-inset`                      | Inputs, code blocks                 |
 | `border-default/subtle/strong/focus` | All borders                         |
 | `text-1/2/3/4`                       | Text hierarchy (primary → disabled) |
-| `brand-red`                          | Primary brand color (`#EE2737`)     |
+| `brand-red`                          | Primary brand color (`#E01414`)     |
+| `topbar-glass` / `overlay-scrim`     | Translucent chrome                  |
 | `service-design`                     | Violet (`#A78BFA`)                  |
 | `service-dev`                        | Cyan (`#22D3EE`)                    |
 | `service-mkt`                        | Amber (`#FBBF24`)                   |
 
 ### Typography
 
-| Font           | Variable       | Usage                      |
-| -------------- | -------------- | -------------------------- |
-| Space Grotesk  | `font-display` | Headings, brand text       |
-| IBM Plex Sans  | `font-ui`      | Body, labels, UI text      |
-| JetBrains Mono | `font-mono`    | Code, metadata, timestamps |
+One family, five weights — the Linknbit 3.0 brand runs on Poppins alone.
+
+| Font    | Variable       | Usage                      |
+| ------- | -------------- | -------------------------- |
+| Poppins | `font-display` | Headings, brand text       |
+| Poppins | `font-ui`      | Body, labels, UI text      |
+| Poppins | `font-mono`    | Metadata, timestamps       |
+| Caveat  | `font-hand`    | Sticky notes only          |
+
+`font-mono` is a role name, not a promise of a monospaced face — it marks metadata, and stays in
+Poppins so the UI reads as one voice. Do not reintroduce a second family.
 
 ### Border Radius
 
-- `rounded-xs` = 4px (chips, small badges)
-- `rounded-sm` = 6px (buttons, nav items)
-- `rounded-md` = 10px (cards, inputs)
-- `rounded-lg` = 14px (elevated cards)
-- `rounded-xl` = 20px (large cards, panels)
-- `rounded-full` = 999px (avatars, pills)
+**The theme is square.** Every radius token except `--radius-full` is `0px`, so `rounded-sm`,
+`rounded-md`, `rounded-lg` and `rounded-xl` all render as hard rectangles today. Keep using the
+token that matches the element's weight rather than deleting the class — the names still carry the
+intent, and a future theme can move the scale in one place.
+
+- `rounded-xs` / `-sm` / `-md` / `-lg` / `-xl` = 0px (everything: chips, buttons, cards, panels)
+- `rounded-full` = 999px — **circles only**: avatars, status dots, spinners. Never on a padded
+  text pill; a capsule chip is the one shape that reads as "not this theme".
+
+Never write an arbitrary radius (`rounded-[6px]`). There are none left in the internal portal.
 
 ---
 
@@ -96,9 +109,24 @@ All design tokens are defined in `tailwind.config.js`. Never hardcode hex values
 
 ### Internal Portal (dark mode — default)
 
-Background: `bg-base` (`#0B1018`) — deep navy, NOT pure black.
+Background: `app-backdrop` over `bg-base` (`#0A0A0A`) — near-black under a soft red radial wash.
 Cards: `surface-1` with `border-default` borders.
 Use surfaces 1→2→3 for depth hierarchy.
+
+The app shell paints the `app-backdrop` utility rather than `bg-base`, and `<main>` carries no
+background of its own — that is what lets a theme's gradient reach the content area. Do not add a
+`bg-bg-base` back onto either.
+
+### Per-user themes
+
+`profiles.theme` → a `theme-<slug>` class on `<html>` (applied in `AppShell`). A theme is a single
+`:root.theme-<slug>` block in `src/index.css` that redefines the variables it moves; because every
+utility resolves through those variables, one class repaints the sidebar, topbar, inputs, tables,
+modals, scrollbars and the backdrop at once.
+
+To add a theme: add the CSS block, register the slug in `src/constants/themes.ts`, and widen the
+`profiles_theme_check` constraint in a migration. Never theme the semantic status colours or the
+service accents — those carry meaning, not branding.
 
 ### Client Portal (light mode — completely separate theme)
 
@@ -600,7 +628,10 @@ These extend the existing "Code Style" rules and take precedence.
 
 **UI / Design**
 
-- No pure-black backgrounds (`#000000`) — use `bg-base` (`#0B1018`)
+- No pure-black backgrounds (`#000000`) — use `bg-base` (`#0A0A0A`); the sticky-note board is the
+  one deliberate exception
+- No literal hex in a component — it breaks per-user themes. Use a token, or add one
+- No `rounded-full` on a padded text pill — circles only (avatars, dots, spinners)
 - No Inter + purple gradient combos
 - No Notion-clone card layouts
 - No lorem ipsum

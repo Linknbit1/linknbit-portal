@@ -75,7 +75,7 @@ export default function StandupTeamPage() {
             <p className="font-mono text-[10px] uppercase tracking-wider text-text-4 mb-2.5">Not submitted</p>
             <div className="flex flex-wrap gap-2">
               {missing.map((m) => (
-                <span key={m.profile_id} className="inline-flex items-center gap-1.5 bg-surface-2 border border-border-default rounded-full pl-0.5 pr-2.5 py-0.5">
+                <span key={m.profile_id} className="inline-flex items-center gap-1.5 bg-surface-2 border border-border-default rounded-sm pl-0.5 pr-2.5 py-0.5">
                   <Avatar name={m.name} src={m.avatar_url ?? undefined} size="xs" personId={m.profile_id} />
                   <PersonLink personId={m.profile_id} className="font-ui text-[12px] text-text-2">{m.name}</PersonLink>
                 </span>

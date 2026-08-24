@@ -38,7 +38,7 @@ const MODULE_OPTIONS = [
 
 const SEVERITY_SEGMENTS: { value: AuditSeverity | 'all'; label: string; active: string }[] = [
   { value: 'all',     label: 'All',     active: 'bg-surface-3 text-text-1' },
-  { value: 'danger',  label: 'Danger',  active: 'bg-[rgba(238,39,55,0.16)] text-brand-red' },
+  { value: 'danger',  label: 'Danger',  active: 'bg-[rgba(224,20,20,0.16)] text-brand-red' },
   { value: 'warning', label: 'Warning', active: 'bg-[rgba(251,191,36,0.16)] text-service-mkt' },
   { value: 'info',    label: 'Info',    active: 'bg-surface-3 text-text-1' },
 ]
@@ -49,7 +49,7 @@ const MODULE_CHIP: Record<string, string> = {
   gamification: 'text-service-design border-[rgba(167,139,250,0.22)] bg-[rgba(167,139,250,0.1)]',
   projects:     'text-service-mkt border-[rgba(251,191,36,0.22)] bg-[rgba(251,191,36,0.1)]',
   chat:         'text-info border-info/25 bg-info/10',
-  access:       'text-brand-red border-[rgba(238,39,55,0.22)] bg-[rgba(238,39,55,0.1)]',
+  access:       'text-brand-red border-[rgba(224,20,20,0.22)] bg-[rgba(224,20,20,0.1)]',
 }
 const MODULE_LABEL: Record<string, string> = {
   attendance: 'Attendance', standup: 'Standup', gamification: 'Gamification',
@@ -143,7 +143,7 @@ const AuditDetail = ({ row }: { row: AuditLogRow }) => {
   return (
     <div className="space-y-3.5 border-t border-border-subtle bg-surface-inset/40 px-4 py-3.5">
       {row.flagged && row.flag_reason && (
-        <div className="flex items-start gap-2 rounded-md border border-[rgba(238,39,55,0.3)] bg-[rgba(238,39,55,0.08)] px-3 py-2">
+        <div className="flex items-start gap-2 rounded-md border border-[rgba(224,20,20,0.3)] bg-[rgba(224,20,20,0.08)] px-3 py-2">
           <ShieldAlert size={15} className="mt-0.5 shrink-0 text-brand-red" />
           <div>
             <p className="font-ui text-[11px] font-semibold uppercase tracking-wide text-brand-red">Why this is flagged</p>
@@ -230,14 +230,14 @@ const AuditRow = ({ row, expanded, onToggle }: RowProps) => {
   const iconTone = row.severity === 'danger' ? 'text-brand-red' : row.severity === 'warning' ? 'text-service-mkt' : 'text-text-4'
 
   return (
-    <div className={cn(row.flagged && 'bg-[rgba(238,39,55,0.035)]')}>
+    <div className={cn(row.flagged && 'bg-[rgba(224,20,20,0.035)]')}>
       <button
         onClick={onToggle}
         aria-expanded={expanded}
         className={cn(
           ROW_GRID,
           'w-full px-4 py-2.5 text-left transition-colors motion-reduce:transition-none',
-          row.flagged ? 'hover:bg-[rgba(238,39,55,0.06)]' : 'hover:bg-surface-2',
+          row.flagged ? 'hover:bg-[rgba(224,20,20,0.06)]' : 'hover:bg-surface-2',
         )}
       >
         {/* col 1 (mobile): severity dot */}
@@ -395,7 +395,7 @@ const AuditLogPage = () => {
               className={cn(
                 'inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 font-ui text-[12px] font-medium transition-colors motion-reduce:transition-none',
                 filters.flaggedOnly
-                  ? 'border-[rgba(238,39,55,0.4)] bg-[rgba(238,39,55,0.1)] text-brand-red'
+                  ? 'border-[rgba(224,20,20,0.4)] bg-[rgba(224,20,20,0.1)] text-brand-red'
                   : 'border-border-default text-text-3 hover:text-text-1',
               )}
             >
@@ -403,7 +403,7 @@ const AuditLogPage = () => {
             </button>
 
             <div className="ml-auto flex items-center gap-3">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-border-default bg-surface-1 px-2.5 py-1 font-mono text-[10px] uppercase tracking-wide text-text-3">
+              <span className="inline-flex items-center gap-1.5 rounded-sm border border-border-default bg-surface-1 px-2.5 py-1 font-mono text-[10px] uppercase tracking-wide text-text-3">
                 <Radio size={11} className="text-service-dev" /> Live
               </span>
               {hasActiveFilters && (
@@ -432,7 +432,7 @@ const AuditLogPage = () => {
         {pendingCount > 0 && (
           <button
             onClick={showNewEntries}
-            className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-border-strong bg-surface-2 px-3 py-1.5 font-ui text-[12px] font-medium text-text-1 transition-colors hover:bg-surface-3 motion-reduce:transition-none"
+            className="mb-3 inline-flex items-center gap-1.5 rounded-sm border border-border-strong bg-surface-2 px-3 py-1.5 font-ui text-[12px] font-medium text-text-1 transition-colors hover:bg-surface-3 motion-reduce:transition-none"
           >
             <ArrowUp size={13} className="text-service-dev" />
             {pendingCount === 1 ? '1 new entry' : `${pendingCount} new entries`}

@@ -173,7 +173,7 @@ export function ConversationListPane({ activeChannelId, onSelect, onNewChannel, 
               {f === 'dms' ? 'DMs' : 'Channels'}
               {/* Nothing unread, no badge — a "0" is noise, not information. */}
               {counts[f] > 0 && (
-                <span className="rounded-full bg-brand-red px-1.5 font-mono text-[10px] font-bold tabular-nums text-white">
+                <span className="rounded-sm bg-brand-red px-1.5 font-mono text-[10px] font-bold tabular-nums text-white">
                   {counts[f] > 99 ? '99+' : counts[f]}
                 </span>
               )}
@@ -232,7 +232,7 @@ export function ConversationListPane({ activeChannelId, onSelect, onNewChannel, 
                       <span className="min-w-0 truncate">{section.label}</span>
                       <Count value={section.items.length} />
                       {hidden > 0 && (
-                        <span className="ml-auto rounded-full bg-brand-red px-1.5 font-ui text-[9.5px] font-bold text-white">
+                        <span className="ml-auto rounded-sm bg-brand-red px-1.5 font-ui text-[9.5px] font-bold text-white">
                           {hidden > 99 ? '99+' : hidden}
                         </span>
                       )}

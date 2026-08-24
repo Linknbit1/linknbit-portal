@@ -45,12 +45,12 @@ function WorkloadBars({ level }: { level: 'light' | 'medium' | 'heavy' }) {
   const activeBars = level === 'light' ? 1 : level === 'medium' ? 2 : 3
 
   return (
-    <span className={cn('inline-flex items-center gap-1.5 py-0.75 px-2.25 rounded-full border text-[10.5px] font-ui font-semibold uppercase tracking-[0.04em] leading-[1.4] whitespace-nowrap', barCls)}>
+    <span className={cn('inline-flex items-center gap-1.5 py-0.75 px-2.25 rounded-sm border text-[10.5px] font-ui font-semibold uppercase tracking-[0.04em] leading-[1.4] whitespace-nowrap', barCls)}>
       <span className="inline-flex items-end gap-0.5 h-3">
         {[4, 8, 12].map((h, i) => (
           <span
             key={i}
-            className={cn('w-0.75 rounded-[1px]', i < activeBars ? 'opacity-100' : 'opacity-20 bg-current')}
+            className={cn('w-0.75', i < activeBars ? 'opacity-100' : 'opacity-20 bg-current')}
             style={{ height: h, background: i < activeBars ? 'currentColor' : undefined }}
           />
         ))}
@@ -126,12 +126,12 @@ export default function DashboardPage() {
           <div className="bg-surface-1 border border-border-default rounded-lg p-5 flex flex-col gap-3 relative overflow-hidden">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-[11px] font-ui font-semibold text-text-3 uppercase tracking-widest">
-                <span className="size-7 rounded-[7px] bg-surface-2 border border-border-subtle text-text-2 flex items-center justify-center">
+                <span className="size-7 bg-surface-2 border border-border-subtle text-text-2 flex items-center justify-center">
                   <TrendingUp size={14} />
                 </span>
                 Active Projects
               </div>
-              <button className="size-6 rounded-[5px] text-text-4 hover:bg-surface-2 hover:text-text-2 flex items-center justify-center">
+              <button className="size-6 text-text-4 hover:bg-surface-2 hover:text-text-2 flex items-center justify-center">
                 <MoreHorizontal size={14} />
               </button>
             </div>
@@ -154,12 +154,12 @@ export default function DashboardPage() {
             />
             <div className="flex items-center justify-between relative">
               <div className="flex items-center gap-2 text-[11px] font-ui font-semibold text-text-3 uppercase tracking-widest">
-                <span className="size-7 rounded-[7px] bg-error/15 border border-error/30 text-error flex items-center justify-center">
+                <span className="size-7 bg-error/15 border border-error/30 text-error flex items-center justify-center">
                   <AlertTriangle size={14} />
                 </span>
                 Overdue Tasks
               </div>
-              <button className="size-6 rounded-[5px] text-text-4 hover:bg-surface-2 hover:text-text-2 flex items-center justify-center">
+              <button className="size-6 text-text-4 hover:bg-surface-2 hover:text-text-2 flex items-center justify-center">
                 <MoreHorizontal size={14} />
               </button>
             </div>
@@ -177,12 +177,12 @@ export default function DashboardPage() {
           <div className="bg-surface-1 border border-border-default rounded-lg p-5 flex flex-col gap-3 relative overflow-hidden">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-[11px] font-ui font-semibold text-text-3 uppercase tracking-widest">
-                <span className="size-7 rounded-[7px] bg-surface-2 border border-border-subtle text-text-2 flex items-center justify-center">
+                <span className="size-7 bg-surface-2 border border-border-subtle text-text-2 flex items-center justify-center">
                   <Users size={14} />
                 </span>
                 Team Utilization
               </div>
-              <button className="size-6 rounded-[5px] text-text-4 hover:bg-surface-2 hover:text-text-2 flex items-center justify-center">
+              <button className="size-6 text-text-4 hover:bg-surface-2 hover:text-text-2 flex items-center justify-center">
                 <MoreHorizontal size={14} />
               </button>
             </div>
@@ -200,12 +200,12 @@ export default function DashboardPage() {
           <div className="bg-surface-1 border border-border-default rounded-lg p-5 flex flex-col gap-3 relative overflow-hidden">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-[11px] font-ui font-semibold text-text-3 uppercase tracking-widest">
-                <span className="size-7 rounded-[7px] bg-coin-gold/12 border border-coin-gold/30 text-coin-gold flex items-center justify-center">
+                <span className="size-7 bg-coin-gold/12 border border-coin-gold/30 text-coin-gold flex items-center justify-center">
                   <Zap size={14} />
                 </span>
                 XP Awarded
               </div>
-              <button className="size-6 rounded-[5px] text-text-4 hover:bg-surface-2 hover:text-text-2 flex items-center justify-center">
+              <button className="size-6 text-text-4 hover:bg-surface-2 hover:text-text-2 flex items-center justify-center">
                 <MoreHorizontal size={14} />
               </button>
             </div>
@@ -228,7 +228,7 @@ export default function DashboardPage() {
               <h3 className="font-display font-semibold text-[15px] text-text-1 tracking-tight">
                 Project Status Overview
               </h3>
-              <span className="font-mono text-[10.5px] text-text-3 bg-surface-2 rounded-full px-2 py-0.5 uppercase tracking-wider">
+              <span className="font-mono text-[10.5px] text-text-3 bg-surface-2 rounded-sm px-2 py-0.5 uppercase tracking-wider">
                 {total} total
               </span>
             </div>
@@ -240,7 +240,7 @@ export default function DashboardPage() {
                     key={s}
                     onClick={() => setServiceFilter(s)}
                     className={cn(
-                      'inline-flex items-center gap-1.5 px-3 py-1.25 rounded-full text-[11.5px] font-ui font-semibold border transition-all capitalize',
+                      'inline-flex items-center gap-1.5 px-3 py-1.25 rounded-sm text-[11.5px] font-ui font-semibold border transition-all capitalize',
                       serviceFilter === s && s === 'all'
                         ? 'bg-surface-2 border-border-strong text-text-1'
                         : serviceFilter === s && s === 'design'
@@ -299,7 +299,7 @@ export default function DashboardPage() {
                 {completed > 0 && (
                   <div
                     className="flex items-center justify-center text-[11px] font-display font-bold text-white transition-all"
-                    style={{ flex: completed, background: 'linear-gradient(180deg, #5C6A7F, #3B4A60)' }}
+                    style={{ flex: completed, background: 'linear-gradient(180deg, #6A6A6A, #3F3F3F)' }}
                   >
                     {completed}
                   </div>
@@ -336,7 +336,7 @@ export default function DashboardPage() {
                 { label: 'Marketing', count: byService.marketing, dot: SERVICE_COLORS.marketing },
               ].map((row) => (
                 <div key={row.label} className="flex items-center gap-2.5 py-2 border-b border-dashed border-border-subtle last:border-0">
-                  <span className="size-2 rounded-[2px] shrink-0" style={{ background: row.dot }} />
+                  <span className="size-2 shrink-0" style={{ background: row.dot }} />
                   <div className="flex-1 min-w-0">
                     <span className="font-ui font-medium text-[13px] text-text-1">{row.label}</span>
                     <span className="font-mono text-[10.5px] text-text-3 block mt-0.5">
@@ -358,7 +358,7 @@ export default function DashboardPage() {
                 <AlertTriangle size={15} className="text-error" />
                 At-Risk Projects
               </h3>
-              <span className="font-mono text-[10.5px] text-error bg-error/13 rounded-full px-2 py-0.5 border border-error/30 uppercase tracking-wider">
+              <span className="font-mono text-[10.5px] text-error bg-error/13 rounded-sm px-2 py-0.5 border border-error/30 uppercase tracking-wider">
                 {atRisk.length} flagged
               </span>
             </div>
@@ -459,7 +459,7 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between px-6 py-3.5 border-b border-border-subtle">
               <div className="flex items-center gap-2.5">
                 <h3 className="font-display font-semibold text-[15px] text-text-1 tracking-tight">Team Performance</h3>
-                <span className="font-mono text-[10.5px] text-text-3 bg-surface-2 rounded-full px-2 py-0.5 uppercase tracking-wider">
+                <span className="font-mono text-[10.5px] text-text-3 bg-surface-2 rounded-sm px-2 py-0.5 uppercase tracking-wider">
                   This {period}
                 </span>
               </div>
@@ -578,7 +578,7 @@ export default function DashboardPage() {
                 {LEADERBOARD.slice(0, 5).map((entry) => {
                   const rankCls =
                     entry.rank === 1 ? 'text-[#FBBF24]' :
-                    entry.rank === 2 ? 'text-[#B5C0CF]' :
+                    entry.rank === 2 ? 'text-[#B5B5B5]' :
                     entry.rank === 3 ? 'text-[#D97757]' : 'text-text-4'
                   return (
                     <div

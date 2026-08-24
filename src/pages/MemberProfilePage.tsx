@@ -85,10 +85,10 @@ const REQ_STATUS: Record<string, string> = {
 
 // Internal portal is dark-only; match the ReportsPage Recharts theming.
 const CHART_LP = '#FBBF24' // LP / coin-gold — single series, so one hue, no legend
-const CHART_AXIS_TICK = { fontSize: 10, fill: '#4A5468', fontFamily: 'JetBrains Mono' }
+const CHART_AXIS_TICK = { fontSize: 10, fill: '#5A5A5A', fontFamily: 'Poppins, sans-serif' }
 const CHART_TOOLTIP = {
-  backgroundColor: '#0F1620', border: '1px solid rgba(255,255,255,0.08)',
-  borderRadius: 8, color: '#E2E8F0', fontSize: 12, fontFamily: 'JetBrains Mono, monospace',
+  backgroundColor: '#0F0F0F', border: '1px solid rgba(255,255,255,0.08)',
+  borderRadius: 8, color: '#F2F2F2', fontSize: 12, fontFamily: 'Poppins, sans-serif',
 }
 const MONTH_ABBR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 // monthly_lp_history.period is a 'YYYY-MM…' string → "Mon 'YY".
@@ -365,7 +365,7 @@ function OverviewTab({ person, teams, projects, tasks, activeTasks, canSeeSalary
         {teams.length === 0 ? <Empty label="Not a member of any team." /> : (
           <div className="flex flex-wrap gap-2">
             {teams.map((t) => (
-              <Link key={t.id} to="/teams" className="inline-flex items-center gap-1.5 rounded-full border border-border-subtle bg-surface-2 px-3 py-1 font-ui text-[12.5px] text-text-1 transition-colors hover:border-border-default">
+              <Link key={t.id} to="/teams" className="inline-flex items-center gap-1.5 rounded-sm border border-border-subtle bg-surface-2 px-3 py-1 font-ui text-[12.5px] text-text-1 transition-colors hover:border-border-default">
                 {t.name}{t.is_lead && <span className="font-mono text-[9.5px] uppercase tracking-wide text-brand-red">Lead</span>}
               </Link>
             ))}

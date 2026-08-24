@@ -142,7 +142,7 @@ function TimeEntryRow({ entry, now, canEdit, showWho, onEdit, onDelete }: TimeEn
         {entry.note && <p className="truncate font-ui text-[11.5px] text-text-4">{entry.note}</p>}
       </div>
       {entry.billable && (
-        <span className="shrink-0 rounded-full border border-success-border bg-success-soft px-1.5 py-0.5 font-mono text-[9.5px] uppercase tracking-wider text-success">
+        <span className="shrink-0 rounded-sm border border-success-border bg-success-soft px-1.5 py-0.5 font-mono text-[9.5px] uppercase tracking-wider text-success">
           Billable
         </span>
       )}

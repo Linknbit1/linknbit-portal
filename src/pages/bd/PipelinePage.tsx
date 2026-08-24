@@ -539,7 +539,7 @@ function FunnelStrip({ byStage, stats }: FunnelStripProps) {
           <span>Cycle <span className="text-text-2">34d</span></span>
         </span>
       </div>
-      <div className="flex h-2 gap-0.5 overflow-hidden rounded-full">
+      <div className="flex h-2 gap-0.5 overflow-hidden rounded-sm">
         {open.map(({ stage, leads }) => {
           if (leads.length === 0) return null
           const config = STAGE_CONFIG[stage]

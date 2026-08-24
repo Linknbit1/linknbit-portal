@@ -45,7 +45,7 @@ interface TaskFormModalProps {
 const NEW_SERVICE = 'new:'
 
 const PRIORITY_DOTS: Record<Priority, string> = {
-  critical: '#F4364C', high: '#F59E0B', medium: '#60A5FA', low: '#7A8597',
+  critical: '#F4364C', high: '#F59E0B', medium: '#60A5FA', low: '#8A8A8A',
 }
 
 const STATUS_ORDER: TaskStatus[] = ['backlog', 'todo', 'in_progress', 'review', 'approved', 'completed', 'blocked']

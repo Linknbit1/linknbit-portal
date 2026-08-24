@@ -59,7 +59,7 @@ export function RunningTimerWidget() {
             'fixed right-4 z-40 w-[min(20rem,calc(100vw-2rem))] overflow-hidden rounded-lg',
             // A warm red-tinted surface carries the "running" state instead of a
             // top rule — visible against the page without shouting.
-            'border border-brand-red/35 bg-[linear-gradient(140deg,rgba(238,39,55,0.16),rgba(19,28,40,0.98)_62%)]',
+            'border border-brand-red/35 bg-[linear-gradient(140deg,rgba(224,20,20,0.16),rgba(19,28,40,0.98)_62%)]',
             'shadow-[0_18px_50px_rgba(0,0,0,0.5)] backdrop-blur-sm',
             // Clears the mobile tab bar (4rem + safe area); sits lower on desktop.
             'bottom-[calc(5rem+env(safe-area-inset-bottom))] lg:bottom-6 lg:right-6',

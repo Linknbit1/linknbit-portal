@@ -20,7 +20,7 @@ const ICP_CONFIG: Record<IcpFit, { label: string; classes: string }> = {
 }
 
 const chipBase =
-  'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-ui text-[10px] font-semibold uppercase tracking-[0.04em] leading-[1.4] whitespace-nowrap'
+  'inline-flex items-center gap-1 rounded-sm border px-2 py-0.5 font-ui text-[10px] font-semibold uppercase tracking-[0.04em] leading-[1.4] whitespace-nowrap'
 
 interface StageChipProps {
   stage: LeadStage

@@ -113,7 +113,7 @@ export function ClientShell() {
       case 'file':
         return <FileText size={13} style={{ color: '#7A3FD9' }} />
       case 'approval':
-        return <AlertCircle size={13} style={{ color: '#EE2737' }} />
+        return <AlertCircle size={13} style={{ color: '#E01414' }} />
       case 'approved':
         return <CheckCircle2 size={13} style={{ color: '#1F9D55' }} />
       case 'comment':
@@ -181,7 +181,7 @@ export function ClientShell() {
                   {item.badgeKey === 'approvals' && pendingApprovals > 0 && (
                     <span
                       className="text-[10px] font-bold px-1.5 py-px rounded-full text-white"
-                      style={{ background: '#EE2737' }}
+                      style={{ background: '#E01414' }}
                     >
                       {pendingApprovals}
                     </span>
@@ -189,7 +189,7 @@ export function ClientShell() {
                   {isActive && (
                     <span
                       className="absolute bottom-0 inset-x-3.5 h-0.5 rounded-full"
-                      style={{ background: '#EE2737' }}
+                      style={{ background: '#E01414' }}
                     />
                   )}
                 </>
@@ -215,7 +215,7 @@ export function ClientShell() {
               {unreadCount > 0 && (
                 <span
                   className="absolute top-1.5 right-1.5 size-2 rounded-full border-2 border-client-surface"
-                  style={{ background: '#EE2737' }}
+                  style={{ background: '#E01414' }}
                 />
               )}
             </button>
@@ -280,7 +280,7 @@ export function ClientShell() {
                         {isNew && (
                           <div
                             className="size-2 rounded-full shrink-0 mt-1.5"
-                            style={{ background: '#EE2737' }}
+                            style={{ background: '#E01414' }}
                           />
                         )}
                       </div>
@@ -294,7 +294,7 @@ export function ClientShell() {
                 >
                   <button
                     className="text-[12px] font-semibold transition-colors hover:opacity-70"
-                    style={{ color: '#EE2737' }}
+                    style={{ color: '#E01414' }}
                   >
                     View all notifications
                   </button>
@@ -408,8 +408,8 @@ export function ClientShell() {
                     }}
                     className="w-full px-4 py-2.5 flex items-center gap-3 transition-colors hover:bg-red-50 text-left"
                   >
-                    <LogOut size={15} style={{ color: '#EE2737' }} />
-                    <span className="text-[13px] font-medium" style={{ color: '#EE2737' }}>
+                    <LogOut size={15} style={{ color: '#E01414' }} />
+                    <span className="text-[13px] font-medium" style={{ color: '#E01414' }}>
                       Sign Out
                     </span>
                   </button>
@@ -441,14 +441,14 @@ export function ClientShell() {
             key={item.to}
             to={item.to}
             className="relative flex-1 flex flex-col items-center justify-center gap-1 py-2 font-medium text-[10.5px]"
-            style={({ isActive }) => ({ color: isActive ? '#EE2737' : '#4F4940' })}
+            style={({ isActive }) => ({ color: isActive ? '#E01414' : '#4F4940' })}
           >
             <span className="relative">
               <item.icon size={20} />
               {item.badgeKey === 'approvals' && pendingApprovals > 0 && (
                 <span
                   className="absolute -top-1.5 -right-2 text-[9px] font-bold px-1 rounded-full text-white leading-tight"
-                  style={{ background: '#EE2737' }}
+                  style={{ background: '#E01414' }}
                 >
                   {pendingApprovals}
                 </span>

@@ -60,7 +60,7 @@ export function ConversationListRow({ channel, myProfileId, unread, active, onCl
               {channel.last_message_preview || 'No messages yet'}
             </span>
             {unread > 0 && (
-              <span className="flex h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-full bg-brand-red px-1.5 font-mono text-[10px] font-bold text-white">
+              <span className="flex h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-sm bg-brand-red px-1.5 font-mono text-[10px] font-bold text-white">
                 {unread > 99 ? '99+' : unread}
               </span>
             )}

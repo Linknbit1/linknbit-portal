@@ -169,7 +169,7 @@ function ClientCards({ clients, onEdit, onDelete }: {
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-3">
       {clients.map((c) => (
         <article key={c.id} className="group flex flex-col overflow-hidden rounded-lg border border-border-default bg-surface-1 shadow-sm transition-colors hover:border-border-strong">
-          <div className="border-b border-border-subtle bg-[linear-gradient(135deg,rgba(238,39,55,0.055),rgba(34,211,238,0.045)_58%,rgba(20,29,42,0)_100%)] p-4">
+          <div className="border-b border-border-subtle bg-[linear-gradient(135deg,rgba(224,20,20,0.055),rgba(34,211,238,0.045)_58%,rgba(20,29,42,0)_100%)] p-4">
             <div className="flex items-start gap-3">
               <span className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-border-subtle bg-surface-2 text-text-3">
                 <Building2 size={17} />

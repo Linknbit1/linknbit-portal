@@ -195,7 +195,7 @@ function MeetingRow({ meeting, onClick, avatarOf }: {
             <h4 className="font-ui font-semibold text-[14px] text-text-1 truncate">{meeting.company}</h4>
             <span
               className={cn(
-                'rounded-full border px-2 py-0.5 font-ui text-[10px] font-semibold uppercase tracking-[0.04em]',
+                'rounded-sm border px-2 py-0.5 font-ui text-[10px] font-semibold uppercase tracking-[0.04em]',
                 type.classes,
               )}
             >

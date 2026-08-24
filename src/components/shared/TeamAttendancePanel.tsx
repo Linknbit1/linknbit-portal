@@ -65,7 +65,7 @@ const REQUEST_STATUS: Record<string, string> = {
 function Pill({ status, map }: { status: string; map: Record<string, string> }) {
   return (
     <span className={cn(
-      'inline-flex items-center px-2 py-0.5 rounded-full border text-[10.5px] font-ui font-semibold uppercase tracking-wider whitespace-nowrap',
+      'inline-flex items-center px-2 py-0.5 rounded-sm border text-[10.5px] font-ui font-semibold uppercase tracking-wider whitespace-nowrap',
       map[status] ?? 'bg-surface-2 text-text-3 border-border-default',
     )}>
       {status.replace(/_/g, ' ')}

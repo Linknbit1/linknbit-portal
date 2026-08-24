@@ -82,7 +82,7 @@ export function PermissionDetailModal({ permission, onClose }: PermissionDetailM
               {holders.map((r) => (
                 <span
                   key={r.id}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-border-default bg-surface-2 px-2.5 py-1"
+                  className="inline-flex items-center gap-1.5 rounded-sm border border-border-default bg-surface-2 px-2.5 py-1"
                 >
                   <span
                     className="inline-block size-2 rounded-full shrink-0"

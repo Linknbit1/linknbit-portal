@@ -293,7 +293,7 @@ function RequestStatusChip({ status }: { status: string }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-ui font-semibold border shrink-0",
+        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-[11px] font-ui font-semibold border shrink-0",
         m.cls,
       )}
     >
@@ -2867,7 +2867,7 @@ const HOLIDAY_TYPE_META: Record<
   public_holiday: {
     label: "Public Holiday",
     cls: "bg-brand-red/10 text-brand-red border-brand-red/25",
-    dot: "#EE2737",
+    dot: "#E01414",
   },
   company_off: {
     label: "Company Off",
@@ -3186,7 +3186,7 @@ export function HolidaysTab() {
             <span
               key={k}
               className={cn(
-                "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-ui font-semibold border",
+                "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-[11px] font-ui font-semibold border",
                 v.cls,
               )}
             >
@@ -3238,7 +3238,7 @@ export function HolidaysTab() {
                             {(isToday || isUpcoming) && (
                               <span
                                 className={cn(
-                                  "shrink-0 px-2 py-0.5 rounded-full text-[10px] font-ui font-semibold border uppercase tracking-wide",
+                                  "shrink-0 px-2 py-0.5 rounded-sm text-[10px] font-ui font-semibold border uppercase tracking-wide",
                                   isToday
                                     ? "bg-brand-red/13 text-brand-red border-brand-red/30"
                                     : "bg-success/10 text-success border-success/25",
@@ -3254,7 +3254,7 @@ export function HolidaysTab() {
                         </div>
                         <span
                           className={cn(
-                            "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-ui font-semibold border shrink-0",
+                            "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-[11px] font-ui font-semibold border shrink-0",
                             meta.cls,
                           )}
                         >
@@ -3530,7 +3530,7 @@ export function HolidaysTab() {
                     </p>
                   )}
                 </div>
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-ui font-semibold bg-success/10 text-success border border-success/25 shrink-0">
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-sm text-[11px] font-ui font-semibold bg-success/10 text-success border border-success/25 shrink-0">
                   Working Day
                 </span>
                 <button
@@ -3587,7 +3587,7 @@ export function HolidaysTab() {
                     {d.reason}
                   </p>
                 </div>
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-ui font-semibold bg-service-dev/10 text-service-dev border border-service-dev/25 shrink-0">
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-sm text-[11px] font-ui font-semibold bg-service-dev/10 text-service-dev border border-service-dev/25 shrink-0">
                   Work From Home
                 </span>
                 <button

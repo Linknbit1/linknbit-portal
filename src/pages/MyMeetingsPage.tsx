@@ -139,11 +139,11 @@ export default function MyMeetingsPage() {
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-2">
                             <h4 className="truncate font-ui text-[14px] font-semibold text-text-1">{meeting.company}</h4>
-                            <span className={cn('rounded-full border px-2 py-0.5 font-ui text-[10px] font-semibold uppercase tracking-[0.04em]', type.classes)}>
+                            <span className={cn('rounded-sm border px-2 py-0.5 font-ui text-[10px] font-semibold uppercase tracking-[0.04em]', type.classes)}>
                               {type.label}
                             </span>
                             {!hosting && (
-                              <span className="rounded-full border border-border-subtle bg-surface-2 px-2 py-0.5 font-ui text-[10px] uppercase tracking-wider text-text-4">
+                              <span className="rounded-sm border border-border-subtle bg-surface-2 px-2 py-0.5 font-ui text-[10px] uppercase tracking-wider text-text-4">
                                 Invited
                               </span>
                             )}

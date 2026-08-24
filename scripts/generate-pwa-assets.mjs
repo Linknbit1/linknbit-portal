@@ -14,7 +14,7 @@ import { dirname, join } from 'node:path'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const PUBLIC = join(__dirname, '..', 'public')
-const BRAND_BG = '#1A222D'
+const BRAND_BG = '#0A0A0A'
 const BANNER_SOURCE = join(__dirname, 'banner-source.svg')
 
 // ── The mark, in two coordinate spaces ────────────────────────────────────────
@@ -22,7 +22,7 @@ const BANNER_SOURCE = join(__dirname, 'banner-source.svg')
 const squareMark = (fg) => `
   <rect x="312" y="497" width="109.524" height="285.714" rx="1" fill="${fg}"/>
   <rect x="312" y="239.857" width="109.524" height="204.762" rx="1" fill="${fg}"/>
-  <rect x="602.476" y="239.857" width="109.524" height="109.524" rx="1" fill="#EE2737"/>
+  <rect x="602.476" y="239.857" width="109.524" height="109.524" rx="1" fill="#E01414"/>
   <rect x="373.905" y="535.095" width="338.095" height="109.524" rx="2.82544" fill="${fg}"/>
   <rect x="312" y="239.857" width="242.857" height="109.524" rx="1" fill="${fg}"/>
   <rect x="602.476" y="397" width="109.524" height="247.619" rx="1" fill="${fg}"/>`
@@ -33,7 +33,7 @@ const GLYPH_H = 542.857
 const glyph = (fg) => `
   <rect x="0" y="257.143" width="109.524" height="285.714" rx="1" fill="${fg}"/>
   <rect x="0" y="0" width="109.524" height="204.762" rx="1" fill="${fg}"/>
-  <rect x="290.476" y="0" width="109.524" height="109.524" rx="1" fill="#EE2737"/>
+  <rect x="290.476" y="0" width="109.524" height="109.524" rx="1" fill="#E01414"/>
   <rect x="61.905" y="295.238" width="338.095" height="109.524" rx="2.82544" fill="${fg}"/>
   <rect x="0" y="0" width="242.857" height="109.524" rx="1" fill="${fg}"/>
   <rect x="290.476" y="157.143" width="109.524" height="247.619" rx="1" fill="${fg}"/>`

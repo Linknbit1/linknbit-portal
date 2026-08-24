@@ -523,7 +523,7 @@ export default function ProjectDetailPage() {
                 <div key={s.id} className="flex min-w-0 flex-1 basis-96 flex-col overflow-hidden rounded-xl border border-border-default bg-surface-1">
                   <div className="flex flex-wrap items-center gap-2 border-b border-border-subtle bg-surface-2/30 px-4 py-3">
                     {s.service && <ServiceChip service={s.service.slug} />}
-                    <span className="rounded-full bg-surface-2 px-2 py-0.5 font-mono text-[10px] text-text-3">
+                    <span className="rounded-sm bg-surface-2 px-2 py-0.5 font-mono text-[10px] text-text-3">
                       {roster.length} {roster.length === 1 ? 'member' : 'members'}
                     </span>
                     {canManage && (

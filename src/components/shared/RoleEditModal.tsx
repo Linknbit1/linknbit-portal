@@ -16,7 +16,7 @@ import { isPermissionLocked, LOCKED_REASON } from '../../lib/roleLocks'
 import { cn } from '../../lib/cn'
 import type { PermissionRow, RoleRow } from '../../api/permissions'
 
-const ROLE_COLORS = ['#EE2737', '#F87171', '#FBBF24', '#34D399', '#22D3EE', '#A78BFA', '#94A3B8']
+const ROLE_COLORS = ['#E01414', '#F87171', '#FBBF24', '#34D399', '#22D3EE', '#A78BFA', '#94A3B8']
 
 interface RoleEditModalProps {
   role: RoleRow

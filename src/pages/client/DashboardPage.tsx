@@ -147,7 +147,7 @@ function AnimatedProgressBar({
 function ProjectCard({ project }: { project: (typeof CLIENT_PROJECTS)[0] }) {
   const isActionNeeded = project.status === 'awaiting_client'
   const stageInfo = STAGE_DESCRIPTIONS[project.currentStage]
-  const progressColor = isActionNeeded ? '#EE2737' : '#1F9D55'
+  const progressColor = isActionNeeded ? '#E01414' : '#1F9D55'
 
   return (
     <motion.div
@@ -157,7 +157,7 @@ function ProjectCard({ project }: { project: (typeof CLIENT_PROJECTS)[0] }) {
         isActionNeeded ? 'border-2' : 'border',
       )}
       style={{
-        borderColor: isActionNeeded ? 'rgba(238,39,55,0.3)' : '#EAE3D6',
+        borderColor: isActionNeeded ? 'rgba(224,20,20,0.3)' : '#EAE3D6',
       }}
       whileHover={{ y: -3, boxShadow: '0 8px 24px rgba(26,22,18,0.08)' }}
       transition={{ duration: 0.22, ease: 'easeOut' }}
@@ -247,9 +247,9 @@ function ProjectCard({ project }: { project: (typeof CLIENT_PROJECTS)[0] }) {
             whileTap={{ scale: 0.96 }}
             className="px-4 py-1.5 rounded-lg text-[13px] font-semibold transition-colors"
             style={{
-              background: isActionNeeded ? '#EE2737' : 'transparent',
-              color: isActionNeeded ? 'white' : '#EE2737',
-              border: '1.5px solid #EE2737',
+              background: isActionNeeded ? '#E01414' : 'transparent',
+              color: isActionNeeded ? 'white' : '#E01414',
+              border: '1.5px solid #E01414',
             }}
           >
             {isActionNeeded ? 'Review Now' : 'View Project'}
@@ -300,7 +300,7 @@ function ApprovalCard({ approval }: { approval: (typeof APPROVALS)[0] }) {
       {/* Card header stripe */}
       <div
         className="h-1 w-full"
-        style={{ background: approval.type === 'stage' ? '#EE2737' : '#7A3FD9' }}
+        style={{ background: approval.type === 'stage' ? '#E01414' : '#7A3FD9' }}
       />
 
       <div className="p-5">
@@ -362,7 +362,7 @@ function ApprovalCard({ approval }: { approval: (typeof APPROVALS)[0] }) {
             <motion.button
               whileTap={{ scale: 0.95 }}
               className="text-[12px] font-semibold flex items-center gap-1"
-              style={{ color: '#EE2737' }}
+              style={{ color: '#E01414' }}
             >
               View <ChevronRight size={12} />
             </motion.button>
@@ -431,7 +431,7 @@ export default function ClientDashboardPage() {
                 <a
                   href="#approvals"
                   className="font-semibold hover:underline underline-offset-2"
-                  style={{ color: '#EE2737' }}
+                  style={{ color: '#E01414' }}
                 >
                   Review now →
                 </a>
@@ -457,7 +457,7 @@ export default function ClientDashboardPage() {
             icon={AlertCircle}
             value={pendingApprovals.length}
             label="Pending Approvals"
-            accent="#EE2737"
+            accent="#E01414"
           />
           <StatPill
             icon={FileText}
@@ -486,7 +486,7 @@ export default function ClientDashboardPage() {
           <motion.a
             href="/client/projects"
             className="text-[13px] font-semibold flex items-center gap-1 hover:underline underline-offset-2"
-            style={{ color: '#EE2737' }}
+            style={{ color: '#E01414' }}
             whileHover={{ x: 2 }}
             transition={{ duration: 0.15 }}
           >
@@ -514,7 +514,7 @@ export default function ClientDashboardPage() {
             animate={{ scale: 1 }}
             transition={{ delay: 0.5, duration: 0.3, ease: 'backOut' }}
             className="text-[12px] font-bold px-2 py-0.5 rounded-full text-white"
-            style={{ background: '#EE2737' }}
+            style={{ background: '#E01414' }}
           >
             {pendingApprovals.length}
           </motion.span>
@@ -599,7 +599,7 @@ export default function ClientDashboardPage() {
             <motion.a
               href="/client/files"
               className="text-[13px] font-semibold flex items-center gap-1 hover:underline underline-offset-2"
-              style={{ color: '#EE2737' }}
+              style={{ color: '#E01414' }}
               whileHover={{ x: 2 }}
               transition={{ duration: 0.15 }}
             >
@@ -649,7 +649,7 @@ export default function ClientDashboardPage() {
                 <motion.button
                   whileTap={{ scale: 0.94 }}
                   className="flex items-center gap-1.5 text-[12px] font-semibold px-3 py-1.5 rounded-lg transition-colors hover:bg-red-50"
-                  style={{ color: '#EE2737' }}
+                  style={{ color: '#E01414' }}
                 >
                   <Download size={12} />
                   Download

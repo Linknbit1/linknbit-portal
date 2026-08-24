@@ -85,7 +85,7 @@ export default function NotificationsPage() {
                     </span>
                   </span>
                   {group.count > 1
-                    ? <span className="shrink-0 mt-0.5 rounded-full bg-surface-3 px-1.5 font-mono text-[10px] text-text-3">{group.count}</span>
+                    ? <span className="shrink-0 mt-0.5 rounded-sm bg-surface-3 px-1.5 font-mono text-[10px] text-text-3">{group.count}</span>
                     : !isUnread && <Check size={12} className="text-text-4 shrink-0 mt-1" />}
                 </button>
               )

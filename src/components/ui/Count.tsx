@@ -33,7 +33,7 @@ export function Count({ value, icon: Icon, label, tone = 'default', className }:
       title={title}
       aria-label={title}
       className={cn(
-        'inline-flex shrink-0 items-center gap-1 rounded-full border px-1.5 py-0.5 font-mono text-[10.5px] font-semibold leading-none tabular-nums',
+        'inline-flex shrink-0 items-center gap-1 rounded-sm border px-1.5 py-0.5 font-mono text-[10.5px] font-semibold leading-none tabular-nums',
         empty
           ? 'border-border-subtle bg-surface-2/50 text-text-4'
           : tone === 'attention'

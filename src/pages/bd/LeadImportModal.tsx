@@ -237,7 +237,7 @@ function Summary({ icon: Icon, tone, label }: {
   label: string
 }) {
   return (
-    <span className={cn('flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-ui text-[11.5px] font-medium', SUMMARY_TONES[tone])}>
+    <span className={cn('flex items-center gap-1.5 rounded-sm border px-2.5 py-1 font-ui text-[11.5px] font-medium', SUMMARY_TONES[tone])}>
       <Icon size={12} />
       {label}
     </span>

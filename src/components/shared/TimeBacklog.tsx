@@ -103,7 +103,7 @@ function SegmentRow({ segment, now }: { segment: BacklogSegment; now: number }) 
 
         {manual && (
           <span
-            className="inline-flex items-center gap-1 rounded-full border border-warning/25 bg-warning/10 px-1.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-warning"
+            className="inline-flex items-center gap-1 rounded-sm border border-warning/25 bg-warning/10 px-1.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-warning"
             title={`Entered by hand on ${formatStamp(entry.created_at)}`}
           >
             <Pencil size={8} /> added {formatStamp(entry.created_at)}
@@ -111,7 +111,7 @@ function SegmentRow({ segment, now }: { segment: BacklogSegment; now: number }) 
         )}
 
         {entry.billable && (
-          <span className="rounded-full bg-success/10 px-1.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-success">
+          <span className="rounded-sm bg-success/10 px-1.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-success">
             Billable
           </span>
         )}

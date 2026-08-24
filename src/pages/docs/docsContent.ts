@@ -103,6 +103,14 @@ export const DOC_CHAPTERS: DocChapter[] = [
             ],
           },
           {
+            title: 'Change your colour theme',
+            steps: [
+              'Open your avatar in the top bar and choose Profile.',
+              'Scroll to Appearance.',
+              'Pick a theme — the whole portal changes as soon as you click it.',
+            ],
+          },
+          {
             title: 'Turn push notifications on',
             steps: [
               'Go to Settings → Notifications.',
@@ -112,6 +120,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
           },
         ],
         notes: [
+          'Your theme is yours alone. It follows your account to any device you sign in from, and changes nothing for anyone else.',
           'Push is granted per device — enabling it on your laptop does not enable it on your phone.',
           'Muting a chat conversation silences it regardless of your global preferences.',
         ],

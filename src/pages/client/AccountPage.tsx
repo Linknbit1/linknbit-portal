@@ -70,7 +70,7 @@ function Field({
             <input
               value={val}
               onChange={(e) => setVal(e.target.value)}
-              className="flex-1 text-[14px] px-3 py-1.5 rounded-lg border outline-none focus:border-[#EE2737]/40 transition-colors"
+              className="flex-1 text-[14px] px-3 py-1.5 rounded-lg border outline-none focus:border-[#E01414]/40 transition-colors"
               style={{ background: '#FAF7F2', borderColor: '#EAE3D6', color: '#1A1612' }}
               autoFocus
             />
@@ -78,7 +78,7 @@ function Field({
               whileTap={{ scale: 0.96 }}
               onClick={handleSave}
               className="px-3 py-1.5 rounded-lg text-[12px] font-semibold text-white"
-              style={{ background: '#EE2737' }}
+              style={{ background: '#E01414' }}
             >
               Save
             </motion.button>
@@ -111,7 +111,7 @@ function Field({
                 <button
                   onClick={() => setEditing(true)}
                   className="text-[12px] font-semibold transition-colors hover:opacity-70"
-                  style={{ color: '#EE2737' }}
+                  style={{ color: '#E01414' }}
                 >
                   Edit
                 </button>
@@ -158,7 +158,7 @@ export default function ClientAccountPage() {
               </div>
               <button
                 className="absolute bottom-0 right-0 size-7 rounded-full flex items-center justify-center border-2 border-white"
-                style={{ background: '#EE2737' }}
+                style={{ background: '#E01414' }}
               >
                 <Camera size={12} color="white" />
               </button>

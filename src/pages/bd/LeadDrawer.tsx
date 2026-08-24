@@ -419,7 +419,7 @@ export function LeadDrawer({ lead, onClose, onEdit, onLogActivity }: LeadDrawerP
                             <span>·</span>
                             <span>{formatRelativeTime(a.at)}</span>
                             {a.outcome && (
-                              <span className="rounded-full border border-border-subtle bg-surface-2 px-1.5 py-px text-text-3">
+                              <span className="rounded-sm border border-border-subtle bg-surface-2 px-1.5 py-px text-text-3">
                                 {OUTCOME_LABEL[a.outcome]}
                               </span>
                             )}

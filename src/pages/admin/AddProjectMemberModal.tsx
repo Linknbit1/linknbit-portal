@@ -99,7 +99,7 @@ export function AddProjectMemberModal({
                         type="button"
                         onClick={() => toggleTeam(t.ids, allSelected)}
                         className={cn(
-                          'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-ui text-[12px] transition-colors',
+                          'inline-flex items-center gap-1.5 rounded-sm border px-3 py-1 font-ui text-[12px] transition-colors',
                           allSelected
                             ? 'border-brand-red/30 bg-brand-red/10 text-brand-red'
                             : 'border-border-default bg-surface-2 text-text-2 hover:border-border-strong hover:text-text-1',

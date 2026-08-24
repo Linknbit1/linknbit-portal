@@ -50,7 +50,7 @@ import type { Priority, TaskStatus } from '../../types'
 
 const STATUS_ORDER: TaskStatus[] = ['backlog', 'todo', 'in_progress', 'review', 'approved', 'completed', 'blocked']
 const PRIORITY_ORDER: Priority[] = ['critical', 'high', 'medium', 'low']
-const PRIORITY_DOTS: Record<Priority, string> = { critical: '#F4364C', high: '#F59E0B', medium: '#60A5FA', low: '#7A8597' }
+const PRIORITY_DOTS: Record<Priority, string> = { critical: '#F4364C', high: '#F59E0B', medium: '#60A5FA', low: '#8A8A8A' }
 const isStatus = (v: string): v is TaskStatus => (STATUS_ORDER as string[]).includes(v)
 const isPriority = (v: string): v is Priority => (PRIORITY_ORDER as string[]).includes(v)
 
@@ -526,7 +526,7 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
             >
               <t.icon size={13} /> {t.label}
               {t.count > 0 && (
-                <span className="rounded-full bg-surface-3 px-1.5 font-mono text-[10px] font-bold text-text-3">{t.count}</span>
+                <span className="rounded-sm bg-surface-3 px-1.5 font-mono text-[10px] font-bold text-text-3">{t.count}</span>
               )}
             </button>
           ))}
@@ -726,6 +726,6 @@ function DeleteImpactMessage({
 
 function cnCheck(completed: boolean): string {
   return completed
-    ? 'size-4.5 rounded-[5px] bg-success/20 text-success border border-success/40 flex items-center justify-center shrink-0'
-    : 'size-4.5 rounded-[5px] bg-surface-inset border border-border-strong flex items-center justify-center shrink-0 hover:border-text-3'
+    ? 'size-4.5 bg-success/20 text-success border border-success/40 flex items-center justify-center shrink-0'
+    : 'size-4.5 bg-surface-inset border border-border-strong flex items-center justify-center shrink-0 hover:border-text-3'
 }

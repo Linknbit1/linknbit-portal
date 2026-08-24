@@ -25,7 +25,7 @@ function Toggle({
       onClick={() => onChange(!checked)}
       className="relative w-10 h-5.5 rounded-full shrink-0 transition-colors"
       style={{
-        background: checked ? '#EE2737' : '#D6CFC5',
+        background: checked ? '#E01414' : '#D6CFC5',
         height: '22px',
         width: '40px',
       }}
@@ -170,8 +170,8 @@ export default function ClientSettingsPage() {
           description="Choose how and when you receive updates."
         >
           <div className="flex items-center gap-3 px-6 py-3 border-b" style={{ borderColor: '#F2EDE4' }}>
-            <div className="size-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(238,39,55,0.08)' }}>
-              <Bell size={13} style={{ color: '#EE2737' }} />
+            <div className="size-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(224,20,20,0.08)' }}>
+              <Bell size={13} style={{ color: '#E01414' }} />
             </div>
             <span className="text-[12px] font-mono uppercase tracking-wider" style={{ color: '#B7AE9D' }}>
               Email Notifications
@@ -201,8 +201,8 @@ export default function ClientSettingsPage() {
         {/* Security */}
         <Section title="Security" description="Keep your account safe.">
           <div className="flex items-center gap-3 px-6 py-3 border-b" style={{ borderColor: '#F2EDE4' }}>
-            <div className="size-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(238,39,55,0.08)' }}>
-              <Lock size={13} style={{ color: '#EE2737' }} />
+            <div className="size-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(224,20,20,0.08)' }}>
+              <Lock size={13} style={{ color: '#E01414' }} />
             </div>
             <span className="text-[12px] font-mono uppercase tracking-wider" style={{ color: '#B7AE9D' }}>
               Password
@@ -222,7 +222,7 @@ export default function ClientSettingsPage() {
                   type={field.type}
                   value={field.value}
                   onChange={(e) => field.set(e.target.value)}
-                  className="w-full text-[13px] px-3 py-2 rounded-xl border outline-none focus:border-[#EE2737]/40 transition-colors"
+                  className="w-full text-[13px] px-3 py-2 rounded-xl border outline-none focus:border-[#E01414]/40 transition-colors"
                   style={{ background: '#FAF7F2', borderColor: '#EAE3D6', color: '#1A1612' }}
                 />
               </div>
@@ -233,7 +233,7 @@ export default function ClientSettingsPage() {
                 onClick={handlePasswordSave}
                 disabled={!newPw || newPw !== confirmPw}
                 className="px-4 py-2 rounded-xl text-[13px] font-semibold text-white disabled:opacity-40 transition-opacity"
-                style={{ background: '#EE2737' }}
+                style={{ background: '#E01414' }}
               >
                 Update Password
               </motion.button>

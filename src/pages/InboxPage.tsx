@@ -85,7 +85,7 @@ export default function InboxPage() {
       <div className="p-4 lg:px-8 lg:py-7 flex flex-col gap-6">
         <div className="flex items-center gap-3">
           <h2 className="font-display font-bold text-[22px] text-text-1">Inbox</h2>
-          {unread > 0 && <span className="px-2 py-0.5 rounded-full bg-brand-red text-white text-[11px] font-bold">{unread}</span>}
+          {unread > 0 && <span className="px-2 py-0.5 rounded-sm bg-brand-red text-white text-[11px] font-bold">{unread}</span>}
           {unread > 0 && (
             <button onClick={() => markAllRead()} className="ml-auto flex items-center gap-1.5 font-ui text-[12px] text-text-3 hover:text-text-1 transition-colors">
               <CheckCheck size={14} /> Mark all read
@@ -116,7 +116,7 @@ export default function InboxPage() {
                   onClick={() => setCategory(c.key)}
                   aria-pressed={on}
                   className={cn(
-                    'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-ui text-[12px] transition-colors',
+                    'inline-flex items-center gap-1.5 rounded-sm border px-3 py-1 font-ui text-[12px] transition-colors',
                     on
                       ? 'border-brand-red/30 bg-brand-red/10 text-brand-red'
                       : 'border-border-default bg-surface-1 text-text-3 hover:border-border-strong hover:text-text-1',
@@ -165,13 +165,13 @@ export default function InboxPage() {
                     <span className="flex items-center gap-2">
                       <span className={cn('font-ui text-[13px]', isUnread ? 'text-text-1 font-semibold' : 'text-text-2')}>{groupTitle(group)}</span>
                       {group.count > 1 && (
-                        <span className="shrink-0 rounded-full bg-surface-3 px-1.5 font-mono text-[10px] text-text-3">{group.count}</span>
+                        <span className="shrink-0 rounded-sm bg-surface-3 px-1.5 font-mono text-[10px] text-text-3">{group.count}</span>
                       )}
                       {isUnread && <span className="size-1.5 rounded-full bg-brand-red shrink-0" />}
                     </span>
                     {n.body && <span className="block font-ui text-[12px] text-text-3 mt-0.5 line-clamp-2">{n.body}</span>}
                     <span className="mt-1 flex flex-wrap items-center gap-2">
-                      <span className="rounded-full border border-border-subtle bg-surface-2 px-1.5 py-0.5 font-mono text-[9.5px] uppercase tracking-wider text-text-4">
+                      <span className="rounded-sm border border-border-subtle bg-surface-2 px-1.5 py-0.5 font-mono text-[9.5px] uppercase tracking-wider text-text-4">
                         {categoryForType(n.type).label}
                       </span>
                       <span className="font-mono text-[10px] text-text-4">{formatRelativeTime(n.created_at)}{href ? ' · click to open' : ''}</span>

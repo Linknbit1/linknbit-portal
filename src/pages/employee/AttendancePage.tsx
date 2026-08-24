@@ -149,7 +149,7 @@ export function UpcomingScheduleSection() {
               </div>
               <p className="flex-1 font-ui font-medium text-[13px] text-text-1 truncate">{item.label}</p>
               <span className="font-mono text-[11.5px] text-text-3 shrink-0">{dateLabel}</span>
-              <span className={cn('text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full border shrink-0', meta.pill)}>
+              <span className={cn('text-[10px] font-mono font-semibold px-2 py-0.5 rounded-sm border shrink-0', meta.pill)}>
                 {meta.label}
               </span>
             </div>

@@ -76,7 +76,7 @@ type Tab = 'overview' | 'timeline' | 'files' | 'approvals' | 'activity'
 function FileTypeIcon({ type }: { type: string }) {
   const styles: Record<string, { bg: string; color: string; label: string }> = {
     figma: { bg: 'rgba(122,63,217,0.1)', color: '#7A3FD9', label: 'FIG' },
-    pdf: { bg: 'rgba(238,39,55,0.08)', color: '#EE2737', label: 'PDF' },
+    pdf: { bg: 'rgba(224,20,20,0.08)', color: '#E01414', label: 'PDF' },
     image: { bg: 'rgba(251,191,36,0.1)', color: '#B47700', label: 'IMG' },
     doc: { bg: 'rgba(14,139,154,0.1)', color: '#0E8B9A', label: 'DOC' },
     default: { bg: '#F2EDE4', color: '#877F71', label: 'FILE' },
@@ -151,9 +151,9 @@ export default function ClientProjectDetailPage() {
                 <span
                   className="text-[11px] font-bold px-2.5 py-0.5 rounded-full border"
                   style={{
-                    background: 'rgba(238,39,55,0.08)',
-                    color: '#EE2737',
-                    borderColor: 'rgba(238,39,55,0.25)',
+                    background: 'rgba(224,20,20,0.08)',
+                    color: '#E01414',
+                    borderColor: 'rgba(224,20,20,0.25)',
                   }}
                 >
                   ⚡ Action Needed
@@ -191,7 +191,7 @@ export default function ClientProjectDetailPage() {
               width: `${project.progress}%`,
               background:
                 project.status === 'awaiting_client'
-                  ? '#EE2737'
+                  ? '#E01414'
                   : project.progress >= 75
                     ? '#1F9D55'
                     : svc.bar,
@@ -221,7 +221,7 @@ export default function ClientProjectDetailPage() {
             className={cn(
               'px-4 py-2.5 text-[14px] font-medium border-b-2 transition-all flex items-center gap-1.5 -mb-px',
               tab === t.key
-                ? 'border-[#EE2737] font-semibold'
+                ? 'border-[#E01414] font-semibold'
                 : 'border-transparent hover:border-client-border',
             )}
             style={{ color: tab === t.key ? '#1A1612' : '#877F71' }}
@@ -402,11 +402,11 @@ export default function ClientProjectDetailPage() {
             {visibleStages.some((s) => s.status === 'upcoming' && s.requiresApproval) && (
               <div
                 className="rounded-xl p-4 border"
-                style={{ background: 'rgba(238,39,55,0.04)', borderColor: 'rgba(238,39,55,0.2)' }}
+                style={{ background: 'rgba(224,20,20,0.04)', borderColor: 'rgba(224,20,20,0.2)' }}
               >
                 <p
                   className="text-[11px] font-mono uppercase tracking-wider mb-2"
-                  style={{ color: '#EE2737' }}
+                  style={{ color: '#E01414' }}
                 >
                   Next Milestone
                 </p>
@@ -487,14 +487,14 @@ export default function ClientProjectDetailPage() {
                             isCompleted
                               ? 'bg-green-500 border-green-500'
                               : isCurrent || isBlocked
-                                ? 'bg-white border-[#EE2737]'
+                                ? 'bg-white border-[#E01414]'
                                 : 'bg-white border-client-border',
                           )}
                         >
                           {isCompleted ? (
                             <CheckCircle2 size={14} className="text-white" />
                           ) : isCurrent || isBlocked ? (
-                            <div className="size-2.5 rounded-full bg-[#EE2737] animate-pulse" />
+                            <div className="size-2.5 rounded-full bg-[#E01414] animate-pulse" />
                           ) : (
                             <div className="size-2 rounded-full" style={{ background: '#EAE3D6' }} />
                           )}
@@ -527,12 +527,12 @@ export default function ClientProjectDetailPage() {
                               background: isCompleted
                                 ? 'rgba(31,157,85,0.1)'
                                 : isCurrent || isBlocked
-                                  ? 'rgba(238,39,55,0.08)'
+                                  ? 'rgba(224,20,20,0.08)'
                                   : '#F2EDE4',
                               color: isCompleted
                                 ? '#1F9D55'
                                 : isCurrent || isBlocked
-                                  ? '#EE2737'
+                                  ? '#E01414'
                                   : '#B7AE9D',
                             }}
                           >
@@ -554,10 +554,10 @@ export default function ClientProjectDetailPage() {
                         {stage.approvalStatus === 'pending' && (
                           <div
                             className="mt-3 p-2.5 rounded-lg flex items-center gap-2"
-                            style={{ background: 'rgba(238,39,55,0.06)', border: '1px solid rgba(238,39,55,0.15)' }}
+                            style={{ background: 'rgba(224,20,20,0.06)', border: '1px solid rgba(224,20,20,0.15)' }}
                           >
-                            <AlertCircle size={13} style={{ color: '#EE2737' }} />
-                            <p className="text-[12px] font-medium" style={{ color: '#EE2737' }}>
+                            <AlertCircle size={13} style={{ color: '#E01414' }} />
+                            <p className="text-[12px] font-medium" style={{ color: '#E01414' }}>
                               Approval request sent — awaiting your response
                             </p>
                           </div>
@@ -610,7 +610,7 @@ export default function ClientProjectDetailPage() {
                     </button>
                     <button
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-colors hover:opacity-80"
-                      style={{ background: '#EE2737', color: 'white' }}
+                      style={{ background: '#E01414', color: 'white' }}
                     >
                       <Download size={13} />
                       Download
@@ -671,13 +671,13 @@ export default function ClientProjectDetailPage() {
                                 ? 'rgba(31,157,85,0.1)'
                                 : state === 'revision_requested'
                                   ? 'rgba(251,191,36,0.1)'
-                                  : 'rgba(238,39,55,0.08)',
+                                  : 'rgba(224,20,20,0.08)',
                             color:
                               state === 'approved'
                                 ? '#1F9D55'
                                 : state === 'revision_requested'
                                   ? '#B47700'
-                                  : '#EE2737',
+                                  : '#E01414',
                           }}
                         >
                           {state === 'approved'
@@ -725,7 +725,7 @@ export default function ClientProjectDetailPage() {
                             setApprovalStates((s) => ({ ...s, [approval.id]: 'rejected' }))
                           }
                           className="px-4 py-2.5 rounded-lg text-[14px] font-semibold transition-opacity hover:opacity-80"
-                          style={{ border: '1px solid rgba(238,39,55,0.3)', color: '#EE2737' }}
+                          style={{ border: '1px solid rgba(224,20,20,0.3)', color: '#E01414' }}
                         >
                           <XCircle size={14} className="inline mr-1 -mt-0.5" />
                           Reject
@@ -797,7 +797,7 @@ export default function ClientProjectDetailPage() {
                     : item.type === 'file'
                       ? '#7A3FD9'
                       : item.type === 'approval'
-                        ? '#EE2737'
+                        ? '#E01414'
                         : item.type === 'comment'
                           ? '#0E8B9A'
                           : '#EAE3D6'

@@ -130,7 +130,7 @@ export function ProjectFormModal({ project, onClose }: ProjectFormModalProps) {
                     onClick={() => setServiceIds((prev) =>
                       picked ? prev.filter((id) => id !== s.id) : [...prev, s.id])}
                     className={cn(
-                      'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-ui text-[12px] transition-colors',
+                      'inline-flex items-center gap-1.5 rounded-sm border px-3 py-1 font-ui text-[12px] transition-colors',
                       picked
                         ? 'border-border-strong bg-surface-3 text-text-1'
                         : 'border-border-default bg-surface-2 text-text-3 hover:text-text-1',

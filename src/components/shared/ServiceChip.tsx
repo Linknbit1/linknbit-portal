@@ -27,7 +27,7 @@ export function ServiceChip({ service, showDot = true, className }: ServiceChipP
   return (
     <span
       className={cn(
-        'inline-flex w-fit items-center gap-1.5 py-0.75 px-2.25 rounded-full font-ui font-semibold text-[10.5px] uppercase tracking-[0.04em] leading-[1.4] whitespace-nowrap border border-transparent',
+        'inline-flex w-fit items-center gap-1.5 py-0.75 px-2.25 rounded-sm font-ui font-semibold text-[10.5px] uppercase tracking-[0.04em] leading-[1.4] whitespace-nowrap border border-transparent',
         className,
       )}
       // Dynamic per-service colour — the sanctioned inline-style case (value can't be a token).

@@ -68,7 +68,7 @@ export function Tabs({ tabs, activeKey, onChange, variant = 'underline', classNa
             {tab.badge !== undefined && (
               <span
                 className={cn(
-                  'px-1.5 py-0.5 rounded-full text-[10px] font-bold',
+                  'px-1.5 py-0.5 rounded-sm text-[10px] font-bold',
                   active ? 'bg-brand-red text-white' : 'bg-surface-3 text-text-3',
                 )}
               >

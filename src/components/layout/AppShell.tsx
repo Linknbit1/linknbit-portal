@@ -12,6 +12,7 @@ import { ImpersonationBanner } from './ImpersonationBanner'
 import { MeModeProvider } from '../../context/MeModeContext'
 import { RunningTimerWidget } from '../shared/RunningTimerWidget'
 import { ErrorBoundary } from '../ui/ErrorBoundary'
+import { themeClass } from '../../constants/themes'
 
 export function AppShell() {
   const location = useLocation()
@@ -46,7 +47,7 @@ export function AppShell() {
   // portal out of this tree. A wrapper would leave all three on the default navy.
   useEffect(() => {
     const root = document.documentElement
-    const theme = profile?.theme === 'jade' ? 'theme-jade' : null
+    const theme = themeClass(profile?.theme)
     if (theme) root.classList.add(theme)
     return () => { if (theme) root.classList.remove(theme) }
   }, [profile?.theme])
@@ -67,18 +68,23 @@ export function AppShell() {
             so a page can hand its own scrolling to an inner element (the chat
             message list) instead of growing the document. min-h-0 on the row and
             main is what lets those children shrink below their content. */}
-        <div className="flex h-dvh w-full flex-col overflow-hidden bg-bg-base">
+        <div className="flex h-dvh w-full flex-col overflow-hidden app-backdrop">
           <ImpersonationBanner />
           <div className="flex w-full min-h-0 flex-1">
             <Sidebar />
             {/* pb clears the mobile bottom tab bar (incl. the home-indicator safe
                 area) — but only when that bar is actually showing. A stack screen
                 hides it, and the padding would otherwise leave dead space under
-                the content (most visible under the chat composer). */}
+                the content (most visible under the chat composer).
+
+                No background of its own: the shell above paints `--app-backdrop`,
+                and a fill here would cover it. The backdrop's own base colour is
+                `bg-base`, so nothing changes for a flat theme — it is what lets a
+                gradient theme reach the content area. */}
             <main
               ref={mainRef}
               className={cn(
-                'flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden bg-bg-base lg:pb-0',
+                'flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden lg:pb-0',
                 !hasBack && 'pb-safe-nav',
               )}
             >

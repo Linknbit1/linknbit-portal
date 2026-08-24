@@ -93,7 +93,7 @@ export default function ResetPasswordPage() {
 
         {status === 'invalid' && (
           <div className="flex flex-col gap-5">
-            <div className="flex size-14 items-center justify-center rounded-lg border border-border-default bg-[linear-gradient(160deg,#1A2433_0%,#131C28_100%)] text-error shadow-[0_0_0_6px_rgba(238,39,55,0.06)]">
+            <div className="flex size-14 items-center justify-center rounded-lg border border-border-default bg-[linear-gradient(160deg,#1D1D1D_0%,#151515_100%)] text-error shadow-[0_0_0_6px_rgba(224,20,20,0.06)]">
               <AlertCircle size={26} strokeWidth={1.75} />
             </div>
             <div>
@@ -106,7 +106,7 @@ export default function ResetPasswordPage() {
             </div>
             <button
               onClick={() => navigate('/login', { replace: true })}
-              className="inline-flex h-11.5 w-full items-center justify-center gap-2.5 rounded-sm bg-brand-red font-ui text-body font-semibold text-white shadow-[0_4px_14px_rgba(238,39,55,0.22)] transition-colors hover:bg-brand-red-hover"
+              className="inline-flex h-11.5 w-full items-center justify-center gap-2.5 rounded-sm bg-brand-red font-ui text-body font-semibold text-white shadow-[0_4px_14px_rgba(224,20,20,0.22)] transition-colors hover:bg-brand-red-hover"
             >
               Back to sign in <ArrowRight size={16} />
             </button>
@@ -115,7 +115,7 @@ export default function ResetPasswordPage() {
 
         {status === 'done' && (
           <div className="flex flex-col gap-5">
-            <div className="flex size-14 items-center justify-center rounded-lg border border-border-default bg-[linear-gradient(160deg,#1A2433_0%,#131C28_100%)] text-success shadow-[0_0_0_6px_rgba(34,197,94,0.06)]">
+            <div className="flex size-14 items-center justify-center rounded-lg border border-border-default bg-[linear-gradient(160deg,#1D1D1D_0%,#151515_100%)] text-success shadow-[0_0_0_6px_rgba(34,197,94,0.06)]">
               <ShieldCheck size={26} strokeWidth={1.75} />
             </div>
             <div>
@@ -128,7 +128,7 @@ export default function ResetPasswordPage() {
             </div>
             <button
               onClick={() => navigate('/login', { replace: true })}
-              className="inline-flex h-11.5 w-full items-center justify-center gap-2.5 rounded-sm bg-brand-red font-ui text-body font-semibold text-white shadow-[0_4px_14px_rgba(238,39,55,0.22)] transition-colors hover:bg-brand-red-hover"
+              className="inline-flex h-11.5 w-full items-center justify-center gap-2.5 rounded-sm bg-brand-red font-ui text-body font-semibold text-white shadow-[0_4px_14px_rgba(224,20,20,0.22)] transition-colors hover:bg-brand-red-hover"
             >
               Go to sign in <ArrowRight size={16} />
             </button>
@@ -137,7 +137,7 @@ export default function ResetPasswordPage() {
 
         {(status === 'ready' || status === 'saving') && (
           <form onSubmit={handleSubmit}>
-            <div className="mb-6 flex size-14 items-center justify-center rounded-lg border border-border-default bg-[linear-gradient(160deg,#1A2433_0%,#131C28_100%)] text-success shadow-[0_0_0_6px_rgba(34,197,94,0.06)]">
+            <div className="mb-6 flex size-14 items-center justify-center rounded-lg border border-border-default bg-[linear-gradient(160deg,#1D1D1D_0%,#151515_100%)] text-success shadow-[0_0_0_6px_rgba(34,197,94,0.06)]">
               <ShieldCheck size={26} strokeWidth={1.75} />
             </div>
 
@@ -193,7 +193,7 @@ export default function ResetPasswordPage() {
             <button
               type="submit"
               disabled={!isStrong || mismatch || status === 'saving'}
-              className="mt-2 inline-flex h-11.5 w-full items-center justify-center gap-2.5 rounded-sm bg-brand-red font-ui text-body font-semibold text-white shadow-[0_4px_14px_rgba(238,39,55,0.22)] transition-colors hover:bg-brand-red-hover disabled:cursor-not-allowed disabled:opacity-50"
+              className="mt-2 inline-flex h-11.5 w-full items-center justify-center gap-2.5 rounded-sm bg-brand-red font-ui text-body font-semibold text-white shadow-[0_4px_14px_rgba(224,20,20,0.22)] transition-colors hover:bg-brand-red-hover disabled:cursor-not-allowed disabled:opacity-50"
             >
               {status === 'saving' ? <><Loader2 size={16} className="animate-spin" /> Saving…</> : <>Set password & continue <ArrowRight size={16} /></>}
             </button>

@@ -23,7 +23,7 @@ export function ReactionBar({ groups, onToggle }: ReactionBarProps) {
           onClick={() => onToggle(g.emoji)}
           title={g.names.join(', ')}
           className={cn(
-            'h-6 px-1.5 rounded-full border flex items-center gap-1 transition-colors',
+            'h-6 px-1.5 rounded-sm border flex items-center gap-1 transition-colors',
             g.mine
               ? 'bg-brand-red/13 border-brand-red/40 text-text-1'
               : 'bg-surface-2 border-border-default text-text-2 hover:border-border-strong',

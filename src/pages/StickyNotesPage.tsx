@@ -1052,7 +1052,7 @@ function NoteCard({ note, zoom, isTop, onMove, onChangeContent, onRaise, onResiz
           onPointerDown={(e) => e.stopPropagation()}
           className={cn(
             'absolute left-1/2 -bottom-3.5 z-30 -translate-x-1/2 flex items-center gap-1.5',
-            'rounded-full border border-border-default bg-surface-1/95 pl-1 pr-1.5 py-1 shadow-lg',
+            'rounded-sm border border-border-default bg-surface-1/95 pl-1 pr-1.5 py-1 shadow-lg',
             // Stay visible mid-drag even if the pointer leaves the hover area.
             resizing ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 focus-within:opacity-100',
             'transition-opacity',
@@ -1106,7 +1106,7 @@ function NoteCard({ note, zoom, isTop, onMove, onChangeContent, onRaise, onResiz
           onMouseDown={(e) => e.preventDefault()}
           className={cn(
             'absolute left-1/2 top-full z-40 mt-2 -translate-x-1/2 flex items-center gap-0.5',
-            'rounded-full border border-border-default bg-surface-1/95 p-1 shadow-lg',
+            'rounded-sm border border-border-default bg-surface-1/95 p-1 shadow-lg',
           )}
         >
           {fmtBtn('al', fmt.align === 'left', 'Align left (⌘/Ctrl+L)',
@@ -1690,7 +1690,7 @@ export default function StickyNotesPage() {
               )}
 
               {/* Zoom controls, floating over the board like a canvas tool. */}
-              <div className="absolute bottom-3 right-3 flex items-center gap-1 rounded-full border border-border-default bg-surface-1/95 px-1.5 py-1 shadow-lg">
+              <div className="absolute bottom-3 right-3 flex items-center gap-1 rounded-sm border border-border-default bg-surface-1/95 px-1.5 py-1 shadow-lg">
                 <button
                   type="button"
                   aria-label="Zoom out"

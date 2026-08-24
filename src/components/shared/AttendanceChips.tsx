@@ -23,7 +23,7 @@ export interface AttendanceFacts {
 }
 
 const CHIP_BASE =
-  'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider whitespace-nowrap'
+  'inline-flex items-center gap-1 rounded-sm border px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider whitespace-nowrap'
 
 const DAY_META: Record<string, { label: string; cls: string }> = {
   leave:   { label: 'Leave',    cls: 'bg-service-dev/10 text-service-dev border-service-dev/30' },

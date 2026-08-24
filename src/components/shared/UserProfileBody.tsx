@@ -51,7 +51,7 @@ export function UserProfileBody({
           {name}
         </h3>
         {person && !person.is_active && (
-          <span className="rounded-full bg-error/10 px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-error">
+          <span className="rounded-sm bg-error/10 px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-error">
             Deactivated
           </span>
         )}

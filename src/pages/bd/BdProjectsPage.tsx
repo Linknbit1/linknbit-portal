@@ -243,13 +243,13 @@ function ProjectCard({ project: p, taskCount, onOpen, onDelete }: { project: BdP
       aria-label={p.name}
       className="group flex cursor-pointer flex-col overflow-hidden rounded-lg border border-border-default bg-surface-1 shadow-sm transition-colors hover:border-border-strong focus:outline-none focus-visible:border-border-focus"
     >
-      <div className="border-b border-border-subtle bg-[linear-gradient(135deg,rgba(238,39,55,0.055),rgba(34,211,238,0.045)_58%,rgba(20,29,42,0)_100%)] p-4">
+      <div className="border-b border-border-subtle bg-[linear-gradient(135deg,rgba(224,20,20,0.055),rgba(34,211,238,0.045)_58%,rgba(20,29,42,0)_100%)] p-4">
         <div className="flex items-center gap-2">
           <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
             {p.channels.map((c) => <ChannelChip key={c} channel={c} />)}
           </div>
           {overdue && (
-            <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-error/30 bg-error/10 px-2 py-0.5 font-mono text-[9.5px] font-semibold uppercase tracking-wider text-error">
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-sm border border-error/30 bg-error/10 px-2 py-0.5 font-mono text-[9.5px] font-semibold uppercase tracking-wider text-error">
               <AlertCircle size={10} className="shrink-0" /> Overdue
             </span>
           )}

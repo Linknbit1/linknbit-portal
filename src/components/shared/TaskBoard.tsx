@@ -100,7 +100,7 @@ function ScheduleLine({ task, overdue }: { task: TaskListItem; overdue: boolean 
 /** Labelled overdue flag — same treatment as the project cards. */
 function OverduePill() {
   return (
-    <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-error/30 bg-error/10 px-2 py-0.5 font-mono text-[9.5px] font-semibold uppercase tracking-wider text-error">
+    <span className="inline-flex shrink-0 items-center gap-1 rounded-sm border border-error/30 bg-error/10 px-2 py-0.5 font-mono text-[9.5px] font-semibold uppercase tracking-wider text-error">
       <AlertCircle size={10} className="shrink-0" /> Overdue
     </span>
   )
@@ -342,7 +342,7 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
                         <span className="min-w-0 truncate font-ui text-[10.5px] text-text-4">{t.project.name}</span>
                       )}
                       {t.stage && (
-                        <span className="inline-flex max-w-full items-center gap-1 rounded-full border border-border-subtle bg-surface-2 px-2 py-0.5 font-mono text-[9.5px] uppercase tracking-wider text-text-3">
+                        <span className="inline-flex max-w-full items-center gap-1 rounded-sm border border-border-subtle bg-surface-2 px-2 py-0.5 font-mono text-[9.5px] uppercase tracking-wider text-text-3">
                           <Layers size={9} className="shrink-0 text-text-4" />
                           <span className="truncate">{t.stage.name}</span>
                         </span>

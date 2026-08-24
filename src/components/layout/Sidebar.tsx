@@ -136,7 +136,7 @@ function NavRow({ item, pathname, activePath }: { item: NavItem; pathname: strin
         <item.icon size={16} className={cn('shrink-0', inSection ? 'text-brand-red' : 'text-text-3')} />
         <span>{item.label}</span>
         {item.badge && item.badge > 0 && (
-          <span className="ml-auto bg-brand-red text-white font-ui font-bold text-[10px] px-1.5 py-px rounded-full leading-tight">
+          <span className="ml-auto bg-brand-red text-white font-ui font-bold text-[10px] px-1.5 py-px rounded-sm leading-tight">
             {badgeCount(item.badge)}
           </span>
         )}
@@ -154,7 +154,7 @@ function NavRow({ item, pathname, activePath }: { item: NavItem; pathname: strin
         {/* Section total — shown whether collapsed or expanded, alongside the
             per-child breakdown. */}
         {item.badge && item.badge > 0 && (
-          <span className="bg-brand-red text-white font-ui font-bold text-[10px] px-1.5 py-px rounded-full leading-tight shrink-0">
+          <span className="bg-brand-red text-white font-ui font-bold text-[10px] px-1.5 py-px rounded-sm leading-tight shrink-0">
             {badgeCount(item.badge)}
           </span>
         )}
@@ -183,7 +183,7 @@ function NavRow({ item, pathname, activePath }: { item: NavItem; pathname: strin
               >
                 <span className="truncate">{child.label}</span>
                 {child.badge && child.badge > 0 && (
-                  <span className="ml-auto bg-brand-red text-white font-ui font-bold text-[10px] px-1.5 py-px rounded-full leading-tight shrink-0">
+                  <span className="ml-auto bg-brand-red text-white font-ui font-bold text-[10px] px-1.5 py-px rounded-sm leading-tight shrink-0">
                     {badgeCount(child.badge)}
                   </span>
                 )}

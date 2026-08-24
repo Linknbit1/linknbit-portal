@@ -124,7 +124,7 @@ export function BdCommentThread({ parentType, parentId, fill, className }: BdCom
         <MessageSquare size={13} className="text-text-4" />
         <span className="font-ui text-[12.5px] font-semibold text-text-2">Comments</span>
         {feed.length > 0 && (
-          <span className="rounded-full bg-surface-3 px-1.5 font-mono text-[10px] font-bold text-text-3">
+          <span className="rounded-sm bg-surface-3 px-1.5 font-mono text-[10px] font-bold text-text-3">
             {feed.length}
           </span>
         )}

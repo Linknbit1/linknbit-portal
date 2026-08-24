@@ -239,7 +239,7 @@ export default function ClientReportsPage() {
             value: daysToDeadline <= 0 ? 'Overdue' : `${daysToDeadline}d`,
             sub: nearestDeadline ? nearestDeadline.name : '—',
             icon: Clock,
-            color: daysToDeadline <= 3 ? '#EE2737' : '#B47700',
+            color: daysToDeadline <= 3 ? '#E01414' : '#B47700',
             positive: daysToDeadline > 7,
           },
         ].map((kpi) => (
@@ -265,7 +265,7 @@ export default function ClientReportsPage() {
             >
               {kpi.value}
             </p>
-            <p className="text-[12px]" style={{ color: kpi.positive ? '#1F9D55' : '#EE2737' }}>
+            <p className="text-[12px]" style={{ color: kpi.positive ? '#1F9D55' : '#E01414' }}>
               {kpi.sub}
             </p>
           </div>
@@ -299,8 +299,8 @@ export default function ClientReportsPage() {
             <AreaChart data={chartData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
               <defs>
                 <linearGradient id="progressGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#EE2737" stopOpacity={0.15} />
-                  <stop offset="95%" stopColor="#EE2737" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#E01414" stopOpacity={0.15} />
+                  <stop offset="95%" stopColor="#E01414" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid
@@ -310,12 +310,12 @@ export default function ClientReportsPage() {
               />
               <XAxis
                 dataKey="week"
-                tick={{ fontSize: 10, fill: '#B7AE9D', fontFamily: 'JetBrains Mono' }}
+                tick={{ fontSize: 10, fill: '#B7AE9D', fontFamily: 'Poppins, sans-serif' }}
                 axisLine={false}
                 tickLine={false}
               />
               <YAxis
-                tick={{ fontSize: 10, fill: '#B7AE9D', fontFamily: 'JetBrains Mono' }}
+                tick={{ fontSize: 10, fill: '#B7AE9D', fontFamily: 'Poppins, sans-serif' }}
                 axisLine={false}
                 tickLine={false}
                 tickFormatter={(v) => `${v}%`}
@@ -325,11 +325,11 @@ export default function ClientReportsPage() {
               <Area
                 type="monotone"
                 dataKey="progress"
-                stroke="#EE2737"
+                stroke="#E01414"
                 strokeWidth={2.5}
                 fill="url(#progressGrad)"
-                dot={{ fill: '#EE2737', r: 3, strokeWidth: 0 }}
-                activeDot={{ fill: '#EE2737', r: 5, strokeWidth: 0 }}
+                dot={{ fill: '#E01414', r: 3, strokeWidth: 0 }}
+                activeDot={{ fill: '#E01414', r: 5, strokeWidth: 0 }}
               />
             </AreaChart>
           </ResponsiveContainer>
@@ -412,13 +412,13 @@ export default function ClientReportsPage() {
                   m.status === 'completed'
                     ? 'rgba(31,157,85,0.2)'
                     : m.status === 'pending'
-                      ? 'rgba(238,39,55,0.2)'
+                      ? 'rgba(224,20,20,0.2)'
                       : '#EAE3D6',
                 background:
                   m.status === 'completed'
                     ? 'rgba(31,157,85,0.04)'
                     : m.status === 'pending'
-                      ? 'rgba(238,39,55,0.04)'
+                      ? 'rgba(224,20,20,0.04)'
                       : '#FAF7F2',
               }}
             >
@@ -426,7 +426,7 @@ export default function ClientReportsPage() {
                 {m.status === 'completed' ? (
                   <CheckCircle2 size={16} style={{ color: '#1F9D55' }} />
                 ) : m.status === 'pending' ? (
-                  <AlertCircle size={16} style={{ color: '#EE2737' }} />
+                  <AlertCircle size={16} style={{ color: '#E01414' }} />
                 ) : (
                   <Clock size={16} style={{ color: '#B7AE9D' }} />
                 )}

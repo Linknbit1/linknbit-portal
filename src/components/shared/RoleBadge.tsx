@@ -15,7 +15,7 @@ const ROLE_CONFIG: Record<UserRole, string> = {
 }
 
 const BADGE_BASE =
-  'inline-flex w-fit items-center font-mono font-semibold rounded-full uppercase tracking-wider whitespace-nowrap'
+  'inline-flex w-fit items-center font-mono font-semibold rounded-sm uppercase tracking-wider whitespace-nowrap'
 
 const sizeClass = (size: 'sm' | 'md') =>
   size === 'sm' ? 'text-[10px] px-2 py-0.5' : 'text-caption px-2.5 py-1'

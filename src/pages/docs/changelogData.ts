@@ -13,11 +13,38 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: 'v1.6',
+    date: '2026-08-23',
+    title: 'Linknbit 3.0 — the portal gets the new brand',
+    highlight:
+      'The portal now wears Linknbit 3.0: Poppins throughout, a near-black ground under the new brand red, and square corners on every card, chip and bar. Your own colour theme now lives in Profile → Appearance.',
+    entries: [
+      {
+        kind: 'improved',
+        text: 'The whole portal has been restyled to the Linknbit 3.0 brand. Everything is set in Poppins, the deep navy ground is now near-black with a soft red wash behind it, and the brand red has moved to the 3.0 red. The corners are the loudest change: cards, panels, buttons, inputs, chips, badges and progress bars are all square now. Avatars and status dots stay round.',
+      },
+      {
+        kind: 'improved',
+        text: 'Colours that mean something were deliberately left alone. Design stays violet, Development stays cyan and Marketing stays amber, and approved-green, blocked-red and the warning ambers are unchanged — a board you have learned to read at a glance still reads the same way.',
+      },
+      {
+        kind: 'added',
+        text: 'You can now pick your own colour theme, in Profile → Appearance. Choose one and the whole portal changes at once — sidebar, top bar, tables, inputs, dialogs and the page background — with no reload. The choice is yours alone and follows you to any device you sign in from; it changes nothing for anyone else.',
+      },
+      {
+        kind: 'improved',
+        text: 'Section labels, column heads and the small capitalised text throughout are set wider and more consistently, so a screen full of tables is easier to scan for the heading you want.',
+      },
+      {
+        kind: 'improved',
+        text: 'The client portal keeps its warm cream look, deliberately — it is what a client sees, and it is meant to read as a delivered product rather than as the internal tool. It picks up Poppins and the new brand red so the two still feel like one company.',
+      },
+    ],
+  },
+  {
     version: 'v1.5',
     date: '2026-08-17',
     title: 'Business Development goes live',
-    highlight:
-      'The BD module now saves. Your pipeline, outreach and campaigns are shared with the department and kept between sessions, and every record carries a live comment thread.',
     entries: [
       {
         kind: 'added',

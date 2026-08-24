@@ -35,7 +35,7 @@ export function RolePicker({ value, onChange, lockedRoles = [], disabled }: Role
             disabled={disabled || locked}
             title={locked ? 'Already added to this channel' : undefined}
             className={cn(
-              'flex items-center gap-1.5 rounded-full border px-2 py-1 transition-colors',
+              'flex items-center gap-1.5 rounded-sm border px-2 py-1 transition-colors',
               selected
                 ? 'border-brand-red/40 bg-brand-red/13'
                 : 'border-border-default hover:border-border-strong',

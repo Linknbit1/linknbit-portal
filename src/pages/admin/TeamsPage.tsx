@@ -213,7 +213,7 @@ export default function TeamsPage() {
                   key={team.id}
                   className="group overflow-hidden rounded-lg border border-border-default bg-surface-1 shadow-[0_18px_50px_rgba(0,0,0,0.16)] transition-colors hover:border-border-strong"
                 >
-                  <div className="border-b border-border-subtle bg-[linear-gradient(135deg,rgba(34,211,238,0.08),rgba(238,39,55,0.04)_45%,rgba(20,29,42,0)_100%)] p-5">
+                  <div className="border-b border-border-subtle bg-[linear-gradient(135deg,rgba(34,211,238,0.08),rgba(224,20,20,0.04)_45%,rgba(20,29,42,0)_100%)] p-5">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex min-w-0 items-start gap-3.5">
                         <div className="flex size-12 shrink-0 items-center justify-center rounded-lg border border-border-subtle bg-surface-2 text-service-dev shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
@@ -228,14 +228,14 @@ export default function TeamsPage() {
                               {team.name}
                             </Link>
                             {lead && (
-                              <span className="inline-flex items-center gap-1 rounded-full border border-coin-gold/25 bg-coin-gold/10 px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-coin-gold">
+                              <span className="inline-flex items-center gap-1 rounded-sm border border-coin-gold/25 bg-coin-gold/10 px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-coin-gold">
                                 <Crown size={10} /> Led
                               </span>
                             )}
                           </div>
                           <div className="mt-2 flex flex-wrap items-center gap-2">
                             <ServiceChip service={team.service_type} />
-                            <span className="rounded-full border border-border-subtle bg-surface-2 px-2.5 py-1 font-mono text-[10.5px] text-text-3">
+                            <span className="rounded-sm border border-border-subtle bg-surface-2 px-2.5 py-1 font-mono text-[10.5px] text-text-3">
                               {members.length} member{members.length === 1 ? '' : 's'}
                             </span>
                           </div>
@@ -283,7 +283,7 @@ export default function TeamsPage() {
                         <p className="mt-0.5 font-mono text-[10.5px] text-text-4">People assigned to this team</p>
                       </div>
                       {members.length > 0 && (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-2 px-2.5 py-1 font-mono text-[10px] text-text-3">
+                        <span className="inline-flex items-center gap-1.5 rounded-sm bg-surface-2 px-2.5 py-1 font-mono text-[10px] text-text-3">
                           <ShieldCheck size={11} /> Active roster
                         </span>
                       )}
@@ -310,7 +310,7 @@ export default function TeamsPage() {
                           <div className="mt-1 flex flex-wrap items-center gap-1.5">
                             <ProfileRoles profileId={m.id} fallbackRole={m.role} />
                             {m.designation_id && designationName.get(m.designation_id) && (
-                              <span className="rounded-full bg-surface-inset border border-border-subtle px-2 py-0.5 font-ui text-[10px] text-text-2">{designationName.get(m.designation_id)}</span>
+                              <span className="rounded-sm bg-surface-inset border border-border-subtle px-2 py-0.5 font-ui text-[10px] text-text-2">{designationName.get(m.designation_id)}</span>
                             )}
                           </div>
                         </div>

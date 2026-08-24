@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
-import { updateOwnProfile, uploadAvatar, updatePassword } from '../api/profile'
+import type { ThemeId } from '../constants/themes'
+import { updateOwnProfile, updateOwnTheme, uploadAvatar, updatePassword } from '../api/profile'
 
 interface SaveProfileInput {
   userId: string
@@ -34,6 +35,17 @@ export function useSaveProfile() {
       if (avatarFile) updates.avatar_url = await uploadAvatar(userId, avatarFile)
       return updateOwnProfile(userId, updates)
     },
+  })
+}
+
+/**
+ * Save the signed-in user's colour theme. The caller refreshes the auth profile
+ * on success, which is what re-runs AppShell's effect and swaps the <html> class.
+ */
+export function useUpdateTheme() {
+  return useMutation({
+    mutationFn: ({ userId, theme }: { userId: string; theme: ThemeId }) =>
+      updateOwnTheme(userId, theme),
   })
 }
 

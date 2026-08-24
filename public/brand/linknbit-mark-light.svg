@@ -1,9 +1,9 @@
 <svg width="400" height="542.857" viewBox="0 0 400 542.857" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title">
   <title id="title">Linknbit mark for light surfaces</title>
-  <rect x="0" y="257.143" width="109.524" height="285.714" rx="1" fill="#1A222D"/>
-  <rect x="0" y="0" width="109.524" height="204.762" rx="1" fill="#1A222D"/>
-  <rect x="290.476" y="0" width="109.524" height="109.524" rx="1" fill="#EE2737"/>
-  <rect x="61.905" y="295.238" width="338.095" height="109.524" rx="2.82544" fill="#1A222D"/>
-  <rect x="0" y="0" width="242.857" height="109.524" rx="1" fill="#1A222D"/>
-  <rect x="290.476" y="157.143" width="109.524" height="247.619" rx="1" fill="#1A222D"/>
+  <rect x="0" y="257.143" width="109.524" height="285.714" rx="1" fill="#0A0A0A"/>
+  <rect x="0" y="0" width="109.524" height="204.762" rx="1" fill="#0A0A0A"/>
+  <rect x="290.476" y="0" width="109.524" height="109.524" rx="1" fill="#E01414"/>
+  <rect x="61.905" y="295.238" width="338.095" height="109.524" rx="2.82544" fill="#0A0A0A"/>
+  <rect x="0" y="0" width="242.857" height="109.524" rx="1" fill="#0A0A0A"/>
+  <rect x="290.476" y="157.143" width="109.524" height="247.619" rx="1" fill="#0A0A0A"/>
 </svg>

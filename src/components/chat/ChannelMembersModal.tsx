@@ -76,7 +76,7 @@ export function ChannelMembersModal({ open, onClose, channelId, canManage }: Cha
                 {grantedRoles.map((role) => (
                   <span
                     key={role}
-                    className="flex items-center gap-1.5 rounded-full border border-brand-red/40 bg-brand-red/13 py-1 pl-2 pr-1"
+                    className="flex items-center gap-1.5 rounded-sm border border-brand-red/40 bg-brand-red/13 py-1 pl-2 pr-1"
                   >
                     <RoleBadge role={toUserRole(role)} size="sm" />
                     <button

@@ -1,10 +1,10 @@
 <svg width="2048" height="2048" viewBox="0 0 2048 2048" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title">
   <title id="title">Linknbit splash screen</title>
-  <rect width="2048" height="2048" fill="#1A222D"/>
+  <rect width="2048" height="2048" fill="#0A0A0A"/>
   <g transform="translate(675.8399999999999 182.85726720000002) scale(1.7408000000000001)">
   <rect x="0" y="257.143" width="109.524" height="285.714" rx="1" fill="white"/>
   <rect x="0" y="0" width="109.524" height="204.762" rx="1" fill="white"/>
-  <rect x="290.476" y="0" width="109.524" height="109.524" rx="1" fill="#EE2737"/>
+  <rect x="290.476" y="0" width="109.524" height="109.524" rx="1" fill="#E01414"/>
   <rect x="61.905" y="295.238" width="338.095" height="109.524" rx="2.82544" fill="white"/>
   <rect x="0" y="0" width="242.857" height="109.524" rx="1" fill="white"/>
   <rect x="290.476" y="157.143" width="109.524" height="247.619" rx="1" fill="white"/></g>

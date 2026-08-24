@@ -102,8 +102,8 @@ function FileAttachment({ file }: { file: { id: string; name: string; type: stri
       <div
         className="size-8 rounded-lg flex items-center justify-center shrink-0"
         style={{
-          background: isDesign ? 'rgba(122,63,217,0.1)' : 'rgba(238,39,55,0.07)',
-          color: isDesign ? '#7A3FD9' : '#EE2737',
+          background: isDesign ? 'rgba(122,63,217,0.1)' : 'rgba(224,20,20,0.07)',
+          color: isDesign ? '#7A3FD9' : '#E01414',
         }}
       >
         {isDesign ? <Layers size={13} /> : <FileText size={13} />}
@@ -116,7 +116,7 @@ function FileAttachment({ file }: { file: { id: string; name: string; type: stri
       </span>
       <button
         className="flex items-center gap-1 text-[12px] font-semibold shrink-0 ml-1"
-        style={{ color: '#EE2737' }}
+        style={{ color: '#E01414' }}
       >
         <Eye size={12} /> View
       </button>
@@ -135,11 +135,11 @@ function StatusBadge({ state }: { state: ApprovalStatus }) {
       icon: <RotateCcw size={11} />,
     },
     rejected: {
-      bg: 'rgba(238,39,55,0.08)', text: '#EE2737', label: 'Rejected',
+      bg: 'rgba(224,20,20,0.08)', text: '#E01414', label: 'Rejected',
       icon: <XCircle size={11} />,
     },
     pending: {
-      bg: 'rgba(238,39,55,0.08)', text: '#EE2737', label: 'Awaiting Review',
+      bg: 'rgba(224,20,20,0.08)', text: '#E01414', label: 'Awaiting Review',
       icon: <Clock size={11} />,
     },
   }
@@ -192,7 +192,7 @@ function ApprovalCard({
       variants={cardVariants}
       className={cn('bg-white rounded-2xl flex flex-col overflow-hidden', isPending ? 'border-2' : 'border')}
       style={{
-        borderColor: isPending ? 'rgba(238,39,55,0.25)' : '#EAE3D6',
+        borderColor: isPending ? 'rgba(224,20,20,0.25)' : '#EAE3D6',
       }}
       whileHover={{ boxShadow: '0 6px 20px rgba(26,22,18,0.07)' }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
@@ -203,7 +203,7 @@ function ApprovalCard({
         style={{
           background:
             isPending
-              ? '#EE2737'
+              ? '#E01414'
               : state === 'approved'
                 ? '#1F9D55'
                 : state === 'revision_requested'
@@ -297,7 +297,7 @@ function ApprovalCard({
               onClick={() => setIsConfirmingReject(true)}
               whileTap={{ scale: 0.97 }}
               className="px-3.5 py-2.5 rounded-xl text-[13px] font-semibold transition-colors hover:bg-red-50"
-              style={{ border: '1.5px solid rgba(238,39,55,0.25)', color: '#EE2737' }}
+              style={{ border: '1.5px solid rgba(224,20,20,0.25)', color: '#E01414' }}
             >
               <XCircle size={14} />
             </motion.button>
@@ -322,7 +322,7 @@ function ApprovalCard({
                 value={revisionNote}
                 onChange={(e) => setRevisionNote(e.target.value)}
                 rows={3}
-                className="w-full text-[13px] rounded-xl p-3 border outline-none resize-none mb-3 focus:border-[#EE2737]/40 transition-colors"
+                className="w-full text-[13px] rounded-xl p-3 border outline-none resize-none mb-3 focus:border-[#E01414]/40 transition-colors"
                 style={{ background: '#FAF7F2', borderColor: '#EAE3D6', color: '#1A1612' }}
               />
               <div className="flex gap-2">
@@ -359,10 +359,10 @@ function ApprovalCard({
             >
               <div
                 className="rounded-xl p-3.5 mt-2"
-                style={{ background: 'rgba(238,39,55,0.04)', border: '1px solid rgba(238,39,55,0.18)' }}
+                style={{ background: 'rgba(224,20,20,0.04)', border: '1px solid rgba(224,20,20,0.18)' }}
               >
                 <div className="flex items-start gap-2.5">
-                  <AlertCircle size={15} style={{ color: '#EE2737' }} className="mt-0.5 shrink-0" />
+                  <AlertCircle size={15} style={{ color: '#E01414' }} className="mt-0.5 shrink-0" />
                   <div>
                     <p className="text-[13px] font-semibold mb-0.5" style={{ color: '#1A1612' }}>
                       Confirm rejection?
@@ -374,7 +374,7 @@ function ApprovalCard({
                       <button
                         onClick={handleRejectConfirm}
                         className="px-3.5 py-1.5 rounded-lg text-[12px] font-semibold text-white"
-                        style={{ background: '#EE2737' }}
+                        style={{ background: '#E01414' }}
                       >
                         Yes, Reject
                       </button>
@@ -428,7 +428,7 @@ export default function ClientApprovalsPage() {
   })
 
   const TABS: { key: FilterKey; label: string; count: number; color?: string }[] = [
-    { key: 'pending', label: 'Awaiting Review', count: pendingCount, color: '#EE2737' },
+    { key: 'pending', label: 'Awaiting Review', count: pendingCount, color: '#E01414' },
     { key: 'approved', label: 'Approved', count: approvedCount, color: '#1F9D55' },
     { key: 'revision_requested', label: 'Revision', count: revisionCount, color: '#B47700' },
     { key: 'all', label: 'All', count: ALL_APPROVALS.length },
@@ -460,7 +460,7 @@ export default function ClientApprovalsPage() {
         <p className="text-[15px]" style={{ color: '#4F4940' }}>
           {pendingCount > 0 ? (
             <>
-              <span className="font-semibold" style={{ color: '#EE2737' }}>
+              <span className="font-semibold" style={{ color: '#E01414' }}>
                 {pendingCount} {pendingCount === 1 ? 'item requires' : 'items require'} your attention.
               </span>{' '}
               Your approval keeps the project moving.
@@ -474,7 +474,7 @@ export default function ClientApprovalsPage() {
       {/* Stats row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         {[
-          { label: 'Awaiting Review', value: pendingCount, icon: Clock, color: '#EE2737', bg: 'rgba(238,39,55,0.08)' },
+          { label: 'Awaiting Review', value: pendingCount, icon: Clock, color: '#E01414', bg: 'rgba(224,20,20,0.08)' },
           { label: 'Approved', value: approvedCount, icon: CheckCircle2, color: '#1F9D55', bg: 'rgba(31,157,85,0.08)' },
           { label: 'Revision Requested', value: revisionCount, icon: RotateCcw, color: '#B47700', bg: 'rgba(251,191,36,0.1)' },
         ].map((s) => (
@@ -522,7 +522,7 @@ export default function ClientApprovalsPage() {
               className={cn('text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-4.5 text-center')}
               style={
                 t.key === 'pending' && t.count > 0
-                  ? { background: '#EE2737', color: 'white' }
+                  ? { background: '#E01414', color: 'white' }
                   : { background: filter === t.key ? '#EAE3D6' : '#D6CFC5', color: '#4F4940' }
               }
             >

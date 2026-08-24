@@ -382,7 +382,7 @@ function LiveTimers({ active, loading, tz }: {
               <span className="shrink-0 font-mono text-[11.5px] text-text-4">
                 since {clockAt(a.started_at, tz)}
               </span>
-              <span className="flex shrink-0 items-center gap-1.5 rounded-full border border-success/30 bg-success/10 px-2.5 py-1 font-mono text-[11.5px] font-semibold text-success">
+              <span className="flex shrink-0 items-center gap-1.5 rounded-sm border border-success/30 bg-success/10 px-2.5 py-1 font-mono text-[11.5px] font-semibold text-success">
                 <Radio size={11} /> {formatMinutes(a.running_minutes)}
               </span>
             </div>

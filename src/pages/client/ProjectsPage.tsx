@@ -38,13 +38,13 @@ const STATUS_LABELS: Record<string, string> = {
 const STATUS_STYLES: Record<string, { bg: string; text: string; border: string }> = {
   in_progress: { bg: 'rgba(31,157,85,0.08)', text: '#1F9D55', border: 'rgba(31,157,85,0.25)' },
   blocked: { bg: 'rgba(251,191,36,0.1)', text: '#B47700', border: 'rgba(251,191,36,0.25)' },
-  awaiting_client: { bg: 'rgba(238,39,55,0.08)', text: '#EE2737', border: 'rgba(238,39,55,0.25)' },
+  awaiting_client: { bg: 'rgba(224,20,20,0.08)', text: '#E01414', border: 'rgba(224,20,20,0.25)' },
   completed: { bg: 'rgba(31,157,85,0.08)', text: '#1F9D55', border: 'rgba(31,157,85,0.25)' },
   on_hold: { bg: '#F2EDE4', text: '#877F71', border: '#EAE3D6' },
 }
 
 const PROGRESS_COLORS = (p: number, action: boolean) => {
-  if (action) return '#EE2737'
+  if (action) return '#E01414'
   if (p >= 80) return '#1F9D55'
   if (p >= 50) return '#0E8B9A'
   return '#7A3FD9'
@@ -85,7 +85,7 @@ export default function ClientProjectsPage() {
   const stats = [
     { label: 'Total Projects', value: PROJECTS.length, icon: BarChart2, color: '#0E8B9A' },
     { label: 'Active', value: activeProjects.length, icon: TrendingUp, color: '#1F9D55' },
-    { label: 'Action Needed', value: actionNeeded.length, icon: AlertCircle, color: '#EE2737' },
+    { label: 'Action Needed', value: actionNeeded.length, icon: AlertCircle, color: '#E01414' },
     { label: 'Pending Approvals', value: pendingApprovals, icon: Layers, color: '#7A3FD9' },
   ]
 
@@ -104,7 +104,7 @@ export default function ClientProjectsPage() {
           {actionNeeded.length > 0 && (
             <>
               {' '}
-              <span className="font-semibold" style={{ color: '#EE2737' }}>
+              <span className="font-semibold" style={{ color: '#E01414' }}>
                 {actionNeeded.length} {actionNeeded.length === 1 ? 'needs' : 'need'} your attention.
               </span>
             </>
@@ -192,7 +192,7 @@ export default function ClientProjectsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search projects…"
-            className="w-full pl-9 pr-4 py-2 rounded-lg text-[13px] border outline-none transition-colors focus:border-[#EE2737]/40"
+            className="w-full pl-9 pr-4 py-2 rounded-lg text-[13px] border outline-none transition-colors focus:border-[#E01414]/40"
             style={{
               background: '#FFFFFF',
               borderColor: '#EAE3D6',
@@ -229,7 +229,7 @@ export default function ClientProjectsPage() {
                   'bg-white rounded-2xl p-6 cursor-default',
                   isAction ? 'border-2' : 'border',
                 )}
-                style={{ borderColor: isAction ? 'rgba(238,39,55,0.3)' : '#EAE3D6' }}
+                style={{ borderColor: isAction ? 'rgba(224,20,20,0.3)' : '#EAE3D6' }}
               >
                 {/* Header row */}
                 <div className="flex items-start justify-between gap-3 mb-4">
@@ -325,9 +325,9 @@ export default function ClientProjectsPage() {
                       to={`/client/projects/${project.id}`}
                       className="px-4 py-1.5 rounded-md text-[13px] font-semibold transition-all flex items-center gap-1 hover:opacity-90"
                       style={{
-                        background: isAction ? '#EE2737' : 'transparent',
-                        color: isAction ? 'white' : '#EE2737',
-                        border: '1px solid #EE2737',
+                        background: isAction ? '#E01414' : 'transparent',
+                        color: isAction ? 'white' : '#E01414',
+                        border: '1px solid #E01414',
                       }}
                     >
                       {isAction ? 'Review Now' : 'View'}

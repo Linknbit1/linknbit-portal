@@ -236,7 +236,7 @@ export default function ClientHelpPage() {
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
                 placeholder="What do you need help with?"
-                className="w-full text-[13px] px-3 py-2.5 rounded-xl border outline-none focus:border-[#EE2737]/40 transition-colors"
+                className="w-full text-[13px] px-3 py-2.5 rounded-xl border outline-none focus:border-[#E01414]/40 transition-colors"
                 style={{ background: '#FAF7F2', borderColor: '#EAE3D6', color: '#1A1612' }}
               />
             </div>
@@ -250,7 +250,7 @@ export default function ClientHelpPage() {
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Describe your issue in detail…"
                 rows={4}
-                className="w-full text-[13px] px-3 py-2.5 rounded-xl border outline-none resize-none focus:border-[#EE2737]/40 transition-colors"
+                className="w-full text-[13px] px-3 py-2.5 rounded-xl border outline-none resize-none focus:border-[#E01414]/40 transition-colors"
                 style={{ background: '#FAF7F2', borderColor: '#EAE3D6', color: '#1A1612' }}
               />
             </div>
@@ -261,7 +261,7 @@ export default function ClientHelpPage() {
                 onClick={handleSend}
                 disabled={!subject || !message}
                 className="flex-1 py-2.5 rounded-xl text-[13px] font-semibold text-white disabled:opacity-40"
-                style={{ background: '#EE2737' }}
+                style={{ background: '#E01414' }}
               >
                 Send Message
               </motion.button>

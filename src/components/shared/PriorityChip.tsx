@@ -21,7 +21,7 @@ export function PriorityChip({ priority, className }: PriorityChipProps) {
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 py-0.75 px-2.25 rounded-full font-ui font-semibold text-[10.5px] uppercase tracking-[0.04em] leading-[1.4] whitespace-nowrap border',
+        'inline-flex items-center gap-1.5 py-0.75 px-2.25 rounded-sm font-ui font-semibold text-[10.5px] uppercase tracking-[0.04em] leading-[1.4] whitespace-nowrap border',
         config.classes,
         className,
       )}

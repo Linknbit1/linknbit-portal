@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase'
 import type { Tables, TablesUpdate } from '../types/database'
+import type { ThemeId } from '../constants/themes'
 
 type ProfileSelfUpdate = Pick<
   TablesUpdate<'profiles'>,
@@ -18,6 +19,31 @@ export async function updateOwnProfile(
   const { data, error } = await supabase
     .from('profiles')
     .update(updates)
+    .eq('id', userId)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+/**
+ * Set the signed-in user's colour theme.
+ *
+ * Separate from `updateOwnProfile` because it is a one-field write from a
+ * different surface: the picker applies instantly and saves in the background,
+ * so it must not carry the personal-details form's payload with it.
+ *
+ * `theme` is constrained in the database to the ids in `src/constants/themes.ts`
+ * — an unknown value is rejected by `profiles_theme_check` rather than silently
+ * stored and then ignored by the UI.
+ */
+export async function updateOwnTheme(
+  userId: string,
+  theme: ThemeId,
+): Promise<Tables<'profiles'>> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({ theme })
     .eq('id', userId)
     .select()
     .single()

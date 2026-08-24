@@ -46,7 +46,7 @@ function slugify(name: string): string {
     .replace(/^-+|-+$/g, '')
 }
 
-const ROLE_COLORS = ['#EE2737', '#F87171', '#FBBF24', '#34D399', '#22D3EE', '#A78BFA', '#94A3B8']
+const ROLE_COLORS = ['#E01414', '#F87171', '#FBBF24', '#34D399', '#22D3EE', '#A78BFA', '#94A3B8']
 
 export function RoleManager({ canEdit }: { canEdit: boolean }) {
   const toast = useToast()

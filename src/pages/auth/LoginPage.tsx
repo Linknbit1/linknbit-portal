@@ -147,7 +147,7 @@ function BrandPanel() {
         <div className="flex gap-4.5">
           {serviceLegend.map((service) => (
             <span key={service.label} className="flex items-center gap-1.75">
-              <span className={cn('size-1.5 shrink-0 rounded-[2px]', service.dotClass)} />
+              <span className={cn('size-1.5 shrink-0', service.dotClass)} />
               {service.label}
             </span>
           ))}
@@ -230,7 +230,7 @@ function AuthBtn({
       disabled={disabled}
       className={cn(
         'inline-flex h-11.5 w-full items-center justify-center gap-2.5 rounded-sm border font-ui text-body font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50',
-        variant === 'primary' && 'border-transparent bg-brand-red shadow-[0_4px_14px_rgba(238,39,55,0.22)] hover:bg-brand-red-hover',
+        variant === 'primary' && 'border-transparent bg-brand-red shadow-[0_4px_14px_rgba(224,20,20,0.22)] hover:bg-brand-red-hover',
         variant === 'ghost' && 'border-border-default bg-surface-1 hover:bg-surface-2',
       )}
     >
@@ -548,7 +548,7 @@ function OtpView({
 
   return (
     <form onSubmit={handleVerify}>
-      <div className="mb-6 flex size-14 items-center justify-center rounded-lg border border-border-default bg-[linear-gradient(160deg,#1A2433_0%,#131C28_100%)] text-brand-red shadow-[0_0_0_6px_rgba(238,39,55,0.06)]">
+      <div className="mb-6 flex size-14 items-center justify-center rounded-lg border border-border-default bg-[linear-gradient(160deg,#1D1D1D_0%,#151515_100%)] text-brand-red shadow-[0_0_0_6px_rgba(224,20,20,0.06)]">
         <ShieldCheck size={26} strokeWidth={1.75} />
       </div>
 
@@ -558,7 +558,7 @@ function OtpView({
       <p className="mb-1 font-ui text-body leading-[1.55] text-text-3">
         We sent a 6-digit code to
       </p>
-      <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border-default bg-surface-1 px-3 py-1.5 font-mono text-mono text-text-1">
+      <div className="mb-6 inline-flex items-center gap-2 rounded-sm border border-border-default bg-surface-1 px-3 py-1.5 font-mono text-mono text-text-1">
         <span className="size-1.25 shrink-0 rounded-full bg-success" />
         {maskEmail(email)}
       </div>
@@ -630,7 +630,7 @@ function NewPasswordView({ onDone }: { onDone: () => void }) {
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="mb-6 flex size-14 items-center justify-center rounded-lg border border-border-default bg-[linear-gradient(160deg,#1A2433_0%,#131C28_100%)] text-success shadow-[0_0_0_6px_rgba(34,197,94,0.06)]">
+      <div className="mb-6 flex size-14 items-center justify-center rounded-lg border border-border-default bg-[linear-gradient(160deg,#1D1D1D_0%,#151515_100%)] text-success shadow-[0_0_0_6px_rgba(34,197,94,0.06)]">
         <ShieldCheck size={26} strokeWidth={1.75} />
       </div>
 
@@ -742,7 +742,7 @@ function SplashScreen({ user, onDone }: { user: SplashUser; onDone: () => void }
   }, [onDone])
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_50%_50%,#0F1620_0%,#06080C_70%)] px-[clamp(16px,5vw,64px)] pt-[max(env(safe-area-inset-top),clamp(20px,4vh,56px))] pb-[max(env(safe-area-inset-bottom),clamp(20px,4vh,56px))]">
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_50%_50%,#0F0F0F_0%,#050505_70%)] px-[clamp(16px,5vw,64px)] pt-[max(env(safe-area-inset-top),clamp(20px,4vh,56px))] pb-[max(env(safe-area-inset-bottom),clamp(20px,4vh,56px))]">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,rgba(122,133,151,0.07)_1px,transparent_1px)] bg-size-[40px_40px] mask-[radial-gradient(ellipse_60%_60%_at_50%_50%,#000_30%,transparent_100%)]" />
       <div className="absolute inset-x-[clamp(16px,5vw,32px)] top-[max(env(safe-area-inset-top),clamp(16px,3vh,32px))] flex items-center justify-between gap-3 font-mono text-[10.5px] uppercase tracking-[0.12em] text-text-4">
         <div className="flex items-center gap-3">
@@ -780,7 +780,7 @@ function SplashScreen({ user, onDone }: { user: SplashUser; onDone: () => void }
             <span className="text-brand-red">.</span>
           </h1>
           <div className="mt-[clamp(10px,2vh,14px)]">
-            <span className="inline-flex items-center gap-2 rounded-full border border-border-default bg-surface-2 py-1.25 pl-1.25 pr-3 font-ui text-[12.5px] font-semibold text-text-1">
+            <span className="inline-flex items-center gap-2 rounded-sm border border-border-default bg-surface-2 py-1.25 pl-1.25 pr-3 font-ui text-[12.5px] font-semibold text-text-1">
               <span className="inline-flex size-6 items-center justify-center rounded-full bg-[linear-gradient(135deg,#A78BFA,#8B5CF6)] text-white">
                 <LayoutGrid size={13} />
               </span>

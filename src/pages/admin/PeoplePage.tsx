@@ -400,11 +400,11 @@ const PEOPLE_VIEWS: ViewToggleOption<ViewMode>[] = [
 
 function TeamsCell({ labels }: { labels: string[] }) {
   if (labels.length === 0) {
-    return <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-surface-inset border border-dashed border-border-default font-mono text-[10.5px] text-text-4">No team</span>
+    return <span className="inline-flex items-center px-2 py-0.5 rounded-sm bg-surface-inset border border-dashed border-border-default font-mono text-[10.5px] text-text-4">No team</span>
   }
   const [first, ...rest] = labels
   return (
-    <span className="inline-flex max-w-[140px] items-center gap-1.5 px-2 py-0.5 rounded-full bg-surface-2 border border-border-subtle font-ui text-[11.5px] text-text-2" title={labels.join(', ')}>
+    <span className="inline-flex max-w-[140px] items-center gap-1.5 px-2 py-0.5 rounded-sm bg-surface-2 border border-border-subtle font-ui text-[11.5px] text-text-2" title={labels.join(', ')}>
       <Users size={11} className="text-text-4 shrink-0" />
       <span className="truncate">{first}</span>
       {rest.length > 0 && <span className="shrink-0 font-mono text-[10px] text-text-4">+{rest.length}</span>}
@@ -414,7 +414,7 @@ function TeamsCell({ labels }: { labels: string[] }) {
 
 function JobTypeBadge({ jobType }: { jobType: string }) {
   return (
-    <span className="inline-flex w-fit items-center gap-1 rounded-full bg-surface-inset border border-border-subtle px-1.5 py-0.5 font-mono text-[9.5px] uppercase tracking-wider text-text-3">
+    <span className="inline-flex w-fit items-center gap-1 rounded-sm bg-surface-inset border border-border-subtle px-1.5 py-0.5 font-mono text-[9.5px] uppercase tracking-wider text-text-3">
       <MapPin size={9} className="text-text-4" />
       {JOB_TYPE_LABELS[jobType] ?? jobType}
     </span>
@@ -441,7 +441,7 @@ const STATUS_META: Record<AccountStatus, { label: string; cls: string }> = {
 function AccountStatusChip({ person }: { person: Person }) {
   const meta = STATUS_META[accountStatus(person)]
   return (
-    <span className={cn('inline-flex items-center px-2 py-0.5 rounded-full border font-mono text-[10px] font-semibold uppercase tracking-wider', meta.cls)}>
+    <span className={cn('inline-flex items-center px-2 py-0.5 rounded-sm border font-mono text-[10px] font-semibold uppercase tracking-wider', meta.cls)}>
       {meta.label}
     </span>
   )
@@ -566,7 +566,7 @@ function PersonTableRow({ person, myRole, myId, teamLabels, designationName, ...
   designationName: string | null
 } & RowActions) {
   const inactiveBadge = !person.is_active && (
-    <span className="rounded-full bg-error/10 px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-error">Inactive</span>
+    <span className="rounded-sm bg-error/10 px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-error">Inactive</span>
   )
 
   return (
@@ -576,7 +576,7 @@ function PersonTableRow({ person, myRole, myId, teamLabels, designationName, ...
         <div className="min-w-0">
           <p className="flex items-center gap-2 truncate font-ui text-[13px] font-semibold text-text-1">
             <PersonLink personId={person.id} className="truncate">{person.name}</PersonLink>
-            <span className="shrink-0 rounded-full bg-surface-2 px-1.5 py-0.5 font-display text-[10px] font-bold text-text-2">Lv {person.level}</span>
+            <span className="shrink-0 rounded-sm bg-surface-2 px-1.5 py-0.5 font-display text-[10px] font-bold text-text-2">Lv {person.level}</span>
             {inactiveBadge}
           </p>
           <p className="mt-0.5 truncate font-mono text-[11px] text-text-3">{person.email}</p>
@@ -602,12 +602,12 @@ function PersonCard({ person, myRole, myId, teamLabels, designationName, ...acti
   designationName: string | null
 } & RowActions) {
   const inactiveBadge = !person.is_active && (
-    <span className="rounded-full bg-error/10 px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-error">Inactive</span>
+    <span className="rounded-sm bg-error/10 px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-error">Inactive</span>
   )
 
   return (
     <article className={cn('overflow-visible rounded-lg border border-border-default bg-surface-1 shadow-[0_14px_40px_rgba(0,0,0,0.14)] transition-colors hover:border-border-strong', !person.is_active && 'opacity-65')}>
-      <div className="border-b border-border-subtle bg-[linear-gradient(135deg,rgba(238,39,55,0.055),rgba(34,211,238,0.045)_58%,rgba(20,29,42,0)_100%)] p-4">
+      <div className="border-b border-border-subtle bg-[linear-gradient(135deg,rgba(224,20,20,0.055),rgba(34,211,238,0.045)_58%,rgba(20,29,42,0)_100%)] p-4">
         <div className="flex items-start gap-3">
           <Avatar name={person.name} src={person.avatar_url ?? undefined} size="lg" personId={person.id} />
           <div className="min-w-0 flex-1">
@@ -622,7 +622,7 @@ function PersonCard({ person, myRole, myId, teamLabels, designationName, ...acti
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <ProfileRoles profileId={person.id} fallbackRole={person.role} />
-          <span className="inline-flex items-center rounded-full bg-surface-2 px-2.5 py-1 font-display text-[11px] font-bold text-text-1">Lv {person.level}</span>
+          <span className="inline-flex items-center rounded-sm bg-surface-2 px-2.5 py-1 font-display text-[11px] font-bold text-text-1">Lv {person.level}</span>
         </div>
       </div>
 
@@ -648,7 +648,7 @@ function PersonCard({ person, myRole, myId, teamLabels, designationName, ...acti
           <span className="font-mono text-[10.5px] uppercase tracking-wider text-text-4">Account status</span>
           <span className="flex items-center gap-1.5">
             <AccountStatusChip person={person} />
-            <span className={cn('rounded-full px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-wider', person.is_active ? 'bg-success/10 text-success' : 'bg-error/10 text-error')}>
+            <span className={cn('rounded-sm px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-wider', person.is_active ? 'bg-success/10 text-success' : 'bg-error/10 text-error')}>
               {person.is_active ? 'Active' : 'Inactive'}
             </span>
           </span>
@@ -878,7 +878,7 @@ export default function PeoplePage() {
                       'flex items-center gap-1.5 rounded-sm px-2.5 py-1 font-ui text-[12px] font-medium transition-colors motion-reduce:transition-none',
                       on
                         ? t.value === 'inactive'
-                          ? 'bg-[rgba(238,39,55,0.14)] text-brand-red'
+                          ? 'bg-[rgba(224,20,20,0.14)] text-brand-red'
                           : 'bg-surface-3 text-text-1'
                         : 'text-text-3 hover:text-text-1',
                     )}

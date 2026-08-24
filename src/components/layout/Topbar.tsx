@@ -251,7 +251,7 @@ export function Topbar({ title, breadcrumb, className, back, actions }: TopbarPr
                           </p>
                         </div>
                         {group.count > 1
-                          ? <span className="shrink-0 mt-0.5 rounded-full bg-surface-3 px-1.5 font-mono text-[10px] text-text-3">{group.count}</span>
+                          ? <span className="shrink-0 mt-0.5 rounded-sm bg-surface-3 px-1.5 font-mono text-[10px] text-text-3">{group.count}</span>
                           : !isUnread && <Check size={12} className="text-text-4 shrink-0 mt-1" />}
                       </button>
                     )
@@ -278,7 +278,7 @@ export function Topbar({ title, breadcrumb, className, back, actions }: TopbarPr
           <div ref={menuRef} className="relative">
             <button
               onClick={() => setMenuOpen((o) => !o)}
-              className="flex items-center gap-2.5 p-1 sm:pr-2.5 rounded-full bg-surface-1 border border-border-default hover:bg-surface-2 transition-colors"
+              className="flex items-center gap-2.5 p-1 sm:pr-2.5 rounded-sm bg-surface-1 border border-border-default hover:bg-surface-2 transition-colors"
               aria-haspopup="menu"
               aria-expanded={menuOpen}
             >
