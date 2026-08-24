@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
   Plus, Search, Target, Columns3, Table2, CalendarClock,
   AlertTriangle, MessageSquare, ChevronLeft, SlidersHorizontal, Upload,
@@ -110,7 +111,14 @@ export default function PipelinePage() {
   const [view, setView] = useState<PipelineView>('board')
   const [collapsed, setCollapsed] = useState<LeadStage[]>([])
 
-  const [openLeadId, setOpenLeadId] = useState<string | null>(null)
+  /**
+   * `?lead=<id>` opens that lead's drawer on arrival, so anything holding a lead
+   * id — a BD task's linked lead, a pasted link — can point at it. Read once into
+   * state rather than driven from the URL, because the drawer is closed by
+   * clearing the state and re-reading a still-present param would reopen it.
+   */
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [openLeadId, setOpenLeadId] = useState<string | null>(() => searchParams.get('lead'))
   const [formOpen, setFormOpen] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
   const [editing, setEditing] = useState<Lead | null>(null)
@@ -469,7 +477,14 @@ export default function PipelinePage() {
       {/* ── Overlays ── */}
       <LeadDrawer
         lead={openLead}
-        onClose={() => setOpenLeadId(null)}
+        onClose={() => {
+          setOpenLeadId(null)
+          // Drop the param too, so a refresh does not reopen what was just closed.
+          if (searchParams.has('lead')) {
+            searchParams.delete('lead')
+            setSearchParams(searchParams, { replace: true })
+          }
+        }}
         onEdit={(l) => { setOpenLeadId(null); setEditing(l); setFormOpen(true) }}
         onLogActivity={(l) => setActivityFor(l)}
       />

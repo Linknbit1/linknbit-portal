@@ -926,7 +926,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
         id: 'bd-campaigns',
         title: 'Campaigns and BD tasks',
         summary:
-          'A campaign is an outreach initiative that tasks hang off — the BD equivalent of a delivery project. Its board uses the same six columns as the delivery board.',
+          'A campaign is an outreach initiative that tasks hang off — the BD equivalent of a delivery project. Its board uses the same six columns as the delivery board, and you see a campaign only if you are on its team.',
         where: 'Business Dev → Projects, Business Dev → Tasks',
         feature: 'can_view_bd',
         procedures: [
@@ -934,7 +934,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
             title: 'Start a campaign',
             steps: [
               'Open Business Dev → Projects and press New project.',
-              'Name it, pick the channels it targets and who is on it.',
+              'Name it, pick the channels it targets and who is on it. Add everyone who needs to see it — a campaign is invisible to anybody not on its team.',
               'Open it and use the Brief tab to write down what it is going after.',
             ],
           },
@@ -944,6 +944,14 @@ export const DOC_CHAPTERS: DocChapter[] = [
               'On the campaign’s Board tab, press Add task in the column you want it in.',
               'The task opens straight away — every field is edited in place, so there is no separate form.',
               'Drag cards between columns as the work moves.',
+            ],
+          },
+          {
+            title: 'Change a campaign after it exists',
+            steps: [
+              'Open the campaign and press Edit — or use the pencil on its card in Projects.',
+              'Change the name, owner, status, deadline, channels or team, then save.',
+              'The title, status, brief, channels and team can also be edited straight on the page without opening the form.',
             ],
           },
           {
@@ -960,6 +968,10 @@ export const DOC_CHAPTERS: DocChapter[] = [
           'A campaign’s progress bar is calculated from its tasks. There is no progress field to type into, because a typed number goes stale the moment a task moves.',
           'Assigning a task to someone notifies them.',
           'Task documents work the same way as documents on a lead or on a delivery task, and are stored the same way: uploads are private, links open where they live. Anyone who can open Business Dev can read them; adding and removing is limited to the person the task is assigned to, whoever raised it, and anyone who runs BD.',
+          'You see a campaign only if you own it, created it, or were added to its team. Creating one puts you on it automatically, and so does being made its owner — you cannot lose access to your own campaign by editing the team.',
+          'Tasks follow their campaign: work on a campaign you are not on does not appear on your Tasks board either. Two exceptions — a task assigned to you, or one you raised, is always visible to you, and so is any task not attached to a campaign.',
+          'Whoever runs BD sees every campaign, so nothing is hidden from the department’s own oversight.',
+          'A task’s linked lead is a link. Press it to open that lead in the Pipeline.',
           'The Tasks screen opens on the whole team. Use the people picker beside the project filter to narrow it to your own work, or to one colleague.',
           'You can hand a campaign to a colleague by naming them as its owner — including at the moment you create it. It stays editable by you as well as by them, so setting up a campaign for someone else does not lock you out of it. The same goes for a lead.',
         ],

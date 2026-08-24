@@ -26,6 +26,7 @@ import { randomUUID } from '../../lib/uuid'
 import { cn } from '../../lib/cn'
 import { plainTextToDoc, toDbDoc } from '../../lib/richText'
 import { formatCompactCurrency, formatDate, isOverdue, PROJECT_STATUS_LABELS } from '../../lib/utils'
+import { BdProjectFormModal } from './BdProjectFormModal'
 import { BdTaskBoard } from './BdTaskBoard'
 import { TaskDrawer } from './TaskDrawer'
 import type { BdChannel, BdProject, ProjectStatus, TaskStatus } from '../../types'
@@ -99,8 +100,12 @@ function Meta({ icon: Icon, label, value, danger }: { icon: LucideIcon; label: s
  *
  * Mirrors the delivery project page (summary header, tabbed body) but scoped to
  * what a campaign actually has: its tasks, the channel effort it produced, its
- * team. Every field edits in place; there is no edit modal, matching the task
- * drawer.
+ * team.
+ *
+ * Most fields edit in place — the title, the status, the brief, the channels and
+ * the team. Owner and deadline never got an inline editor, which left them
+ * unchangeable for the life of the campaign, so Edit opens the same form the
+ * campaign was created with rather than growing two more one-off editors here.
  */
 export default function BdProjectDetailPage() {
   const { id = '' } = useParams()
@@ -114,6 +119,7 @@ export default function BdProjectDetailPage() {
   const [tab, setTab] = useState<ProjectTab>('board')
   const [openTaskId, setOpenTaskId] = useState<string | null>(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [showEdit, setShowEdit] = useState(false)
 
   const project = projects.find((p) => p.id === id)
   const projectTasks = useMemo(() => tasks.filter((t) => t.projectId === id), [tasks, id])
@@ -138,7 +144,9 @@ export default function BdProjectDetailPage() {
     return (
       <div className="flex flex-1 flex-col">
         <Topbar title="Project" back="/bd/projects" />
-        <div className="p-10 text-center font-ui text-text-3">Project not found.</div>
+        <div className="p-10 text-center font-ui text-text-3">
+          This campaign either does not exist, or you are not on its team.
+        </div>
       </div>
     )
   }
@@ -213,6 +221,9 @@ export default function BdProjectDetailPage() {
                 size="sm"
                 className="w-40"
               />
+              <Button size="sm" variant="secondary" iconLeft={<Pencil size={14} />} onClick={() => setShowEdit(true)}>
+                Edit
+              </Button>
               <button
                 onClick={() => setConfirmDelete(true)}
                 aria-label="Delete project"
@@ -410,6 +421,10 @@ export default function BdProjectDetailPage() {
           </div>
         )}
       </div>
+
+      {showEdit && (
+        <BdProjectFormModal key={project.id} open project={project} onClose={() => setShowEdit(false)} />
+      )}
 
       <TaskDrawer task={openTask} onClose={() => setOpenTaskId(null)} />
 

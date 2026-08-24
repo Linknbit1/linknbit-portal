@@ -4801,6 +4801,7 @@ export type Database = {
       }
       can_oversee_channel: { Args: { p_channel_id: string }; Returns: boolean }
       can_recognize: { Args: never; Returns: boolean }
+      can_view_bd_project: { Args: { p_project_id: string }; Returns: boolean }
       can_view_confidential_scope: {
         Args: { p_scope: string }
         Returns: boolean

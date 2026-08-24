@@ -15,9 +15,9 @@ export const RELEASES: ChangelogRelease[] = [
   {
     version: 'v1.7',
     date: '2026-08-24',
-    title: 'Won deals build their own projects',
+    title: 'Won deals build their own projects, and campaigns get their privacy',
     highlight:
-      'Handing a won lead to delivery now creates the project itself — the client, every service the deal covers, a starting pipeline for each and the people who will work on it — instead of leaving somebody to build it by hand.',
+      'Handing a won lead to delivery now creates the project itself — the client, every service the deal covers, a starting pipeline for each and the people who will work on it — instead of leaving somebody to build it by hand. Separately, BD campaigns are now visible only to the people on them.',
     entries: [
       {
         kind: 'improved',
@@ -34,6 +34,26 @@ export const RELEASES: ChangelogRelease[] = [
       {
         kind: 'added',
         text: 'The handoff now asks which client the work is for, rather than guessing. Pick an existing client, or name a new one — prefilled from the lead, and flagged if that name already exists so the same account cannot end up in the list twice. Leads are usually named after the deal, so this is worth a glance.',
+      },
+      {
+        kind: 'improved',
+        text: 'BD campaigns are now private to the people on them. You see a campaign if you own it, created it, or were added to its team — and creating one, or being handed one as its owner, puts you on it automatically. Whoever runs BD still sees every campaign. Until now every campaign was visible to everyone in the department: the Projects screen had a filter meant to prevent that, but it never took effect.',
+      },
+      {
+        kind: 'improved',
+        text: 'Tasks follow their campaign, so the Tasks board no longer lists — and names — work from campaigns you were deliberately left off. A task assigned to you, one you raised, or one attached to no campaign stays visible either way.',
+      },
+      {
+        kind: 'added',
+        text: 'Campaigns can be edited after they are created. Press Edit on the campaign, or the pencil on its card in Projects, to change the name, owner, status, deadline, channels or team. Owner and deadline in particular had no way to be changed at all once a campaign existed.',
+      },
+      {
+        kind: 'fixed',
+        text: 'A BD task’s linked lead is now a link — press it to open that lead in the Pipeline. The link had been built but was never switched on, so the field named a lead you then had to go and find by hand.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Editing a campaign no longer records you as the person who created it.',
       },
       {
         kind: 'fixed',

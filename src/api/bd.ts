@@ -549,6 +549,24 @@ export function projectPatchToRow(patch: Partial<BdProject>): TablesUpdate<'bd_p
   return row
 }
 
+/**
+ * Who must be on the roster whatever the form said.
+ *
+ * A campaign is only visible to its team now, so dropping the owner off it would
+ * hide their own campaign from them — and dropping the creator would do the same
+ * to whoever made it. The database seeds both on insert; this keeps them there
+ * through the delete-and-replace that every member edit performs.
+ *
+ * `created_by` is not sent on update at all: the column means "who created
+ * this", and a BEFORE UPDATE trigger pins it regardless of what a caller sends.
+ */
+function withPinnedMembers(project: BdProject, actorId: string | null): string[] {
+  const ids = new Set(project.members.map((m) => m.id))
+  if (project.ownerId) ids.add(project.ownerId)
+  if (actorId) ids.add(actorId)
+  return [...ids]
+}
+
 /** Upsert the campaign and replace its member list — same reasoning as meetings. */
 export async function saveBdProject(project: BdProject, actorId: string | null): Promise<void> {
   const { error } = await supabase
@@ -559,10 +577,11 @@ export async function saveBdProject(project: BdProject, actorId: string | null):
   const { error: delErr } = await supabase.from('bd_project_members').delete().eq('project_id', project.id)
   if (delErr) throw delErr
 
-  if (project.members.length > 0) {
+  const memberIds = withPinnedMembers(project, actorId)
+  if (memberIds.length > 0) {
     const { error: insErr } = await supabase
       .from('bd_project_members')
-      .insert(project.members.map((m) => ({ project_id: project.id, profile_id: m.id })))
+      .insert(memberIds.map((id) => ({ project_id: project.id, profile_id: id })))
     if (insErr) throw insErr
   }
 }
@@ -574,12 +593,23 @@ export async function updateBdProject(id: string, patch: Partial<BdProject>): Pr
     if (error) throw error
   }
   if (patch.members !== undefined) {
+    // Read the two people who cannot be taken off the roster before replacing it.
+    // Costs one small select on an infrequent action, and is what stops the Team
+    // tab from hiding a campaign from its own owner — see withPinnedMembers.
+    const { data: pins, error: pinErr } = await supabase
+      .from('bd_projects').select('owner_id,created_by').eq('id', id).single()
+    if (pinErr) throw pinErr
+
     const { error: delErr } = await supabase.from('bd_project_members').delete().eq('project_id', id)
     if (delErr) throw delErr
-    if (patch.members.length > 0) {
+
+    const ids = new Set(patch.members.map((m) => m.id))
+    if (pins.owner_id) ids.add(pins.owner_id)
+    if (pins.created_by) ids.add(pins.created_by)
+    if (ids.size > 0) {
       const { error: insErr } = await supabase
         .from('bd_project_members')
-        .insert(patch.members.map((m) => ({ project_id: id, profile_id: m.id })))
+        .insert([...ids].map((profileId) => ({ project_id: id, profile_id: profileId })))
       if (insErr) throw insErr
     }
   }

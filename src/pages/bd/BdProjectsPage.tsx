@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   List, Columns, Calendar, Plus, Search, ChevronRight, AlertCircle, SlidersHorizontal,
-  Trash2, LayoutGrid, CheckSquare, Users,
+  Trash2, Pencil, LayoutGrid, CheckSquare, Users,
 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Button } from '../../components/ui/Button'
@@ -52,7 +52,7 @@ function sortProjects(list: BdProject[], sort: string): BdProject[] {
 export default function BdProjectsPage() {
   const navigate = useNavigate()
   const toast = useToast()
-  const { projects, tasks, deleteProject, viewerRepId, canSeeAll, people } = useBd()
+  const { projects, tasks, deleteProject, people } = useBd()
 
   const [view, setView] = useState<ViewMode>('cards')
   const [search, setSearch] = useState('')
@@ -70,8 +70,11 @@ export default function BdProjectsPage() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
     const list = projects.filter((p) => {
-      // A rep sees the campaigns they own or are a member of, nothing else.
-      if (!canSeeAll && p.ownerId !== viewerRepId && !p.members.some((m) => m.id === viewerRepId)) return false
+      // No membership check here any more. It used to live in this filter and
+      // never fired — it was skipped for anyone with `can_manage_bd`, which every
+      // BD rep holds — and it could only ever hide rows the server had already
+      // sent. Scoping is now a SELECT policy on bd_projects, so what arrives is
+      // already only the campaigns this person is on.
       return (
         (!q || p.name.toLowerCase().includes(q) || (p.description ?? '').toLowerCase().includes(q)) &&
         (!channelFilter || p.channels.includes(channelFilter as BdChannel)) &&
@@ -82,7 +85,7 @@ export default function BdProjectsPage() {
       )
     })
     return sortProjects(list, sortBy)
-  }, [projects, search, channelFilter, statusFilter, ownerFilter, deadlineFrom, deadlineTo, sortBy, canSeeAll, viewerRepId])
+  }, [projects, search, channelFilter, statusFilter, ownerFilter, deadlineFrom, deadlineTo, sortBy])
 
   // Live counts beat the stored one — tasks move between projects.
   const taskCountOf = (id: string) => tasks.filter((t) => t.projectId === id).length
@@ -92,6 +95,7 @@ export default function BdProjectsPage() {
   const ownerOptions = [{ value: '', label: 'All owners' }, ...people.map((p) => ({ value: p.id, label: p.name }))]
 
   const openNew = () => { setEditing(null); setShowForm(true) }
+  const openEdit = (p: BdProject) => { setEditing(p); setShowForm(true) }
   // Opens the project's own page — the form modal is now create-only, the same
   // split the delivery Projects page uses.
   const openProject = (p: BdProject) => navigate(`/bd/projects/${p.id}`)
@@ -156,8 +160,8 @@ export default function BdProjectsPage() {
           <EmptyState onNew={openNew} />
         ) : (
           <>
-            {view === 'cards' && <CardsView projects={filtered} taskCountOf={taskCountOf} onOpen={openProject} onDelete={setPendingDelete} />}
-            {view === 'list' && <ListView projects={filtered} taskCountOf={taskCountOf} onOpen={openProject} onDelete={setPendingDelete} />}
+            {view === 'cards' && <CardsView projects={filtered} taskCountOf={taskCountOf} onOpen={openProject} onEdit={openEdit} onDelete={setPendingDelete} />}
+            {view === 'list' && <ListView projects={filtered} taskCountOf={taskCountOf} onOpen={openProject} onEdit={openEdit} onDelete={setPendingDelete} />}
             {view === 'kanban' && <KanbanView projects={filtered} onOpen={openProject} />}
           </>
         )}
@@ -213,24 +217,25 @@ interface ViewProps {
   projects: BdProject[]
   taskCountOf: (id: string) => number
   onOpen: (project: BdProject) => void
+  onEdit: (project: BdProject) => void
   onDelete: (project: BdProject) => void
 }
 
 // ── Cards view (default) ─────────────────────────────────────────────
-function CardsView({ projects, taskCountOf, onOpen, onDelete }: ViewProps) {
+function CardsView({ projects, taskCountOf, onOpen, onEdit, onDelete }: ViewProps) {
   if (projects.length === 0) {
     return <div className="py-16 text-center font-ui text-[13px] text-text-4">No projects match your filters.</div>
   }
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-3">
       {projects.map((p) => (
-        <ProjectCard key={p.id} project={p} taskCount={taskCountOf(p.id)} onOpen={onOpen} onDelete={onDelete} />
+        <ProjectCard key={p.id} project={p} taskCount={taskCountOf(p.id)} onOpen={onOpen} onEdit={onEdit} onDelete={onDelete} />
       ))}
     </div>
   )
 }
 
-function ProjectCard({ project: p, taskCount, onOpen, onDelete }: { project: BdProject; taskCount: number; onOpen: (p: BdProject) => void; onDelete: (p: BdProject) => void }) {
+function ProjectCard({ project: p, taskCount, onOpen, onEdit, onDelete }: { project: BdProject; taskCount: number; onOpen: (p: BdProject) => void; onEdit: (p: BdProject) => void; onDelete: (p: BdProject) => void }) {
   const { avatarOf } = useBd()
   const overdue = !!p.deadline && isOverdue(p.deadline) && p.status !== 'completed'
 
@@ -253,6 +258,13 @@ function ProjectCard({ project: p, taskCount, onOpen, onDelete }: { project: BdP
               <AlertCircle size={10} className="shrink-0" /> Overdue
             </span>
           )}
+          <button
+            onClick={(e) => { e.stopPropagation(); onEdit(p) }}
+            className="inline-flex size-7 shrink-0 items-center justify-center rounded-sm text-text-4 opacity-0 transition-opacity hover:bg-surface-3 hover:text-text-1 focus-visible:opacity-100 group-hover:opacity-100"
+            aria-label={`Edit ${p.name}`}
+          >
+            <Pencil size={13} />
+          </button>
           <button
             onClick={(e) => { e.stopPropagation(); onDelete(p) }}
             className="-mr-1 inline-flex size-7 shrink-0 items-center justify-center rounded-sm text-text-4 opacity-0 transition-opacity hover:bg-error/10 hover:text-error focus-visible:opacity-100 group-hover:opacity-100"
@@ -305,7 +317,7 @@ function ProjectCard({ project: p, taskCount, onOpen, onDelete }: { project: BdP
 }
 
 // ── List view ────────────────────────────────────────────────────────
-function ListView({ projects, taskCountOf, onOpen, onDelete }: ViewProps) {
+function ListView({ projects, taskCountOf, onOpen, onEdit, onDelete }: ViewProps) {
   const { avatarOf } = useBd()
   return (
     <div className="overflow-x-auto rounded-md border border-border-default bg-surface-1">
@@ -356,6 +368,13 @@ function ListView({ projects, taskCountOf, onOpen, onDelete }: ViewProps) {
                 </td>
                 <td className="px-4 py-3 text-right">
                   <div className="flex justify-end gap-1">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onEdit(p) }}
+                      className="inline-flex size-7 items-center justify-center rounded-sm text-text-3 hover:bg-surface-3 hover:text-text-1"
+                      aria-label={`Edit ${p.name}`}
+                    >
+                      <Pencil size={13} />
+                    </button>
                     <button
                       onClick={(e) => { e.stopPropagation(); onDelete(p) }}
                       className="inline-flex size-7 items-center justify-center rounded-sm text-text-3 hover:bg-error/10 hover:text-error"

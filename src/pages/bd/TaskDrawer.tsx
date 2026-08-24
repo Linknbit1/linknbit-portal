@@ -1,7 +1,8 @@
 import { useMemo, useState, type ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 import {
   Trash2, Check, Pencil, Plus, X, CircleDot, UserRound, CalendarDays, Flag,
-  Repeat, Building2, Radio, FolderKanban, ListChecks, Paperclip, type LucideIcon,
+  Repeat, Building2, Radio, FolderKanban, ListChecks, Paperclip, ArrowUpRight, type LucideIcon,
 } from 'lucide-react'
 import { Drawer } from '../../components/ui/Drawer'
 import { Button } from '../../components/ui/Button'
@@ -100,8 +101,6 @@ function PropertyRow({ icon: Icon, label, children }: { icon: LucideIcon; label:
 interface TaskDrawerProps {
   task: BdTask | null
   onClose: () => void
-  /** Opens the linked lead in the pipeline drawer. */
-  onOpenLead?: (leadId: string) => void
 }
 
 /**
@@ -111,7 +110,7 @@ interface TaskDrawerProps {
  * delivery task drawer. Every write is optimistic, so the board behind the panel
  * updates as you type and only snaps back if the server refuses it.
  */
-export function TaskDrawer({ task, onClose, onOpenLead }: TaskDrawerProps) {
+export function TaskDrawer({ task, onClose }: TaskDrawerProps) {
   const toast = useToast()
   const {
     leads, projects, patchTask, toggleChecklistItem, deleteTask,
@@ -260,18 +259,23 @@ export function TaskDrawer({ task, onClose, onOpenLead }: TaskDrawerProps) {
             </PropertyRow>
           </div>
 
-          {task.leadCompany && task.leadId && onOpenLead && (
-            <button
-              type="button"
-              onClick={() => onOpenLead(task.leadId as string)}
-              className="flex items-center gap-2.5 rounded-md border border-border-default bg-surface-2 px-3 py-2.5 text-left transition-colors hover:border-border-strong"
+          {/* Was a button gated on an `onOpenLead` callback that neither caller
+              ever passed, so the link to the lead never actually rendered. A
+              route link needs nothing from the parent, and is shareable. */}
+          {task.leadId && (
+            <Link
+              to={`/bd/pipeline?lead=${task.leadId}`}
+              className="group flex items-center gap-2.5 rounded-md border border-border-default bg-surface-2 px-3 py-2.5 text-left transition-colors hover:border-border-strong"
             >
               <Building2 size={14} className="shrink-0 text-text-4" />
               <span className="min-w-0 flex-1">
                 <span className="block font-ui text-[10.5px] uppercase tracking-wider text-text-4">Open lead</span>
-                <span className="block truncate font-ui text-[13px] text-text-1">{task.leadCompany}</span>
+                <span className="block truncate font-ui text-[13px] text-text-1">
+                  {task.leadCompany || 'View in pipeline'}
+                </span>
               </span>
-            </button>
+              <ArrowUpRight size={14} className="shrink-0 text-text-4 transition-colors group-hover:text-text-1" />
+            </Link>
           )}
 
           {/* ── Description ── */}
