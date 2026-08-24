@@ -1022,6 +1022,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
             title: 'Hand over',
             steps: [
               'Move the lead to Won — the handoff opens by itself.',
+              'Set the client first. Choose Existing client if you already work with them, or New client and check the name — it is prefilled from the lead, which often holds the deal name rather than the client’s.',
               'Name the project, pick the manager who will run it, and confirm the budget. Set a start date and deadline if they were agreed.',
               'Tick every service the deal covers. The services you sold are ticked for you — add or remove any.',
               'For each service, choose a starting pipeline and add the people who will work on it. Both can be left for the manager to do later.',
@@ -1031,7 +1032,8 @@ export const DOC_CHAPTERS: DocChapter[] = [
         ],
         notes: [
           'Confirming builds the project immediately, with a service block for each service you ticked. It is in Projects for the manager and the team from that moment — you do not have to tell anyone to set it up.',
-          'The client is created for you from the lead, or reused if one with that company name already exists — you do not need to add it first.',
+          'You do not need to add the client beforehand. Naming a new one creates it; naming one that already exists attaches to it instead, and the modal tells you which before you confirm.',
+          'Two deals with the same client usually arrive under different lead names. Pick Existing client on the second one, or you will end up with the same account twice.',
           'Your notes become the project description, so what was promised in the negotiation is on the project rather than only in BD.',
           'Everything is created together or not at all. If the handoff fails you get told why, and no half-built project is left behind.',
           'The lead stays in BD history afterwards and shows what it became, so nothing disappears when it leaves the pipeline.',

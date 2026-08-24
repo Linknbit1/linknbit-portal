@@ -33,7 +33,7 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'added',
-        text: 'The client is created from the lead automatically, or matched to an existing one with the same company name, so the same client does not end up in the list twice.',
+        text: 'The handoff now asks which client the work is for, rather than guessing. Pick an existing client, or name a new one — prefilled from the lead, and flagged if that name already exists so the same account cannot end up in the list twice. Leads are usually named after the deal, so this is worth a glance.',
       },
       {
         kind: 'fixed',

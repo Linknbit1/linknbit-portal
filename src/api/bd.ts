@@ -881,6 +881,16 @@ export interface HandoffInput {
   managerId: string
   budget: number
   services: HandoffServicePlan[]
+  /** An existing client to attach the project to. Wins over `clientName`. */
+  clientId?: string
+  /**
+   * Name for a new client, when none was picked. Matched against existing
+   * clients first, so naming one that already exists attaches to it rather than
+   * creating a twin. Never defaults to the lead's company here — the lead
+   * routinely carries a deal name ("Starr luxury jets - Project"), and letting
+   * that become a client name is the mistake this parameter exists to prevent.
+   */
+  clientName?: string
   notes?: string
   startDate?: string
   deadline?: string
@@ -907,6 +917,8 @@ export async function handoffToProject(input: HandoffInput): Promise<HandoffOutc
       template_id: s.templateId ?? null,
       member_ids: s.memberIds,
     })),
+    p_client_id: input.clientId || undefined,
+    p_client_name: input.clientName?.trim() || undefined,
     p_notes: input.notes ?? undefined,
     p_start_date: input.startDate || undefined,
     p_deadline: input.deadline || undefined,

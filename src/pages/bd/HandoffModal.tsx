@@ -7,6 +7,7 @@ import { Select } from '../../components/ui/Select'
 import { DatePicker } from '../../components/ui/DatePicker'
 import { MultiSelectPeople } from '../../components/ui/MultiSelectPeople'
 import { useToast } from '../../components/ui/toast-context'
+import { useClients } from '../../hooks/useClients'
 import { usePeople } from '../../hooks/usePeople'
 import { useServices } from '../../hooks/useServices'
 import { useUsableTemplates } from '../../hooks/useTemplates'
@@ -56,6 +57,7 @@ export function HandoffModal({ open, lead, onClose }: HandoffModalProps) {
   const { handOffLead } = useBd()
   const { data: services = [] } = useServices()
   const { data: people = [] } = usePeople()
+  const { data: clients = [] } = useClients()
   const { data: templates = [] } = useUsableTemplates(open)
 
   const activeServices = useMemo(() => services.filter((s) => s.is_active), [services])
@@ -74,6 +76,15 @@ export function HandoffModal({ open, lead, onClose }: HandoffModalProps) {
    * Both call sites key this modal by lead id, so there is no stale-lead case.
    */
   const [picked, setPicked] = useState<string[] | null>(null)
+  /**
+   * Which client the project goes to. Starts on 'new' with the lead's company as
+   * a *prefill only* — leads routinely carry a deal name rather than a company
+   * ("Starr luxury jets - Project"), so this is the one field the rep is asked to
+   * look at rather than accept.
+   */
+  const [clientMode, setClientMode] = useState<'existing' | 'new'>('new')
+  const [clientId, setClientId] = useState('')
+  const [clientName, setClientName] = useState(lead?.company.trim() ?? '')
   const [templateByService, setTemplateByService] = useState<Record<string, string>>({})
   const [staffByService, setStaffByService] = useState<Record<string, string[]>>({})
   const [projectName, setProjectName] = useState(
@@ -102,6 +113,15 @@ export function HandoffModal({ open, lead, onClose }: HandoffModalProps) {
   const nameError = touched && !projectName.trim() ? 'Give the project a name' : undefined
   const managerError = touched && !managerId ? 'Somebody has to own the delivery' : undefined
   const serviceError = touched && serviceIds.length === 0 ? 'Pick at least one service' : undefined
+  const clientError =
+    touched && clientMode === 'existing' && !clientId ? 'Choose the client'
+    : touched && clientMode === 'new' && !clientName.trim() ? 'Name the client'
+    : undefined
+  // A typed name that already exists attaches to it rather than making a twin —
+  // say so before they confirm, not after two clients appear in the list.
+  const nameMatch = clientMode === 'new'
+    ? clients.find((c) => c.name.trim().toLowerCase() === clientName.trim().toLowerCase())
+    : undefined
 
   const toggleService = (id: string) =>
     setPicked(serviceIds.includes(id) ? serviceIds.filter((s) => s !== id) : [...serviceIds, id])
@@ -109,6 +129,7 @@ export function HandoffModal({ open, lead, onClose }: HandoffModalProps) {
   const submit = async () => {
     setTouched(true)
     if (!projectName.trim() || !managerId || serviceIds.length === 0) return
+    if (clientMode === 'existing' ? !clientId : !clientName.trim()) return
 
     const plan: HandoffServicePlan[] = serviceIds.map((serviceId) => ({
       serviceId,
@@ -124,6 +145,8 @@ export function HandoffModal({ open, lead, onClose }: HandoffModalProps) {
         managerId,
         budget,
         services: plan,
+        clientId: clientMode === 'existing' ? clientId : undefined,
+        clientName: clientMode === 'new' ? clientName.trim() : undefined,
         notes: notes.trim() || undefined,
         startDate: startDate || undefined,
         deadline: deadline || undefined,
@@ -178,6 +201,58 @@ export function HandoffModal({ open, lead, onClose }: HandoffModalProps) {
           <span className="ml-auto flex items-center gap-2 font-mono text-[13px] text-success">
             <Wallet size={14} /> {formatCompactCurrency(lead.valueEntered, lead.valueCurrency)}
           </span>
+        </div>
+
+        {/* The client, chosen rather than guessed. */}
+        <div className="space-y-2 rounded-md border border-border-subtle bg-surface-2 p-3.5">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <label className="mr-auto text-label font-ui font-semibold uppercase tracking-wider text-text-2">
+              Client
+            </label>
+            {(['existing', 'new'] as const).map((mode) => (
+              <button
+                key={mode}
+                type="button"
+                aria-pressed={clientMode === mode}
+                onClick={() => setClientMode(mode)}
+                className={cn(
+                  'rounded-sm border px-2.5 py-1 font-ui text-[12px] transition-colors',
+                  clientMode === mode
+                    ? 'border-border-strong bg-surface-3 text-text-1'
+                    : 'border-border-default bg-surface-1 text-text-3 hover:text-text-1',
+                )}
+              >
+                {mode === 'existing' ? 'Existing client' : 'New client'}
+              </button>
+            ))}
+          </div>
+
+          {clientMode === 'existing' ? (
+            <Select
+              value={clientId}
+              onChange={setClientId}
+              placeholder="Choose the client this work is for"
+              options={clients.map((c) => ({ value: c.id, label: c.name }))}
+            />
+          ) : (
+            <Input
+              value={clientName}
+              onChange={(e) => setClientName(e.target.value)}
+              placeholder="Company or account name"
+            />
+          )}
+
+          {clientError && <p className="font-ui text-[11.5px] text-error">{clientError}</p>}
+          {nameMatch ? (
+            <p className="font-ui text-[11.5px] text-warning">
+              “{nameMatch.name}” already exists — this will attach to it rather than create a second one.
+            </p>
+          ) : (
+            <p className="font-mono text-[10.5px] text-text-4">
+              Prefilled from the lead ({lead.company}) — check it. A lead often carries the deal name,
+              not the client’s.
+            </p>
+          )}
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -317,8 +392,8 @@ export function HandoffModal({ open, lead, onClose }: HandoffModalProps) {
 
         {/* States exactly what confirming does — it now really does it. */}
         <p className="rounded-md border border-border-subtle bg-surface-2 px-3 py-2 font-ui text-[11.5px] text-text-4">
-          Creates the client and the project in Delivery with the services, pipelines and people above,
-          then links this lead to it. The notes become the project description.
+          Creates the project in Delivery against the client above, with the services, pipelines and
+          people you chose, then links this lead to it. The notes become the project description.
         </p>
       </div>
     </Modal>

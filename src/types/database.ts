@@ -4764,6 +4764,8 @@ export type Database = {
       bd_handoff_to_project: {
         Args: {
           p_budget: number
+          p_client_id?: string
+          p_client_name?: string
           p_deadline?: string
           p_lead_id: string
           p_manager_id: string
