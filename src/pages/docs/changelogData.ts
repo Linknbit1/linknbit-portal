@@ -13,11 +13,26 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: 'v1.7.1',
+    date: '2026-08-25',
+    title: 'Checking in from home, and from the office WiFi',
+    highlight:
+      'An approved work-from-home day can be checked into again, and being on the office WiFi now counts the same as putting your finger on the terminal.',
+    entries: [
+      {
+        kind: 'fixed',
+        text: 'Checking in on an approved work-from-home day works again. On-site staff are normally sent to the fingerprint terminal, and that rule was being applied before anyone checked whether it was a WFH day — so the Check In (WFH) button was offered at home and every press came back “Please check in at the biometric terminal”. An approved WFH day now skips the terminal and the office-WiFi rule entirely.',
+      },
+      {
+        kind: 'added',
+        text: 'On the office WiFi, you can check in from the portal instead of the terminal. The card says “Office WiFi detected” when it recognises the network. Off the office network, on-site staff are still sent to the terminal as before.',
+      },
+    ],
+  },
+  {
     version: 'v1.7',
     date: '2026-08-24',
     title: 'Won deals build their own projects, and campaigns get their privacy',
-    highlight:
-      'Handing a won lead to delivery now creates the project itself — the client, every service the deal covers, a starting pipeline for each and the people who will work on it — instead of leaving somebody to build it by hand. Separately, BD campaigns are now visible only to the people on them.',
     entries: [
       {
         kind: 'improved',

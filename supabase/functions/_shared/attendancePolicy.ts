@@ -281,3 +281,24 @@ export function ipInCidr(ip: string, cidr: string): boolean {
     return false
   }
 }
+
+/**
+ * The caller's real public IP.
+ *
+ * `X-Forwarded-For` is NOT trustworthy on its own: Cloudflare *appends* to any
+ * value the client sent, so the left-most entry is whatever the client typed —
+ * `curl -H 'X-Forwarded-For: <office ip>'` used to walk straight through the
+ * office-network gate. `CF-Connecting-IP` is set by the edge itself and a request
+ * that tries to supply its own is rejected with a 1000 before it ever arrives,
+ * so it is the one header worth believing.
+ *
+ * The X-Forwarded-For fall-back only runs where CF-Connecting-IP is absent, which
+ * is no worse than the behaviour it replaces.
+ */
+export function resolveClientIp(req: Request): string {
+  const cf = req.headers.get('CF-Connecting-IP')?.trim()
+  if (cf) return cf
+
+  const forwarded = req.headers.get('X-Forwarded-For')
+  return forwarded ? forwarded.split(',')[0].trim() : ''
+}

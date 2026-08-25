@@ -405,7 +405,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
         id: 'check-in',
         title: 'Checking in and out',
         summary:
-          'How you mark your day depends on your job type. On-site staff use the fingerprint terminal; hybrid and remote staff use the button in the portal.',
+          'On-site staff use the fingerprint terminal, or the portal button while on the office WiFi. Hybrid, remote and work-from-home days are marked in the portal.',
         where: 'People → Attendance',
         procedures: [
           {
@@ -413,19 +413,21 @@ export const DOC_CHAPTERS: DocChapter[] = [
             steps: [
               'Put your finger on the terminal on your way in.',
               'The portal picks the punch up on its own — there is nothing to press.',
-              'Do the same on your way out.',
+              'Or, if you are on the office WiFi, open People → Attendance and press Check in instead.',
             ],
           },
           {
-            title: 'Check in from the portal',
+            title: 'Check in on a work-from-home day',
             steps: [
-              'Open People → Attendance.',
-              'Press Check in. The button is only offered if your job type allows it.',
-              'Press Check out at the end of your day.',
+              'Open People → Attendance once your WFH day has been approved.',
+              'Press Check In (WFH). No office WiFi and no terminal are needed.',
+              'Your hours are recorded against the day exactly as an office day.',
             ],
           },
         ],
         notes: [
+          'You only ever check in. The end of your day is filled in for you — there is no Check out button.',
+          'The office WiFi stands in for the terminal: on it, the portal button is offered even while the terminal is working. Off it, on-site staff are sent to the terminal.',
           'The on-site check-in button reappears automatically if the terminal is offline, so a broken device never costs you a day.',
           'Arriving after your allowed start time is recorded as late; the allowance can be adjusted per person.',
           'The portal decides the time from the server clock, never your device’s.',

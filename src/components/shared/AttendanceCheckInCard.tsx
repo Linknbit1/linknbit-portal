@@ -322,8 +322,9 @@ export function AttendanceCheckInCard() {
           {/* Terminal routing takes precedence over device gating: when you punch a
               finger, whether this browser is an approved device is irrelevant. The
               server decides this (get_my_terminal_gate) using the same rule
-              attendance-checkin enforces, and it flips back to the button on its own
-              once the relay stops reporting. */}
+              attendance-checkin enforces — including its waivers for an approved
+              WFH day and for a request coming from the office network — and it
+              flips back to the button on its own once the relay stops reporting. */}
           {terminalGate?.must_use_terminal ? (
             <DeviceNotice
               tone="terminal"
@@ -331,8 +332,8 @@ export function AttendanceCheckInCard() {
               title="Check in at the terminal"
               body={
                 terminalGate.terminal_location
-                  ? `Place your finger on the terminal at ${terminalGate.terminal_location}. Your check-in appears here within a few seconds.`
-                  : 'Place your finger on the biometric terminal. Your check-in appears here within a few seconds.'
+                  ? `Place your finger on the terminal at ${terminalGate.terminal_location}, or join the office WiFi to check in here. Your check-in appears within a few seconds.`
+                  : 'Place your finger on the biometric terminal, or join the office WiFi to check in here. Your check-in appears within a few seconds.'
               }
             />
           ) : deviceReady && !canCheckIn && deviceStatus === 'unregistered' ? (
@@ -392,7 +393,10 @@ export function AttendanceCheckInCard() {
               )}
 
               <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1 text-[11.5px] font-mono text-text-3">
-                <span className="flex items-center gap-1.5"><Wifi size={12} className="text-success" /> Office Network Required</span>
+                {terminalGate?.on_office_network
+                  ? <span className="flex items-center gap-1.5"><Wifi size={12} className="text-success" /> Office WiFi detected</span>
+                  : <span className="flex items-center gap-1.5"><WifiOff size={12} className="text-warning" /> Office Network Required</span>
+                }
                 <span className="text-text-4">{fmtHHMM(workStart)} – {fmtHHMM(workEnd)} · {grace}m grace</span>
               </div>
             </>

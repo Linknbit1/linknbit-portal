@@ -5082,8 +5082,10 @@ export type Database = {
         Returns: {
           last_heartbeat_at: string
           must_use_terminal: boolean
+          on_office_network: boolean
           terminal_location: string
           terminal_name: string
+          wfh_today: boolean
         }[]
       }
       get_quest_claimants: {

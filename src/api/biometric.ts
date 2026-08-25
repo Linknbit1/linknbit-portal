@@ -73,11 +73,19 @@ export async function fetchTerminals(): Promise<TerminalPublic[]> {
 }
 
 export interface TerminalGate {
-  /** True when this member should use the terminal AND a relay is actually live. */
+  /**
+   * True when this member should use the terminal AND a relay is actually live
+   * AND neither waiver applies — an approved WFH day, or a request arriving from
+   * the office network.
+   */
   must_use_terminal: boolean
   terminal_name: string | null
   terminal_location: string | null
   last_heartbeat_at: string | null
+  /** The request reached the server from the office's public IP. */
+  on_office_network: boolean
+  /** Today is an approved WFH day that has not been checked into yet. */
+  wfh_today: boolean
 }
 
 const NO_GATE: TerminalGate = {
@@ -85,15 +93,19 @@ const NO_GATE: TerminalGate = {
   terminal_name: null,
   terminal_location: null,
   last_heartbeat_at: null,
+  on_office_network: false,
+  wfh_today: false,
 }
 
 /**
  * Whether the current member must check in at a terminal right now.
  *
  * Decided server-side by the same rule attendance-checkin enforces (job-type
- * policy + terminal_stale_min), so the button the card shows always matches what
- * the edge function will accept. The underlying table is admin-only and holds
- * secret_hash, so members reach it only through this RPC.
+ * policy + terminal_stale_min, minus the WFH and office-network waivers), so the
+ * button the card shows always matches what the edge function will accept. The
+ * office-network half needs the caller's real IP, which only the server can see —
+ * another reason this is not computed in the browser. The underlying table is
+ * admin-only and holds secret_hash, so members reach it only through this RPC.
  */
 export async function fetchMyTerminalGate(): Promise<TerminalGate> {
   const { data, error } = await supabase.rpc('get_my_terminal_gate')

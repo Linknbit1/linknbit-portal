@@ -7,6 +7,7 @@ import {
   fmtHHMM,
   ipInCidr,
   localParts,
+  resolveClientIp,
   resolveCutoffs,
 } from '../_shared/attendancePolicy.ts'
 
@@ -94,12 +95,53 @@ Deno.serve(async (req: Request) => {
 
   const tz = settings.timezone ?? 'Asia/Karachi'
 
-  // 3a. Terminal routing — on-site staff mark attendance at the biometric
+  // 4. Time window check
+  const now = new Date()
+  const { today, localMinutes, dayOfWeek } = localParts(now, tz)
+
+  // 4a/4b. Weekend and holiday gates.
+  const dayGate = await checkDayGates(supabase, today, dayOfWeek, settings)
+  if (dayGate.blocked) {
+    return json({ error: dayGate.message, code: dayGate.code }, 422)
+  }
+
+  // 5. Existing-row handling. Deliberately BEFORE the terminal and network gates:
+  //    an approved WFH day waives both, and "you already checked in" is a truer
+  //    answer than "go and use the terminal".
+  const { data: existing } = await supabase
+    .from('attendance')
+    .select('id, source, status, day_type, day_part, check_in')
+    .eq('profile_id', profileId)
+    .eq('date', today)
+    .maybeSingle()
+
+  const existingKind = classifyExistingRow(existing)
+  if (existingKind === 'duplicate') {
+    return json({ error: 'Already checked in today', code: 'duplicate' }, 409)
+  }
+  if (existingKind === 'leave') {
+    return json({ error: 'You are on approved leave today.', code: 'on_leave' }, 409)
+  }
+  const wfhOverride = existingKind === 'wfh'
+
+  // 6. Where the request is coming from. Resolved once, because two gates below
+  //    both turn on it: being on the office network satisfies the network rule
+  //    AND stands in for the terminal (you are demonstrably in the building).
+  const clientIp = resolveClientIp(req)
+  const inOffice = !!settings.office_ip_cidr && !!clientIp
+    && ipInCidr(clientIp, settings.office_ip_cidr)
+
+  // 6a. Terminal routing — on-site staff mark attendance at the biometric
   //     terminal, not here. Enforced only while a terminal relay is actually
   //     alive; if every terminal has gone stale this falls through so a dead Pi
   //     can't strand anyone. get_my_terminal_gate() applies the same rule for the
   //     UI, and both read terminal_stale_min so they cannot disagree.
-  if (policy.attendance_via_terminal) {
+  //
+  //     Two waivers, both meaning "the terminal is not reachable or not the
+  //     point": an approved WFH day (the employee is at home) and a request
+  //     arriving from the office network (they are already in the office, so the
+  //     portal button proves the same presence the terminal would).
+  if (policy.attendance_via_terminal && !wfhOverride && !inOffice) {
     const staleMin = settings.terminal_stale_min ?? 10
     const staleBefore = new Date(Date.now() - staleMin * 60_000).toISOString()
     const { data: liveTerminal } = await supabase
@@ -113,23 +155,13 @@ Deno.serve(async (req: Request) => {
     if (liveTerminal) {
       const where = liveTerminal.location ?? liveTerminal.name
       return json({
-        error: `Please check in at the biometric terminal (${where}).`,
+        error: `Please check in at the biometric terminal (${where}), or connect to the office WiFi to check in here.`,
         code: 'use_terminal',
       }, 403)
     }
   }
 
-  // 4. Time window check
-  const now = new Date()
-  const { today, localMinutes, dayOfWeek } = localParts(now, tz)
-
-  // 4a/4b. Weekend and holiday gates.
-  const dayGate = await checkDayGates(supabase, today, dayOfWeek, settings)
-  if (dayGate.blocked) {
-    return json({ error: dayGate.message, code: dayGate.code }, 422)
-  }
-
-  // 4c. Late cutoff, layering per-employee allowance, a first-half day off and
+  // 6b. Late cutoff, layering per-employee allowance, a first-half day off and
   //     an approved late arrival.
   const { lateCutoff, openMinutes, endMinutes, lowerBoundActive } = await resolveCutoffs(
     supabase, profileId, today, settings, callerProfile?.allowed_check_in ?? null,
@@ -153,34 +185,13 @@ Deno.serve(async (req: Request) => {
     }
   }
 
-  // 5. Existing-row handling.
-  const { data: existing } = await supabase
-    .from('attendance')
-    .select('id, source, status, day_type, day_part, check_in')
-    .eq('profile_id', profileId)
-    .eq('date', today)
-    .maybeSingle()
-
-  const existingKind = classifyExistingRow(existing)
-  if (existingKind === 'duplicate') {
-    return json({ error: 'Already checked in today', code: 'duplicate' }, 409)
-  }
-  if (existingKind === 'leave') {
-    return json({ error: 'You are on approved leave today.', code: 'on_leave' }, 409)
-  }
-  const wfhOverride = existingKind === 'wfh'
-
-  // 6. WiFi / IP check — driven by the job-type policy:
+  // 6c. WiFi / IP check — driven by the job-type policy:
   //    • require_office_network (on-site): hard gate, block when off-network.
   //    • auto_detect_network (hybrid): never block; just record office vs remote.
   //    • otherwise (remote): no gate at all.
   //    An approved-WFH override always waives the gate (the employee is off-site).
   let wifiValidated = false
   if (!wfhOverride && settings.office_ip_cidr) {
-    const forwarded = req.headers.get('X-Forwarded-For')
-    const clientIp = forwarded ? forwarded.split(',')[0].trim() : ''
-    const inOffice = !!clientIp && ipInCidr(clientIp, settings.office_ip_cidr)
-
     if (policy.require_office_network) {
       if (!inOffice) {
         return json({
