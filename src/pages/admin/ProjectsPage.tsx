@@ -22,10 +22,10 @@ import { formatDate, isOverdue, PROJECT_STATUS_LABELS } from '../../lib/utils'
 import { useDeleteProject, useProjectDeleteImpact, useProjects, useUpdateProjectStatus } from '../../hooks/useProjects'
 import { useServices } from '../../hooks/useServices'
 import { useToast } from '../../components/ui/toast-context'
-import { useMyProjectsFilter } from '../../hooks/useMeMode'
+import { useScopedProjects } from '../../hooks/useScopeFilter'
 import { TimeBacklog } from '../../components/shared/TimeBacklog'
 import { useStatusOverrides } from '../../hooks/useStatusLabels'
-import { MeModeNotice } from '../../components/shared/MeModeNotice'
+import { ScopeNotice } from '../../components/shared/ScopeNotice'
 import { ProjectFormModal } from './ProjectFormModal'
 import type { ProjectListItem, ProjectStatus } from '../../api/projects'
 import type { ProjectStatus as AppProjectStatus } from '../../types'
@@ -100,7 +100,7 @@ export default function ProjectsPage() {
   }, [projects, search, serviceFilter, statusFilter, managerFilter, deadlineFrom, deadlineTo, sortBy])
 
   // Me Mode narrows to projects you are staffed on or manage.
-  const shown = useMyProjectsFilter(filtered)
+  const shown = useScopedProjects(filtered)
   // Renames from Settings → Statuses drive the filter and the board headings.
   const projectStatusMeta = useStatusOverrides('project')
 
@@ -167,7 +167,7 @@ export default function ProjectsPage() {
           </button>
         </div>
 
-        <MeModeNotice shown={shown.length} total={filtered.length} />
+        <ScopeNotice shown={shown.length} total={filtered.length} />
 
         {showAdv && (
           <div className="flex flex-wrap items-center gap-2 bg-surface-1 border border-border-default rounded-lg p-2.5">

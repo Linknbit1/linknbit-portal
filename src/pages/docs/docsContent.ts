@@ -314,6 +314,29 @@ export const DOC_CHAPTERS: DocChapter[] = [
         ],
       },
       {
+        id: 'scope-switch',
+        title: 'Mine, my team, or everyone',
+        summary:
+          'A switch in the top bar that decides whose work the projects and tasks screens are showing. It stays put as you move between them.',
+        where: 'Delivery → Projects or Tasks, top right',
+        procedures: [
+          {
+            title: 'Narrow a board to your own work',
+            steps: [
+              'Open Delivery → Tasks or Delivery → Projects.',
+              'Press Mine in the switch at the top right.',
+              'Press Everyone to widen it again — or use the Show everyone link on the banner.',
+            ],
+          },
+        ],
+        notes: [
+          'My team means anyone who shares a team with you, including yourself. Someone on several teams counts on all of them.',
+          'Mine also keeps tasks that merely tag you, since being mentioned is how work often reaches you before it is formally assigned. My team does not — a mention is personal.',
+          'A banner across the top says which lens is on and how many rows it hid, so a nearly empty board is never a mystery.',
+          'The switch only appears on the screens it affects, and is remembered per device.',
+        ],
+      },
+      {
         id: 'time-tracking',
         title: 'Tracking your time',
         summary:

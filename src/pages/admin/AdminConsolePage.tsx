@@ -90,9 +90,9 @@ function AuditLink() {
       to="/admin/audit"
       className="flex items-center gap-2.5 px-4 py-3 font-ui text-[13px] font-medium text-text-2 hover:bg-surface-2 hover:text-text-1 transition-colors border-t border-border-subtle"
     >
-      <ShieldAlert size={14} />
-      Audit Log
-      <ArrowUpRight size={12} className="ml-auto text-text-4" />
+      <ShieldAlert size={14} className="shrink-0" />
+      <span className="lg:truncate">Audit Log</span>
+      <ArrowUpRight size={12} className="ml-auto shrink-0 text-text-4" />
     </Link>
   )
 }
@@ -110,7 +110,7 @@ export default function AdminConsolePage({ mobileSection }: { mobileSection?: st
   // Mobile drill-in: one section as a stack screen with its own back chrome.
   if (mobileSection) {
     const entry = sections.find((s) => s.key === mobileSection)
-    if (!entry) return <Navigate to="/admin/console" replace />
+    if (!entry) return <Navigate to="/admin" replace />
     return <StackScreen title={entry.label}>{entry.render()}</StackScreen>
   }
 
@@ -134,7 +134,7 @@ export default function AdminConsolePage({ mobileSection }: { mobileSection?: st
         {showHub ? (
           <div className="flex flex-col gap-2.5">
             {sections.map((s) => (
-              <HubRow key={s.key} to={`/admin/console/${s.key}`} label={s.label} icon={s.icon} />
+              <HubRow key={s.key} to={`/admin/${s.key}`} label={s.label} icon={s.icon} />
             ))}
             {canViewAudit && <HubRow to="/admin/audit" label="Audit Log" icon={ShieldAlert} />}
           </div>
@@ -148,16 +148,16 @@ export default function AdminConsolePage({ mobileSection }: { mobileSection?: st
                     type="button"
                     onClick={() => setActive(key)}
                     className={cn(
-                      'shrink-0 lg:w-full flex items-center gap-2.5 px-4 py-3 text-[13px] font-ui font-medium whitespace-nowrap transition-colors border-r lg:border-r-0 lg:border-b border-border-subtle last:border-0',
+                      'shrink-0 lg:w-full flex items-center gap-2.5 px-4 py-3 text-[13px] font-ui font-medium whitespace-nowrap lg:whitespace-normal transition-colors border-r lg:border-r-0 lg:border-b border-border-subtle last:border-0',
                       activeKey === key
                         ? 'bg-brand-red/10 text-brand-red'
                         : 'text-text-2 hover:bg-surface-2 hover:text-text-1',
                     )}
                   >
-                    <Icon size={14} />
-                    {label}
+                    <Icon size={14} className="shrink-0" />
+                    <span className="lg:truncate">{label}</span>
                     {activeKey === key && (
-                      <ChevronRight size={12} className="ml-auto hidden lg:block" />
+                      <ChevronRight size={12} className="ml-auto shrink-0 hidden lg:block" />
                     )}
                   </button>
                 ))}
@@ -183,11 +183,11 @@ export default function AdminConsolePage({ mobileSection }: { mobileSection?: st
   )
 }
 
-/** Mobile-only /admin/console/:section stack screen; redirects on desktop. */
+/** Mobile-only /admin/:section stack screen; redirects on desktop. */
 export function AdminConsoleSectionScreen() {
   const isDesktop = useIsDesktop()
   const { section } = useParams()
   const valid = SECTIONS.some((s) => s.key === section)
-  if (isDesktop || !section || !valid) return <Navigate to="/admin/console" replace />
+  if (isDesktop || !section || !valid) return <Navigate to="/admin" replace />
   return <AdminConsolePage mobileSection={section} />
 }

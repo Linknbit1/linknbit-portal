@@ -18,12 +18,12 @@ import { useDeleteTask, useTaskDeleteImpact, useTasks } from '../../hooks/useTas
 import { useServices } from '../../hooks/useServices'
 import { useStatusOverrides } from '../../hooks/useStatusLabels'
 import { useCanAccess } from '../../hooks/useRoleFlags'
-import { useMyTasksFilter } from '../../hooks/useMeMode'
+import { useScopedTasks } from '../../hooks/useScopeFilter'
 import { useToast } from '../../components/ui/toast-context'
 import { ViewToggle, type ViewToggleOption } from '../../components/ui/ViewToggle'
 import { TaskBoard } from '../../components/shared/TaskBoard'
 import { TimeBacklog } from '../../components/shared/TimeBacklog'
-import { MeModeNotice } from '../../components/shared/MeModeNotice'
+import { ScopeNotice } from '../../components/shared/ScopeNotice'
 import { TaskDetailDrawer } from './TaskDetailDrawer'
 import type { Priority, TaskStatus } from '../../types'
 import type { TaskListItem } from '../../api/tasks'
@@ -94,7 +94,7 @@ export default function TasksPage() {
   }, [tasks, search, statusFilter, priorityFilter, serviceFilter, assigneeFilter, dueFrom, dueTo, sortBy])
 
   // Me Mode narrows to the signed-in user's own work, on top of the filters above.
-  const shown = useMyTasksFilter(filtered)
+  const shown = useScopedTasks(filtered)
 
   const statusOptions = [{ value: '', label: 'All statuses' }, ...STATUS_ORDER.map((s) => ({ value: s, label: statusMeta[s]?.label ?? STATUS_LABELS[s] }))]
   const priorityOptions = [{ value: '', label: 'All priorities' }, ...PRIORITY_ORDER.map((p) => ({ value: p, label: PRIORITY_LABELS[p] }))]
@@ -132,7 +132,7 @@ export default function TasksPage() {
           />
         </div>
 
-        <MeModeNotice shown={shown.length} total={filtered.length} />
+        <ScopeNotice shown={shown.length} total={filtered.length} />
 
         {showAdv && (
           <div className="flex flex-wrap items-center gap-2 bg-surface-1 border border-border-default rounded-lg p-2.5">

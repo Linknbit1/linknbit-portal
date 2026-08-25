@@ -134,7 +134,7 @@ const GAMIFICATION_CHILDREN: NavItem[] = [
     feature: ['can_govern_gamification', 'can_recognize', 'can_fulfill_payouts'] },
   // Governance, not configuration: this grants XP and decides who takes part.
   // The rule-set that used to share the name lives in Settings → Gamification.
-  { label: 'Governance',     icon: Trophy, to: '/gamification/admin',
+  { label: 'Governance',     icon: Trophy, to: '/gamification/governance',
     feature: 'can_govern_gamification' },
 ]
 
@@ -240,7 +240,10 @@ export const NAV_ITEMS: NavItem[] = [
   // Admin — governance only, so the section genuinely disappears for the roles
   // that have none of it. One row holding terminals, devices, the working
   // calendar and the audit log, rather than four scattered through People.
-  { label: 'Admin', icon: ShieldAlert, to: '/admin/console', group: 'admin', matchPrefix: '/admin/console',
+  // matchPrefix is the bare /admin: activeNavPath takes the LONGEST match, so
+  // /admin/projects still lights up Projects and only the console's own
+  // sections (and /admin/audit) fall through to this row.
+  { label: 'Admin', icon: ShieldAlert, to: '/admin', group: 'admin', matchPrefix: '/admin',
     feature: ['can_manage_attendance', 'can_view_audit_log'] },
 
   // Pinned to the footer — see NAV_GROUPS. Personal for most roles (My Devices,
@@ -351,7 +354,7 @@ export function useNavItems(): NavItem[] {
     // The Admin row carries what is waiting inside it: devices to approve, plus
     // unseen audit entries. Folding four pages behind one door must not fold
     // away the reason to open it.
-    if (item.matchPrefix === '/admin/console') {
+    if (item.matchPrefix === '/admin') {
       const total = devicesPending + (auditNewCount ?? 0)
       return [total > 0 ? { ...item, badge: total } : item]
     }

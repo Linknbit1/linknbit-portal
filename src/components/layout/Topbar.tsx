@@ -1,47 +1,19 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Bell, Search, Check, CheckCheck, ChevronDown, ChevronRight, UserCircle, LogOut, ChevronLeft, UserRound, Settings as SettingsIcon } from 'lucide-react'
+import { Bell, Search, Check, CheckCheck, ChevronDown, ChevronRight, UserCircle, LogOut, ChevronLeft, Settings as SettingsIcon } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { useCommandPalette } from '../../context/CommandPaletteContext'
+import { ScopeSwitch } from '../shared/ScopeSwitch'
 import { Avatar } from '../ui/Avatar'
 import { ProfileRoles } from '../shared/ProfileRoles'
 import { useAuthContext } from '../../context/AuthContext'
 import { useNavChrome } from './MobileNavContext'
-import { useMeMode } from '../../context/MeModeContext'
 import { useNotifications, useMarkGroupRead, useMarkAllRead } from '../../hooks/useNotifications'
 import { notificationHref } from '../../constants/notifications'
 import { groupNotifications, groupTitle } from '../../lib/notificationGroups'
 import { formatRelativeTime } from '../../lib/utils'
 import { isUserRole } from '../../lib/peopleAccess'
 import { SETTINGS_ROLES } from '../../constants/roles'
-
-/**
- * Me Mode — narrows task views to what you are assigned to or tagged in. Lives in
- * the Topbar rather than per page so the lens holds across navigation, and turns
- * brand-red when active: a filter you have forgotten about is worse than no filter.
- */
-function MeModeButton({ meMode, compact }: { meMode: ReturnType<typeof useMeMode>; compact?: boolean }) {
-  return (
-    <button
-      onClick={meMode.toggle}
-      aria-pressed={meMode.enabled}
-      aria-label="Me Mode — only my tasks"
-      title={meMode.enabled
-        ? 'Me Mode on — showing only tasks assigned to or tagging you. Click to show everyone.'
-        : 'Me Mode — show only tasks assigned to or tagging you'}
-      className={cn(
-        'flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-sm border font-ui text-[12px] font-semibold transition-colors',
-        compact ? 'w-9' : 'px-2.5',
-        meMode.enabled
-          ? 'border-brand-red/40 bg-brand-red/12 text-brand-red'
-          : 'border-border-default bg-surface-1 text-text-3 hover:text-text-1',
-      )}
-    >
-      <UserRound size={15} />
-      {!compact && 'Me'}
-    </button>
-  )
-}
 
 interface TopbarProps {
   title?: string
@@ -57,12 +29,13 @@ interface TopbarProps {
 export function Topbar({ title, breadcrumb, className, back, actions }: TopbarProps) {
   const navigate = useNavigate()
   const { profile, signOut } = useAuthContext()
-  const meMode = useMeMode()
   const { setOpen: setPaletteOpen } = useCommandPalette()
   // Me Mode only filters task views, so it only appears on the pages it affects —
   // a toggle on Attendance or Settings would do nothing and just raise questions.
   const { pathname } = useLocation()
-  const meModeRelevant = /^\/admin\/(projects|tasks)(\/|$)/.test(pathname)
+  // The lens only filters task and project views, so it only appears on the
+  // pages it affects — a switch on Attendance or Settings would do nothing.
+  const scopeRelevant = /^\/admin\/(projects|tasks)(\/|$)/.test(pathname)
   const profileId = profile?.id ?? ''
 
   // Report this screen's back affordance to the shell so the mobile bottom tab
@@ -160,7 +133,7 @@ export function Topbar({ title, breadcrumb, className, back, actions }: TopbarPr
       {/* Me Mode + mobile bell. Me Mode sits outside the desktop-only block so it
           exists at every width — hidden below lg is exactly how it went missing. */}
       <div className={cn('flex shrink-0 items-center gap-2 lg:hidden', !actions && 'ml-auto')}>
-        {meModeRelevant && <MeModeButton meMode={meMode} compact />}
+        {scopeRelevant && <ScopeSwitch compact />}
         {!back && (
           <button
             onClick={() => navigate('/notifications')}
@@ -179,7 +152,7 @@ export function Topbar({ title, breadcrumb, className, back, actions }: TopbarPr
 
       {/* Actions — desktop only; mobile uses the bell above + bottom tabs */}
       <div className="ml-auto hidden lg:flex items-center gap-3.5">
-        {meModeRelevant && <MeModeButton meMode={meMode} />}
+        {scopeRelevant && <ScopeSwitch />}
 
         {/* Notification bell — live: reads the real notifications table. */}
         <div ref={bellRef} className="relative">

@@ -20,7 +20,7 @@ import { StatusChip } from '../../components/shared/StatusChip'
 import { PriorityChip } from '../../components/shared/PriorityChip'
 import { TaskBoard } from '../../components/shared/TaskBoard'
 import { TimeBacklog } from '../../components/shared/TimeBacklog'
-import { MeModeNotice } from '../../components/shared/MeModeNotice'
+import { ScopeNotice } from '../../components/shared/ScopeNotice'
 import { DocEditor } from '../../components/editor/DocEditor'
 import { ProjectFilesTab } from './ProjectFilesTab'
 import { ProjectFormModal } from './ProjectFormModal'
@@ -43,7 +43,7 @@ import { useServices } from '../../hooks/useServices'
 import { useUsableTemplates, useApplyTemplate } from '../../hooks/useTemplates'
 import { useApprovals, useRequestApproval, useReviewApproval } from '../../hooks/useApprovals'
 import { useRealtimeTasks } from '../../hooks/realtime/useRealtimeTasks'
-import { useMyTasksFilter } from '../../hooks/useMeMode'
+import { useScopedTasks } from '../../hooks/useScopeFilter'
 import { PROJECT_TASK_QUERY_PARAM } from '../../constants/notifications'
 import { StageFormModal } from './StageFormModal'
 import { TaskFormModal } from './TaskFormModal'
@@ -158,7 +158,7 @@ export default function ProjectDetailPage() {
     [projectTasks, activeServiceId],
   )
   // Me Mode applies here too, so the lens holds when you drill into a project.
-  const tasks = useMyTasksFilter(allTasks)
+  const tasks = useScopedTasks(allTasks)
 
   const taskCountByService = useMemo(() => {
     const map = new Map<string, number>()
@@ -480,7 +480,7 @@ export default function ProjectDetailPage() {
         )}
 
         {(activeTab === 'board' || activeTab === 'pipeline') && (
-          <MeModeNotice shown={tasks.length} total={allTasks.length} />
+          <ScopeNotice shown={tasks.length} total={allTasks.length} />
         )}
 
         {activeTab === 'board' && (

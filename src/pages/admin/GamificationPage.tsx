@@ -828,7 +828,7 @@ const GAMIFICATION_SECTIONS = [
   { key: 'rewards',     label: 'Rewards Shop',  icon: Gift },
   { key: 'history',     label: 'Points History', icon: History },
   { key: 'approvals',   label: 'Approvals',     icon: Inbox },
-  { key: 'admin',       label: 'Settings',      icon: ShieldAlert },
+  { key: 'governance',  label: 'Governance',    icon: ShieldAlert },
 ] as const
 
 export default function GamificationPage({ mobileSection }: { mobileSection?: string } = {}) {
@@ -1127,7 +1127,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
     { key: 'rewards',     label: 'Rewards Shop' },
     { key: 'history',     label: 'Points History' },
     ...(showApprovals ? [{ key: 'approvals', label: `Approvals${reviewCount > 0 ? ` (${reviewCount})` : ''}` }] : []),
-    ...(showSettings ? [{ key: 'admin', label: 'Settings' }] : []),
+    ...(showSettings ? [{ key: 'governance', label: 'Governance' }] : []),
   ]
 
   // Mobile: /gamification is a hub of rows; /gamification/:section is one stack screen.
@@ -1163,7 +1163,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
         {showHub ? (
           <div className="flex flex-col gap-2.5">
             {GAMIFICATION_SECTIONS.filter((s) =>
-              s.key === 'admin' ? showSettings : s.key === 'approvals' ? showApprovals : true,
+              s.key === 'governance' ? showSettings : s.key === 'approvals' ? showApprovals : true,
             ).map((s) => (
               <HubRow
                 key={s.key}
@@ -1803,8 +1803,8 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
           </div>
         )}
 
-        {/* ── SETTINGS (catalog & governance) ── */}
-        {!showHub && activeTab === 'admin' && showSettings && (
+        {/* ── GOVERNANCE (grant XP, participation, catalog) ── */}
+        {!showHub && activeTab === 'governance' && showSettings && (
           <div className="flex flex-col gap-8">
             <h2 className="font-display font-bold text-[22px] text-text-1">{sectionLabel}</h2>
 
@@ -1939,12 +1939,12 @@ export function GamificationSectionScreen() {
 
   const valid = GAMIFICATION_SECTIONS.some((s) => s.key === section)
   if (!section || !valid) return <Navigate to="/gamification" replace />
-  // Guard by capability, not just key validity — otherwise /gamification/admin renders
+  // Guard by capability, not just key validity — otherwise /gamification/governance renders
   // an empty shell for anyone who types the URL (every panel inside is role-gated).
   if (section === 'approvals' && !(canGovern || canRecog || canFulfil)) {
     return <Navigate to="/gamification" replace />
   }
-  if (section === 'admin' && !canGovern) {
+  if (section === 'governance' && !canGovern) {
     return <Navigate to="/gamification" replace />
   }
   return <GamificationPage mobileSection={section} />

@@ -13,11 +13,26 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: 'v1.13',
+    date: '2026-08-26',
+    title: 'Mine, my team, or everyone',
+    highlight:
+      'The Me toggle on Projects and Tasks became a three-way switch: Mine, My team, or Everyone. Seeing what your team is carrying no longer means scrolling past everybody else’s work.',
+    entries: [
+      {
+        kind: 'added',
+        text: 'My team is a new lens on the projects and tasks screens — work belonging to anyone who shares a team with you. Someone on several teams counts on all of them.',
+      },
+      {
+        kind: 'improved',
+        text: 'The banner that tells you a list is filtered now names which lens is on and still counts what it hid, so a nearly empty board is never a mystery. Your previous Me setting carries over as Mine.',
+      },
+    ],
+  },
+  {
     version: 'v1.12',
     date: '2026-08-26',
     title: 'One door for reports, one for admin',
-    highlight:
-      'Reporting is one place instead of three, and the administrative machinery — terminals, devices, the working calendar, the audit log — now sits behind a single Admin door instead of being scattered through the Attendance menu. Six rows left the sidebar.',
     entries: [
       {
         kind: 'added',
@@ -25,11 +40,15 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'added',
-        text: 'Admin is a console. Terminals, Enrolled Devices, and Schedule & holidays moved out of the Attendance menu and joined the Audit Log behind one Admin row. The count on that row is what is waiting inside — devices to approve and unseen audit entries — so folding them away never hides work.',
+        text: 'Admin is a console, at its own short address. Terminals, Enrolled Devices, and Schedule & holidays moved out of the Attendance menu and joined the Audit Log behind one Admin row. The count on that row is what is waiting inside — devices to approve and unseen audit entries — so folding them away never hides work.',
       },
       {
         kind: 'improved',
-        text: 'Gamification’s “Settings” is now called Governance, because that is what it is — granting XP and deciding who takes part. The actual gamification rules live in Settings → Gamification, where the standup and attendance rules already were.',
+        text: 'Gamification’s “Settings” is now called Governance, on the page as well as in the menu, because that is what it is — granting XP and deciding who takes part. Its address changed to match; the old link still works. The actual gamification rules live in Settings → Gamification, where the standup and attendance rules already were.',
+      },
+      {
+        kind: 'fixed',
+        text: 'In the Admin console, a long section name pushed its icon and the arrow marking the open section off the row. The name now shortens instead.',
       },
       {
         kind: 'improved',

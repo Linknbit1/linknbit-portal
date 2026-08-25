@@ -114,6 +114,9 @@ export default function App() {
                 <Route path="/attendance/:section" element={<AttendanceSectionScreen />} />
                 {/* No combined Gamification page — land on the first sub-page. */}
                 <Route path="/gamification" element={<Navigate to="/gamification/leaderboard" replace />} />
+                {/* Renamed: the section grants XP and decides who takes part, so it
+                    was never "settings". Old links keep working. */}
+                <Route path="/gamification/admin" element={<Navigate to="/gamification/governance" replace />} />
                 <Route path="/gamification/:section" element={<GamificationSectionScreen />} />
                 <Route
                   path="/settings"
@@ -147,8 +150,13 @@ export default function App() {
                 <Route path="/admin/tasks/:id" element={<RoleGuard allowedRoles={SETTINGS_ROLES}><AdminTaskDetailPage /></RoleGuard>} />
                 <Route path="/admin/clients" element={<RoleGuard feature="can_manage_clients"><ClientsPage /></RoleGuard>} />
                 <Route path="/admin/audit" element={<RoleGuard feature="can_view_audit_log"><AuditLogPage /></RoleGuard>} />
-                <Route path="/admin/console" element={<AdminConsolePage />} />
-                <Route path="/admin/console/:section" element={<AdminConsoleSectionScreen />} />
+                {/* The console lives at /admin itself. React Router ranks static
+                    segments above dynamic ones, so /admin/projects and friends
+                    above still win over /admin/:section — which only ever
+                    resolves the console's own keys and redirects otherwise. */}
+                <Route path="/admin" element={<AdminConsolePage />} />
+                <Route path="/admin/console" element={<Navigate to="/admin" replace />} />
+                <Route path="/admin/:section" element={<AdminConsoleSectionScreen />} />
 
                 {/* Backlog reporting and the timesheet. Out of the WIP gate now
                     that both read real timer and standup data rather than the
