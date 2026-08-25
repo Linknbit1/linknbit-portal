@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase'
-import type { Tables, TablesInsert, TablesUpdate } from '../types/database'
+import type { Database, Tables, TablesInsert, TablesUpdate } from '../types/database'
 import type { AttendanceDayPart } from '../types'
 
 export type AttendanceRow = Tables<'attendance'>
@@ -495,6 +495,51 @@ export async function fetchAllAttendanceExceptions(
   if (error) throw error
   // as unknown: Supabase cannot infer the joined shape when multiple FKs exist on profiles
   return data as unknown as AttendanceExceptionWithProfile[]
+}
+
+// ── Day roster ────────────────────────────────────────────────────────────────
+
+/**
+ * Resolved presence for one day. `day_roster` folds attendance, approved leave,
+ * approved WFH, holidays, company WFH days and the weekend rule into a single
+ * status per person, so the "who is working today" question is one round trip
+ * rather than five overlapping lists reconciled in the browser.
+ */
+export type DayRosterRow = Database['public']['Functions']['day_roster']['Returns'][number]
+
+/**
+ * The statuses `day_roster` can return, narrowest first. Postgres hands back a
+ * plain text column, so this is the one place the union is stated.
+ */
+export const ROSTER_STATUSES = [
+  'in_office',
+  'wfh',
+  'leave',
+  'holiday',
+  'off',
+  'not_checked_in',
+] as const
+
+export type RosterStatus = (typeof ROSTER_STATUSES)[number]
+
+/** Narrows the RPC's `text` status without asserting. */
+export function isRosterStatus(value: string): value is RosterStatus {
+  return ROSTER_STATUSES.some((s) => s === value)
+}
+
+export interface RosterEntry extends Omit<DayRosterRow, 'status'> {
+  status: RosterStatus
+}
+
+export async function fetchDayRoster(date: string): Promise<RosterEntry[]> {
+  const { data, error } = await supabase.rpc('day_roster', { p_date: date })
+  if (error) throw error
+  // An unrecognised status means the function grew a case the client has not
+  // shipped yet; treat it as "no answer" rather than crashing the roster.
+  return (data ?? []).map((row) => ({
+    ...row,
+    status: isRosterStatus(row.status) ? row.status : 'not_checked_in',
+  }))
 }
 
 // ── Holidays ──────────────────────────────────────────────────────────────────

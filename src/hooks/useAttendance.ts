@@ -4,6 +4,7 @@ import {
   fetchMyMonthlyAttendance,
   fetchMyTodayAttendance,
   fetchAllAttendance,
+  fetchDayRoster,
   fetchMonthlyAttendance,
   checkIn,
   markAttendance,
@@ -80,6 +81,7 @@ export const ATTENDANCE_KEYS = {
   myMonthly: (year: number, month: number) => ['attendance', 'my', 'monthly', year, month] as const,
   myToday: ['attendance', 'my', 'today'] as const,
   allByDate: (date: string) => ['attendance', 'all', date] as const,
+  dayRoster: (date: string) => ['attendance', 'roster', date] as const,
   monthly: (year: number, month: number) => ['attendance', 'monthly', year, month] as const,
   settings: ['attendance', 'settings'] as const,
   exceptions: (filters: FetchExceptionsFilters) => ['attendance', 'exceptions', filters] as const,
@@ -133,6 +135,22 @@ export function useAllAttendance(date: string) {
   return useQuery({
     queryKey: ATTENDANCE_KEYS.allByDate(date),
     queryFn: () => fetchAllAttendance(date),
+  })
+}
+
+/**
+ * Everyone expected at work on `date`, with presence already resolved by the
+ * server. Refetches on window focus and on a one-minute interval: this is a
+ * live board people leave open, and a check-in that lands two minutes late
+ * reads as broken.
+ */
+export function useDayRoster(date: string, enabled = true) {
+  return useQuery({
+    queryKey: ATTENDANCE_KEYS.dayRoster(date),
+    queryFn: () => fetchDayRoster(date),
+    enabled,
+    staleTime: 1000 * 30,
+    refetchInterval: 1000 * 60,
   })
 }
 

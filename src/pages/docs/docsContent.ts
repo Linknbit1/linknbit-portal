@@ -413,6 +413,37 @@ export const DOC_CHAPTERS: DocChapter[] = [
     blurb: 'Marking your day, and asking for leave, remote days or overtime.',
     topics: [
       {
+        id: 'today',
+        title: 'Who is working today',
+        summary:
+          'One roster for the whole company on any date — who is in the office, who is working from home, who is off, and who has not checked in yet.',
+        where: 'People → Attendance → Today',
+        procedures: [
+          {
+            title: 'See who is in',
+            steps: [
+              'Open People → Attendance. Today is the first tab.',
+              'Read the four counters for the shape of the day: in office, working from home, on leave, not checked in.',
+              'Press By team to regroup the list by team instead of by status.',
+            ],
+          },
+          {
+            title: 'Check another date',
+            steps: [
+              'Pick the date you want from the date box.',
+              'Press Back to today to return.',
+            ],
+          },
+        ],
+        notes: [
+          'A public holiday or a company-wide work-from-home day is announced in a banner across the top, and everyone is marked accordingly.',
+          'Weekends show as a non-working day rather than reporting the whole company as missing.',
+          'You always see everyone’s status. Check-in times, the late flag and which kind of leave someone took are shown only for yourself, for people on your teams, and to whoever manages attendance.',
+          'The roster refreshes on its own about once a minute, so it can be left open.',
+          'People excluded from attendance tracking are left out entirely — counting them would make the numbers wrong.',
+        ],
+      },
+      {
         id: 'check-in',
         title: 'Checking in and out',
         summary:

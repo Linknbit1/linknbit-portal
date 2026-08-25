@@ -32,9 +32,11 @@ import {
   Plane,
   Trash2,
   Pencil,
+  CalendarCheck,
   type LucideIcon,
 } from "lucide-react";
 import { Topbar } from "../../components/layout/Topbar";
+import { TodayRoster } from "../../components/shared/TodayRoster";
 import { Avatar } from "../../components/ui/Avatar";
 import { Button } from "../../components/ui/Button";
 import { Select } from "../../components/ui/Select";
@@ -5587,6 +5589,7 @@ function SettingsForm({ settings }: { settings: AttendanceSettings }) {
 
 /* ── Page ──────────────────────────────────────────────────────────────────── */
 type Tab =
+  | "today"
   | "records"
   | "wfh"
   | "leave"
@@ -5598,7 +5601,7 @@ type Tab =
   | "settings";
 
 export default function AttendancePage() {
-  const [view, setView] = useState<Tab>("records");
+  const [view, setView] = useState<Tab>("today");
   const tabStripRef = React.useRef<HTMLDivElement>(null);
 
   // Keep the selected tab centered within the horizontally scrollable strip.
@@ -5634,6 +5637,7 @@ export default function AttendancePage() {
   // Only Super Admin / Admin / HR reach this view, and they get every feature.
   const tabs: { id: Tab; label: string; icon: typeof Users; badge?: number }[] =
     [
+      { id: "today", label: "Today", icon: CalendarCheck },
       { id: "records", label: "Daily Records", icon: Users },
       { id: "wfh", label: "WFH Requests", icon: Home, badge: pendingWFH },
       { id: "leave", label: "Leave", icon: Plane, badge: pendingLeave },
@@ -5698,6 +5702,7 @@ export default function AttendancePage() {
           ))}
         </div>
 
+        {effectiveView === "today" && <TodayRoster />}
         {effectiveView === "records" && <DailyRecordsTab />}
         {effectiveView === "wfh" && <WFHRequestsTab />}
         {effectiveView === "leave" && <LeaveTab />}

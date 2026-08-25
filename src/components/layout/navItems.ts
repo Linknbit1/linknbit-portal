@@ -98,6 +98,11 @@ export interface NavItem {
 
 /** Attendance sub-pages — the management views at /attendance/:section. */
 const ATTENDANCE_CHILDREN: NavItem[] = [
+  // Ungated on purpose, and first: "who is in today" is the question the whole
+  // section exists to answer, and it is not privileged. The RPC behind it hands
+  // an employee the presence of everyone but withholds times, the late flag and
+  // the leave type for people outside their team.
+  { label: 'Today',            icon: CalendarCheck, to: '/attendance/today' },
   // Only for the roles whose parent link goes to the management side — HR's
   // "Attendance" already lands on this exact page, so offering it twice is noise.
   { label: 'My Attendance',    icon: CalendarCheck, to: '/attendance/me',         feature: 'can_manage_attendance',

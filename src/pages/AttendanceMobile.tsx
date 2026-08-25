@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
 import {
   Users, Home, Plane, AlertCircle, Smartphone, Palmtree, Hourglass, BarChart2,
-  Settings as SettingsIcon, CalendarClock, Calendar, Fingerprint,
+  Settings as SettingsIcon, CalendarClock, Calendar, Fingerprint, CalendarCheck,
 } from 'lucide-react'
 import { MobileHub, HubRow, type HubRowItem } from '../components/layout/MobileHub'
 import { StackScreen } from '../components/layout/StackScreen'
@@ -29,6 +29,7 @@ import {
   OooSection, SummaryStats, HistoryTable, MyAttendanceSections,
 } from './employee/AttendancePage'
 import { AttendanceCheckInCard } from '../components/shared/AttendanceCheckInCard'
+import { TodayRoster } from '../components/shared/TodayRoster'
 import { BiometricTerminalsTab } from '../components/shared/BiometricTerminalsTab'
 import { MyDevicesCard } from '../components/shared/MyDevicesCard'
 import {
@@ -42,6 +43,7 @@ interface SectionEntry {
 }
 
 const ADMIN_SECTIONS: Record<string, SectionEntry> = {
+  today:      { title: 'Today',            render: () => <TodayRoster /> },
   records:    { title: 'Daily Records',    render: () => <DailyRecordsTab /> },
   wfh:        { title: 'WFH Requests',     render: () => <WFHRequestsTab /> },
   leave:      { title: 'Leave',            render: () => <LeaveTab /> },
@@ -107,6 +109,7 @@ function EmployeeHistoryScreen() {
 }
 
 const EMPLOYEE_SECTIONS: Record<string, SectionEntry> = {
+  today:      { title: 'Today',            render: () => <TodayRoster /> },
   history:    { title: 'History',          render: () => <EmployeeHistoryScreen /> },
   wfh:        { title: 'WFH Requests',     render: () => <WfhSection /> },
   leave:      { title: 'Leave',            render: () => <LeaveSection /> },
@@ -155,6 +158,7 @@ function AdminAttendanceHub() {
 
   const items: HubRowItem[] = [
     // Managers file their own requests too — this is their self-service view.
+    { to: '/attendance/today',      label: 'Today',            icon: CalendarCheck },
     { to: '/attendance/me',         label: 'My Attendance',    icon: CalendarClock },
     { to: '/attendance/records',    label: 'Daily Records',    icon: Users },
     { to: '/attendance/wfh',        label: 'WFH Requests',     icon: Home,        badge: pendingWfh.length },
@@ -182,6 +186,7 @@ function EmployeeAttendanceHub() {
   const canSeeTeam = showsInlineTeamAttendance(profile?.role)
 
   const items: HubRowItem[] = [
+    { to: '/attendance/today',      label: 'Today',          icon: CalendarCheck },
     { to: '/attendance/history',    label: 'History',        icon: CalendarClock },
     { to: '/attendance/wfh',        label: 'WFH Requests',   icon: Home },
     { to: '/attendance/leave',      label: 'Leave',          icon: Plane },

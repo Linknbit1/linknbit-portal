@@ -13,11 +13,30 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: 'v1.9',
+    date: '2026-08-26',
+    title: 'Who is working today, on one screen',
+    highlight:
+      'Attendance opens on a new Today tab: the whole company on one roster — who is in the office, who is working from home, who is off, and who has not checked in yet. No more opening four separate lists and piecing it together.',
+    entries: [
+      {
+        kind: 'added',
+        text: 'Today is the new first tab of Attendance. Four counters give you the shape of the day at a glance, and the list underneath can be grouped by status or by team. Pick any date to see how a past day went, and a public holiday or company-wide WFH day is announced in a banner across the top.',
+      },
+      {
+        kind: 'improved',
+        text: 'Weekends and holidays no longer report the whole company as missing. A non-working day is now recognised as one, and a declared holiday marks everybody as off even if an older work-from-home approval was still sitting on that date.',
+      },
+      {
+        kind: 'improved',
+        text: 'Everyone can see who is in today, not just managers — that was the question people were asking in chat. Check-in times, the late flag and which kind of leave someone took stay private: those show only for yourself, for people on your teams, and to whoever manages attendance.',
+      },
+    ],
+  },
+  {
     version: 'v1.8',
     date: '2026-08-25',
     title: 'A tighter sidebar',
-    highlight:
-      'The sidebar is about a third shorter. Rows are compact rather than chunky, and you can fold away whole sections you never use \u2014 so the whole menu fits on screen without scrolling.',
     entries: [
       {
         kind: 'improved',
