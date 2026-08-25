@@ -96,22 +96,28 @@ export interface NavItem {
   children?: NavItem[]
 }
 
-/** Attendance sub-pages — the management views at /attendance/:section. */
+/**
+ * Attendance sub-pages — the views at /attendance/:section.
+ *
+ * The first three are views, not destinations: Today, Calendar and Requests are
+ * three ways of looking at one question, and Requests alone replaced the four
+ * separate Leave / WFH / Exceptions / Overtime rows that used to sit here. They
+ * are ungated because the question "who is working today" is not privileged —
+ * `day_roster` withholds the private detail rather than the whole screen, and
+ * the Requests queue hides its Approve and Reject buttons from anyone without
+ * `can_manage_attendance`.
+ *
+ * What remains below the views is genuine administration, and stays gated.
+ */
 const ATTENDANCE_CHILDREN: NavItem[] = [
-  // Ungated on purpose, and first: "who is in today" is the question the whole
-  // section exists to answer, and it is not privileged. The RPC behind it hands
-  // an employee the presence of everyone but withholds times, the late flag and
-  // the leave type for people outside their team.
   { label: 'Today',            icon: CalendarCheck, to: '/attendance/today' },
+  { label: 'Calendar',         icon: CalendarCheck, to: '/attendance/calendar' },
+  { label: 'Requests',         icon: CalendarCheck, to: '/attendance/requests' },
   // Only for the roles whose parent link goes to the management side — HR's
   // "Attendance" already lands on this exact page, so offering it twice is noise.
   { label: 'My Attendance',    icon: CalendarCheck, to: '/attendance/me',         feature: 'can_manage_attendance',
     roles: ATTENDANCE_ADMIN_LANDING_ROLES },
   { label: 'Daily Records',    icon: CalendarCheck, to: '/attendance/records',    feature: 'can_manage_attendance' },
-  { label: 'Leave',            icon: CalendarCheck, to: '/attendance/leave',      feature: 'can_manage_attendance' },
-  { label: 'WFH Requests',     icon: CalendarCheck, to: '/attendance/wfh',        feature: 'can_manage_attendance' },
-  { label: 'Exceptions',       icon: CalendarCheck, to: '/attendance/exceptions', feature: 'can_manage_attendance' },
-  { label: 'Overtime',         icon: CalendarCheck, to: '/attendance/overtime',   feature: 'can_manage_attendance' },
   { label: 'Schedule',         icon: CalendarCheck, to: '/attendance/schedule',   feature: 'can_manage_attendance' },
   { label: 'Enrolled Devices', icon: CalendarCheck, to: '/attendance/devices',    feature: 'can_manage_attendance' },
   { label: 'Terminals',        icon: CalendarCheck, to: '/attendance/terminals',  feature: 'can_manage_attendance' },
@@ -268,7 +274,7 @@ export function filterNavItems(role: string | null | undefined, can: CanFn): Nav
     const landsOnAdminView =
       can('can_manage_attendance') && ATTENDANCE_ADMIN_LANDING_ROLES.includes(role ?? '')
     const to = item.matchPrefix === '/attendance'
-      ? (landsOnAdminView ? '/attendance/records' : '/attendance')
+      ? (landsOnAdminView ? '/attendance/today' : '/attendance')
       : item.to
     return { ...item, to, children: children && children.length > 0 ? children : undefined }
   })
@@ -328,11 +334,11 @@ export function useNavItems(): NavItem[] {
   const { data: upcomingMeetings = 0 } = useMyUpcomingMeetingCount(!!profile)
 
   const devicesPending = devices.filter((d) => !d.approved_by && d.is_active).length
+  // Leave, WFH, exceptions and overtime share one queue now, so their pending
+  // counts sum onto that single row rather than four that no longer exist.
   const attendanceByPath: Record<string, number> = {
-    '/attendance/leave': leavePending.length,
-    '/attendance/wfh': wfhPending.length,
-    '/attendance/exceptions': excPending.length,
-    '/attendance/overtime': otPending.length,
+    '/attendance/requests':
+      leavePending.length + wfhPending.length + excPending.length + otPending.length,
     '/attendance/devices': devicesPending,
   }
   const attendanceTotal = Object.values(attendanceByPath).reduce((a, n) => a + n, 0)

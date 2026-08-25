@@ -444,6 +444,28 @@ export const DOC_CHAPTERS: DocChapter[] = [
         ],
       },
       {
+        id: 'attendance-calendar',
+        title: 'The month ahead',
+        summary:
+          'A month at a glance: public holidays, company off days, working Saturdays, and who is away on which day.',
+        where: 'People → Attendance → Calendar',
+        procedures: [
+          {
+            title: 'Check coverage before approving time off',
+            steps: [
+              'Open People → Attendance → Calendar.',
+              'Find the day in question — each cell counts how many people are off and how many are working from home.',
+              'Press the day to list exactly who, and what kind of leave they are on.',
+            ],
+          },
+        ],
+        notes: [
+          'Holidays are shaded and named in the cell, so you can see a long weekend coming without opening anything.',
+          'Only approved leave and WFH appear here. A request still waiting on a decision is not counted — look in Requests for those.',
+          'Working Saturdays are labelled; every other Saturday and Sunday is shaded as a non-working day.',
+        ],
+      },
+      {
         id: 'check-in',
         title: 'Checking in and out',
         summary:
@@ -479,8 +501,8 @@ export const DOC_CHAPTERS: DocChapter[] = [
         id: 'requests',
         title: 'Leave, WFH, overtime and corrections',
         summary:
-          'Four request types, all with the same shape: you submit, someone with the authority reviews, and you are notified of the outcome.',
-        where: 'People → Attendance',
+          'Four request types, all with the same shape: you submit, someone with the authority reviews, and you are notified of the outcome. They share one queue.',
+        where: 'People → Attendance → Requests',
         procedures: [
           {
             title: 'Request time off or a remote day',
@@ -489,6 +511,14 @@ export const DOC_CHAPTERS: DocChapter[] = [
               'Choose the duration: a full day (or range of days), or half a day.',
               'For a half day, pick which half — first or second.',
               'Add a reason and submit.',
+            ],
+          },
+          {
+            title: 'Work through what is waiting',
+            steps: [
+              'Open People → Attendance → Requests. It opens on Pending.',
+              'Narrow to one kind with the type filters if you want to clear leave before anything else.',
+              'Press Approve or Reject on the row. The list updates in place.',
             ],
           },
           {
@@ -501,6 +531,8 @@ export const DOC_CHAPTERS: DocChapter[] = [
           },
         ],
         notes: [
+          'Leave, WFH, overtime and exceptions all queue up together. The type filters carry their own pending counts, so you can see where the backlog is without opening each one.',
+          'Everyone can read the queue; Approve and Reject appear only for those who manage attendance.',
           'An approved leave or WFH day updates your attendance record for that day automatically.',
           'On a first-half day off you are not due in until the second half starts, so your arrival is judged against that time plus the usual grace — coming in before it counts as on time, not late.',
           'A multi-day request is listed under every day it covers, so the team can see who is off on a given date. It is still one request: the Approve and Reject buttons appear only on its first day.',

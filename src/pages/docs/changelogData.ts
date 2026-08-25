@@ -15,13 +15,25 @@ export const RELEASES: ChangelogRelease[] = [
   {
     version: 'v1.9',
     date: '2026-08-26',
-    title: 'Who is working today, on one screen',
+    title: 'Attendance, in three views instead of eleven',
     highlight:
-      'Attendance opens on a new Today tab: the whole company on one roster — who is in the office, who is working from home, who is off, and who has not checked in yet. No more opening four separate lists and piecing it together.',
+      'Attendance now opens on Today — the whole company on one roster. Alongside it are a Calendar for the month ahead and a single Requests queue that replaces the separate Leave, WFH, Exceptions and Overtime lists. The section went from eleven menu rows to three views and the admin pages behind them.',
     entries: [
       {
         kind: 'added',
-        text: 'Today is the new first tab of Attendance. Four counters give you the shape of the day at a glance, and the list underneath can be grouped by status or by team. Pick any date to see how a past day went, and a public holiday or company-wide WFH day is announced in a banner across the top.',
+        text: 'Requests is one queue for all four kinds of request — leave, WFH, exceptions and overtime. It opens on Pending, each type filter carries its own count so you can see where the backlog is, and Approve and Reject work right on the row. This replaces four separate menu items.',
+      },
+      {
+        kind: 'added',
+        text: 'Calendar shows the month at a glance: public holidays and company off days shaded and named, working Saturdays labelled, and a count on every day of who is off and who is working from home. Press a day to see exactly who.',
+      },
+      {
+        kind: 'improved',
+        text: 'The Attendance menu is three views and the admin pages behind them, instead of eleven rows. Leave, WFH, Exceptions and Overtime are gone from the menu — they live in Requests now, with their pending counts summed onto that one row.',
+      },
+      {
+        kind: 'added',
+        text: 'Today is the new landing page for Attendance. Four counters give you the shape of the day at a glance, and the list underneath can be grouped by status or by team. Pick any date to see how a past day went, and a public holiday or company-wide WFH day is announced in a banner across the top.',
       },
       {
         kind: 'improved',

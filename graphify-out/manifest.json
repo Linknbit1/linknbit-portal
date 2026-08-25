@@ -8,8 +8,8 @@
     "hash": "1ce412fcaca9e43e507c65abe6139dc7"
   },
   "D:\\Projects\\react\\linknbit-portal\\public\\sw.js": {
-    "mtime": 1787693840.6772907,
-    "hash": "8a31e53ae00921bccfd09ba9a2f8a613"
+    "mtime": 1787695636.960659,
+    "hash": "221e9732dc9eeb9ab86342e395504ee9"
   },
   "D:\\Projects\\react\\linknbit-portal\\references\\office-quest-app\\preview-server.js": {
     "mtime": 1778922121.4382007,
@@ -392,8 +392,8 @@
     "hash": "bec16156a65b28510ae5264b2650eca0"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\navItems.ts": {
-    "mtime": 1787693680.161819,
-    "hash": "547fd75e4c20768fdde17c6ab486b2d1"
+    "mtime": 1787695490.021351,
+    "hash": "0730161b0e6b389488836cd6f285b399"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\PrivateRoute.tsx": {
     "mtime": 1781661659.0246265,
@@ -455,6 +455,10 @@
     "mtime": 1787482783.6494665,
     "hash": "3c2e2d28aa19e721c2f5d894713ebce9"
   },
+  "D:\\Projects\\react\\linknbit-portal\\src\\components\\shared\\AttendanceCalendar.tsx": {
+    "mtime": 1787695544.606579,
+    "hash": "3b3abd1b35e6918f5edb4cab0990f8ca"
+  },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\shared\\AttendanceCheckInCard.tsx": {
     "mtime": 1787690994.6692886,
     "hash": "261458ce1439cf942614fa19d5838ce4"
@@ -462,6 +466,10 @@
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\shared\\AttendanceChips.tsx": {
     "mtime": 1787484931.36712,
     "hash": "a9facbf478fe5fc5d84dcb9eccb55bcf"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\components\\shared\\AttendanceRequests.tsx": {
+    "mtime": 1787695225.4816785,
+    "hash": "5e0847f8bfc4941e35c4ecf0de627f05"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\shared\\BdChips.tsx": {
     "mtime": 1787484931.36712,
@@ -1196,12 +1204,12 @@
     "hash": "f827e66fd44e31b6301e9c6142a9598c"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\AttendanceMobile.tsx": {
-    "mtime": 1787693672.0256157,
-    "hash": "4c6509658009996635fef7b009ba52b5"
+    "mtime": 1787695406.6216564,
+    "hash": "0e5b6ed399bb544b588770773c8a2cac"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\AttendancePage.tsx": {
-    "mtime": 1787482783.701986,
-    "hash": "06dcf2b34974a06e9e8a961231ab232d"
+    "mtime": 1787695499.3962822,
+    "hash": "aed6f153927bec3efa6de1e8b2da47cd"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\ChatPage.tsx": {
     "mtime": 1787482783.702988,
@@ -1272,8 +1280,8 @@
     "hash": "b1e0fcf51c6e0bafac8ec00df45b1f03"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\AttendancePage.tsx": {
-    "mtime": 1787693613.610798,
-    "hash": "fd581a43123e11ec7e759c7ba6b8f02d"
+    "mtime": 1787695451.426871,
+    "hash": "50afe257db38dc4ff708807311a9cae8"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\AuditLogPage.tsx": {
     "mtime": 1787484931.4051843,
@@ -1516,16 +1524,16 @@
     "hash": "31d5a4789d6b7202d5783f4c75ac5717"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\docs\\changelogData.ts": {
-    "mtime": 1787693804.3676212,
-    "hash": "4c9b59195b0d15591d7f3bb9766f2740"
+    "mtime": 1787695608.2214377,
+    "hash": "f3efc3d9d72c5ef4c589149052d08083"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\docs\\ChangelogPage.tsx": {
     "mtime": 1787482783.7379875,
     "hash": "db0bd27e5d8d62c37a67ed5c7c9441f3"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\docs\\docsContent.ts": {
-    "mtime": 1787693749.6334536,
-    "hash": "2fb725275cf1c57c79441f08a6e1c23c"
+    "mtime": 1787695594.777606,
+    "hash": "6ee567f6c79c7717c8abf05672365d49"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\docs\\DocumentationPage.tsx": {
     "mtime": 1787482783.7389877,

@@ -16,8 +16,9 @@ export default function AttendancePage() {
   if (!isDesktop) return <AttendanceHub />
 
   // Desktop management has no combined "Attendance" page any more — each section
-  // is its own page, so land on Daily Records (the sidebar dropdown mirrors this).
+  // is its own page. Land on Today: the roster answers the question people open
+  // this section to ask, and Daily Records is one row away when it doesn't.
   return ATTENDANCE_ADMIN_LANDING_ROLES.includes(role)
-    ? <Navigate to="/attendance/records" replace />
+    ? <Navigate to="/attendance/today" replace />
     : <EmployeeAttendancePage />
 }
