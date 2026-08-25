@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   Bell, CheckCheck, AtSign, CheckSquare, MessageSquare, Inbox as InboxIcon, Flag,
+  ChevronRight, CircleCheck,
 } from 'lucide-react'
 import { Topbar } from '../components/layout/Topbar'
 import { Skeleton } from '../components/ui/Skeleton'
@@ -11,6 +12,7 @@ import { notificationHref, categoryForType, INBOX_CATEGORIES } from '../constant
 import { groupNotifications, groupTitle, type NotificationGroup } from '../lib/notificationGroups'
 import { formatRelativeTime } from '../lib/utils'
 import { cn } from '../lib/cn'
+import { useWaitingOnYou } from '../hooks/useWaitingOnYou'
 import type { NotificationRow } from '../api/notifications'
 
 function iconFor(n: NotificationRow) {
@@ -32,10 +34,12 @@ export default function InboxPage() {
   const { data: notifications = [], isLoading } = useNotifications(profileId)
   const { mutate: markGroupRead } = useMarkGroupRead(profileId)
   const { mutate: markAllRead } = useMarkAllRead(profileId)
-  const [tab, setTab] = useState<'all' | 'unread'>('all')
+  const [tab, setTab] = useState<'waiting' | 'all' | 'unread'>('waiting')
   const [category, setCategory] = useState('all')
 
   const unread = notifications.filter((n) => !n.read).length
+  // The actionable queue: things somebody is blocked on, as opposed to news.
+  const { items: waiting, total: waitingTotal } = useWaitingOnYou()
 
   // Read/unread narrows first; the category counts then describe what that tab
   // actually holds, so "Chat 3" on the unread tab means three unread chat items.
@@ -85,7 +89,7 @@ export default function InboxPage() {
       <div className="p-4 lg:px-8 lg:py-7 flex flex-col gap-6">
         <div className="flex items-center gap-3">
           <h2 className="font-display font-bold text-[22px] text-text-1">Inbox</h2>
-          {unread > 0 && <span className="px-2 py-0.5 rounded-sm bg-brand-red text-white text-[11px] font-bold">{unread}</span>}
+          {waitingTotal > 0 && <span className="px-2 py-0.5 rounded-sm bg-brand-red text-white text-[11px] font-bold">{waitingTotal}</span>}
           {unread > 0 && (
             <button onClick={() => markAllRead()} className="ml-auto flex items-center gap-1.5 font-ui text-[12px] text-text-3 hover:text-text-1 transition-colors">
               <CheckCheck size={14} /> Mark all read
@@ -95,19 +99,25 @@ export default function InboxPage() {
 
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-1 bg-surface-1 border border-border-default rounded-lg p-1 w-fit">
-            {(['all', 'unread'] as const).map((t) => (
+            {([
+              { key: 'waiting', label: 'Waiting on you', count: waitingTotal },
+              { key: 'all', label: 'All', count: 0 },
+              { key: 'unread', label: 'Unread', count: unread },
+            ] as const).map((t) => (
               <button
-                key={t}
-                onClick={() => setTab(t)}
-                className={cn('px-3 h-8 rounded-md font-ui font-medium text-[12.5px] capitalize transition-colors', tab === t ? 'bg-surface-3 text-text-1 shadow-sm' : 'text-text-3 hover:text-text-1')}
+                key={t.key}
+                onClick={() => setTab(t.key)}
+                className={cn('px-3 h-8 rounded-md font-ui font-medium text-[12.5px] transition-colors flex items-center gap-1.5', tab === t.key ? 'bg-surface-3 text-text-1 shadow-sm' : 'text-text-3 hover:text-text-1')}
               >
-                {t}
+                {t.label}
+                {t.count > 0 && <span className="font-mono text-[10.5px] tabular-nums opacity-70">{t.count}</span>}
               </button>
             ))}
           </div>
 
-          {/* Category filters — same buckets the notification settings screen uses. */}
-          <div className="flex flex-wrap items-center gap-1.5">
+          {/* Category filters — same buckets the notification settings screen uses.
+              They describe notifications, so the actionable queue has none. */}
+          <div className={cn('flex flex-wrap items-center gap-1.5', tab === 'waiting' && 'hidden')}>
             {categoryChips.map((c) => {
               const on = activeCategory === c.key
               return (
@@ -130,7 +140,46 @@ export default function InboxPage() {
           </div>
         </div>
 
-        {isLoading ? (
+        {tab === 'waiting' ? (
+          waiting.length === 0 ? (
+            <div className="flex flex-col items-center gap-2 py-20 text-center">
+              <span className="size-12 rounded-full bg-success/12 flex items-center justify-center text-success">
+                <CircleCheck size={22} />
+              </span>
+              <p className="font-ui font-semibold text-[14px] text-text-1">Nothing is stuck on you</p>
+              <p className="font-ui text-[12px] text-text-4 max-w-sm">
+                Approvals, requests to review and mentions waiting for a reply appear here. When it
+                is empty, nobody is blocked.
+              </p>
+            </div>
+          ) : (
+            <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
+              {waiting.map((item) => {
+                const Icon = item.icon
+                return (
+                  <Link
+                    key={item.id}
+                    to={item.to}
+                    className="w-full text-left px-4 py-3.5 border-b border-border-subtle last:border-0 flex gap-3 items-center transition-colors hover:bg-surface-2/50"
+                  >
+                    <span className="size-8 rounded-lg bg-surface-2 flex items-center justify-center text-text-3 shrink-0">
+                      <Icon size={15} />
+                    </span>
+                    <span className="flex-1 min-w-0">
+                      <span className="block font-ui text-[13px] font-semibold text-text-1 truncate">
+                        {item.label}
+                      </span>
+                      {item.detail && (
+                        <span className="block font-ui text-[12px] text-text-3 truncate">{item.detail}</span>
+                      )}
+                    </span>
+                    <ChevronRight size={14} className="shrink-0 text-text-4" />
+                  </Link>
+                )
+              })}
+            </div>
+          )
+        ) : isLoading ? (
           <div className="space-y-2">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-16" />)}</div>
         ) : shown.length === 0 ? (
           <div className="flex flex-col items-center gap-2 py-20 text-center">

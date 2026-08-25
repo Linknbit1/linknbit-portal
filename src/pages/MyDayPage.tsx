@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  CalendarClock, Video, Play, Square, AlertTriangle, CircleDot, ClipboardList,
-  Inbox, Trophy, Home, Plane, ArrowRight, Loader2, CheckCircle2,
+  CalendarClock, Video, Play, Square, CircleDot, ClipboardList,
+  Inbox, Home, Plane, ArrowRight, Loader2, CheckCircle2,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '../lib/cn'
@@ -13,9 +13,8 @@ import { useAuthContext } from '../context/AuthContext'
 import { useMyMeetings } from '../hooks/useBd'
 import { useTasks } from '../hooks/useTasks'
 import { useStandupWindow } from '../hooks/useStandups'
-import { useNotifications } from '../hooks/useNotifications'
 import { useDayRoster } from '../hooks/useAttendance'
-import { useClaimableQuestCount } from '../hooks/useGamification'
+import { useWaitingOnYou } from '../hooks/useWaitingOnYou'
 import { useRunningTimeEntry, useStartTimer, useStopTimer } from '../hooks/useTimeEntries'
 import type { TaskListItem } from '../api/tasks'
 import type { BdMeeting } from '../types'
@@ -240,9 +239,10 @@ export default function MyDayPage() {
   const meetingsQ = useMyMeetings()
   const tasksQ = useTasks()
   const windowQ = useStandupWindow()
-  const { data: notifications = [] } = useNotifications(myId)
   const rosterQ = useDayRoster(today, !!profile)
-  const { data: claimableQuests = 0 } = useClaimableQuestCount(!!profile)
+  // Same source as the Inbox and its badge, so the three can never disagree
+  // about whether something is waiting.
+  const { items: waiting, total: waitingTotal } = useWaitingOnYou()
 
   const { data: running } = useRunningTimeEntry()
   const startTimer = useStartTimer()
@@ -288,8 +288,6 @@ export default function MyDayPage() {
       (a, b) => order[a.bucket] - order[b.bucket] || a.task.title.localeCompare(b.task.title),
     )
   }, [tasksQ.data, myId, today])
-
-  const unread = notifications.filter((n) => !n.read).length
 
   const away = useMemo(
     () => (rosterQ.data ?? []).filter((r) => r.status === 'leave' || r.status === 'wfh'),
@@ -416,35 +414,31 @@ export default function MyDayPage() {
               </Panel>
             )}
 
-            <Panel title="Waiting on you" icon={Inbox}>
-              {unread === 0 && claimableQuests === 0 ? (
+            <Panel
+              title="Waiting on you"
+              icon={Inbox}
+              count={waitingTotal}
+              action={waiting.length > 0 ? { to: '/inbox', label: 'Inbox' } : undefined}
+            >
+              {waiting.length === 0 ? (
                 <Empty>Nothing is stuck on you.</Empty>
               ) : (
                 <div className="flex flex-col">
-                  {unread > 0 && (
-                    <Link
-                      to="/inbox"
-                      className="flex items-center gap-2 px-4 py-2.5 border-b border-border-subtle last:border-0 hover:bg-surface-2"
-                    >
-                      <AlertTriangle size={13} className="text-warning" />
-                      <span className="font-ui text-[12.5px] text-text-2">
-                        {unread} unread {unread === 1 ? 'notification' : 'notifications'}
-                      </span>
-                      <ArrowRight size={11} className="ml-auto text-text-4" />
-                    </Link>
-                  )}
-                  {claimableQuests > 0 && (
-                    <Link
-                      to="/gamification/board"
-                      className="flex items-center gap-2 px-4 py-2.5 border-b border-border-subtle last:border-0 hover:bg-surface-2"
-                    >
-                      <Trophy size={13} className="text-service-mkt" />
-                      <span className="font-ui text-[12.5px] text-text-2">
-                        {claimableQuests} {claimableQuests === 1 ? 'quest' : 'quests'} you can claim
-                      </span>
-                      <ArrowRight size={11} className="ml-auto text-text-4" />
-                    </Link>
-                  )}
+                  {/* Capped: My Day is a summary. The rest are one click away. */}
+                  {waiting.slice(0, 5).map((item) => {
+                    const Icon = item.icon
+                    return (
+                      <Link
+                        key={item.id}
+                        to={item.to}
+                        className="flex items-center gap-2 px-4 py-2.5 border-b border-border-subtle last:border-0 hover:bg-surface-2"
+                      >
+                        <Icon size={13} className="shrink-0 text-text-3" />
+                        <span className="font-ui text-[12.5px] text-text-2 truncate">{item.label}</span>
+                        <ArrowRight size={11} className="ml-auto shrink-0 text-text-4" />
+                      </Link>
+                    )
+                  })}
                 </div>
               )}
             </Panel>

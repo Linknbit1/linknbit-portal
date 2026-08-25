@@ -1,9 +1,9 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { Bell, Search, Check, CheckCheck, ChevronDown, ChevronRight, UserCircle, LogOut, ChevronLeft, Settings as SettingsIcon } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { useCommandPalette } from '../../context/CommandPaletteContext'
-import { ScopeSwitch } from '../shared/ScopeSwitch'
+import { PinPageButton } from './PinPageButton'
 import { Avatar } from '../ui/Avatar'
 import { ProfileRoles } from '../shared/ProfileRoles'
 import { useAuthContext } from '../../context/AuthContext'
@@ -30,12 +30,6 @@ export function Topbar({ title, breadcrumb, className, back, actions }: TopbarPr
   const navigate = useNavigate()
   const { profile, signOut } = useAuthContext()
   const { setOpen: setPaletteOpen } = useCommandPalette()
-  // Me Mode only filters task views, so it only appears on the pages it affects —
-  // a toggle on Attendance or Settings would do nothing and just raise questions.
-  const { pathname } = useLocation()
-  // The lens only filters task and project views, so it only appears on the
-  // pages it affects — a switch on Attendance or Settings would do nothing.
-  const scopeRelevant = /^\/admin\/(projects|tasks)(\/|$)/.test(pathname)
   const profileId = profile?.id ?? ''
 
   // Report this screen's back affordance to the shell so the mobile bottom tab
@@ -133,7 +127,6 @@ export function Topbar({ title, breadcrumb, className, back, actions }: TopbarPr
       {/* Me Mode + mobile bell. Me Mode sits outside the desktop-only block so it
           exists at every width — hidden below lg is exactly how it went missing. */}
       <div className={cn('flex shrink-0 items-center gap-2 lg:hidden', !actions && 'ml-auto')}>
-        {scopeRelevant && <ScopeSwitch compact />}
         {!back && (
           <button
             onClick={() => navigate('/notifications')}
@@ -152,7 +145,10 @@ export function Topbar({ title, breadcrumb, className, back, actions }: TopbarPr
 
       {/* Actions — desktop only; mobile uses the bell above + bottom tabs */}
       <div className="ml-auto hidden lg:flex items-center gap-3.5">
-        {scopeRelevant && <ScopeSwitch />}
+
+        {/* Global on purpose, unlike a page's own filters: any screen can be
+            pinned, so the control belongs in chrome that is always there. */}
+        <PinPageButton title={title} />
 
         {/* Notification bell — live: reads the real notifications table. */}
         <div ref={bellRef} className="relative">

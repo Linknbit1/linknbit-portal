@@ -2521,6 +2521,44 @@ export type Database = {
           },
         ]
       }
+      nav_pins: {
+        Row: {
+          created_at: string
+          icon: string | null
+          id: string
+          label: string
+          path: string
+          position: number
+          profile_id: string
+        }
+        Insert: {
+          created_at?: string
+          icon?: string | null
+          id?: string
+          label: string
+          path: string
+          position?: number
+          profile_id: string
+        }
+        Update: {
+          created_at?: string
+          icon?: string | null
+          id?: string
+          label?: string
+          path?: string
+          position?: number
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nav_pins_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notification_preferences: {
         Row: {
           enabled: boolean

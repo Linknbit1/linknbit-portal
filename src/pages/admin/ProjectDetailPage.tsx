@@ -21,6 +21,7 @@ import { PriorityChip } from '../../components/shared/PriorityChip'
 import { TaskBoard } from '../../components/shared/TaskBoard'
 import { TimeBacklog } from '../../components/shared/TimeBacklog'
 import { ScopeNotice } from '../../components/shared/ScopeNotice'
+import { ScopeSwitch } from '../../components/shared/ScopeSwitch'
 import { DocEditor } from '../../components/editor/DocEditor'
 import { ProjectFilesTab } from './ProjectFilesTab'
 import { ProjectFormModal } from './ProjectFormModal'
@@ -412,10 +413,17 @@ export default function ProjectDetailPage() {
               </button>
             ))}
           </div>
-          {canManage && (activeTab === 'pipeline' || activeTab === 'board') && (
+          {(activeTab === 'pipeline' || activeTab === 'board') && (
             <div className="flex items-center gap-2">
-              <Button size="sm" variant="secondary" iconLeft={<Plus size={14} />} onClick={() => { setEditingStage(null); setShowStageForm(true) }}>Stage</Button>
-              <Button size="sm" iconLeft={<Plus size={14} />} onClick={() => openAddTask()}>Task</Button>
+              {/* Compact here: inside one project the labels are redundant — the
+                  only question is whose of THESE tasks you are looking at. */}
+              <ScopeSwitch size="sm" compact />
+              {canManage && (
+                <>
+                  <Button size="sm" variant="secondary" iconLeft={<Plus size={14} />} onClick={() => { setEditingStage(null); setShowStageForm(true) }}>Stage</Button>
+                  <Button size="sm" iconLeft={<Plus size={14} />} onClick={() => openAddTask()}>Task</Button>
+                </>
+              )}
             </div>
           )}
           {canManage && activeTab === 'team' && activeServiceId && (

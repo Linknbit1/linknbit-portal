@@ -8,8 +8,8 @@
     "hash": "1ce412fcaca9e43e507c65abe6139dc7"
   },
   "D:\\Projects\\react\\linknbit-portal\\public\\sw.js": {
-    "mtime": 1787698139.848378,
-    "hash": "abb1d96487c89ead32c5e1db5897318a"
+    "mtime": 1787699217.719112,
+    "hash": "cb18bf5af67bcd2f2f7a03664e45d13c"
   },
   "D:\\Projects\\react\\linknbit-portal\\references\\office-quest-app\\preview-server.js": {
     "mtime": 1778922121.4382007,
@@ -162,6 +162,10 @@
   "D:\\Projects\\react\\linknbit-portal\\src\\api\\messages.ts": {
     "mtime": 1785338415.3091996,
     "hash": "4b2254f3b8ee0b4e576eadb3d65e2968"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\api\\navPins.ts": {
+    "mtime": 1787699027.720196,
+    "hash": "e601909d767679fb78d7258695cf1d8c"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\api\\notifications.ts": {
     "mtime": 1787482783.6254642,
@@ -396,8 +400,20 @@
     "hash": "bec16156a65b28510ae5264b2650eca0"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\navItems.ts": {
-    "mtime": 1787697797.9873357,
-    "hash": "1ec24c5c978477ba14433a569f04ed35"
+    "mtime": 1787698882.7866273,
+    "hash": "c0a3c0ab4ccaff59c5125a348597d42b"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\PinnedNav.tsx": {
+    "mtime": 1787699543.6634364,
+    "hash": "1cc9334211121a90b6799ce8265a8d2e"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\PinPageButton.tsx": {
+    "mtime": 1787699124.3416438,
+    "hash": "84046315998988b7200354d105fcee54"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\PinToggle.tsx": {
+    "mtime": 1787699491.0313053,
+    "hash": "cecfe71c142991dae110d4e4848a8ad2"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\PrivateRoute.tsx": {
     "mtime": 1787696021.858076,
@@ -408,16 +424,16 @@
     "hash": "0f0927823f3929f8cf0c2cfa1a98a499"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\Sidebar.tsx": {
-    "mtime": 1787690994.6681228,
-    "hash": "d3870924db994ff5a5b0c7353d62ec9d"
+    "mtime": 1787699543.7110481,
+    "hash": "fd21cf6f921cf46b466a478d1cabdeff"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\StackScreen.tsx": {
     "mtime": 1781663447.3296728,
     "hash": "2228ce4e560d7119a75c20f2b7f2ba1f"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\Topbar.tsx": {
-    "mtime": 1787698034.7308486,
-    "hash": "4a621cc73cca07a7c0c98e401e0e17ae"
+    "mtime": 1787699124.3798826,
+    "hash": "3e0d13edee13d0b6632044579a06999f"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\pwa\\InstallAppButton.tsx": {
     "mtime": 1787690994.668711,
@@ -572,8 +588,8 @@
     "hash": "511de3760bf35994d9f1ff06a9e8f16e"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\shared\\ScopeSwitch.tsx": {
-    "mtime": 1787698080.4820302,
-    "hash": "0868f0ea374130c6f9fb8dbf0cd9c819"
+    "mtime": 1787698508.9693396,
+    "hash": "471a1da98c7c1869d533eef13d5c6cc3"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\shared\\ServiceChip.tsx": {
     "mtime": 1787484931.3731284,
@@ -931,6 +947,10 @@
     "mtime": 1787690994.6715517,
     "hash": "dbd788a1e214c360a91e114ea4d7b37c"
   },
+  "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useNavPins.ts": {
+    "mtime": 1787699027.744203,
+    "hash": "99a48433cdf20d75f437565e2e33967b"
+  },
   "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useNotifications.ts": {
     "mtime": 1787482783.6824718,
     "hash": "a82a447538ac0593facf17f83b894745"
@@ -1026,6 +1046,10 @@
   "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useTimeEntries.ts": {
     "mtime": 1787482783.6874714,
     "hash": "d5517a55d80dfeb59dec0c251f0c4815"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useWaitingOnYou.ts": {
+    "mtime": 1787698775.447604,
+    "hash": "a89244b08463f512601387da9356d80f"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\hooks\\useWatchers.ts": {
     "mtime": 1787482783.6884727,
@@ -1236,8 +1260,8 @@
     "hash": "e00d5a3978405cc68c5fef711cd890d9"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\InboxPage.tsx": {
-    "mtime": 1787484931.3871317,
-    "hash": "aaa9daf6050f6dbe9c575d8c2e284723"
+    "mtime": 1787698829.7319882,
+    "hash": "b6474ed886a2b2d69187752902cbd71b"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\MemberProfilePage.tsx": {
     "mtime": 1787484931.3891323,
@@ -1248,8 +1272,8 @@
     "hash": "5638183cfd6ed16e9efc8175e6ed1082"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\MyDayPage.tsx": {
-    "mtime": 1787696354.6832898,
-    "hash": "4dd7cff725d1456a34f95b0a7dfa9655"
+    "mtime": 1787698947.19341,
+    "hash": "2e3951845c5ed0dbd72958278803f2b1"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\MyMeetingsPage.tsx": {
     "mtime": 1787484931.3901343,
@@ -1344,8 +1368,8 @@
     "hash": "505d7fc1c77adccd6afc7e5d66ece55f"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\ProjectDetailPage.tsx": {
-    "mtime": 1787698006.4387758,
-    "hash": "1c464c56fd21ed34085671a96da68b68"
+    "mtime": 1787698647.9370282,
+    "hash": "d5b169f17bcd7c6fcd3c0219719876ac"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\ProjectFilesTab.tsx": {
     "mtime": 1787482783.7169883,
@@ -1356,8 +1380,8 @@
     "hash": "00f1605e48e81bcfc478553e7bba207a"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\ProjectsPage.tsx": {
-    "mtime": 1787698006.4412875,
-    "hash": "422b7cd0c86577a7ec85142a3b98015e"
+    "mtime": 1787698605.864348,
+    "hash": "d2c1039fb335324557f9b6ce65cdfd07"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\ReportsPage.tsx": {
     "mtime": 1787696972.708547,
@@ -1388,8 +1412,8 @@
     "hash": "d09ae14a36a082a3d2c36ecae73df9ac"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\TasksPage.tsx": {
-    "mtime": 1787698006.4412875,
-    "hash": "91844de814317cd97b2b5f365f4ce621"
+    "mtime": 1787698605.864348,
+    "hash": "99eded49ba99cd7599f67c64f576d1c7"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\admin\\TeamDetailPage.tsx": {
     "mtime": 1787482783.7229874,
@@ -1548,16 +1572,16 @@
     "hash": "31d5a4789d6b7202d5783f4c75ac5717"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\docs\\changelogData.ts": {
-    "mtime": 1787698133.3624902,
-    "hash": "0c432be43c62099fe4abedd733fe017f"
+    "mtime": 1787699583.1839504,
+    "hash": "528d29f91d53788741a72d3a859915ea"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\docs\\ChangelogPage.tsx": {
     "mtime": 1787482783.7379875,
     "hash": "db0bd27e5d8d62c37a67ed5c7c9441f3"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\docs\\docsContent.ts": {
-    "mtime": 1787698133.2853215,
-    "hash": "aab17d7a2cc82cc2b06fd9efbcad28f6"
+    "mtime": 1787699583.1839504,
+    "hash": "93988a11f94c2a503d6bcadb1558b59c"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\docs\\DocumentationPage.tsx": {
     "mtime": 1787482783.7389877,
@@ -1572,8 +1596,8 @@
     "hash": "dff1931aa9ffab5873c3bf32c7ab15a1"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\types\\database.ts": {
-    "mtime": 1787693480.324588,
-    "hash": "ce4641bca14ad48371a190f1b39e68eb"
+    "mtime": 1787699044.4474585,
+    "hash": "1a75ca97faae760c966a83083de76e2b"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\types\\index.ts": {
     "mtime": 1787690994.682114,
@@ -2646,6 +2670,10 @@
   "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260826090000_day_roster_rpc.sql": {
     "mtime": 1787693372.36105,
     "hash": "5b793fe21cbe449a8bec08e735de9759"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\supabase\\migrations\\20260826120000_nav_pins.sql": {
+    "mtime": 1787699005.6130588,
+    "hash": "8a62343bae7793635b7cd4d35064735b"
   },
   "D:\\Projects\\react\\linknbit-portal\\supabase\\tests\\rls\\snapshot.sql": {
     "mtime": 1785338415.3842332,

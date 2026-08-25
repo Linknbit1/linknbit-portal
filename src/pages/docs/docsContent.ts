@@ -203,9 +203,45 @@ export const DOC_CHAPTERS: DocChapter[] = [
         id: 'inbox',
         title: 'Inbox',
         summary:
-          'Every notification in one list — task assignments, mentions, comments, approvals and request decisions. Reading it here clears the badge.',
+          'Two things in one place: what is waiting on you to act, and every notification you have been sent.',
         where: 'Workspace → Inbox',
-        notes: ['Clicking a notification takes you straight to the task, message or request it refers to.'],
+        procedures: [
+          {
+            title: 'Clear what is blocked on you',
+            steps: [
+              'Open Workspace → Inbox. It opens on Waiting on you.',
+              'Work down the list — each row opens the thing that needs you.',
+              'Switch to All or Unread for notifications, which are news rather than work.',
+            ],
+          },
+        ],
+        notes: [
+          'The number beside Inbox in the menu counts what is waiting on you, not unread notifications. It goes to zero by acting, not by reading — so an empty Inbox badge means nobody is blocked.',
+          'Waiting on you gathers approvals in your queue, requests you can review, and mentions you have not replied to. You only ever see queues your role can act on.',
+          'A mention counts as work because being tagged is a request for a reply. Other notifications do not.',
+          'Clicking a notification takes you straight to the task, message or request it refers to.',
+        ],
+      },
+      {
+        id: 'pinned',
+        title: 'Pinning what you use',
+        summary:
+          'Put the handful of screens you open every day at the top of the menu, above the sections.',
+        where: 'Any screen, top right',
+        procedures: [
+          {
+            title: 'Pin a screen',
+            steps: [
+              'Hover any row in the menu and press the pin that appears on it — sections and their sub-pages both.',
+              'Or open any other screen — a project, a chat channel — and press the pin button in the top right.',
+              'It appears under Pinned at the top of the menu. Hover it there and press × to remove it.',
+            ],
+          },
+        ],
+        notes: [
+          'Pins are yours alone. Nobody else sees them, and no two people need the same menu order.',
+          'The Pinned section only exists once you have pinned something.',
+        ],
       },
       {
         // Ungated on purpose. The people most likely to need this are the ones

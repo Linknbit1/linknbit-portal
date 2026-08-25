@@ -24,6 +24,7 @@ import { ViewToggle, type ViewToggleOption } from '../../components/ui/ViewToggl
 import { TaskBoard } from '../../components/shared/TaskBoard'
 import { TimeBacklog } from '../../components/shared/TimeBacklog'
 import { ScopeNotice } from '../../components/shared/ScopeNotice'
+import { ScopeSwitch } from '../../components/shared/ScopeSwitch'
 import { TaskDetailDrawer } from './TaskDetailDrawer'
 import type { Priority, TaskStatus } from '../../types'
 import type { TaskListItem } from '../../api/tasks'
@@ -111,8 +112,10 @@ export default function TasksPage() {
           <h2 className="font-display font-bold text-[22px] text-text-1">Tasks</h2>
         </div>
 
-        {/* Filters */}
+        {/* Filters. Scope leads: it is the broadest of them, and it belongs with
+            the other filters rather than in the Topbar — it only applies here. */}
         <div className="flex flex-wrap items-center gap-2">
+          <ScopeSwitch size="sm" />
           <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search tasks…" iconLeft={<Search size={14} />} className="w-full sm:w-56" />
           <Select value={statusFilter} onChange={setStatusFilter} options={statusOptions} size="sm" />
           <Select value={priorityFilter} onChange={setPriorityFilter} options={priorityOptions} size="sm" />

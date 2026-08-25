@@ -26,6 +26,7 @@ import { useScopedProjects } from '../../hooks/useScopeFilter'
 import { TimeBacklog } from '../../components/shared/TimeBacklog'
 import { useStatusOverrides } from '../../hooks/useStatusLabels'
 import { ScopeNotice } from '../../components/shared/ScopeNotice'
+import { ScopeSwitch } from '../../components/shared/ScopeSwitch'
 import { ProjectFormModal } from './ProjectFormModal'
 import type { ProjectListItem, ProjectStatus } from '../../api/projects'
 import type { ProjectStatus as AppProjectStatus } from '../../types'
@@ -153,8 +154,10 @@ export default function ProjectsPage() {
           ))}
         </div>
 
-        {/* Filters */}
+        {/* Filters. Scope leads: it is the broadest of them, and it belongs with
+            the other filters rather than in the Topbar — it only applies here. */}
         <div className="flex flex-wrap items-center gap-2">
+          <ScopeSwitch size="sm" />
           <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search projects…" iconLeft={<Search size={14} />} className="w-full sm:w-56" />
           <Select value={serviceFilter} onChange={setServiceFilter} options={serviceOptions} size="sm" />
           <Select value={statusFilter} onChange={setStatusFilter} options={statusOptions} size="sm" />

@@ -13,11 +13,34 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: 'v1.14',
+    date: '2026-08-26',
+    title: 'An inbox that means something, and a menu you arrange',
+    highlight:
+      'The number beside Inbox now counts what is actually waiting on you — approvals, requests to review, mentions needing a reply — not unread news. Zero means nobody is blocked. And you can pin the screens you live in to the top of the menu.',
+    entries: [
+      {
+        kind: 'added',
+        text: 'Inbox opens on a new Waiting on you tab: approvals in your queue, requests you can review, and mentions you have not replied to, gathered from every module that can block you. Notifications are still there under All and Unread.',
+      },
+      {
+        kind: 'improved',
+        text: 'The Inbox badge counts that queue rather than unread notifications, so it is a number you clear by acting rather than by scrolling. My Day shows the same list, from the same source, so the two can never disagree.',
+      },
+      {
+        kind: 'added',
+        text: 'Pin any screen to the top of the menu. Hover a menu row and press the pin that appears on it, or use the pin button in the top right for anything else — a project you are living in, a chat channel, a board. Pins are yours alone, and the Pinned section only appears once you have one.',
+      },
+      {
+        kind: 'improved',
+        text: 'The Mine / My team / Everyone switch moved out of the top bar and into the filter row of the screens it actually affects, beside the other filters. Inside a single project it sits with that project’s own controls.',
+      },
+    ],
+  },
+  {
     version: 'v1.13',
     date: '2026-08-26',
     title: 'Mine, my team, or everyone',
-    highlight:
-      'The Me toggle on Projects and Tasks became a three-way switch: Mine, My team, or Everyone. Seeing what your team is carrying no longer means scrolling past everybody else’s work.',
     entries: [
       {
         kind: 'added',

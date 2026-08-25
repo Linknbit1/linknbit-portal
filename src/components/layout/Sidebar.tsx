@@ -7,6 +7,8 @@ import { LinknbitMark } from '../brand/LinknbitLogo'
 import { InstallAppButton } from '../pwa/InstallAppButton'
 import { Popover } from '../ui/Popover'
 import { useNavGroupCollapse } from '../../hooks/useNavGroupCollapse'
+import { PinnedNav } from './PinnedNav'
+import { PinToggle } from './PinToggle'
 
 export function Sidebar() {
   const location = useLocation()
@@ -34,6 +36,9 @@ export function Sidebar() {
 
       {/* Nav — one section per kind of work; empty sections drop out per role. */}
       <nav className="flex-1 min-h-0 overflow-y-auto px-3 py-2 flex flex-col">
+        {/* Above the groups on purpose: these are the destinations this person
+            chose, and they outrank any ordering we could guess at. */}
+        <PinnedNav rowCls={rowCls} navItems={navGroups.flatMap((g) => g.items)} />
         {bodyGroups.map((group, i) => {
           const folded = isCollapsed(group.id)
           // A folded section still has to show that something is waiting inside
@@ -172,21 +177,24 @@ function NavRow({ item, pathname, activePath }: { item: NavItem; pathname: strin
 
   if (!item.children?.length) {
     return (
-      <NavLink to={item.to} className={rowCls(inSection)}>
-        <item.icon size={15} className={cn('shrink-0', inSection ? 'text-brand-red' : 'text-text-3')} />
-        <span className="truncate">{item.label}</span>
+      <div className={cn(rowCls(inSection), 'group/row pr-1')}>
+        <NavLink to={item.to} className="flex items-center gap-2 flex-1 min-w-0">
+          <item.icon size={15} className={cn('shrink-0', inSection ? 'text-brand-red' : 'text-text-3')} />
+          <span className="truncate">{item.label}</span>
+        </NavLink>
         {item.badge && item.badge > 0 && (
-          <span className="ml-auto bg-brand-red text-white font-ui font-bold text-[10px] px-1.5 py-px rounded-sm leading-tight">
+          <span className="bg-brand-red text-white font-ui font-bold text-[10px] px-1.5 py-px rounded-sm leading-tight shrink-0">
             {badgeCount(item.badge)}
           </span>
         )}
-      </NavLink>
+        <PinToggle label={item.label} path={item.to} revealClass="group-hover/row:opacity-100" />
+      </div>
     )
   }
 
   return (
     <div>
-      <div className={cn(rowCls(inSection), 'pr-1')}>
+      <div className={cn(rowCls(inSection), 'group/row pr-1')}>
         <NavLink to={item.to} className="flex items-center gap-2 flex-1 min-w-0">
           <item.icon size={15} className={cn('shrink-0', inSection ? 'text-brand-red' : 'text-text-3')} />
           <span className="truncate">{item.label}</span>
@@ -198,6 +206,7 @@ function NavRow({ item, pathname, activePath }: { item: NavItem; pathname: strin
             {badgeCount(item.badge)}
           </span>
         )}
+        <PinToggle label={item.label} path={item.to} revealClass="group-hover/row:opacity-100" />
         <button
           onClick={() => setOpen((v) => !v)}
           aria-label={open ? `Collapse ${item.label}` : `Expand ${item.label}`}
@@ -213,21 +222,28 @@ function NavRow({ item, pathname, activePath }: { item: NavItem; pathname: strin
           {item.children.map((child) => {
             const active = pathname === child.to
             return (
-              <NavLink
+              <div
                 key={child.to}
-                to={child.to}
                 className={cn(
-                  'flex h-6 items-center gap-2 px-2 rounded-sm font-ui text-[12px] leading-none transition-colors',
+                  'group/child flex h-6 items-center gap-2 pl-2 pr-1 rounded-sm font-ui text-[12px] leading-none transition-colors',
                   active ? 'text-white bg-brand-red/13 font-medium' : 'text-text-3 hover:text-text-1 hover:bg-surface-2',
                 )}
               >
-                <span className="truncate">{child.label}</span>
+                <NavLink to={child.to} className="flex-1 min-w-0 truncate">
+                  {child.label}
+                </NavLink>
                 {child.badge && child.badge > 0 && (
-                  <span className="ml-auto bg-brand-red text-white font-ui font-bold text-[10px] px-1.5 py-px rounded-sm leading-tight shrink-0">
+                  <span className="bg-brand-red text-white font-ui font-bold text-[10px] px-1.5 py-px rounded-sm leading-tight shrink-0">
                     {badgeCount(child.badge)}
                   </span>
                 )}
-              </NavLink>
+                <PinToggle
+                  label={child.label}
+                  path={child.to}
+                  revealClass="group-hover/child:opacity-100"
+                  size="sm"
+                />
+              </div>
             )
           })}
         </div>

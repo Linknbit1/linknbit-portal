@@ -27,7 +27,7 @@ import { SETTINGS_ROLES, ATTENDANCE_ADMIN_LANDING_ROLES } from '../../constants/
 import { useMyPermissions } from '../../hooks/usePermissions'
 import { ADMINISTRATOR } from '../../api/permissions'
 import { useAuditNewCount } from '../../hooks/useAuditLog'
-import { useNotifications } from '../../hooks/useNotifications'
+import { useWaitingOnYou } from '../../hooks/useWaitingOnYou'
 import { useChatUnreadTotal } from '../../hooks/useChatUnreadCount'
 import { useTeams } from '../../hooks/useTeams'
 import { useMyUpcomingMeetingCount } from '../../hooks/useBd'
@@ -297,7 +297,6 @@ export function useNavItems(): NavItem[] {
   const { data: permissions } = useMyPermissions()
   const { data: auditNewCount } = useAuditNewCount()
   const chatUnread = useChatUnreadTotal()
-  const { data: notifications = [] } = useNotifications(profile?.id ?? '')
   const { data: teams } = useTeams()
   const role = profile?.role
   // "My Team" is a shortcut, not a section: it points at the team this person
@@ -344,7 +343,9 @@ export function useNavItems(): NavItem[] {
     '/gamification/board': questCount,
     '/gamification/approvals': gamificationPending,
   }
-  const inboxUnread = notifications.filter((n) => !n.read).length
+  // The Inbox badge counts what is BLOCKED on this person, not unread news — a
+  // number you can drive to zero by acting, rather than by reading.
+  const { total: waitingTotal } = useWaitingOnYou()
 
   // Surface live counts on the relevant items (parent shows the section total).
   return filterNavItems(role, can).flatMap((item) => {
@@ -359,7 +360,7 @@ export function useNavItems(): NavItem[] {
       return [total > 0 ? { ...item, badge: total } : item]
     }
     if (item.to === '/chat' && chatUnread) return [{ ...item, badge: chatUnread }]
-    if (item.to === '/inbox' && inboxUnread) return [{ ...item, badge: inboxUnread }]
+    if (item.to === '/inbox' && waitingTotal) return [{ ...item, badge: waitingTotal }]
     if (item.to === '/my-meetings' && upcomingMeetings) return [{ ...item, badge: upcomingMeetings }]
     if (item.matchPrefix === '/attendance') {
       const withChildren = withChildBadges(item, attendanceByPath)
