@@ -178,6 +178,28 @@ export const DOC_CHAPTERS: DocChapter[] = [
         where: 'Workspace → Dashboard',
       },
       {
+        id: 'command-palette',
+        title: 'Jumping anywhere',
+        summary:
+          'Press ⌘K (Ctrl+K on Windows) to search every screen you can open, plus your projects, people and tasks — then Enter to go there.',
+        where: 'Anywhere in the portal',
+        procedures: [
+          {
+            title: 'Go somewhere fast',
+            steps: [
+              'Press ⌘K, or click the search box at the top of the screen.',
+              'Type a few letters of a screen, project, person or task.',
+              'Move with the arrow keys and press Enter. Escape closes it.',
+            ],
+          },
+        ],
+        notes: [
+          'With the box empty it lists every screen you can open, so it doubles as the full menu.',
+          'It only ever offers screens your role can actually open — it reads the same list your sidebar does.',
+          'Projects, people and tasks appear once you start typing, not before.',
+        ],
+      },
+      {
         id: 'inbox',
         title: 'Inbox',
         summary:

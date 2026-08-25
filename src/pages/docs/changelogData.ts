@@ -13,11 +13,30 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: 'v1.11',
+    date: '2026-08-26',
+    title: 'Press ⌘K',
+    highlight:
+      'Search is live. Press ⌘K (Ctrl+K on Windows) anywhere in the portal to jump to any screen, project, person or task — type a few letters, press Enter, done.',
+    entries: [
+      {
+        kind: 'added',
+        text: 'The command palette. ⌘K or Ctrl+K opens it from any screen, and the search box at the top of the page opens the same thing. Arrow keys move, Enter opens, Escape closes.',
+      },
+      {
+        kind: 'added',
+        text: 'With the box empty it lists every screen you can open, so it works as the whole menu when you cannot remember where something lives. It reads the same list your sidebar does, so it never offers a screen your role cannot open.',
+      },
+      {
+        kind: 'improved',
+        text: 'The search box in the top bar was a placeholder that did nothing. It now opens the palette.',
+      },
+    ],
+  },
+  {
     version: 'v1.10',
     date: '2026-08-26',
     title: 'My Day',
-    highlight:
-      'The portal now opens on My Day: your meetings, the work that is overdue or due today, whatever is waiting on you, and who is out of the office — on one screen, with a check-in card and a timer you can start without leaving it.',
     entries: [
       {
         kind: 'added',

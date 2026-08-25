@@ -10,6 +10,8 @@ import { useRealtimeChannelList } from '../../hooks/realtime/useRealtimeChannelL
 import { FileViewerProvider } from '../shared/FileViewer'
 import { ImpersonationBanner } from './ImpersonationBanner'
 import { MeModeProvider } from '../../context/MeModeContext'
+import { CommandPaletteProvider } from '../../context/CommandPaletteContext'
+import { CommandPalette } from './CommandPalette'
 import { RunningTimerWidget } from '../shared/RunningTimerWidget'
 import { ErrorBoundary } from '../ui/ErrorBoundary'
 import { themeClass } from '../../constants/themes'
@@ -63,6 +65,7 @@ export function AppShell() {
   return (
     <NavChromeContext.Provider value={{ hasBack, setHasBack }}>
       <MeModeProvider>
+      <CommandPaletteProvider>
       <FileViewerProvider>
         {/* Fixed viewport height, not min-height: `main` is the scroll container,
             so a page can hand its own scrolling to an inner element (the chat
@@ -100,8 +103,11 @@ export function AppShell() {
           </div>
           {/* Outside <main> so it stays put while the page scrolls. */}
           <RunningTimerWidget />
+          {/* Mounted at the shell so ⌘K works on every internal screen. */}
+          <CommandPalette />
         </div>
       </FileViewerProvider>
+      </CommandPaletteProvider>
       </MeModeProvider>
     </NavChromeContext.Provider>
   )

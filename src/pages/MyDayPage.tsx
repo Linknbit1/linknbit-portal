@@ -118,7 +118,7 @@ function MeetingRow({
         past && 'opacity-55',
       )}
     >
-      <span className="font-mono text-[11.5px] text-text-3 tabular-nums w-18 shrink-0">
+      <span className="font-mono text-[11.5px] text-text-3 tabular-nums w-20 shrink-0">
         {fmtClock(meeting.scheduledAt)}
       </span>
       <div className="min-w-0 flex-1">
@@ -302,7 +302,7 @@ export default function MyDayPage() {
     <div className="flex flex-col flex-1">
       <Topbar title="My Day" />
 
-      <div className="px-4 py-6 lg:px-8 lg:py-7 flex flex-col gap-6 max-w-360">
+      <div className="px-4 py-6 lg:px-8 lg:py-7 flex flex-col gap-6 max-w-content">
         <header className="flex flex-col gap-1">
           <h1 className="font-display font-bold text-[22px] text-text-1">
             {greeting()}

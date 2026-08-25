@@ -8,8 +8,8 @@
     "hash": "1ce412fcaca9e43e507c65abe6139dc7"
   },
   "D:\\Projects\\react\\linknbit-portal\\public\\sw.js": {
-    "mtime": 1787696190.096959,
-    "hash": "1ad5de12cdb89ec559657ef9bfac9d82"
+    "mtime": 1787696657.4919858,
+    "hash": "0e26f1ef0a6ae1d6092a513f520c23e3"
   },
   "D:\\Projects\\react\\linknbit-portal\\references\\office-quest-app\\preview-server.js": {
     "mtime": 1778922121.4382007,
@@ -368,8 +368,8 @@
     "hash": "9b5e4a3090966a6b084884a8fb000319"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\AppShell.tsx": {
-    "mtime": 1787484724.6112165,
-    "hash": "321645d8097a97ad2a1e39070d8fa078"
+    "mtime": 1787696467.2342987,
+    "hash": "801e51c829d345289835b195304df758"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\BottomTabBar.tsx": {
     "mtime": 1784989358.824721,
@@ -378,6 +378,10 @@
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\ClientShell.tsx": {
     "mtime": 1787484778.6329732,
     "hash": "f1d1c85b32ee379f69c29a0a8ed50083"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\CommandPalette.tsx": {
+    "mtime": 1787696606.9075584,
+    "hash": "4bccbbc737be25cc4bc3f505ca8e146a"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\ImpersonationBanner.tsx": {
     "mtime": 1784989358.8257208,
@@ -412,8 +416,8 @@
     "hash": "2228ce4e560d7119a75c20f2b7f2ba1f"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\Topbar.tsx": {
-    "mtime": 1787484931.3646088,
-    "hash": "d294ac14d4c7b91631a5b5e96bb5844b"
+    "mtime": 1787696492.2008243,
+    "hash": "aaa18d57d1090fd7cd075c2d3fb0aad2"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\pwa\\InstallAppButton.tsx": {
     "mtime": 1787690994.668711,
@@ -790,6 +794,10 @@
   "D:\\Projects\\react\\linknbit-portal\\src\\context\\BdContext.tsx": {
     "mtime": 1787690994.6703973,
     "hash": "6a82fbb118145440c7bad5f180ba86f6"
+  },
+  "D:\\Projects\\react\\linknbit-portal\\src\\context\\CommandPaletteContext.tsx": {
+    "mtime": 1787696421.3960903,
+    "hash": "f4f7913cc27310ba7d8cbf98e3c776cb"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\context\\MeModeContext.tsx": {
     "mtime": 1787482783.6724646,
@@ -1232,8 +1240,8 @@
     "hash": "5638183cfd6ed16e9efc8175e6ed1082"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\MyDayPage.tsx": {
-    "mtime": 1787696075.545354,
-    "hash": "80426983209437d4c9622a8ba18e47e1"
+    "mtime": 1787696354.6832898,
+    "hash": "4dd7cff725d1456a34f95b0a7dfa9655"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\MyMeetingsPage.tsx": {
     "mtime": 1787484931.3901343,
@@ -1528,16 +1536,16 @@
     "hash": "31d5a4789d6b7202d5783f4c75ac5717"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\docs\\changelogData.ts": {
-    "mtime": 1787696155.7868094,
-    "hash": "b12d240fc3a7f960172f0f51cba3c68f"
+    "mtime": 1787696650.749517,
+    "hash": "4b852bde6c9f1e1ea80ab0eb190ed8fa"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\docs\\ChangelogPage.tsx": {
     "mtime": 1787482783.7379875,
     "hash": "db0bd27e5d8d62c37a67ed5c7c9441f3"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\docs\\docsContent.ts": {
-    "mtime": 1787696140.416274,
-    "hash": "0af3d0633e661fbdbff80bcc6db3729b"
+    "mtime": 1787696650.6982124,
+    "hash": "2039ae726e4e5c0514aa705db6088d54"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\docs\\DocumentationPage.tsx": {
     "mtime": 1787482783.7389877,

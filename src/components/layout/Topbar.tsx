@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode }
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Bell, Search, Check, CheckCheck, ChevronDown, ChevronRight, UserCircle, LogOut, ChevronLeft, UserRound, Settings as SettingsIcon } from 'lucide-react'
 import { cn } from '../../lib/cn'
-import { showWipFeatures } from '../../lib/featureFlags'
+import { useCommandPalette } from '../../context/CommandPaletteContext'
 import { Avatar } from '../ui/Avatar'
 import { ProfileRoles } from '../shared/ProfileRoles'
 import { useAuthContext } from '../../context/AuthContext'
@@ -58,6 +58,7 @@ export function Topbar({ title, breadcrumb, className, back, actions }: TopbarPr
   const navigate = useNavigate()
   const { profile, signOut } = useAuthContext()
   const meMode = useMeMode()
+  const { setOpen: setPaletteOpen } = useCommandPalette()
   // Me Mode only filters task views, so it only appears on the pages it affects —
   // a toggle on Attendance or Settings would do nothing and just raise questions.
   const { pathname } = useLocation()
@@ -136,20 +137,21 @@ export function Topbar({ title, breadcrumb, className, back, actions }: TopbarPr
         )}
       </div>
 
-      {/* Search — hidden in production until wired to real search */}
-      {showWipFeatures && (
-        <div className="ml-8 flex-1 max-w-md bg-surface-1 border border-border-default rounded-sm h-9 flex items-center gap-2.5 px-3">
-          <Search size={14} className="text-text-3 shrink-0" />
-          <input
-            type="text"
-            placeholder="Search projects, tasks, people..."
-            className="bg-transparent border-0 outline-none text-body font-ui text-text-1 placeholder:text-text-3 flex-1 min-w-0 font-medium"
-          />
-          <span className="font-mono text-[10px] text-text-4 border border-border-default rounded px-1.5 py-0.5 shrink-0">
-            ⌘K
-          </span>
-        </div>
-      )}
+      {/* Opens the command palette rather than searching in place: one surface
+          for the shortcut and the click, so they can never drift apart. */}
+      <button
+        type="button"
+        onClick={() => setPaletteOpen(true)}
+        className="ml-8 hidden lg:flex flex-1 max-w-md bg-surface-1 border border-border-default rounded-sm h-9 items-center gap-2.5 px-3 text-left hover:border-border-strong transition-colors"
+      >
+        <Search size={14} className="text-text-3 shrink-0" />
+        <span className="text-body font-ui text-text-3 flex-1 min-w-0 truncate font-medium">
+          Search projects, tasks, people...
+        </span>
+        <kbd className="font-mono text-[10px] text-text-4 border border-border-default rounded-sm px-1.5 py-0.5 shrink-0">
+          ⌘K
+        </kbd>
+      </button>
 
       {/* Screen-specific controls. ml-auto so they anchor right even when the
           bell is hidden (drill-in screens). */}
