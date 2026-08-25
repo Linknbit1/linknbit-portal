@@ -13,6 +13,8 @@ import { formatMinutes } from '../../lib/duration'
 import { cn } from '../../lib/cn'
 import { RangePicker, VarianceChip, ExportButton } from '../../components/reports/ReportControls'
 import { useReportRange, type DateRange, type RangePreset } from '../../components/reports/reportRange'
+import { TimesheetContent } from './TimesheetPage'
+import { ReportsTab as AttendanceReports } from './AttendancePage'
 
 /**
  * Carry the range through to the detail screen, so opening a project keeps the
@@ -27,7 +29,7 @@ function detailHref(base: string, preset: RangePreset, custom: DateRange): strin
   return `${base}?${params.toString()}`
 }
 
-type Tab = 'projects' | 'people'
+type Tab = 'projects' | 'people' | 'timesheet' | 'attendance'
 
 /**
  * Backlog reporting.
@@ -49,22 +51,30 @@ export default function ReportsPage() {
       <Topbar title="Reports" />
       <div className="flex flex-col gap-5 p-4 lg:px-8 lg:py-7">
         <div>
-          <h2 className="font-display text-[22px] font-bold text-text-1">Backlog</h2>
+          <h2 className="font-display text-[22px] font-bold text-text-1">Reports</h2>
           <p className="font-ui text-[13px] text-text-3">
-            Where the hours went — by project, and by person.
+            Where the hours went — by project, by person, by day, and against attendance.
           </p>
         </div>
 
+        {/* One door for reporting. These four used to be three separate sidebar
+            rows in three different sections, so finding a number meant already
+            knowing which module produced it. */}
         <Tabs
           tabs={[
             { key: 'projects', label: 'Project backlog' },
             { key: 'people', label: 'Employee backlog' },
+            { key: 'timesheet', label: 'Timesheet' },
+            { key: 'attendance', label: 'Attendance' },
           ]}
           activeKey={tab}
           onChange={(k) => setTab(k as Tab)}
         />
 
-        {tab === 'projects' ? <ProjectBacklog /> : <EmployeeBacklog />}
+        {tab === 'projects' ? <ProjectBacklog />
+          : tab === 'people' ? <EmployeeBacklog />
+          : tab === 'timesheet' ? <TimesheetContent />
+          : <AttendanceReports />}
       </div>
     </div>
   )

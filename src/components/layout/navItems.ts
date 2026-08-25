@@ -6,7 +6,6 @@ import {
   UserCog,
   CheckSquare,
   BarChart2,
-  Clock3,
   Trophy,
   Inbox,
   MessageCircle,
@@ -119,11 +118,6 @@ const ATTENDANCE_CHILDREN: NavItem[] = [
   { label: 'My Attendance',    icon: CalendarCheck, to: '/attendance/me',         feature: 'can_manage_attendance',
     roles: ATTENDANCE_ADMIN_LANDING_ROLES },
   { label: 'Daily Records',    icon: CalendarCheck, to: '/attendance/records',    feature: 'can_manage_attendance' },
-  { label: 'Schedule',         icon: CalendarCheck, to: '/attendance/schedule',   feature: 'can_manage_attendance' },
-  { label: 'Enrolled Devices', icon: CalendarCheck, to: '/attendance/devices',    feature: 'can_manage_attendance' },
-  { label: 'Terminals',        icon: CalendarCheck, to: '/attendance/terminals',  feature: 'can_manage_attendance' },
-  { label: 'Reports',          icon: CalendarCheck, to: '/attendance/reports',    feature: 'can_manage_attendance' },
-  { label: 'Settings',         icon: CalendarCheck, to: '/attendance/settings',   feature: 'can_manage_attendance' },
 ]
 
 /** Gamification sub-pages — each is its own route at /gamification/:section. */
@@ -138,8 +132,9 @@ const GAMIFICATION_CHILDREN: NavItem[] = [
   // redemptions, finance fulfils them — so all three capabilities open this page.
   { label: 'Approvals',      icon: Trophy, to: '/gamification/approvals',
     feature: ['can_govern_gamification', 'can_recognize', 'can_fulfill_payouts'] },
-  // Governance only: granting XP, who takes part, Employee of the Month.
-  { label: 'Settings',       icon: Trophy, to: '/gamification/admin',
+  // Governance, not configuration: this grants XP and decides who takes part.
+  // The rule-set that used to share the name lives in Settings → Gamification.
+  { label: 'Governance',     icon: Trophy, to: '/gamification/admin',
     feature: 'can_govern_gamification' },
 ]
 
@@ -179,7 +174,6 @@ const STANDUP_CHILDREN: NavItem[] = [
   { label: 'My Standup', icon: ClipboardList, to: '/standup',          roles: STANDUP_ROLES },
   { label: 'Team',       icon: ClipboardList, to: '/standup/team',     roles: STANDUP_REVIEW_ROLES },
   { label: 'History',    icon: ClipboardList, to: '/standup/history',  roles: STANDUP_ROLES },
-  { label: 'Settings',   icon: ClipboardList, to: '/standup/settings', feature: 'can_manage_standups' },
 ]
 
 /**
@@ -222,9 +216,6 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Clients', icon: UserCircle, to: '/admin/clients', group: 'delivery', feature: 'can_manage_clients' },
   { label: 'Projects', icon: FolderOpen, to: '/admin/projects', group: 'delivery' },
   { label: 'Tasks', icon: CheckSquare, to: '/admin/tasks', group: 'delivery' },
-  // Sits with the work rather than under Admin: a lead opens it to see who is on
-  // what, not to administer anything. The RPCs scope it to their own team.
-  { label: 'Timesheet', icon: Clock3, to: '/timesheet', group: 'delivery', feature: 'can_view_reports' },
   // With Delivery rather than Admin: a PM reading where the hours went is doing
   // delivery work, not governance. No longer dev-only either — it reads real
   // timer and standup data now, not the mock arrays it shipped with.
@@ -246,9 +237,11 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Attendance', icon: CalendarCheck, to: '/attendance', group: 'people', matchPrefix: '/attendance', primaryMobile: true, children: ATTENDANCE_CHILDREN },
   { label: 'Gamification', icon: Trophy, to: '/gamification/leaderboard', group: 'people', matchPrefix: '/gamification', primaryMobile: true, children: GAMIFICATION_CHILDREN },
 
-  // Admin — governance only, so the section genuinely disappears for the five
-  // roles that have none of it.
-  { label: 'Audit Log', icon: ShieldAlert, to: '/admin/audit', group: 'admin', feature: 'can_view_audit_log' },
+  // Admin — governance only, so the section genuinely disappears for the roles
+  // that have none of it. One row holding terminals, devices, the working
+  // calendar and the audit log, rather than four scattered through People.
+  { label: 'Admin', icon: ShieldAlert, to: '/admin/console', group: 'admin', matchPrefix: '/admin/console',
+    feature: ['can_manage_attendance', 'can_view_audit_log'] },
 
   // Pinned to the footer — see NAV_GROUPS. Personal for most roles (My Devices,
   // Notifications); the admin-only sections filter themselves in-page.
@@ -342,7 +335,6 @@ export function useNavItems(): NavItem[] {
   const attendanceByPath: Record<string, number> = {
     '/attendance/requests':
       leavePending.length + wfhPending.length + excPending.length + otPending.length,
-    '/attendance/devices': devicesPending,
   }
   const attendanceTotal = Object.values(attendanceByPath).reduce((a, n) => a + n, 0)
   const gamificationByPath: Record<string, number> = {
@@ -356,7 +348,13 @@ export function useNavItems(): NavItem[] {
     if (item.label === 'My Team') {
       return myTeamId ? [{ ...item, to: `/teams/${myTeamId}` }] : []
     }
-    if (item.to === '/admin/audit' && auditNewCount) return [{ ...item, badge: auditNewCount }]
+    // The Admin row carries what is waiting inside it: devices to approve, plus
+    // unseen audit entries. Folding four pages behind one door must not fold
+    // away the reason to open it.
+    if (item.matchPrefix === '/admin/console') {
+      const total = devicesPending + (auditNewCount ?? 0)
+      return [total > 0 ? { ...item, badge: total } : item]
+    }
     if (item.to === '/chat' && chatUnread) return [{ ...item, badge: chatUnread }]
     if (item.to === '/inbox' && inboxUnread) return [{ ...item, badge: inboxUnread }]
     if (item.to === '/my-meetings' && upcomingMeetings) return [{ ...item, badge: upcomingMeetings }]

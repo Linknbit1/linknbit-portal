@@ -86,7 +86,12 @@ interface Row {
  * NOT do is fill the gaps in: the timer covers well under a full day for most
  * people, and inventing the missing hours would turn a record into a guess.
  */
-export default function TimesheetPage() {
+/**
+ * The timesheet itself, without page chrome, so Reports can show it as a tab
+ * beside the other "where did the hours go" views. The route at /timesheet
+ * still works and renders the same thing under its own Topbar.
+ */
+export function TimesheetContent() {
   const toast = useToast()
   const { profile } = useSession()
   const [date, setDate] = useState(() => iso(new Date()))
@@ -200,9 +205,7 @@ export default function TimesheetPage() {
         : 'Everyone in the company.'
 
   return (
-    <div className="flex flex-1 flex-col">
-      <Topbar title="Timesheet" />
-      <div className="flex flex-col gap-5 p-4 lg:px-8 lg:py-7">
+    <div className="flex flex-col gap-5">
         <div>
           <h2 className="font-display text-[22px] font-bold text-text-1">Timesheet</h2>
           <p className="font-ui text-[13px] text-text-3">
@@ -325,6 +328,17 @@ export default function TimesheetPage() {
             </p>
           </section>
         )}
+    </div>
+  )
+}
+
+/** The /timesheet route — the same content under its own page chrome. */
+export default function TimesheetPage() {
+  return (
+    <div className="flex flex-1 flex-col">
+      <Topbar title="Timesheet" />
+      <div className="p-4 lg:px-8 lg:py-7">
+        <TimesheetContent />
       </div>
     </div>
   )

@@ -2,8 +2,8 @@ import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
 import {
-  Users, Home, Plane, AlertCircle, Smartphone, Palmtree, Hourglass, BarChart2,
-  Settings as SettingsIcon, CalendarClock, Calendar, Fingerprint, CalendarCheck, Inbox, CalendarDays,
+  Users, Home, Plane, AlertCircle, Smartphone, Palmtree, Hourglass,
+  CalendarClock, Calendar, CalendarCheck, Inbox, CalendarDays,
 } from 'lucide-react'
 import { MobileHub, HubRow, type HubRowItem } from '../components/layout/MobileHub'
 import { StackScreen } from '../components/layout/StackScreen'
@@ -16,7 +16,6 @@ import { useMyMonthlyAttendance } from '../hooks/useAttendance'
 import {
   useAllWfhRequests, useAllLeaveRequests, useAllAttendanceExceptions, useAllOvertimeRequests,
 } from '../hooks/useAttendance'
-import { useEnrolledDevices } from '../hooks/useEnrolledDevices'
 
 // Admin tab components (reused as full-screen sections on mobile)
 import {
@@ -168,25 +167,17 @@ function AdminAttendanceHub() {
   const { data: pendingLeave = [] } = useAllLeaveRequests('pending')
   const { data: pendingExc = [] } = useAllAttendanceExceptions({ status: 'pending' })
   const { data: pendingOt = [] } = useAllOvertimeRequests('pending')
-  const { data: devices = [] } = useEnrolledDevices()
-  const pendingDevices = devices.filter((d) => !d.approved_by && d.is_active).length
+  // The four queues are one row now, so their counts sum onto it.
+  const pendingRequests =
+    pendingWfh.length + pendingLeave.length + pendingExc.length + pendingOt.length
 
   const items: HubRowItem[] = [
-    // Managers file their own requests too — this is their self-service view.
     { to: '/attendance/today',      label: 'Today',            icon: CalendarCheck },
     { to: '/attendance/calendar',   label: 'Calendar',         icon: CalendarDays },
-    { to: '/attendance/requests',   label: 'Requests',         icon: Inbox },
+    { to: '/attendance/requests',   label: 'Requests',         icon: Inbox, badge: pendingRequests },
+    // Managers file their own requests too — this is their self-service view.
     { to: '/attendance/me',         label: 'My Attendance',    icon: CalendarClock },
     { to: '/attendance/records',    label: 'Daily Records',    icon: Users },
-    { to: '/attendance/wfh',        label: 'WFH Requests',     icon: Home,        badge: pendingWfh.length },
-    { to: '/attendance/leave',      label: 'Leave',            icon: Plane,       badge: pendingLeave.length },
-    { to: '/attendance/exceptions', label: 'Exceptions',       icon: AlertCircle, badge: pendingExc.length },
-    { to: '/attendance/devices',    label: 'Enrolled Devices', icon: Smartphone,  badge: pendingDevices },
-    { to: '/attendance/terminals',  label: 'Terminals',        icon: Fingerprint },
-    { to: '/attendance/schedule',   label: 'Schedule',         icon: Palmtree },
-    { to: '/attendance/overtime',   label: 'Overtime',         icon: Hourglass,   badge: pendingOt.length },
-    { to: '/attendance/reports',    label: 'Reports',          icon: BarChart2 },
-    { to: '/attendance/settings',   label: 'Settings',         icon: SettingsIcon },
   ]
   return (
     <MobileHub title="Attendance" items={items}>

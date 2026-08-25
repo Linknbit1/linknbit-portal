@@ -38,6 +38,7 @@ import ReportsPage from './pages/admin/ReportsPage'
 import TimesheetPage from './pages/admin/TimesheetPage'
 import ProjectBacklogDetailPage, { EmployeeBacklogDetailPage } from './pages/admin/BacklogDetailPage'
 import AuditLogPage from './pages/admin/AuditLogPage'
+import AdminConsolePage, { AdminConsoleSectionScreen } from './pages/admin/AdminConsolePage'
 import SettingsPage, { SettingsSectionScreen } from './pages/admin/SettingsPage'
 import AttendancePage from './pages/AttendancePage'
 import MyMeetingsPage from './pages/MyMeetingsPage'
@@ -146,6 +147,8 @@ export default function App() {
                 <Route path="/admin/tasks/:id" element={<RoleGuard allowedRoles={SETTINGS_ROLES}><AdminTaskDetailPage /></RoleGuard>} />
                 <Route path="/admin/clients" element={<RoleGuard feature="can_manage_clients"><ClientsPage /></RoleGuard>} />
                 <Route path="/admin/audit" element={<RoleGuard feature="can_view_audit_log"><AuditLogPage /></RoleGuard>} />
+                <Route path="/admin/console" element={<AdminConsolePage />} />
+                <Route path="/admin/console/:section" element={<AdminConsoleSectionScreen />} />
 
                 {/* Backlog reporting and the timesheet. Out of the WIP gate now
                     that both read real timer and standup data rather than the

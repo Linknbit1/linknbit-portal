@@ -380,13 +380,13 @@ export const DOC_CHAPTERS: DocChapter[] = [
         title: 'Timesheet',
         summary:
           'Everybody’s day on one chart — who was due in, who turned up, who is on leave, and what the timer caught. Everyone you can see gets a row, whether or not they ever pressed start.',
-        where: 'Delivery → Timesheet',
+        where: 'Delivery → Reports → Timesheet',
         feature: 'can_view_reports',
         procedures: [
           {
             title: 'See what a day looked like',
             steps: [
-              'Open Delivery → Timesheet.',
+              'Open Delivery → Reports and pick the Timesheet tab.',
               'Pick a date, or step back a day at a time with the arrows.',
               'Read the four tiles for the shape of the day: hours tracked, timers running, how many people have logged nothing, and how many are away.',
               'Hover any coloured block for the task, the project, the exact times and how long it ran. Hover the green line underneath for check-in and check-out.',
@@ -488,6 +488,36 @@ export const DOC_CHAPTERS: DocChapter[] = [
           'You always see everyone’s status. Check-in times, the late flag and which kind of leave someone took are shown only for yourself, for people on your teams, and to whoever manages attendance.',
           'The roster refreshes on its own about once a minute, so it can be left open.',
           'People excluded from attendance tracking are left out entirely — counting them would make the numbers wrong.',
+        ],
+      },
+      {
+        id: 'admin-console',
+        title: 'Terminals, devices and the working calendar',
+        summary:
+          'The administrative side of attendance — fingerprint terminals, the devices people check in from, and the public holidays and working Saturdays that define the year.',
+        where: 'Admin',
+        feature: 'can_manage_attendance',
+        procedures: [
+          {
+            title: 'Approve a new device',
+            steps: [
+              'Open Admin → Enrolled Devices.',
+              'Find the device waiting for approval — the count on the Admin row in the menu is how many.',
+              'Approve it, or deactivate one that should no longer be used.',
+            ],
+          },
+          {
+            title: 'Set up the year',
+            steps: [
+              'Open Admin → Schedule & holidays.',
+              'Add public holidays and company off days, singly or as a range.',
+              'Mark any Saturday that is being worked, and any company-wide work-from-home day.',
+            ],
+          },
+        ],
+        notes: [
+          'These used to sit inside the Attendance menu. They are administration, not daily work, so they now live behind Admin along with the audit log.',
+          'The rules themselves — working hours, grace period, office network — are configuration and live in Settings → Attendance.',
         ],
       },
       {

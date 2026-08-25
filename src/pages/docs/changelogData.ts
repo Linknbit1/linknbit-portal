@@ -13,11 +13,34 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: 'v1.12',
+    date: '2026-08-26',
+    title: 'One door for reports, one for admin',
+    highlight:
+      'Reporting is one place instead of three, and the administrative machinery — terminals, devices, the working calendar, the audit log — now sits behind a single Admin door instead of being scattered through the Attendance menu. Six rows left the sidebar.',
+    entries: [
+      {
+        kind: 'added',
+        text: 'Reports gained Timesheet and Attendance tabs. Project backlog, employee backlog, the timesheet and the attendance reports were four screens in three different menu sections; finding a number meant already knowing which module produced it. They are now four tabs in one place.',
+      },
+      {
+        kind: 'added',
+        text: 'Admin is a console. Terminals, Enrolled Devices, and Schedule & holidays moved out of the Attendance menu and joined the Audit Log behind one Admin row. The count on that row is what is waiting inside — devices to approve and unseen audit entries — so folding them away never hides work.',
+      },
+      {
+        kind: 'improved',
+        text: 'Gamification’s “Settings” is now called Governance, because that is what it is — granting XP and deciding who takes part. The actual gamification rules live in Settings → Gamification, where the standup and attendance rules already were.',
+      },
+      {
+        kind: 'improved',
+        text: 'Timesheet and the per-module Settings rows are gone from the menu. Every screen is still reachable — Timesheet from Reports, the rule-sets from Settings — and old links keep working.',
+      },
+    ],
+  },
+  {
     version: 'v1.11',
     date: '2026-08-26',
     title: 'Press ⌘K',
-    highlight:
-      'Search is live. Press ⌘K (Ctrl+K on Windows) anywhere in the portal to jump to any screen, project, person or task — type a few letters, press Enter, done.',
     entries: [
       {
         kind: 'added',
