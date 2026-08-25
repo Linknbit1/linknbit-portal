@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { ChevronRight, ChevronDown } from 'lucide-react'
 import { cn } from '../../lib/cn'
-import { useNavGroups, activeNavPath, BRAND_MENU_LINKS, BOTTOM_GROUP_ID, type NavItem } from './navItems'
+import { useNavGroups, activeNavPath, navLabelForPath, BRAND_MENU_LINKS, BOTTOM_GROUP_ID, type NavItem } from './navItems'
 import { LinknbitMark } from '../brand/LinknbitLogo'
 import { InstallAppButton } from '../pwa/InstallAppButton'
 import { Popover } from '../ui/Popover'
@@ -15,7 +15,8 @@ export function Sidebar() {
   const navGroups = useNavGroups()
   // Resolved once across every section — including the pinned footer — so
   // exactly one item can be active.
-  const activePath = activeNavPath(navGroups.flatMap((g) => g.items), location.pathname)
+  const allItems = navGroups.flatMap((g) => g.items)
+  const activePath = activeNavPath(allItems, location.pathname)
   const bodyGroups = navGroups.filter((g) => g.id !== BOTTOM_GROUP_ID)
   const bottomGroup = navGroups.find((g) => g.id === BOTTOM_GROUP_ID)
   const { isCollapsed, toggle: toggleGroup } = useNavGroupCollapse()
@@ -38,7 +39,7 @@ export function Sidebar() {
       <nav className="flex-1 min-h-0 overflow-y-auto px-3 py-2 flex flex-col">
         {/* Above the groups on purpose: these are the destinations this person
             chose, and they outrank any ordering we could guess at. */}
-        <PinnedNav rowCls={rowCls} navItems={navGroups.flatMap((g) => g.items)} />
+        <PinnedNav rowCls={rowCls} navItems={allItems} />
         {bodyGroups.map((group, i) => {
           const folded = isCollapsed(group.id)
           // A folded section still has to show that something is waiting inside
@@ -71,7 +72,7 @@ export function Sidebar() {
                 )}
               </button>
               {!folded && group.items.map((item) => (
-                <NavRow key={item.to} item={item} pathname={location.pathname} activePath={activePath} />
+                <NavRow key={item.to} item={item} pathname={location.pathname} activePath={activePath} allItems={allItems} />
               ))}
             </section>
           )
@@ -85,7 +86,7 @@ export function Sidebar() {
         {bottomGroup && (
           <div className="flex flex-col gap-px">
             {bottomGroup.items.map((item) => (
-              <NavRow key={item.to} item={item} pathname={location.pathname} activePath={activePath} />
+              <NavRow key={item.to} item={item} pathname={location.pathname} activePath={activePath} allItems={allItems} />
             ))}
           </div>
         )}
@@ -167,8 +168,16 @@ const rowCls = (active: boolean) =>
 /** Keeps a badge pill one or two glyphs wide, the way the bell does. */
 const badgeCount = (n: number) => (n > 99 ? '99+' : String(n))
 
-function NavRow({ item, pathname, activePath }: { item: NavItem; pathname: string; activePath: string | null }) {
+function NavRow({ item, pathname, activePath, allItems }: {
+  item: NavItem
+  pathname: string
+  activePath: string | null
+  allItems: NavItem[]
+}) {
   const inSection = (item.matchPrefix ?? item.to) === activePath
+  // A parent row opens one of its children, so the pin is named after that page
+  // rather than after the section heading that links to it.
+  const pinLabel = navLabelForPath(allItems, item.to) ?? item.label
   // Expanded by default while you're inside the section; an explicit toggle wins
   // until you navigate elsewhere (derived, so no state sync needed).
   const [toggled, setToggled] = useState<boolean | null>(null)
@@ -187,7 +196,7 @@ function NavRow({ item, pathname, activePath }: { item: NavItem; pathname: strin
             {badgeCount(item.badge)}
           </span>
         )}
-        <PinToggle label={item.label} path={item.to} revealClass="group-hover/row:opacity-100" />
+        <PinToggle label={pinLabel} path={item.to} revealClass="group-hover/row:opacity-100" />
       </div>
     )
   }
@@ -206,7 +215,7 @@ function NavRow({ item, pathname, activePath }: { item: NavItem; pathname: strin
             {badgeCount(item.badge)}
           </span>
         )}
-        <PinToggle label={item.label} path={item.to} revealClass="group-hover/row:opacity-100" />
+        <PinToggle label={pinLabel} path={item.to} revealClass="group-hover/row:opacity-100" />
         <button
           onClick={() => setOpen((v) => !v)}
           aria-label={open ? `Collapse ${item.label}` : `Expand ${item.label}`}

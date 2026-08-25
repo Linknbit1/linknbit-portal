@@ -377,6 +377,27 @@ export function useNavItems(): NavItem[] {
 }
 
 /**
+ * The name of the actual page a path opens.
+ *
+ * A parent row is a shortcut to one of its children — "Business Dev" opens
+ * /bd/pipeline, "Gamification" opens /gamification/leaderboard — so naming a pin
+ * after the row you clicked would label the Pipeline page "Business Dev".
+ * Children are checked first for exactly that reason.
+ *
+ * It also keeps pinning idempotent: the parent and the child resolve to one
+ * path, so they must resolve to one label, or the pin's name would depend on
+ * where you happened to click.
+ */
+export function navLabelForPath(items: NavItem[], path: string): string | null {
+  for (const item of items) {
+    for (const child of item.children ?? []) {
+      if (child.to === path) return child.label
+    }
+  }
+  return items.find((item) => item.to === path)?.label ?? null
+}
+
+/**
  * Which single top-level item the current URL belongs to. Prefix matching alone
  * lights up every ancestor — /teams/<id> matches both "Teams" (/teams) and
  * "My Team" (/teams/<id>) — so the longest match wins and only it is active.
