@@ -62,7 +62,18 @@ export const DOC_CHAPTERS: DocChapter[] = [
         summary:
           'The left sidebar is grouped by the kind of work rather than by your role: Workspace (your own day), Delivery (client work), People, and Admin. Sections you have no access to are not shown at all.',
         where: 'Sidebar',
+        procedures: [
+          {
+            title: 'Fold a section you do not use',
+            steps: [
+              'Hover the section heading — Workspace, Delivery, People or Admin — and press it.',
+              'Press it again to bring the section back.',
+            ],
+          },
+        ],
         notes: [
+          'A folded section still shows a count if something inside it needs you, so folding can never hide work.',
+          'Folding is remembered on that device only. Your other devices keep their own arrangement.',
           'Delivery is ordered the way a piece of work travels — clients, then projects, then tasks.',
           'Settings sits on its own below the divider at the very bottom, and stays there while the sections above scroll.',
           'Red count badges mark things waiting on you — unread chat, claimable quests, requests to approve.',

@@ -465,13 +465,18 @@
     background-clip: text;
   }
 
-  /* Active nav indicator */
+  /* Active nav indicator.
+     Sits on the row's own leading edge. It used to be pulled out to left:-14px,
+     which put it 2px beyond the scroll container's clip boundary — `nav` carries
+     overflow-y, so overflow-x computes to auto and clips too, and 2px of a 3px
+     bar was being cut off. Inside the row it is unclippable, and it lines up
+     with the rounded fill instead of floating away from it. */
   .nav-active-indicator::before {
     content: '';
     position: absolute;
-    left: -14px;
-    top: 8px;
-    bottom: 8px;
+    left: 0;
+    top: 5px;
+    bottom: 5px;
     width: 3px;
     background: var(--color-brand-red);
   }

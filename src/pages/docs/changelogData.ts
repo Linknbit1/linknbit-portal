@@ -13,11 +13,34 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: 'v1.8',
+    date: '2026-08-25',
+    title: 'A tighter sidebar',
+    highlight:
+      'The sidebar is about a third shorter. Rows are compact rather than chunky, and you can fold away whole sections you never use \u2014 so the whole menu fits on screen without scrolling.',
+    entries: [
+      {
+        kind: 'improved',
+        text: 'Navigation rows are noticeably more compact \u2014 shorter, with lighter text on everything except the page you are on. The whole menu now fits without scrolling, even with a section expanded.',
+      },
+      {
+        kind: 'added',
+        text: 'Sections fold. Press the Workspace, Delivery, People or Admin heading to collapse it, and again to bring it back. A folded section still shows a count when something inside needs you, so nothing hides. The arrangement is remembered per device.',
+      },
+      {
+        kind: 'fixed',
+        text: 'The red bar marking the page you are on was being clipped by the sidebar edge and showed as a sliver. It now sits on the row itself.',
+      },
+      {
+        kind: 'improved',
+        text: 'The Install app prompt is a single row instead of a two-line block, so it stops outweighing the destinations above it.',
+      },
+    ],
+  },
+  {
     version: 'v1.7.1',
     date: '2026-08-25',
     title: 'Checking in from home, and from the office WiFi',
-    highlight:
-      'An approved work-from-home day can be checked into again, and being on the office WiFi now counts the same as putting your finger on the terminal.',
     entries: [
       {
         kind: 'fixed',

@@ -81,21 +81,18 @@ export function InstallAppButton({ className }: { className?: string }) {
     <>
       <button
         onClick={showNative ? install : () => setGuideOpen(true)}
+        // One row, the same height as a nav row. It was a two-line block with a
+        // filled red tile — about 48px of permanent chrome outweighing the
+        // destinations above it, for a prompt most people act on once.
+        title={showNative ? 'Open faster from your device' : 'See how to add it on iPhone'}
         className={cn(
-          'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-sm font-ui font-medium text-body-sm',
-          'bg-brand-red/13 text-text-1 hover:bg-brand-red/20 transition-colors',
+          'w-full flex h-7 items-center gap-2 px-2 rounded-sm font-ui text-[12.5px] leading-none',
+          'text-text-3 hover:bg-surface-2 hover:text-text-1 transition-colors',
           className,
         )}
       >
-        <span className="size-6 rounded-sm bg-brand-red flex items-center justify-center shrink-0">
-          <Download size={13} className="text-white" />
-        </span>
-        <span className="flex flex-col items-start leading-tight min-w-0">
-          <span className="text-[12.5px] font-semibold truncate">Install app</span>
-          <span className="font-mono text-[10px] text-text-3">
-            {showNative ? 'Open faster from your device' : 'See how to add it on iPhone'}
-          </span>
-        </span>
+        <Download size={15} className="shrink-0 text-brand-red" />
+        <span className="truncate">Install app</span>
       </button>
 
       {guideOpen && <IosInstallGuide onClose={() => setGuideOpen(false)} />}

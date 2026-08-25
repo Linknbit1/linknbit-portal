@@ -6,6 +6,7 @@ import { useNavGroups, activeNavPath, BRAND_MENU_LINKS, BOTTOM_GROUP_ID, type Na
 import { LinknbitMark } from '../brand/LinknbitLogo'
 import { InstallAppButton } from '../pwa/InstallAppButton'
 import { Popover } from '../ui/Popover'
+import { useNavGroupCollapse } from '../../hooks/useNavGroupCollapse'
 
 export function Sidebar() {
   const location = useLocation()
@@ -15,39 +16,67 @@ export function Sidebar() {
   const activePath = activeNavPath(navGroups.flatMap((g) => g.items), location.pathname)
   const bodyGroups = navGroups.filter((g) => g.id !== BOTTOM_GROUP_ID)
   const bottomGroup = navGroups.find((g) => g.id === BOTTOM_GROUP_ID)
+  const { isCollapsed, toggle: toggleGroup } = useNavGroupCollapse()
 
   // Scrolling lives on <nav> rather than the aside: with the whole aside as the
   // scroll container, the pinned footer scrolled away with the list.
   return (
     <aside className="w-sidebar-expanded bg-surface-1 border-r border-border-default hidden lg:flex flex-col sticky top-0 h-screen overflow-hidden shrink-0">
       {/* Brand */}
-      <div className="flex items-center gap-3 px-4 pt-5 pb-4 border-b border-border-subtle">
-        <LinknbitMark surface="dark" className="h-8 w-7 shrink-0" />
+      <div className="flex items-center gap-2.5 p-3 border-b border-border-subtle">
+        <LinknbitMark surface="dark" className="h-7 w-6 shrink-0" />
         <div className="flex-1 min-w-0">
           <p className="font-display font-bold text-body-sm/tight text-text-1">Linknbit</p>
-          <p className="font-mono text-[9px] text-text-4 uppercase tracking-wider mt-0.5">Operations Portal</p>
+          <p className="font-mono text-[9px] text-text-4 uppercase tracking-wider">Operations Portal</p>
         </div>
         <BrandMenu />
       </div>
 
       {/* Nav — one section per kind of work; empty sections drop out per role. */}
-      <nav className="flex-1 min-h-0 overflow-y-auto px-3 pt-3 pb-2 flex flex-col">
-        {bodyGroups.map((group, i) => (
-          <section key={group.id} className={cn('flex flex-col gap-px', i > 0 && 'mt-3')}>
-            <h2 className="text-[10px] font-ui font-semibold text-text-4 uppercase tracking-widest px-2 pt-2 pb-1.5">
-              {group.label}
-            </h2>
-            {group.items.map((item) => (
-              <NavRow key={item.to} item={item} pathname={location.pathname} activePath={activePath} />
-            ))}
-          </section>
-        ))}
+      <nav className="flex-1 min-h-0 overflow-y-auto px-3 py-2 flex flex-col">
+        {bodyGroups.map((group, i) => {
+          const folded = isCollapsed(group.id)
+          // A folded section still has to show that something is waiting inside
+          // it, or folding becomes a way to miss work.
+          const hidden = folded ? group.items.reduce((n, it) => n + (it.badge ?? 0), 0) : 0
+          return (
+            <section key={group.id} className={cn('flex flex-col gap-px', i > 0 && 'mt-1.5')}>
+              <button
+                type="button"
+                onClick={() => toggleGroup(group.id)}
+                aria-expanded={!folded}
+                className={cn(
+                  'group/head flex items-center gap-1 px-2 pt-1.5 pb-1 rounded-sm',
+                  'text-[10px] font-ui font-semibold uppercase tracking-widest',
+                  'text-text-4 transition-colors hover:text-text-2',
+                )}
+              >
+                <ChevronDown
+                  size={10}
+                  className={cn(
+                    'shrink-0 transition-transform opacity-0 group-hover/head:opacity-100 focus-visible:opacity-100',
+                    folded && 'opacity-100 -rotate-90',
+                  )}
+                />
+                <span>{group.label}</span>
+                {hidden > 0 && (
+                  <span className="ml-auto rounded-sm bg-brand-red px-1.5 py-px font-ui text-[10px] font-bold leading-tight text-white">
+                    {badgeCount(hidden)}
+                  </span>
+                )}
+              </button>
+              {!folded && group.items.map((item) => (
+                <NavRow key={item.to} item={item} pathname={location.pathname} activePath={activePath} />
+              ))}
+            </section>
+          )
+        })}
       </nav>
 
       {/* Pinned footer — Settings, then the install prompt. Separated by a rule
           so it reads as a different kind of destination from the nav above, and
           stays put when the sections above overflow into a scroll. */}
-      <div className="shrink-0 border-t border-border-subtle px-3 pt-2 pb-3">
+      <div className="shrink-0 border-t border-border-subtle px-3 py-2">
         {bottomGroup && (
           <div className="flex flex-col gap-px">
             {bottomGroup.items.map((item) => (
@@ -112,10 +141,21 @@ function BrandMenu() {
   )
 }
 
+/**
+ * One nav row.
+ *
+ * `py-1.5` + `text-body-sm/tight` lands at ~28px, down from ~35.5px — the height
+ * ClickUp, Linear and Notion all converge on for a sidebar row. Weight carries
+ * the state instead of size: inactive rows are regular, only the current one is
+ * medium. Every row being `font-medium` was what made a 19-row list read as a
+ * wall rather than a list.
+ */
 const rowCls = (active: boolean) =>
   cn(
-    'flex items-center gap-2.5 px-2.5 py-2 rounded-sm font-ui font-medium text-body-sm transition-colors relative',
-    active ? 'bg-brand-red/13 text-white nav-active-indicator' : 'text-text-2 hover:bg-surface-2 hover:text-text-1',
+    'flex h-7 items-center gap-2 px-2 rounded-sm font-ui text-[12.5px] leading-none transition-colors relative',
+    active
+      ? 'bg-brand-red/13 text-white font-medium nav-active-indicator'
+      : 'text-text-2 font-normal hover:bg-surface-2 hover:text-text-1',
   )
 
 /** A nav entry — a plain link, or an expandable group when it has sub-pages. */
@@ -133,8 +173,8 @@ function NavRow({ item, pathname, activePath }: { item: NavItem; pathname: strin
   if (!item.children?.length) {
     return (
       <NavLink to={item.to} className={rowCls(inSection)}>
-        <item.icon size={16} className={cn('shrink-0', inSection ? 'text-brand-red' : 'text-text-3')} />
-        <span>{item.label}</span>
+        <item.icon size={15} className={cn('shrink-0', inSection ? 'text-brand-red' : 'text-text-3')} />
+        <span className="truncate">{item.label}</span>
         {item.badge && item.badge > 0 && (
           <span className="ml-auto bg-brand-red text-white font-ui font-bold text-[10px] px-1.5 py-px rounded-sm leading-tight">
             {badgeCount(item.badge)}
@@ -147,8 +187,8 @@ function NavRow({ item, pathname, activePath }: { item: NavItem; pathname: strin
   return (
     <div>
       <div className={cn(rowCls(inSection), 'pr-1')}>
-        <NavLink to={item.to} className="flex items-center gap-2.5 flex-1 min-w-0">
-          <item.icon size={16} className={cn('shrink-0', inSection ? 'text-brand-red' : 'text-text-3')} />
+        <NavLink to={item.to} className="flex items-center gap-2 flex-1 min-w-0">
+          <item.icon size={15} className={cn('shrink-0', inSection ? 'text-brand-red' : 'text-text-3')} />
           <span className="truncate">{item.label}</span>
         </NavLink>
         {/* Section total — shown whether collapsed or expanded, alongside the
@@ -162,14 +202,14 @@ function NavRow({ item, pathname, activePath }: { item: NavItem; pathname: strin
           onClick={() => setOpen((v) => !v)}
           aria-label={open ? `Collapse ${item.label}` : `Expand ${item.label}`}
           aria-expanded={open}
-          className="size-6 rounded flex items-center justify-center text-text-4 hover:text-text-1 shrink-0"
+          className="size-5 rounded flex items-center justify-center text-text-4 hover:text-text-1 shrink-0"
         >
-          <ChevronDown size={13} className={cn('transition-transform', open && 'rotate-180')} />
+          <ChevronDown size={12} className={cn('transition-transform', open && 'rotate-180')} />
         </button>
       </div>
 
       {open && (
-        <div className="mt-px mb-1 ml-[1.45rem] pl-2.5 border-l border-border-subtle flex flex-col gap-px">
+        <div className="mt-px mb-1 ml-[1.15rem] pl-2 border-l border-border-subtle flex flex-col gap-px">
           {item.children.map((child) => {
             const active = pathname === child.to
             return (
@@ -177,7 +217,7 @@ function NavRow({ item, pathname, activePath }: { item: NavItem; pathname: strin
                 key={child.to}
                 to={child.to}
                 className={cn(
-                  'flex items-center gap-2 px-2.5 py-1.5 rounded-sm font-ui text-[12.5px] transition-colors',
+                  'flex h-6 items-center gap-2 px-2 rounded-sm font-ui text-[12px] leading-none transition-colors',
                   active ? 'text-white bg-brand-red/13 font-medium' : 'text-text-3 hover:text-text-1 hover:bg-surface-2',
                 )}
               >
