@@ -8,8 +8,8 @@
     "hash": "1ce412fcaca9e43e507c65abe6139dc7"
   },
   "D:\\Projects\\react\\linknbit-portal\\public\\sw.js": {
-    "mtime": 1787695636.960659,
-    "hash": "221e9732dc9eeb9ab86342e395504ee9"
+    "mtime": 1787696190.096959,
+    "hash": "1ad5de12cdb89ec559657ef9bfac9d82"
   },
   "D:\\Projects\\react\\linknbit-portal\\references\\office-quest-app\\preview-server.js": {
     "mtime": 1778922121.4382007,
@@ -60,8 +60,8 @@
     "hash": "8f653c16cabecc5924aac319f782115c"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\App.tsx": {
-    "mtime": 1787482783.616465,
-    "hash": "6c6a981fcfb2ae373967458ba613a70d"
+    "mtime": 1787696021.8570712,
+    "hash": "ea0c9cd120a5c5cc965704c3c3c11f66"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\main.tsx": {
     "mtime": 1787482783.7009854,
@@ -392,12 +392,12 @@
     "hash": "bec16156a65b28510ae5264b2650eca0"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\navItems.ts": {
-    "mtime": 1787695490.021351,
-    "hash": "0730161b0e6b389488836cd6f285b399"
+    "mtime": 1787696021.858076,
+    "hash": "d1b887384462031927ed4ee00f44988d"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\PrivateRoute.tsx": {
-    "mtime": 1781661659.0246265,
-    "hash": "55ab416abd56da929ba320cfd1f61c1c"
+    "mtime": 1787696021.858076,
+    "hash": "a70ab0a9bc53ab8bc6210c886a7e0832"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\components\\layout\\RoleGuard.tsx": {
     "mtime": 1784989358.8257208,
@@ -1231,6 +1231,10 @@
     "mtime": 1787482783.7049887,
     "hash": "5638183cfd6ed16e9efc8175e6ed1082"
   },
+  "D:\\Projects\\react\\linknbit-portal\\src\\pages\\MyDayPage.tsx": {
+    "mtime": 1787696075.545354,
+    "hash": "80426983209437d4c9622a8ba18e47e1"
+  },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\MyMeetingsPage.tsx": {
     "mtime": 1787484931.3901343,
     "hash": "37ddd38c7d3b39f17a5ad2db64e3a238"
@@ -1524,16 +1528,16 @@
     "hash": "31d5a4789d6b7202d5783f4c75ac5717"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\docs\\changelogData.ts": {
-    "mtime": 1787695608.2214377,
-    "hash": "f3efc3d9d72c5ef4c589149052d08083"
+    "mtime": 1787696155.7868094,
+    "hash": "b12d240fc3a7f960172f0f51cba3c68f"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\docs\\ChangelogPage.tsx": {
     "mtime": 1787482783.7379875,
     "hash": "db0bd27e5d8d62c37a67ed5c7c9441f3"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\docs\\docsContent.ts": {
-    "mtime": 1787695594.777606,
-    "hash": "6ee567f6c79c7717c8abf05672365d49"
+    "mtime": 1787696140.416274,
+    "hash": "0af3d0633e661fbdbff80bcc6db3729b"
   },
   "D:\\Projects\\react\\linknbit-portal\\src\\pages\\docs\\DocumentationPage.tsx": {
     "mtime": 1787482783.7389877,

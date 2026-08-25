@@ -13,11 +13,30 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: 'v1.10',
+    date: '2026-08-26',
+    title: 'My Day',
+    highlight:
+      'The portal now opens on My Day: your meetings, the work that is overdue or due today, whatever is waiting on you, and who is out of the office — on one screen, with a check-in card and a timer you can start without leaving it.',
+    entries: [
+      {
+        kind: 'added',
+        text: 'My Day is the new first item in Workspace, and where you land when you open the portal. Meetings today with the next one marked and a Join link; your overdue, due-today and in-progress work with a Start button for the timer; the standup prompt while its window is open; unread notifications and claimable quests; and a short list of who is out.',
+      },
+      {
+        kind: 'improved',
+        text: 'Your own work is now gathered from every way a task can be assigned to you — on your own or alongside other people — so a shared task no longer goes missing from your list.',
+      },
+      {
+        kind: 'improved',
+        text: 'Dashboard stays where it is, for the company-wide picture. My Day is only ever about you.',
+      },
+    ],
+  },
+  {
     version: 'v1.9',
     date: '2026-08-26',
     title: 'Attendance, in three views instead of eleven',
-    highlight:
-      'Attendance now opens on Today — the whole company on one roster. Alongside it are a Calendar for the month ahead and a single Requests queue that replaces the separate Leave, WFH, Exceptions and Overtime lists. The section went from eleven menu rows to three views and the admin pages behind them.',
     entries: [
       {
         kind: 'added',

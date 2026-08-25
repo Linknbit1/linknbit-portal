@@ -146,10 +146,35 @@ export const DOC_CHAPTERS: DocChapter[] = [
     blurb: 'The screens you open first: what is waiting for you, and where you talk to people.',
     topics: [
       {
+        id: 'my-day',
+        title: 'My Day',
+        summary:
+          'Where the portal opens: your meetings today, the work that is overdue or due, whatever is waiting on you, and who is out of the office.',
+        where: 'Workspace → My Day',
+        procedures: [
+          {
+            title: 'Start your day',
+            steps: [
+              'Check in from the card on the right — the same one as on the Attendance page.',
+              'Read Meetings today. The next one still ahead of you is marked, with a Join link when there is one.',
+              'Work down Your work: overdue first, then due today, then anything already underway.',
+              'Press Start on a task to run its timer without leaving the page.',
+            ],
+          },
+        ],
+        notes: [
+          'Only your own open work is listed — tasks assigned to you, alone or alongside others. Finished and approved work drops off.',
+          'A task with no due date only appears once you have moved it to In progress; otherwise the list would be your whole backlog.',
+          'Standup appears here when the window is open, and says so once you have submitted.',
+          'Out today is a short version of the Attendance roster — press Roster for the full picture.',
+          'Nothing on this page is a chart. Company-wide numbers live on the Dashboard.',
+        ],
+      },
+      {
         id: 'dashboard',
         title: 'Dashboard',
         summary:
-          'Your landing page: today’s attendance, the tasks assigned to you, what you have earned this month, and anything blocked.',
+          'The company view: today’s attendance across the team, what you have earned this month, and anything blocked.',
         where: 'Workspace → Dashboard',
       },
       {

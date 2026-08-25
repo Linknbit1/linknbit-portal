@@ -1,4 +1,5 @@
 import {
+  Sunrise,
   LayoutDashboard,
   FolderOpen,
   Users,
@@ -194,7 +195,9 @@ export const BRAND_MENU_LINKS = [
 
 export const NAV_ITEMS: NavItem[] = [
   // Workspace — what someone opens to do their own day.
-  { label: 'Dashboard', icon: LayoutDashboard, to: '/dashboard', group: 'workspace', primaryMobile: true },
+  // First row, and the landing page: your own day before the company's.
+  { label: 'My Day', icon: Sunrise, to: '/my-day', group: 'workspace', primaryMobile: true },
+  { label: 'Dashboard', icon: LayoutDashboard, to: '/dashboard', group: 'workspace' },
   { label: 'Inbox', icon: Inbox, to: '/inbox', group: 'workspace' },
   { label: 'Chat', icon: MessageCircle, to: '/chat', group: 'workspace', matchPrefix: '/chat', primaryMobile: true },
   // A daily personal ritual for employees; reviewers reach the team board through

@@ -12,6 +12,7 @@ import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
 import ResetPasswordPage from './pages/auth/ResetPasswordPage'
 import DashboardPage from './pages/DashboardPage'
+import MyDayPage from './pages/MyDayPage'
 import ProfilePage from './pages/ProfilePage'
 import MemberProfilePage from './pages/MemberProfilePage'
 import MorePage from './pages/MorePage'
@@ -76,6 +77,7 @@ export default function App() {
 
               {/* Internal portal (dark mode) */}
               <Route element={<PrivateRoute><AppShell /></PrivateRoute>}>
+                <Route path="/my-day" element={<MyDayPage />} />
                 <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
                 {/* Public (to all internal staff) member profile — tiered sections gated by role/RLS */}
