@@ -13,7 +13,7 @@ interface BraveNavigator extends Navigator {
 
 // Resolves the identity (cookie token) of the device the user is on, then reports
 // whether it is cleared to check in. Centralises identity + device lookup + role check
-// so the check-in card, the dashboard quick-action, and the My Devices list all agree
+// so the check-in card, the My Day quick-action, and the My Devices list all agree
 // on a single source of truth. `fingerprint` carries the stable token (the identity);
 // `fingerprintHint` carries the specs hash, stored as a soft signal only.
 export function useCurrentDevice() {

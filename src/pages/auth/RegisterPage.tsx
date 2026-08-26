@@ -144,7 +144,7 @@ export default function RegisterPage() {
             Your account is ready. You'll be redirected to your workspace in a moment.
           </p>
           <button
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate('/my-day')}
             className="inline-flex h-11.5 w-full items-center justify-center gap-2.5 rounded-sm border border-transparent bg-brand-red font-ui text-body font-semibold text-white hover:bg-brand-red-hover transition-colors"
           >
             Go to workspace <ArrowRight size={16} />

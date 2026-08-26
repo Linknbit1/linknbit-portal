@@ -11,13 +11,11 @@ import { SETTINGS_ROLES, CLIENT_ROLES, STANDUP_REVIEW_ROLES } from './constants/
 import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
 import ResetPasswordPage from './pages/auth/ResetPasswordPage'
-import DashboardPage from './pages/DashboardPage'
 import MyDayPage from './pages/MyDayPage'
 import ProfilePage from './pages/ProfilePage'
 import MemberProfilePage from './pages/MemberProfilePage'
 import MorePage from './pages/MorePage'
 import NotificationsPage from './pages/NotificationsPage'
-import InboxPage from './pages/InboxPage'
 import ChatPage from './pages/ChatPage'
 import StandupPage from './pages/StandupPage'
 import StickyNotesPage from './pages/StickyNotesPage'
@@ -79,7 +77,6 @@ export default function App() {
               {/* Internal portal (dark mode) */}
               <Route element={<PrivateRoute><AppShell /></PrivateRoute>}>
                 <Route path="/my-day" element={<MyDayPage />} />
-                <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
                 {/* Public (to all internal staff) member profile — tiered sections gated by role/RLS */}
                 <Route path="/members/:id" element={<RoleGuard allowedRoles={SETTINGS_ROLES}><MemberProfilePage /></RoleGuard>} />
@@ -88,9 +85,8 @@ export default function App() {
                     the handbook filters its own chapters by role and capability. */}
                 <Route path="/docs" element={<DocumentationPage />} />
                 <Route path="/docs/changelog" element={<ChangelogPage />} />
-                {/* Mobile-only list; redirects to /dashboard on desktop (bell dropdown). */}
+                {/* Notifications and the "waiting on you" queue, in one place. */}
                 <Route path="/notifications" element={<NotificationsPage />} />
-                <Route path="/inbox" element={<InboxPage />} />
                 <Route path="/chat" element={<ChatPage />} />
                 <Route path="/chat/:channelId" element={<ChatPage />} />
                 {/* Same capability key as the nav item, so the URL can't bypass it. */}
@@ -189,8 +185,10 @@ export default function App() {
                 </Route>
 
                 {/* Legacy path redirects */}
-                <Route path="/admin/dashboard" element={<Navigate to="/dashboard" replace />} />
-                <Route path="/employee/dashboard" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/dashboard" element={<Navigate to="/my-day" replace />} />
+                <Route path="/admin/dashboard" element={<Navigate to="/my-day" replace />} />
+                <Route path="/employee/dashboard" element={<Navigate to="/my-day" replace />} />
+                <Route path="/inbox" element={<Navigate to="/notifications" replace />} />
                 <Route path="/admin/people" element={<Navigate to="/people" replace />} />
                 <Route path="/admin/teams" element={<Navigate to="/teams" replace />} />
                 <Route path="/admin/settings" element={<Navigate to="/settings" replace />} />
@@ -200,7 +198,7 @@ export default function App() {
               </Route>
 
               {/* Client portal (light mode) */}
-              <Route element={<PrivateRoute><RoleGuard allowedRoles={CLIENT_ROLES} redirectTo="/dashboard"><ClientShell /></RoleGuard></PrivateRoute>}>
+              <Route element={<PrivateRoute><RoleGuard allowedRoles={CLIENT_ROLES} redirectTo="/my-day"><ClientShell /></RoleGuard></PrivateRoute>}>
                 <Route path="/client" element={<Navigate to="/client/dashboard" replace />} />
                 <Route path="/client/dashboard" element={<ClientDashboardPage />} />
                 <Route path="/client/projects" element={<ClientProjectsPage />} />

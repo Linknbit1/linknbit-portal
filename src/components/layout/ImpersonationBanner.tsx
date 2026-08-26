@@ -6,7 +6,7 @@ import { useToast } from '../ui/toast-context'
 
 /**
  * Persistent bar shown while an admin is impersonating a member. Exiting restores the
- * admin session (from the untouched HTTP-only cookie) and returns to the dashboard.
+ * admin session (from the untouched HTTP-only cookie) and returns to My Day.
  * A page reload also safely reverts to the admin.
  */
 export function ImpersonationBanner() {
@@ -21,7 +21,7 @@ export function ImpersonationBanner() {
     setExiting(true)
     try {
       await stopImpersonating()
-      navigate('/dashboard')
+      navigate('/my-day')
     } catch {
       toast('Could not exit impersonation — reload the page to return to your account', 'error')
     } finally {

@@ -34,7 +34,7 @@ export interface WaitingItem {
  * block them.
  *
  * This is deliberately NOT "unread notifications". Most notifications are news —
- * something happened, nothing is owed. Mixing the two is what made the Inbox
+ * something happened, nothing is owed. Mixing the two is what made the badge
  * badge meaningless: it counted things you had already dealt with elsewhere.
  * Here a zero is a promise that nothing is stuck on you.
  *

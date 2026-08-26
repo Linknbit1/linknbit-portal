@@ -13,11 +13,30 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: 'v1.15',
+    date: '2026-08-26',
+    title: 'One less screen, and a clearer name',
+    highlight:
+      'Inbox is now called Notifications, and the Dashboard has been retired — signing in takes you straight to My Day.',
+    entries: [
+      {
+        kind: 'improved',
+        text: 'Inbox is now Notifications. Nothing about it changed: it still opens on Waiting on you, with All and Unread beside it, and the badge still counts what is blocked on you. The old name promised a second message box, which it never was.',
+      },
+      {
+        kind: 'improved',
+        text: 'The Dashboard has been retired. It had become a page of links to menu items that are already on screen, so signing in now lands you on My Day. Company-wide numbers live in Reports, and anything you had pinned to Dashboard has been cleared.',
+      },
+      {
+        kind: 'fixed',
+        text: 'The bell in the top bar and "View all" now open the full Notifications screen — with the Waiting on you tab, category filters and Unread — rather than a shorter list of the same notifications.',
+      },
+    ],
+  },
+  {
     version: 'v1.14',
     date: '2026-08-26',
     title: 'An inbox that means something, and a menu you arrange',
-    highlight:
-      'The number beside Inbox now counts what is actually waiting on you — approvals, requests to review, mentions needing a reply — not unread news. Zero means nobody is blocked. And you can pin the screens you live in to the top of the menu.',
     entries: [
       {
         kind: 'added',

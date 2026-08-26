@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
-  Bell, CheckCheck, AtSign, CheckSquare, MessageSquare, Inbox as InboxIcon, Flag,
+  Bell, CheckCheck, AtSign, CheckSquare, MessageSquare, BellOff, Flag,
   ChevronRight, CircleCheck,
 } from 'lucide-react'
 import { Topbar } from '../components/layout/Topbar'
@@ -27,7 +27,12 @@ function iconFor(n: NotificationRow) {
   }
 }
 
-export default function InboxPage() {
+/**
+ * Notifications: the "waiting on you" queue and the notification feed in one
+ * screen. It opens on Waiting on you because that tab is a queue you clear by
+ * acting; All and Unread are news you clear by reading.
+ */
+export default function NotificationsPage() {
   const navigate = useNavigate()
   const { profile } = useAuthContext()
   const profileId = profile?.id ?? ''
@@ -48,7 +53,7 @@ export default function InboxPage() {
     [notifications, tab],
   )
 
-  // Only categories with something in them get a chip — an inbox of empty
+  // Only categories with something in them get a chip — a list of empty
   // filters is worse than no filters.
   const categoryChips = useMemo(() => {
     const counts = new Map<string, number>()
@@ -85,10 +90,10 @@ export default function InboxPage() {
 
   return (
     <div className="flex flex-col flex-1">
-      <Topbar title="Inbox" />
+      <Topbar title="Notifications" />
       <div className="p-4 lg:px-8 lg:py-7 flex flex-col gap-6">
         <div className="flex items-center gap-3">
-          <h2 className="font-display font-bold text-[22px] text-text-1">Inbox</h2>
+          <h2 className="font-display font-bold text-[22px] text-text-1">Notifications</h2>
           {waitingTotal > 0 && <span className="px-2 py-0.5 rounded-sm bg-brand-red text-white text-[11px] font-bold">{waitingTotal}</span>}
           {unread > 0 && (
             <button onClick={() => markAllRead()} className="ml-auto flex items-center gap-1.5 font-ui text-[12px] text-text-3 hover:text-text-1 transition-colors">
@@ -183,7 +188,7 @@ export default function InboxPage() {
           <div className="space-y-2">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-16" />)}</div>
         ) : shown.length === 0 ? (
           <div className="flex flex-col items-center gap-2 py-20 text-center">
-            <span className="size-12 rounded-full bg-surface-2 flex items-center justify-center text-text-3"><InboxIcon size={22} /></span>
+            <span className="size-12 rounded-full bg-surface-2 flex items-center justify-center text-text-3"><BellOff size={22} /></span>
             <p className="font-ui font-semibold text-[14px] text-text-1">
               {activeCategory === 'all' ? "You're all caught up" : 'Nothing in this category'}
             </p>

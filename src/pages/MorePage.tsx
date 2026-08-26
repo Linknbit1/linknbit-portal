@@ -18,7 +18,7 @@ export default function MorePage() {
   // Must run before the early return — hooks cannot be called conditionally.
   const groups = useMoreNavGroups()
 
-  if (isDesktop) return <Navigate to="/dashboard" replace />
+  if (isDesktop) return <Navigate to="/my-day" replace />
 
   const handleLogout = async () => {
     await signOut()

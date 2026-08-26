@@ -39,7 +39,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
             steps: [
               'Open the invite link from your email.',
               'Choose a password and confirm it.',
-              'You land on your Dashboard, already signed in.',
+              'You land on My Day, already signed in.',
             ],
           },
           {
@@ -167,15 +167,8 @@ export const DOC_CHAPTERS: DocChapter[] = [
           'A task with no due date only appears once you have moved it to In progress; otherwise the list would be your whole backlog.',
           'Standup appears here when the window is open, and says so once you have submitted.',
           'Out today is a short version of the Attendance roster — press Roster for the full picture.',
-          'Nothing on this page is a chart. Company-wide numbers live on the Dashboard.',
+          'Nothing on this page is a chart. Company-wide numbers live in Reports.',
         ],
-      },
-      {
-        id: 'dashboard',
-        title: 'Dashboard',
-        summary:
-          'The company view: today’s attendance across the team, what you have earned this month, and anything blocked.',
-        where: 'Workspace → Dashboard',
       },
       {
         id: 'command-palette',
@@ -200,23 +193,23 @@ export const DOC_CHAPTERS: DocChapter[] = [
         ],
       },
       {
-        id: 'inbox',
-        title: 'Inbox',
+        id: 'notifications',
+        title: 'Notifications',
         summary:
           'Two things in one place: what is waiting on you to act, and every notification you have been sent.',
-        where: 'Workspace → Inbox',
+        where: 'Workspace → Notifications',
         procedures: [
           {
             title: 'Clear what is blocked on you',
             steps: [
-              'Open Workspace → Inbox. It opens on Waiting on you.',
+              'Open Workspace → Notifications. It opens on Waiting on you.',
               'Work down the list — each row opens the thing that needs you.',
               'Switch to All or Unread for notifications, which are news rather than work.',
             ],
           },
         ],
         notes: [
-          'The number beside Inbox in the menu counts what is waiting on you, not unread notifications. It goes to zero by acting, not by reading — so an empty Inbox badge means nobody is blocked.',
+          'The number beside Notifications in the menu counts what is waiting on you, not unread notifications. It goes to zero by acting, not by reading — so no badge means nobody is blocked.',
           'Waiting on you gathers approvals in your queue, requests you can review, and mentions you have not replied to. You only ever see queues your role can act on.',
           'A mention counts as work because being tagged is a request for a reply. Other notifications do not.',
           'Clicking a notification takes you straight to the task, message or request it refers to.',
@@ -329,7 +322,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
           {
             title: 'Move a task forward',
             steps: [
-              'Open the task from the board, the list, or your Dashboard.',
+              'Open the task from the board, the list, or My Day.',
               'Change its status — Backlog, To Do, In Progress, Review, Approved, Completed or Blocked.',
               'Tick off subtasks as you finish them; the progress bar follows.',
               'Leave a comment to bring someone in, using @ to notify them.',
@@ -905,7 +898,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
           {
             title: 'Review a submission',
             steps: [
-              'Open the approval from your Inbox or from the project.',
+              'Open the approval from Notifications or from the project.',
               'Approve it, or request a revision with a note explaining what is needed.',
               'The person who submitted it is notified either way.',
             ],

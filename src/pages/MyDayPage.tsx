@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   CalendarClock, Video, Play, Square, CircleDot, ClipboardList,
-  Inbox, Home, Plane, ArrowRight, Loader2, CheckCircle2,
+  Bell, Home, Plane, ArrowRight, Loader2, CheckCircle2,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '../lib/cn'
@@ -222,9 +222,9 @@ function TaskRow({
 
 /**
  * My Day — everything the signed-in person owes or is owed in the next few
- * hours, in one place. Deliberately not a dashboard: every block is either
+ * hours, in one place. Deliberately not a metrics screen: every block is either
  * something to do today or something blocking someone else. The moment it grows
- * a chart it has become the company dashboard again.
+ * a chart it has become a company overview again.
  *
  * Every source here is already fetched elsewhere in the app, so this page is
  * assembly rather than new plumbing, and it shares those cache entries.
@@ -240,7 +240,7 @@ export default function MyDayPage() {
   const tasksQ = useTasks()
   const windowQ = useStandupWindow()
   const rosterQ = useDayRoster(today, !!profile)
-  // Same source as the Inbox and its badge, so the three can never disagree
+  // Same source as Notifications and its badge, so the three can never disagree
   // about whether something is waiting.
   const { items: waiting, total: waitingTotal } = useWaitingOnYou()
 
@@ -416,9 +416,9 @@ export default function MyDayPage() {
 
             <Panel
               title="Waiting on you"
-              icon={Inbox}
+              icon={Bell}
               count={waitingTotal}
-              action={waiting.length > 0 ? { to: '/inbox', label: 'Inbox' } : undefined}
+              action={waiting.length > 0 ? { to: '/notifications', label: 'Notifications' } : undefined}
             >
               {waiting.length === 0 ? (
                 <Empty>Nothing is stuck on you.</Empty>

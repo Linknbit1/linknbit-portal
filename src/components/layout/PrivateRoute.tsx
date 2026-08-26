@@ -25,7 +25,7 @@ export function HomeRedirect() {
   if (loading) return <FullPageSpinner />
   if (!accessToken) return <Navigate to="/login" replace />
   const isClient = profile?.role === 'client_owner' || profile?.role === 'client_member'
-  // Internal staff land on My Day rather than the company dashboard: the first
-  // thing someone needs on opening the portal is their own next few hours.
+  // Internal staff land on My Day: the first thing someone needs on opening the
+  // portal is their own next few hours.
   return <Navigate to={isClient ? '/client/dashboard' : '/my-day'} replace />
 }

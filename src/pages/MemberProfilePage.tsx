@@ -201,7 +201,7 @@ export default function MemberProfilePage() {
     setImpersonatePending(true)
     try {
       await impersonate(person.id)
-      navigate('/dashboard')
+      navigate('/my-day')
     } catch (e) {
       toast(e instanceof Error ? e.message : 'Could not impersonate this member', 'error')
       setImpersonatePending(false)

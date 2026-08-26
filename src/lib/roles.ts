@@ -1,4 +1,4 @@
-// Authoritative (management) roles get the management dashboard experience and can
+// Authoritative (management) roles get the management experience and can
 // see People / Teams. Everyone else (employee, finance, clients) gets the
 // individual-contributor experience. Team Lead / PM are authoritative but see
 // scoped data — that scoping is layered on inside the relevant pages.

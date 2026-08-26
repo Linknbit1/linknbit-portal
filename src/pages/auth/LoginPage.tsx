@@ -330,7 +330,7 @@ function LoginForm({
             name: email.split('@')[0],
             role: 'Team Member',
             pod: 'Linknbit',
-            path: '/dashboard',
+            path: '/my-day',
           })
         },
         onError: () => setAttempts((n) => n + 1),
@@ -793,7 +793,7 @@ function SplashScreen({ user, onDone }: { user: SplashUser; onDone: () => void }
           <BootItem status="done" label="Verifying credentials" ms="142ms" />
           <BootItem status="done" label="Loading role permissions" ms="87ms" />
           <BootItem status={step3} label="Syncing your projects from ClickUp" ms={step3 === 'now' ? '...' : '203ms'} />
-          <BootItem status={step4} label="Preparing your dashboard" ms={step4 === 'pending' ? 'queued' : step4 === 'now' ? '...' : 'ready'} />
+          <BootItem status={step4} label="Preparing your workspace" ms={step4 === 'pending' ? 'queued' : step4 === 'now' ? '...' : 'ready'} />
         </div>
 
         <div className="relative h-1 w-120 max-w-[90vw] overflow-hidden rounded-full bg-surface-inset">

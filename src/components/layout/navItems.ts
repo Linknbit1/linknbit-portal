@@ -1,13 +1,12 @@
 import {
   Sunrise,
-  LayoutDashboard,
   FolderOpen,
   Users,
   UserCog,
   CheckSquare,
   BarChart2,
   Trophy,
-  Inbox,
+  Bell,
   MessageCircle,
   ClipboardList,
   Settings,
@@ -191,8 +190,7 @@ export const NAV_ITEMS: NavItem[] = [
   // Workspace — what someone opens to do their own day.
   // First row, and the landing page: your own day before the company's.
   { label: 'My Day', icon: Sunrise, to: '/my-day', group: 'workspace', primaryMobile: true },
-  { label: 'Dashboard', icon: LayoutDashboard, to: '/dashboard', group: 'workspace' },
-  { label: 'Inbox', icon: Inbox, to: '/inbox', group: 'workspace' },
+  { label: 'Notifications', icon: Bell, to: '/notifications', group: 'workspace' },
   { label: 'Chat', icon: MessageCircle, to: '/chat', group: 'workspace', matchPrefix: '/chat', primaryMobile: true },
   // A daily personal ritual for employees; reviewers reach the team board through
   // its own sub-page, so it belongs here rather than under People.
@@ -343,7 +341,8 @@ export function useNavItems(): NavItem[] {
     '/gamification/board': questCount,
     '/gamification/approvals': gamificationPending,
   }
-  // The Inbox badge counts what is BLOCKED on this person, not unread news — a
+  // The Notifications badge counts what is BLOCKED on this person, not unread
+  // news — a
   // number you can drive to zero by acting, rather than by reading.
   const { total: waitingTotal } = useWaitingOnYou()
 
@@ -360,7 +359,7 @@ export function useNavItems(): NavItem[] {
       return [total > 0 ? { ...item, badge: total } : item]
     }
     if (item.to === '/chat' && chatUnread) return [{ ...item, badge: chatUnread }]
-    if (item.to === '/inbox' && waitingTotal) return [{ ...item, badge: waitingTotal }]
+    if (item.to === '/notifications' && waitingTotal) return [{ ...item, badge: waitingTotal }]
     if (item.to === '/my-meetings' && upcomingMeetings) return [{ ...item, badge: upcomingMeetings }]
     if (item.matchPrefix === '/attendance') {
       const withChildren = withChildBadges(item, attendanceByPath)

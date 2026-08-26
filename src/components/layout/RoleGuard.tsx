@@ -32,14 +32,14 @@ export function RoleGuard({ allowedRoles, feature, children, redirectTo }: RoleG
   if (!profile) return <Navigate to="/login" replace />
 
   if (allowedRoles && !allowedRoles.includes(profile.role)) {
-    return <Navigate to={redirectTo ?? '/dashboard'} replace />
+    return <Navigate to={redirectTo ?? '/my-day'} replace />
   }
 
   if (feature) {
     // Wait for the flag matrix rather than bouncing — redirecting mid-load would
     // eject a user who actually has the capability.
     if (access.isLoading) return <Spinner />
-    if (!access.allowed) return <Navigate to={redirectTo ?? '/dashboard'} replace />
+    if (!access.allowed) return <Navigate to={redirectTo ?? '/my-day'} replace />
   }
 
   return <>{children}</>

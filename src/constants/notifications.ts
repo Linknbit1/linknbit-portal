@@ -110,7 +110,7 @@ export interface NotificationCategory {
 }
 
 /**
- * Inbox categories. The settings taxonomy above is the source of truth — a
+ * Notification categories. The settings taxonomy above is the source of truth — a
  * notification lands in the same bucket the toggle that controls it lives in,
  * so the two screens can never disagree about what "Chat" means.
  *
@@ -129,7 +129,7 @@ const CATEGORY_BY_TYPE: ReadonlyMap<string, NotificationCategory> = new Map(
   NOTIFICATION_GROUPS.flatMap((g) => g.items.map((i) => [i.type, { key: g.key, label: g.label }] as const)),
 )
 
-/** Which inbox category a notification belongs to. Never returns undefined. */
+/** Which notification category a notification belongs to. Never returns undefined. */
 export function categoryForType(type: string | null | undefined): NotificationCategory {
   if (type === 'audit_alert') return { key: 'security', label: 'Security & audit' }
   return (type && CATEGORY_BY_TYPE.get(type)) || { key: 'other', label: 'Other' }
@@ -171,9 +171,9 @@ export function notificationHref(
   if (type && GAMIFICATION_REVIEW_TYPES.includes(type)) return '/gamification/approvals'
   switch (resourceType) {
     case 'task':
-      return resourceId ? taskNotificationHref(resourceId) : '/inbox'
+      return resourceId ? taskNotificationHref(resourceId) : '/notifications'
     case 'project':
-      return resourceId ? `/admin/projects/${resourceId}` : '/inbox'
+      return resourceId ? `/admin/projects/${resourceId}` : '/notifications'
     case 'leave_request':
     case 'wfh_request':
     case 'attendance_exception':

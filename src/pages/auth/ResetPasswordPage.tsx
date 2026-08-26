@@ -65,7 +65,7 @@ export default function ResetPasswordPage() {
       if (email) {
         try {
           await signIn(email, password)
-          navigate('/dashboard', { replace: true })
+          navigate('/my-day', { replace: true })
           return
         } catch { /* fall through — they can sign in manually */ }
       }
