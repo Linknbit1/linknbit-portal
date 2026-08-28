@@ -87,7 +87,7 @@ function PaletteDialog({ onClose }: { onClose: () => void }) {
         label: p.name,
         hint: p.client?.name ?? undefined,
         icon: FolderOpen,
-        to: `/admin/projects/${p.id}`,
+        to: `/projects/${p.id}`,
       })),
       ...people.map((p) => ({
         id: `person:${p.id}`,
@@ -103,7 +103,7 @@ function PaletteDialog({ onClose }: { onClose: () => void }) {
         label: t.title,
         hint: t.project?.name ?? undefined,
         icon: CheckSquare,
-        to: `/admin/tasks/${t.id}`,
+        to: `/tasks/${t.id}`,
       })),
     ]
   }, [trimmed, projects, people, tasks])

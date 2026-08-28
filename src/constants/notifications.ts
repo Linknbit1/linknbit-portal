@@ -152,15 +152,15 @@ export function notificationGroupsFor(role: string | null | undefined): Notifica
 export const PROJECT_TASK_QUERY_PARAM = 'task'
 
 export function projectTaskDrawerHref(projectId: string, taskId: string): string {
-  return `/admin/projects/${projectId}?${PROJECT_TASK_QUERY_PARAM}=${encodeURIComponent(taskId)}`
+  return `/projects/${projectId}?${PROJECT_TASK_QUERY_PARAM}=${encodeURIComponent(taskId)}`
 }
 
 /**
- * /admin/tasks/<id> is a redirector into the project drawer, so every link to a
+ * /tasks/<id> is a redirector into the project drawer, so every link to a
  * task can stay this short and still open in the right place.
  */
 function taskNotificationHref(taskId: string): string {
-  return `/admin/tasks/${taskId}`
+  return `/tasks/${taskId}`
 }
 
 /**
@@ -187,7 +187,7 @@ export function notificationHref(
     case 'task':
       return resourceId ? taskNotificationHref(resourceId) : '/notifications'
     case 'project':
-      return resourceId ? `/admin/projects/${resourceId}` : '/notifications'
+      return resourceId ? `/projects/${resourceId}` : '/notifications'
     case 'leave_request':
     case 'wfh_request':
     case 'attendance_exception':
@@ -216,7 +216,7 @@ export function notificationHref(
       return '/settings/devices'
     // Business Development. These land on the module's own screens rather than
     // the delivery ones — a bd_task is not a task, and sending someone to
-    // /admin/tasks/<id> would 404.
+    // /tasks/<id> would 404.
     case 'bd_task':
       return '/bd/tasks'
     case 'bd_lead':

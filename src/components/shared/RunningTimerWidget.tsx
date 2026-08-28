@@ -75,7 +75,7 @@ export function RunningTimerWidget() {
 
             <button
               type="button"
-              onClick={() => task && navigate(`/admin/tasks/${task.id}`)}
+              onClick={() => task && navigate(`/tasks/${task.id}`)}
               disabled={!task}
               className="min-w-0 flex-1 text-left disabled:cursor-default"
             >

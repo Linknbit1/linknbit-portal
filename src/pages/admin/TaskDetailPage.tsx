@@ -26,7 +26,7 @@ export default function TaskDetailPage() {
 
   return (
     <div className="flex flex-col flex-1">
-      <Topbar title="Task" back="/admin/tasks" />
+      <Topbar title="Task" back="/tasks" />
       <div className="p-4 lg:p-6 max-w-3xl mx-auto w-full">
         {isLoading || task?.project_id ? (
           <Skeleton className="h-64" />

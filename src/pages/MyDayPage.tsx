@@ -211,7 +211,7 @@ function TaskRow({
   // project (rare, but possible) keep the standalone page.
   const href = task.project
     ? projectTaskDrawerHref(task.project.id, task.id)
-    : `/admin/tasks/${task.id}`
+    : `/tasks/${task.id}`
 
   return (
     <div className="flex flex-col gap-1.5 px-4 py-3 border-b border-border-subtle last:border-0">
@@ -467,7 +467,7 @@ export default function MyDayPage() {
               title="Your work"
               icon={CircleDot}
               count={myWork.length}
-              action={{ to: '/admin/tasks', label: 'All tasks' }}
+              action={{ to: '/tasks', label: 'All tasks' }}
             >
               {tasksQ.isLoading ? (
                 <Empty>Loading…</Empty>

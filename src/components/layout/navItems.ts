@@ -211,13 +211,13 @@ export const NAV_ITEMS: NavItem[] = [
   // "Business Development" to "Business Develo…" once the expand chevron takes
   // its share of the row. The pages themselves keep the full name.
   { label: 'Business Dev', icon: TrendingUp, to: '/bd/pipeline', group: 'delivery', matchPrefix: '/bd', feature: 'can_view_bd', children: BD_CHILDREN },
-  { label: 'Clients', icon: UserCircle, to: '/admin/clients', group: 'delivery', feature: 'can_manage_clients' },
-  { label: 'Projects', icon: FolderOpen, to: '/admin/projects', group: 'delivery' },
-  { label: 'Tasks', icon: CheckSquare, to: '/admin/tasks', group: 'delivery' },
+  { label: 'Clients', icon: UserCircle, to: '/clients', group: 'delivery', feature: 'can_manage_clients' },
+  { label: 'Projects', icon: FolderOpen, to: '/projects', group: 'delivery' },
+  { label: 'Tasks', icon: CheckSquare, to: '/tasks', group: 'delivery' },
   // With Delivery rather than Admin: a PM reading where the hours went is doing
   // delivery work, not governance. No longer dev-only either — it reads real
   // timer and standup data now, not the mock arrays it shipped with.
-  { label: 'Reports', icon: BarChart2, to: '/admin/reports', group: 'delivery', feature: 'can_view_reports' },
+  { label: 'Reports', icon: BarChart2, to: '/reports', group: 'delivery', feature: 'can_view_reports' },
 
   // People — who works here, when, and how they are recognised. The three
   // directory views sit together at the top; the two heavy sections with their
@@ -238,9 +238,9 @@ export const NAV_ITEMS: NavItem[] = [
   // Admin — governance only, so the section genuinely disappears for the roles
   // that have none of it. One row holding terminals, devices, the working
   // calendar and the audit log, rather than four scattered through People.
-  // matchPrefix is the bare /admin: activeNavPath takes the LONGEST match, so
-  // /admin/projects still lights up Projects and only the console's own
-  // sections (and /admin/audit) fall through to this row.
+  // matchPrefix is the bare /admin. Projects, Tasks, Clients and Reports used to
+  // sit under it and no longer do, which is the point: those are the day job,
+  // not governance. What is left under /admin genuinely belongs to this row.
   { label: 'Admin', icon: ShieldAlert, to: '/admin', group: 'admin', matchPrefix: '/admin',
     feature: ['can_manage_attendance', 'can_view_audit_log'] },
 

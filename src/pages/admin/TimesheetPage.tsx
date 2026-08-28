@@ -381,7 +381,7 @@ function LiveTimers({ active, loading, tz }: {
                   {a.profile_name}
                 </PersonLink>
                 <p className="truncate font-ui text-[11.5px] text-text-3">
-                  <Link to={`/admin/tasks/${a.task_id}`} className="hover:text-brand-red">
+                  <Link to={`/tasks/${a.task_id}`} className="hover:text-brand-red">
                     {a.task_title}
                   </Link>
                   {a.project_name && <span className="text-text-4"> · {a.project_name}</span>}

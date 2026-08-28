@@ -31,11 +31,30 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: '1.17.1',
+    date: '2026-08-29',
+    title: 'Shorter addresses, and a fix for creating tasks',
+    highlight:
+      'Projects, Tasks, Clients and Reports have dropped /admin from their addresses, and creating or editing a task works again.',
+    entries: [
+      {
+        kind: 'fixed',
+        text: 'Creating or editing a task failed with a permissions error, even for an admin. The task was in fact being saved and only the read-back afterwards was refused, so the screen reported a failure for something that had worked. Fixed, and a task now records who created it.',
+      },
+      {
+        kind: 'improved',
+        text: 'Projects, Tasks, Clients and Reports have moved out of /admin: they are at /projects, /tasks, /clients and /reports. They are the day job, not governance, and the address said otherwise. Every old link still works and lands in the same place, bookmarks and pasted links included.',
+      },
+      {
+        kind: 'improved',
+        text: 'The Projects list no longer offers a Board view. Cards, Table and Backlog are ways of finding a project; moving one along belongs inside it, where the board still is.',
+      },
+    ],
+  },
+  {
     version: '1.17.0',
     date: '2026-08-28',
     title: 'Knowing what changed',
-    highlight:
-      'A dot on the menu when there is a release you have not read, a changelog that only shows you the parts you can actually use, and proper three-part version numbers.',
     entries: [
       {
         kind: 'added',
@@ -105,7 +124,7 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'improved',
-        text: 'Projects no longer have a Board tab. A project already has a structure of its own, its services and their stages, which is what Pipeline shows. The board that spans projects is still on Delivery → Tasks.',
+        text: 'The Projects list no longer has a Board view. Dragging a whole project between status columns was a second way to set a field the project page already owns, on a screen whose job is finding a project rather than working one. Cards, Table and Backlog remain, and the board inside a project is untouched.',
       },
       {
         kind: 'improved',

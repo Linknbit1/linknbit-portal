@@ -313,7 +313,7 @@ export function EmployeeBacklogDetailPage() {
             <Row key={r.project_id ?? 'other'}>
               <Cell>
                 {r.project_id ? (
-                  <Link to={`/admin/projects/${r.project_id}`} className="block truncate font-ui text-[13px] font-medium text-text-1 hover:text-brand-red">
+                  <Link to={`/projects/${r.project_id}`} className="block truncate font-ui text-[13px] font-medium text-text-1 hover:text-brand-red">
                     {r.project_name}
                   </Link>
                 ) : (
@@ -392,7 +392,7 @@ function DetailShell({
       <Topbar title={title} back />
       <div className="flex flex-col gap-5 p-4 lg:px-8 lg:py-7">
         <Link
-          to="/admin/reports"
+          to="/reports"
           className="flex w-fit items-center gap-1.5 font-ui text-[12px] text-text-3 transition-colors hover:text-text-1"
         >
           <ArrowLeft size={13} /> {backLabel}
@@ -539,7 +539,7 @@ function TaskCell({ row }: { row: Pick<ProjectTaskRow, 'task_id' | 'task_title' 
           </span>
         ) : (
           <Link
-            to={`/admin/tasks/${row.task_id}`}
+            to={`/tasks/${row.task_id}`}
             className="truncate font-ui text-[13px] font-medium text-text-1 hover:text-brand-red"
           >
             {row.task_title}

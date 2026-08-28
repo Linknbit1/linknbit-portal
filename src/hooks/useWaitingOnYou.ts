@@ -93,7 +93,7 @@ export function useWaitingOnYou(): { items: WaitingItem[]; total: number } {
         id: `approval:${approval.id}`,
         label: `Approve ${approval.type.replace(/_/g, ' ')}`,
         detail: approval.project?.name ?? undefined,
-        to: approval.project ? `/admin/projects/${approval.project.id}` : '/admin/projects',
+        to: approval.project ? `/projects/${approval.project.id}` : '/projects',
         icon: ClipboardCheck,
         count: 1,
       })

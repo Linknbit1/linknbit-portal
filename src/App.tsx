@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ToastProvider } from './components/ui/Toast'
 import { AuthProvider } from './context/AuthContext'
@@ -61,6 +61,23 @@ const queryClient = new QueryClient({
     queries: { staleTime: 1000 * 60 * 5, retry: 1 },
   },
 })
+
+/**
+ * Keeps a deep link to a moved screen working, id and query string intact.
+ * `<Navigate>` alone cannot do this: the id is a route param, not part of a
+ * fixed path, and a bookmarked task or project is exactly the link people have.
+ */
+function LegacyAdminRedirect({ to }: { to: string }) {
+  const { id } = useParams()
+  const { search } = useLocation()
+  return <Navigate to={`${to}/${id ?? ''}${search}`} replace />
+}
+
+/** The reports tree keeps its own sub-paths (project/:id, employee/:id). */
+function LegacyReportsRedirect() {
+  const { pathname, search } = useLocation()
+  return <Navigate to={pathname.replace('/admin/reports', '/reports') + search} replace />
+}
 
 export default function App() {
   return (
@@ -140,16 +157,29 @@ export default function App() {
                 />
 
                 {/* Projects, Tasks & Clients — live for internal staff (RLS scopes data) */}
-                <Route path="/admin/projects" element={<RoleGuard allowedRoles={SETTINGS_ROLES}><AdminProjectsPage /></RoleGuard>} />
-                <Route path="/admin/projects/:id" element={<RoleGuard allowedRoles={SETTINGS_ROLES}><AdminProjectDetailPage /></RoleGuard>} />
-                <Route path="/admin/tasks" element={<RoleGuard allowedRoles={SETTINGS_ROLES}><TasksPage /></RoleGuard>} />
-                <Route path="/admin/tasks/:id" element={<RoleGuard allowedRoles={SETTINGS_ROLES}><AdminTaskDetailPage /></RoleGuard>} />
-                <Route path="/admin/clients" element={<RoleGuard feature="can_manage_clients"><ClientsPage /></RoleGuard>} />
+                <Route path="/projects" element={<RoleGuard allowedRoles={SETTINGS_ROLES}><AdminProjectsPage /></RoleGuard>} />
+                <Route path="/projects/:id" element={<RoleGuard allowedRoles={SETTINGS_ROLES}><AdminProjectDetailPage /></RoleGuard>} />
+                <Route path="/tasks" element={<RoleGuard allowedRoles={SETTINGS_ROLES}><TasksPage /></RoleGuard>} />
+                <Route path="/tasks/:id" element={<RoleGuard allowedRoles={SETTINGS_ROLES}><AdminTaskDetailPage /></RoleGuard>} />
+                <Route path="/clients" element={<RoleGuard feature="can_manage_clients"><ClientsPage /></RoleGuard>} />
                 <Route path="/admin/audit" element={<RoleGuard feature="can_view_audit_log"><AuditLogPage /></RoleGuard>} />
+
+                {/* Projects, tasks, clients and reports used to live under /admin,
+                    which said they were governance when they are the day job.
+                    These keep every link that is already out there working, and
+                    must sit above /admin/:section or the catch-all swallows them. */}
+                <Route path="/admin/projects" element={<Navigate to="/projects" replace />} />
+                <Route path="/admin/projects/:id" element={<LegacyAdminRedirect to="/projects" />} />
+                <Route path="/admin/tasks" element={<Navigate to="/tasks" replace />} />
+                <Route path="/admin/tasks/:id" element={<LegacyAdminRedirect to="/tasks" />} />
+                <Route path="/admin/clients" element={<Navigate to="/clients" replace />} />
+                <Route path="/admin/reports/*" element={<LegacyReportsRedirect />} />
+                <Route path="/admin/reports" element={<Navigate to="/reports" replace />} />
+
                 {/* The console lives at /admin itself. React Router ranks static
-                    segments above dynamic ones, so /admin/projects and friends
-                    above still win over /admin/:section — which only ever
-                    resolves the console's own keys and redirects otherwise. */}
+                    segments above dynamic ones, so the redirects above still win
+                    over /admin/:section — which only ever resolves the console's
+                    own keys and redirects otherwise. */}
                 <Route path="/admin" element={<AdminConsolePage />} />
                 <Route path="/admin/console" element={<Navigate to="/admin" replace />} />
                 <Route path="/admin/:section" element={<AdminConsoleSectionScreen />} />
@@ -159,11 +189,11 @@ export default function App() {
                     mock arrays the prototype shipped with. Row-level scoping
                     lives in the RPCs: leads and PMs see their own team,
                     management sees everyone, an employee sees themselves. */}
-                <Route path="/admin/reports" element={<RoleGuard feature="can_view_reports"><ReportsPage /></RoleGuard>} />
+                <Route path="/reports" element={<RoleGuard feature="can_view_reports"><ReportsPage /></RoleGuard>} />
                 {/* One project / one person in full. Both read the same scoped
                     RPCs as the summary tables, so a URL cannot widen access. */}
-                <Route path="/admin/reports/project/:id" element={<RoleGuard feature="can_view_reports"><ProjectBacklogDetailPage /></RoleGuard>} />
-                <Route path="/admin/reports/employee/:id" element={<RoleGuard feature="can_view_reports"><EmployeeBacklogDetailPage /></RoleGuard>} />
+                <Route path="/reports/project/:id" element={<RoleGuard feature="can_view_reports"><ProjectBacklogDetailPage /></RoleGuard>} />
+                <Route path="/reports/employee/:id" element={<RoleGuard feature="can_view_reports"><EmployeeBacklogDetailPage /></RoleGuard>} />
                 <Route path="/timesheet" element={<RoleGuard feature="can_view_reports"><TimesheetPage /></RoleGuard>} />
                 {/* Your own client meetings. Open to all internal staff and not
                     behind the BD guard on purpose: an invitee holds no

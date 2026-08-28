@@ -345,7 +345,8 @@ export const DOC_CHAPTERS: DocChapter[] = [
         notes: [
           'The service switcher at the top of a project changes everything below it.',
           'You are staffed onto a service, not onto the project as a whole.',
-          'Inside a project, Pipeline is the view of its work: the stages that service runs through. There is no separate board tab. The board on Delivery → Tasks is the one that spans projects.',
+          'Inside a project, Board and Pipeline are two views of the same tasks: Board groups them by status, Pipeline by the stage of the service they belong to.',
+          'The Projects list itself has no board. Cards, Table and Backlog are ways of finding a project; moving one along is done inside it.',
         ],
       },
       {

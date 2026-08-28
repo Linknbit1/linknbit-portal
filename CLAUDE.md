@@ -370,6 +370,46 @@ The portal documents itself. `/docs` is the staff handbook and `/docs/changelog`
 2. **Changelog** — add a `ChangelogEntry` to the top release (`added` / `improved` / `fixed`). Start a new release entry when shipping a milestone rather than a single change, and move `highlight` onto it — only the newest release should carry one.
 3. **Gate it** — set `roles` / `feature` to the *same* keys the nav item and route guard use. A reader must never be shown instructions for a screen they cannot open.
 
+### Release numbering
+
+`major.minor.patch`, and the third number carries its weight:
+
+| Bump      | When                                                     |
+| --------- | -------------------------------------------------------- |
+| **patch** | Nothing new — only `improved` and `fixed` entries        |
+| **minor** | Anything with an `added` entry in it                     |
+| **major** | The portal changes shape                                 |
+
+Never renumber a shipped release. `announce_release()` records the version it sent, so a
+version that has gone out is a fact somebody has already read.
+
+### Gating changelog entries
+
+`ChangelogEntry` and `ChangelogRelease` both extend `DocGate`, so an entry takes the same
+`roles` / `feature` keys a handbook topic does, and `filterReleases()` applies them.
+
+- **Most entries carry no gate.** Most of what ships is for everybody, and an unnecessary
+  gate hides a real feature from someone who has it.
+- **Gate an entry only when it describes a screen the reader could not open.** The test is
+  "could this person go and try it?", not "is this about a module they use daily".
+- **The trap:** a line about a module reaching people *outside* it must stay ungated. "A BD
+  meeting shows in My Meetings even without BD access" is written *for* non-BD readers —
+  gating it on `can_view_bd` hides it from exactly its audience.
+- A release whose every entry is gated away disappears for that reader, so `highlight` can
+  never announce something they cannot see. This is why the What's-new callout reads from
+  `filterReleases()` and not from `RELEASES[0]`.
+
+### Telling people about a release
+
+Two signals, deliberately different in kind — do not collapse them into one:
+
+- **The dot** on the sidebar chevron is automatic, costs nothing and interrupts nobody. It
+  compares the newest release in the bundle against `profiles.last_seen_release`; opening
+  the changelog clears it. No release ever needs an action to get this.
+- **`announce_release()`** notifies every active internal person and is gated on
+  `can_publish_releases`. It is a decision somebody makes for a release worth interrupting
+  the company over, not something that fires on deploy, and a version can only go out once.
+
 ### What does NOT go in the handbook
 
 Governance and plumbing: the audit log, the role/permission editor, impersonation, terminal provisioning, migrations, RLS. The handbook is read by all seven roles; internal machinery reads as noise and invites people to go looking for screens they have no access to.

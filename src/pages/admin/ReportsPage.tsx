@@ -169,7 +169,7 @@ function ProjectBacklog() {
                 <tr key={r.project_id} className="group border-b border-border-subtle last:border-0 hover:bg-surface-2/40">
                   <td className="px-4 py-3">
                     <Link
-                      to={detailHref(`/admin/reports/project/${r.project_id}`, preset, custom)}
+                      to={detailHref(`/reports/project/${r.project_id}`, preset, custom)}
                       className="flex items-center gap-2"
                     >
                       <span className="min-w-0 flex-1">
@@ -287,7 +287,7 @@ function EmployeeBacklog() {
                   <tr key={r.profile_id} className="group border-b border-border-subtle last:border-0 hover:bg-surface-2/40">
                     <td className="px-4 py-3">
                       <Link
-                        to={detailHref(`/admin/reports/employee/${r.profile_id}`, preset, custom)}
+                        to={detailHref(`/reports/employee/${r.profile_id}`, preset, custom)}
                         className="flex items-center gap-2.5"
                       >
                         <Avatar name={r.profile_name ?? ''} src={r.avatar_url ?? undefined} size="sm" personId={r.profile_id} />

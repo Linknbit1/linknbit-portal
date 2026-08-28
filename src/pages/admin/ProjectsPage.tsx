@@ -19,7 +19,7 @@ import { ServiceChip } from '../../components/shared/ServiceChip'
 import { StatusChip } from '../../components/shared/StatusChip'
 import { cn } from '../../lib/cn'
 import { formatDate, isOverdue, PROJECT_STATUS_LABELS } from '../../lib/utils'
-import { useDeleteProject, useProjectDeleteImpact, useProjects, useUpdateProjectStatus } from '../../hooks/useProjects'
+import { useDeleteProject, useProjectDeleteImpact, useProjects } from '../../hooks/useProjects'
 import { useServices } from '../../hooks/useServices'
 import { useToast } from '../../components/ui/toast-context'
 import { useScopedProjects } from '../../hooks/useScopeFilter'
@@ -28,15 +28,18 @@ import { useStatusOverrides } from '../../hooks/useStatusLabels'
 import { ScopeNotice } from '../../components/shared/ScopeNotice'
 import { ScopeSwitch } from '../../components/shared/ScopeSwitch'
 import { ProjectFormModal } from './ProjectFormModal'
-import type { ProjectListItem, ProjectStatus } from '../../api/projects'
+import type { ProjectListItem } from '../../api/projects'
 import type { ProjectStatus as AppProjectStatus } from '../../types'
 
-type ViewMode = 'cards' | 'list' | 'kanban' | 'backlog'
+type ViewMode = 'cards' | 'list' | 'backlog'
 
+// No board of projects. A board is for moving one thing through stages, and a
+// project's stages live inside it, per service. Dragging a whole project between
+// status columns was a second way to set a field the project page already owns,
+// on a screen whose job is finding a project rather than working one.
 const VIEWS: { key: ViewMode; label: string; icon: typeof List }[] = [
   { key: 'cards', label: 'Cards', icon: LayoutGrid },
   { key: 'list', label: 'Table', icon: List },
-  { key: 'kanban', label: 'Board', icon: Columns },
   { key: 'backlog', label: 'Backlog', icon: History },
 ]
 
@@ -44,7 +47,8 @@ const VIEWS: { key: ViewMode; label: string; icon: typeof List }[] = [
 const backlogVisible = (canViewBacklog: boolean) =>
   VIEWS.filter((v) => v.key !== 'backlog' || canViewBacklog)
 
-const KANBAN_COLUMNS: AppProjectStatus[] = ['todo', 'in_progress', 'ongoing', 'awaiting_client', 'blocked', 'on_hold', 'completed']
+/** Every project status, in workflow order. Drives the status filter. */
+const PROJECT_STATUSES: AppProjectStatus[] = ['todo', 'in_progress', 'ongoing', 'awaiting_client', 'blocked', 'on_hold', 'completed']
 const PROJECT_SORT = [
   { value: 'recent', label: 'Newest' },
   { value: 'deadline', label: 'Deadline' },
@@ -106,7 +110,7 @@ export default function ProjectsPage() {
   const projectStatusMeta = useStatusOverrides('project')
 
   const serviceOptions = [{ value: '', label: 'All services' }, ...services.map((s) => ({ value: s.slug, label: s.name, dot: s.color }))]
-  const statusOptions = [{ value: '', label: 'All statuses' }, ...KANBAN_COLUMNS.map((s) => ({ value: s, label: projectStatusMeta[s]?.label ?? PROJECT_STATUS_LABELS[s] }))]
+  const statusOptions = [{ value: '', label: 'All statuses' }, ...PROJECT_STATUSES.map((s) => ({ value: s, label: projectStatusMeta[s]?.label ?? PROJECT_STATUS_LABELS[s] }))]
   // Managers who have left but still hold projects are listed too — otherwise the
   // one filter that would find the projects needing a new owner can't name them.
   const departedManagers = useMemo(() => {
@@ -125,9 +129,9 @@ export default function ProjectsPage() {
   ]
 
   return (
-    <div className={cn('flex flex-col flex-1', view === 'kanban' && 'min-h-0')}>
+    <div className="flex flex-col flex-1">
       <Topbar title="Projects" />
-      <div className={cn('p-4 lg:px-8 lg:py-7 flex flex-col gap-5', view === 'kanban' && 'min-h-0 flex-1')}>
+      <div className="p-4 lg:px-8 lg:py-7 flex flex-col gap-5">
         <div className="flex flex-wrap items-center gap-3">
           <p className="font-ui text-[13px] text-text-3">{shown.length} of {projects.length} project{projects.length !== 1 ? 's' : ''}</p>
           {canManageProjects && (
@@ -193,9 +197,8 @@ export default function ProjectsPage() {
           <EmptyState onNew={() => setShowNew(true)} canCreate={canManageProjects} />
         ) : (
           <>
-            {view === 'cards' && <CardsView projects={shown} onOpen={(id) => navigate(`/admin/projects/${id}`)} onDelete={setPendingDelete} canDelete={canManageProjects} />}
-            {view === 'list' && <ListView projects={shown} onOpen={(id) => navigate(`/admin/projects/${id}`)} onDelete={setPendingDelete} canDelete={canManageProjects} />}
-            {view === 'kanban' && <KanbanView projects={shown} onOpen={(id) => navigate(`/admin/projects/${id}`)} />}
+            {view === 'cards' && <CardsView projects={shown} onOpen={(id) => navigate(`/projects/${id}`)} onDelete={setPendingDelete} canDelete={canManageProjects} />}
+            {view === 'list' && <ListView projects={shown} onOpen={(id) => navigate(`/projects/${id}`)} onDelete={setPendingDelete} canDelete={canManageProjects} />}
           </>
         )}
       </div>
@@ -434,91 +437,3 @@ function DeleteImpactMessage({
 }
 
 // ── Kanban view ──────────────────────────────────────────────────────
-function KanbanView({ projects, onOpen }: { projects: ProjectListItem[]; onOpen: (id: string) => void }) {
-  const toast = useToast()
-  const updateStatus = useUpdateProjectStatus()
-  const statusMeta = useStatusOverrides('project')
-  const [dragId, setDragId] = useState<string | null>(null)
-  const [dragOver, setDragOver] = useState<string | null>(null)
-
-  const byStatus = (status: AppProjectStatus) => projects.filter((p) => p.status === status)
-
-  const handleDrop = (status: ProjectStatus) => {
-    setDragOver(null)
-    const id = dragId
-    setDragId(null)
-    if (!id) return
-    const project = projects.find((p) => p.id === id)
-    if (!project || project.status === status) return
-    updateStatus.mutate({ id, status }, {
-      onError: (e) => toast(e instanceof Error ? e.message : 'Could not move project', 'error'),
-    })
-  }
-
-  return (
-    <div className="flex min-h-80 flex-1 snap-x snap-mandatory gap-2.5 overflow-x-auto pb-2 lg:snap-none lg:gap-3">
-      {KANBAN_COLUMNS.map((status) => {
-        const items = byStatus(status)
-        return (
-          <div
-            key={status}
-            onDragOver={(e) => { e.preventDefault(); setDragOver(status) }}
-            onDragLeave={() => setDragOver((s) => (s === status ? null : s))}
-            onDrop={() => handleDrop(status)}
-            className={cn(
-              'flex h-full snap-start flex-col rounded-lg border p-2.5 transition-colors',
-              'w-[86vw] shrink-0 sm:w-72 lg:w-auto lg:min-w-[220px] lg:flex-1',
-              dragOver === status ? 'border-brand-red bg-brand-red/5' : 'border-border-default bg-surface-1/60',
-            )}
-          >
-            <div className="flex shrink-0 items-center justify-between px-1 pb-2">
-              <span className="font-ui font-semibold text-[12px] text-text-2">
-                {statusMeta[status]?.label ?? PROJECT_STATUS_LABELS[status]}
-              </span>
-              <span className="font-mono text-[10.5px] text-text-4">{items.length}</span>
-            </div>
-            <div className="min-h-2 flex-1 space-y-2 overflow-y-auto overscroll-contain">
-              {items.map((p) => {
-                const overdue = !!p.deadline && isOverdue(p.deadline) && p.status !== 'completed'
-                return (
-                  <div
-                    key={p.id}
-                    draggable
-                    onDragStart={() => setDragId(p.id)}
-                    onDragEnd={() => { setDragId(null); setDragOver(null) }}
-                    onClick={() => onOpen(p.id)}
-                    className={cn(
-                      'bg-surface-1 border border-border-default rounded-md p-3 cursor-pointer hover:border-border-strong transition-colors',
-                      dragId === p.id && 'opacity-50',
-                    )}
-                  >
-                    <div className="mb-2 flex items-center gap-2">
-                      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
-                        {p.services.map((s) => <ServiceChip key={s.id} service={s.slug} showDot={false} />)}
-                      </div>
-                      {overdue && (
-                        <span className="inline-flex shrink-0 items-center gap-1 rounded-sm border border-error/30 bg-error/10 px-2 py-0.5 font-mono text-[9.5px] font-semibold uppercase tracking-wider text-error">
-                          <AlertCircle size={10} className="shrink-0" /> Overdue
-                        </span>
-                      )}
-                    </div>
-                    <p className="font-ui font-semibold text-body-sm/snug text-text-1">{p.name}</p>
-                    {p.client?.name && <p className="font-ui text-[11.5px] text-text-3 mt-0.5">{p.client.name}</p>}
-                    <ProgressBar value={p.progress} className="mt-2.5" />
-                    <div className="flex items-center justify-between mt-2.5">
-                      {p.members.length > 0
-                        ? <AvatarGroup users={p.members.map((m) => ({ id: m.id, name: m.name, avatarUrl: m.avatar_url ?? undefined }))} max={3} size="xs" linkToProfile />
-                        : <span />}
-                      <span className="font-mono text-[10.5px] text-text-4">{p.progress}%</span>
-                    </div>
-                  </div>
-                )
-              })}
-              {items.length === 0 && <p className="text-center text-[11.5px] text-text-4 py-4">Empty</p>}
-            </div>
-          </div>
-        )
-      })}
-    </div>
-  )
-}
