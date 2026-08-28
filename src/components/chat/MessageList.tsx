@@ -3,7 +3,6 @@ import { MessageSquare } from 'lucide-react'
 import { Skeleton } from '../ui/Skeleton'
 import { MessageBubble } from './MessageBubble'
 import { startsNewGroup, isOptimistic, mentionsMe } from './chatUtils'
-import { Avatar } from '../ui/Avatar'
 import { groupReactions } from '../../hooks/useMessageReactions'
 import type { MessageWithAuthor } from '../../api/messages'
 import type { MessageAttachmentRow } from '../../api/messageAttachments'
@@ -23,8 +22,10 @@ interface MessageListProps {
   onEdit: (message: MessageWithAuthor) => void
   onToggleReaction: (messageId: string, emoji: string) => void
   onReply: (message: MessageWithAuthor) => void
-  /** Everyone who has read up to a given message, for the seen-by line. */
+  /** Everyone other than you who has read up to a given message. */
   readersOf: (message: MessageWithAuthor) => { id: string; name: string; avatar_url: string | null }[]
+  /** How many people other than you are in the conversation. */
+  audienceSize: number
   /** My id, my teams' ids and the @everyone sentinel: what makes a message mine. */
   myMentionIds: ReadonlySet<string>
 }
@@ -32,7 +33,7 @@ interface MessageListProps {
 export function MessageList({
   messages, isLoading, hasNextPage, isFetchingNextPage, onLoadOlder,
   canModerate, myProfileId, attachments, reactions, onDelete, onEdit, onToggleReaction, onReply, readersOf,
-  myMentionIds,
+  audienceSize, myMentionIds,
 }: MessageListProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -54,10 +55,6 @@ export function MessageList({
 
   // The newest message of mine that has actually been sent, which is the only
   // one a read receipt is meaningful for.
-  const lastOwn = useMemo(
-    () => [...messages].reverse().find((m) => m.author_id === myProfileId && !m.deleted_at && !isOptimistic(m.id)),
-    [messages, myProfileId],
-  )
 
   // Bucket attachments by message once, rather than filtering per bubble.
   const attachmentsByMessage = useMemo(() => {
@@ -129,40 +126,12 @@ export function MessageList({
           onReply={onReply}
           onJumpTo={jumpTo}
           tagsMe={mentionsMe(m, myMentionIds)}
+          receipt={m.author_id === myProfileId && !isOptimistic(m.id) ? readersOf(m) : null}
+          audience={audienceSize}
         />
       ))}
 
-      {/* Seen-by, once, under the last message you sent. Repeating it on every
-          message of yours would be a wall of avatars saying the same thing. */}
-      {lastOwn && (
-        <SeenBy readers={readersOf(lastOwn)} />
-      )}
       <div ref={bottomRef} />
-    </div>
-  )
-}
-
-/**
- * "Seen by" under your last message.
- *
- * Read state is derived, not stored: channel_members.last_read_at already says
- * how far each person has read, so this needs no new writes and no per-message
- * receipt rows. Nothing is shown when nobody has caught up yet, rather than an
- * empty row implying they have.
- */
-function SeenBy({ readers }: { readers: { id: string; name: string; avatar_url: string | null }[] }) {
-  if (readers.length === 0) return null
-
-  return (
-    <div className="flex items-center justify-end gap-1.5 px-4 pt-1 pb-2">
-      <span className="font-mono text-[10px] text-text-4">
-        Seen by {readers.length === 1 ? readers[0].name : readers.length}
-      </span>
-      <span className="flex -space-x-1.5">
-        {readers.slice(0, 5).map((r) => (
-          <Avatar key={r.id} name={r.name} src={r.avatar_url ?? undefined} size="xs" personId={r.id} />
-        ))}
-      </span>
     </div>
   )
 }

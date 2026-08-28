@@ -5,6 +5,7 @@ import { MESSAGE_KEYS } from '../useMessages'
 import { CHAT_UNREAD_KEYS } from '../useChatUnreadCount'
 import { MESSAGE_ATTACHMENT_KEYS } from '../useMessageAttachments'
 import { REACTION_KEYS } from '../useMessageReactions'
+import { CHANNEL_MEMBER_KEYS } from '../useChannelMembers'
 
 /**
  * Live thread for the open conversation. The sender receives this event for
@@ -30,6 +31,13 @@ export function useRealtimeChatMessages(channelId: string | undefined) {
       })
       .on('postgres_changes', { event: '*', table: 'message_reactions', ...scope }, () => {
         queryClient.invalidateQueries({ queryKey: REACTION_KEYS.byChannel(channelId) })
+      })
+      // Read receipts. Every member's last_read_at lives here, so somebody
+      // opening the conversation is what turns the sender's ticks blue. Without
+      // this the members query would sit on its 30-second staleTime and the
+      // ticks would only catch up on a refresh, which reads as "it doesn't work".
+      .on('postgres_changes', { event: 'UPDATE', table: 'channel_members', ...scope }, () => {
+        queryClient.invalidateQueries({ queryKey: CHANNEL_MEMBER_KEYS.byChannel(channelId) })
       })
       .subscribe()
 

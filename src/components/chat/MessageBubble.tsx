@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { Trash2, Pencil, SmilePlus, Reply, CornerUpLeft } from 'lucide-react'
+import { Trash2, Pencil, SmilePlus, Reply, CornerUpLeft, Check, CheckCheck } from 'lucide-react'
 import { Avatar } from '../ui/Avatar'
 import { PersonLink } from '../shared/PersonLink'
 import { RichRenderer } from '../editor/RichRenderer'
@@ -29,6 +29,13 @@ interface MessageBubbleProps {
   onJumpTo: (messageId: string) => void
   /** Tags me by name, tags a team I am on, or carries an @everyone. */
   tagsMe: boolean
+  /**
+   * Who else has read this. Null on other people's messages and on one still
+   * sending, which is what decides whether ticks are drawn at all.
+   */
+  receipt: { id: string; name: string }[] | null
+  /** People in the conversation other than you, so "everyone" can be tested. */
+  audience: number
 }
 
 /**
@@ -58,7 +65,7 @@ function timeOf(iso: string): string {
 
 export function MessageBubble({
   message, startsGroup, canModerate, myProfileId, attachments, reactions, onDelete, onEdit, onToggleReaction,
-  onReply, onJumpTo, tagsMe,
+  onReply, onJumpTo, tagsMe, receipt, audience,
 }: MessageBubbleProps) {
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [reactOpen, setReactOpen] = useState(false)
@@ -163,6 +170,8 @@ export function MessageBubble({
 
         {attachments.map((a) => <MessageAttachment key={a.id} attachment={a} />)}
 
+        {receipt && <ReadTicks readers={receipt} audience={audience} />}
+
         <ReactionBar groups={reactions} onToggle={(emoji) => onToggleReaction(message.id, emoji)} />
       </div>
 
@@ -221,5 +230,46 @@ export function MessageBubble({
         danger
       />
     </div>
+  )
+}
+
+/**
+ * Read ticks, the way a messaging app does them.
+ *
+ * One grey tick means sent and nobody has caught up. Two grey means some of the
+ * room has, two coloured means all of it has. In a direct message there is only
+ * one other person, so it goes straight from one tick to two coloured, which is
+ * the behaviour people already expect.
+ *
+ * Drawn only on your own messages: ticks on somebody else's message would be
+ * telling them something they cannot act on, and would double the noise in a
+ * busy channel.
+ *
+ * The names sit in the title rather than on screen. "Seen by" spelled out under
+ * every message is a wall of text in a channel, and in a DM it says what one
+ * blue tick already said.
+ */
+function ReadTicks({ readers, audience }: { readers: { id: string; name: string }[]; audience: number }) {
+  const seen = readers.length
+  const all = audience > 0 && seen >= audience
+  const label = seen === 0
+    ? 'Sent'
+    : all
+      ? (audience === 1 ? `Read by ${readers[0].name}` : 'Read by everyone')
+      : `Read by ${readers.map((r) => r.name).join(', ')}`
+
+  return (
+    <span
+      title={label}
+      aria-label={label}
+      className={cn(
+        'mt-0.5 inline-flex items-center leading-none',
+        all ? 'text-info' : 'text-text-4',
+      )}
+    >
+      {seen === 0
+        ? <Check size={13} />
+        : <CheckCheck size={13} />}
+    </span>
   )
 }

@@ -31,11 +31,32 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: '1.23.2',
+    date: '2026-08-30',
+    title: 'Read ticks that actually tick',
+    entries: [
+      {
+        kind: 'improved',
+        text: 'Read receipts are now a tick on your own messages rather than a line of text under the last one. One grey tick is sent, two grey means some of the room has read it, two coloured means everybody has. Hover to see who.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Ticks now update the moment somebody reads, instead of waiting for the page to be reloaded. Nothing was listening for other people opening the conversation.',
+      },
+      {
+        kind: 'fixed',
+        text: 'A message could briefly claim it had been seen by the person who sent it. It now shows nothing at all until the portal knows who you are.',
+      },
+      {
+        kind: 'improved',
+        text: 'Channels get receipts too, and they read honestly: two grey ticks while some of the room has caught up, coloured only once everyone has.',
+      },
+    ],
+  },
+  {
     version: '1.23.1',
     date: '2026-08-30',
     title: 'Attaching files to a task',
-    highlight:
-      'Some file types were accepted by the upload box and then refused once the upload finished. They work now, and photos from an iPhone are among them.',
     entries: [
       {
         kind: 'fixed',

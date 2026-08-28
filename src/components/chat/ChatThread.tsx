@@ -32,6 +32,8 @@ interface ChatThreadProps {
 export function ChatThread({ channelId, hideHeader }: ChatThreadProps) {
   const toast = useToast()
   const { profile } = useAuthContext()
+  // Read out once: several memos below depend on the id, not the whole profile.
+  const myId = profile?.id
   const { data: channel } = useChannel(channelId)
   const { data: members = [] } = useChannelMembers(channelId)
   const canModerate = useCanAccess('can_administer_channels')
@@ -63,12 +65,27 @@ export function ChatThread({ channelId, hideHeader }: ChatThreadProps) {
    * timestamp already carries. You are excluded, since your own message being
    * seen by you is not news.
    */
-  const readersOf = useMemo(() => (message: MessageWithAuthor) =>
-    members.filter((m) =>
-      m.id !== profile?.id
-      && m.last_read_at
-      && new Date(m.last_read_at).getTime() >= new Date(message.created_at).getTime()),
-  [members, profile?.id])
+  /**
+   * Everyone except me, with how far they have read, as a timestamp.
+   *
+   * The memo holds data rather than a closure: memoising a returned function is
+   * something the React Compiler cannot preserve, and it bails out of optimising
+   * the whole component when it sees one.
+   */
+  const otherReaders = useMemo(
+    () => (myId
+      ? members
+          .filter((m) => m.id !== myId && m.last_read_at)
+          .map((m) => ({ id: m.id, name: m.name, avatar_url: m.avatar_url, at: new Date(m.last_read_at).getTime() }))
+      : []),
+    [members, myId],
+  )
+
+  // Not memoised: it closes over `otherReaders`, which is.
+  const readersOf = (message: MessageWithAuthor) => {
+    const sentAt = new Date(message.created_at).getTime()
+    return otherReaders.filter((r) => r.at >= sentAt)
+  }
 
   const mentionItems = useMemo(
     () => members.map((m) => ({ id: m.id, name: m.name, avatar_url: m.avatar_url })),
@@ -93,9 +110,6 @@ export function ChatThread({ channelId, hideHeader }: ChatThreadProps) {
    * the thread can pick out the ones that were aimed at me.
    */
   const { data: memberships = [] } = useTeamMembers()
-  // Read out once so the memo depends on the id rather than the whole profile,
-  // which is what the React Compiler needs to keep the memoization.
-  const myId = profile?.id
   const myMentionIds = useMemo(() => {
     const ids = new Set<string>([EVERYONE_MENTION_ID])
     if (myId) ids.add(myId)
@@ -198,6 +212,7 @@ export function ChatThread({ channelId, hideHeader }: ChatThreadProps) {
               toggleReaction({ messageId, emoji, channelId }, { onError: () => toast('Could not react to that message', 'error') })}
             onReply={setReplyTo}
             readersOf={readersOf}
+            audienceSize={members.filter((m) => m.id !== profile?.id).length}
             myMentionIds={myMentionIds}
           />
         </div>
