@@ -47,7 +47,11 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'added',
-        text: 'Channel headings can be renamed and deleted straight from the conversation list, and a channel can be moved between them from its settings. All three were possible in the data and had nowhere to be done from.',
+        text: 'Channel headings can be renamed and deleted straight from the conversation list, using the pencil and bin that appear on the heading. A channel is moved between headings from its own settings. All three were possible in the data and had nowhere to be done from.',
+      },
+      {
+        kind: 'improved',
+        text: 'A channel’s settings and its member list are now one dialog with three tabs: Overview for its name and heading, People for who is in it, and Permissions for who can post and who manages it. They used to be split between a panel and a separate popup, which is how the rename control went unfound.',
       },
       {
         kind: 'added',

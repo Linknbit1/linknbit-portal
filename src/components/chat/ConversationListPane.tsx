@@ -278,7 +278,10 @@ export function ConversationListPane({ activeChannelId, onSelect, onNewChannel, 
                       )}
 
                       {canAdminChannels && isRealCategory && renamingCategory !== section.id && (
-                        <span className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover/section:opacity-100 focus-within:opacity-100">
+                        // Faint rather than invisible: a control nobody knows
+                        // is there is a control nobody uses, and this is the
+                        // only way to rename a heading.
+                        <span className="flex shrink-0 items-center gap-0.5 opacity-40 transition-opacity group-hover/section:opacity-100 focus-within:opacity-100">
                           <button
                             onClick={() => setRenamingCategory(section.id)}
                             aria-label={`Rename ${section.label}`}

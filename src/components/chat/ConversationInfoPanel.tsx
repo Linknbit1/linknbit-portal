@@ -3,8 +3,7 @@ import { Hash, Users as UsersIcon, Settings2 } from 'lucide-react'
 import { Avatar } from '../ui/Avatar'
 import { Count } from '../ui/Count'
 import { ChannelFilesPanel } from './ChannelFilesPanel'
-import { ChannelMembersModal } from './ChannelMembersModal'
-import { ChannelSettingsPanel } from './ChannelSettingsPanel'
+import { ChannelSettingsModal } from './ChannelSettingsModal'
 import { UserProfileBody } from '../shared/UserProfileBody'
 import { PersonLink } from '../shared/PersonLink'
 import { ProfileRoles } from '../shared/ProfileRoles'
@@ -85,19 +84,20 @@ function MemberList({ channelId, kind, channel }: {
   const canManage = kind !== 'dm' && (canManageAll || iManage)
 
   return (
-    <>
-    {channel && <ChannelSettingsPanel channel={channel} canManage={canManage} />}
     <div className="shrink-0 border-b border-border-default">
       <div className="flex items-center gap-2 px-4 py-2.5">
         <UsersIcon size={13} className="text-text-3" />
         <h4 className="font-display text-[13px] font-bold text-text-1">Members</h4>
         <Count value={members.length} label={`${members.length} member${members.length === 1 ? '' : 's'}`} />
-        {canManage && (
+        {/* Open to everyone in a channel: the dialog is read-only without the
+            manager flag, and "who is in here" is not privileged. Hidden on a DM,
+            where there is nothing to settle. */}
+        {kind !== 'dm' && (
           <button
             onClick={() => setManageOpen(true)}
             className="ml-auto flex items-center gap-1 rounded-sm px-1.5 py-1 font-ui text-[11.5px] text-text-3 transition-colors hover:bg-surface-2 hover:text-text-1"
           >
-            <Settings2 size={12} /> Manage
+            <Settings2 size={12} /> Settings
           </button>
         )}
       </div>
@@ -147,13 +147,14 @@ function MemberList({ channelId, kind, channel }: {
         ))}
       </div>
 
-      <ChannelMembersModal
-        open={manageOpen}
-        onClose={() => setManageOpen(false)}
-        channelId={channelId}
-        canManage={canManage}
-      />
+      {channel && (
+        <ChannelSettingsModal
+          open={manageOpen}
+          onClose={() => setManageOpen(false)}
+          channel={channel}
+          canManage={canManage}
+        />
+      )}
     </div>
-    </>
   )
 }
