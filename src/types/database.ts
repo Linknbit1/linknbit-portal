@@ -2448,6 +2448,7 @@ export type Database = {
           deleted_at: string | null
           edited_at: string | null
           id: string
+          reply_to_id: string | null
         }
         Insert: {
           author_id?: string | null
@@ -2458,6 +2459,7 @@ export type Database = {
           deleted_at?: string | null
           edited_at?: string | null
           id?: string
+          reply_to_id?: string | null
         }
         Update: {
           author_id?: string | null
@@ -2468,6 +2470,7 @@ export type Database = {
           deleted_at?: string | null
           edited_at?: string | null
           id?: string
+          reply_to_id?: string | null
         }
         Relationships: [
           {
@@ -2482,6 +2485,13 @@ export type Database = {
             columns: ["channel_id"]
             isOneToOne: false
             referencedRelation: "channels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_reply_to_id_fkey"
+            columns: ["reply_to_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
             referencedColumns: ["id"]
           },
         ]
@@ -5127,6 +5137,10 @@ export type Database = {
       fn_mark_absent_today: { Args: never; Returns: undefined }
       fn_mark_channel_read: {
         Args: { p_channel_id: string }
+        Returns: undefined
+      }
+      fn_mark_channel_unread: {
+        Args: { p_before_message_id?: string; p_channel_id: string }
         Returns: undefined
       }
       fn_monthly_lp_reset: { Args: never; Returns: undefined }

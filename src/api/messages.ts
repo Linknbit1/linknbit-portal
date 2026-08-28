@@ -4,8 +4,18 @@ import type { Tables, Json } from '../types/database'
 
 export type MessageRow = Tables<'messages'>
 
+/** Just enough of the answered message to render a quote above the reply. */
+export interface RepliedMessage {
+  id: string
+  body_text: string
+  deleted_at: string | null
+  author: { id: string; name: string } | null
+}
+
 export interface MessageWithAuthor extends MessageRow {
   author: { id: string; name: string; avatar_url: string | null; role: string } | null
+  /** Null when this message answers nothing, or the original has been removed. */
+  reply_to: RepliedMessage | null
 }
 
 export interface CreateMessageArgs {
@@ -13,6 +23,8 @@ export interface CreateMessageArgs {
   bodyDoc: Json | null
   /** Rows already uploaded by the composer, linked to this message on send. */
   attachmentIds?: string[]
+  /** The message this answers, if any. */
+  replyToId?: string | null
 }
 
 export const MESSAGE_PAGE_SIZE = 50
@@ -20,11 +32,16 @@ export const MESSAGE_PAGE_SIZE = 50
 /**
  * One page of a channel's history, oldest-first for rendering. `before` pages
  * backwards through older messages as the user scrolls up.
+ *
+ * The select stays one literal, including the self-join for `reply_to`:
+ * supabase-js infers the row type from it, and a concatenation widens it to
+ * `string` and loses that inference. Only one level is followed, so a reply to
+ * a reply quotes what it answers rather than the whole chain.
  */
 export async function fetchMessages(channelId: string, before?: string): Promise<MessageWithAuthor[]> {
   let query = supabase
     .from('messages')
-    .select('*, author:profiles!messages_author_id_fkey(id,name,avatar_url,role)')
+    .select('*, author:profiles!messages_author_id_fkey(id,name,avatar_url,role), reply_to:messages!messages_reply_to_id_fkey(id,body_text,deleted_at,author:profiles!messages_author_id_fkey(id,name))')
     .eq('channel_id', channelId)
     .order('created_at', { ascending: false })
     .limit(MESSAGE_PAGE_SIZE)
@@ -33,7 +50,12 @@ export async function fetchMessages(channelId: string, before?: string): Promise
 
   const { data, error } = await query
   if (error) throw error
-  return data.reverse()
+  // A self-join has no unique constraint telling PostgREST it is to-one, so
+  // `reply_to` arrives as an array of at most one. Flattened here rather than at
+  // every render site.
+  return data
+    .map((m) => ({ ...m, reply_to: m.reply_to[0] ?? null }))
+    .reverse()
 }
 
 export async function createMessage(channelId: string, args: CreateMessageArgs): Promise<MessageRow> {
@@ -45,6 +67,7 @@ export async function createMessage(channelId: string, args: CreateMessageArgs):
       body_text: args.bodyText,
       body_doc: args.bodyDoc,
       author_id: auth.user?.id ?? null,
+      reply_to_id: args.replyToId ?? null,
     })
     .select()
     .single()
@@ -120,5 +143,17 @@ export async function softDeleteMessage(id: string): Promise<void> {
 
 export async function markChannelRead(channelId: string): Promise<void> {
   const { error } = await supabase.rpc('fn_mark_channel_read', { p_channel_id: channelId })
+  if (error) throw error
+}
+
+/**
+ * Winds the caller's read marker back so the conversation reads as unread again.
+ * With no anchor it starts from the newest message.
+ */
+export async function markChannelUnread(channelId: string, beforeMessageId?: string): Promise<void> {
+  const { error } = await supabase.rpc('fn_mark_channel_unread', {
+    p_channel_id: channelId,
+    p_before_message_id: beforeMessageId ?? undefined,
+  })
   if (error) throw error
 }

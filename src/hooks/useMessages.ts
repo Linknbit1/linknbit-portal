@@ -1,7 +1,8 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query'
 import {
-  fetchMessages, createMessage, updateMessage, softDeleteMessage, markChannelRead, searchMessages,
-  MESSAGE_PAGE_SIZE, type MessageWithAuthor, type CreateMessageArgs,
+  fetchMessages, createMessage, updateMessage, softDeleteMessage, markChannelRead, markChannelUnread,
+  searchMessages, MESSAGE_PAGE_SIZE,
+  type MessageWithAuthor, type CreateMessageArgs, type RepliedMessage,
 } from '../api/messages'
 import { CHANNEL_KEYS } from './useChannels'
 import { CHAT_UNREAD_KEYS } from './useChatUnreadCount'
@@ -20,6 +21,8 @@ export interface SendMessageArgs extends CreateMessageArgs {
   channelId: string
   /** Used for the optimistic bubble only; the server sets the real author. */
   author: { id: string; name: string; avatar_url: string | null; role: string } | null
+  /** The quoted message, for the optimistic bubble. The server reads replyToId. */
+  replyTo?: RepliedMessage | null
 }
 
 /**
@@ -46,8 +49,8 @@ export function useMessages(channelId: string | undefined) {
 export function useSendMessage() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ channelId, bodyText, bodyDoc, attachmentIds }: SendMessageArgs) =>
-      createMessage(channelId, { bodyText, bodyDoc, attachmentIds }),
+    mutationFn: ({ channelId, bodyText, bodyDoc, attachmentIds, replyToId }: SendMessageArgs) =>
+      createMessage(channelId, { bodyText, bodyDoc, attachmentIds, replyToId }),
 
     onMutate: async (v) => {
       const key = MESSAGE_KEYS.byChannel(v.channelId)
@@ -64,6 +67,8 @@ export function useSendMessage() {
         deleted_at: null,
         created_at: new Date().toISOString(),
         author: v.author,
+        reply_to_id: v.replyToId ?? null,
+        reply_to: v.replyTo ?? null,
       }
 
       qc.setQueryData<MessagePages>(key, (old) => {
@@ -131,6 +136,24 @@ export function useMarkChannelRead() {
   return useMutation({
     mutationFn: (channelId: string) => markChannelRead(channelId),
     onSuccess: () => { qc.invalidateQueries({ queryKey: CHAT_UNREAD_KEYS.all }) },
+  })
+}
+
+/**
+ * Puts a conversation back to unread.
+ *
+ * The channel list is invalidated as well as the unread counts: the row itself
+ * changes appearance, not just the badge beside it.
+ */
+export function useMarkChannelUnread() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ channelId, beforeMessageId }: { channelId: string; beforeMessageId?: string }) =>
+      markChannelUnread(channelId, beforeMessageId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: CHAT_UNREAD_KEYS.all })
+      qc.invalidateQueries({ queryKey: CHANNEL_KEYS.all })
+    },
   })
 }
 
