@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase'
-import { linkAttachmentsToMessage, purgeMessageAttachments } from './messageAttachments'
+import { linkAttachmentsToMessage } from './messageAttachments'
 import type { Tables, Json } from '../types/database'
 
 export type MessageRow = Tables<'messages'>
@@ -100,13 +100,17 @@ export async function updateMessage(id: string, args: CreateMessageArgs): Promis
 }
 
 /**
- * Soft delete — the row stays so the thread keeps its shape ("message deleted"),
- * but any attached files are removed outright, so deleting a message also clears
- * it from the conversation's Media/Links/Files panel.
+ * Soft delete: the row stays so the thread keeps its shape ("message deleted"),
+ * while its files go for good, which also clears them from the conversation's
+ * Media/Links/Files panel.
+ *
+ * The files used to be purged here, before this update. That put them in front
+ * of the thing that might fail, so a rejected delete left the message standing
+ * with its attachments already destroyed. trg_messages_purge_attachments now
+ * does it inside the same transaction as the stamp, so the two cannot disagree,
+ * and it also covers deletions this function is not involved in.
  */
 export async function softDeleteMessage(id: string): Promise<void> {
-  await purgeMessageAttachments(id)
-
   const { error } = await supabase
     .from('messages')
     .update({ deleted_at: new Date().toISOString() })

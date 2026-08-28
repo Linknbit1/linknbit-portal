@@ -133,7 +133,13 @@ export async function toggleAttachmentVisibility(id: string, clientVisible: bool
   return data
 }
 
-// Link rows have no storage object, so only remove from the bucket for files.
+/**
+ * Link rows (a Google Doc) have no storage object, so only files touch the bucket.
+ *
+ * As in chat, the bucket call is the fast path rather than the guarantee:
+ * trg_attachments_queue_cleanup queues the file when the row goes, whatever
+ * removed it, including a cascade from the project or task.
+ */
 export async function deleteAttachment(id: string, storagePath: string | null): Promise<void> {
   const { error } = await supabase.from('attachments').delete().eq('id', id)
   if (error) throw error

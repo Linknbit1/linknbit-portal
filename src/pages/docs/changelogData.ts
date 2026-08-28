@@ -31,11 +31,30 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: '1.18.0',
+    date: '2026-08-29',
+    title: 'Files that go when their owner does',
+    highlight:
+      'Deleting a message, task, project or channel now takes its files with it, and a project that somebody logged a standup against can be deleted at all.',
+    entries: [
+      {
+        kind: 'fixed',
+        text: 'Deleting a project failed outright if anyone had ever written a standup against it. The entry lost its subject as the project went and the whole delete was refused. Those entries now keep the project name they were written with, and the delete goes through.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Files no longer outlive what they were attached to. Deleting a task, project, lead, message or whole conversation used to remove the record and leave the file itself sitting in storage for ever. Every one of those paths now clears the file too.',
+      },
+      {
+        kind: 'improved',
+        text: 'Taking a file back out of the chat box while it is still uploading now actually cancels it, instead of letting it finish quietly into nothing. The same goes for files staged against an edit you then abandon.',
+      },
+    ],
+  },
+  {
     version: '1.17.1',
     date: '2026-08-29',
     title: 'Shorter addresses, and a fix for creating tasks',
-    highlight:
-      'Projects, Tasks, Clients and Reports have dropped /admin from their addresses, and creating or editing a task works again.',
     entries: [
       {
         kind: 'fixed',

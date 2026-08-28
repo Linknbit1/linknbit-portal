@@ -136,33 +136,18 @@ export async function linkAttachmentsToMessage(attachmentIds: string[], messageI
   if (error) throw error
 }
 
+/**
+ * Removes one attachment now.
+ *
+ * The bucket call is the fast path, not the guarantee: trg_message_attachments_queue_cleanup
+ * queues the same file the moment the row goes, so it is removed within the hour
+ * even if this tab dies between the two statements. Deleting a whole message
+ * needs nothing here at all, the database does it.
+ */
 export async function deleteMessageAttachment(id: string, storagePath: string | null): Promise<void> {
   const { error } = await supabase.from('message_attachments').delete().eq('id', id)
   if (error) throw error
   if (storagePath) await supabase.storage.from(BUCKET).remove([storagePath])
-}
-
-/**
- * Removes every file belonging to a message, from both the table and storage.
- * Called when a message is deleted so its files also disappear from the
- * Media/Links/Files panel instead of lingering as orphans.
- */
-export async function purgeMessageAttachments(messageId: string): Promise<void> {
-  const { data, error } = await supabase
-    .from('message_attachments')
-    .select('id, storage_path')
-    .eq('message_id', messageId)
-  if (error) throw error
-  if (data.length === 0) return
-
-  const { error: deleteError } = await supabase
-    .from('message_attachments')
-    .delete()
-    .eq('message_id', messageId)
-  if (deleteError) throw deleteError
-
-  const paths = data.flatMap((a) => (a.storage_path ? [a.storage_path] : []))
-  if (paths.length > 0) await supabase.storage.from(BUCKET).remove(paths)
 }
 
 /** Short-lived signed URL — chat files are never public. */

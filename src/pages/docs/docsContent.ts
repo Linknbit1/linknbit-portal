@@ -325,7 +325,11 @@ export const DOC_CHAPTERS: DocChapter[] = [
             ],
           },
         ],
-        notes: ['Some channels are private; you will only see them if you have been added.'],
+        notes: [
+          'Some channels are private; you will only see them if you have been added.',
+          'Deleting a message deletes the files attached to it, and they leave the Files panel with it. The message itself stays as a note that something was removed.',
+          'Removing a file from the message box before you send cancels it, even mid-upload.',
+        ],
       },
     ],
   },
@@ -376,6 +380,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
         ],
         notes: [
           'Files and tasks carry a client-visible switch. When it is off, the client portal never shows the item.',
+          'Deleting a task or a project deletes its files as well. There is no archive to recover them from, so download anything worth keeping first.',
           'Watch a task to be notified about it even when it is not assigned to you.',
           'The description box is the same whether you are creating a task or editing one. Type / for formatting commands and @ to tag someone; a person tagged while the task is being created is notified once it is saved.',
         ],

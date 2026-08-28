@@ -8,7 +8,7 @@ import { useToast } from '../ui/toast-context'
 import { cn } from '../../lib/cn'
 import { docToPlainText, emptyDoc, isEmptyDoc, toDbDoc } from '../../lib/richText'
 import { validateChatAttachmentFile } from '../../lib/chatAttachment'
-import { useUploadChatAttachment } from '../../hooks/useMessageAttachments'
+import { useDeleteChatAttachment, useUploadChatAttachment } from '../../hooks/useMessageAttachments'
 import type { PersonMini } from '../../api/projects'
 import type { Json } from '../../types/database'
 import { randomUUID } from '../../lib/uuid'
@@ -44,6 +44,28 @@ export function MessageComposer({
   const fileInputRef = useRef<HTMLInputElement>(null)
   const editorRef = useRef<Editor | null>(null)
   const { mutate: upload } = useUploadChatAttachment()
+  const { mutate: dropAttachment } = useDeleteChatAttachment()
+  /**
+   * Chips taken off while their upload was still running.
+   *
+   * A ref, not state: the upload's onSuccess fires long after the render that
+   * removed the chip, and it needs to know what is true NOW rather than what was
+   * captured in its closure. Without this the file finishes uploading into a row
+   * nothing points at, and sits there until the nightly sweep notices.
+   */
+  const cancelledRef = useRef<Set<string>>(new Set())
+
+  /** Take a staged file back out, and take the upload with it. */
+  const removePending = (localId: string, attachmentId: string | null) => {
+    setPending((prev) => prev.filter((p) => p.localId !== localId))
+    if (attachmentId) {
+      // Already uploaded: the row and its file can go straight away.
+      dropAttachment({ id: attachmentId, storagePath: null, channelId })
+      return
+    }
+    // Still in flight: remembered, and cleaned up the moment it lands.
+    cancelledRef.current.add(localId)
+  }
 
   const hasUploading = pending.some((p) => p.attachmentId === null && !p.error)
 
@@ -65,8 +87,16 @@ export function MessageComposer({
             setPending((prev) => prev.map((p) => (p.localId === localId ? { ...p, progress } : p))),
         },
         {
-          onSuccess: (row) =>
-            setPending((prev) => prev.map((p) => (p.localId === localId ? { ...p, attachmentId: row.id, progress: 100 } : p))),
+          onSuccess: (row) => {
+            // Removed while this was uploading, so the row it just created has
+            // no owner. Delete it now rather than leaving it for the sweeper.
+            if (cancelledRef.current.has(localId)) {
+              cancelledRef.current.delete(localId)
+              dropAttachment({ id: row.id, storagePath: row.storage_path, channelId })
+              return
+            }
+            setPending((prev) => prev.map((p) => (p.localId === localId ? { ...p, attachmentId: row.id, progress: 100 } : p)))
+          },
           onError: () =>
             setPending((prev) => prev.map((p) => (p.localId === localId ? { ...p, error: 'Upload failed' } : p))),
         },
@@ -84,6 +114,11 @@ export function MessageComposer({
     setDoc(emptyDoc())
     setPending([])
     setEditorKey((k) => k + 1)
+  }
+
+  /** Everything staged but not sent, discarded properly rather than forgotten. */
+  const discardPending = () => {
+    for (const p of pending) removePending(p.localId, p.attachmentId)
   }
 
   const submit = () => {
@@ -116,7 +151,7 @@ export function MessageComposer({
         <div className="flex items-center gap-2 mb-1.5 px-1">
           <span className="font-mono text-[10px] uppercase tracking-wider text-text-4">Editing message</span>
           <button
-            onClick={() => { onCancelEdit?.(); reset() }}
+            onClick={() => { discardPending(); onCancelEdit?.(); reset() }}
             className="text-text-3 hover:text-text-1 transition-colors"
             aria-label="Cancel edit"
           >
@@ -128,7 +163,10 @@ export function MessageComposer({
       {!editing && (
         <ChatAttachmentChips
           pending={pending}
-          onRemove={(localId) => setPending((prev) => prev.filter((p) => p.localId !== localId))}
+          onRemove={(localId) => {
+            const chip = pending.find((p) => p.localId === localId)
+            removePending(localId, chip?.attachmentId ?? null)
+          }}
         />
       )}
 
