@@ -79,6 +79,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
           'Red count badges mark things waiting on you, unread chat, claimable quests, requests to approve.',
           'On a phone the same destinations live in the bottom bar and behind the “More” tab.',
           'The arrow beside the Linknbit logo opens this handbook and the changelog. A red dot on it means a release has shipped that you have not read; opening the changelog clears it.',
+          'Pinned conversations show who or what they are: a channel by its name behind a #, a direct message by the other person’s picture. Pinned projects and tasks show the project they belong to, with the full name beside the menu when it is too long to fit.',
         ],
       },
       {
@@ -327,6 +328,9 @@ export const DOC_CHAPTERS: DocChapter[] = [
         ],
         notes: [
           'Some channels are private; you will only see them if you have been added.',
+          'A channel has managers rather than an owner. Any number of people can hold it, so a channel never becomes unmanageable because somebody left. Managers rename it, move it between headings, choose who can post, and add or remove people.',
+          'A channel can be set so only its managers post, which turns it into an announcement channel. Everyone else still reads and reacts. Direct messages ignore this: both people always post.',
+          'Channel headings can be renamed and deleted from the conversation list. Deleting one only removes the heading, and its channels move to Uncategorised.',
           'Reply to a particular message with the arrow that appears when you hover it. Your reply carries a quote of theirs, and pressing the quote jumps to the original.',
           'A message that tags you, tags a team you are on, or carries an @everyone is banded in amber so you can find it scrolling back, not only when the notification arrives.',
           'Your own messages carry a tick. One grey tick means sent, two grey means some of the room has read it, two coloured means everybody has. Hover a tick to see who.',

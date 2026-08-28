@@ -31,6 +31,35 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: '1.24.0',
+    date: '2026-08-30',
+    title: 'Channels you can actually run',
+    highlight:
+      'Channels have managers instead of an owner, you can say who is allowed to post, headings can be renamed, and pinned items finally show what they are.',
+    entries: [
+      {
+        kind: 'improved',
+        text: 'Pinned items show what they actually are. A pinned channel shows its name behind a #, a pinned direct message shows the other person’s picture, and pinned projects and tasks carry their own icons. Names too long for the menu show in full beside it when you hover.',
+      },
+      {
+        kind: 'improved',
+        text: 'Pinned names follow renames. They are read live rather than frozen at the moment you pinned them, so a renamed channel or project no longer sits in your menu under a name nobody uses.',
+      },
+      {
+        kind: 'added',
+        text: 'Channel headings can be renamed and deleted straight from the conversation list, and a channel can be moved between them from its settings. All three were possible in the data and had nowhere to be done from.',
+      },
+      {
+        kind: 'added',
+        text: 'A channel can be set so only its managers post, turning it into an announcement channel. Everybody else still reads and reacts. Direct messages are unaffected.',
+      },
+      {
+        kind: 'improved',
+        text: 'Channels no longer have an owner. Any number of people can be managers instead, so a channel does not become unmanageable when one person leaves, and nothing implies somebody owns a conversation. Everyone who was an owner is now a manager.',
+      },
+    ],
+  },
+  {
     version: '1.23.2',
     date: '2026-08-30',
     title: 'Read ticks that actually tick',

@@ -128,12 +128,15 @@ export function ChannelMembersModal({ open, onClose, channelId, canManage }: Cha
                   {m.added_via_role && ' · via role'}
                 </span>
               </span>
-              {m.role_in_channel === 'owner' && (
+              {m.can_manage && (
                 <span className={cn('px-2 py-0.5 rounded-xs font-mono text-[10px] uppercase tracking-wider', 'bg-surface-3 text-text-3')}>
-                  Owner
+                  Manager
                 </span>
               )}
-              {canManage && m.role_in_channel !== 'owner' && (
+              {/* A manager can be removed like anyone else. There is no last
+                  owner to protect any more, and a channel with no manager is
+                  still editable by anyone with can_manage_all_channels. */}
+              {canManage && (
                 <button
                   onClick={() => remove(m.id, m.name)}
                   aria-label={`Remove ${m.name}`}

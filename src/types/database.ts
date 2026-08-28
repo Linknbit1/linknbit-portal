@@ -1480,6 +1480,7 @@ export type Database = {
       channel_members: {
         Row: {
           added_via_role: string | null
+          can_manage: boolean
           channel_id: string
           created_at: string
           hidden_at: string | null
@@ -1490,6 +1491,7 @@ export type Database = {
         }
         Insert: {
           added_via_role?: string | null
+          can_manage?: boolean
           channel_id: string
           created_at?: string
           hidden_at?: string | null
@@ -1500,6 +1502,7 @@ export type Database = {
         }
         Update: {
           added_via_role?: string | null
+          can_manage?: boolean
           channel_id?: string
           created_at?: string
           hidden_at?: string | null
@@ -1572,6 +1575,7 @@ export type Database = {
           is_private: boolean
           kind: string
           name: string | null
+          post_policy: string
           updated_at: string
         }
         Insert: {
@@ -1584,6 +1588,7 @@ export type Database = {
           is_private?: boolean
           kind: string
           name?: string | null
+          post_policy?: string
           updated_at?: string
         }
         Update: {
@@ -1596,6 +1601,7 @@ export type Database = {
           is_private?: boolean
           kind?: string
           name?: string | null
+          post_policy?: string
           updated_at?: string
         }
         Relationships: [
@@ -5510,6 +5516,7 @@ export type Database = {
         Returns: string
       }
       has_feature: { Args: { p_key: string }; Returns: boolean }
+      is_channel_manager: { Args: { p_channel_id: string }; Returns: boolean }
       is_channel_member: { Args: { p_channel_id: string }; Returns: boolean }
       is_channel_owner: { Args: { p_channel_id: string }; Returns: boolean }
       is_internal: { Args: never; Returns: boolean }

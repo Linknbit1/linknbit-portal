@@ -13,6 +13,8 @@ export interface ChannelListItem extends ChannelRow {
   hidden_at?: string | null
   /** Whether the viewer silenced notifications for this conversation. */
   muted?: boolean
+  /** Whether the viewer may rename it, recategorise it and manage its people. */
+  can_manage?: boolean
 }
 
 export interface CreateChannelArgs {
@@ -36,7 +38,7 @@ export async function fetchChannels(): Promise<ChannelListItem[]> {
 
   const { data, error } = await supabase
     .from('channels')
-    .select('*, channel_members(profile_id,hidden_at,notifications_muted,profile:profiles(id,name,avatar_url)), messages(body_text,created_at)')
+    .select('*, channel_members(profile_id,hidden_at,notifications_muted,can_manage,profile:profiles(id,name,avatar_url)), messages(body_text,created_at)')
     .order('updated_at', { ascending: false })
     // A deleted message leaves a tombstone in the thread, but it must not be the
     // line that represents the conversation in the list -- the preview would go
@@ -61,6 +63,7 @@ export async function fetchChannels(): Promise<ChannelListItem[]> {
         last_message_preview: latest?.body_text ?? null,
         hidden_at: membership?.hidden_at ?? null,
         muted: membership?.notifications_muted ?? false,
+        can_manage: membership?.can_manage ?? false,
       }
     })
     // A conversation you removed from your list stays hidden until someone
@@ -75,16 +78,19 @@ export async function hideChannel(channelId: string): Promise<void> {
 }
 
 export async function fetchChannel(id: string): Promise<ChannelListItem | null> {
+  const { data: auth } = await supabase.auth.getUser()
   const { data, error } = await supabase
     .from('channels')
-    .select('*, channel_members(profile:profiles(id,name,avatar_url))')
+    .select('*, channel_members(profile_id,can_manage,profile:profiles(id,name,avatar_url))')
     .eq('id', id)
     .maybeSingle()
   if (error) throw error
   if (!data) return null
+  const mine = (data.channel_members ?? []).find((m) => m.profile_id === auth.user?.id)
   return {
     ...data,
     members: (data.channel_members ?? []).flatMap((m) => (m.profile ? [m.profile] : [])),
+    can_manage: mine?.can_manage ?? false,
     last_message_at: null,
     last_message_preview: null,
   }
@@ -133,5 +139,34 @@ export async function updateChannel(
 
 export async function deleteChannel(id: string): Promise<void> {
   const { error } = await supabase.from('channels').delete().eq('id', id)
+  if (error) throw error
+}
+
+/** Who may post in a channel. DMs ignore this: both people always can. */
+export async function setChannelPostPolicy(
+  channelId: string,
+  policy: 'everyone' | 'managers',
+): Promise<void> {
+  const { error } = await supabase.from('channels').update({ post_policy: policy }).eq('id', channelId)
+  if (error) throw error
+}
+
+/**
+ * Grants or removes the right to change a channel.
+ *
+ * A flag on the membership rather than a role called "owner": several people can
+ * hold it, losing one does not leave the channel unmanageable, and it does not
+ * imply anybody owns a conversation.
+ */
+export async function setChannelManager(
+  channelId: string,
+  profileId: string,
+  canManage: boolean,
+): Promise<void> {
+  const { error } = await supabase
+    .from('channel_members')
+    .update({ can_manage: canManage })
+    .eq('channel_id', channelId)
+    .eq('profile_id', profileId)
   if (error) throw error
 }

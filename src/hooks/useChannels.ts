@@ -1,9 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   fetchChannels, fetchChannel, createChannel, createDM, updateChannel, deleteChannel, hideChannel,
-  type CreateChannelArgs,
+  type CreateChannelArgs, setChannelPostPolicy, setChannelManager,
 } from '../api/channels'
 import { CHAT_UNREAD_KEYS } from './useChatUnreadCount'
+import { CHANNEL_MEMBER_KEYS } from './useChannelMembers'
 
 export const CHANNEL_KEYS = {
   all: ['channels'] as const,
@@ -71,5 +72,29 @@ export function useDeleteChannel() {
   return useMutation({
     mutationFn: (id: string) => deleteChannel(id),
     onSuccess: () => { qc.invalidateQueries({ queryKey: CHANNEL_KEYS.all }) },
+  })
+}
+
+/** Who may post. Invalidates the channel so the composer locks or unlocks. */
+export function useSetChannelPostPolicy() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ channelId, policy }: { channelId: string; policy: 'everyone' | 'managers' }) =>
+      setChannelPostPolicy(channelId, policy),
+    onSuccess: () => qc.invalidateQueries({ queryKey: CHANNEL_KEYS.all }),
+  })
+}
+
+/** Grants or removes the right to change a channel. */
+export function useSetChannelManager() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ channelId, profileId, canManage }: {
+      channelId: string; profileId: string; canManage: boolean
+    }) => setChannelManager(channelId, profileId, canManage),
+    onSuccess: (_r, v) => {
+      qc.invalidateQueries({ queryKey: CHANNEL_KEYS.all })
+      qc.invalidateQueries({ queryKey: CHANNEL_MEMBER_KEYS.byChannel(v.channelId) })
+    },
   })
 }

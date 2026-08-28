@@ -4,11 +4,15 @@ import { Avatar } from '../ui/Avatar'
 import { Count } from '../ui/Count'
 import { ChannelFilesPanel } from './ChannelFilesPanel'
 import { ChannelMembersModal } from './ChannelMembersModal'
+import { ChannelSettingsPanel } from './ChannelSettingsPanel'
 import { UserProfileBody } from '../shared/UserProfileBody'
 import { PersonLink } from '../shared/PersonLink'
 import { ProfileRoles } from '../shared/ProfileRoles'
 import { useChannelMembers } from '../../hooks/useChannelMembers'
 import { useCanAccess } from '../../hooks/useRoleFlags'
+import { useSetChannelManager } from '../../hooks/useChannels'
+import { useToast } from '../ui/toast-context'
+import { cn } from '../../lib/cn'
 import { useAuthContext } from '../../context/AuthContext'
 import type { ChannelListItem } from '../../api/channels'
 import type { PersonMini } from '../../api/projects'
@@ -53,7 +57,7 @@ export function ConversationInfoPanel({ channel, counterpart, title, memberCount
         )}
       </div>
 
-      {channel && <MemberList channelId={channel.id} kind={channel.kind} />}
+      {channel && <MemberList channelId={channel.id} kind={channel.kind} channel={channel} />}
 
       <div className="min-h-0 flex-1">
         {channel && <ChannelFilesPanel channelId={channel.id} />}
@@ -62,19 +66,27 @@ export function ConversationInfoPanel({ channel, counterpart, title, memberCount
   )
 }
 
-function MemberList({ channelId, kind }: { channelId: string; kind: ChannelListItem['kind'] }) {
+function MemberList({ channelId, kind, channel }: {
+  channelId: string
+  kind: ChannelListItem['kind']
+  channel: ChannelListItem | null
+}) {
   const { profile } = useAuthContext()
   const { data: members = [] } = useChannelMembers(channelId)
   const canManageAll = useCanAccess('can_manage_all_channels')
   const [manageOpen, setManageOpen] = useState(false)
+  const setManager = useSetChannelManager()
+  const toast = useToast()
 
-  const isOwner = members.some((m) => m.id === profile?.id && m.role_in_channel === 'owner')
+  const iManage = members.some((m) => m.id === profile?.id && m.can_manage)
   // A 1:1 DM is fixed at two people, enforced by trg_guard_dm_membership. The
   // button is hidden here so nobody is offered a dialog the database refuses —
   // the trigger is what actually holds the line, including against admins.
-  const canManage = kind !== 'dm' && (canManageAll || isOwner)
+  const canManage = kind !== 'dm' && (canManageAll || iManage)
 
   return (
+    <>
+    {channel && <ChannelSettingsPanel channel={channel} canManage={canManage} />}
     <div className="shrink-0 border-b border-border-default">
       <div className="flex items-center gap-2 px-4 py-2.5">
         <UsersIcon size={13} className="text-text-3" />
@@ -93,7 +105,7 @@ function MemberList({ channelId, kind }: { channelId: string; kind: ChannelListI
       {/* Capped so a large channel can't push the shared files off-screen. */}
       <div className="max-h-52 overflow-y-auto px-2 pb-2">
         {members.map((m) => (
-          <div key={m.id} className="flex items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-surface-2">
+          <div key={m.id} className="group/member flex items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-surface-2">
             <Avatar name={m.name} src={m.avatar_url ?? undefined} size="sm" personId={m.id} />
             <span className="min-w-0 flex-1">
               <PersonLink personId={m.id} className="block truncate font-ui text-[12.5px] text-text-1">
@@ -106,9 +118,29 @@ function MemberList({ channelId, kind }: { channelId: string; kind: ChannelListI
                 className="block truncate font-mono text-[10px] text-text-4"
               />
             </span>
-            {m.role_in_channel === 'owner' && (
+            {/* A manager, not an owner: several people can hold it, and losing
+                one does not leave the channel stuck. Clickable for anyone who
+                may manage, so handing it over is one press. */}
+            {canManage ? (
+              <button
+                type="button"
+                onClick={() => setManager.mutate(
+                  { channelId, profileId: m.id, canManage: !m.can_manage },
+                  { onError: (e) => toast(e instanceof Error ? e.message : 'Could not change that', 'error') },
+                )}
+                title={m.can_manage ? 'Remove as manager' : 'Make a manager'}
+                className={cn(
+                  'shrink-0 rounded-xs px-1.5 py-0.5 font-mono text-[9.5px] uppercase tracking-wider transition-colors',
+                  m.can_manage
+                    ? 'bg-brand-red/12 text-brand-red hover:bg-brand-red/20'
+                    : 'bg-surface-3 text-text-4 opacity-0 group-hover/member:opacity-100 hover:text-text-1',
+                )}
+              >
+                {m.can_manage ? 'Manager' : 'Make manager'}
+              </button>
+            ) : m.can_manage && (
               <span className="shrink-0 rounded-xs bg-surface-3 px-1.5 py-0.5 font-mono text-[9.5px] uppercase tracking-wider text-text-3">
-                Owner
+                Manager
               </span>
             )}
           </div>
@@ -122,5 +154,6 @@ function MemberList({ channelId, kind }: { channelId: string; kind: ChannelListI
         canManage={canManage}
       />
     </div>
+    </>
   )
 }

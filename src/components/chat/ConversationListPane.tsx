@@ -1,15 +1,16 @@
 import { useMemo, useRef, useState, type ReactNode } from 'react'
-import { Plus, Search, Hash, MessageSquarePlus, Loader2, ChevronRight } from 'lucide-react'
+import { Plus, Search, Hash, MessageSquarePlus, Loader2, ChevronRight, Pencil, Trash2 } from 'lucide-react'
 import { Input } from '../ui/Input'
 import { Skeleton } from '../ui/Skeleton'
 import { Popover } from '../ui/Popover'
+import { useToast } from '../ui/toast-context'
 import { ConversationListRow } from './ConversationListRow'
 import { cn } from '../../lib/cn'
 import { formatRelativeTime } from '../../lib/utils'
 import { channelTitle } from './chatUtils'
 import { Count } from '../ui/Count'
 import { useChannels } from '../../hooks/useChannels'
-import { useChannelCategories } from '../../hooks/useChannelCategories'
+import { useChannelCategories, useRenameChannelCategory, useDeleteChannelCategory } from '../../hooks/useChannelCategories'
 import { useMessageSearch } from '../../hooks/useMessages'
 import { useChatUnreadMap } from '../../hooks/useChatUnreadCount'
 import { useCanAccess } from '../../hooks/useRoleFlags'
@@ -116,6 +117,24 @@ export function ConversationListPane({ activeChannelId, onSelect, onNewChannel, 
   // Collapsed headings, by section id. Empty = everything open.
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
 
+  // Category editing. Renaming happens in place on the heading rather than in a
+  // dialog: it is one short string, and a modal for it is heavier than the edit.
+  const [renamingCategory, setRenamingCategory] = useState<string | null>(null)
+  const canAdminChannels = useCanAccess('can_administer_channels')
+  const renameCategory = useRenameChannelCategory()
+  const deleteCategory = useDeleteChannelCategory()
+  const toast = useToast()
+
+  const commitRename = (id: string, value: string) => {
+    setRenamingCategory(null)
+    const name = value.trim()
+    if (!name) return
+    renameCategory.mutate(
+      { id, name },
+      { onError: (e) => toast(e instanceof Error ? e.message : 'Could not rename', 'error') },
+    )
+  }
+
   return (
     <div className="flex flex-col h-full min-h-0 bg-surface-1 border-r border-border-default">
       <div className="p-3 flex flex-col gap-2.5 border-b border-border-default">
@@ -221,22 +240,68 @@ export function ConversationListPane({ activeChannelId, onSelect, onNewChannel, 
                   ? section.items.reduce((n, c) => n + (unreadMap.get(c.id) ?? 0), 0)
                   : 0
 
+                // The two synthetic headings are not rows in the table, so
+                // there is nothing to rename or delete on them.
+                const isRealCategory = section.id !== '__none__' && section.id !== '__dms__'
+
                 return (
-                  <div key={section.id}>
-                    <button
-                      onClick={() => setCollapsed((prev) => ({ ...prev, [section.id]: !prev[section.id] }))}
-                      aria-expanded={!isShut}
-                      className="flex w-full items-center gap-1 px-3 pb-1 pt-3 font-mono text-[10px] font-semibold uppercase tracking-wider text-text-4 transition-colors hover:text-text-2"
-                    >
-                      <ChevronRight size={11} className={cn('shrink-0 transition-transform', !isShut && 'rotate-90')} />
-                      <span className="min-w-0 truncate">{section.label}</span>
-                      <Count value={section.items.length} />
+                  <div key={section.id} className="group/section">
+                    <div className="flex items-center gap-1 px-3 pb-1 pt-3">
+                      <button
+                        onClick={() => setCollapsed((prev) => ({ ...prev, [section.id]: !prev[section.id] }))}
+                        aria-expanded={!isShut}
+                        className="flex min-w-0 flex-1 items-center gap-1 font-mono text-[10px] font-semibold uppercase tracking-wider text-text-4 transition-colors hover:text-text-2"
+                      >
+                        <ChevronRight size={11} className={cn('shrink-0 transition-transform', !isShut && 'rotate-90')} />
+                        {renamingCategory === section.id ? (
+                          <input
+                            autoFocus
+                            defaultValue={section.label}
+                            onClick={(e) => e.stopPropagation()}
+                            onBlur={(e) => commitRename(section.id, e.currentTarget.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') e.currentTarget.blur()
+                              if (e.key === 'Escape') setRenamingCategory(null)
+                            }}
+                            className="min-w-0 flex-1 rounded-xs border border-border-focus bg-surface-inset px-1 font-mono text-[10px] uppercase tracking-wider text-text-1 outline-none"
+                          />
+                        ) : (
+                          <span className="min-w-0 truncate">{section.label}</span>
+                        )}
+                        <Count value={section.items.length} />
+                      </button>
+
                       {hidden > 0 && (
-                        <span className="ml-auto rounded-sm bg-brand-red px-1.5 font-ui text-[9.5px] font-bold text-white">
+                        <span className="rounded-sm bg-brand-red px-1.5 font-ui text-[9.5px] font-bold text-white">
                           {hidden > 99 ? '99+' : hidden}
                         </span>
                       )}
-                    </button>
+
+                      {canAdminChannels && isRealCategory && renamingCategory !== section.id && (
+                        <span className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover/section:opacity-100 focus-within:opacity-100">
+                          <button
+                            onClick={() => setRenamingCategory(section.id)}
+                            aria-label={`Rename ${section.label}`}
+                            title="Rename"
+                            className="flex size-5 items-center justify-center rounded-sm text-text-4 hover:bg-surface-3 hover:text-text-1"
+                          >
+                            <Pencil size={11} />
+                          </button>
+                          <button
+                            onClick={() => deleteCategory.mutate(section.id, {
+                              onError: (e) => toast(e instanceof Error ? e.message : 'Could not delete', 'error'),
+                            })}
+                            aria-label={`Delete ${section.label}`}
+                            // Only the heading goes: category_id is ON DELETE SET
+                            // NULL, so its channels drop to Uncategorised.
+                            title="Delete this heading. Its channels move to Uncategorised."
+                            className="flex size-5 items-center justify-center rounded-sm text-text-4 hover:bg-error/10 hover:text-error"
+                          >
+                            <Trash2 size={11} />
+                          </button>
+                        </span>
+                      )}
+                    </div>
 
                     {!isShut && section.items.map((c) => (
                       <ConversationListRow

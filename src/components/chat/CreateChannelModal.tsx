@@ -144,7 +144,7 @@ export function CreateChannelModal({ open, onClose, onCreated }: CreateChannelMo
             options={people.filter((p) => p.id !== profile?.id).map((p) => ({ id: p.id, name: p.name, avatar_url: p.avatar_url }))}
             placeholder="Add people"
           />
-          <p className="font-ui text-[11.5px] text-text-4">You'll be added as the channel owner.</p>
+          <p className="font-ui text-[11.5px] text-text-4">You&rsquo;ll be added as a manager, so you can rename it and choose who posts.</p>
         </div>
 
         <div className="flex items-start gap-3 rounded-md border border-border-default bg-surface-2/40 p-3">
