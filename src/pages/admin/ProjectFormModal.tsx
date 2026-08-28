@@ -66,7 +66,7 @@ export function ProjectFormModal({ project, onClose }: ProjectFormModalProps) {
     ...(departedManager
       ? [{
           value: departedManager.id,
-          label: `${departedManager.name} — deactivated`,
+          label: `${departedManager.name}, deactivated`,
           avatar: { name: departedManager.name, url: departedManager.avatar_url },
           departed: true,
         }]
@@ -160,13 +160,13 @@ export function ProjectFormModal({ project, onClose }: ProjectFormModalProps) {
                     value={templateByService[serviceId] ?? ''}
                     onChange={(v) => setTemplateByService((prev) => ({ ...prev, [serviceId]: v }))}
                     options={[
-                      { value: '', label: 'Empty — no stages' },
+                      { value: '', label: 'Empty, no stages' },
                       ...forService.map((t) => ({
                         value: t.id,
                         label: `${t.name} · ${t.stages.length} stage${t.stages.length === 1 ? '' : 's'}`,
                       })),
                     ]}
-                    placeholder="Empty — no stages"
+                    placeholder="Empty, no stages"
                   />
                 </div>
               )
@@ -183,7 +183,7 @@ export function ProjectFormModal({ project, onClose }: ProjectFormModalProps) {
             <Select value={managerId} onChange={setManagerId} options={managerOptions} placeholder="Unassigned" />
             {departedManager && managerId === departedManager.id && (
               <p className="font-mono text-[10.5px] text-brand-red">
-                {departedManager.name} has left the company — pick a replacement.
+                {departedManager.name} has left the company, pick a replacement.
               </p>
             )}
           </div>

@@ -108,10 +108,6 @@ export default function TasksPage() {
       {/* On the board view the page stops scrolling and hands its remaining height
           to the board, so each column scrolls its own cards under a fixed header. */}
       <div className={cn('p-4 lg:px-8 lg:py-7 flex flex-col gap-5', view === 'board' && 'min-h-0 flex-1')}>
-        <div className="flex flex-wrap items-center gap-3">
-          <h2 className="font-display font-bold text-[22px] text-text-1">Tasks</h2>
-        </div>
-
         {/* Filters. Scope leads: it is the broadest of them, and it belongs with
             the other filters rather than in the Topbar — it only applies here. */}
         <div className="flex flex-wrap items-center gap-2">
@@ -183,7 +179,7 @@ export default function TasksPage() {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         {t.project_service?.service && <ServiceChip service={t.project_service.service.slug} showDot={false} />}
-                        <span className="font-ui text-[12px] text-text-3 truncate max-w-[140px]">{t.project?.name ?? '—'}</span>
+                        <span className="font-ui text-[12px] text-text-3 truncate max-w-[140px]">{t.project?.name ?? '-'}</span>
                       </div>
                     </td>
                     <td className="px-4 py-3"><PriorityChip priority={t.priority} /></td>
@@ -191,7 +187,7 @@ export default function TasksPage() {
                     <td className="px-4 py-3">
                       {t.due_date
                         ? <span className={cn('font-mono text-[12px]', isOverdue(t.due_date) && t.status !== 'completed' ? 'text-error' : 'text-text-3')}>{formatDate(t.due_date)}</span>
-                        : <span className="text-text-4 text-[12px]">—</span>}
+                        : <span className="text-text-4 text-[12px]">-</span>}
                     </td>
                     <td className="px-4 py-3">
                       {t.assignees.length === 1

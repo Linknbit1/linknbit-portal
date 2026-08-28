@@ -61,7 +61,7 @@ export function MeetingFormModal({ open, meeting, onClose }: MeetingFormModalPro
   const lead = leads.find((l) => l.id === leadId)
   const attendeesError = touched && !clientAttendees.trim() ? 'Who is joining from the client side?' : undefined
   const leadError = touched && !lead
-    ? (leads.length === 0 ? 'Add a lead to the pipeline first — a meeting is booked against one.' : 'Choose the lead this is about.')
+    ? (leads.length === 0 ? 'Add a lead to the pipeline first. A meeting is booked against one.' : 'Choose the lead this is about.')
     : undefined
 
   /** Phone and in-person meetings have nothing to link to. */
@@ -70,7 +70,7 @@ export function MeetingFormModal({ open, meeting, onClose }: MeetingFormModalPro
   // dial-in string, and refusing to save because it does not start with https
   // would be the tool arguing with the person who was on the call.
   const joinUrlError = joinUrl.trim() && !/^https?:\/\//i.test(joinUrl.trim())
-    ? 'That does not look like a link — it will be saved as typed.'
+    ? 'That does not look like a link. It will be saved as typed.'
     : undefined
 
   const submit = () => {
@@ -102,7 +102,7 @@ export function MeetingFormModal({ open, meeting, onClose }: MeetingFormModalPro
       meeting
         ? 'Meeting updated'
         : invited > 0
-          ? `Meeting scheduled — ${invited} colleague${invited === 1 ? '' : 's'} invited`
+          ? `Meeting scheduled, ${invited} colleague${invited === 1 ? '' : 's'} invited`
           : `Meeting scheduled with ${lead.company}`,
       'success',
     )
@@ -177,7 +177,7 @@ export function MeetingFormModal({ open, meeting, onClose }: MeetingFormModalPro
         </FormField>
         <FormField
           label="Invite colleagues"
-          hint="— anyone in the portal"
+          hint="- anyone in the portal"
           helper="They see it under Workspace → My Meetings"
         >
           <MultiSelectPeople
@@ -203,7 +203,7 @@ export function MeetingFormModal({ open, meeting, onClose }: MeetingFormModalPro
             offered but never required. */}
         <div className="sm:col-span-2">
           <label htmlFor="meeting-outcome" className="mb-1.5 block font-ui text-[12px] font-medium text-text-2">
-            Outcome <span className="text-text-4">— fill in after the meeting</span>
+            Outcome <span className="text-text-4">- fill in after the meeting</span>
           </label>
           <textarea
             id="meeting-outcome"

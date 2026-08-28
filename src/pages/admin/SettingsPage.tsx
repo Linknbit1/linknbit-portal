@@ -154,7 +154,7 @@ function ServicesPanel({ canManage }: { canManage: boolean }) {
       <h2 className="font-display font-bold text-[16px] text-text-1 mb-1">Services</h2>
       <p className="font-ui text-[13px] text-text-3 mb-5">
         Create, rename, recolour, or retire the service lines used across teams, people, and projects.
-        A service in use can't be deleted — reassign or deactivate it first.
+        A service in use can't be deleted, reassign or deactivate it first.
       </p>
 
       <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
@@ -288,7 +288,7 @@ function StatusesPanel({ canManage }: { canManage: boolean }) {
     <div>
       <h2 className="mb-1 font-display text-[16px] font-bold text-text-1">Statuses</h2>
       <p className="mb-5 font-ui text-[13px] text-text-3">
-        Rename and recolour the statuses used on task and project boards. The set itself is fixed —
+        Rename and recolour the statuses used on task and project boards. The set itself is fixed -
         automations like project progress and completion alerts are keyed to these, so statuses can
         be renamed but not added or removed. Reset puts one back to its built-in name and colour.
       </p>
@@ -456,7 +456,7 @@ function PermissionsPanel({ canEdit }: { canEdit: boolean }) {
         What each role can do. A person may hold several roles; their permissions are the total of all of them.
       </p>
       {!canEdit
-        ? <p className="font-mono text-[11px] text-text-4 mb-4">View only — you need Manage Roles to change permissions.</p>
+        ? <p className="font-mono text-[11px] text-text-4 mb-4">View only. You need Manage Roles to change permissions.</p>
         : <p className="font-mono text-[11px] text-text-4 mb-4">Changes take effect immediately for all sessions.</p>}
 
       {isLoading ? (

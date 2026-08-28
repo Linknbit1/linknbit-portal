@@ -50,13 +50,6 @@ export default function ReportsPage() {
     <div className="flex flex-1 flex-col">
       <Topbar title="Reports" />
       <div className="flex flex-col gap-5 p-4 lg:px-8 lg:py-7">
-        <div>
-          <h2 className="font-display text-[22px] font-bold text-text-1">Reports</h2>
-          <p className="font-ui text-[13px] text-text-3">
-            Where the hours went — by project, by person, by day, and against attendance.
-          </p>
-        </div>
-
         {/* One door for reporting. These four used to be three separate sidebar
             rows in three different sections, so finding a number meant already
             knowing which module produced it. */}
@@ -89,7 +82,7 @@ function TwoClocksNote() {
         <span className="font-medium text-text-2">Timer</span> is time actually tracked against a task.{' '}
         <span className="font-medium text-text-2">Standup</span> is what people wrote up at the end of the
         day. They measure the same hours two different ways and routinely disagree, so they are shown
-        separately and never added — the <span className="font-medium text-text-2">variance</span> between
+        separately and never added. The <span className="font-medium text-text-2">variance</span> between
         them is the number worth looking at.
       </span>
     </p>
@@ -197,7 +190,7 @@ function ProjectBacklog() {
                   <Td muted>{r.tasks}</Td>
                   {/* Only what exists: there is no cost rate in the system, so no
                       margin is implied by showing the budget beside the hours. */}
-                  <Td muted>{r.budget ? Number(r.budget).toLocaleString() : '—'}</Td>
+                  <Td muted>{r.budget ? Number(r.budget).toLocaleString() : '-'}</Td>
                 </tr>
               ))}
             </tbody>
@@ -338,7 +331,7 @@ function EmployeeBacklog() {
                           cleared
                         </span>
                       ) : (
-                        <span className="font-mono text-[12.5px] text-text-4">—</span>
+                        <span className="font-mono text-[12.5px] text-text-4">-</span>
                       )}
                     </td>
                     <Td muted>

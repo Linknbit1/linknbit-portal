@@ -85,7 +85,7 @@ export function LeadImportModal({ open, onClose }: LeadImportModalProps) {
       reset()
       onClose()
     } catch {
-      setReadError('The import was refused. Nothing was added — check the rows and try again.')
+      setReadError('The import was refused. Nothing was added, check the rows and try again.')
     } finally {
       setBusy(false)
     }
@@ -134,7 +134,7 @@ export function LeadImportModal({ open, onClose }: LeadImportModalProps) {
             {fileName || 'Drop a CSV here, or click to choose one'}
           </span>
           <span className="font-ui text-[10.5px] text-text-4">
-            Only <span className="font-mono">company</span> is required — everything else falls back to a default
+            Only <span className="font-mono">company</span> is required. Everything else falls back to a default
           </span>
           <input
             ref={inputRef}
@@ -180,7 +180,7 @@ export function LeadImportModal({ open, onClose }: LeadImportModalProps) {
             {result.unknownColumns.length > 0 && (
               <p className="font-ui text-[11.5px] text-text-3">
                 Ignored {result.unknownColumns.length === 1 ? 'column' : 'columns'}{' '}
-                <span className="font-mono text-text-2">{result.unknownColumns.join(', ')}</span> — not part of the format.
+                <span className="font-mono text-text-2">{result.unknownColumns.join(', ')}</span>, not part of the format.
               </p>
             )}
 
@@ -199,14 +199,14 @@ export function LeadImportModal({ open, onClose }: LeadImportModalProps) {
             {problemRows.length > 0 && (
               <section className="rounded-md border border-error/25 bg-error/6">
                 <h3 className="border-b border-error/20 px-3 py-2 font-ui text-[11.5px] font-bold uppercase tracking-wider text-error">
-                  Skipped rows — the rest still import
+                  Skipped rows. The rest still import
                 </h3>
                 <ul className="max-h-40 divide-y divide-border-subtle overflow-y-auto">
                   {problemRows.map((row) => (
                     <li key={row.line} className="flex gap-2.5 px-3 py-2">
                       <span className="shrink-0 font-mono text-[11px] tabular-nums text-text-4">Line {row.line}</span>
                       <span className="min-w-0 font-ui text-[12px] text-text-2">
-                        {row.company && <span className="font-medium text-text-1">{row.company} — </span>}
+                        {row.company && <span className="font-medium text-text-1">{row.company}, </span>}
                         {row.errors.join('; ')}
                       </span>
                     </li>
@@ -317,7 +317,7 @@ function PreviewTable({ result }: { result: LeadImportResult }) {
                   )}
                 </td>
                 <td className="whitespace-nowrap px-3 py-2 font-ui text-[12px] text-text-3">
-                  {row.lead?.contactName || '—'}
+                  {row.lead?.contactName || '-'}
                 </td>
                 <td className="px-3 py-2">{row.lead && <StageChip stage={row.lead.stage} />}</td>
                 <td className="px-3 py-2">{row.lead && <ChannelChip channel={row.lead.channel} />}</td>

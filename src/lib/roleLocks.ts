@@ -21,4 +21,4 @@ export function isPermissionLocked(
 }
 
 /** Explanation shown on a locked toggle. */
-export const LOCKED_REASON = 'Always on — turning this off would lock everyone out'
+export const LOCKED_REASON = 'Always on, turning this off would lock everyone out'

@@ -134,7 +134,7 @@ export function StandupRulesPanel({ canEdit }: { canEdit: boolean }) {
           <p className="flex items-start gap-1.5 rounded-md border border-warning/30 bg-warning/8 px-3 py-2 font-ui text-[11.5px] text-warning">
             <AlertTriangle size={12} className="mt-0.5 shrink-0" />
             The standup opens at {opensAt} but the working day ends at {dayEnd}. That is more than
-            two hours apart — check the working day has not moved without this.
+            two hours apart, check the working day has not moved without this.
           </p>
         )}
 
@@ -186,7 +186,7 @@ export function StandupRulesPanel({ canEdit }: { canEdit: boolean }) {
           label="Require the full day to be accounted for"
           hint={
             enforce
-              ? 'The logged time must match the day exactly — the working day less the break, less any leave or approved exception.'
+              ? 'The logged time must match the day exactly. The working day less the break, less any leave or approved exception.'
               : 'The required hours are shown but not enforced. Anyone can submit any amount.'
           }
         >

@@ -378,7 +378,7 @@ function LoginForm({
                 <strong className="font-semibold text-error">That email and password don't match.</strong>{' '}
                 Double-check your credentials or reset your password.
                 <span className="mt-1 block font-mono text-[10.5px] tracking-[0.04em] text-text-3">
-                  Attempt {attempts} of 5 — next try free
+                  Attempt {attempts} of 5, next try free
                 </span>
               </>
             )}

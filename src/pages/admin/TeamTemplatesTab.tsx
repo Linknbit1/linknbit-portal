@@ -57,7 +57,7 @@ export function TeamTemplatesTab({ teamId, teamServiceSlug, canEdit }: TeamTempl
       <div className="flex flex-wrap items-start justify-between gap-3">
         <p className="font-ui text-[12.5px] text-text-3 max-w-xl">
           Pre-built stages and tasks this team runs for a service. When a project takes on that
-          service, one of these can be applied to it — a copy, so later edits here never change
+          service, one of these can be applied to it. A copy, so later edits here never change
           projects already created.
         </p>
         {canEdit && (
@@ -73,7 +73,7 @@ export function TeamTemplatesTab({ teamId, teamServiceSlug, canEdit }: TeamTempl
           <p className="font-ui text-[13px] text-text-2">No templates yet</p>
           <p className="font-ui text-[11.5px] text-text-4 max-w-sm">
             {canEdit
-              ? 'Build the pipeline this team repeats — stages, and the tasks inside each.'
+              ? 'Build the pipeline this team repeats, stages, and the tasks inside each.'
               : 'This team has not built any templates yet.'}
           </p>
         </div>
@@ -197,7 +197,7 @@ function TemplatePipeline({ template, canEdit }: { template: TemplateDetail; can
 
       {template.stages.length === 0 && (
         <p className="py-4 text-center font-ui text-[12.5px] text-text-4">
-          No stages yet{canEdit ? ' — add the first one below.' : '.'}
+          No stages yet{canEdit ? ', add the first one below.' : '.'}
         </p>
       )}
 
@@ -211,7 +211,7 @@ function TemplatePipeline({ template, canEdit }: { template: TemplateDetail; can
             value={newStage}
             onChange={(e) => setNewStage(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') addStage() }}
-            placeholder="Add a stage — e.g. Wireframes"
+            placeholder="Add a stage, e.g. Wireframes"
             className="flex-1"
           />
           <Button size="sm" variant="secondary" iconLeft={<Plus size={13} />} onClick={addStage} loading={createStage.isPending}>
@@ -485,7 +485,7 @@ function TemplateTaskModal({ stageName, pending, onSubmit, onClose }: {
               options={PRIORITY_ORDER.map((p) => ({ value: p, label: PRIORITY_LABELS[p] }))}
             />
           </div>
-          <Input label="Estimate (hours)" type="number" min={0} step={0.5} value={hours} onChange={(e) => setHours(e.target.value)} placeholder="—" />
+          <Input label="Estimate (hours)" type="number" min={0} step={0.5} value={hours} onChange={(e) => setHours(e.target.value)} placeholder="-" />
         </div>
         <label className="flex items-center justify-between gap-3">
           <span className={cn('font-ui text-[13px]', clientVisible ? 'text-text-1' : 'text-text-2')}>Visible to client</span>

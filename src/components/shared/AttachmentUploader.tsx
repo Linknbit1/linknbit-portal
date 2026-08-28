@@ -172,7 +172,7 @@ export function AttachmentUploader({ projectId, leadId, bdTaskId, taskId, canMan
                     onClick={() => setConfidential.mutate({ id: file.id, isConfidential: !file.is_confidential }, { onError: () => toast('Could not change confidentiality', 'error') })}
                     className={cn('flex size-7 shrink-0 items-center justify-center rounded-sm transition-colors',
                       file.is_confidential ? 'text-warning hover:bg-warning/10' : 'text-text-4 hover:bg-surface-2 hover:text-text-2')}
-                    title={file.is_confidential ? 'Confidential — click to unmark' : 'Mark as confidential'}
+                    title={file.is_confidential ? 'Confidential, click to unmark' : 'Mark as confidential'}
                     aria-label="Toggle confidential"
                   >
                     <Lock size={13} />

@@ -69,7 +69,7 @@ export function PermissionDetailModal({ permission, onClose }: PermissionDetailM
             Granted to {holders.length} {holders.length === 1 ? 'role' : 'roles'}
             {holders.length > 0 && (
               <span className="text-text-3">
-                {' '}— {peopleCount} {peopleCount === 1 ? 'person' : 'people'}
+                {' '}- {peopleCount} {peopleCount === 1 ? 'person' : 'people'}
               </span>
             )}
           </span>

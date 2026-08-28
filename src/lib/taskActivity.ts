@@ -67,7 +67,7 @@ function describeTimeEvent(action: string, values: Values): string {
   const amount = minutes === null ? 'time' : formatMinutes(minutes)
   const note = asString(read(values, 'note'))
   const billable = String(read(values, 'billable')) === 'true'
-  const tail = `${billable ? ' (billable)' : ''}${note ? ` — “${note}”` : ''}`
+  const tail = `${billable ? ' (billable)' : ''}${note ? `, “${note}”` : ''}`
 
   switch (action) {
     case 'time.logged_manually':

@@ -66,7 +66,7 @@ function localToday(): string {
 }
 
 function formatTime(iso: string | null | undefined): string {
-  if (!iso) return '—'
+  if (!iso) return '-'
   return new Date(iso).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
 }
 
@@ -76,7 +76,7 @@ function formatDateLabel(dateStr: string): string {
 }
 
 function calcHours(checkIn: string | null, checkOut: string | null, excludedMinutes = 0): string {
-  if (!checkIn || !checkOut) return '—'
+  if (!checkIn || !checkOut) return '-'
   const diff = new Date(checkOut).getTime() - new Date(checkIn).getTime() - excludedMinutes * 60_000
   if (diff <= 0) return '0h 0m'
   const h = Math.floor(diff / 3_600_000)
@@ -292,7 +292,7 @@ export function HistoryTable({ records, periodLabel }: { records: AttendanceRow[
                   </span>
                 </td>
                 <td className="px-5 py-3 font-mono text-[11px] text-text-4 max-w-40 truncate" title={row.device_name ?? ''}>
-                  {row.device_name ?? '—'}
+                  {row.device_name ?? '-'}
                 </td>
               </tr>
             ))}
@@ -321,7 +321,7 @@ export function OooSection() {
   const handleDeparture = async () => {
     try {
       await departMut.mutateAsync()
-      toast('Out of office logged — see you back soon!', 'success')
+      toast('Out of office logged, see you back soon!', 'success')
     } catch (err) {
       toast(err instanceof Error ? err.message : 'Failed to log departure', 'error')
     }
@@ -346,7 +346,7 @@ export function OooSection() {
           <p className="font-display font-semibold text-[14px] text-text-1">Out-of-Office Approved</p>
           <p className="font-ui text-[12px] text-text-3">
             {todayOoo.actual_departure
-              ? `Departed at ${new Date(todayOoo.actual_departure).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} — tap "I'm Back" when you return`
+              ? `Departed at ${new Date(todayOoo.actual_departure).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}, tap "I'm Back" when you return`
               : 'Tap the button when you leave the office'}
           </p>
         </div>
@@ -415,7 +415,7 @@ function RequestExceptionModal({ editRow, onClose }: RequestExceptionModalProps)
         toast('Exception request updated', 'success')
       } else {
         await requestMut.mutateAsync(payload)
-        toast('Exception request submitted — awaiting HR approval', 'success')
+        toast('Exception request submitted, awaiting HR approval', 'success')
       }
       onClose()
     } catch {
@@ -437,9 +437,9 @@ function RequestExceptionModal({ editRow, onClose }: RequestExceptionModalProps)
               value={excType}
               onChange={(v) => setExcType(v as typeof excType)}
               options={[
-                { value: 'late_arrival',    label: "Late Arrival — I'll arrive after the usual start time" },
-                { value: 'early_departure', label: "Early Departure — I need to leave before end time" },
-                { value: 'out_of_office',   label: "Out of Office — I'll step out and return same day" },
+                { value: 'late_arrival',    label: "Late Arrival, I'll arrive after the usual start time" },
+                { value: 'early_departure', label: "Early Departure, I need to leave before end time" },
+                { value: 'out_of_office',   label: "Out of Office, I'll step out and return same day" },
               ]}
             />
           </div>
@@ -530,7 +530,7 @@ export function MyExceptionsSection() {
   const openEdit = (exc: AttendanceException) => { setEditRow(exc); setModalOpen(true) }
   const closeModal = () => { setModalOpen(false); setEditRow(null) }
 
-  const fmtTimeStr = (t: string | null) => t ? t.slice(0, 5) : '—'
+  const fmtTimeStr = (t: string | null) => t ? t.slice(0, 5) : '-'
   const fmtDate = (d: string) =>
     new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 
@@ -657,7 +657,7 @@ export function OvertimeSection() {
         toast('Overtime request updated', 'success')
       } else {
         await submitMut.mutateAsync(payload)
-        toast('Overtime request submitted — awaiting HR approval', 'success')
+        toast('Overtime request submitted, awaiting HR approval', 'success')
       }
       closeModal()
       setForm({ date: localToday(), startTime: '', endTime: '', reason: '' })
@@ -849,7 +849,7 @@ export function WfhSection() {
         toast('WFH request updated', 'success')
       } else {
         await submitMut.mutateAsync(payload)
-        toast('WFH request submitted — awaiting approval', 'success')
+        toast('WFH request submitted, awaiting approval', 'success')
       }
       closeModal(); resetForm()
     } catch {
@@ -1030,7 +1030,7 @@ export function LeaveSection() {
         toast('Leave request updated', 'success')
       } else {
         await submitMut.mutateAsync(payload)
-        toast('Leave request submitted — awaiting approval', 'success')
+        toast('Leave request submitted, awaiting approval', 'success')
       }
       closeModal(); resetForm()
     } catch {
@@ -1133,7 +1133,7 @@ export function LeaveSection() {
                   value={typeId}
                   onChange={setTypeId}
                   placeholder="Select type…"
-                  options={balances.map((b) => ({ value: b.type.id, label: `${b.type.name} — ${b.remaining} of ${b.type.days_allowed} left` }))}
+                  options={balances.map((b) => ({ value: b.type.id, label: `${b.type.name}, ${b.remaining} of ${b.type.days_allowed} left` }))}
                 />
               </div>
               <div>
@@ -1143,8 +1143,8 @@ export function LeaveSection() {
                   onChange={(v) => setDayPart(v === 'first_half' || v === 'second_half' ? v : 'full')}
                   options={[
                     { value: 'full',        label: 'Full day(s)' },
-                    { value: 'first_half',  label: 'Half day — first half' },
-                    { value: 'second_half', label: 'Half day — second half' },
+                    { value: 'first_half',  label: 'Half day, first half' },
+                    { value: 'second_half', label: 'Half day, second half' },
                   ]}
                 />
                 {isHalf && (

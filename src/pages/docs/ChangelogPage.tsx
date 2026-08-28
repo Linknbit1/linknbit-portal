@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Tag, Plus, ArrowUpCircle, Wrench, BookOpen } from 'lucide-react'
+import { Plus, ArrowUpCircle, Wrench, BookOpen } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Badge } from '../../components/ui/Badge'
 import { cn } from '../../lib/cn'
@@ -26,10 +26,7 @@ export default function ChangelogPage() {
       <div className="mx-auto w-full max-w-[1000px] p-4 lg:px-8 lg:py-7">
         <header className="border-b border-border-default pb-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5">
-              <Tag size={18} className="text-brand-red" />
-              <h1 className="font-display text-[26px] font-bold text-text-1">Changelog</h1>
-            </div>
+            <p className="font-ui text-[13px] text-text-3">Everything that has shipped, newest first.</p>
             <Link
               to="/docs"
               className="flex items-center gap-1.5 font-ui text-[12.5px] font-medium text-brand-red hover:underline"
@@ -37,9 +34,6 @@ export default function ChangelogPage() {
               <BookOpen size={13} /> Handbook
             </Link>
           </div>
-          <p className="mt-1.5 max-w-2xl font-ui text-[13.5px] text-text-2">
-            Everything that has shipped to the portal, newest first.
-          </p>
         </header>
 
         <div className="mt-7 flex flex-col">

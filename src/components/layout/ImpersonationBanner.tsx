@@ -23,7 +23,7 @@ export function ImpersonationBanner() {
       await stopImpersonating()
       navigate('/my-day')
     } catch {
-      toast('Could not exit impersonation — reload the page to return to your account', 'error')
+      toast('Could not exit impersonation, reload the page to return to your account', 'error')
     } finally {
       setExiting(false)
     }
@@ -33,7 +33,7 @@ export function ImpersonationBanner() {
     <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 bg-warning px-4 py-2 text-amber-950">
       <span className="flex items-center gap-1.5 font-ui text-[12.5px]">
         <Eye size={14} className="shrink-0" />
-        Viewing the app as <strong className="font-semibold">{impersonating.targetName}</strong> — actions you take are performed as them.
+        Viewing the app as <strong className="font-semibold">{impersonating.targetName}</strong>, actions you take are performed as them.
       </span>
       <button
         onClick={exit}

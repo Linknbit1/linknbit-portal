@@ -47,14 +47,14 @@ export function GamificationRulesPanel() {
         <div className="-mx-4 divide-y divide-border-subtle">
           <ScoreRow
             label="On-time check-in"
-            value={attendance ? `${attendance.xp_on_time_checkin} XP` : '—'}
+            value={attendance ? `${attendance.xp_on_time_checkin} XP` : '-'}
             note="Arriving within the grace period."
             to="/settings/attendance"
             toLabel="Attendance"
           />
           <ScoreRow
             label="On-time standup"
-            value={standup ? `${standup.xp_on_time} XP` : '—'}
+            value={standup ? `${standup.xp_on_time} XP` : '-'}
             note={
               standup
                 ? `Submitted within ${standup.on_time_window_min} minutes of the standup opening.`

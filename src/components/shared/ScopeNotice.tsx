@@ -30,7 +30,7 @@ export function ScopeNotice({ shown, total }: { shown?: number; total?: number }
     <div className="flex flex-wrap items-center gap-2 rounded-lg border border-brand-red/30 bg-brand-red/8 px-3 py-2">
       <Icon size={14} className="shrink-0 text-brand-red" />
       <span className="font-ui text-[12px] text-text-2">
-        <strong className="text-text-1">{scope === 'mine' ? 'Mine' : 'My team'}</strong> —{' '}
+        <strong className="text-text-1">{scope === 'mine' ? 'Mine' : 'My team'}</strong> -{' '}
         {DESCRIPTION[scope]}
         {hasCounts && (
           <>

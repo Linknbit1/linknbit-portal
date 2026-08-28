@@ -141,7 +141,7 @@ export default function DocumentationPage() {
                 <Link to="/docs/changelog" className="text-brand-red hover:underline">
                   Check the changelog
                 </Link>{' '}
-                — and tell whoever shipped it, so the handbook gets fixed with the feature.
+, and tell whoever shipped it, so the handbook gets fixed with the feature.
               </p>
             </footer>
           </div>

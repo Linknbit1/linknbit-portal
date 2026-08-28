@@ -16,7 +16,7 @@ function statusMeta(d: EnrolledDevice) {
 }
 
 const fmtDate = (iso: string | null) =>
-  iso ? new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'
+  iso ? new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '-'
 
 export function MyDevicesCard() {
   const toast = useToast()
@@ -33,7 +33,7 @@ export function MyDevicesCard() {
       toast(
         res.status === 'approved'
           ? 'Device registered and approved.'
-          : 'Device registered — an admin will review it shortly.',
+          : 'Device registered. An admin will review it shortly.',
         'success',
       )
     } catch (err: unknown) {

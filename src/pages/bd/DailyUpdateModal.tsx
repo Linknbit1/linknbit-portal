@@ -117,7 +117,7 @@ export function DailyUpdateModal({ open, update, onClose }: DailyUpdateModalProp
 
         <div>
           <p className="mb-1.5 font-ui text-[12px] font-medium text-text-2">
-            Key numbers <span className="text-text-4">— leave at zero if not applicable</span>
+            Key numbers <span className="text-text-4">- leave at zero if not applicable</span>
           </p>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <Input label="Proposals" type="number" min={0} value={proposals} onChange={(e) => setProposals(Number(e.target.value) || 0)} />

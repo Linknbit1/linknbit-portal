@@ -99,12 +99,6 @@ export default function MeetingsPage() {
       <Topbar title="Meetings" />
       <div className="p-4 lg:px-8 lg:py-7 flex flex-col gap-6">
         <div className="flex flex-wrap items-center gap-3">
-          <div>
-            <h2 className="font-display font-bold text-[22px] text-text-1">Meetings</h2>
-            <p className="font-ui text-[13px] text-text-3">
-              Who is meeting which client, and when — across the department
-            </p>
-          </div>
           <div className="ml-auto flex items-center gap-2">
             <Select value={host} onChange={setHost} options={hostOptions} size="sm" className="w-40" />
             <Button size="sm" iconLeft={<Plus size={15} />} onClick={() => { setEditing(null); setFormOpen(true) }}>Schedule</Button>

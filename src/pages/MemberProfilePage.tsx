@@ -70,7 +70,7 @@ const EXC_TYPE: Record<string, { label: string; cls: string }> = {
 
 // Exception/overtime times are 'HH:MM:SS' time-of-day strings → "9:05 AM".
 const fmtClock = (t: string | null) => {
-  if (!t) return '—'
+  if (!t) return '-'
   const [h, m] = t.split(':').map(Number)
   if (Number.isNaN(h)) return t
   const ampm = h >= 12 ? 'PM' : 'AM'
@@ -103,7 +103,7 @@ const fmtDay = (iso: string) =>
 const fmtShort = (iso: string) =>
   new Date(iso + (iso.length === 10 ? 'T00:00:00' : '')).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
 const fmtTime = (iso: string | null) =>
-  iso ? new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '—'
+  iso ? new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '-'
 
 /* ── Small building blocks ─────────────────────────────────────────────────── */
 function StatTile({ icon: Icon, label, value, accent }: {
@@ -296,7 +296,7 @@ export default function MemberProfilePage() {
             <StatTile icon={Trophy} label="Level" value={String(person.level)} accent="bg-coin-gold/12 text-coin-gold" />
             <StatTile icon={Zap} label="Experience" value={person.lp_balance.toLocaleString()} accent="bg-service-mkt/12 text-service-mkt" />
             <StatTile icon={Star} label="Reputation" value={person.reputation_total.toLocaleString()} accent="bg-service-design/12 text-service-design" />
-            <StatTile icon={TrendingUp} label="Rank" value={rank ? `#${rank}` : '—'} accent="bg-service-dev/12 text-service-dev" />
+            <StatTile icon={TrendingUp} label="Rank" value={rank ? `#${rank}` : '-'} accent="bg-service-dev/12 text-service-dev" />
           </div>
         </div>
 
@@ -355,7 +355,7 @@ function OverviewTab({ person, teams, projects, tasks, activeTasks, canSeeSalary
             </div>
             <div>
               <p className="mb-1.5 font-mono text-[10px] uppercase tracking-wider text-text-4">Tech stacks</p>
-              <ChipRow items={person.tech_stacks} emptyLabel="Figma, spreadsheets, a camera, a code editor — something goes here. Until then we assume caffeine." />
+              <ChipRow items={person.tech_stacks} emptyLabel="Figma, spreadsheets, a camera, a code editor, something goes here. Until then we assume caffeine." />
             </div>
           </div>
         </div>

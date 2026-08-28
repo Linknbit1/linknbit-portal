@@ -85,7 +85,7 @@ export function BdProjectFormModal({ open, project, onClose }: BdProjectFormModa
 
         <div className="sm:col-span-2">
           <label htmlFor="bd-project-description" className="mb-1.5 block font-ui text-[12px] font-medium text-text-2">
-            Description <span className="text-text-4">— optional</span>
+            Description <span className="text-text-4">- optional</span>
           </label>
           <textarea
             id="bd-project-description"

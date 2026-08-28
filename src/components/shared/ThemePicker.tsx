@@ -55,7 +55,7 @@ export function ThemePicker() {
     } catch {
       setSelected(previous)
       applyToDocument(previous)
-      toast('Could not save your theme — put the previous one back', 'error')
+      toast('Could not save your theme, put the previous one back', 'error')
     } finally {
       setSaving(null)
     }

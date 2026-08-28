@@ -30,7 +30,7 @@ export const THEMES: ThemeOption[] = [
   {
     id: 'default',
     label: 'Crimson',
-    description: 'The Linknbit 3.0 default — near-black with a red wash.',
+    description: 'The Linknbit 3.0 default, near-black with a red wash.',
     swatch: 'linear-gradient(135deg, #0A0A0A 0%, #1D1D1D 55%, #E01414 100%)',
   },
   {

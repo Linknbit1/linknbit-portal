@@ -13,11 +13,38 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: 'v1.18',
+    date: '2026-08-28',
+    title: 'Less chrome, fewer dead ends',
+    highlight:
+      'Screens no longer print their own name twice, a task always opens in the side panel over its project, and the project board is gone in favour of Pipeline.',
+    entries: [
+      {
+        kind: 'improved',
+        text: 'Screens stopped repeating their title. The name in the top bar was being printed again as a heading, often with a sentence describing the screen you were already looking at. Live counts stayed; the descriptions went.',
+      },
+      {
+        kind: 'improved',
+        text: 'A task now always opens in the side panel over its project, whether you got there from a notification, search, your timer, a profile, or a pasted link. The full-page task view and its Open full page button are gone. Old links still work and land in the panel.',
+      },
+      {
+        kind: 'improved',
+        text: 'Projects no longer have a Board tab. A project already has a structure of its own, its services and their stages, which is what Pipeline shows. The board that spans projects is still on Delivery → Tasks.',
+      },
+      {
+        kind: 'improved',
+        text: 'Writing a task description now uses the same editor as reading one, so / commands and @ mentions work while you are creating the task instead of only after it exists. Anyone tagged is notified once it saves.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Deleting the newest message in a conversation no longer leaves it quoted in the conversation list. The thread still shows that a message was deleted; the list moves on to the newest one that is actually there.',
+      },
+    ],
+  },
+  {
     version: 'v1.17',
     date: '2026-08-28',
     title: 'Tasks follow assignment',
-    highlight:
-      'Task screens now show the work that is actually yours. If you work on tasks, that means the ones assigned to you; team leads and project managers also see the work of anyone they share a team with; admins and finance still see everything.',
     entries: [
       {
         kind: 'improved',
@@ -25,11 +52,11 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'improved',
-        text: 'The Mine / My team / Everyone switch now only offers what your role allows, and disappears entirely when there is a single option — a switch that cannot change anything was just something else to wonder about. The banner stays quiet when your lens is already as wide as it goes.',
+        text: 'The Mine / My team / Everyone switch now only offers what your role allows, and disappears entirely when there is a single option. A switch that cannot change anything was just something else to wonder about. The banner stays quiet when your lens is already as wide as it goes.',
       },
       {
         kind: 'fixed',
-        text: 'A link to a task you cannot open — from an old bookmark, or from being tagged in one that is not yours — now says the task is unavailable instead of showing an empty page.',
+        text: 'A link to a task you cannot open, from an old bookmark, or from being tagged in one that is not yours, now says the task is unavailable instead of showing an empty page.',
       },
     ],
   },
@@ -44,7 +71,7 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'improved',
-        text: 'Clicking a task in Your work opens it in the side panel of its project, with the board still behind it — the same panel the board itself uses. Closing it leaves you where you were instead of on a page you have to navigate back from.',
+        text: 'Clicking a task in Your work opens it in the side panel of its project, with the board still behind it. The same panel the board itself uses. Closing it leaves you where you were instead of on a page you have to navigate back from.',
       },
       {
         kind: 'improved',
@@ -71,7 +98,7 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'fixed',
-        text: 'The bell in the top bar and "View all" now open the full Notifications screen — with the Waiting on you tab, category filters and Unread — rather than a shorter list of the same notifications.',
+        text: 'The bell in the top bar and "View all" now open the full Notifications screen, with the Waiting on you tab, category filters and Unread, rather than a shorter list of the same notifications.',
       },
     ],
   },
@@ -90,7 +117,7 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'added',
-        text: 'Pin any screen to the top of the menu. Hover a menu row and press the pin that appears on it, or use the pin button in the top right for anything else — a project you are living in, a chat channel, a board. Pins are yours alone, and the Pinned section only appears once you have one.',
+        text: 'Pin any screen to the top of the menu. Hover a menu row and press the pin that appears on it, or use the pin button in the top right for anything else. A project you are living in, a chat channel, a board. Pins are yours alone, and the Pinned section only appears once you have one.',
       },
       {
         kind: 'improved',
@@ -105,7 +132,7 @@ export const RELEASES: ChangelogRelease[] = [
     entries: [
       {
         kind: 'added',
-        text: 'My team is a new lens on the projects and tasks screens — work belonging to anyone who shares a team with you. Someone on several teams counts on all of them.',
+        text: 'My team is a new lens on the projects and tasks screens, work belonging to anyone who shares a team with you. Someone on several teams counts on all of them.',
       },
       {
         kind: 'improved',
@@ -124,11 +151,11 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'added',
-        text: 'Admin is a console, at its own short address. Terminals, Enrolled Devices, and Schedule & holidays moved out of the Attendance menu and joined the Audit Log behind one Admin row. The count on that row is what is waiting inside — devices to approve and unseen audit entries — so folding them away never hides work.',
+        text: 'Admin is a console, at its own short address. Terminals, Enrolled Devices, and Schedule & holidays moved out of the Attendance menu and joined the Audit Log behind one Admin row. The count on that row is what is waiting inside, devices to approve and unseen audit entries. So folding them away never hides work.',
       },
       {
         kind: 'improved',
-        text: 'Gamification’s “Settings” is now called Governance, on the page as well as in the menu, because that is what it is — granting XP and deciding who takes part. Its address changed to match; the old link still works. The actual gamification rules live in Settings → Gamification, where the standup and attendance rules already were.',
+        text: 'Gamification’s “Settings” is now called Governance, on the page as well as in the menu, because that is what it is, granting XP and deciding who takes part. Its address changed to match; the old link still works. The actual gamification rules live in Settings → Gamification, where the standup and attendance rules already were.',
       },
       {
         kind: 'fixed',
@@ -136,7 +163,7 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'improved',
-        text: 'Timesheet and the per-module Settings rows are gone from the menu. Every screen is still reachable — Timesheet from Reports, the rule-sets from Settings — and old links keep working.',
+        text: 'Timesheet and the per-module Settings rows are gone from the menu. Every screen is still reachable, Timesheet from Reports, the rule-sets from Settings, and old links keep working.',
       },
     ],
   },
@@ -170,7 +197,7 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'improved',
-        text: 'Your own work is now gathered from every way a task can be assigned to you — on your own or alongside other people — so a shared task no longer goes missing from your list.',
+        text: 'Your own work is now gathered from every way a task can be assigned to you, on your own or alongside other people. So a shared task no longer goes missing from your list.',
       },
       {
         kind: 'improved',
@@ -185,7 +212,7 @@ export const RELEASES: ChangelogRelease[] = [
     entries: [
       {
         kind: 'added',
-        text: 'Requests is one queue for all four kinds of request — leave, WFH, exceptions and overtime. It opens on Pending, each type filter carries its own count so you can see where the backlog is, and Approve and Reject work right on the row. This replaces four separate menu items.',
+        text: 'Requests is one queue for all four kinds of request, leave, WFH, exceptions and overtime. It opens on Pending, each type filter carries its own count so you can see where the backlog is, and Approve and Reject work right on the row. This replaces four separate menu items.',
       },
       {
         kind: 'added',
@@ -193,7 +220,7 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'improved',
-        text: 'The Attendance menu is three views and the admin pages behind them, instead of eleven rows. Leave, WFH, Exceptions and Overtime are gone from the menu — they live in Requests now, with their pending counts summed onto that one row.',
+        text: 'The Attendance menu is three views and the admin pages behind them, instead of eleven rows. Leave, WFH, Exceptions and Overtime are gone from the menu. They live in Requests now, with their pending counts summed onto that one row.',
       },
       {
         kind: 'added',
@@ -205,7 +232,7 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'improved',
-        text: 'Everyone can see who is in today, not just managers — that was the question people were asking in chat. Check-in times, the late flag and which kind of leave someone took stay private: those show only for yourself, for people on your teams, and to whoever manages attendance.',
+        text: 'Everyone can see who is in today, not just managers. That was the question people were asking in chat. Check-in times, the late flag and which kind of leave someone took stay private: those show only for yourself, for people on your teams, and to whoever manages attendance.',
       },
     ],
   },
@@ -239,7 +266,7 @@ export const RELEASES: ChangelogRelease[] = [
     entries: [
       {
         kind: 'fixed',
-        text: 'Checking in on an approved work-from-home day works again. On-site staff are normally sent to the fingerprint terminal, and that rule was being applied before anyone checked whether it was a WFH day — so the Check In (WFH) button was offered at home and every press came back “Please check in at the biometric terminal”. An approved WFH day now skips the terminal and the office-WiFi rule entirely.',
+        text: 'Checking in on an approved work-from-home day works again. On-site staff are normally sent to the fingerprint terminal, and that rule was being applied before anyone checked whether it was a WFH day. So the Check In (WFH) button was offered at home and every press came back “Please check in at the biometric terminal”. An approved WFH day now skips the terminal and the office-WiFi rule entirely.',
       },
       {
         kind: 'added',
@@ -262,19 +289,19 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'added',
-        text: 'You can staff each service during the handoff, and set the project’s start date and deadline while you are there. Both are optional — leave them and the manager picks them up.',
+        text: 'You can staff each service during the handoff, and set the project’s start date and deadline while you are there. Both are optional, leave them and the manager picks them up.',
       },
       {
         kind: 'added',
-        text: 'The handoff now asks which client the work is for, rather than guessing. Pick an existing client, or name a new one — prefilled from the lead, and flagged if that name already exists so the same account cannot end up in the list twice. Leads are usually named after the deal, so this is worth a glance.',
+        text: 'The handoff now asks which client the work is for, rather than guessing. Pick an existing client, or name a new one, prefilled from the lead, and flagged if that name already exists so the same account cannot end up in the list twice. Leads are usually named after the deal, so this is worth a glance.',
       },
       {
         kind: 'improved',
-        text: 'BD campaigns are now private to the people on them. You see a campaign if you own it, created it, or were added to its team — and creating one, or being handed one as its owner, puts you on it automatically. Whoever runs BD still sees every campaign. Until now every campaign was visible to everyone in the department: the Projects screen had a filter meant to prevent that, but it never took effect.',
+        text: 'BD campaigns are now private to the people on them. You see a campaign if you own it, created it, or were added to its team, and creating one, or being handed one as its owner, puts you on it automatically. Whoever runs BD still sees every campaign. Until now every campaign was visible to everyone in the department: the Projects screen had a filter meant to prevent that, but it never took effect.',
       },
       {
         kind: 'improved',
-        text: 'Tasks follow their campaign, so the Tasks board no longer lists — and names — work from campaigns you were deliberately left off. A task assigned to you, one you raised, or one attached to no campaign stays visible either way.',
+        text: 'Tasks follow their campaign, so the Tasks board no longer lists, and names, work from campaigns you were deliberately left off. A task assigned to you, one you raised, or one attached to no campaign stays visible either way.',
       },
       {
         kind: 'added',
@@ -282,11 +309,11 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'fixed',
-        text: 'A BD task’s linked lead is now a link — press it to open that lead in the Pipeline. The link had been built but was never switched on, so the field named a lead you then had to go and find by hand.',
+        text: 'A BD task’s linked lead is now a link, press it to open that lead in the Pipeline. The link had been built but was never switched on, so the field named a lead you then had to go and find by hand.',
       },
       {
         kind: 'fixed',
-        text: 'A note written on Daily Updates is now visible. If you logged no outreach and hosted no meetings that day, your note was stored correctly and then shown to nobody — not to your team, and not to you — because the feed only listed people with logged activity. Writing a note now counts as checking in.',
+        text: 'A note written on Daily Updates is now visible. If you logged no outreach and hosted no meetings that day, your note was stored correctly and then shown to nobody, not to your team, and not to you. Because the feed only listed people with logged activity. Writing a note now counts as checking in.',
       },
       {
         kind: 'fixed',
@@ -298,14 +325,14 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'fixed',
-        text: 'Handing off used to record the handoff on the lead and nothing else — the project it named was never created, and the lead’s timeline said it had been handed over regardless. Old handoffs that were left dangling this way still show on their leads; if one names a project that was later created by hand, ask an admin to link the two.',
+        text: 'Handing off used to record the handoff on the lead and nothing else. The project it named was never created, and the lead’s timeline said it had been handed over regardless. Old handoffs that were left dangling this way still show on their leads; if one names a project that was later created by hand, ask an admin to link the two.',
       },
     ],
   },
   {
     version: 'v1.6',
     date: '2026-08-23',
-    title: 'Linknbit 3.0 — the portal gets the new brand',
+    title: 'Linknbit 3.0. The portal gets the new brand',
     entries: [
       {
         kind: 'improved',
@@ -313,11 +340,11 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'improved',
-        text: 'Colours that mean something were deliberately left alone. Design stays violet, Development stays cyan and Marketing stays amber, and approved-green, blocked-red and the warning ambers are unchanged — a board you have learned to read at a glance still reads the same way.',
+        text: 'Colours that mean something were deliberately left alone. Design stays violet, Development stays cyan and Marketing stays amber, and approved-green, blocked-red and the warning ambers are unchanged. A board you have learned to read at a glance still reads the same way.',
       },
       {
         kind: 'added',
-        text: 'You can now pick your own colour theme, in Profile → Appearance. Choose one and the whole portal changes at once — sidebar, top bar, tables, inputs, dialogs and the page background — with no reload. The choice is yours alone and follows you to any device you sign in from; it changes nothing for anyone else.',
+        text: 'You can now pick your own colour theme, in Profile → Appearance. Choose one and the whole portal changes at once, sidebar, top bar, tables, inputs, dialogs and the page background, with no reload. The choice is yours alone and follows you to any device you sign in from; it changes nothing for anyone else.',
       },
       {
         kind: 'improved',
@@ -325,7 +352,7 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'improved',
-        text: 'The client portal keeps its warm cream look, deliberately — it is what a client sees, and it is meant to read as a delivered product rather than as the internal tool. It picks up Poppins and the new brand red so the two still feel like one company.',
+        text: 'The client portal keeps its warm cream look, deliberately. It is what a client sees, and it is meant to read as a delivered product rather than as the internal tool. It picks up Poppins and the new brand red so the two still feel like one company.',
       },
     ],
   },
@@ -336,7 +363,7 @@ export const RELEASES: ChangelogRelease[] = [
     entries: [
       {
         kind: 'added',
-        text: 'The backlog drill-downs now go all the way down to the task. Under the summary sits every task with both clocks against it, its status, who it is assigned to and the estimate where one was set — for a project, and for a person across the projects they went to. Each table has its own CSV.',
+        text: 'The backlog drill-downs now go all the way down to the task. Under the summary sits every task with both clocks against it, its status, who it is assigned to and the estimate where one was set, for a project, and for a person across the projects they went to. Each table has its own CSV.',
       },
       {
         kind: 'added',
@@ -344,11 +371,11 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'improved',
-        text: 'The task breakdown adds up to the summary above it, and shows its working. Standup time written against a project without naming a task — about two thirds of it — gets its own line rather than being shared out across the tasks, and a deleted task that still carries logged time keeps its row, struck through and marked, instead of quietly vanishing and leaving the totals short.',
+        text: 'The task breakdown adds up to the summary above it, and shows its working. Standup time written against a project without naming a task, about two thirds of it, gets its own line rather than being shared out across the tasks, and a deleted task that still carries logged time keeps its row, struck through and marked, instead of quietly vanishing and leaving the totals short.',
       },
       {
         kind: 'fixed',
-        text: 'Opening a row in the backlog reports now shows the breakdown. Both drill-downs — a project by the people who worked on it, and a person by the projects they went to — were failing on every single call since the day they shipped, and the screen was reporting the failure as “nobody recorded time in this range”. The hours were always there; the page could not read them.',
+        text: 'Opening a row in the backlog reports now shows the breakdown. Both drill-downs. A project by the people who worked on it, and a person by the projects they went to, were failing on every single call since the day they shipped, and the screen was reporting the failure as “nobody recorded time in this range”. The hours were always there; the page could not read them.',
       },
       {
         kind: 'improved',
@@ -356,15 +383,15 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'added',
-        text: 'BD tasks now take documents. Open a task, scroll to Documents, and drop a file in or paste a Google Doc, Sheet or Drive link — the same uploader, preview and Drive support that leads and delivery tasks already had. Anyone who can open Business Dev can read them; adding and removing is limited to whoever the task is assigned to, whoever raised it, and anyone who runs BD.',
+        text: 'BD tasks now take documents. Open a task, scroll to Documents, and drop a file in or paste a Google Doc, Sheet or Drive link. The same uploader, preview and Drive support that leads and delivery tasks already had. Anyone who can open Business Dev can read them; adding and removing is limited to whoever the task is assigned to, whoever raised it, and anyone who runs BD.',
       },
       {
         kind: 'fixed',
-        text: 'The BD Tasks screen was hiding most of the department’s work. It opened filtered to your own tasks, and the control doing it sat collapsed behind the Filters button with nothing to say it was on — so a campaign’s tasks were plainly listed on its own page but missing from the Tasks board. Tasks now opens on the whole team, and the people picker sits in the open beside the project filter.',
+        text: 'The BD Tasks screen was hiding most of the department’s work. It opened filtered to your own tasks, and the control doing it sat collapsed behind the Filters button with nothing to say it was on. So a campaign’s tasks were plainly listed on its own page but missing from the Tasks board. Tasks now opens on the whole team, and the people picker sits in the open beside the project filter.',
       },
       {
         kind: 'improved',
-        text: 'The Timesheet now lists everybody, not only the people who pressed start. A person who worked all day without the timer, a person on leave and a person who never turned up used to look identical — all three were simply missing. Each now has a row, and the four tiles above the chart say how many hours were tracked, how many timers are running, how many people were due in with nothing logged, and how many are away.',
+        text: 'The Timesheet now lists everybody, not only the people who pressed start. A person who worked all day without the timer, a person on leave and a person who never turned up used to look identical, all three were simply missing. Each now has a row, and the four tiles above the chart say how many hours were tracked, how many timers are running, how many people were due in with nothing logged, and how many are away.',
       },
       {
         kind: 'improved',
@@ -372,7 +399,7 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'added',
-        text: 'Business Development is no longer a preview. Leads, outreach, meetings, campaigns, tasks, daily check-ins and targets are all saved and shared — what you change, your colleagues see.',
+        text: 'Business Development is no longer a preview. Leads, outreach, meetings, campaigns, tasks, daily check-ins and targets are all saved and shared, what you change, your colleagues see.',
       },
       {
         kind: 'added',
@@ -380,7 +407,7 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'added',
-        text: 'Lead notes, BD task descriptions and campaign briefs are now written with the same editor as the rest of the portal — formatting, links and @mentions included.',
+        text: 'Lead notes, BD task descriptions and campaign briefs are now written with the same editor as the rest of the portal, formatting, links and @mentions included.',
       },
       {
         kind: 'added',
@@ -392,7 +419,7 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'added',
-        text: 'Meetings carry a joining link. Paste the Zoom or Meet URL when you book one and everybody gets a Join button — on the meeting card, in the email, and in their calendar entry.',
+        text: 'Meetings carry a joining link. Paste the Zoom or Meet URL when you book one and everybody gets a Join button, on the meeting card, in the email, and in their calendar entry.',
       },
       {
         kind: 'fixed',
@@ -400,7 +427,7 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'improved',
-        text: 'Leave and WFH now appear under every day they cover, so you can see who is off on a given date. Each remains one request — the Approve and Reject buttons sit on its first day only.',
+        text: 'Leave and WFH now appear under every day they cover, so you can see who is off on a given date. Each remains one request. The Approve and Reject buttons sit on its first day only.',
       },
       {
         kind: 'improved',
@@ -408,11 +435,11 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'added',
-        text: 'Partial WFH: request half a day from home and work the other half from the office. Say which half — it shows on your attendance as WFH · 1st or WFH · 2nd, and both halves count as worked.',
+        text: 'Partial WFH: request half a day from home and work the other half from the office. Say which half. It shows on your attendance as WFH · 1st or WFH · 2nd, and both halves count as worked.',
       },
       {
         kind: 'improved',
-        text: 'Every BD change applies the moment you make it — dragging a card, ticking a step, editing a field. Nothing waits on a spinner, and if a save is refused the screen puts itself back and tells you.',
+        text: 'Every BD change applies the moment you make it, dragging a card, ticking a step, editing a field. Nothing waits on a spinner, and if a save is refused the screen puts itself back and tells you.',
       },
       {
         kind: 'improved',
@@ -432,11 +459,11 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'fixed',
-        text: 'Overtime is shown in hours and minutes. A 40-minute request read as “0.67h” everywhere it appeared — on the review screen, your own attendance page, a member’s profile and the team panel — and now reads “40m”.',
+        text: 'Overtime is shown in hours and minutes. A 40-minute request read as “0.67h” everywhere it appeared, on the review screen, your own attendance page, a member’s profile and the team panel, and now reads “40m”.',
       },
       {
         kind: 'improved',
-        text: 'Leave, WFH Requests, Exceptions and Overtime now look and work the same. All four are one list grouped by date — Exceptions and Overtime were tables, which meant the same request looked different depending on which screen you reviewed it from — and all four now use the same status pill, so an approved request no longer reads “Approved” on one screen and “approved” on another. The stat cards above each list are gone; they repeated what the list already shows and pushed the requests below the fold.',
+        text: 'Leave, WFH Requests, Exceptions and Overtime now look and work the same. All four are one list grouped by date, Exceptions and Overtime were tables, which meant the same request looked different depending on which screen you reviewed it from, and all four now use the same status pill, so an approved request no longer reads “Approved” on one screen and “approved” on another. The stat cards above each list are gone; they repeated what the list already shows and pushed the requests below the fold.',
       },
       {
         kind: 'added',
@@ -452,19 +479,19 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'added',
-        text: 'A deal can be quoted in any currency — 166 of them, covering every country that has one. Pick it beside the estimated value, search the list by country if the code escapes you, and the lead keeps showing that currency everywhere while the pipeline totals convert it to PKR. Rates refresh daily, and the one used is shown as you type and frozen onto the lead when you save.',
+        text: 'A deal can be quoted in any currency, 166 of them, covering every country that has one. Pick it beside the estimated value, search the list by country if the code escapes you, and the lead keeps showing that currency everywhere while the pipeline totals convert it to PKR. Rates refresh daily, and the one used is shown as you type and frozen onto the lead when you save.',
       },
       {
         kind: 'added',
-        text: 'Import a list of prospects into the pipeline from a spreadsheet. Pipeline → Import CSV takes the file, shows you exactly what it is about to create, and lists any row it could not read with its line number — the rows it can read still go in.',
+        text: 'Import a list of prospects into the pipeline from a spreadsheet. Pipeline → Import CSV takes the file, shows you exactly what it is about to create, and lists any row it could not read with its line number. The rows it can read still go in.',
       },
       {
         kind: 'added',
-        text: 'Rewards can carry a picture. Upload one when you add or edit a reward — JPG, PNG, WebP or GIF up to 5 MB — and it shows on the card in the shop; replace or remove it at any time, and the plain gift icon comes back.',
+        text: 'Rewards can carry a picture. Upload one when you add or edit a reward, JPG, PNG, WebP or GIF up to 5 MB, and it shows on the card in the shop; replace or remove it at any time, and the plain gift icon comes back.',
       },
       {
         kind: 'improved',
-        text: 'Rewards are now added from the Rewards Shop itself. The Add Reward button and the full catalog — including anything currently disabled — sit under the shop, so you edit the list while looking at what everyone else sees.',
+        text: 'Rewards are now added from the Rewards Shop itself. The Add Reward button and the full catalog, including anything currently disabled, sit under the shop, so you edit the list while looking at what everyone else sees.',
       },
       {
         kind: 'improved',
@@ -472,7 +499,7 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'added',
-        text: 'The standup now asks you to account for your whole day. The form shows how many hours that is — your working day less the new lunch break — and the bar turns green when what you have logged matches it. Time off is taken off the total for you: half a day of leave, a late arrival or an approved trip out each reduce what you owe, and overlapping ones only count once.',
+        text: 'The standup now asks you to account for your whole day. The form shows how many hours that is. Your working day less the new lunch break, and the bar turns green when what you have logged matches it. Time off is taken off the total for you: half a day of leave, a late arrival or an approved trip out each reduce what you owe, and overlapping ones only count once.',
       },
       {
         kind: 'fixed',
@@ -480,15 +507,15 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'added',
-        text: 'Exceptions are now unpaid time you work back, rather than hours that simply disappear. Take two hours out and that day asks for six — you were not there — but the same two hours are recorded as make-up time. Log over the requirement on any later day and the balance comes down. The standup shows what you owe and how far over you may go; the backlog and its CSV carry unpaid, made-up and outstanding as their own figures.',
+        text: 'Exceptions are now unpaid time you work back, rather than hours that simply disappear. Take two hours out and that day asks for six. You were not there. But the same two hours are recorded as make-up time. Log over the requirement on any later day and the balance comes down. The standup shows what you owe and how far over you may go; the backlog and its CSV carry unpaid, made-up and outstanding as their own figures.',
       },
       {
         kind: 'added',
-        text: 'Backlog rows open into a screen of their own. A project shows which people put the hours in; a person shows which projects they went to — timer, standup and variance for each, plus their own CSV export. The range you were reading carries across in the link, so it is worth pasting to a colleague.',
+        text: 'Backlog rows open into a screen of their own. A project shows which people put the hours in; a person shows which projects they went to, timer, standup and variance for each, plus their own CSV export. The range you were reading carries across in the link, so it is worth pasting to a colleague.',
       },
       {
         kind: 'improved',
-        text: 'Reports moved from Admin to Delivery, beside the Timesheet — reading where the hours went is delivery work, not governance.',
+        text: 'Reports moved from Admin to Delivery, beside the Timesheet, reading where the hours went is delivery work, not governance.',
       },
       {
         kind: 'improved',
@@ -496,7 +523,7 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'added',
-        text: 'A Timesheet screen under Delivery: who has a timer running this minute, and a bar of each person’s day showing which task ran from when to when. Hover a block for the detail, step through days with the arrows, export the lot as CSV. Only tracked time is drawn — the gaps are left as gaps, because a filled-in guess is not a record.',
+        text: 'A Timesheet screen under Delivery: who has a timer running this minute, and a bar of each person’s day showing which task ran from when to when. Hover a block for the detail, step through days with the arrows, export the lot as CSV. Only tracked time is drawn. The gaps are left as gaps, because a filled-in guess is not a record.',
       },
       {
         kind: 'added',
@@ -504,51 +531,51 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'improved',
-        text: 'Backlog reports show the timer and the standup side by side and never add them together — they measure the same hours two different ways and routinely disagree. The variance between them is its own column, and it is the number worth reading: far more standup time than timer time means work is happening without the timer, and the reverse means work nobody wrote up.',
+        text: 'Backlog reports show the timer and the standup side by side and never add them together. They measure the same hours two different ways and routinely disagree. The variance between them is its own column, and it is the number worth reading: far more standup time than timer time means work is happening without the timer, and the reverse means work nobody wrote up.',
       },
       {
         kind: 'added',
-        text: 'The standup fills itself in. Open it and a banner lists the tasks you actually worked on today — anything you ran a timer on, anything assigned to you and in progress, anything you commented on — and one press drops them into the form. Times and descriptions stay blank, because the timer rarely covers a whole day and a wrong number is slower to fix than an empty one.',
+        text: 'The standup fills itself in. Open it and a banner lists the tasks you actually worked on today, anything you ran a timer on, anything assigned to you and in progress, anything you commented on, and one press drops them into the form. Times and descriptions stay blank, because the timer rarely covers a whole day and a wrong number is slower to fix than an empty one.',
       },
       {
         kind: 'added',
-        text: 'Work that belongs to no project now has somewhere to go. “Add other work” takes a title, a description and the time — for the errand, the interview panel, the afternoon lost to a fire drill. It counts towards your hours like anything else, and has nothing to do with quests or XP.',
+        text: 'Work that belongs to no project now has somewhere to go. “Add other work” takes a title, a description and the time, for the errand, the interview panel, the afternoon lost to a fire drill. It counts towards your hours like anything else, and has nothing to do with quests or XP.',
       },
       {
         kind: 'improved',
-        text: 'Standups are written project by project, with a row for each task you worked on and its own description — no more cramming three tasks into one box. Descriptions take bold, italic, lists and links.',
+        text: 'Standups are written project by project, with a row for each task you worked on and its own description, no more cramming three tasks into one box. Descriptions take bold, italic, lists and links.',
       },
       {
         kind: 'added',
-        text: 'A lunch break can be set under Settings → Attendance. It is unpaid, so it comes off the working day, and that is what decides how much work a standup has to account for — 09:00 to 18:00 with an hour for lunch is eight hours, not nine.',
+        text: 'A lunch break can be set under Settings → Attendance. It is unpaid, so it comes off the working day, and that is what decides how much work a standup has to account for, 09:00 to 18:00 with an hour for lunch is eight hours, not nine.',
       },
       {
         kind: 'improved',
-        text: 'Attendance, Standup and Gamification settings now live as tabs in the main Settings screen instead of being scattered through their own modules, and all three are laid out the same way. The day-to-day screens — registers, approvals, the quest board — stay exactly where they were.',
+        text: 'Attendance, Standup and Gamification settings now live as tabs in the main Settings screen instead of being scattered through their own modules, and all three are laid out the same way. The day-to-day screens, registers, approvals, the quest board, stay exactly where they were.',
       },
       {
         kind: 'added',
-        text: 'The standup rules are configurable at last. When it opens (a set number of minutes before the day ends, or a fixed time), how long it stays “on time”, what an on-time standup is worth, and the minimum length of a task description — all of it was previously fixed in code.',
+        text: 'The standup rules are configurable at last. When it opens (a set number of minutes before the day ends, or a fixed time), how long it stays “on time”, what an on-time standup is worth, and the minimum length of a task description, all of it was previously fixed in code.',
       },
       {
         kind: 'added',
-        text: 'A lead now holds the rest of what you know about a prospect: their website, country and city, as many social profiles as they have, and the documents you sent them — each with a title and a link. Social links need no picking from a list; paste the address and the platform is recognised from it. All of it shows on the lead beneath Services.',
+        text: 'A lead now holds the rest of what you know about a prospect: their website, country and city, as many social profiles as they have, and the documents you sent them. Each with a title and a link. Social links need no picking from a list; paste the address and the platform is recognised from it. All of it shows on the lead beneath Services.',
       },
       {
         kind: 'added',
-        text: 'Leads have a Documents tab, the same one projects have had: drop a file to upload it, or link a Google Doc, Sheet, Slide deck or Drive file. Press the eye and it opens inside the portal — Google documents, PDFs, images and spreadsheets all preview in place rather than sending you off to another tab.',
+        text: 'Leads have a Documents tab, the same one projects have had: drop a file to upload it, or link a Google Doc, Sheet, Slide deck or Drive file. Press the eye and it opens inside the portal, Google documents, PDFs, images and spreadsheets all preview in place rather than sending you off to another tab.',
       },
       {
         kind: 'added',
-        text: 'Document titles fill themselves in. Paste a link and the portal reads the document’s own name off it — “Q3 Proposal”, not “docs.google.com/document/d/1a2b3c”. Upload a file and its filename is used. Either way you can type over it. A document that needs sign-in cannot be read, and the portal says so instead of guessing.',
+        text: 'Document titles fill themselves in. Paste a link and the portal reads the document’s own name off it, “Q3 Proposal”, not “docs.google.com/document/d/1a2b3c”. Upload a file and its filename is used. Either way you can type over it. A document that needs sign-in cannot be read, and the portal says so instead of guessing.',
       },
       {
         kind: 'improved',
-        text: 'The CSV importer takes the new fields too — website, country, city, where the lead came from, social links and documents — so a spreadsheet no longer has to leave half of itself behind at the door.',
+        text: 'The CSV importer takes the new fields too, website, country, city, where the lead came from, social links and documents. So a spreadsheet no longer has to leave half of itself behind at the door.',
       },
       {
         kind: 'added',
-        text: 'Pipeline cards can be dragged up and down inside a column, not just across to the next stage. The card lifts out, the ones below close up, and an empty slot follows your cursor so you can see exactly where it will land. The order you set is saved for the whole department. It works under the new Manual order sort, which is now the default — the other sorts arrange the column for you, so dragging within one is not offered there.',
+        text: 'Pipeline cards can be dragged up and down inside a column, not just across to the next stage. The card lifts out, the ones below close up, and an empty slot follows your cursor so you can see exactly where it will land. The order you set is saved for the whole department. It works under the new Manual order sort, which is now the default. The other sorts arrange the column for you, so dragging within one is not offered there.',
       },
       {
         kind: 'added',
@@ -556,7 +583,7 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'improved',
-        text: 'Recognition notifications now open the screen they are about — a badge opens Badges, a redemption opens the Rewards Shop — instead of dropping you on the leaderboard to find it yourself.',
+        text: 'Recognition notifications now open the screen they are about. A badge opens Badges, a redemption opens the Rewards Shop, instead of dropping you on the leaderboard to find it yourself.',
       },
       {
         kind: 'improved',
@@ -564,7 +591,7 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'improved',
-        text: 'Holidays are listed newest first, and one that has not happened yet is marked Upcoming — Today on the day itself — so the next day off is at the top instead of buried under the year so far.',
+        text: 'Holidays are listed newest first, and one that has not happened yet is marked Upcoming, Today on the day itself. So the next day off is at the top instead of buried under the year so far.',
       },
     ],
   },
@@ -587,7 +614,7 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'improved',
-        text: 'Settings has moved to the bottom of the sidebar, pinned below a divider, and stays put while the rest of the list scrolls. Delivery now reads in the order work actually travels — clients, then projects, then tasks — and the People section groups the directory pages together above Attendance and Gamification.',
+        text: 'Settings has moved to the bottom of the sidebar, pinned below a divider, and stays put while the rest of the list scrolls. Delivery now reads in the order work actually travels, clients, then projects, then tasks, and the People section groups the directory pages together above Attendance and Gamification.',
       },
     ],
   },
@@ -630,7 +657,7 @@ export const RELEASES: ChangelogRelease[] = [
     entries: [
       { kind: 'added', text: 'Fingerprint check-in through the office terminal, with the portal button kept as a fallback when the device is offline.' },
       { kind: 'added', text: 'Every task now carries a full activity feed of what changed, when and by whom.' },
-      { kind: 'improved', text: 'Names are clickable everywhere — task, comment, standup, leaderboard, chat — and all open the same profile.' },
+      { kind: 'improved', text: 'Names are clickable everywhere, task, comment, standup, leaderboard, chat, and all open the same profile.' },
     ],
   },
   {
@@ -642,7 +669,7 @@ export const RELEASES: ChangelogRelease[] = [
       { kind: 'added', text: 'Private channels with managed membership.' },
       {
         kind: 'added',
-        text: 'Projects are now organised by service — Design, Development and Marketing each carry their own stages, tasks and people, so you only see the pipeline you work in.',
+        text: 'Projects are now organised by service, Design, Development and Marketing each carry their own stages, tasks and people, so you only see the pipeline you work in.',
       },
       { kind: 'added', text: 'Team pages, with reusable project templates a team can apply to a new service in one action.' },
       { kind: 'added', text: 'Standup history, team board and participation settings.' },
@@ -676,7 +703,7 @@ export const RELEASES: ChangelogRelease[] = [
     title: 'Push notifications and group rewards',
     entries: [
       { kind: 'added', text: 'Push notifications, enabled per device, with per-event-type preferences.' },
-      { kind: 'added', text: 'Group rewards — club together on a pooled reward and contribute an equal share each.' },
+      { kind: 'added', text: 'Group rewards, club together on a pooled reward and contribute an equal share each.' },
       { kind: 'added', text: 'Company-wide work-from-home days.' },
     ],
   },
@@ -697,7 +724,7 @@ export const RELEASES: ChangelogRelease[] = [
     entries: [
       { kind: 'added', text: 'Profile page with avatar upload and password change.' },
       { kind: 'added', text: 'A mobile layout with a bottom tab bar, and the portal became installable as an app.' },
-      { kind: 'added', text: 'Points history — a full ledger of every point earned and spent.' },
+      { kind: 'added', text: 'Points history. A full ledger of every point earned and spent.' },
       { kind: 'added', text: 'Device enrolment and approval for shared check-in devices.' },
       { kind: 'added', text: 'Password reset by email.' },
     ],
@@ -708,7 +735,7 @@ export const RELEASES: ChangelogRelease[] = [
     title: 'Recognition, people and services',
     entries: [
       { kind: 'added', text: 'Gamification rebuilt: quest board, shoutouts, badges, rewards shop and a monthly reset.' },
-      { kind: 'added', text: 'People management — invite staff, set roles, control access.' },
+      { kind: 'added', text: 'People management, invite staff, set roles, control access.' },
       { kind: 'added', text: 'Work-from-home and leave requests, synced into the attendance record.' },
       { kind: 'added', text: 'A configurable service catalogue.' },
     ],

@@ -164,12 +164,6 @@ export default function TargetsPage() {
       <Topbar title="Performance" />
       <div className="p-4 lg:px-8 lg:py-7 flex flex-col gap-6">
         <div className="flex flex-wrap items-center gap-3">
-          <div>
-            <h2 className="font-display font-bold text-[22px] text-text-1">Performance</h2>
-            <p className="font-ui text-[13px] text-text-3">
-              Targets, KPIs and reporting — the department’s numbers in one place
-            </p>
-          </div>
           <div className="ml-auto flex items-center gap-2">
             <Select value={period} onChange={setPeriod} options={PERIOD_OPTIONS} size="sm" className="w-36" />
             <Button size="sm" variant="secondary" iconLeft={<Filter size={14} />}>Filters</Button>
@@ -347,7 +341,7 @@ export default function TargetsPage() {
           <div className="flex flex-col gap-3 p-5 font-ui text-body-sm/relaxed text-text-2">
             <p>
               <span className="font-semibold text-text-1">Revenue stands at {formatCompactCurrency(totals.revenueActual)}</span>{' '}
-              against a {formatCompactCurrency(totals.revenueTarget)} target — {totals.attainment}% of the month, from{' '}
+              against a {formatCompactCurrency(totals.revenueTarget)} target, {totals.attainment}% of the month, from{' '}
               {totals.wins} closed deal{totals.wins === 1 ? '' : 's'}.
             </p>
             <p>
@@ -504,17 +498,17 @@ function ChannelReportTable({ stats }: { stats: ChannelStats[] }) {
                   <Icon size={14} className={cn('shrink-0', config.tint)} />
                   <span className="truncate font-ui text-[13px] text-text-1">{config.label}</span>
                 </span>
-                <span className="text-right font-mono text-[12.5px] tabular-nums text-text-3">{stat.sent || '—'}</span>
+                <span className="text-right font-mono text-[12.5px] tabular-nums text-text-3">{stat.sent || '-'}</span>
                 <span className="text-right font-mono text-[12.5px] tabular-nums text-text-2">{stat.leads}</span>
                 <span className={cn('text-right font-mono text-[12.5px] tabular-nums', stat.won > 0 ? 'text-success' : 'text-text-4')}>
                   {stat.won}
                 </span>
                 <span className="text-right font-mono text-[12.5px] tabular-nums text-text-2">{winRate}%</span>
                 <span className="text-right font-mono text-[12.5px] tabular-nums text-text-3">
-                  {perLead > 0 ? formatCompactCurrency(perLead) : '—'}
+                  {perLead > 0 ? formatCompactCurrency(perLead) : '-'}
                 </span>
                 <span className="text-right font-mono text-[12.5px] tabular-nums text-text-1">
-                  {stat.revenue > 0 ? formatCompactCurrency(stat.revenue) : '—'}
+                  {stat.revenue > 0 ? formatCompactCurrency(stat.revenue) : '-'}
                 </span>
               </div>
             )
@@ -531,7 +525,7 @@ function ChannelReportTable({ stats }: { stats: ChannelStats[] }) {
               <Icon size={14} className={config.tint} />
               <span className="font-ui text-[13px] font-semibold text-text-1">{config.label}</span>
               <span className="ml-auto font-mono text-[12.5px] tabular-nums text-text-1">
-                {stat.revenue > 0 ? formatCompactCurrency(stat.revenue) : '—'}
+                {stat.revenue > 0 ? formatCompactCurrency(stat.revenue) : '-'}
               </span>
             </span>
             <p className="font-mono text-[11.5px] tabular-nums text-text-3">

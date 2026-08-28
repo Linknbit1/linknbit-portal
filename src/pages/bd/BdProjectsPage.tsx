@@ -105,12 +105,9 @@ export default function BdProjectsPage() {
       <Topbar title="Projects" />
       <div className={cn('flex flex-col gap-5 p-4 lg:px-8 lg:py-7', view === 'kanban' && 'min-h-0 flex-1')}>
         <div className="flex flex-wrap items-center gap-3">
-          <div>
-            <h2 className="font-display text-[22px] font-bold text-text-1">Projects</h2>
-            <p className="font-ui text-[13px] text-text-3">
-              {filtered.length} of {projects.length} project{projects.length !== 1 ? 's' : ''}
-            </p>
-          </div>
+          <p className="font-ui text-[13px] text-text-3">
+            {filtered.length} of {projects.length} project{projects.length !== 1 ? 's' : ''}
+          </p>
           <Button size="sm" className="ml-auto" iconLeft={<Plus size={15} />} onClick={openNew}>New Project</Button>
         </div>
 
@@ -206,7 +203,7 @@ function EmptyState({ onNew }: { onNew: () => void }) {
       <span className="flex size-12 items-center justify-center rounded-full bg-surface-2 text-text-3"><Columns size={22} /></span>
       <p className="font-ui text-[14px] text-text-2">No projects yet</p>
       <p className="max-w-[44ch] font-ui text-[12.5px]/relaxed text-text-4">
-        A BD project is a campaign or initiative — an outreach push, a deal desk, a referral programme. Tasks hang off it.
+        A BD project is a campaign or initiative. An outreach push, a deal desk, a referral programme. Tasks hang off it.
       </p>
       <Button size="sm" variant="secondary" iconLeft={<Plus size={15} />} onClick={onNew}>Create your first project</Button>
     </div>
@@ -297,7 +294,7 @@ function ProjectCard({ project: p, taskCount, onOpen, onEdit, onDelete }: { proj
             <div className="min-w-0">
               <p className="font-mono text-[9.5px] font-semibold uppercase tracking-wider text-text-4">Deadline</p>
               <p className={cn('truncate font-ui text-[12.5px] font-semibold', overdue ? 'text-error' : 'text-text-1')}>
-                {p.deadline ? formatDate(p.deadline) : '—'}
+                {p.deadline ? formatDate(p.deadline) : '-'}
               </p>
             </div>
           </div>
@@ -359,12 +356,12 @@ function ListView({ projects, taskCountOf, onOpen, onEdit, onDelete }: ViewProps
                 <td className="px-4 py-3">
                   {p.deadline
                     ? <span className={cn('font-mono text-[12px]', isOverdue(p.deadline) && p.status !== 'completed' ? 'text-error' : 'text-text-3')}>{formatDate(p.deadline)}</span>
-                    : <span className="text-[12px] text-text-4">—</span>}
+                    : <span className="text-[12px] text-text-4">-</span>}
                 </td>
                 <td className="px-4 py-3">
                   {p.members.length > 0
                     ? <AvatarGroup users={p.members.map((m) => ({ id: m.id, name: m.name, avatarUrl: avatarOf(m.id) }))} max={4} size="xs" />
-                    : <span className="text-[12px] text-text-4">—</span>}
+                    : <span className="text-[12px] text-text-4">-</span>}
                 </td>
                 <td className="px-4 py-3 text-right">
                   <div className="flex justify-end gap-1">

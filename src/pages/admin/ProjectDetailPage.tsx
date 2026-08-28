@@ -2,7 +2,7 @@ import { useMemo, useRef, useState, type ReactNode } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
   Plus, Users, Layers, Paperclip, Calendar, Wallet, UserCircle,
-  Pencil, Trash2, Flag, X, CheckCircle2, Columns, FileText, Bell, BellOff, MoreVertical, History,
+  Pencil, Trash2, Flag, X, CheckCircle2, FileText, Bell, BellOff, MoreVertical, History,
 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Button } from '../../components/ui/Button'
@@ -18,7 +18,6 @@ import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { ServiceChip } from '../../components/shared/ServiceChip'
 import { StatusChip } from '../../components/shared/StatusChip'
 import { PriorityChip } from '../../components/shared/PriorityChip'
-import { TaskBoard } from '../../components/shared/TaskBoard'
 import { TimeBacklog } from '../../components/shared/TimeBacklog'
 import { ScopeNotice } from '../../components/shared/ScopeNotice'
 import { ScopeSwitch } from '../../components/shared/ScopeSwitch'
@@ -57,8 +56,11 @@ import type { TaskListItem } from '../../api/tasks'
 import type { ApprovalStatus } from '../../api/approvals'
 import type { UserRole } from '../../types'
 
+// No board here. A project already has a structure of its own -- services, then
+// stages -- and Pipeline is that structure. A second status-column view of the
+// same tasks answered a question nobody was asking inside a single project, and
+// the cross-project board on Tasks is where a board actually earns its place.
 const TABS = [
-  { key: 'board', label: 'Board', icon: Columns },
   { key: 'pipeline', label: 'Pipeline', icon: Layers },
   { key: 'overview', label: 'Overview', icon: FileText },
   { key: 'files', label: 'Files', icon: Paperclip },
@@ -193,12 +195,12 @@ export default function ProjectDetailPage() {
   // else produced a button that always errored.
   const canManageProjects = useCanAccess('can_manage_projects')
   const canViewBacklog = useCanAccess('can_view_backlog')
-  const [projectView, setProjectView] = useState<ProjectTab>('board')
+  const [projectView, setProjectView] = useState<ProjectTab>('pipeline')
   const visibleTabs = TABS.filter((t) => t.key !== 'backlog' || canViewBacklog)
   // Permissions resolve after first paint; clamp rather than stranding someone
   // on a tab that has just disappeared from the row.
-  const requestedTab: ProjectTab = taskIdFromUrl ? 'board' : projectView
-  const activeTab: ProjectTab = visibleTabs.some((t) => t.key === requestedTab) ? requestedTab : 'board'
+  const requestedTab: ProjectTab = taskIdFromUrl ? 'pipeline' : projectView
+  const activeTab: ProjectTab = visibleTabs.some((t) => t.key === requestedTab) ? requestedTab : 'pipeline'
   const [showEdit, setShowEdit] = useState(false)
   // Which service the "add member" modal is filling — the picker is per service now.
   const [addMemberFor, setAddMemberFor] = useState<string | null>(null)
@@ -291,13 +293,9 @@ export default function ProjectDetailPage() {
   }
 
   return (
-    <div className={cn('flex flex-col flex-1', activeTab === 'board' && 'min-h-0')}>
+    <div className="flex flex-col flex-1">
       <Topbar title={project.name} back="/admin/projects" />
-      {/* On the board tab the page stops scrolling and hands its remaining height
-          to the board, so each column scrolls its own cards under a fixed header.
-          overflow-hidden is what makes that binding: without it the tall summary
-          header pushes the board past the viewport and <main> scrolls instead. */}
-      <div className={cn('flex flex-col gap-5 p-4 lg:px-8 lg:py-7', activeTab === 'board' && 'min-h-0 flex-1 overflow-hidden')}>
+      <div className="flex flex-col gap-5 p-4 lg:px-8 lg:py-7">
         {/* Summary header */}
         <div className="shrink-0 bg-surface-1 border border-border-default rounded-xl p-4 sm:p-5">
           <div className="flex flex-wrap items-start gap-3">
@@ -320,11 +318,11 @@ export default function ProjectDetailPage() {
             <Meta
               icon={UserCircle}
               label="Manager"
-              value={project.manager?.name ?? '—'}
+              value={project.manager?.name ?? '-'}
               badge={project.manager?.is_active === false ? <DepartedBadge /> : undefined}
             />
-            <Meta icon={Calendar} label="Deadline" value={project.deadline ? formatDate(project.deadline) : '—'} danger={!!project.deadline && isOverdue(project.deadline) && project.status !== 'completed'} />
-            {canViewBudget && <Meta icon={Wallet} label="Budget" value={project.budget ? formatCurrency(project.budget) : '—'} />}
+            <Meta icon={Calendar} label="Deadline" value={project.deadline ? formatDate(project.deadline) : '-'} danger={!!project.deadline && isOverdue(project.deadline) && project.status !== 'completed'} />
+            {canViewBudget && <Meta icon={Wallet} label="Budget" value={project.budget ? formatCurrency(project.budget) : '-'} />}
             <div>
               <p className="font-mono text-[10px] uppercase tracking-wider text-text-4 mb-1.5">Progress</p>
               <div className="flex items-center gap-2">
@@ -413,7 +411,7 @@ export default function ProjectDetailPage() {
               </button>
             ))}
           </div>
-          {(activeTab === 'pipeline' || activeTab === 'board') && (
+          {activeTab === 'pipeline' && (
             <div className="flex items-center gap-2">
               {/* Compact here: inside one project the labels are redundant — the
                   only question is whose of THESE tasks you are looking at. */}
@@ -487,14 +485,8 @@ export default function ProjectDetailPage() {
           )
         )}
 
-        {(activeTab === 'board' || activeTab === 'pipeline') && (
+        {activeTab === 'pipeline' && (
           <ScopeNotice shown={tasks.length} total={allTasks.length} />
-        )}
-
-        {activeTab === 'board' && (
-          tasks.length === 0
-            ? <div className="bg-surface-1 border border-border-default rounded-md py-10 text-center font-ui text-[13px] text-text-4">No tasks yet.</div>
-            : <TaskBoard tasks={tasks} onOpenTask={setManualOpenTaskId} />
         )}
 
         {activeTab === 'overview' && (

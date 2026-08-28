@@ -247,7 +247,7 @@ export function useSaveLead() {
     keys: [BD_KEYS.leads],
     optimistic: (qc, { lead }) => upsertIn(qc, BD_KEYS.leads, lead),
     run: ({ lead, isNew }) => (isNew ? bd.createLead(lead, actorId) : bd.updateLead(lead.id, lead)),
-    errorMessage: 'Could not save the lead — your change has been undone.',
+    errorMessage: 'Could not save the lead. Your change has been undone.',
   })
 }
 
@@ -273,7 +273,7 @@ export function usePatchLead() {
     keys: [BD_KEYS.leads],
     optimistic: (qc, { id, patch }) => patchIn<Lead>(qc, BD_KEYS.leads, id, patch),
     run: ({ id, patch }) => bd.updateLead(id, patch),
-    errorMessage: 'Could not update the lead — your change has been undone.',
+    errorMessage: 'Could not update the lead. Your change has been undone.',
   })
 }
 
@@ -298,7 +298,7 @@ export function useMoveLeadMutation() {
       )
     },
     run: ({ id, patch }) => bd.updateLead(id, patch),
-    errorMessage: 'Could not move the lead — it is back where it was.',
+    errorMessage: 'Could not move the lead. It is back where it was.',
   })
 }
 
@@ -312,7 +312,7 @@ export function useDeleteLead() {
       qc.setQueryData<BdActivity[]>(BD_KEYS.activities, (cur) => cur?.filter((a) => a.leadId !== id))
     },
     run: ({ id }) => bd.deleteLead(id),
-    errorMessage: 'Could not delete the lead — it has been restored.',
+    errorMessage: 'Could not delete the lead. It has been restored.',
   })
 }
 
@@ -338,7 +338,7 @@ export function useLogActivity() {
         await bd.updateLead(activity.leadId, { lastContacted: activity.at.slice(0, 10) })
       }
     },
-    errorMessage: 'Could not log that activity — it has been removed.',
+    errorMessage: 'Could not log that activity. It has been removed.',
   })
 }
 
@@ -367,7 +367,7 @@ export function useSaveMeeting() {
       // roll the UI back. The invitee still has the notification either way.
       void bd.sendMeetingInvites(meeting.id, addedAttendeeIds).catch(() => {})
     },
-    errorMessage: 'Could not save the meeting — your change has been undone.',
+    errorMessage: 'Could not save the meeting. Your change has been undone.',
   })
 }
 
@@ -379,7 +379,7 @@ export function useDeleteMeeting() {
       removeFrom<BdMeeting>(qc, BD_KEYS.myMeetings, id)
     },
     run: ({ id }) => bd.deleteMeeting(id),
-    errorMessage: 'Could not delete the meeting — it has been restored.',
+    errorMessage: 'Could not delete the meeting. It has been restored.',
   })
 }
 
@@ -391,7 +391,7 @@ export function useSaveBdTask() {
     keys: [BD_KEYS.tasks],
     optimistic: (qc, { task }) => upsertIn(qc, BD_KEYS.tasks, task),
     run: ({ task, isNew }) => (isNew ? bd.createBdTask(task, actorId) : bd.updateBdTask(task.id, task)),
-    errorMessage: 'Could not save the task — your change has been undone.',
+    errorMessage: 'Could not save the task. Your change has been undone.',
   })
 }
 
@@ -400,7 +400,7 @@ export function usePatchBdTask() {
     keys: [BD_KEYS.tasks],
     optimistic: (qc, { id, patch }) => patchIn<BdTask>(qc, BD_KEYS.tasks, id, patch),
     run: ({ id, patch }) => bd.updateBdTask(id, patch),
-    errorMessage: 'Could not update the task — your change has been undone.',
+    errorMessage: 'Could not update the task. Your change has been undone.',
   })
 }
 
@@ -409,7 +409,7 @@ export function useDeleteBdTask() {
     keys: [BD_KEYS.tasks],
     optimistic: (qc, { id }) => removeFrom<BdTask>(qc, BD_KEYS.tasks, id),
     run: ({ id }) => bd.deleteBdTask(id),
-    errorMessage: 'Could not delete the task — it has been restored.',
+    errorMessage: 'Could not delete the task. It has been restored.',
   })
 }
 
@@ -433,7 +433,7 @@ export function useToggleBdChecklistItem() {
       )
     },
     run: ({ itemId, done }) => bd.setChecklistItemDone(itemId, done),
-    errorMessage: 'Could not save that tick — it has been undone.',
+    errorMessage: 'Could not save that tick. It has been undone.',
   })
 }
 
@@ -528,7 +528,7 @@ export function useMoveBdTaskMutation() {
       )
     },
     run: ({ id, status, position }) => bd.updateBdTask(id, { status, position }),
-    errorMessage: 'Could not move the task — it is back where it was.',
+    errorMessage: 'Could not move the task. It is back where it was.',
   })
 }
 
@@ -553,7 +553,7 @@ export function useSaveBdProject() {
     keys: [BD_KEYS.projects],
     optimistic: (qc, { project }) => upsertIn(qc, BD_KEYS.projects, project),
     run: ({ project }) => bd.saveBdProject(project, actorId),
-    errorMessage: 'Could not save the campaign — your change has been undone.',
+    errorMessage: 'Could not save the campaign. Your change has been undone.',
   })
 }
 
@@ -562,7 +562,7 @@ export function usePatchBdProject() {
     keys: [BD_KEYS.projects],
     optimistic: (qc, { id, patch }) => patchIn<BdProject>(qc, BD_KEYS.projects, id, patch),
     run: ({ id, patch }) => bd.updateBdProject(id, patch),
-    errorMessage: 'Could not update the campaign — your change has been undone.',
+    errorMessage: 'Could not update the campaign. Your change has been undone.',
   })
 }
 
@@ -576,7 +576,7 @@ export function useDeleteBdProject() {
       qc.setQueryData<BdTask[]>(BD_KEYS.tasks, (cur) => cur?.filter((t) => t.projectId !== id))
     },
     run: ({ id }) => bd.deleteBdProject(id),
-    errorMessage: 'Could not delete the campaign — it has been restored.',
+    errorMessage: 'Could not delete the campaign. It has been restored.',
   })
 }
 
@@ -596,7 +596,7 @@ export function useSaveBdUpdate() {
       })
     },
     run: ({ update }) => bd.saveDailyUpdate(update),
-    errorMessage: 'Could not save your update — it has been undone.',
+    errorMessage: 'Could not save your update. It has been undone.',
   })
 }
 
@@ -608,7 +608,7 @@ export function useSaveBdTargets(periodMonth: string) {
     keys: [BD_KEYS.targets(periodMonth)],
     optimistic: (qc, { targets }) => qc.setQueryData<BdTarget[]>(BD_KEYS.targets(periodMonth), targets),
     run: ({ targets }) => bd.saveTargets(targets, periodMonth, actorId),
-    errorMessage: 'Could not save the targets — the previous quotas are back.',
+    errorMessage: 'Could not save the targets. The previous quotas are back.',
   })
 }
 
@@ -696,7 +696,7 @@ export function useDeleteBdComment(parentType: BdCommentParent, parentId: string
     keys: [BD_KEYS.comments(parentType, parentId)],
     optimistic: (qc, { id }) => removeFrom<BdComment>(qc, BD_KEYS.comments(parentType, parentId), id),
     run: ({ id }) => bd.deleteBdComment(id),
-    errorMessage: 'Could not delete that comment — it has been restored.',
+    errorMessage: 'Could not delete that comment. It has been restored.',
   })
 }
 
@@ -706,7 +706,7 @@ export function useUpdateBdComment(parentType: BdCommentParent, parentId: string
     optimistic: (qc, { id, content, doc }) =>
       patchIn<BdComment>(qc, BD_KEYS.comments(parentType, parentId), id, { content, doc }),
     run: ({ id, content, doc }) => bd.updateBdComment(id, content, doc),
-    errorMessage: 'Could not save that edit — it has been undone.',
+    errorMessage: 'Could not save that edit. It has been undone.',
   })
 }
 

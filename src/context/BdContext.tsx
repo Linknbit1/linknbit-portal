@@ -438,7 +438,7 @@ export function BdProvider({ children }: { children: ReactNode }) {
         at: new Date().toISOString(),
         note:
           `Handed to delivery as “${input.projectName}”, owned by ${manager?.name ?? 'delivery'}` +
-          ` — ${count} service${count === 1 ? '' : 's'}.`,
+          `, ${count} service${count === 1 ? '' : 's'}.`,
         volume: 1, responses: 0, meetingsBooked: 0, leadsCreated: 0,
         byId: viewerRepId, byName: viewerName,
       },

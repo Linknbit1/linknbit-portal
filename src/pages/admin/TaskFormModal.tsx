@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { Paperclip, X as XIcon } from 'lucide-react'
 import { Drawer } from '../../components/ui/Drawer'
 import { Button } from '../../components/ui/Button'
@@ -14,6 +14,8 @@ import { useAddProjectService, useProjectServices, useProjectServiceMembers } fr
 import { useServices } from '../../hooks/useServices'
 import { useCreateTask, useUpdateTask, useMoveTask } from '../../hooks/useTasks'
 import { MultiSelectPeople } from '../../components/ui/MultiSelectPeople'
+import { RichEditor } from '../../components/editor/RichEditor'
+import { useSyncMentions } from '../../hooks/useMentions'
 import { TaskTimeTracker } from '../../components/shared/TaskTimeTracker'
 import { useSetTaskAssignees } from '../../hooks/useTaskAssignees'
 import { useUploadAttachment } from '../../hooks/useAttachments'
@@ -21,7 +23,8 @@ import { useCanAccess } from '../../hooks/useRoleFlags'
 import { useToast } from '../../components/ui/toast-context'
 import { formatFileSize } from '../../lib/attachment'
 import { cn } from '../../lib/cn'
-import { docToPlainText, fromDbDoc, plainTextToDoc, toDbDoc } from '../../lib/richText'
+import { docToPlainText, extractMentionIds, fromDbDoc, plainTextToDoc, toDbDoc } from '../../lib/richText'
+import type { JSONContent } from '@tiptap/react'
 import { PRIORITY_LABELS, STATUS_LABELS, toDateInput, toTimeInput, fromDateTimeInput } from '../../lib/utils'
 import type { TaskListItem } from '../../api/tasks'
 import { SIGN_OFF_STATUSES } from '../../types'
@@ -90,7 +93,7 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
       const block = services.find((ps) => ps.service_id === s.id)
       return {
         value: block ? block.id : `${NEW_SERVICE}${s.id}`,
-        label: block ? s.name : `${s.name} — add to project`,
+        label: block ? s.name : `${s.name}, add to project`,
         dot: s.color,
       }
     })
@@ -108,11 +111,16 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
   const members = pendingNewService ? [] : allMembers.filter((m) => m.project_service_id === effectiveService)
 
   const [title, setTitle] = useState(task?.title ?? '')
-  // Tasks written before `description` was mirrored only have the rich `doc`,
-  // so fall back to flattening that rather than showing an empty box.
-  const [description, setDescription] = useState(
-    task?.description ?? docToPlainText(fromDbDoc(task?.doc)),
+  // The same rich editor the task view uses, so `/` commands and `@` mentions
+  // work while a task is being written rather than only after it exists. It is
+  // RichEditor rather than DocEditor because DocEditor autosaves against a row
+  // id, and on a new task there is no row yet -- mentions are synced on save.
+  const [descDoc, setDescDoc] = useState<JSONContent | null>(
+    // Tasks written before `description` was mirrored only have the rich `doc`,
+    // and older ones only the plain text. Take whichever exists.
+    () => fromDbDoc(task?.doc) ?? (task?.description ? plainTextToDoc(task.description) : null),
   )
+  const description = useMemo(() => docToPlainText(descDoc), [descDoc])
   const [stageId, setStageId] = useState(task?.stage_id ?? defaultStageId ?? '')
   const [assigneeIds, setAssigneeIds] = useState<string[]>(task?.assignees.map((a) => a.id) ?? [])
   const [priority, setPriority] = useState<Priority>(toPriority(task?.priority))
@@ -132,6 +140,16 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
   // Drives the slide-out; the real `onClose` runs once the animation finishes.
   const [visible, setVisible] = useState(true)
   const dismiss = () => setVisible(false)
+
+  const syncMentions = useSyncMentions()
+  // DocEditor records mentions as it autosaves; here there is one save, so the
+  // same job is done once the row is known to exist. Fire-and-forget: a mention
+  // that fails to record must not fail the task that carries it.
+  const recordMentions = (taskId: string, projectId: string) => {
+    const ids = extractMentionIds(descDoc)
+    if (ids.length === 0) return
+    syncMentions.mutate({ sourceType: 'task', sourceId: taskId, projectId, profileIds: ids })
+  }
 
   const projectOptions = projects.map((p) => ({ value: p.id, label: p.name }))
   const stageOptions = [{ value: '', label: 'No stage' }, ...stages.map((s) => ({ value: s.id, label: s.name }))]
@@ -195,7 +213,7 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
             // Both halves together: editing the plain mirror here would otherwise
             // leave the rich doc stale and the task view showing the old text.
             description: description.trim(),
-            doc: toDbDoc(plainTextToDoc(description)),
+            doc: toDbDoc(descDoc),
             stage_id: stageId || null,
             priority, status, due_date: dueAt, client_visible: clientVisible,
             estimated_minutes: estimatedMinutes,
@@ -203,6 +221,7 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
         },
         {
           onSuccess: () => {
+            recordMentions(task.id, task.project_id)
             const moved = serviceBlockId !== task.project_service_id
             const afterAssignees = () => {
               // Moving last: the field edits above are scoped to the task, while
@@ -233,7 +252,7 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
           project_service_id: serviceBlockId,
           title: title.trim(),
           description: description.trim(),
-          doc: toDbDoc(plainTextToDoc(description)),
+          doc: toDbDoc(descDoc),
           stage_id: stageId || null,
           assignee_id: assigneeIds[0] ?? null,
           priority, status, due_date: dueAt, client_visible: clientVisible,
@@ -241,6 +260,7 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
         },
         {
           onSuccess: async (row) => {
+            recordMentions(row.id, selectedProject)
             try {
               await uploadPending(row.id, selectedProject)
             } catch (e) {
@@ -302,13 +322,14 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
           <label className="text-label font-ui font-semibold text-text-2 uppercase tracking-wider">
             Description <span className="text-brand-red">*</span>
           </label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={3}
-            placeholder="What does done look like? (required)"
-            className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 font-ui text-body-sm text-text-1 placeholder:text-text-3 focus:outline-none focus:border-border-focus focus:shadow-ring-focus resize-none"
-          />
+          <div className="min-h-[76px] w-full rounded-md border border-border-default bg-surface-inset px-3 py-2 focus-within:border-border-focus focus-within:shadow-ring-focus">
+            <RichEditor
+              value={descDoc}
+              onChange={setDescDoc}
+              mentionItems={memberPeople}
+              placeholder="What does done look like? Type / for commands, @ to mention"
+            />
+          </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
@@ -417,7 +438,7 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
         <div className="space-y-1.5">
           <label className="text-label font-ui font-semibold text-text-2 uppercase tracking-wider">Time estimate</label>
           <DurationInput value={estimatedMinutes} onChange={setEstimatedMinutes} />
-          <p className="font-ui text-[11px] text-text-4">How much work this is — separate from when it&rsquo;s scheduled.</p>
+          <p className="font-ui text-[11px] text-text-4">How much work this is, separate from when it&rsquo;s scheduled.</p>
         </div>
 
         <div className="space-y-1.5">
@@ -428,7 +449,7 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
             // Time is logged against a task that exists, so there is nothing to
             // attach an entry to until this form is saved.
             <p className="rounded-md border border-dashed border-border-default bg-surface-inset px-3 py-2.5 font-ui text-[12px] text-text-4">
-              Available once the task is created — open it to start a timer or log time.
+              Available once the task is created, open it to start a timer or log time.
             </p>
           )}
         </div>

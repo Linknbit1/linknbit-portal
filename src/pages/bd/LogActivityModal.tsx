@@ -45,7 +45,7 @@ export function LogActivityModal({ open, lead, onClose }: LogActivityModalProps)
 
   if (!lead) return null
 
-  const noteError = touched && !note.trim() ? 'Write what happened — this is what gets reported on' : undefined
+  const noteError = touched && !note.trim() ? 'Write what happened. This is what gets reported on' : undefined
 
   const submit = () => {
     setTouched(true)
@@ -77,7 +77,7 @@ export function LogActivityModal({ open, lead, onClose }: LogActivityModalProps)
       open={open}
       onClose={onClose}
       size="lg"
-      title={`Log activity — ${lead.company}`}
+      title={`Log activity, ${lead.company}`}
       footer={
         <div className="flex items-center justify-end gap-2">
           <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>

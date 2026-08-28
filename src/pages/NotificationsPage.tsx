@@ -93,7 +93,6 @@ export default function NotificationsPage() {
       <Topbar title="Notifications" />
       <div className="p-4 lg:px-8 lg:py-7 flex flex-col gap-6">
         <div className="flex items-center gap-3">
-          <h2 className="font-display font-bold text-[22px] text-text-1">Notifications</h2>
           {waitingTotal > 0 && <span className="px-2 py-0.5 rounded-sm bg-brand-red text-white text-[11px] font-bold">{waitingTotal}</span>}
           {unread > 0 && (
             <button onClick={() => markAllRead()} className="ml-auto flex items-center gap-1.5 font-ui text-[12px] text-text-3 hover:text-text-1 transition-colors">

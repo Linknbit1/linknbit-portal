@@ -42,7 +42,7 @@ function mintSecret(): string {
 }
 
 function fmtWhen(iso: string | null): string {
-  if (!iso) return '—'
+  if (!iso) return '-'
   return new Date(iso).toLocaleString('en-US', {
     month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
   })
@@ -60,7 +60,7 @@ function SecretReveal({ secret, onDone }: { secret: string; onDone: () => void }
       setCopied(true)
       toast('Secret copied', 'success')
     } catch {
-      toast('Could not copy — select the text manually', 'error')
+      toast('Could not copy, select the text manually', 'error')
     }
   }
 
@@ -70,7 +70,7 @@ function SecretReveal({ secret, onDone }: { secret: string; onDone: () => void }
         <KeyRound size={15} className="text-warning shrink-0 mt-0.5" />
         <div>
           <p className="font-ui font-semibold text-[13px] text-warning">
-            Copy this secret now — it is not stored and cannot be shown again
+            Copy this secret now. It is not stored and cannot be shown again
           </p>
           <p className="font-ui text-[12px] text-text-3 mt-0.5">
             Put it in <code className="font-mono text-[11px]">ZK_TERMINAL_SECRET</code> in{' '}
@@ -179,16 +179,16 @@ function TerminalCard({ terminal }: { terminal: TerminalPublic }) {
         <div className="flex items-start gap-2 bg-warning/8 border border-warning/25 rounded-sm px-3 py-2">
           <Clock size={13} className="text-warning shrink-0 mt-0.5" />
           <p className="font-ui text-[11.5px] text-warning">
-            {skew} — late/on-time results may be wrong. Run{' '}
+            {skew}, late/on-time results may be wrong. Run{' '}
             <code className="font-mono">zk_provision.py --sync-time</code>.
           </p>
         </div>
       )}
 
       <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 font-mono text-[11px] text-text-3">
-        <span>Firmware <span className="text-text-4">{terminal.firmware ?? '—'}</span></span>
-        <span>Serial <span className="text-text-4">{terminal.serial_number ?? '—'}</span></span>
-        <span>Device log <span className="text-text-4">{terminal.device_log_count ?? '—'}</span></span>
+        <span>Firmware <span className="text-text-4">{terminal.firmware ?? '-'}</span></span>
+        <span>Serial <span className="text-text-4">{terminal.serial_number ?? '-'}</span></span>
+        <span>Device log <span className="text-text-4">{terminal.device_log_count ?? '-'}</span></span>
         <span>Last poll <span className="text-text-4">{fmtWhen(terminal.last_poll_at)}</span></span>
       </div>
 
@@ -278,7 +278,7 @@ function AddTerminalModal({ onClose }: { onClose: () => void }) {
 
         <p className="font-ui text-[11.5px] text-text-4">
           A secret is generated for you and shown once. The name must match{' '}
-          <code className="font-mono text-[11px]">ZK_TERMINAL_NAME</code> on the Pi exactly —
+          <code className="font-mono text-[11px]">ZK_TERMINAL_NAME</code> on the Pi exactly -
           avoid dashes that are easy to mistype.
         </p>
       </div>
@@ -328,7 +328,7 @@ function LinkRow({ entry, linkedTo }: { entry: RosterEntry; linkedTo: Enrollment
     if (!linkedTo) return
     try {
       await unlink.mutateAsync(linkedTo.id)
-      toast(`#${entry.zk_user_id} freed — past attendance is unchanged`, 'success')
+      toast(`#${entry.zk_user_id} freed, past attendance is unchanged`, 'success')
     } catch (err) {
       toast(err instanceof Error ? err.message : 'Could not unlink', 'error')
     }
@@ -340,7 +340,7 @@ function LinkRow({ entry, linkedTo }: { entry: RosterEntry; linkedTo: Enrollment
       setSelected('')
       toast(
         result.adopted_punches > 0
-          ? `Linked — ${result.adopted_punches} earlier punch(es) across ${result.affected_dates.length} day(s) attached`
+          ? `Linked, ${result.adopted_punches} earlier punch(es) across ${result.affected_dates.length} day(s) attached`
           : 'Linked',
         'success',
       )
@@ -403,7 +403,7 @@ function LinkedMembers() {
   const handleUnlink = async (id: string) => {
     try {
       await unlink.mutateAsync(id)
-      toast('Enroll number unlinked — past attendance is unchanged', 'success')
+      toast('Enroll number unlinked, past attendance is unchanged', 'success')
     } catch (err) {
       toast(err instanceof Error ? err.message : 'Could not unlink', 'error')
     }
@@ -548,8 +548,8 @@ export function BiometricTerminalsTab() {
                 No fingerprints enrolled on the terminal yet
               </p>
               <p className="font-ui text-[12px] text-text-4 mt-1.5 max-w-110 mx-auto">
-                Enrol people at the terminal keypad — typically{' '}
-                <span className="text-text-3">Menu → User Mgt → New User</span> — and note the user
+                Enrol people at the terminal keypad, typically{' '}
+                <span className="text-text-3">Menu → User Mgt → New User</span>, and note the user
                 ID it assigns. They show up here on the next roster sync, and you then link each ID
                 to a member.
               </p>

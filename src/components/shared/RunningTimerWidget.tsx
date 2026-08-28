@@ -40,7 +40,7 @@ export function RunningTimerWidget() {
     stopTimer.mutate(undefined, {
       onSuccess: (entry) => {
         const mins = entry ? Math.round(secondsBetween(entry.started_at, entry.ended_at) / 60) : 0
-        toast(`Timer stopped — ${formatMinutes(mins)} logged`, 'success')
+        toast(`Timer stopped, ${formatMinutes(mins)} logged`, 'success')
       },
       onError: (e) => toast(e instanceof Error ? e.message : 'Could not stop the timer', 'error'),
     })

@@ -466,7 +466,7 @@ export default function ClientApprovalsPage() {
               Your approval keeps the project moving.
             </>
           ) : (
-            "You're all caught up — no pending approvals."
+            "You're all caught up, no pending approvals."
           )}
         </p>
       </div>

@@ -18,7 +18,7 @@ export default function ClickUpPage() {
     await new Promise((r) => setTimeout(r, 1800))
     setSyncing(false)
     setLastSync(new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }))
-    toast('ClickUp sync completed — all projects updated', 'success')
+    toast('ClickUp sync completed, all projects updated', 'success')
   }
 
   const syncedProjects = PROJECTS.filter((p) => p.clickUpSync === 'synced')
@@ -114,7 +114,7 @@ export default function ClickUpPage() {
                   <td className="px-4 py-3.5"><ClickUpStatus status={project.clickUpSync} showRetry /></td>
                   <td className="px-4 py-3.5">
                     <span className="font-mono text-[11.5px] text-text-3">
-                      {project.lastSynced ? new Date(project.lastSynced).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
+                      {project.lastSynced ? new Date(project.lastSynced).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}
                     </span>
                   </td>
                   <td className="px-4 py-3.5">
@@ -154,7 +154,7 @@ export default function ClickUpPage() {
                 <div key={p.id} className="flex items-center justify-between p-3 bg-error/5 border border-error/20 rounded-lg">
                   <div>
                     <p className="font-ui font-medium text-[13px] text-text-1">{p.name}</p>
-                    <p className="font-mono text-[11px] text-error mt-0.5">Authentication token expired — re-authorize in Settings</p>
+                    <p className="font-mono text-[11px] text-error mt-0.5">Authentication token expired, re-authorize in Settings</p>
                   </div>
                   <Button size="sm" variant="danger" onClick={() => toast('Re-authorizing...', 'info')}>
                     Fix

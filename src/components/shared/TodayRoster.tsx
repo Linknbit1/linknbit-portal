@@ -14,7 +14,7 @@ function localToday(): string {
 }
 
 const fmtTime = (ts: string | null): string =>
-  ts ? new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : '—'
+  ts ? new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : '-'
 
 interface StatusMeta {
   label: string
@@ -275,7 +275,7 @@ export function TodayRoster() {
         <div className="flex items-center gap-2 px-4 py-2.5 border border-service-mkt/30 bg-service-mkt/10 text-service-mkt font-ui text-[13px]">
           <Palmtree size={14} />
           <span>
-            <span className="font-semibold">{holidayName}</span> — the office is closed.
+            <span className="font-semibold">{holidayName}</span>. The office is closed.
           </span>
         </div>
       )}
@@ -284,7 +284,7 @@ export function TodayRoster() {
         <div className="flex items-center gap-2 px-4 py-2.5 border border-service-dev/30 bg-service-dev/10 text-service-dev font-ui text-[13px]">
           <Home size={14} />
           <span>
-            <span className="font-semibold">Company-wide WFH</span> — {companyWfh}
+            <span className="font-semibold">Company-wide WFH</span>, {companyWfh}
           </span>
         </div>
       )}

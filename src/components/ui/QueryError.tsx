@@ -40,7 +40,7 @@ export function QueryError({ error, label = 'This view', className }: QueryError
         {message}
       </p>
       <p className="mt-2 font-ui text-[12px] text-text-4">
-        This is a fault, not an empty result — the figures you are looking for may well exist.
+        This is a fault, not an empty result. The figures you are looking for may well exist.
       </p>
     </div>
   )

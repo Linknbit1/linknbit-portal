@@ -67,7 +67,7 @@ export function MessageList({
           <MessageSquare size={22} />
         </span>
         <p className="font-ui font-semibold text-[14px] text-text-1">No messages yet</p>
-        <p className="font-ui text-[12px] text-text-4 max-w-sm">Say hello — this is the beginning of the conversation.</p>
+        <p className="font-ui text-[12px] text-text-4 max-w-sm">Say hello. This is the beginning of the conversation.</p>
       </div>
     )
   }

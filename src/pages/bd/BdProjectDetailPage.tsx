@@ -239,7 +239,7 @@ export default function BdProjectDetailPage() {
             <Meta
               icon={Calendar}
               label="Deadline"
-              value={project.deadline ? formatDate(project.deadline) : '—'}
+              value={project.deadline ? formatDate(project.deadline) : '-'}
               danger={overdue}
             />
             <Meta icon={CheckSquare} label="Tasks" value={`${done}/${projectTasks.length} done`} />
@@ -272,7 +272,7 @@ export default function BdProjectDetailPage() {
             <EmptyTab
               icon={Columns}
               title="No tasks on this campaign yet"
-              body="Tasks are the work behind the outreach — proposals to prep, lists to build, follow-ups to make."
+              body="Tasks are the work behind the outreach, proposals to prep, lists to build, follow-ups to make."
               action={<Button size="sm" variant="secondary" iconLeft={<Plus size={15} />} onClick={() => addTask()}>Add the first task</Button>}
             />
           ) : (
@@ -517,7 +517,7 @@ function OutreachTab({
               <div className="flex items-center justify-between border-t border-border-subtle pt-3">
                 <span className="font-ui text-[11px] uppercase tracking-widest text-text-4">Revenue</span>
                 <span className="font-display text-[15px] font-bold tabular-nums text-text-1">
-                  {won.length > 0 ? formatCompactCurrency(won.reduce((n, l) => n + l.value, 0)) : '—'}
+                  {won.length > 0 ? formatCompactCurrency(won.reduce((n, l) => n + l.value, 0)) : '-'}
                 </span>
               </div>
             </article>

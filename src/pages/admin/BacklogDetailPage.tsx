@@ -197,16 +197,16 @@ export default function ProjectBacklogDetailPage() {
             <Row key={t.task_id ?? 'unattributed'}>
               <Cell><TaskCell row={t} /></Cell>
               <Cell align="right">
-                {t.status ? <StatusChip status={t.status} /> : <span className="text-text-4">—</span>}
+                {t.status ? <StatusChip status={t.status} /> : <span className="text-text-4">-</span>}
               </Cell>
               <Cell align="right">
                 <span className="block truncate font-ui text-[12px] text-text-3">
-                  {(t.assignees ?? []).length > 0 ? (t.assignees ?? []).join(', ') : '—'}
+                  {(t.assignees ?? []).length > 0 ? (t.assignees ?? []).join(', ') : '-'}
                 </span>
               </Cell>
-              <Num muted>{t.estimated_minutes ? formatMinutes(t.estimated_minutes) : '—'}</Num>
-              <Num muted={!t.had_activity}>{t.timer_minutes ? formatMinutes(t.timer_minutes) : '—'}</Num>
-              <Num muted={!t.had_activity}>{t.standup_minutes ? formatMinutes(t.standup_minutes) : '—'}</Num>
+              <Num muted>{t.estimated_minutes ? formatMinutes(t.estimated_minutes) : '-'}</Num>
+              <Num muted={!t.had_activity}>{t.timer_minutes ? formatMinutes(t.timer_minutes) : '-'}</Num>
+              <Num muted={!t.had_activity}>{t.standup_minutes ? formatMinutes(t.standup_minutes) : '-'}</Num>
               <Cell align="right">
                 {t.had_activity
                   ? <VarianceChip minutes={t.variance_minutes} />
@@ -285,7 +285,7 @@ export function EmployeeBacklogDetailPage() {
           {summary.makeup_balance_minutes > 0 && (
             <Callout tone="warning">
               <span className="font-semibold">{formatMinutes(summary.makeup_balance_minutes)}</span> of
-              make-up time still owed — unpaid hours from an approved exception.
+              make-up time still owed, unpaid hours from an approved exception.
               {summary.made_up_minutes > 0 && (
                 <> {formatMinutes(summary.made_up_minutes)} of {formatMinutes(summary.unpaid_minutes)} has
                 been worked back so far.</>
@@ -353,10 +353,10 @@ export function EmployeeBacklogDetailPage() {
                 <span className="block truncate font-ui text-[12px] text-text-3">{t.project_name}</span>
               </Cell>
               <Cell align="right">
-                {t.status ? <StatusChip status={t.status} /> : <span className="text-text-4">—</span>}
+                {t.status ? <StatusChip status={t.status} /> : <span className="text-text-4">-</span>}
               </Cell>
-              <Num>{t.timer_minutes ? formatMinutes(t.timer_minutes) : '—'}</Num>
-              <Num>{t.standup_minutes ? formatMinutes(t.standup_minutes) : '—'}</Num>
+              <Num>{t.timer_minutes ? formatMinutes(t.timer_minutes) : '-'}</Num>
+              <Num>{t.standup_minutes ? formatMinutes(t.standup_minutes) : '-'}</Num>
               <Cell align="right"><VarianceChip minutes={t.variance_minutes} /></Cell>
             </Row>
           ))}
@@ -417,7 +417,7 @@ function DetailShell({
           <span>
             <span className="font-medium text-text-2">Timer</span> is time tracked against a task;{' '}
             <span className="font-medium text-text-2">Standup</span> is what was written up at the end of
-            the day. They are never added together — the{' '}
+            the day. They are never added together. The{' '}
             <span className="font-medium text-text-2">variance</span> between them is the number worth
             reading.
           </span>
@@ -539,7 +539,7 @@ function TaskCell({ row }: { row: Pick<ProjectTaskRow, 'task_id' | 'task_title' 
           </span>
         ) : (
           <Link
-            to={`/admin/tasks/${row.task_id}?openInProject=1`}
+            to={`/admin/tasks/${row.task_id}`}
             className="truncate font-ui text-[13px] font-medium text-text-1 hover:text-brand-red"
           >
             {row.task_title}

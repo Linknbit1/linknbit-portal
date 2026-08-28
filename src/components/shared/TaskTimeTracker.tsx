@@ -332,7 +332,7 @@ export function TaskTimeTracker({ taskId, estimatedMinutes, className }: TaskTim
       </div>
 
       {runningElsewhere && (
-        <p className="font-ui text-[11px] text-text-4">A timer is running on another task — starting here moves it.</p>
+        <p className="font-ui text-[11px] text-text-4">A timer is running on another task, starting here moves it.</p>
       )}
 
       {showLog && (

@@ -414,13 +414,13 @@ export const QUESTS: Quest[] = [
    REWARDS
    ========================================================= */
 export const REWARDS: Reward[] = [
-  { id: 'r1', name: 'Half Day Off', description: 'Take a half day off — morning or afternoon', coinCost: 500, category: 'time_off', icon: '🌅', available: true, status: 'active' },
+  { id: 'r1', name: 'Half Day Off', description: 'Take a half day off, morning or afternoon', coinCost: 500, category: 'time_off', icon: '🌅', available: true, status: 'active' },
   { id: 'r2', name: 'Work From Home Day', description: 'Work from the comfort of home for a full day', coinCost: 800, category: 'time_off', icon: '🏠', available: true, status: 'active' },
   { id: 'r3', name: 'Team Lunch Nomination', description: 'Nominate your team for a sponsored lunch', coinCost: 1200, category: 'work_perk', icon: '🍽️', available: true, status: 'active' },
   { id: 'r4', name: 'Choose Your Next Project', description: 'Have a say in which project you\'re assigned to next', coinCost: 2000, category: 'career', icon: '🎯', available: false, status: 'active' },
   { id: 'r5', name: 'Mentorship with CTO', description: 'One-on-one career mentorship session with the CTO', coinCost: 1500, category: 'career', icon: '🎓', available: false, status: 'active' },
   { id: 'r6', name: 'Linknbit Merch Box', description: 'Premium Linknbit branded merchandise package', coinCost: 3000, category: 'recognition', icon: '🎁', available: false, status: 'active' },
-  { id: 'r7', name: 'Extended Deadline Pass', description: 'Get a one-task deadline extension — no questions asked', coinCost: 400, category: 'work_perk', icon: '⏰', available: true, status: 'active' },
+  { id: 'r7', name: 'Extended Deadline Pass', description: 'Get a one-task deadline extension, no questions asked', coinCost: 400, category: 'work_perk', icon: '⏰', available: true, status: 'active' },
   { id: 'r8', name: 'Featured on Showcase', description: 'Get featured on Linknbit\'s social media and website', coinCost: 600, category: 'recognition', icon: '🌟', available: true, status: 'active' },
 ]
 
@@ -512,7 +512,7 @@ export const WFH_REQUESTS: WFHRequest[] = [
     userName: 'Usman Tariq',
     date: '2026-05-19',
     requestedAt: '2026-05-18T09:15:00',
-    reason: 'Internet issues in my area — will work from a co-working space nearby.',
+    reason: 'Internet issues in my area, will work from a co-working space nearby.',
     status: 'pending',
   },
   {
@@ -530,7 +530,7 @@ export const WFH_REQUESTS: WFHRequest[] = [
     userName: 'Sara Qureshi',
     date: '2026-05-20',
     requestedAt: '2026-05-18T10:00:00',
-    reason: 'Deadline-critical design work — need a distraction-free environment.',
+    reason: 'Deadline-critical design work, need a distraction-free environment.',
     status: 'pending',
   },
   {

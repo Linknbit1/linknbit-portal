@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { ArrowUpRight, Maximize2, Minimize2 } from 'lucide-react'
+import { Maximize2, Minimize2 } from 'lucide-react'
 import { Drawer } from '../../components/ui/Drawer'
 import { TaskDetailContent } from './TaskDetailContent'
 
@@ -11,7 +10,6 @@ interface TaskDetailDrawerProps {
 }
 
 export function TaskDetailDrawer({ taskId, open, onClose }: TaskDetailDrawerProps) {
-  const navigate = useNavigate()
   const [wide, setWide] = useState(false)
 
   return (
@@ -27,12 +25,6 @@ export function TaskDetailDrawer({ taskId, open, onClose }: TaskDetailDrawerProp
             aria-label={wide ? 'Collapse panel' : 'Expand panel'}
           >
             {wide ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
-          </button>
-          <button
-            onClick={() => taskId && navigate(`/admin/tasks/${taskId}`)}
-            className="flex items-center gap-1.5 font-ui text-[12px] text-text-3 hover:text-text-1 transition-colors"
-          >
-            Open full page <ArrowUpRight size={13} />
           </button>
         </div>
       }

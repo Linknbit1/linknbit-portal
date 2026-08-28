@@ -155,7 +155,7 @@ export function CreateChannelModal({ open, onClose, onCreated }: CreateChannelMo
             </p>
             <p className="mt-0.5 font-ui text-[11.5px] text-text-4">
               Only people who can manage channels may add members. Channels are always invisible to
-              non-members — this stops anyone else from inviting people in.
+              non-members. This stops anyone else from inviting people in.
             </p>
           </div>
         </div>

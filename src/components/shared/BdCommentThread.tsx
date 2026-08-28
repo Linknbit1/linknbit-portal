@@ -133,7 +133,7 @@ export function BdCommentThread({ parentType, parentId, fill, className }: BdCom
       <div className={cn('space-y-4 p-4', fill ? 'flex-1 overflow-y-auto' : 'max-h-96 overflow-y-auto')}>
         {feed.length === 0 && (
           <p className="py-8 text-center font-ui text-[12.5px] text-text-4">
-            No comments yet — start the thread.
+            No comments yet, start the thread.
           </p>
         )}
 

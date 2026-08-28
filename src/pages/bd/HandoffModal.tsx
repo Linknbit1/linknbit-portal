@@ -88,7 +88,7 @@ export function HandoffModal({ open, lead, onClose }: HandoffModalProps) {
   const [templateByService, setTemplateByService] = useState<Record<string, string>>({})
   const [staffByService, setStaffByService] = useState<Record<string, string[]>>({})
   const [projectName, setProjectName] = useState(
-    lead ? `${lead.company} — ${lead.services[0] ?? 'Project'}` : '',
+    lead ? `${lead.company}, ${lead.services[0] ?? 'Project'}` : '',
   )
   const [budget, setBudget] = useState(lead?.value ?? 0)
   const [managerId, setManagerId] = useState('')
@@ -157,7 +157,7 @@ export function HandoffModal({ open, lead, onClose }: HandoffModalProps) {
       toast(`${projectName.trim()} created in Delivery${built}`, 'success')
       onClose()
     } catch (e) {
-      toast(e instanceof Error ? e.message : 'The handoff failed — nothing was created.', 'error')
+      toast(e instanceof Error ? e.message : 'The handoff failed. Nothing was created.', 'error')
     } finally {
       setPending(false)
     }
@@ -245,11 +245,11 @@ export function HandoffModal({ open, lead, onClose }: HandoffModalProps) {
           {clientError && <p className="font-ui text-[11.5px] text-error">{clientError}</p>}
           {nameMatch ? (
             <p className="font-ui text-[11.5px] text-warning">
-              “{nameMatch.name}” already exists — this will attach to it rather than create a second one.
+              “{nameMatch.name}” already exists. This will attach to it rather than create a second one.
             </p>
           ) : (
             <p className="font-mono text-[10.5px] text-text-4">
-              Prefilled from the lead ({lead.company}) — check it. A lead often carries the deal name,
+              Prefilled from the lead ({lead.company}), check it. A lead often carries the deal name,
               not the client’s.
             </p>
           )}
@@ -287,7 +287,7 @@ export function HandoffModal({ open, lead, onClose }: HandoffModalProps) {
             step={50_000}
             value={budget || ''}
             onChange={(e) => setBudget(Number(e.target.value) || 0)}
-            helper="Carried from the deal value — edit if the signed figure differs"
+            helper="Carried from the deal value, edit if the signed figure differs"
           />
           <div className="grid grid-cols-2 gap-3">
             <FormField label="Start date">
@@ -327,7 +327,7 @@ export function HandoffModal({ open, lead, onClose }: HandoffModalProps) {
               )
             })}
           </div>
-          <p className="font-mono text-[10.5px] text-text-4">BD sold: {lead.services.join(', ') || '—'}</p>
+          <p className="font-mono text-[10.5px] text-text-4">BD sold: {lead.services.join(', ') || '-'}</p>
           {serviceError && <p className="font-ui text-[11.5px] text-error">{serviceError}</p>}
 
           {serviceIds.map((serviceId) => {
@@ -349,13 +349,13 @@ export function HandoffModal({ open, lead, onClose }: HandoffModalProps) {
                       value={templateByService[serviceId] ?? ''}
                       onChange={(v) => setTemplateByService((prev) => ({ ...prev, [serviceId]: v }))}
                       options={[
-                        { value: '', label: 'Empty — no stages' },
+                        { value: '', label: 'Empty, no stages' },
                         ...forService.map((t) => ({
                           value: t.id,
                           label: `${t.name} · ${t.stages.length} stage${t.stages.length === 1 ? '' : 's'}`,
                         })),
                       ]}
-                      placeholder="Empty — no stages"
+                      placeholder="Empty, no stages"
                     />
                   </FormField>
                 )}
@@ -365,7 +365,7 @@ export function HandoffModal({ open, lead, onClose }: HandoffModalProps) {
                     value={staffByService[serviceId] ?? []}
                     onChange={(ids) => setStaffByService((prev) => ({ ...prev, [serviceId]: ids }))}
                     options={staffOptions}
-                    placeholder="Nobody yet — the PM can staff this later"
+                    placeholder="Nobody yet. The PM can staff this later"
                   />
                 </FormField>
               </div>
@@ -375,7 +375,7 @@ export function HandoffModal({ open, lead, onClose }: HandoffModalProps) {
 
         <div>
           <label htmlFor="handoff-notes" className="mb-1.5 block font-ui text-[12px] font-medium text-text-2">
-            Notes for delivery <span className="text-text-4">— optional</span>
+            Notes for delivery <span className="text-text-4">- optional</span>
           </label>
           <textarea
             id="handoff-notes"

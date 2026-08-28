@@ -206,15 +206,9 @@ export function TimesheetContent() {
 
   return (
     <div className="flex flex-col gap-5">
-        <div>
-          <h2 className="font-display text-[22px] font-bold text-text-1">Timesheet</h2>
-          <p className="font-ui text-[13px] text-text-3">
-            Who is on what right now, and how each person&rsquo;s day was spent.
-            <span className="ml-1.5 inline-flex items-center gap-1 text-text-4">
-              <Users size={11} /> {scopeNote}
-            </span>
-          </p>
-        </div>
+        <p className="inline-flex items-center gap-1 font-ui text-[12.5px] text-text-4">
+          <Users size={11} /> {scopeNote}
+        </p>
 
         <LiveTimers active={active} loading={activeLoading} tz={tz} />
 
@@ -322,7 +316,7 @@ export function TimesheetContent() {
               </div>
             </div>
             <p className="border-t border-border-subtle px-4 py-2.5 font-ui text-[11px] text-text-4">
-              Only tracked time is drawn on the upper lane. Gaps are time no timer was running —
+              Only tracked time is drawn on the upper lane. Gaps are time no timer was running -
               not necessarily time not worked. The lower lane is the attendance record: when they
               checked in and out.
             </p>
@@ -387,7 +381,7 @@ function LiveTimers({ active, loading, tz }: {
                   {a.profile_name}
                 </PersonLink>
                 <p className="truncate font-ui text-[11.5px] text-text-3">
-                  <Link to={`/admin/tasks/${a.task_id}?openInProject=1`} className="hover:text-brand-red">
+                  <Link to={`/admin/tasks/${a.task_id}`} className="hover:text-brand-red">
                     {a.task_title}
                   </Link>
                   {a.project_name && <span className="text-text-4"> · {a.project_name}</span>}
@@ -758,7 +752,7 @@ function PersonRow({ row, from, to, schedule, tz, isToday }: {
           'font-mono text-[12px] font-semibold',
           person.tracked_minutes > 0 ? 'text-text-1' : off ? 'text-text-4' : 'text-warning',
         )}>
-          {person.tracked_minutes > 0 ? formatMinutes(person.tracked_minutes) : off ? '—' : '0m'}
+          {person.tracked_minutes > 0 ? formatMinutes(person.tracked_minutes) : off ? '-' : '0m'}
         </p>
         {person.required_minutes > 0 && (
           <p className="font-mono text-[10px] text-text-4">

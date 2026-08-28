@@ -505,7 +505,7 @@ export default function MyDayPage() {
                   ) : standup.is_open ? (
                     <>
                       <p className="font-ui text-[12.5px] text-text-2">
-                        The window is open — it closes at {fmtClock(standup.closes_at)}.
+                        The window is open. It closes at {fmtClock(standup.closes_at)}.
                       </p>
                       <Link
                         to="/standup"

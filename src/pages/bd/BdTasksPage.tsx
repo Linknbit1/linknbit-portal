@@ -93,7 +93,7 @@ export default function BdTasksPage() {
     // the database will refuse.
     const project = projects.find((p) => p.id === projectFilter) ?? projects[0]
     if (!project) {
-      toast('Create a campaign first — every BD task belongs to one.', 'warning')
+      toast('Create a campaign first. Every BD task belongs to one.', 'warning')
       return
     }
 
@@ -155,7 +155,6 @@ export default function BdTasksPage() {
       <Topbar title="Tasks" />
       <div className={cn('flex flex-col gap-5 p-4 lg:px-8 lg:py-7', view === 'board' && 'min-h-0 flex-1')}>
         <div className="flex flex-wrap items-center gap-3">
-          <h2 className="font-display text-[22px] font-bold text-text-1">Tasks</h2>
           <Button
             size="sm"
             className="ml-auto"
@@ -260,7 +259,7 @@ export default function BdTasksPage() {
                     <td className="px-4 py-3">
                       {t.dueDate
                         ? <span className={cn('font-mono text-[12px]', isOverdue(t.dueDate) && t.status !== 'completed' && t.status !== 'approved' ? 'text-error' : 'text-text-3')}>{formatDate(t.dueDate)}</span>
-                        : <span className="text-[12px] text-text-4">—</span>}
+                        : <span className="text-[12px] text-text-4">-</span>}
                     </td>
                     <td className="px-4 py-3">
                       <span className="flex items-center gap-2">

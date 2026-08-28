@@ -243,7 +243,7 @@ function DataTable({ rows }: { rows: unknown[][] }) {
         </tbody>
       </table>
       {body.length > capped.length && (
-        <p className="mt-3 font-mono text-[11px] text-text-4">Showing first {capped.length.toLocaleString()} of {body.length.toLocaleString()} rows — download for the full file.</p>
+        <p className="mt-3 font-mono text-[11px] text-text-4">Showing first {capped.length.toLocaleString()} of {body.length.toLocaleString()} rows, download for the full file.</p>
       )}
     </div>
   )

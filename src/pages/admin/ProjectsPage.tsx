@@ -120,7 +120,7 @@ export default function ProjectsPage() {
     { value: '', label: 'All managers' },
     ...people.filter((p) => p.is_active).map((p) => ({ value: p.id, label: p.name, avatar: { name: p.name, url: p.avatar_url } })),
     ...departedManagers.flatMap((m) => m
-      ? [{ value: m.id, label: `${m.name} — deactivated`, avatar: { name: m.name, url: m.avatar_url } }]
+      ? [{ value: m.id, label: `${m.name}, deactivated`, avatar: { name: m.name, url: m.avatar_url } }]
       : []),
   ]
 
@@ -129,10 +129,7 @@ export default function ProjectsPage() {
       <Topbar title="Projects" />
       <div className={cn('p-4 lg:px-8 lg:py-7 flex flex-col gap-5', view === 'kanban' && 'min-h-0 flex-1')}>
         <div className="flex flex-wrap items-center gap-3">
-          <div>
-            <h2 className="font-display font-bold text-[22px] text-text-1">Projects</h2>
-            <p className="font-ui text-[13px] text-text-3">{shown.length} of {projects.length} project{projects.length !== 1 ? 's' : ''}</p>
-          </div>
+          <p className="font-ui text-[13px] text-text-3">{shown.length} of {projects.length} project{projects.length !== 1 ? 's' : ''}</p>
           {canManageProjects && (
             <Button size="sm" className="ml-auto" iconLeft={<Plus size={15} />} onClick={() => setShowNew(true)}>New Project</Button>
           )}
@@ -321,7 +318,7 @@ function ProjectCard({ project: p, onOpen, onDelete, canDelete }: { project: Pro
             <div className="min-w-0">
               <p className="font-mono text-[9.5px] font-semibold uppercase tracking-wider text-text-4">Deadline</p>
               <p className={cn('truncate font-ui text-[12.5px] font-semibold', overdue ? 'text-error' : 'text-text-1')}>
-                {p.deadline ? formatDate(p.deadline) : '—'}
+                {p.deadline ? formatDate(p.deadline) : '-'}
               </p>
             </div>
           </div>
@@ -366,7 +363,7 @@ function ListView({ projects, onOpen, onDelete, canDelete }: { projects: Project
                 <p className="font-ui font-semibold text-[13px] text-text-1">{p.name}</p>
                 <p className="font-mono text-[10.5px] text-text-4">{p.task_count} task{p.task_count !== 1 ? 's' : ''}</p>
               </td>
-              <td className="px-4 py-3 text-[12.5px] text-text-2">{p.client?.name ?? '—'}</td>
+              <td className="px-4 py-3 text-[12.5px] text-text-2">{p.client?.name ?? '-'}</td>
               <td className="px-4 py-3">
                 <div className="flex flex-wrap items-center gap-1">
                   {p.services.map((s) => <ServiceChip key={s.id} service={s.slug} />)}
@@ -382,12 +379,12 @@ function ListView({ projects, onOpen, onDelete, canDelete }: { projects: Project
               <td className="px-4 py-3">
                 {p.deadline
                   ? <span className={cn('text-[12px] font-mono', isOverdue(p.deadline) && p.status !== 'completed' ? 'text-error' : 'text-text-3')}>{formatDate(p.deadline)}</span>
-                  : <span className="text-text-4 text-[12px]">—</span>}
+                  : <span className="text-text-4 text-[12px]">-</span>}
               </td>
               <td className="px-4 py-3">
                 {p.members.length > 0
                   ? <AvatarGroup users={p.members.map((m) => ({ id: m.id, name: m.name, avatarUrl: m.avatar_url ?? undefined }))} max={4} size="xs" linkToProfile />
-                  : <span className="text-text-4 text-[12px]">—</span>}
+                  : <span className="text-text-4 text-[12px]">-</span>}
               </td>
               <td className="px-4 py-3 text-right">
                 <div className="flex justify-end gap-1">

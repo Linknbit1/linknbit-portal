@@ -38,7 +38,7 @@ const PROJECT_DESCRIPTIONS: Record<string, string> = {
   p2: 'Complete brand identity package including logo system, typography, color palette, brand guidelines, and all digital asset deliverables.',
   p3: 'Comprehensive SEO optimization campaign targeting cricket and sports-adjacent keywords, including technical audits, on-page optimization, and content strategy.',
   p4: 'Modern transport company website featuring fleet showcase, booking system, route information, and contact management.',
-  p5: 'Premium automotive portal for a luxury car dealership — inventory management, vehicle showcase, financing calculator, and appointment booking.',
+  p5: 'Premium automotive portal for a luxury car dealership, inventory management, vehicle showcase, financing calculator, and appointment booking.',
   p6: 'Personal brand website for executive coaching services with service showcases, testimonials, booking integration, and blog.',
   p7: 'B2B directory and listing platform for offsite team collaboration tools and remote work resources.',
   p8: 'Healthcare management app connecting patients with providers, including appointment booking, telemedicine, and health record management.',
@@ -68,7 +68,7 @@ const ACTIVITY: Array<{ id: string; text: string; time: string; type: string }> 
   { id: 'ac3', text: 'You approved Wireframing stage', time: '2026-05-06T11:00:00', type: 'approved' },
   { id: 'ac4', text: 'Ahmad Karimi commented on task: Fix pagination bug', time: '2026-05-12T08:00:00', type: 'comment' },
   { id: 'ac5', text: 'API Documentation v2 submitted for your review', time: '2026-05-11T10:00:00', type: 'approval' },
-  { id: 'ac6', text: 'Project started — Development phase began', time: '2026-03-18T09:00:00', type: 'stage' },
+  { id: 'ac6', text: 'Project started, Development phase began', time: '2026-03-18T09:00:00', type: 'stage' },
 ]
 
 type Tab = 'overview' | 'timeline' | 'files' | 'approvals' | 'activity'
@@ -558,7 +558,7 @@ export default function ClientProjectDetailPage() {
                           >
                             <AlertCircle size={13} style={{ color: '#E01414' }} />
                             <p className="text-[12px] font-medium" style={{ color: '#E01414' }}>
-                              Approval request sent — awaiting your response
+                              Approval request sent, awaiting your response
                             </p>
                           </div>
                         )}

@@ -237,7 +237,7 @@ export default function ClientReportsPage() {
           {
             label: 'Next Deadline',
             value: daysToDeadline <= 0 ? 'Overdue' : `${daysToDeadline}d`,
-            sub: nearestDeadline ? nearestDeadline.name : '—',
+            sub: nearestDeadline ? nearestDeadline.name : '-',
             icon: Clock,
             color: daysToDeadline <= 3 ? '#E01414' : '#B47700',
             positive: daysToDeadline > 7,

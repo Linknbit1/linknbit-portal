@@ -281,7 +281,7 @@ function ApprovalCard({ approval }: { approval: (typeof APPROVALS)[0] }) {
         >
           <CheckCircle2 size={16} style={{ color: approved ? '#1F9D55' : '#B45309' }} />
           <span className="text-[13px] font-medium" style={{ color: '#4F4940' }}>
-            {approved ? 'Stage approved successfully.' : 'Revision requested — team has been notified.'}
+            {approved ? 'Stage approved successfully.' : 'Revision requested, team has been notified.'}
           </span>
         </div>
       </motion.div>

@@ -153,7 +153,7 @@ export function AttendanceCheckInCard() {
     try {
       const result = await checkInMut.mutateAsync({ deviceFingerprint: fingerprint, deviceName: deviceNameVal, fingerprintHint })
       toast(
-        result.status === 'late' ? 'Checked in — marked as late' : 'Checked in successfully!',
+        result.status === 'late' ? 'Checked in, marked as late' : 'Checked in successfully!',
         result.status === 'late' ? 'warning' : 'success',
       )
     } catch (err: unknown) {
@@ -178,8 +178,8 @@ export function AttendanceCheckInCard() {
       const res = await registerMut.mutateAsync({ deviceFingerprint: fingerprint, deviceName: deviceNameVal, fingerprintHint })
       toast(
         res.status === 'approved'
-          ? 'Device registered and approved — you can check in now.'
-          : 'Device registered — an admin will review it shortly.',
+          ? 'Device registered and approved. You can check in now.'
+          : 'Device registered. An admin will review it shortly.',
         'success',
       )
     } catch (err: unknown) {
@@ -214,7 +214,7 @@ export function AttendanceCheckInCard() {
           </div>
           <div>
             <p className="font-display font-bold text-[18px] text-text-2">Public Holiday</p>
-            <p className="font-ui text-[13px] text-text-3 mt-0.5">{todayHoliday.name} — enjoy your day off!</p>
+            <p className="font-ui text-[13px] text-text-3 mt-0.5">{todayHoliday.name}, enjoy your day off!</p>
           </div>
         </div>
       )}
@@ -228,7 +228,7 @@ export function AttendanceCheckInCard() {
           <div>
             <p className="font-display font-bold text-[18px] text-service-dev">Weekend</p>
             <p className="font-ui text-[13px] text-text-3 mt-0.5">
-              {isSunday ? 'Sundays are off — see you tomorrow!' : 'Saturdays are off — see you Monday!'}
+              {isSunday ? 'Sundays are off, see you tomorrow!' : 'Saturdays are off, see you Monday!'}
             </p>
           </div>
         </div>

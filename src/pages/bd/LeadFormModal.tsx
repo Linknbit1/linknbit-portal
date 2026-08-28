@@ -212,7 +212,7 @@ export function LeadFormModal({ open, lead, onClose }: LeadFormModalProps) {
                 : [
                     `≈ ${formatMoney(toPkr(draft.valueEntered, draft.valueCurrency, rates), 'PKR')}`,
                     `at ${formatMoney(pkrRate(draft.valueCurrency, rates), 'PKR')}/${draft.valueCurrency}`,
-                    freshness.stale ? `— ${freshness.reason}` : '— what the pipeline totals count',
+                    freshness.stale ? `- ${freshness.reason}` : '- what the pipeline totals count',
                   ].join(' ')
             }
           />
@@ -310,7 +310,7 @@ export function LeadFormModal({ open, lead, onClose }: LeadFormModalProps) {
             use its Documents tab. */}
         {lead && (
           <p className="font-ui text-[11.5px] text-text-4 sm:col-span-2">
-            Documents live on the lead itself — open it and choose the Documents tab to upload a
+            Documents live on the lead itself, open it and choose the Documents tab to upload a
             file or link a Google Doc.
           </p>
         )}

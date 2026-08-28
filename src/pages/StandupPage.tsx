@@ -22,13 +22,6 @@ export default function StandupPage() {
     <div className="flex flex-col flex-1">
       <Topbar title="Daily Standup" />
       <div className="p-4 lg:px-8 lg:py-7 flex flex-col gap-6">
-        <div>
-          <h2 className="font-display font-bold text-[22px] text-text-1">Daily Standup</h2>
-          <p className="font-ui text-[13px] text-text-3">
-            End-of-day update — what you worked on, how long it took, and anything blocking you.
-          </p>
-        </div>
-
         <StandupTabs />
 
         {isLoading ? <Skeleton className="h-40" /> : win ? <MyStandup win={win} /> : null}
@@ -64,7 +57,7 @@ function MyStandup({ win }: { win: StandupWindow }) {
     return (
       <Panel icon={Coffee} tone="muted" title="No standup required">
         {canReviewTeam
-          ? "You are not on the standup list — the team's updates are on the Team tab."
+          ? "You are not on the standup list. The team's updates are on the Team tab."
           : 'You are not on the standup list, so there is nothing for you to submit here.'}
       </Panel>
     )
@@ -101,7 +94,7 @@ function MyStandup({ win }: { win: StandupWindow }) {
         <div className="flex items-center gap-2 bg-error/8 border border-error/25 rounded-lg px-3.5 py-2.5">
           <AlertTriangle size={14} className="text-error shrink-0" />
           <span className="font-ui text-[12.5px] text-text-2">
-            The on-time window (until {onTimeLabel}) has passed — you can still submit, but it'll be marked <strong className="text-text-1">late</strong> and won't earn XP.
+            The on-time window (until {onTimeLabel}) has passed. You can still submit, but it'll be marked <strong className="text-text-1">late</strong> and won't earn XP.
           </span>
         </div>
       ) : (
@@ -109,7 +102,7 @@ function MyStandup({ win }: { win: StandupWindow }) {
           <Clock size={14} className="text-success shrink-0" />
           <span className="font-ui text-[12.5px] text-text-2">
             Submit by <strong className="text-text-1">{onTimeLabel}</strong> to earn 5 XP + 5 reputation
-            {untilOnTime !== null && untilOnTime > 0 && <> — <span className="font-mono tabular-nums">{hhmm(untilOnTime)}</span> left</>}
+            {untilOnTime !== null && untilOnTime > 0 && <>, <span className="font-mono tabular-nums">{hhmm(untilOnTime)}</span> left</>}
           </span>
         </div>
       )}
@@ -138,7 +131,7 @@ function SubmittedStandup({
   if (!standup) {
     return (
       <Panel icon={CheckCircle2} tone="success" title="Standup submitted">
-        You've logged today's update. Thanks — it's visible to your leads.
+        You've logged today's update. Thanks. It's visible to your leads.
       </Panel>
     )
   }
@@ -149,7 +142,7 @@ function SubmittedStandup({
         <div className="flex items-center gap-2 bg-surface-1 border border-border-default rounded-lg px-3.5 py-2.5">
           <PencilLine size={14} className="text-text-3 shrink-0" />
           <span className="font-ui text-[12.5px] text-text-2">
-            Correcting today's standup. Saving replaces the update your leads see — it does not change your
+            Correcting today's standup. Saving replaces the update your leads see. It does not change your
             on-time status or the XP you already earned.
           </span>
         </div>
@@ -163,7 +156,7 @@ function SubmittedStandup({
       <div className="flex flex-wrap items-center gap-3 bg-success/8 border border-success/25 rounded-lg px-3.5 py-2.5">
         <CheckCircle2 size={14} className="text-success shrink-0" />
         <span className="font-ui text-[12.5px] text-text-2 flex-1 min-w-0">
-          Standup submitted — visible to your leads.
+          Standup submitted, visible to your leads.
           {win.can_edit
             ? <> Spotted a mistake? You can correct it until {closesLabel}.</>
             : <> This standup is now locked.</>}

@@ -53,10 +53,7 @@ export default function ClientsPage() {
       <Topbar title="Clients" />
       <div className="p-4 lg:px-8 lg:py-7 flex flex-col gap-6">
         <div className="flex flex-wrap items-center gap-3">
-          <div>
-            <h2 className="font-display font-bold text-[22px] text-text-1">Clients</h2>
-            <p className="font-ui text-[13px] text-text-3">{clients.length} client{clients.length !== 1 ? 's' : ''}</p>
-          </div>
+          <p className="font-ui text-[13px] text-text-3">{clients.length} client{clients.length !== 1 ? 's' : ''}</p>
           <div className="ml-auto flex items-center gap-2">
             <Input
               value={search}
@@ -110,7 +107,7 @@ export default function ClientsPage() {
                         <td className="px-4 py-3 text-[12px] text-text-3">
                           {c.email && <span className="flex items-center gap-1.5"><Mail size={11} />{c.email}</span>}
                           {c.phone && <span className="flex items-center gap-1.5 mt-0.5"><Phone size={11} />{c.phone}</span>}
-                          {!c.email && !c.phone && '—'}
+                          {!c.email && !c.phone && '-'}
                         </td>
                         <td className="px-4 py-3">
                           {c.account_manager ? (

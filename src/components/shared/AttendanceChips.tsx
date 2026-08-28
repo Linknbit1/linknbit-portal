@@ -54,7 +54,7 @@ function isFullDayOff(f: AttendanceFacts): boolean {
   return f.day_part === 'full' && (f.day_type === 'leave' || f.day_type === 'holiday')
 }
 
-const Dash = () => <span className="font-mono text-[11px] text-text-4">—</span>
+const Dash = () => <span className="font-mono text-[11px] text-text-4">-</span>
 
 /** The day-kind chip. Renders nothing for an ordinary working day. */
 export function DayTypeChip({ facts, className }: { facts: AttendanceFacts; className?: string }) {

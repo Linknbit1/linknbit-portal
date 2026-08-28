@@ -33,7 +33,7 @@ export function Repeater<T extends RepeaterRow>({
     <fieldset className="min-w-0">
       <legend className="mb-1.5 font-ui text-[12px] font-medium text-text-2">
         {label}
-        {hint && <span className="ml-1.5 font-normal text-text-4">— {hint}</span>}
+        {hint && <span className="ml-1.5 font-normal text-text-4">- {hint}</span>}
       </legend>
 
       {rows.length === 0 && emptyHint && (

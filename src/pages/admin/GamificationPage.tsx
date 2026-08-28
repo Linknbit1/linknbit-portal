@@ -194,7 +194,7 @@ function PodiumSlot({ entry, place }: {
         </div>
       )}
       <div className="text-center">
-        <p className={cn('font-display font-bold text-[13px] truncate w-24', entry?.isMe ? 'text-service-dev' : 'text-text-1')}>{entry?.name ?? '—'}</p>
+        <p className={cn('font-display font-bold text-[13px] truncate w-24', entry?.isMe ? 'text-service-dev' : 'text-text-1')}>{entry?.name ?? '-'}</p>
         <p className="font-mono text-[11px] text-coin-gold">{entry ? `${entry.lp_balance.toLocaleString()} XP` : '0 XP'}</p>
       </div>
       <div className={cn('w-20 rounded-t-lg bg-linear-to-b flex items-end justify-center pb-2', heights[place], colors[place])}>
@@ -279,7 +279,7 @@ function ShoutoutModal({ open, onClose, recipients, profileId, canSetCustom }: {
       },
       {
         onSuccess: () => {
-          toast('Shoutout submitted — HR will review it before XP is awarded.', 'success')
+          toast('Shoutout submitted, HR will review it before XP is awarded.', 'success')
           onClose(); setToId(''); setMessage(''); setImpact('standard'); setCustomLp('')
         },
         onError: () => toast('Failed to submit shoutout', 'error'),
@@ -624,7 +624,7 @@ function RewardModal({ actorId, editRow, onClose }: RewardModalProps) {
       // Storage rejects on size/type/permission; the row write fails on anything
       // else. Say which half broke so the fix is obvious.
       const isUpload = /storage|bucket|mime|payload|exceeded/i.test(e.message)
-      toast(isUpload ? `Image upload failed — ${e.message}` : `Failed to ${verb} reward`, 'error')
+      toast(isUpload ? `Image upload failed, ${e.message}` : `Failed to ${verb} reward`, 'error')
     }
     if (editRow) {
       // is_active is owned by the Enable/Disable action, so it's left untouched here.
@@ -715,7 +715,7 @@ function RewardModal({ actorId, editRow, onClose }: RewardModalProps) {
           <label className="flex items-center gap-2.5 cursor-pointer">
             <Toggle checked={isGroup} onChange={setIsGroup} />
             <span className="font-ui text-[12.5px] text-text-2 flex items-center gap-1.5">
-              <Users size={13} className="text-text-3" /> Group reward — several employees pool together
+              <Users size={13} className="text-text-3" /> Group reward, several employees pool together
             </span>
           </label>
           <div className="grid grid-cols-2 gap-3">
@@ -745,13 +745,13 @@ function RewardModal({ actorId, editRow, onClose }: RewardModalProps) {
               <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-coin-gold/8 border border-coin-gold/20">
                 <Coins size={13} className="text-coin-gold shrink-0" />
                 <span className="font-mono text-[12px] text-text-2">
-                  Everyone pays <span className="text-coin-gold font-bold">{isNaN(perPerson) ? '—' : lp(perPerson)}</span>
-                  {' · total '}<span className="text-coin-gold font-bold">{total ? lp(total) : '—'}</span>
-                  {' for '}{groupSizeValid && !isNaN(size) ? size : '—'} people
+                  Everyone pays <span className="text-coin-gold font-bold">{isNaN(perPerson) ? '-' : lp(perPerson)}</span>
+                  {' · total '}<span className="text-coin-gold font-bold">{total ? lp(total) : '-'}</span>
+                  {' for '}{groupSizeValid && !isNaN(size) ? size : '-'} people
                 </span>
               </div>
               <div>
-                <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Qty — completed groups (-1 = ∞)</label>
+                <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Qty, completed groups (-1 = ∞)</label>
                 <input type="number" min={-1} value={quantity} onChange={(e) => setQuantity(e.target.value)}
                   className="w-full bg-surface-inset border border-border-default rounded-md px-3 py-2 text-[13px] font-ui text-text-1 outline-none focus:border-border-focus" />
               </div>
@@ -935,7 +935,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
     return m
   }, [claimants])
   const earnedBadgeIds = useMemo(() => new Set(myAwards.map((a) => a.badge_id)), [myAwards])
-  const nameOf = (id: string) => directory[id]?.name ?? '—'
+  const nameOf = (id: string) => directory[id]?.name ?? '-'
   const rewardName = (id: string) => allRewards.find((r) => r.id === id)?.name ?? rewards.find((r) => r.id === id)?.name ?? 'Reward'
 
   // ── Quest board: month-scoped history (any status) ───────────────────────────
@@ -968,7 +968,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
     return [
       { value: 'all', label: 'All members' },
       ...ids
-        .map((id) => ({ value: id, label: directory[id]?.name ?? '—' }))
+        .map((id) => ({ value: id, label: directory[id]?.name ?? '-' }))
         .sort((a, b) => a.label.localeCompare(b.label)),
     ]
   }, [shoutFeed, directory])
@@ -1034,7 +1034,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
   }
 
   const handleClaim = (taskId: string) => claimTask(taskId, {
-    onSuccess: () => toast('Task claimed — complete it, then submit proof.', 'success'),
+    onSuccess: () => toast('Task claimed, complete it, then submit proof.', 'success'),
     onError: (e) => toast(
       e.message.includes('participation_restricted') ? 'You are restricted from claiming tasks'
         : e.message.includes('task_full') ? 'This task is full'
@@ -1053,7 +1053,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
   const handleRedeem = () => {
     if (!redeemTarget) return
     redeem(redeemTarget.id, {
-      onSuccess: () => { toast(`"${redeemTarget.name}" requested — pending HR approval.`, 'success'); setRedeemTarget(null) },
+      onSuccess: () => { toast(`"${redeemTarget.name}" requested, pending HR approval.`, 'success'); setRedeemTarget(null) },
       onError: (e) => {
         toast(
           e.message.includes('insufficient_lp') ? 'Not enough XP'
@@ -1077,11 +1077,11 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
       : 'Action failed'
 
   const handleStartPool = (reward: RewardRow) => openPool(reward.id, {
-    onSuccess: () => toast(`Group started for "${reward.name}" — your share is reserved.`, 'success'),
+    onSuccess: () => toast(`Group started for "${reward.name}". Your share is reserved.`, 'success'),
     onError: (e) => toast(poolErr(e), 'error'),
   })
   const handleJoinPool = (poolId: string) => joinPool(poolId, {
-    onSuccess: () => toast('Joined — your share is reserved.', 'success'),
+    onSuccess: () => toast('Joined. Your share is reserved.', 'success'),
     onError: (e) => toast(poolErr(e), 'error'),
   })
   const handleLeavePool = (pool: RewardPoolWithMembers) => {
@@ -1089,12 +1089,12 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
     // member just withdraws their own share.
     if (pool.initiated_by === profileId) {
       cancelPool({ poolId: pool.id }, {
-        onSuccess: () => toast('Group cancelled — everyone refunded.', 'success'),
+        onSuccess: () => toast('Group cancelled. Everyone refunded.', 'success'),
         onError: (e) => toast(poolErr(e), 'error'),
       })
     } else {
       leavePool(pool.id, {
-        onSuccess: () => toast('You left the group — XP refunded.', 'success'),
+        onSuccess: () => toast('You left the group, XP refunded.', 'success'),
         onError: (e) => toast(poolErr(e), 'error'),
       })
     }
@@ -1113,8 +1113,8 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
     if (!review) return
     const done = (msg: string) => { toast(msg, 'success'); setReview(null) }
     const fail = () => { toast('Action failed', 'error'); setReview(null) }
-    if (review.kind === 'task') reviewTask({ claimId: review.id, approve: review.approve, note: note || null }, { onSuccess: () => done(review.approve ? 'Task approved — XP awarded' : 'Sent back for rework'), onError: fail })
-    else if (review.kind === 'shoutout') reviewShout({ id: review.id, approve: review.approve, note: note || null }, { onSuccess: () => done(review.approve ? 'Shoutout approved — XP awarded' : 'Shoutout rejected'), onError: fail })
+    if (review.kind === 'task') reviewTask({ claimId: review.id, approve: review.approve, note: note || null }, { onSuccess: () => done(review.approve ? 'Task approved, XP awarded' : 'Sent back for rework'), onError: fail })
+    else if (review.kind === 'shoutout') reviewShout({ id: review.id, approve: review.approve, note: note || null }, { onSuccess: () => done(review.approve ? 'Shoutout approved, XP awarded' : 'Shoutout rejected'), onError: fail })
     else if (review.kind === 'redeem') reviewRedeem({ id: review.id, action: review.action ?? 'approve', note: note || null }, { onSuccess: () => done('Redemption updated'), onError: fail })
     else reviewPool({ poolId: review.id, action: review.action ?? 'approve', note: note || null }, { onSuccess: () => done('Group redemption updated'), onError: fail })
   }
@@ -1661,7 +1661,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
                   <Button size="sm" variant="ghost" onClick={() => setRewardModal('new')}><Plus size={13} /> Add Reward</Button>
                 </div>
                 <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">
-                  {allRewards.length === 0 && <div className="px-5 py-8 text-center text-text-4 font-ui text-[13px]">No rewards yet — add the first one.</div>}
+                  {allRewards.length === 0 && <div className="px-5 py-8 text-center text-text-4 font-ui text-[13px]">No rewards yet, add the first one.</div>}
                   {allRewards.map((r) => (
                     <div key={r.id} className="grid grid-cols-[auto_1fr_90px_70px_90px_120px] gap-3 items-center px-5 py-3 border-b border-border-subtle last:border-0">
                       <RewardThumb reward={r} size="sm" />
@@ -1734,7 +1734,7 @@ export default function GamificationPage({ mobileSection }: { mobileSection?: st
                     <div key={s.id} className="grid grid-cols-[1fr_auto] gap-3 items-center px-5 py-3 border-b border-border-subtle last:border-0">
                       <div className="min-w-0">
                         <p className="font-ui font-semibold text-[13px] text-text-1">{nameOf(s.to_profile_id)} · <span className="text-coin-gold font-mono">+{s.lp_value} XP</span> · <span className="text-text-3">{s.category}</span></p>
-                        <p className="font-ui text-[11.5px] text-text-3 italic">"{s.message}" — {nameOf(s.from_profile_id)}</p>
+                        <p className="font-ui text-[11.5px] text-text-3 italic">"{s.message}", {nameOf(s.from_profile_id)}</p>
                       </div>
                       <div className="flex gap-1.5">
                         <Button size="sm" variant="secondary" disabled={reviewPending} onClick={() => setReview({ kind: 'shoutout', id: s.id, approve: true, label: 'Approve Shoutout' })}>Approve</Button>

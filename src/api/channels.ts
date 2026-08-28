@@ -38,8 +38,14 @@ export async function fetchChannels(): Promise<ChannelListItem[]> {
     .from('channels')
     .select('*, channel_members(profile_id,hidden_at,notifications_muted,profile:profiles(id,name,avatar_url)), messages(body_text,created_at)')
     .order('updated_at', { ascending: false })
-    // Only the newest message per channel — without these two the nested select
-    // would pull each channel's entire history just to render a one-line preview.
+    // A deleted message leaves a tombstone in the thread, but it must not be the
+    // line that represents the conversation in the list -- the preview would go
+    // on quoting text that is no longer there. Filtering the embedded rows (no
+    // `!inner`) keeps channels that have nothing left to preview.
+    .is('messages.deleted_at', null)
+    // Only the newest surviving message per channel. Without these two the
+    // nested select would pull each channel's entire history just to render a
+    // one-line preview.
     .order('created_at', { referencedTable: 'messages', ascending: false })
     .limit(1, { referencedTable: 'messages' })
   if (error) throw error

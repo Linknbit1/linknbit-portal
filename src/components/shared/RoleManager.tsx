@@ -142,7 +142,7 @@ export function RoleManager({ canEdit }: { canEdit: boolean }) {
           const message = err instanceof Error ? err.message : 'Failed to create role'
           toast(
             message.includes('forbidden_role_hierarchy')
-              ? 'That position is at or above your own role — pick a lower number'
+              ? 'That position is at or above your own role, pick a lower number'
               : message,
             'error',
           )
@@ -160,7 +160,7 @@ export function RoleManager({ canEdit }: { canEdit: boolean }) {
       const message = err instanceof Error ? err.message : 'Failed to update members'
       toast(
         message.includes('forbidden_role_hierarchy')
-          ? 'That role is at or above your own — you cannot assign it'
+          ? 'That role is at or above your own. You cannot assign it'
           : message,
         'error',
       )

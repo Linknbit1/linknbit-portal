@@ -43,13 +43,13 @@ function localToday(): string {
 }
 
 const fmtTime = (ts: string | null): string =>
-  ts ? new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : '—'
+  ts ? new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : '-'
 
 const monthLabel = (year: number, month: number): string =>
   new Date(year, month - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
 
 /** "12 Mar 2026" — dates were previously printed as raw ISO strings. */
-const fmtDay = (date: string | null): string => (date ? formatDate(date) : '—')
+const fmtDay = (date: string | null): string => (date ? formatDate(date) : '-')
 
 /** "12 Mar → 15 Mar 2026", collapsing a single-day range. */
 const fmtRange = (start: string, end: string): string =>
@@ -168,7 +168,7 @@ export function TeamRoster({ memberIds }: TeamScope = {}) {
       if (!inScope({ memberIds }, r.profile_id)) continue
       const id = r.profile_id
       const t = byMember.get(id) ?? {
-        profileId: id, name: r.profiles?.name ?? '—', avatar: r.profiles?.avatar_url ?? null,
+        profileId: id, name: r.profiles?.name ?? '-', avatar: r.profiles?.avatar_url ?? null,
         present: 0, late: 0, wfh: 0, leave: 0, absent: 0,
       }
       // A worked half day is half an attendance and half a leave, so it counts
@@ -211,7 +211,7 @@ export function TeamRoster({ memberIds }: TeamScope = {}) {
         dayRows.length === 0 ? <Empty label="No team attendance for this date." /> :
         <div>
           {dayRows.map((r) => (
-            <Row key={r.id} name={r.profiles?.name ?? '—'} avatar={r.profiles?.avatar_url ?? null} personId={r.profile_id}
+            <Row key={r.id} name={r.profiles?.name ?? '-'} avatar={r.profiles?.avatar_url ?? null} personId={r.profile_id}
               status={<AttendanceChips facts={r} />}>
               <span>In: <span className="text-text-1">{fmtTime(r.check_in)}</span></span>
             </Row>
@@ -256,7 +256,7 @@ export function TeamWfhList({ memberIds }: TeamScope = {}) {
       {wfh.isLoading ? <Loading /> : rows.length === 0 ? <Empty label={`No WFH requests in ${filter.label}.`} /> : (
         <div>
           {rows.map((r) => (
-            <Row key={r.id} name={r.profiles?.name ?? '—'} avatar={r.profiles?.avatar_url ?? null} personId={r.profile_id}
+            <Row key={r.id} name={r.profiles?.name ?? '-'} avatar={r.profiles?.avatar_url ?? null} personId={r.profile_id}
               status={<Pill status={r.status} map={REQUEST_STATUS} />}>
               <span className="text-text-1">{fmtRange(r.start_date, r.end_date)}</span>
               {r.day_part !== 'full' && <span>{DAY_PART_LABEL[r.day_part]}</span>}
@@ -282,7 +282,7 @@ export function TeamExceptionsList({ memberIds }: TeamScope = {}) {
       {exceptions.isLoading ? <Loading /> : rows.length === 0 ? <Empty label={`No exceptions in ${filter.label}.`} /> : (
         <div>
           {rows.map((r) => (
-            <Row key={r.id} name={r.profiles?.name ?? '—'} avatar={r.profiles?.avatar_url ?? null} personId={r.profile_id}
+            <Row key={r.id} name={r.profiles?.name ?? '-'} avatar={r.profiles?.avatar_url ?? null} personId={r.profile_id}
               status={<Pill status={r.status} map={REQUEST_STATUS} />}>
               <span className="text-text-1 capitalize">{r.exception_type.replace(/_/g, ' ')}</span>
               <span>{fmtDay(r.date)} · {r.requested_time}</span>
@@ -307,7 +307,7 @@ export function TeamOvertimeList({ memberIds }: TeamScope = {}) {
       {overtime.isLoading ? <Loading /> : rows.length === 0 ? <Empty label={`No overtime requests in ${filter.label}.`} /> : (
         <div>
           {rows.map((r) => (
-            <Row key={r.id} name={r.profiles?.name ?? '—'} avatar={r.profiles?.avatar_url ?? null} personId={r.profile_id}
+            <Row key={r.id} name={r.profiles?.name ?? '-'} avatar={r.profiles?.avatar_url ?? null} personId={r.profile_id}
               status={<Pill status={r.status} map={REQUEST_STATUS} />}>
               <span className="text-text-1">{fmtDay(r.date)}</span>
               <span>{r.start_time}–{r.end_time} · {formatHoursMinutes(r.hours)}</span>
@@ -334,7 +334,7 @@ export function TeamLeaveList({ memberIds }: TeamScope = {}) {
       {leave.isLoading ? <Loading /> : rows.length === 0 ? <Empty label={`No leave requests in ${filter.label}.`} /> : (
         <div>
           {rows.map((r) => (
-            <Row key={r.id} name={r.profiles?.name ?? '—'} avatar={r.profiles?.avatar_url ?? null} personId={r.profile_id}
+            <Row key={r.id} name={r.profiles?.name ?? '-'} avatar={r.profiles?.avatar_url ?? null} personId={r.profile_id}
               status={<Pill status={r.status} map={REQUEST_STATUS} />}>
               <span className="text-text-1">{r.leave_types?.name ?? 'Leave'}</span>
               <span>{fmtRange(r.start_date, r.end_date)} · {r.days}d</span>

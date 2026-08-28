@@ -956,7 +956,7 @@ export async function handoffToProject(input: HandoffInput): Promise<HandoffOutc
   if (error) throw error
 
   const row = data?.[0]
-  if (!row) throw new Error('The handoff did not come back — nothing was created.')
+  if (!row) throw new Error('The handoff did not come back. Nothing was created.')
   return {
     projectId: row.project_id,
     clientId: row.client_id,

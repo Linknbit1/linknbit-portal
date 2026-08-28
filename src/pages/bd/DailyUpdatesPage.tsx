@@ -86,12 +86,6 @@ export default function DailyUpdatesPage() {
       <Topbar title="Daily Updates" />
       <div className="p-4 lg:px-8 lg:py-7 flex flex-col gap-6">
         <div className="flex flex-wrap items-center gap-3">
-          <div>
-            <h2 className="font-display font-bold text-[22px] text-text-1">Daily Updates</h2>
-            <p className="font-ui text-[13px] text-text-3">
-              Built from logged activity — nobody retypes their day. Add a note only if the numbers need context.
-            </p>
-          </div>
           <div className="ml-auto flex items-center gap-2">
             <Select value={dayOffset} onChange={setDayOffset} options={DAY_OPTIONS} size="sm" className="w-36" />
             <Button size="sm" variant="secondary" iconLeft={<Plus size={15} />} onClick={() => { setEditing(null); setFormOpen(true) }}>Add a note</Button>

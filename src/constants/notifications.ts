@@ -54,7 +54,7 @@ export const NOTIFICATION_GROUPS: NotificationGroup[] = [
       { type: 'gamification_quest',    label: 'Quests',      description: 'When your quest claim is approved or sent back' },
       { type: 'gamification_reward',   label: 'Rewards',     description: 'Redemption and group reward updates' },
       { type: 'gamification_eotm',           label: 'Employee of the Month',   description: 'When you are named Employee of the Month' },
-      { type: 'gamification_eotm_announced', label: 'Employee of the Month — announcements', description: 'When someone else is named Employee of the Month' },
+      { type: 'gamification_eotm_announced', label: 'Employee of the Month, announcements', description: 'When someone else is named Employee of the Month' },
     ],
   },
   {
@@ -83,7 +83,7 @@ export const NOTIFICATION_GROUPS: NotificationGroup[] = [
     label: 'Chat',
     items: [
       { type: 'chat_message', label: 'New messages', description: 'When someone messages you or posts in a channel you are in' },
-      { type: 'chat_mention', label: 'Mentions',     description: 'When someone @mentions you in chat — reaches you even in a muted conversation' },
+      { type: 'chat_mention', label: 'Mentions',     description: 'When someone @mentions you in chat, reaches you even in a muted conversation' },
       { type: 'chat_added',   label: 'Added to a channel', description: 'When someone adds you to a channel or group chat' },
     ],
   },
@@ -143,14 +143,17 @@ export function notificationGroupsFor(role: string | null | undefined): Notifica
 }
 
 export const PROJECT_TASK_QUERY_PARAM = 'task'
-export const TASK_PROJECT_REDIRECT_QUERY_PARAM = 'openInProject'
 
 export function projectTaskDrawerHref(projectId: string, taskId: string): string {
   return `/admin/projects/${projectId}?${PROJECT_TASK_QUERY_PARAM}=${encodeURIComponent(taskId)}`
 }
 
+/**
+ * /admin/tasks/<id> is a redirector into the project drawer, so every link to a
+ * task can stay this short and still open in the right place.
+ */
 function taskNotificationHref(taskId: string): string {
-  return `/admin/tasks/${taskId}?${TASK_PROJECT_REDIRECT_QUERY_PARAM}=1`
+  return `/admin/tasks/${taskId}`
 }
 
 /**

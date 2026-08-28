@@ -237,15 +237,12 @@ export default function PipelinePage() {
       <div className={cn('flex flex-col gap-6 p-4 lg:px-8 lg:py-7', view === 'board' && 'min-h-0 flex-1')}>
         {/* ── Header ── */}
         <div className="flex shrink-0 flex-wrap items-center gap-3">
-          <div>
-            <h2 className="font-display text-[20px] font-bold text-text-1">Pipeline</h2>
-            <p className="font-ui text-[13px] text-text-3">
-              {filtered.length} lead{filtered.length !== 1 ? 's' : ''}
-              {stats.needsFollowUp > 0 && (
-                <span className="text-warning"> · {stats.needsFollowUp} need following up</span>
-              )}
-            </p>
-          </div>
+          <p className="font-ui text-[13px] text-text-3">
+            {filtered.length} lead{filtered.length !== 1 ? 's' : ''}
+            {stats.needsFollowUp > 0 && (
+              <span className="text-warning"> · {stats.needsFollowUp} need following up</span>
+            )}
+          </p>
           <div className="ml-auto flex flex-wrap items-center gap-2">
             <Input
               value={search}
@@ -374,7 +371,7 @@ export default function PipelinePage() {
 
                   <div className="flex shrink-0 items-baseline justify-between px-1">
                     <span className="font-mono text-[11px] tabular-nums text-text-3">
-                      {value > 0 ? formatCompactCurrency(value) : '—'}
+                      {value > 0 ? formatCompactCurrency(value) : '-'}
                     </span>
                     {!isTerminal && columnLeads.length > 0 && (
                       <span className="font-mono text-[10px] text-text-4">
@@ -680,7 +677,7 @@ function LeadCard({ lead, ownerAvatar, dragging, onDragStart, onDragEnd, onClick
         )
       )}
 
-      {lead.lostReason && <p className="mt-2 font-ui text-[10.5px] text-text-4">Lost — {lead.lostReason}</p>}
+      {lead.lostReason && <p className="mt-2 font-ui text-[10.5px] text-text-4">Lost, {lead.lostReason}</p>}
     </article>
   )
 }
@@ -758,7 +755,7 @@ function LeadTable({ leads, onOpen, onNew, avatarOf }: LeadTableProps) {
                   <span className="truncate font-ui text-[12.5px] text-text-2">{lead.ownerName}</span>
                 </span>
                 <span className={cn('font-mono text-[11.5px]', tone ? FOLLOW_UP_CLASSES[tone] : 'text-text-4')}>
-                  {lead.nextFollowUp ? formatDate(lead.nextFollowUp) : '—'}
+                  {lead.nextFollowUp ? formatDate(lead.nextFollowUp) : '-'}
                 </span>
               </button>
             )

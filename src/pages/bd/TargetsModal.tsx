@@ -42,7 +42,7 @@ export function TargetsModal({ open, onClose }: TargetsModalProps) {
       open={open}
       onClose={onClose}
       size="xl"
-      title="Set targets — this month"
+      title="Set targets. This month"
       footer={
         <div className="flex flex-wrap items-center gap-3">
           <p className="font-ui text-[12.5px] text-text-3">

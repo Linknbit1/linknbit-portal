@@ -118,7 +118,7 @@ export function LeadDrawer({ lead, onClose, onEdit, onLogActivity }: LeadDrawerP
 
   const confirmLost = () => {
     moveLeadStage(lead.id, 'lost', pendingLost ?? 'No response')
-    toast(`${lead.company} marked lost — ${pendingLost}`, 'info')
+    toast(`${lead.company} marked lost, ${pendingLost}`, 'info')
     setPendingLost(null)
   }
 
@@ -204,7 +204,7 @@ export function LeadDrawer({ lead, onClose, onEdit, onLogActivity }: LeadDrawerP
             </div>
             <StageStepper stage={lead.stage} />
             {lead.lostReason && (
-              <p className="font-ui text-[12px] text-error">Lost — {lead.lostReason}</p>
+              <p className="font-ui text-[12px] text-error">Lost, {lead.lostReason}</p>
             )}
             {lead.stage === 'won' && (
               handoff ? (
@@ -243,7 +243,7 @@ export function LeadDrawer({ lead, onClose, onEdit, onLogActivity }: LeadDrawerP
                   {formatDate(lead.nextFollowUp)}
                 </span>
               ) : (
-                <span className="font-mono text-[12.5px] text-text-4">—</span>
+                <span className="font-mono text-[12.5px] text-text-4">-</span>
               )}
             </Field>
             <Field label="Added">
@@ -308,7 +308,7 @@ export function LeadDrawer({ lead, onClose, onEdit, onLogActivity }: LeadDrawerP
                         href={href}
                         target="_blank"
                         rel="noreferrer noopener"
-                        title={`${platform?.label ?? 'Link'} — ${prettyUrl(s.url)}`}
+                        title={`${platform?.label ?? 'Link'}, ${prettyUrl(s.url)}`}
                         className="transition-opacity hover:opacity-80"
                       >
                         <SocialBadge url={s.url} size="sm" />

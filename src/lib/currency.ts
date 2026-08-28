@@ -247,7 +247,7 @@ export function formatMoney(amount: number, code = 'PKR'): string {
 /** `USD — US Dollar`, for the picker's closed state and its option rows. */
 export function currencyLabel(code: string): string {
   const name = CURRENCY_META[code]?.name
-  return name ? `${code} — ${name}` : code
+  return name ? `${code}, ${name}` : code
 }
 
 /**

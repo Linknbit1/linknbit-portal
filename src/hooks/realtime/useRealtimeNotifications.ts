@@ -43,7 +43,7 @@ export function useRealtimeNotifications(profileId: string) {
           // Only speak up if the user is actually looking — otherwise the push
           // notification is the right surface and a toast would go unseen.
           if (document.visibilityState === 'visible') {
-            toastRef.current(row.body ? `${row.title} — ${row.body}` : row.title, 'info')
+            toastRef.current(row.body ? `${row.title}: ${row.body}` : row.title, 'info')
           }
         },
       )

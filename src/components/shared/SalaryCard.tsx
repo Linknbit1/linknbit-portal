@@ -59,7 +59,7 @@ function SalaryForm({
       <div className="flex items-center gap-2">
         <h4 className="font-mono text-[10px] uppercase tracking-wider text-text-4">Compensation</h4>
         <span className="inline-flex items-center gap-1 font-mono text-[9.5px] text-text-4">
-          <Lock size={10} /> {context === 'self' ? 'Only you and HR/Admin can see this' : 'Private — HR/Admin & the employee only'}
+          <Lock size={10} /> {context === 'self' ? 'Only you and HR/Admin can see this' : 'Private, HR/Admin & the employee only'}
         </span>
       </div>
       <div className="grid grid-cols-[1fr_auto] gap-2.5">
@@ -69,7 +69,7 @@ function SalaryForm({
           min={0}
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          placeholder="—"
+          placeholder="-"
         />
         <div>
           <label className="mb-1.5 block font-mono text-[11px] font-semibold uppercase tracking-wider text-text-4">Currency</label>

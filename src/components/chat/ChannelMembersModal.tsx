@@ -94,7 +94,7 @@ export function ChannelMembersModal({ open, onClose, channelId, canManage }: Cha
               </div>
             )}
             <p className="font-ui text-[11.5px] text-text-4">
-              Removing a role only removes the people it added — anyone invited individually stays.
+              Removing a role only removes the people it added, anyone invited individually stays.
             </p>
           </div>
         )}

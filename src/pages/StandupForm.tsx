@@ -96,7 +96,7 @@ function rowError(t: TaskRow, minChars: number, kind: ProjectGroup['kind']): str
   if (mins < 5) return 'Log at least 5 minutes'
   if (mins > 960) return 'That is more than 16 hours'
   if (t.workDone.trim().length < minChars) {
-    return `Describe what you did — ${minChars} characters minimum`
+    return `Describe what you did, ${minChars} characters minimum`
   }
   if (t.blocker.trim() && t.blocker.trim().length < MIN_BLOCKER) {
     return `Explain the blocker (${MIN_BLOCKER}+ characters)`
@@ -285,7 +285,7 @@ export function StandupForm({ onDone, editing, onCancel }: StandupFormProps) {
                       <Sparkles size={13} className="text-text-3" /> Other work
                     </p>
                     <p className="mt-0.5 font-ui text-[11.5px] text-text-4">
-                      Anything with no project behind it — an errand, an interview, a fire drill.
+                      Anything with no project behind it. An errand, an interview, a fire drill.
                     </p>
                   </>
                 ) : (
@@ -308,7 +308,7 @@ export function StandupForm({ onDone, editing, onCancel }: StandupFormProps) {
                 )}
               </div>
               <span className="font-mono text-[11.5px] text-text-3">
-                {groupMinutes > 0 ? formatMinutes(groupMinutes) : '—'}
+                {groupMinutes > 0 ? formatMinutes(groupMinutes) : '-'}
               </span>
               {groups.length > 1 && (
                 <button
@@ -400,7 +400,7 @@ export function StandupForm({ onDone, editing, onCancel }: StandupFormProps) {
                       <StandupEntryEditor
                         value={t.workDoneDoc}
                         onChange={(doc, text) => patchTask(g.key, t.key, { workDoneDoc: doc, workDone: text })}
-                        placeholder="Be specific — what changed, and where it got to."
+                        placeholder="Be specific, what changed, and where it got to."
                       />
                       <div className="mt-1 flex items-center justify-between gap-2">
                         <p className={cn(
@@ -419,7 +419,7 @@ export function StandupForm({ onDone, editing, onCancel }: StandupFormProps) {
 
                     <div>
                       <label className="mb-1.5 block font-ui text-[11px] font-semibold uppercase tracking-wider text-text-3">
-                        Blocker <span className="font-normal normal-case tracking-normal text-text-4">— optional</span>
+                        Blocker <span className="font-normal normal-case tracking-normal text-text-4">- optional</span>
                       </label>
                       <textarea
                         value={t.blocker}
@@ -494,7 +494,7 @@ export function StandupForm({ onDone, editing, onCancel }: StandupFormProps) {
         <span className="font-ui text-[11.5px] text-text-4">
           {isEditing
             ? 'Corrections stay open until the window closes. Your on-time status and XP are unchanged.'
-            : 'You can only submit once per day — you can still correct it afterwards.'}
+            : 'You can only submit once per day. You can still correct it afterwards.'}
         </span>
       </div>
     </div>
@@ -586,7 +586,7 @@ function HoursMeter({ required, logged, enforced, makeupOwed }: {
           <AlertTriangle size={11} className="mt-0.5 shrink-0" />
           <span>
             You owe <span className="font-semibold">{formatMinutes(makeupOwed)}</span> of make-up time
-            from an approved exception — unpaid hours you agreed to work back. Log up to{' '}
+            from an approved exception, unpaid hours you agreed to work back. Log up to{' '}
             <span className="font-semibold">{formatMinutes(ceiling)}</span> today and the extra comes
             off that balance.
           </span>

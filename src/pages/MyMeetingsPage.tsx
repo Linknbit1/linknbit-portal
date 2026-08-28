@@ -83,13 +83,6 @@ export default function MyMeetingsPage() {
     <div className="flex flex-1 flex-col">
       <Topbar title="My Meetings" />
       <div className="flex flex-col gap-6 p-4 lg:px-8 lg:py-7">
-        <div>
-          <h2 className="font-display text-[22px] font-bold text-text-1">My Meetings</h2>
-          <p className="font-ui text-[13px] text-text-3">
-            Client meetings you are hosting or have been invited to
-          </p>
-        </div>
-
         <div className="flex flex-col gap-4">
           <Tabs
             tabs={[

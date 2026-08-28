@@ -130,7 +130,7 @@ export function MoveTaskModal({
           <label className="text-label font-ui font-semibold uppercase tracking-wider text-text-2">Service</label>
           {noServices ? (
             <p className="rounded-md border border-dashed border-border-default px-3 py-2.5 font-ui text-[12px] text-text-4">
-              That project has no services yet — a task has to live in one. Add a service to it first.
+              That project has no services yet. A task has to live in one. Add a service to it first.
             </p>
           ) : (
             <Select value={destinationService} onChange={setServiceId} options={serviceOptions} placeholder="Select a service…" />

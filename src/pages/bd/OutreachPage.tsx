@@ -66,12 +66,6 @@ export default function OutreachPage() {
       <Topbar title="Outreach" />
       <div className="p-4 lg:px-8 lg:py-7 flex flex-col gap-6">
         <div className="flex flex-wrap items-center gap-3">
-          <div>
-            <h2 className="font-display font-bold text-[22px] text-text-1">Outreach</h2>
-            <p className="font-ui text-[13px] text-text-3">
-              Volume and response rate per channel — including outreach that never became a lead
-            </p>
-          </div>
           <div className="ml-auto flex items-center gap-2">
             <Select value={period} onChange={setPeriod} options={PERIOD_OPTIONS} size="sm" className="w-36" />
             <Button size="sm" iconLeft={<Plus size={15} />} onClick={() => { setLogFor(null); setLogOpen(true) }}>Log outreach</Button>
@@ -184,7 +178,7 @@ function ChannelCard({ stat, maxSent, onLog }: { stat: ChannelStats; maxSent: nu
         <div className="min-w-0 flex-1">
           <h3 className="font-ui font-semibold text-[14px] text-text-1 truncate">{config.label}</h3>
           <p className="font-ui text-[11.5px] text-text-3">
-            {stat.sent > 0 ? `${stat.sent} sent` : 'Inbound — nothing sent'}
+            {stat.sent > 0 ? `${stat.sent} sent` : 'Inbound. Nothing sent'}
           </p>
         </div>
         <span
@@ -225,7 +219,7 @@ function ChannelCard({ stat, maxSent, onLog }: { stat: ChannelStats; maxSent: nu
       <div className="flex items-center justify-between border-t border-border-subtle pt-3">
         <span className="font-ui text-[11px] uppercase tracking-widest text-text-4">Revenue</span>
         <span className="font-display font-bold text-[15px] text-text-1 tabular-nums">
-          {stat.revenue > 0 ? formatCompactCurrency(stat.revenue) : '—'}
+          {stat.revenue > 0 ? formatCompactCurrency(stat.revenue) : '-'}
         </span>
       </div>
     </article>
@@ -281,11 +275,11 @@ function ChannelTable({ stats }: { stats: ChannelStats[] }) {
                   <span className="font-ui text-[13px] text-text-1 truncate">{config.label}</span>
                 </span>
                 <span className="font-mono text-[12.5px] text-text-2 tabular-nums text-right">
-                  {stat.sent || '—'}
+                  {stat.sent || '-'}
                 </span>
                 <span className="font-mono text-[12.5px] text-text-2 tabular-nums text-right">{stat.responses}</span>
                 <span className="font-mono text-[12.5px] tabular-nums text-right text-text-2">
-                  {rate !== null ? `${rate}%` : '—'}
+                  {rate !== null ? `${rate}%` : '-'}
                 </span>
                 <span className="font-mono text-[12.5px] text-text-2 tabular-nums text-right">{stat.leads}</span>
                 <span
@@ -297,7 +291,7 @@ function ChannelTable({ stats }: { stats: ChannelStats[] }) {
                   {stat.won}
                 </span>
                 <span className="font-mono text-[12.5px] text-text-1 tabular-nums text-right">
-                  {stat.revenue > 0 ? formatCompactCurrency(stat.revenue) : '—'}
+                  {stat.revenue > 0 ? formatCompactCurrency(stat.revenue) : '-'}
                 </span>
               </div>
             )
@@ -314,13 +308,13 @@ function ChannelTable({ stats }: { stats: ChannelStats[] }) {
               <Icon size={14} className={config.tint} />
               <span className="font-ui font-semibold text-[13px] text-text-1">{config.label}</span>
               <span className="ml-auto font-mono text-[12.5px] text-text-1 tabular-nums">
-                {stat.revenue > 0 ? formatCompactCurrency(stat.revenue) : '—'}
+                {stat.revenue > 0 ? formatCompactCurrency(stat.revenue) : '-'}
               </span>
             </span>
             <div className="grid grid-cols-5 gap-2">
-              <Metric label="Sent" value={stat.sent ? `${stat.sent}` : '—'} />
+              <Metric label="Sent" value={stat.sent ? `${stat.sent}` : '-'} />
               <Metric label="Replies" value={`${stat.responses}`} />
-              <Metric label="Rate" value={rate !== null ? `${rate}%` : '—'} />
+              <Metric label="Rate" value={rate !== null ? `${rate}%` : '-'} />
               <Metric label="Leads" value={`${stat.leads}`} />
               <Metric label="Won" value={`${stat.won}`} tone={stat.won > 0 ? 'success' : undefined} />
             </div>

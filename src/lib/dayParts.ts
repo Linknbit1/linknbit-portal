@@ -10,8 +10,8 @@ import type { AttendanceDayPart } from '../types'
 /** Long form, for pickers where the reader is choosing rather than scanning. */
 export const DAY_PART_OPTIONS: { value: AttendanceDayPart; label: string }[] = [
   { value: 'full', label: 'Full day(s)' },
-  { value: 'first_half', label: 'Half day — first half' },
-  { value: 'second_half', label: 'Half day — second half' },
+  { value: 'first_half', label: 'Half day, first half' },
+  { value: 'second_half', label: 'Half day, second half' },
 ]
 
 /** Short form, for chips on a row that already says which day it is. */

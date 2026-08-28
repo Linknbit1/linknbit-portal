@@ -123,13 +123,6 @@ export default function AdminConsolePage({ mobileSection }: { mobileSection?: st
       <Topbar title="Admin" back="/more" />
 
       <div className="px-4 py-6 lg:px-8 lg:py-7 flex flex-col gap-5">
-        <div>
-          <h2 className="font-display text-[22px] font-bold text-text-1">Admin</h2>
-          <p className="font-ui text-[13px] text-text-3">
-            The machinery under the portal — devices, terminals, the working calendar, and the
-            record of who changed what.
-          </p>
-        </div>
 
         {showHub ? (
           <div className="flex flex-col gap-2.5">

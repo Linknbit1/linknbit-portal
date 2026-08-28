@@ -21,13 +21,6 @@ export default function StandupHistoryPage() {
     <div className="flex flex-col flex-1">
       <Topbar title="Standup History" />
       <div className="p-4 lg:px-8 lg:py-7 flex flex-col gap-6">
-        <div>
-          <h2 className="font-display font-bold text-[22px] text-text-1">Standup History</h2>
-          <p className="font-ui text-[13px] text-text-3">
-            Your last {HISTORY_DAYS} standups — a record of what you shipped and what got in the way.
-          </p>
-        </div>
-
         <StandupTabs />
 
         {isLoading ? (

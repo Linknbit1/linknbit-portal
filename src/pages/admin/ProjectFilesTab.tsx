@@ -215,7 +215,7 @@ export function ProjectFilesTab({ projectId, canManage = true, onOpenTask }: Pro
                       'flex size-7 shrink-0 items-center justify-center rounded-sm transition-colors',
                       file.is_confidential ? 'text-warning hover:bg-warning/10' : 'text-text-4 hover:bg-surface-2 hover:text-text-2',
                     )}
-                    title={file.is_confidential ? 'Marked confidential — click to unmark' : 'Mark as confidential'}
+                    title={file.is_confidential ? 'Marked confidential, click to unmark' : 'Mark as confidential'}
                     aria-label="Toggle confidential"
                   >
                     <Lock size={13} />

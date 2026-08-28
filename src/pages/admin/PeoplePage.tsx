@@ -96,7 +96,7 @@ function InviteModal({ actorRole, teams, designationOptions, onClose }: {
       {
         onSuccess: (res) => {
           setResult(res)
-          toast(res.emailed ? `Invite emailed to ${email}` : 'User created — share the invite link below', 'success')
+          toast(res.emailed ? `Invite emailed to ${email}` : 'User created, share the invite link below', 'success')
         },
         onError: (e) => toast(e.message || 'Invite failed', 'error'),
       },
@@ -122,7 +122,7 @@ function InviteModal({ actorRole, teams, designationOptions, onClose }: {
             <p className="font-ui text-[13px] text-text-2">
               {result.emailed
                 ? `An invitation email has been sent to ${email}.`
-                : 'Email delivery is not configured — copy this invite link and send it to the user:'}
+                : 'Email delivery is not configured, copy this invite link and send it to the user:'}
             </p>
             {result.invite_link && (
               <div className="flex items-center gap-2 bg-surface-inset border border-border-default rounded-md px-3 py-2">
@@ -324,7 +324,7 @@ function EditDrawer({ person, actorRole, isSelf, teams, designationOptions, curr
             <div className="flex items-center justify-between gap-3 rounded-md border border-border-default bg-surface-inset px-3 py-2.5">
               <div className="min-w-0">
                 <p className="font-ui text-[12.5px] font-semibold text-text-1">Exclude from attendance</p>
-                <p className="font-mono text-[10px] text-text-4 mt-0.5">Exempt (e.g. CEO/COO) — no check-in, hidden from attendance lists & reports.</p>
+                <p className="font-mono text-[10px] text-text-4 mt-0.5">Exempt (e.g. CEO/COO), no check-in, hidden from attendance lists & reports.</p>
               </div>
               <Toggle checked={attendanceExcluded} onChange={setAttendanceExcluded} />
             </div>

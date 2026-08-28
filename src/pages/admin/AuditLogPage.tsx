@@ -106,7 +106,7 @@ const absolute = (iso: string) =>
   new Date(iso).toLocaleString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })
 
 function renderValue(value: unknown): string {
-  if (value === null || value === undefined || value === '') return '—'
+  if (value === null || value === undefined || value === '') return '-'
   if (typeof value === 'object') return JSON.stringify(value)
   return String(value)
 }
@@ -138,7 +138,7 @@ const AuditDetail = ({ row }: { row: AuditLogRow }) => {
   const context = (row.context ?? {}) as Record<string, unknown>
   const keys = diffKeys(row)
   const contextKeys = Object.keys(context)
-  const forWhat = row.target_name ?? row.subject_name ?? '—'
+  const forWhat = row.target_name ?? row.subject_name ?? '-'
 
   return (
     <div className="space-y-3.5 border-t border-border-subtle bg-surface-inset/40 px-4 py-3.5">
@@ -166,7 +166,7 @@ const AuditDetail = ({ row }: { row: AuditLogRow }) => {
           }
         />
         <FactCell label="What happened" value={actionPhrase(row.action)} />
-        <FactCell label="For / on" value={forWhat} muted={forWhat === '—'} />
+        <FactCell label="For / on" value={forWhat} muted={forWhat === '-'} />
       </div>
 
       {/* Technical footer */}
@@ -417,7 +417,7 @@ const AuditLogPage = () => {
 
         <div className="my-4 flex flex-wrap items-start justify-between gap-3">
           <p className="max-w-3xl font-ui text-body-sm/relaxed text-text-3">
-            Every action people take across attendance, gamification, projects and chat — who did it, what happened, and
+            Every action people take across attendance, gamification, projects and chat, who did it, what happened, and
             for whom. Automated system actions aren't logged. <span className="text-brand-red">Flagged</span> rows are
             likely attempts to game the system.
           </p>

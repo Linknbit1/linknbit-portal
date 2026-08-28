@@ -164,7 +164,7 @@ export default function ProfilePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input label="Full name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" />
             <Input label="Job title" value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} placeholder="e.g. Frontend Engineer" />
-            <Input label="Age" type="number" min={14} max={120} value={age} onChange={(e) => setAge(e.target.value)} placeholder="—" error={ageValid ? undefined : 'Enter 14–120'} />
+            <Input label="Age" type="number" min={14} max={120} value={age} onChange={(e) => setAge(e.target.value)} placeholder="-" error={ageValid ? undefined : 'Enter 14–120'} />
             <Input label="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+92 …" />
             <Input label="Location" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="City, Country" className="sm:col-span-2" />
           </div>

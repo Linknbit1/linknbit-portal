@@ -73,7 +73,7 @@ export function AddLinkModal({ projectId, leadId, bdTaskId, taskId, canMarkConfi
         setTitle(found)
         setTitleNote(null)
       } else {
-        setTitleNote({ url: target, message: 'Could not read the title — it may need sign-in. Type one below.' })
+        setTitleNote({ url: target, message: 'Could not read the title. It may need sign-in. Type one below.' })
       }
     }, 600)
     return () => clearTimeout(timer)

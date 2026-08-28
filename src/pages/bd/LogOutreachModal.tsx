@@ -169,7 +169,7 @@ export function LogOutreachModal({ open, channel: initialChannel, onClose }: Log
 
         <div>
           <label htmlFor="outreach-note" className="mb-1.5 block font-ui text-[12px] font-medium text-text-2">
-            Note <span className="text-text-4">— optional</span>
+            Note <span className="text-text-4">- optional</span>
           </label>
           <textarea
             id="outreach-note"

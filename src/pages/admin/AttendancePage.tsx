@@ -443,7 +443,7 @@ function MarkModal({ onClose, dateFilter, editRecord = null }: MarkModalProps) {
                 size="sm"
               />
               <span className="font-ui text-[13px] text-text-1">
-                {editRecord?.profiles?.name ?? "—"}
+                {editRecord?.profiles?.name ?? "-"}
               </span>
             </div>
           ) : (
@@ -504,8 +504,8 @@ function MarkModal({ onClose, dateFilter, editRecord = null }: MarkModalProps) {
                 )}
               >
                 {computedStatus === "late"
-                  ? `Late — checks in after ${minutesToHHMM(cutoffMinutes)} cutoff`
-                  : `On time — at or before ${minutesToHHMM(cutoffMinutes)} cutoff`}
+                  ? `Late, checks in after ${minutesToHHMM(cutoffMinutes)} cutoff`
+                  : `On time, at or before ${minutesToHHMM(cutoffMinutes)} cutoff`}
                 {status !== computedStatus && " (status overridden manually)"}
               </p>
             )}
@@ -595,7 +595,7 @@ export function DailyRecordsTab() {
   // Duration counts check-in → day-end. Check-out is no longer a user action; the
   // day-end cron fills check_out to work_end, so this shows "—" until then.
   const durationLabel = (rec: AttendanceWithProfile) => {
-    if (!rec.check_in || !rec.check_out) return "—";
+    if (!rec.check_in || !rec.check_out) return "-";
     const diff =
       new Date(rec.check_out).getTime() - new Date(rec.check_in).getTime();
     const mins = Math.floor(diff / 60000);
@@ -608,7 +608,7 @@ export function DailyRecordsTab() {
           hour: "2-digit",
           minute: "2-digit",
         })
-      : "—";
+      : "-";
 
   const exportCsv = () => {
     if (filtered.length === 0) {
@@ -852,7 +852,7 @@ export function DailyRecordsTab() {
                       </span>
                     ) : (
                       <span className="font-mono text-[11px] text-text-4">
-                        —
+                        -
                       </span>
                     )}
                   </td>
@@ -1042,7 +1042,7 @@ function GrantWfhModal({
         },
         grantedBy: profile?.id ?? "",
       });
-      toast("WFH granted — marked on attendance", "success");
+      toast("WFH granted, marked on attendance", "success");
       onClose();
       setProfileId("");
       setReason("");
@@ -1205,7 +1205,7 @@ export function WFHRequestsTab() {
         status: "approved",
         reviewedBy: profile?.id ?? "",
       });
-      toast("WFH request approved — marked on attendance", "success");
+      toast("WFH request approved, marked on attendance", "success");
     } catch {
       toast("Failed to approve request", "error");
     }
@@ -1669,7 +1669,7 @@ function AddLeaveModal({
       toast(
         result.status === "approved"
           ? "Leave added and applied to attendance"
-          : "Leave added — pending admin approval",
+          : "Leave added, pending admin approval",
         "success",
       );
       onClose();
@@ -1846,7 +1846,7 @@ export function LeaveTab() {
       await deleteTypeMut.mutateAsync(t.id);
       toast("Leave type removed", "success");
     } catch {
-      toast("Cannot delete — leave requests reference this type", "error");
+      toast("Cannot delete, leave requests reference this type", "error");
     }
   };
 
@@ -1857,7 +1857,7 @@ export function LeaveTab() {
         status: "approved",
         reviewedBy: profile?.id ?? "",
       });
-      toast("Leave approved — marked on attendance", "success");
+      toast("Leave approved, marked on attendance", "success");
     } catch {
       toast("Failed to approve leave", "error");
     }
@@ -2225,7 +2225,7 @@ export function EnrolledDevicesTab() {
           day: "numeric",
           year: "numeric",
         })
-      : "—";
+      : "-";
 
   const handleApprove = async (deviceId: string) => {
     if (!profile) return;
@@ -2619,14 +2619,14 @@ export function ExceptionsTab() {
     },
   };
 
-  const fmtTimeStr = (t: string | null) => (t ? t.slice(0, 5) : "—");
+  const fmtTimeStr = (t: string | null) => (t ? t.slice(0, 5) : "-");
   const fmtTs = (iso: string | null) =>
     iso
       ? new Date(iso).toLocaleTimeString("en-US", {
           hour: "2-digit",
           minute: "2-digit",
         })
-      : "—";
+      : "-";
   return (
     <div className="flex flex-col gap-5">
       {/* Table */}
@@ -2986,7 +2986,7 @@ export function HolidaysTab() {
         createdBy: profile.id,
       });
       toast(
-        `${new Date(wfhDate + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })} set as a company WFH day — everyone's attendance marked`,
+        `${new Date(wfhDate + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })} set as a company WFH day. Everyone's attendance marked`,
         "success",
       );
       setWfhOpen(false);
@@ -3005,7 +3005,7 @@ export function HolidaysTab() {
   const handleRemoveWfhDay = async (id: string) => {
     try {
       await removeWfhMutation.mutateAsync(id);
-      toast("Company WFH day removed — attendance reverted", "success");
+      toast("Company WFH day removed, attendance reverted", "success");
       setWfhDeleteTarget(null);
     } catch {
       toast("Failed to remove WFH day", "error");
@@ -3068,7 +3068,7 @@ export function HolidaysTab() {
           payload: { date: form.date, name, type: form.type },
           createdBy: profile!.id,
         });
-        toast(`"${name}" added — attendance records updated`, "success");
+        toast(`"${name}" added, attendance records updated`, "success");
       } else {
         await createRangeMutation.mutateAsync({
           startDate: form.date,
@@ -3375,7 +3375,7 @@ export function HolidaysTab() {
                   <span className="text-text-1 font-semibold">
                     {rangeCount}
                   </span>{" "}
-                  day{rangeCount !== 1 ? "s" : ""} —{" "}
+                  day{rangeCount !== 1 ? "s" : ""} -{" "}
                   {new Date(form.date + "T00:00:00").toLocaleDateString(
                     "en-GB",
                     { day: "2-digit", month: "short" },
@@ -3419,11 +3419,11 @@ export function HolidaysTab() {
               />
               <p className="text-[11px] font-ui text-text-4 mt-1.5">
                 {form.type === "public_holiday" &&
-                  "National / government holiday — all employees off."}
+                  "National / government holiday, all employees off."}
                 {form.type === "company_off" &&
                   "Company-wide day off (team outing, shutdown, etc.)."}
                 {form.type === "optional" &&
-                  "Optional — employees may choose to take it off."}
+                  "Optional, employees may choose to take it off."}
               </p>
             </div>
           </div>
@@ -3570,7 +3570,7 @@ export function HolidaysTab() {
         {companyWfhDays.length === 0 ? (
           <ScheduleEmpty>
             No company WFH days for {year}. Declare one when the office can't be
-            used — a power cut, flooding, or similar.
+            used. A power cut, flooding, or similar.
           </ScheduleEmpty>
         ) : (
           <div className="divide-y divide-border-subtle">
@@ -4202,14 +4202,14 @@ function minutesSinceMidnight(iso: string): number {
 }
 
 function fmtMinutes(mins: number): string {
-  if (!isFinite(mins)) return "—";
+  if (!isFinite(mins)) return "-";
   const h = Math.floor(mins / 60);
   const m = Math.round(mins % 60);
   return `${h}h ${m}m`;
 }
 
 function fmtTime(mins: number): string {
-  if (!isFinite(mins)) return "—";
+  if (!isFinite(mins)) return "-";
   const h = Math.floor(mins / 60);
   const m = Math.round(mins % 60);
   const ampm = h >= 12 ? "PM" : "AM";
@@ -4903,13 +4903,13 @@ export function ReportsTab() {
                           </span>
                         </td>
                         <td className="px-4 py-3 font-mono text-[13px] text-service-design">
-                          {s.halfDay || "—"}
+                          {s.halfDay || "-"}
                         </td>
                         <td className="px-4 py-3 font-mono text-[13px] text-service-dev">
-                          {s.leave || "—"}
+                          {s.leave || "-"}
                         </td>
                         <td className="px-4 py-3 font-mono text-[12px] text-text-2">
-                          {s.totalCheckins > 0 ? fmtTime(s.avgCheckinMin) : "—"}
+                          {s.totalCheckins > 0 ? fmtTime(s.avgCheckinMin) : "-"}
                         </td>
                         <td
                           className="px-4 py-3 font-mono text-[12px] text-text-2"
@@ -4917,12 +4917,12 @@ export function ReportsTab() {
                         >
                           {s.totalMinutes > 0
                             ? fmtMinutes(s.totalMinutes)
-                            : "—"}
+                            : "-"}
                         </td>
                         <td className="px-4 py-3 font-mono text-[12px] text-service-mkt">
                           {s.overtimeMinutes > 0
                             ? `+${(s.overtimeMinutes / 60).toFixed(1)}h`
-                            : "—"}
+                            : "-"}
                         </td>
                         <td className="px-4 py-3 font-mono text-[12px] text-text-3">
                           {fmtMinutes(s.expectedMin)}
@@ -4991,7 +4991,7 @@ export function ReportsTab() {
                         >
                           <td colSpan={15} className="px-6 py-3">
                             <div className="text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-2">
-                              Daily log — {MONTH_NAMES[month - 1]} {year}
+                              Daily log, {MONTH_NAMES[month - 1]} {year}
                             </div>
                             <div className="flex flex-wrap gap-1.5">
                               {dayRecords.map((r) => {
@@ -5060,7 +5060,7 @@ export function ReportsTab() {
                                         ? "Absent"
                                         : null;
                                 const statusLabel =
-                                  [dayLabel, attLabel].filter(Boolean).join(" + ") || "—";
+                                  [dayLabel, attLabel].filter(Boolean).join(" + ") || "-";
 
                                 return (
                                   <div key={r.id} className="relative group">
@@ -5184,7 +5184,7 @@ function OfficeIpAutoUpdate({
           </p>
           <p className="font-ui text-[11px] text-text-4 mt-0.5">
             {enabled
-              ? "The terminal's heartbeat keeps this range correct when the ISP changes the office IP — the prefix you chose is kept."
+              ? "The terminal's heartbeat keeps this range correct when the ISP changes the office IP. The prefix you chose is kept."
               : "The range changes only when someone edits it here. A router restart will block check-in until it is corrected."}
           </p>
         </div>
@@ -5218,7 +5218,7 @@ function OfficeIpAutoUpdate({
         </div>
       ) : (
         <p className="pt-3 border-t border-border-subtle text-[11px] font-ui text-text-4">
-          No terminal has reported yet — nothing to compare against.
+          No terminal has reported yet. Nothing to compare against.
         </p>
       )}
 
@@ -5402,7 +5402,7 @@ function SettingsForm({ settings }: { settings: AttendanceSettings }) {
               {workStart || "?"}–{workEnd || "?"} less this break is{" "}
               {formatMinutes(workingDayMinutes)}
             </span>{" "}
-            — and that is how much work each person has to account for in their standup.
+, and that is how much work each person has to account for in their standup.
           </p>
           {breakInvalid && (
             <p className="flex items-center gap-1.5 text-[11px] font-ui text-error -mt-2">
@@ -5453,7 +5453,7 @@ function SettingsForm({ settings }: { settings: AttendanceSettings }) {
               </p>
               <p className="font-ui text-[11px] text-text-4 mt-0.5">
                 {saturdayWorking
-                  ? "Every Saturday is a regular workday — check-in required"
+                  ? "Every Saturday is a regular workday, check-in required"
                   : "Saturdays are off by default"}
               </p>
             </div>
@@ -5548,7 +5548,7 @@ function SettingsForm({ settings }: { settings: AttendanceSettings }) {
             <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">
               Office IP CIDR{" "}
               <span className="normal-case font-ui text-text-4 ml-1">
-                (optional — leave blank to disable WiFi check)
+                (optional, leave blank to disable WiFi check)
               </span>
             </label>
             <input

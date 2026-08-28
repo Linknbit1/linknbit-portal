@@ -42,7 +42,7 @@ export function PushDevicesCard() {
     onSuccess: () => toast('Notifications enabled on this device', 'success'),
     onError: (e) => toast(
       e.message === 'permission_denied'
-        ? 'Your browser blocked notifications — allow them in site settings, then try again'
+        ? 'Your browser blocked notifications, allow them in site settings, then try again'
         : e.message === 'push_not_configured'
           ? 'Push isn’t configured on the server yet'
           : 'Could not enable notifications on this device',
@@ -65,7 +65,7 @@ export function PushDevicesCard() {
       </div>
 
       <p className="font-ui text-[12px] text-text-3">
-        Each device is separate — turn it on once per phone or computer you use.
+        Each device is separate, turn it on once per phone or computer you use.
         While the portal is open and focused you'll see an in-app alert instead of a system pop-up.
       </p>
 
@@ -80,7 +80,7 @@ export function PushDevicesCard() {
         <div className="flex items-start gap-2 px-3 py-2 rounded-md bg-service-mkt/8 border border-service-mkt/20">
           <Info size={13} className="text-service-mkt shrink-0 mt-0.5" />
           <p className="font-ui text-[11.5px] text-text-2">
-            On iPhone/iPad, add the portal to your Home Screen first — Safari only allows
+            On iPhone/iPad, add the portal to your Home Screen first, Safari only allows
             notifications from the installed app.
           </p>
         </div>

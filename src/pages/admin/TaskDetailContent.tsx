@@ -502,7 +502,7 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
           onClick={() => watch.toggle()}
           title={watch.isSubscribed
             ? 'You get status, priority and due-date updates for this task'
-            : 'Muted — only @mentions will reach you'}
+            : 'Muted, only @mentions will reach you'}
         >
           {watch.isSubscribed ? 'Notifying' : 'Muted'}
         </Button>

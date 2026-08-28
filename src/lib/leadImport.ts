@@ -31,7 +31,7 @@ export interface LeadImportColumn {
  * only a company name typed in.
  */
 export const LEAD_IMPORT_COLUMNS: LeadImportColumn[] = [
-  { key: 'company', required: true, accepts: 'Any text', fallback: '— required —' },
+  { key: 'company', required: true, accepts: 'Any text', fallback: '- required -' },
   { key: 'contact_name', aliases: ['contact'], accepts: 'Any text', fallback: 'Empty' },
   { key: 'contact_title', aliases: ['title', 'job_title'], accepts: 'Any text', fallback: 'Empty' },
   { key: 'email', accepts: 'Any text', fallback: 'Empty' },
@@ -41,28 +41,28 @@ export const LEAD_IMPORT_COLUMNS: LeadImportColumn[] = [
     accepts: CHANNEL_ORDER.map((c) => CHANNEL_CONFIG[c].label).join(', '),
     fallback: 'Website/SEO',
   },
-  { key: 'services', accepts: `${BD_SERVICES.join(', ')} — separate several with ;`, fallback: 'None' },
+  { key: 'services', accepts: `${BD_SERVICES.join(', ')}, separate several with ;`, fallback: 'None' },
   { key: 'industry', accepts: BD_INDUSTRIES.join(', '), fallback: 'Other' },
   { key: 'icp_fit', aliases: ['fit'], accepts: 'Strong fit, Partial fit, Not a fit', fallback: 'Partial fit' },
-  { key: 'value', aliases: ['deal_value', 'amount'], accepts: 'A number — 450000 or 450,000', fallback: '0' },
-  { key: 'currency', accepts: 'A currency code — PKR, USD, GBP, EUR…', fallback: 'PKR' },
+  { key: 'value', aliases: ['deal_value', 'amount'], accepts: 'A number, 450000 or 450,000', fallback: '0' },
+  { key: 'currency', accepts: 'A currency code, PKR, USD, GBP, EUR…', fallback: 'PKR' },
   { key: 'stage', accepts: STAGE_ORDER.map((s) => STAGE_CONFIG[s].label).join(', '), fallback: 'New Lead' },
   { key: 'temperature', accepts: 'Hot, Warm, Cold', fallback: 'Warm' },
   { key: 'owner', aliases: ['owner_name', 'rep'], accepts: 'The full name of someone in BD', fallback: 'You' },
   { key: 'added_on', aliases: ['date_added'], accepts: 'YYYY-MM-DD', fallback: 'Today' },
-  { key: 'last_contacted', accepts: 'YYYY-MM-DD', fallback: 'Empty — until outreach is logged' },
+  { key: 'last_contacted', accepts: 'YYYY-MM-DD', fallback: 'Empty, until outreach is logged' },
   { key: 'next_follow_up', aliases: ['follow_up'], accepts: 'YYYY-MM-DD', fallback: 'Empty' },
   { key: 'notes', aliases: ['description'], accepts: 'Any text', fallback: 'Empty' },
-  { key: 'website', aliases: ['url', 'site'], accepts: 'A web address — with or without https://', fallback: 'Empty' },
+  { key: 'website', aliases: ['url', 'site'], accepts: 'A web address, with or without https://', fallback: 'Empty' },
   { key: 'country', accepts: 'Any text', fallback: 'Empty' },
   { key: 'city', accepts: 'Any text', fallback: 'Empty' },
   // Not `source`: that is already an alias of `channel`, and a sheet carrying
   // both would be ambiguous about which one it meant.
-  { key: 'source_folder', aliases: ['origin'], accepts: 'Any text — where the lead came from', fallback: 'Empty' },
-  { key: 'socials', aliases: ['social_media'], accepts: 'Profile links — separate several with ;', fallback: 'None' },
+  { key: 'source_folder', aliases: ['origin'], accepts: 'Any text, where the lead came from', fallback: 'Empty' },
+  { key: 'socials', aliases: ['social_media'], accepts: 'Profile links, separate several with ;', fallback: 'None' },
   {
     key: 'documents', aliases: ['document_links', 'drive_links'],
-    accepts: 'Title | link — separate several with ;', fallback: 'None',
+    accepts: 'Title | link, separate several with ;', fallback: 'None',
   },
 ]
 

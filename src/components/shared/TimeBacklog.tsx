@@ -403,7 +403,7 @@ export function TimeBacklog({ projectId, groupBy }: TimeBacklogProps) {
           <p className="max-w-sm font-ui text-[12px] text-text-4">
             {filtering
               ? 'Try a different project, task or person.'
-              : 'Start a timer or log time on a task and every session shows up here — when it started, stopped and resumed.'}
+              : 'Start a timer or log time on a task and every session shows up here, when it started, stopped and resumed.'}
           </p>
         </div>
       ) : nested ? (

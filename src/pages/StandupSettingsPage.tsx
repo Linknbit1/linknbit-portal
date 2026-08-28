@@ -88,13 +88,6 @@ export default function StandupSettingsPage() {
     <div className="flex flex-col flex-1">
       <Topbar title="Standup Settings" />
       <div className="p-4 lg:px-8 lg:py-7 flex flex-col gap-6">
-        <div>
-          <h2 className="font-display font-bold text-[22px] text-text-1">Standup Settings</h2>
-          <p className="font-ui text-[13px] text-text-3">
-            Who has to submit a daily standup. Set a default per role, then make exceptions per person.
-          </p>
-        </div>
-
         <StandupTabs />
 
         {isLoading ? (
@@ -152,7 +145,7 @@ export default function StandupSettingsPage() {
                 <Info size={12} className="text-text-4 shrink-0 mt-0.5" />
                 <p className="font-ui text-[11.5px] text-text-4">
                   "Follow role" uses the defaults above. Setting a person to Required or Excluded overrides
-                  their role — useful for exempting one person or pulling a lead into the routine.
+                  their role, useful for exempting one person or pulling a lead into the routine.
                 </p>
               </div>
 

@@ -95,7 +95,7 @@ export function AttendanceCalendar() {
         if (date >= r.start_date && date <= r.end_date) {
           away.push({
             profileId: r.profile_id,
-            name: r.profiles?.name ?? '—',
+            name: r.profiles?.name ?? '-',
             avatarUrl: r.profiles?.avatar_url ?? null,
             kind: 'leave',
             label: r.leave_types?.name ?? 'Leave',
@@ -106,7 +106,7 @@ export function AttendanceCalendar() {
         if (date >= r.start_date && date <= r.end_date) {
           away.push({
             profileId: r.profile_id,
-            name: r.profiles?.name ?? '—',
+            name: r.profiles?.name ?? '-',
             avatarUrl: r.profiles?.avatar_url ?? null,
             kind: 'wfh',
             label: 'Working from home',

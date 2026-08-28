@@ -4,7 +4,7 @@
 // runs code against a shape that no longer exists — which is exactly how the WFH
 // page white-screened on `r.date` being undefined. A new name drops the old
 // cache on activate, so the offline fallback cannot resurrect the previous app.
-const CACHE_NAME = 'linknbit-portal-v28'
+const CACHE_NAME = 'linknbit-portal-v29'
 const PRECACHE_URLS = [
   '/',
   '/index.html',
@@ -141,7 +141,7 @@ self.addEventListener('push', (event) => {
 function pathForNotification(data) {
   const id = data.resourceId
   switch (data.resourceType) {
-    case 'task': return id ? '/admin/tasks/' + id + '?openInProject=1' : '/notifications'
+    case 'task': return id ? '/admin/tasks/' + id : '/notifications'
     case 'project': return id ? '/admin/projects/' + id : '/notifications'
     case 'leave_request':
     case 'wfh_request':

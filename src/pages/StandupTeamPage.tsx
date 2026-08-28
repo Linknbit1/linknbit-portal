@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Clock } from 'lucide-react'
+import { Clock, Users } from 'lucide-react'
 import { Topbar } from '../components/layout/Topbar'
 import { Avatar } from '../components/ui/Avatar'
 import { Badge } from '../components/ui/Badge'
@@ -40,14 +40,9 @@ export default function StandupTeamPage() {
     <div className="flex flex-col flex-1">
       <Topbar title="Team Standups" />
       <div className="p-4 lg:px-8 lg:py-7 flex flex-col gap-6">
-        <div>
-          <h2 className="font-display font-bold text-[22px] text-text-1">Team Standups</h2>
-          <p className="font-ui text-[13px] text-text-3">
-            {isScoped
-              ? "Your team's end-of-day updates — what they worked on, time spent, and blockers."
-              : 'End-of-day updates across the company — what people worked on, time spent, and blockers.'}
-          </p>
-        </div>
+        <p className="inline-flex items-center gap-1 font-ui text-[12.5px] text-text-4">
+          <Users size={11} /> {isScoped ? 'Your team' : 'Everyone'}
+        </p>
 
         <StandupTabs />
 
@@ -65,7 +60,7 @@ export default function StandupTeamPage() {
           <div className="flex items-center gap-2 bg-surface-1 border border-border-default rounded-lg px-3.5 py-2.5">
             <Clock size={14} className="text-text-3 shrink-0" />
             <span className="font-ui text-[12.5px] text-text-3">
-              The standup window opens at {officeTime(win.opens_at, win.timezone)} — updates appear after that.
+              The standup window opens at {officeTime(win.opens_at, win.timezone)}, updates appear after that.
             </span>
           </div>
         )}

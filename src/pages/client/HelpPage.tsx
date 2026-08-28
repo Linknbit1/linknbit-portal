@@ -28,7 +28,7 @@ const FAQS = [
   },
   {
     q: 'What does "Action Needed" mean on my project?',
-    a: '"Action Needed" means the team is waiting for your input before they can proceed — usually a stage approval or file review. Click the project card to see what needs your attention.',
+    a: '"Action Needed" means the team is waiting for your input before they can proceed, usually a stage approval or file review. Click the project card to see what needs your attention.',
   },
   {
     q: 'How do I download a delivered file?',
