@@ -10,14 +10,75 @@ import type { ChangelogRelease } from '../../types'
  *
  * `RELEASES[0]` is rendered as "Latest" on this page and as the What's new
  * callout at the top of the handbook, so a new milestone goes on top.
+ *
+ * ── Numbering ────────────────────────────────────────────────────────────────
+ * `major.minor.patch`, and the third number carries its weight:
+ *
+ *   patch  nothing new, only `improved` and `fixed` entries
+ *   minor  anything with an `added` entry in it
+ *   major  the portal changes shape
+ *
+ * ── Who sees what ────────────────────────────────────────────────────────────
+ * An entry may carry `roles` / `feature`, gated exactly as a handbook topic is
+ * and with the same keys the nav and route guards use. Most entries carry
+ * neither, because most of what ships is for everybody. Gate an entry only when
+ * it describes a screen the reader could not open, and remember that a line
+ * about a module reaching people OUTSIDE it (a BD meeting landing in a
+ * non-BD person's calendar) is exactly the line that must stay ungated.
+ *
+ * A release whose every entry is gated away disappears for that reader, so
+ * `highlight` never announces something they cannot see.
  */
 export const RELEASES: ChangelogRelease[] = [
   {
-    version: 'v1.19',
+    version: '1.17.0',
+    date: '2026-08-28',
+    title: 'Knowing what changed',
+    highlight:
+      'A dot on the menu when there is a release you have not read, a changelog that only shows you the parts you can actually use, and proper three-part version numbers.',
+    entries: [
+      {
+        kind: 'added',
+        text: 'A dot appears beside the arrow next to the logo when a release has shipped that you have not opened yet. Opening the changelog clears it. Nothing is sent to you and nothing interrupts you, it is just there when you next look.',
+      },
+      {
+        kind: 'added',
+        feature: 'can_publish_releases',
+        text: 'A release worth telling everybody about can be announced from the changelog. Press Announce beside it and every active member of staff gets a notification linking back to it. A version can only go out once, and the entry afterwards says how many people it reached.',
+      },
+      {
+        kind: 'improved',
+        text: 'The changelog and the handbook now show you only what applies to you, using the same rules that decide what is in your menu. A release about a screen your role cannot open no longer appears at all, rather than describing something you cannot go and try.',
+      },
+      {
+        kind: 'improved',
+        text: 'Versions are now three numbers rather than two. The last one moves when a release only improved or fixed things, the middle one when something new arrived. Every past release has been renumbered to match, so the history reads the same way.',
+      },
+    ],
+  },
+  {
+    version: '1.16.0',
+    date: '2026-08-28',
+    title: 'A standup that fills itself in',
+    entries: [
+      {
+        kind: 'improved',
+        text: 'Press “Fill them in” and anything you ran a timer on arrives with its time already in the box. Tasks that were only in progress or commented on still come in empty, because nothing measured how long they took, and an invented number is slower to correct than an empty box is to fill.',
+      },
+      {
+        kind: 'added',
+        text: 'Hours with no project behind them are now a first-class option rather than something to hunt for. “Add time with no project” offers ready-made titles for the ones that keep coming up: a meeting, an office quest, onboarding, a stretch with nothing assigned. An empty first card can be turned into one with “This was not project work”.',
+      },
+      {
+        kind: 'added',
+        text: 'When only the tail of the day is unaccounted for, every Time spent box carries a “+ 2h 15m left” link that drops the whole remainder onto that row. No more working out what is missing.',
+      },
+    ],
+  },
+  {
+    version: '1.15.0',
     date: '2026-08-28',
     title: 'Drop a single day from a longer request',
-    highlight:
-      'A week of leave no longer has to be rejected wholesale because one day of it changed. Whoever manages attendance can take that day out and leave the rest approved.',
     entries: [
       {
         kind: 'added',
@@ -30,7 +91,7 @@ export const RELEASES: ChangelogRelease[] = [
     ],
   },
   {
-    version: 'v1.18',
+    version: '1.14.4',
     date: '2026-08-28',
     title: 'Less chrome, fewer dead ends',
     entries: [
@@ -57,7 +118,7 @@ export const RELEASES: ChangelogRelease[] = [
     ],
   },
   {
-    version: 'v1.17',
+    version: '1.14.3',
     date: '2026-08-28',
     title: 'Tasks follow assignment',
     entries: [
@@ -76,7 +137,7 @@ export const RELEASES: ChangelogRelease[] = [
     ],
   },
   {
-    version: 'v1.16',
+    version: '1.14.2',
     date: '2026-08-28',
     title: 'My Day, sharpened',
     entries: [
@@ -99,7 +160,7 @@ export const RELEASES: ChangelogRelease[] = [
     ],
   },
   {
-    version: 'v1.15',
+    version: '1.14.1',
     date: '2026-08-26',
     title: 'One less screen, and a clearer name',
     entries: [
@@ -118,7 +179,7 @@ export const RELEASES: ChangelogRelease[] = [
     ],
   },
   {
-    version: 'v1.14',
+    version: '1.14.0',
     date: '2026-08-26',
     title: 'An inbox that means something, and a menu you arrange',
     entries: [
@@ -141,7 +202,7 @@ export const RELEASES: ChangelogRelease[] = [
     ],
   },
   {
-    version: 'v1.13',
+    version: '1.13.0',
     date: '2026-08-26',
     title: 'Mine, my team, or everyone',
     entries: [
@@ -156,7 +217,7 @@ export const RELEASES: ChangelogRelease[] = [
     ],
   },
   {
-    version: 'v1.12',
+    version: '1.12.0',
     date: '2026-08-26',
     title: 'One door for reports, one for admin',
     entries: [
@@ -166,10 +227,12 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'added',
+        feature: ['can_manage_attendance', 'can_view_audit_log'],
         text: 'Admin is a console, at its own short address. Terminals, Enrolled Devices, and Schedule & holidays moved out of the Attendance menu and joined the Audit Log behind one Admin row. The count on that row is what is waiting inside, devices to approve and unseen audit entries. So folding them away never hides work.',
       },
       {
         kind: 'improved',
+        feature: 'can_govern_gamification',
         text: 'Gamification’s “Settings” is now called Governance, on the page as well as in the menu, because that is what it is, granting XP and deciding who takes part. Its address changed to match; the old link still works. The actual gamification rules live in Settings → Gamification, where the standup and attendance rules already were.',
       },
       {
@@ -183,7 +246,7 @@ export const RELEASES: ChangelogRelease[] = [
     ],
   },
   {
-    version: 'v1.11',
+    version: '1.11.0',
     date: '2026-08-26',
     title: 'Press ⌘K',
     entries: [
@@ -202,7 +265,7 @@ export const RELEASES: ChangelogRelease[] = [
     ],
   },
   {
-    version: 'v1.10',
+    version: '1.10.0',
     date: '2026-08-26',
     title: 'My Day',
     entries: [
@@ -221,7 +284,7 @@ export const RELEASES: ChangelogRelease[] = [
     ],
   },
   {
-    version: 'v1.9',
+    version: '1.9.0',
     date: '2026-08-26',
     title: 'Attendance, in three views instead of eleven',
     entries: [
@@ -252,7 +315,7 @@ export const RELEASES: ChangelogRelease[] = [
     ],
   },
   {
-    version: 'v1.8',
+    version: '1.8.0',
     date: '2026-08-25',
     title: 'A tighter sidebar',
     entries: [
@@ -275,7 +338,7 @@ export const RELEASES: ChangelogRelease[] = [
     ],
   },
   {
-    version: 'v1.7.1',
+    version: '1.7.1',
     date: '2026-08-25',
     title: 'Checking in from home, and from the office WiFi',
     entries: [
@@ -290,28 +353,33 @@ export const RELEASES: ChangelogRelease[] = [
     ],
   },
   {
-    version: 'v1.7',
+    version: '1.7.0',
     date: '2026-08-24',
     title: 'Won deals build their own projects, and campaigns get their privacy',
     entries: [
       {
         kind: 'improved',
+        feature: 'can_view_bd',
         text: 'The handoff on a won lead now builds the project rather than recording an intention to. Confirming it creates the client, the project, a service block for every service you ticked, the starting pipeline you chose for each, and the people you staffed onto them. The project is in Projects the moment the modal closes.',
       },
       {
         kind: 'added',
+        feature: 'can_view_bd',
         text: 'A handoff can now cover several services at once. Every service the deal was sold against is ticked for you and each gets its own block, so a deal that bought design, development and marketing arrives as one project with three service blocks instead of three separate conversations.',
       },
       {
         kind: 'added',
+        feature: 'can_view_bd',
         text: 'You can staff each service during the handoff, and set the project’s start date and deadline while you are there. Both are optional, leave them and the manager picks them up.',
       },
       {
         kind: 'added',
+        feature: 'can_view_bd',
         text: 'The handoff now asks which client the work is for, rather than guessing. Pick an existing client, or name a new one, prefilled from the lead, and flagged if that name already exists so the same account cannot end up in the list twice. Leads are usually named after the deal, so this is worth a glance.',
       },
       {
         kind: 'improved',
+        feature: 'can_view_bd',
         text: 'BD campaigns are now private to the people on them. You see a campaign if you own it, created it, or were added to its team, and creating one, or being handed one as its owner, puts you on it automatically. Whoever runs BD still sees every campaign. Until now every campaign was visible to everyone in the department: the Projects screen had a filter meant to prevent that, but it never took effect.',
       },
       {
@@ -324,10 +392,12 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'fixed',
+        feature: 'can_view_bd',
         text: 'A BD task’s linked lead is now a link, press it to open that lead in the Pipeline. The link had been built but was never switched on, so the field named a lead you then had to go and find by hand.',
       },
       {
         kind: 'fixed',
+        feature: 'can_view_bd',
         text: 'A note written on Daily Updates is now visible. If you logged no outreach and hosted no meetings that day, your note was stored correctly and then shown to nobody, not to your team, and not to you. Because the feed only listed people with logged activity. Writing a note now counts as checking in.',
       },
       {
@@ -340,12 +410,13 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'fixed',
+        feature: 'can_view_bd',
         text: 'Handing off used to record the handoff on the lead and nothing else. The project it named was never created, and the lead’s timeline said it had been handed over regardless. Old handoffs that were left dangling this way still show on their leads; if one names a project that was later created by hand, ask an admin to link the two.',
       },
     ],
   },
   {
-    version: 'v1.6',
+    version: '1.6.0',
     date: '2026-08-23',
     title: 'Linknbit 3.0. The portal gets the new brand',
     entries: [
@@ -372,7 +443,7 @@ export const RELEASES: ChangelogRelease[] = [
     ],
   },
   {
-    version: 'v1.5',
+    version: '1.5.0',
     date: '2026-08-17',
     title: 'Business Development goes live',
     entries: [
@@ -382,6 +453,7 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'added',
+        feature: 'can_view_reports',
         text: 'A project’s task breakdown also lists still-open tasks that recorded no time at all in the range, which is the thing a delivery lead most wants to spot and the one thing a table built from time entries can never show. One button hides them again.',
       },
       {
@@ -398,10 +470,12 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'added',
+        feature: 'can_view_bd',
         text: 'BD tasks now take documents. Open a task, scroll to Documents, and drop a file in or paste a Google Doc, Sheet or Drive link. The same uploader, preview and Drive support that leads and delivery tasks already had. Anyone who can open Business Dev can read them; adding and removing is limited to whoever the task is assigned to, whoever raised it, and anyone who runs BD.',
       },
       {
         kind: 'fixed',
+        feature: 'can_view_bd',
         text: 'The BD Tasks screen was hiding most of the department’s work. It opened filtered to your own tasks, and the control doing it sat collapsed behind the Filters button with nothing to say it was on. So a campaign’s tasks were plainly listed on its own page but missing from the Tasks board. Tasks now opens on the whole team, and the people picker sits in the open beside the project filter.',
       },
       {
@@ -414,14 +488,17 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'added',
+        feature: 'can_view_bd',
         text: 'Business Development is no longer a preview. Leads, outreach, meetings, campaigns, tasks, daily check-ins and targets are all saved and shared, what you change, your colleagues see.',
       },
       {
         kind: 'added',
+        feature: 'can_view_bd',
         text: 'Comment threads on leads, BD tasks and campaigns. Type “@” to tag a colleague and they are notified; comments from other people appear as they are posted, without reloading.',
       },
       {
         kind: 'added',
+        feature: 'can_view_bd',
         text: 'Lead notes, BD task descriptions and campaign briefs are now written with the same editor as the rest of the portal, formatting, links and @mentions included.',
       },
       {
@@ -454,18 +531,22 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'improved',
+        feature: 'can_view_bd',
         text: 'Every BD change applies the moment you make it, dragging a card, ticking a step, editing a field. Nothing waits on a spinner, and if a save is refused the screen puts itself back and tells you.',
       },
       {
         kind: 'improved',
+        feature: 'can_view_bd',
         text: 'The people pickers throughout BD now list your actual colleagues rather than sample names, and reassigning a lead or a task notifies whoever picks it up.',
       },
       {
         kind: 'fixed',
+        feature: 'can_view_bd',
         text: 'Performance reporting is now measured off real records: the funnel counts your live pipeline, and the revenue chart books each deal to the month it closed rather than the month the lead arrived.',
       },
       {
         kind: 'fixed',
+        feature: 'can_view_bd',
         text: 'You can now file a lead or a campaign for a colleague. Choosing anyone but yourself as the owner used to refuse the save; the record is now created and stays yours to edit as well as theirs.',
       },
       {
@@ -486,18 +567,22 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'fixed',
+        feature: 'can_view_bd',
         text: 'Profile photos now appear throughout Business Development. Lead cards, the pipeline table, the task board, meetings, targets and daily check-ins were all drawing initials even for people who had uploaded a picture.',
       },
       {
         kind: 'fixed',
+        feature: 'can_view_bd',
         text: 'Last contacted no longer shows the day a lead was added. It stays blank until outreach is actually logged, and a lead nobody has contacted reads “Not contacted” rather than appearing to have been spoken to today.',
       },
       {
         kind: 'added',
+        feature: 'can_view_bd',
         text: 'A deal can be quoted in any currency, 166 of them, covering every country that has one. Pick it beside the estimated value, search the list by country if the code escapes you, and the lead keeps showing that currency everywhere while the pipeline totals convert it to PKR. Rates refresh daily, and the one used is shown as you type and frozen onto the lead when you save.',
       },
       {
         kind: 'added',
+        feature: 'can_view_bd',
         text: 'Import a list of prospects into the pipeline from a spreadsheet. Pipeline → Import CSV takes the file, shows you exactly what it is about to create, and lists any row it could not read with its line number. The rows it can read still go in.',
       },
       {
@@ -530,6 +615,7 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'improved',
+        feature: 'can_view_reports',
         text: 'Reports moved from Admin to Delivery, beside the Timesheet, reading where the hours went is delivery work, not governance.',
       },
       {
@@ -574,10 +660,12 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'added',
+        feature: 'can_view_bd',
         text: 'A lead now holds the rest of what you know about a prospect: their website, country and city, as many social profiles as they have, and the documents you sent them. Each with a title and a link. Social links need no picking from a list; paste the address and the platform is recognised from it. All of it shows on the lead beneath Services.',
       },
       {
         kind: 'added',
+        feature: 'can_view_bd',
         text: 'Leads have a Documents tab, the same one projects have had: drop a file to upload it, or link a Google Doc, Sheet, Slide deck or Drive file. Press the eye and it opens inside the portal, Google documents, PDFs, images and spreadsheets all preview in place rather than sending you off to another tab.',
       },
       {
@@ -586,10 +674,12 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'improved',
+        feature: 'can_view_bd',
         text: 'The CSV importer takes the new fields too, website, country, city, where the lead came from, social links and documents. So a spreadsheet no longer has to leave half of itself behind at the door.',
       },
       {
         kind: 'added',
+        feature: 'can_view_bd',
         text: 'Pipeline cards can be dragged up and down inside a column, not just across to the next stage. The card lifts out, the ones below close up, and an empty slot follows your cursor so you can see exactly where it will land. The order you set is saved for the whole department. It works under the new Manual order sort, which is now the default. The other sorts arrange the column for you, so dragging within one is not offered there.',
       },
       {
@@ -611,7 +701,7 @@ export const RELEASES: ChangelogRelease[] = [
     ],
   },
   {
-    version: 'v1.4',
+    version: '1.4.0',
     date: '2026-08-10',
     title: 'The task timer replaces the daily standup',
     entries: [
@@ -634,7 +724,7 @@ export const RELEASES: ChangelogRelease[] = [
     ],
   },
   {
-    version: 'v1.3',
+    version: '1.3.0',
     date: '2026-08-07',
     title: 'Time backlog and cleaner attendance records',
     entries: [
@@ -654,7 +744,7 @@ export const RELEASES: ChangelogRelease[] = [
     ],
   },
   {
-    version: 'v1.2',
+    version: '1.2.0',
     date: '2026-08-04',
     title: 'Task time tracking',
     entries: [
@@ -666,7 +756,7 @@ export const RELEASES: ChangelogRelease[] = [
     ],
   },
   {
-    version: 'v1.1',
+    version: '1.1.0',
     date: '2026-07-31',
     title: 'Fingerprint check-in and task history',
     entries: [
@@ -676,7 +766,7 @@ export const RELEASES: ChangelogRelease[] = [
     ],
   },
   {
-    version: 'v1.0',
+    version: '1.0.0',
     date: '2026-07-27',
     title: 'Team chat and the services model',
     entries: [
@@ -691,7 +781,7 @@ export const RELEASES: ChangelogRelease[] = [
     ],
   },
   {
-    version: 'v0.9',
+    version: '0.9.0',
     date: '2026-07-22',
     title: 'Files everywhere',
     entries: [
@@ -702,7 +792,7 @@ export const RELEASES: ChangelogRelease[] = [
     ],
   },
   {
-    version: 'v0.8',
+    version: '0.8.0',
     date: '2026-07-20',
     title: 'Tasks and the daily standup',
     entries: [
@@ -713,7 +803,7 @@ export const RELEASES: ChangelogRelease[] = [
     ],
   },
   {
-    version: 'v0.7',
+    version: '0.7.0',
     date: '2026-07-15',
     title: 'Push notifications and group rewards',
     entries: [
@@ -723,7 +813,7 @@ export const RELEASES: ChangelogRelease[] = [
     ],
   },
   {
-    version: 'v0.6',
+    version: '0.6.0',
     date: '2026-06-23',
     title: 'Designations and check-in policy',
     entries: [
@@ -733,7 +823,7 @@ export const RELEASES: ChangelogRelease[] = [
     ],
   },
   {
-    version: 'v0.5',
+    version: '0.5.0',
     date: '2026-06-18',
     title: 'Profiles, mobile and installable app',
     entries: [
@@ -745,7 +835,7 @@ export const RELEASES: ChangelogRelease[] = [
     ],
   },
   {
-    version: 'v0.4',
+    version: '0.4.0',
     date: '2026-06-05',
     title: 'Recognition, people and services',
     entries: [
@@ -756,7 +846,7 @@ export const RELEASES: ChangelogRelease[] = [
     ],
   },
   {
-    version: 'v0.3',
+    version: '0.3.0',
     date: '2026-05-24',
     title: 'Attendance',
     entries: [
@@ -766,7 +856,7 @@ export const RELEASES: ChangelogRelease[] = [
     ],
   },
   {
-    version: 'v0.2',
+    version: '0.2.0',
     date: '2026-05-20',
     title: 'Accounts',
     entries: [
@@ -774,7 +864,7 @@ export const RELEASES: ChangelogRelease[] = [
     ],
   },
   {
-    version: 'v0.1',
+    version: '0.1.0',
     date: '2026-05-18',
     title: 'First build',
     entries: [

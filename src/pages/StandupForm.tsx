@@ -17,6 +17,24 @@ import type { StandupDetail, StandupEntryInput } from '../api/standups'
 import type { Json } from '../types/database'
 import { randomUUID } from '../lib/uuid'
 
+/**
+ * The non-project days that keep coming up, as one-click subjects.
+ *
+ * The eight-hour rule means every one of these has to be written down, and the
+ * people filing them are typing the same handful of words every evening. They
+ * are only a starting point: the title stays editable, and anything not on the
+ * list is still typed in full.
+ */
+const ADHOC_PRESETS = [
+  'Meeting',
+  'No work assigned',
+  'Office quest',
+  'Onboarding',
+  'Interview panel',
+  'Training',
+  'Support and admin',
+] as const
+
 const MIN_BLOCKER = 10
 /** Fallback until the window loads; the server value always wins. */
 const DEFAULT_MIN_CHARS = 100
@@ -124,6 +142,10 @@ export function StandupForm({ onDone, editing, onCancel }: StandupFormProps) {
   // Only for a fresh standup — reopening one to correct it must show what was
   // submitted, not what the timer thinks happened.
   const { data: suggestions = [] } = useStandupSuggestions(!editing)
+  // What "Fill them in" will actually put in the time boxes.
+  const timedMinutes = suggestions.reduce(
+    (sum, s) => sum + (s.source === 'timer' ? s.tracked_minutes : 0), 0,
+  )
 
   const [groups, setGroups] = useState<ProjectGroup[]>(() => (editing ? groupsFrom(editing) : [emptyGroup()]))
   const [notes, setNotes] = useState(editing?.notes ?? '')
@@ -133,10 +155,14 @@ export function StandupForm({ onDone, editing, onCancel }: StandupFormProps) {
   /**
    * Fill the form with today's tasks, grouped by project.
    *
-   * Times are left empty on purpose. Measured across the last month the timer
-   * accounts for under four hours of an eight-hour day, so a prefilled duration
-   * would be wrong more often than right — and correcting a wrong number is
-   * slower than typing into an empty one.
+   * Only a `timer` row brings its minutes with it. The other two signals are
+   * guesses about WHAT was worked on, not measurements of how long: a task
+   * sitting in In progress says nothing about today, and a comment says a
+   * minute or an hour with equal confidence. A number there would be invented,
+   * and a wrong number is slower to correct than an empty box is to fill.
+   *
+   * Timer rows still want checking. The timer covers well under a full day for
+   * most people, so this is a head start on the total, not the total.
    */
   const applySuggestions = () => {
     if (suggestions.length === 0) return
@@ -148,7 +174,13 @@ export function StandupForm({ onDone, editing, onCancel }: StandupFormProps) {
         group = { key: randomUUID(), kind: 'project', projectId: pid, tasks: [] }
         byProject.set(pid, group)
       }
-      group.tasks.push({ ...emptyTask(), taskId: sug.task_id })
+      const measured = sug.source === 'timer' ? sug.tracked_minutes : 0
+      group.tasks.push({
+        ...emptyTask(),
+        taskId: sug.task_id,
+        hours: measured >= 60 ? String(Math.floor(measured / 60)) : '',
+        minutes: measured % 60 > 0 ? String(measured % 60) : '',
+      })
     }
     setGroups([...byProject.values()])
     setSeeded(true)
@@ -166,6 +198,8 @@ export function StandupForm({ onDone, editing, onCancel }: StandupFormProps) {
     (sum, g) => sum + g.tasks.reduce((s, t) => s + rowMinutes(t), 0), 0,
   )
   const difference = loggedMinutes - requiredMinutes
+  // Still unaccounted for. Only offered while there is a target to hit.
+  const remaining = enforceHours ? Math.max(0, requiredMinutes - loggedMinutes) : 0
 
   const patchGroup = (key: string, changes: Partial<ProjectGroup>) =>
     setGroups((gs) => gs.map((g) => (g.key === key ? { ...g, ...changes } : g)))
@@ -253,6 +287,11 @@ export function StandupForm({ onDone, editing, onCancel }: StandupFormProps) {
               {suggestions.slice(0, 3).map((s) => s.task_title).join(' · ')}
               {suggestions.length > 3 && ` · +${suggestions.length - 3} more`}
             </p>
+            {timedMinutes > 0 && (
+              <p className="mt-0.5 font-ui text-[11.5px] text-text-4">
+                {formatMinutes(timedMinutes)} of that is on the timer and comes with it. Check the rest.
+              </p>
+            )}
           </div>
           <Button size="sm" variant="secondary" onClick={applySuggestions}>
             Fill them in
@@ -285,7 +324,8 @@ export function StandupForm({ onDone, editing, onCancel }: StandupFormProps) {
                       <Sparkles size={13} className="text-text-3" /> Other work
                     </p>
                     <p className="mt-0.5 font-ui text-[11.5px] text-text-4">
-                      Anything with no project behind it. An errand, an interview, a fire drill.
+                      Hours with no project behind them. A meeting, an office quest, onboarding,
+                      or a stretch with nothing assigned. Give it a title and a length.
                     </p>
                   </>
                 ) : (
@@ -304,6 +344,22 @@ export function StandupForm({ onDone, editing, onCancel }: StandupFormProps) {
                       placeholder="Select project…"
                       className="max-w-sm"
                     />
+                    {/* A day of meetings starts on this card too, and having to
+                        add an Other work card and then delete this one is a
+                        puzzle. One click turns it into the right kind of card. */}
+                    {!g.projectId && !groups.some((x) => x.kind === 'adhoc') && (
+                      <button
+                        type="button"
+                        onClick={() => patchGroup(g.key, {
+                          kind: 'adhoc',
+                          projectId: '',
+                          tasks: g.tasks.map((t) => ({ ...t, taskId: '' })),
+                        })}
+                        className="mt-1.5 font-ui text-[11.5px] font-medium text-brand-red hover:underline"
+                      >
+                        This was not project work
+                      </button>
+                    )}
                   </>
                 )}
               </div>
@@ -346,12 +402,28 @@ export function StandupForm({ onDone, editing, onCancel }: StandupFormProps) {
                           {g.kind === 'adhoc' ? 'Title' : 'Task'}
                         </label>
                         {g.kind === 'adhoc' ? (
-                          <input
-                            value={t.title}
-                            onChange={(e) => patchTask(g.key, t.key, { title: e.target.value })}
-                            placeholder="e.g. Collected the cake from the bakery"
-                            className="h-9 w-full rounded-md border border-border-default bg-surface-inset px-3 font-ui text-[13px] text-text-1 outline-none placeholder:text-text-4 focus:border-border-focus"
-                          />
+                          <>
+                            <input
+                              value={t.title}
+                              onChange={(e) => patchTask(g.key, t.key, { title: e.target.value })}
+                              placeholder="e.g. Collected the cake from the bakery"
+                              className="h-9 w-full rounded-md border border-border-default bg-surface-inset px-3 font-ui text-[13px] text-text-1 outline-none placeholder:text-text-4 focus:border-border-focus"
+                            />
+                            {!t.title.trim() && (
+                              <div className="mt-2 flex flex-wrap gap-1.5">
+                                {ADHOC_PRESETS.map((preset) => (
+                                  <button
+                                    key={preset}
+                                    type="button"
+                                    onClick={() => patchTask(g.key, t.key, { title: preset })}
+                                    className="rounded-sm border border-border-default bg-surface-2 px-2 py-0.5 font-ui text-[11px] text-text-3 transition-colors hover:border-border-strong hover:text-text-1"
+                                  >
+                                    {preset}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </>
                         ) : (
                           <Select
                             value={t.taskId}
@@ -362,8 +434,22 @@ export function StandupForm({ onDone, editing, onCancel }: StandupFormProps) {
                         )}
                       </div>
                       <div>
-                        <label className="mb-1.5 block font-ui text-[11px] font-semibold uppercase tracking-wider text-text-3">
+                        <label className="mb-1.5 flex items-center gap-2 font-ui text-[11px] font-semibold uppercase tracking-wider text-text-3">
                           Time spent
+                          {/* The last stretch of the day is the tedious one to
+                              work out: whatever is left over, on this row. */}
+                          {remaining > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => patchTask(g.key, t.key, {
+                                hours: String(Math.floor((rowMinutes(t) + remaining) / 60) || ''),
+                                minutes: String((rowMinutes(t) + remaining) % 60 || ''),
+                              })}
+                              className="font-ui text-[10.5px] font-semibold normal-case tracking-normal text-brand-red hover:underline"
+                            >
+                              +{formatMinutes(remaining)} left
+                            </button>
+                          )}
                         </label>
                         <div className="flex items-center gap-1.5">
                           <input
@@ -459,9 +545,9 @@ export function StandupForm({ onDone, editing, onCancel }: StandupFormProps) {
         </Button>
         {/* One "Other work" card is enough — everything without a project goes in it. */}
         {!groups.some((g) => g.kind === 'adhoc') && (
-          <Button variant="ghost" size="sm" iconLeft={<Sparkles size={14} />}
+          <Button variant="secondary" size="sm" iconLeft={<Sparkles size={14} />}
             onClick={() => setGroups((gs) => [...gs, emptyAdhocGroup()])}>
-            Add other work
+            Add time with no project
           </Button>
         )}
       </div>

@@ -1,9 +1,19 @@
+import { useEffect, useMemo, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, ArrowUpCircle, Wrench, BookOpen } from 'lucide-react'
+import { Plus, ArrowUpCircle, Wrench, BookOpen, Megaphone, Check } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Badge } from '../../components/ui/Badge'
+import { Button } from '../../components/ui/Button'
 import { cn } from '../../lib/cn'
+import { useAuthContext } from '../../context/AuthContext'
+import { useMyPermissions } from '../../hooks/usePermissions'
+import { ADMINISTRATOR } from '../../api/permissions'
+import { useToast } from '../../components/ui/toast-context'
+import {
+  useAnnounceRelease, useMarkReleaseSeen, useReleaseAnnouncements,
+} from '../../hooks/useReleases'
 import { RELEASES } from './changelogData'
+import { filterReleases } from './docsContent'
 import type { ChangelogKind, ChangelogRelease } from '../../types'
 
 const KIND_STYLE: Record<ChangelogKind, { label: string; icon: typeof Plus; fg: string; ring: string }> = {
@@ -19,6 +29,31 @@ function formatDate(iso: string): string {
 }
 
 export default function ChangelogPage() {
+  const { profile } = useAuthContext()
+  const { data: permissions } = useMyPermissions()
+  const markSeen = useMarkReleaseSeen()
+  const seenRef = useRef(false)
+
+  const can = (feature: string) =>
+    !!permissions && (permissions.includes(ADMINISTRATOR) || permissions.includes(feature))
+  const canPublish = can('can_publish_releases')
+
+  const releases = useMemo(
+    () => filterReleases(RELEASES, profile?.role, can),
+    // `can` closes over permissions; listing it is what actually re-runs this.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [permissions, profile?.role],
+  )
+
+  // Reading the page is what marks it read. Guarded by a ref rather than the
+  // mutation's own state so a re-render mid-flight cannot fire it twice.
+  const newest = releases[0]?.version
+  useEffect(() => {
+    if (!newest || seenRef.current || profile?.last_seen_release === newest) return
+    seenRef.current = true
+    markSeen.mutate(newest)
+  }, [newest, profile?.last_seen_release, markSeen])
+
   return (
     <div className="flex flex-1 flex-col">
       <Topbar title="Changelog" />
@@ -26,7 +61,9 @@ export default function ChangelogPage() {
       <div className="mx-auto w-full max-w-[1000px] p-4 lg:px-8 lg:py-7">
         <header className="border-b border-border-default pb-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="font-ui text-[13px] text-text-3">Everything that has shipped, newest first.</p>
+            <p className="font-ui text-[13px] text-text-3">
+              Everything that has shipped, newest first. Only the parts that apply to you.
+            </p>
             <Link
               to="/docs"
               className="flex items-center gap-1.5 font-ui text-[12.5px] font-medium text-brand-red hover:underline"
@@ -37,8 +74,13 @@ export default function ChangelogPage() {
         </header>
 
         <div className="mt-7 flex flex-col">
-          {RELEASES.map((release, i) => (
-            <Release key={release.version} release={release} latest={i === 0} />
+          {releases.map((release, i) => (
+            <Release
+              key={release.version}
+              release={release}
+              latest={i === 0}
+              canPublish={canPublish}
+            />
           ))}
         </div>
       </div>
@@ -46,7 +88,59 @@ export default function ChangelogPage() {
   )
 }
 
-function Release({ release, latest }: { release: ChangelogRelease; latest: boolean }) {
+/**
+ * Push a release out as a notification to everyone.
+ *
+ * Separate from the dot on purpose. The dot is passive and costs nobody
+ * anything; this interrupts the whole company, so it is a decision somebody
+ * makes rather than something that happens on deploy. The server refuses a
+ * second attempt at the same version, and the button reflects that.
+ */
+function AnnounceButton({ release }: { release: ChangelogRelease }) {
+  const toast = useToast()
+  const announce = useAnnounceRelease()
+  const { data: announcements = [] } = useReleaseAnnouncements()
+  const already = announcements.find((a) => a.version === release.version)
+
+  if (already) {
+    return (
+      <span className="inline-flex items-center gap-1.5 font-ui text-[11.5px] text-text-4">
+        <Check size={12} /> Announced to {already.recipients}
+      </span>
+    )
+  }
+
+  return (
+    <Button
+      size="sm"
+      variant="secondary"
+      iconLeft={<Megaphone size={13} />}
+      loading={announce.isPending}
+      onClick={() =>
+        announce.mutate(
+          {
+            version: release.version,
+            title: `What's new in ${release.version}`,
+            body: release.highlight ?? release.title,
+          },
+          {
+            onSuccess: (count) => toast(`Announced to ${count} people`, 'success'),
+            onError: (e) =>
+              toast(e instanceof Error ? e.message : 'Could not announce this release', 'error'),
+          },
+        )
+      }
+    >
+      Announce
+    </Button>
+  )
+}
+
+function Release({ release, latest, canPublish }: {
+  release: ChangelogRelease
+  latest: boolean
+  canPublish: boolean
+}) {
   return (
     <section
       className={cn(
@@ -60,6 +154,7 @@ function Release({ release, latest }: { release: ChangelogRelease; latest: boole
         <time dateTime={release.date} className="font-mono text-[11px] text-text-4">
           {formatDate(release.date)}
         </time>
+        {canPublish && <AnnounceButton release={release} />}
       </div>
 
       <div className="min-w-0 flex-1">

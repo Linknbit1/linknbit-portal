@@ -37,6 +37,13 @@ export const NOTIFICATION_GROUPS: NotificationGroup[] = [
     ],
   },
   {
+    key: 'portal',
+    label: 'The portal itself',
+    items: [
+      { type: 'release_published', label: 'New releases', description: 'When a release is announced, with what changed in it' },
+    ],
+  },
+  {
     key: 'schedule',
     label: 'Schedule',
     items: [
@@ -173,6 +180,10 @@ export function notificationHref(
 ): string | null {
   if (type && GAMIFICATION_REVIEW_TYPES.includes(type)) return '/gamification/approvals'
   switch (resourceType) {
+    // The version rides along as the resource id, but the changelog is one page
+    // and the release is on it, so there is nothing to look up.
+    case 'changelog':
+      return '/docs/changelog'
     case 'task':
       return resourceId ? taskNotificationHref(resourceId) : '/notifications'
     case 'project':

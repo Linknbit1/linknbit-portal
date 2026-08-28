@@ -2784,6 +2784,7 @@ export type Database = {
           job_title: string | null
           job_type: string
           last_seen_at: string | null
+          last_seen_release: string | null
           last_sign_in_at: string | null
           level: number
           location: string | null
@@ -2819,6 +2820,7 @@ export type Database = {
           job_title?: string | null
           job_type?: string
           last_seen_at?: string | null
+          last_seen_release?: string | null
           last_sign_in_at?: string | null
           level?: number
           location?: string | null
@@ -2854,6 +2856,7 @@ export type Database = {
           job_title?: string | null
           job_type?: string
           last_seen_at?: string | null
+          last_seen_release?: string | null
           last_sign_in_at?: string | null
           level?: number
           location?: string | null
@@ -3295,6 +3298,38 @@ export type Database = {
           {
             foreignKeyName: "quest_tasks_created_by_fkey"
             columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      release_announcements: {
+        Row: {
+          announced_at: string
+          announced_by: string | null
+          recipients: number
+          title: string
+          version: string
+        }
+        Insert: {
+          announced_at?: string
+          announced_by?: string | null
+          recipients?: number
+          title: string
+          version: string
+        }
+        Update: {
+          announced_at?: string
+          announced_by?: string | null
+          recipients?: number
+          title?: string
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "release_announcements_announced_by_fkey"
+            columns: ["announced_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -4786,6 +4821,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      announce_release: {
+        Args: { p_body: string; p_title: string; p_version: string }
+        Returns: number
+      }
       apply_template_to_service: {
         Args: { p_project_service_id: string; p_template_id: string }
         Returns: {
@@ -5191,6 +5230,7 @@ export type Database = {
           affected_dates: string[]
         }[]
       }
+      mark_release_seen: { Args: { p_version: string }; Returns: undefined }
       my_bd_meetings: {
         Args: never
         Returns: {

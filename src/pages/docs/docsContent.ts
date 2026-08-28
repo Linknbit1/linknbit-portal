@@ -1,4 +1,4 @@
-import type { DocChapter, DocGate } from '../../types'
+import type { ChangelogRelease, DocChapter, DocGate } from '../../types'
 
 /**
  * The portal handbook, as data.
@@ -78,7 +78,38 @@ export const DOC_CHAPTERS: DocChapter[] = [
           'Settings sits on its own below the divider at the very bottom, and stays there while the sections above scroll.',
           'Red count badges mark things waiting on you, unread chat, claimable quests, requests to approve.',
           'On a phone the same destinations live in the bottom bar and behind the “More” tab.',
-          'The arrow beside the Linknbit logo opens this handbook and the changelog.',
+          'The arrow beside the Linknbit logo opens this handbook and the changelog. A red dot on it means a release has shipped that you have not read; opening the changelog clears it.',
+        ],
+      },
+      {
+        id: 'whats-new',
+        title: 'Keeping up with what changed',
+        summary:
+          'Every release, newest first, filtered to the parts that apply to you.',
+        where: 'Sidebar → the arrow beside the logo → What’s new',
+        procedures: [
+          {
+            title: 'Catch up on a release',
+            steps: [
+              'When a red dot appears on the arrow beside the logo, open it and choose What’s new.',
+              'The newest release is at the top, marked Latest, with a summary of what it was about.',
+              'The dot clears as soon as the page opens. Nothing else to press.',
+            ],
+          },
+          {
+            title: 'Tell everyone about a release',
+            steps: [
+              'Open What’s new and find the release.',
+              'Press Announce beside its version number.',
+              'Everyone still with the company is notified, with a link back to the release.',
+            ],
+            // Gated separately: the steps only exist for whoever holds the key.
+          },
+        ],
+        notes: [
+          'You only see the parts of a release that apply to you. A change to a screen your role cannot open is not listed at all, so nothing here describes something you cannot go and try.',
+          'Version numbers are three parts. The last one moves for a release that only improved or fixed things, the middle one when something new arrived.',
+          'A release can only be announced once, and afterwards the entry says how many people it reached.',
         ],
       },
       {
@@ -416,10 +447,11 @@ export const DOC_CHAPTERS: DocChapter[] = [
             title: 'Submit one (while it is still required of you)',
             steps: [
               'Open Workspace → Standup during the submission window. The top of the form shows how much of the day you have to account for.',
-              'If you tracked time or moved tasks today, a banner offers to fill them in, press “Fill them in” and the rows appear, ready for their times and descriptions. Delete any that are wrong.',
+              'If you tracked time or moved tasks today, a banner offers to fill them in. Press “Fill them in” and the rows appear, with the time already in for anything you ran a timer on. Delete any that are wrong.',
               'Otherwise pick a project, then add a row for each task you worked on it, “Add another task on this project”.',
-              'For work with no project behind it. An errand, an interview panel, a fire drill, press “Add other work” and give it a title of its own.',
+              'For hours with no project behind them, a meeting, an office quest, onboarding, or a stretch with nothing assigned, press “Add time with no project”. Pick one of the suggested titles or type your own. If your first card is still empty, “This was not project work” turns it into one of these.',
               'Give each task the time it took and a description of what you actually did. Bold, italic, lists and links are available.',
+              'When only the last stretch is missing, press the “+ 2h 15m left” link beside any Time spent box to put the whole remainder on that row.',
               'Repeat with “Add another project” until the logged total matches the hours shown at the top.',
               'Submit. You can correct it for as long as the window stays open.',
             ],
@@ -429,8 +461,9 @@ export const DOC_CHAPTERS: DocChapter[] = [
           'The hours you log have to add up to your working day exactly. The day less the lunch break. The bar at the top turns green when they match.',
           'Time off comes out of that total automatically. Half a day of leave, a late arrival or an approved trip out of the office each reduce what you owe, and overlapping ones are only counted once.',
           'An exception is unpaid time, so those hours are owed back. The day you take it, you write up less. But the same hours appear as make-up time, and you clear them by logging over the requirement on a later day. The form tells you how much is outstanding and how far you may go over.',
-          'The tasks offered are the ones you ran a timer on, are assigned and in progress, or commented on today. Times are never guessed for you. The timer usually covers less than half a day, so a filled-in number would be wrong more often than right.',
-          'Work with no project still counts towards your hours. “Other work” is time accounting only. It earns no XP and has nothing to do with quests.',
+          'The tasks offered are the ones you ran a timer on, are assigned and in progress, or commented on today. Only the timed ones arrive with a duration, because only those were measured. A task sitting in progress says nothing about how long you spent on it today, so its box is left empty for you.',
+          'The timer usually covers less than half a day, so what it fills in is a head start on your total, not your total. Check it.',
+          'Work with no project still counts towards your hours. Time with no project is time accounting only. It earns no XP and has nothing to do with quests, including the hour you spend on an office quest.',
           'Each task needs a real description. The minimum length is set by your admins and the counter under the box shows how far off you are.',
           'Submitting before the on-time cutoff earns XP; after it, the entry is saved but marked late and earns nothing. The amount and the cutoff are both configurable.',
           'If your role or your account has been excluded, the page tells you no standup is expected today.',
@@ -1314,6 +1347,23 @@ function passes(gate: DocGate, role: string | null | undefined, can: CanFn): boo
   // `Array.isArray` doesn't narrow a `readonly string[]` union member, so key off
   // the string case instead.
   return typeof gate.feature === 'string' ? can(gate.feature) : gate.feature.some(can)
+}
+
+/**
+ * The releases this person should read, with the lines they should not stripped
+ * out. A release whose every entry was gated away disappears rather than
+ * appearing empty, and its highlight goes with it.
+ */
+export function filterReleases(
+  releases: ChangelogRelease[],
+  role: string | null | undefined,
+  can: CanFn,
+): ChangelogRelease[] {
+  return releases.flatMap((release) => {
+    if (!passes(release, role, can)) return []
+    const entries = release.entries.filter((entry) => passes(entry, role, can))
+    return entries.length > 0 ? [{ ...release, entries }] : []
+  })
 }
 
 /**

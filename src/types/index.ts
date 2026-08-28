@@ -386,13 +386,24 @@ export interface DocChapter extends DocGate {
 
 export type ChangelogKind = 'added' | 'improved' | 'fixed'
 
-export interface ChangelogEntry {
+/**
+ * One line of a release. Gated the same way a handbook topic is, with the same
+ * keys the nav and route guards use, so nobody reads about a screen they cannot
+ * open. Most entries carry no gate: they describe things everybody has.
+ */
+export interface ChangelogEntry extends DocGate {
   kind: ChangelogKind
   text: string
 }
 
-export interface ChangelogRelease {
-  /** Curated milestone tag, e.g. "v1.4". */
+export interface ChangelogRelease extends DocGate {
+  /**
+   * Semantic version, `major.minor.patch`.
+   *
+   * The third number is not decoration: a release that only improves or fixes
+   * things is a patch, and anything with something new in it is a minor. The
+   * major moves when the portal itself changes shape.
+   */
   version: string
   /** ISO date of the release's last shipped change. */
   date: string

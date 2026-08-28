@@ -7,7 +7,7 @@ import { useAuthContext } from '../../context/AuthContext'
 import { useMyPermissions } from '../../hooks/usePermissions'
 import { ADMINISTRATOR } from '../../api/permissions'
 import { cn } from '../../lib/cn'
-import { DOC_CHAPTERS, filterChapters } from './docsContent'
+import { DOC_CHAPTERS, filterChapters, filterReleases } from './docsContent'
 import { RELEASES } from './changelogData'
 import type { DocChapter, DocTopic } from '../../types'
 
@@ -29,11 +29,23 @@ export default function DocumentationPage() {
   const { data: permissions } = useMyPermissions()
   const [query, setQuery] = useState('')
 
-  const chapters = useMemo(() => {
-    const can = (feature: string) =>
-      !!permissions && (permissions.includes(ADMINISTRATOR) || permissions.includes(feature))
-    return filterChapters(DOC_CHAPTERS, profile?.role, can)
-  }, [permissions, profile?.role])
+  const can = (feature: string) =>
+    !!permissions && (permissions.includes(ADMINISTRATOR) || permissions.includes(feature))
+
+  const chapters = useMemo(
+    () => filterChapters(DOC_CHAPTERS, profile?.role, can),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [permissions, profile?.role],
+  )
+
+  // The callout has to be gated too. A release whose every line was about a
+  // screen this person cannot open has nothing to announce to them, and a
+  // headline is exactly the wrong place to first hear about one.
+  const visibleReleases = useMemo(
+    () => filterReleases(RELEASES, profile?.role, can),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [permissions, profile?.role],
+  )
 
   const q = query.trim().toLowerCase()
   const visible = useMemo(
@@ -45,7 +57,7 @@ export default function DocumentationPage() {
     [chapters, q],
   )
 
-  const latest = RELEASES[0]
+  const latest = visibleReleases[0]
 
   return (
     <div className="flex flex-1 flex-col">

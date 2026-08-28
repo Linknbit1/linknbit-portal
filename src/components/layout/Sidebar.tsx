@@ -3,6 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom'
 import { ChevronRight, ChevronDown } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { useNavGroups, activeNavPath, navLabelForPath, BRAND_MENU_LINKS, BOTTOM_GROUP_ID, type NavItem } from './navItems'
+import { useUnseenRelease } from '../../hooks/useReleases'
 import { LinknbitMark } from '../brand/LinknbitLogo'
 import { InstallAppButton } from '../pwa/InstallAppButton'
 import { Popover } from '../ui/Popover'
@@ -99,12 +100,16 @@ export function Sidebar() {
 
 /**
  * The arrow beside the logo. It sat inert since the first build; it now opens the
- * things that describe the portal itself rather than a destination inside it —
+ * things that describe the portal itself rather than a destination inside it,
  * which is why they are here and not another sidebar row.
+ *
+ * A dot rather than a count. There is only ever one newest release, so a number
+ * would always read "1" and invite the question of what the other ones were.
  */
 function BrandMenu() {
   const [open, setOpen] = useState(false)
   const triggerRef = useRef<HTMLButtonElement>(null)
+  const { unseen } = useUnseenRelease()
 
   return (
     <>
@@ -113,13 +118,19 @@ function BrandMenu() {
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label="Portal documentation"
+        aria-label={unseen ? 'Portal documentation, new release' : 'Portal documentation'}
         className={cn(
-          'size-5 rounded flex items-center justify-center transition-colors hover:bg-surface-2 hover:text-text-2',
+          'relative size-5 rounded flex items-center justify-center transition-colors hover:bg-surface-2 hover:text-text-2',
           open ? 'text-text-2 bg-surface-2' : 'text-text-4',
         )}
       >
         <ChevronRight size={12} className={cn('transition-transform', open && 'rotate-90')} />
+        {unseen && !open && (
+          <span
+            aria-hidden
+            className="absolute -right-0.5 -top-0.5 size-1.5 rounded-full bg-brand-red"
+          />
+        )}
       </button>
 
       <Popover
@@ -137,7 +148,12 @@ function BrandMenu() {
           >
             <link.icon size={14} className="mt-0.5 shrink-0 text-text-3" />
             <span className="min-w-0">
-              <span className="block font-ui text-[13px] font-medium text-text-1">{link.label}</span>
+              <span className="flex items-center gap-1.5 font-ui text-[13px] font-medium text-text-1">
+                {link.label}
+                {unseen && link.to === '/docs/changelog' && (
+                  <span className="size-1.5 shrink-0 rounded-full bg-brand-red" />
+                )}
+              </span>
               <span className="block font-ui text-[11.5px] text-text-4">{link.hint}</span>
             </span>
           </NavLink>
