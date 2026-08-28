@@ -13,11 +13,30 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: 'v1.17',
+    date: '2026-08-28',
+    title: 'Tasks follow assignment',
+    highlight:
+      'Task screens now show the work that is actually yours. If you work on tasks, that means the ones assigned to you; team leads and project managers also see the work of anyone they share a team with; admins and finance still see everything.',
+    entries: [
+      {
+        kind: 'improved',
+        text: 'Whose tasks you can see now follows assignment rather than project staffing. Being on a project used to show you every task in it, including work that had nothing to do with you. Team leads and project managers keep sight of the people they share a team with, and unassigned work stays visible to them so a backlog can still be handed out.',
+      },
+      {
+        kind: 'improved',
+        text: 'The Mine / My team / Everyone switch now only offers what your role allows, and disappears entirely when there is a single option — a switch that cannot change anything was just something else to wonder about. The banner stays quiet when your lens is already as wide as it goes.',
+      },
+      {
+        kind: 'fixed',
+        text: 'A link to a task you cannot open — from an old bookmark, or from being tagged in one that is not yours — now says the task is unavailable instead of showing an empty page.',
+      },
+    ],
+  },
+  {
     version: 'v1.16',
     date: '2026-08-28',
     title: 'My Day, sharpened',
-    highlight:
-      'Your work now shows each task’s status and detail, tasks open in the project side panel instead of a page of their own, Out today is scoped to your teams, and a mention stops waiting on you once you have replied.',
     entries: [
       {
         kind: 'improved',

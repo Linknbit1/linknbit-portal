@@ -243,7 +243,16 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
   const showFiles = filesOpen || taskFiles.length > 0
 
   if (isLoading) return <div className="p-5 space-y-3"><Skeleton className="h-6 w-2/3" /><Skeleton className="h-24" /><Skeleton className="h-32" /></div>
-  if (!task) return <div className="p-8 text-center font-ui text-text-3">Task not found.</div>
+  // Deliberately one message for "gone" and "not yours": task visibility is
+  // assignment-based now, so a mention can hand somebody a link to a task they
+  // cannot open, and saying which of the two it is would confirm it exists.
+  if (!task) {
+    return (
+      <div className="p-8 text-center font-ui text-[13px] text-text-3">
+        This task is not available. It may have been deleted, or it may not be one you have access to.
+      </div>
+    )
+  }
 
   // Every property here saves on change, so each write reports into the header
   // badge — otherwise an edit landing (or failing) is invisible.

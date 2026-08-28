@@ -350,22 +350,25 @@ export const DOC_CHAPTERS: DocChapter[] = [
         id: 'scope-switch',
         title: 'Mine, my team, or everyone',
         summary:
-          'A switch in the top bar that decides whose work the projects and tasks screens are showing. It stays put as you move between them.',
-        where: 'Delivery → Projects or Tasks, top right',
+          'A switch on the projects and tasks screens that decides whose work they are showing. How far it goes depends on your role. It stays put as you move between screens.',
+        where: 'Delivery → Projects or Tasks, in the filter row',
         procedures: [
           {
             title: 'Narrow a board to your own work',
             steps: [
               'Open Delivery → Tasks or Delivery → Projects.',
-              'Press Mine in the switch at the top right.',
-              'Press Everyone to widen it again — or use the Show everyone link on the banner.',
+              'Press Mine in the switch above the list.',
+              'Press the widest option you have to open it up again — or use the link on the banner.',
             ],
           },
         ],
         notes: [
-          'My team means anyone who shares a team with you, including yourself. Someone on several teams counts on all of them.',
-          'Mine also keeps tasks that merely tag you, since being mentioned is how work often reaches you before it is formally assigned. My team does not — a mention is personal.',
-          'A banner across the top says which lens is on and how many rows it hid, so a nearly empty board is never a mystery.',
+          'How wide the switch goes depends on your role. If you work on tasks, you see the ones assigned to you, and there is no switch to show — that is simply what the screen is. Team leads and project managers can also see the work of anyone they share a team with. Admins and finance can see everything.',
+          'A team means anyone who shares a team with you, including yourself. Someone on several teams counts on all of them, so joining another team widens what you see.',
+          'This is not only what the screen shows: work that is not yours is not sent to your browser at all, and a link to it opens a page saying it is unavailable.',
+          'Unassigned work stays visible to team leads and project managers on the project, so a backlog can still be handed out.',
+          'Mine also keeps tasks that merely tag you, since being mentioned is how work often reaches you before it is formally assigned. Opening one still needs it to be assigned to you.',
+          'A banner across the top says which lens is on and how many rows it hid, so a nearly empty board is never a mystery. It stays quiet when the lens is already as wide as your role goes.',
           'The switch only appears on the screens it affects, and is remembered per device.',
         ],
       },

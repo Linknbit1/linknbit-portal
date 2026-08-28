@@ -11,10 +11,15 @@ const DESCRIPTION = {
  *
  * Without it, a narrowed scope on a board you have nothing on just looks like an
  * empty board — and the only clue is a small control up in the Topbar.
+ *
+ * Nothing is said when the scope is already as wide as the role goes: for an
+ * employee "Mine" is not a filter they forgot to clear, it is what the screen
+ * is, and a permanent banner offering a view they cannot open is worse than
+ * silence.
  */
 export function ScopeNotice({ shown, total }: { shown?: number; total?: number }) {
-  const { scope, setScope } = useScope()
-  if (scope === 'everyone') return null
+  const { scope, setScope, maxScope } = useScope()
+  if (scope === 'everyone' || scope === maxScope) return null
 
   const Icon = scope === 'mine' ? UserRound : Users
   // The count is what proves the filter is doing something. Without it, a view
@@ -35,10 +40,10 @@ export function ScopeNotice({ shown, total }: { shown?: number; total?: number }
         .
       </span>
       <button
-        onClick={() => setScope('everyone')}
+        onClick={() => setScope(maxScope)}
         className="ml-auto rounded-sm px-2 py-0.5 font-ui text-[11.5px] font-semibold text-brand-red transition-colors hover:bg-brand-red/12"
       >
-        Show everyone
+        {maxScope === 'everyone' ? 'Show everyone' : 'Show my teams'}
       </button>
     </div>
   )

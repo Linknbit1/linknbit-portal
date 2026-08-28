@@ -1,9 +1,12 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react'
-import { SCOPES, type Scope } from '../constants/scopes'
+import { SCOPES, clampScope, maxScopeFor, type Scope } from '../constants/scopes'
+import { useAuthContext } from './AuthContext'
 
 interface ScopeValue {
   scope: Scope
   setScope: (next: Scope) => void
+  /** The widest scope this role may choose — the switch renders up to it. */
+  maxScope: Scope
 }
 
 const ScopeContext = createContext<ScopeValue | null>(null)
@@ -35,12 +38,20 @@ function readStored(): Scope {
  * from Tasks into a project should not silently widen it back to everyone.
  * Persisted to localStorage because it is a view preference — no auth or
  * profile data, which is what the storage rules actually guard against.
+ *
+ * The role's cap is applied on the way out rather than on the way in, so a
+ * stored "everyone" from a wider role (or from before the caps existed) is
+ * narrowed for this session without being overwritten — someone promoted back
+ * finds their setting where they left it.
  */
 export function ScopeProvider({ children }: { children: ReactNode }) {
-  const [scope, setScopeState] = useState<Scope>(readStored)
+  const { profile } = useAuthContext()
+  const [stored, setStoredState] = useState<Scope>(readStored)
+  const maxScope = maxScopeFor(profile?.role)
+  const scope = clampScope(stored, profile?.role)
 
   const setScope = useCallback((next: Scope) => {
-    setScopeState(next)
+    setStoredState(next)
     try {
       localStorage.setItem(STORAGE_KEY, next)
       localStorage.removeItem(LEGACY_KEY)
@@ -49,12 +60,12 @@ export function ScopeProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const value = useMemo(() => ({ scope, setScope }), [scope, setScope])
+  const value = useMemo(() => ({ scope, setScope, maxScope }), [scope, setScope, maxScope])
   return <ScopeContext.Provider value={value}>{children}</ScopeContext.Provider>
 }
 
 /** Falls back to "everyone" outside the provider, so client-portal pages are safe. */
 // eslint-disable-next-line react-refresh/only-export-components
 export function useScope(): ScopeValue {
-  return useContext(ScopeContext) ?? { scope: 'everyone', setScope: () => {} }
+  return useContext(ScopeContext) ?? { scope: 'everyone', setScope: () => {}, maxScope: 'everyone' }
 }
