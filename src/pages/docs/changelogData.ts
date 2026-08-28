@@ -31,11 +31,30 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: '1.23.1',
+    date: '2026-08-30',
+    title: 'Attaching files to a task',
+    highlight:
+      'Some file types were accepted by the upload box and then refused once the upload finished. They work now, and photos from an iPhone are among them.',
+    entries: [
+      {
+        kind: 'fixed',
+        text: 'Attaching a .rar or .7z archive to a task failed after the upload had already run, with nothing useful said about why. The upload box was accepting file types the storage itself would not take.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Photos from an iPhone can now be attached to a task. They could always be posted into a conversation, so the same picture worked in chat and failed on the task the chat was about.',
+      },
+      {
+        kind: 'improved',
+        text: 'A file type that genuinely cannot be uploaded is now refused before the upload starts, saying so, rather than after it finishes.',
+      },
+    ],
+  },
+  {
     version: '1.23.0',
     date: '2026-08-30',
     title: 'Boards you can shape',
-    highlight:
-      'Task board columns can now be added, renamed, recoloured and reordered, and you choose which one tells a task’s reviewers it is their turn.',
     entries: [
       {
         kind: 'added',

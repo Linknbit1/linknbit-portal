@@ -6,6 +6,8 @@ export const MAX_ATTACHMENT_MB = 25
 
 const ALLOWED_MIME = new Set([
   'image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml',
+  // Matching chat: a photo from an iPhone is image/heic.
+  'image/heic', 'image/avif',
   'video/mp4', 'video/webm', 'video/quicktime', 'video/ogg',
   'application/pdf',
   'application/msword',
@@ -17,13 +19,14 @@ const ALLOWED_MIME = new Set([
   'text/plain', 'text/csv', 'text/markdown', 'text/x-markdown', 'text/tab-separated-values',
   'application/json',
   'application/zip', 'application/x-zip-compressed',
+  'application/vnd.rar', 'application/x-rar-compressed', 'application/x-7z-compressed',
 ])
 
 // Fallback allow-by-extension — browsers report inconsistent (or empty) MIME types
 // for docs/markdown/csv, so we also accept by a known extension. Must stay a subset
 // of the bucket's allowed_mime_types or the upload still fails server-side.
 const ALLOWED_EXT = new Set([
-  'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg',
+  'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'heic', 'avif',
   'mp4', 'webm', 'mov', 'ogv',
   'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx',
   'csv', 'tsv', 'txt', 'md', 'markdown', 'json',
@@ -36,8 +39,12 @@ export function validateAttachmentFile(file: File): string | null {
     return `File is too large (max ${MAX_ATTACHMENT_MB} MB)`
   }
   const ext = file.name.split('.').pop()?.toLowerCase() ?? ''
-  // Accept by MIME, by known extension, or when the browser couldn't detect a type.
-  if (ALLOWED_MIME.has(file.type) || ALLOWED_EXT.has(ext) || !file.type) return null
+  if (ALLOWED_MIME.has(file.type) || ALLOWED_EXT.has(ext)) return null
+
+  // A browser that reports no type at all used to be waved through, which meant
+  // the refusal happened at the bucket instead, after the upload, as an opaque
+  // failure. Say no here, where it can say why.
+  if (!file.type && EXT_MIME[ext]) return null
   return 'Unsupported file type'
 }
 
@@ -54,6 +61,11 @@ const EXT_MIME: Record<string, string> = {
   csv: 'text/csv', tsv: 'text/tab-separated-values', txt: 'text/plain',
   md: 'text/markdown', markdown: 'text/markdown', json: 'application/json',
   zip: 'application/zip',
+  // Every extension in ALLOWED_EXT needs an entry here, or inferContentType
+  // falls through to application/octet-stream and the bucket refuses the upload
+  // after the person has already waited for it.
+  heic: 'image/heic', avif: 'image/avif',
+  rar: 'application/vnd.rar', '7z': 'application/x-7z-compressed',
 }
 
 /**
