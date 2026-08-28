@@ -71,6 +71,7 @@ export const NOTIFICATION_GROUPS: NotificationGroup[] = [
       { type: 'task_assigned',          label: 'Assigned to you',   description: 'When someone puts you on a task, or takes you off one' },
       { type: 'task_activity',          label: 'Task updates',      description: 'Status, priority and due-date changes on tasks you follow' },
       { type: 'mention',                label: 'Mentions',          description: 'When someone @mentions you in a task, comment or project doc' },
+      { type: 'task_review_requested',  label: 'Ready for review',  description: 'When a task you are named reviewer on moves to Review' },
       { type: 'project_task_added',     label: 'New tasks',         description: 'When a task is added to a project you watch' },
       { type: 'project_comment_added',  label: 'New comments',      description: 'When someone comments in a project you watch' },
     ],

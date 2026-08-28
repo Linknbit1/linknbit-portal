@@ -14,6 +14,8 @@ export interface TaskListItem extends TaskRow {
   assignee: PersonMini | null
   /** Everyone assigned (task_assignees join table). */
   assignees: PersonMini[]
+  /** Everyone expected to check it before it is signed off. */
+  reviewers: PersonMini[]
   stage: { id: string; name: string } | null
   subtask_count: number
   /** How many of those subtasks are ticked — drives the board card's progress bar. */
@@ -38,7 +40,7 @@ const TASK_SELECT =
   // is_active on the assignees: someone deactivated mid-task must still show up,
   // flagged, so their work is visibly waiting to be reassigned rather than
   // silently reading as unassigned.
-  '*, project:projects(id,name), project_service:project_services(id, service:services(id,name,slug,color)), assignee:profiles!tasks_assignee_id_fkey(id,name,avatar_url,is_active), assignees:task_assignees(profile:profiles(id,name,avatar_url,is_active)), stage:stages(id,name), subtasks(completed), comment_count:comments(count), attachment_count:attachments(count)'
+  '*, project:projects(id,name), project_service:project_services(id, service:services(id,name,slug,color)), assignee:profiles!tasks_assignee_id_fkey(id,name,avatar_url,is_active), assignees:task_assignees(profile:profiles(id,name,avatar_url,is_active)), reviewers:task_reviewers(profile:profiles(id,name,avatar_url,is_active)), stage:stages(id,name), subtasks(completed), comment_count:comments(count), attachment_count:attachments(count)'
 
 export async function fetchTasks(filters: TaskFilters = {}): Promise<TaskListItem[]> {
   let query = supabase
@@ -58,9 +60,10 @@ export async function fetchTasks(filters: TaskFilters = {}): Promise<TaskListIte
 
   const { data, error } = await query
   if (error) throw error
-  const shaped = data.map(({ subtasks, comment_count, attachment_count, assignees, ...rest }) => ({
+  const shaped = data.map(({ subtasks, comment_count, attachment_count, assignees, reviewers, ...rest }) => ({
     ...rest,
     assignees: assignees.flatMap((a) => (a.profile ? [a.profile] : [])),
+    reviewers: reviewers.flatMap((r) => (r.profile ? [r.profile] : [])),
     subtask_count: subtasks.length,
     subtask_done: subtasks.filter((s) => s.completed).length,
     comment_count: comment_count[0]?.count ?? 0,
@@ -81,10 +84,11 @@ export async function fetchTask(id: string): Promise<TaskListItem | null> {
   const { data, error } = await supabase.from('tasks').select(TASK_SELECT).eq('id', id).maybeSingle()
   if (error) throw error
   if (!data) return null
-  const { subtasks, comment_count, attachment_count, assignees, ...rest } = data
+  const { subtasks, comment_count, attachment_count, assignees, reviewers, ...rest } = data
   return {
     ...rest,
     assignees: assignees.flatMap((a) => (a.profile ? [a.profile] : [])),
+    reviewers: reviewers.flatMap((r) => (r.profile ? [r.profile] : [])),
     subtask_count: subtasks.length,
     subtask_done: subtasks.filter((s) => s.completed).length,
     comment_count: comment_count[0]?.count ?? 0,

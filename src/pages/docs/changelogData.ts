@@ -31,11 +31,30 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: '1.20.0',
+    date: '2026-08-29',
+    title: 'Reviewers, and picking anyone you like',
+    highlight:
+      'A task can now say who is checking it, not just who is doing it, and you can put someone on a task before they are staffed on the service. Choosing them staffs them.',
+    entries: [
+      {
+        kind: 'added',
+        text: 'Tasks take reviewers, working the same way assignees do: any number of them, and a reviewer can open the task they are reviewing. Review was a status with nobody’s name against it, so there was no answer to who it was waiting on.',
+      },
+      {
+        kind: 'added',
+        text: 'A reviewer is notified the moment the task moves to Review, so the handover happens without anybody having to go and tell them.',
+      },
+      {
+        kind: 'improved',
+        text: 'The assignee and reviewer pickers now list everyone, not only the people already staffed on the service. Choosing someone new staffs them onto it, exactly as choosing a service the project does not run adds the service. Assigning work used to mean leaving the form, staffing the person, and coming back, which is how so much of it ended up with whoever happened to be there.',
+      },
+    ],
+  },
+  {
     version: '1.19.0',
     date: '2026-08-29',
     title: 'A project can have more than one manager',
-    highlight:
-      'Projects now take several managers, all of whom can open the project, see its work and be tagged in it. What a project manager sees follows the projects they run rather than the teams they happen to sit on.',
     entries: [
       {
         kind: 'added',

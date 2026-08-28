@@ -4,7 +4,7 @@ import {
   Plus, Trash2, Send, CheckCircle2, MessageSquare, ListChecks, RotateCcw, Pencil,
   CircleDot, UserRound, CalendarDays, Flag, Layers, Eye, Paperclip, Bell, BellOff, Timer, Clock, History,
   CornerUpRight,
-  type LucideIcon,
+  type LucideIcon, CheckCheck,
 } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { DocEditor } from '../../components/editor/DocEditor'
@@ -16,6 +16,7 @@ import { Button } from '../../components/ui/Button'
 import { Select } from '../../components/ui/Select'
 import { MultiSelectPeople } from '../../components/ui/MultiSelectPeople'
 import { useSetTaskAssignees } from '../../hooks/useTaskAssignees'
+import { useSetTaskReviewers } from '../../hooks/useTaskReviewers'
 import { DateTimeRangePicker } from '../../components/ui/DateTimeRangePicker'
 import { DurationInput } from '../../components/ui/DurationInput'
 import { TaskTimeTracker } from '../../components/shared/TaskTimeTracker'
@@ -213,6 +214,7 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
   const deleteComment = useDeleteComment()
   const syncMentions = useSyncMentions()
   const setAssignees = useSetTaskAssignees()
+  const setReviewers = useSetTaskReviewers()
 
   // Assignees and the creator are subscribed server-side without a row, so the
   // bell has to reflect that before the user has ever touched it.
@@ -407,6 +409,24 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
                     return m ? [{ id: m.id, name: m.name, avatar_url: m.avatar_url }] : []
                   }),
                 },
+                {
+                  onSuccess: () => markSaved(),
+                  onError: (e) => { markFailed(); toast(e instanceof Error ? e.message : 'Failed', 'error') },
+                },
+              )
+            }}
+            options={assigneeOptions}
+            size="sm"
+            closeOnSelect
+          />
+        </PropertyRow>
+        <PropertyRow icon={CheckCheck} label="Reviewers">
+          <MultiSelectPeople
+            value={task.reviewers.map((r) => r.id)}
+            onChange={(ids) => {
+              markSaving()
+              setReviewers.mutate(
+                { taskId: task.id, profileIds: ids, projectId: task.project_id },
                 {
                   onSuccess: () => markSaved(),
                   onError: (e) => { markFailed(); toast(e instanceof Error ? e.message : 'Failed', 'error') },

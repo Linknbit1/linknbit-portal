@@ -357,7 +357,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
         id: 'working-a-task',
         title: 'Working a task',
         summary:
-          'A task carries its status, priority, assignees, estimate, subtasks, comments, files and full activity history.',
+          'A task carries its status, priority, assignees, reviewers, estimate, subtasks, comments, files and full activity history.',
         where: 'Delivery → Tasks, or from inside a project',
         procedures: [
           {
@@ -367,6 +367,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
               'Change its status, Backlog, To Do, In Progress, Review, Approved, Completed or Blocked.',
               'Tick off subtasks as you finish them; the progress bar follows.',
               'Leave a comment to bring someone in, using @ to notify them.',
+              'Name a reviewer if somebody has to check it. They are notified the moment it moves to Review.',
             ],
           },
           {
@@ -382,6 +383,8 @@ export const DOC_CHAPTERS: DocChapter[] = [
           'Files and tasks carry a client-visible switch. When it is off, the client portal never shows the item.',
           'Deleting a task or a project deletes its files as well. There is no archive to recover them from, so download anything worth keeping first.',
           'Watch a task to be notified about it even when it is not assigned to you.',
+          'Reviewers work like assignees: a task can have several, and a reviewer can open the task they are reviewing whether or not it is theirs.',
+          'You can assign or name a reviewer who is not staffed on the service yet. Choosing them adds them to it, the same way choosing a service the project does not run adds the service.',
           'The description box is the same whether you are creating a task or editing one. Type / for formatting commands and @ to tag someone; a person tagged while the task is being created is notified once it is saved.',
         ],
       },

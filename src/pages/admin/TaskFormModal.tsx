@@ -9,6 +9,7 @@ import { TimePicker } from '../../components/ui/TimePicker'
 import { DurationInput } from '../../components/ui/DurationInput'
 import { Toggle } from '../../components/ui/Toggle'
 import { useProjects } from '../../hooks/useProjects'
+import { usePeople } from '../../hooks/usePeople'
 import { useServiceStages } from '../../hooks/useStages'
 import { useAddProjectService, useProjectServices, useProjectServiceMembers } from '../../hooks/useProjectServices'
 import { useServices } from '../../hooks/useServices'
@@ -18,6 +19,7 @@ import { RichEditor } from '../../components/editor/RichEditor'
 import { useSyncMentions } from '../../hooks/useMentions'
 import { TaskTimeTracker } from '../../components/shared/TaskTimeTracker'
 import { useSetTaskAssignees } from '../../hooks/useTaskAssignees'
+import { useSetTaskReviewers } from '../../hooks/useTaskReviewers'
 import { useUploadAttachment } from '../../hooks/useAttachments'
 import { useCanAccess } from '../../hooks/useRoleFlags'
 import { useToast } from '../../components/ui/toast-context'
@@ -70,6 +72,7 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
   const uploadAttachment = useUploadAttachment()
   const canSignOff = useCanAccess('can_approve_tasks')
   const setAssignees = useSetTaskAssignees()
+  const setReviewers = useSetTaskReviewers()
 
   const lockedProjectId = projectId ?? task?.project_id
   const lockedServiceId = projectServiceId ?? task?.project_service_id
@@ -79,6 +82,8 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
   const { data: services = [] } = useProjectServices(selectedProject || undefined)
   const { data: catalog = [] } = useServices()
   const { data: allMembers = [] } = useProjectServiceMembers(selectedProject || undefined)
+  // Everyone internal, so somebody can be put on a task before they are staffed.
+  const { data: people = [] } = usePeople()
   const addService = useAddProjectService()
 
   /**
@@ -107,7 +112,8 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
   // A service the project does not have yet has no stages and nobody staffed, so
   // don't query with a sentinel that isn't a uuid.
   const { data: stages = [] } = useServiceStages(pendingNewService ? undefined : effectiveService || undefined)
-  // Only people staffed on this service can be assigned its work.
+  // Who is already staffed on this service. Others can still be picked, and
+  // are staffed by a trigger as the link is written.
   const members = pendingNewService ? [] : allMembers.filter((m) => m.project_service_id === effectiveService)
 
   const [title, setTitle] = useState(task?.title ?? '')
@@ -123,6 +129,7 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
   const description = useMemo(() => docToPlainText(descDoc), [descDoc])
   const [stageId, setStageId] = useState(task?.stage_id ?? defaultStageId ?? '')
   const [assigneeIds, setAssigneeIds] = useState<string[]>(task?.assignees.map((a) => a.id) ?? [])
+  const [reviewerIds, setReviewerIds] = useState<string[]>(task?.reviewers.map((r) => r.id) ?? [])
   const [priority, setPriority] = useState<Priority>(toPriority(task?.priority))
   const [status, setStatus] = useState<TaskStatus>(toStatus(task?.status))
   // Deadline only — a task is "due by", not "scheduled from". start_date is left
@@ -153,7 +160,24 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
 
   const projectOptions = projects.map((p) => ({ value: p.id, label: p.name }))
   const stageOptions = [{ value: '', label: 'No stage' }, ...stages.map((s) => ({ value: s.id, label: s.name }))]
-  const memberPeople = members.map((m) => ({ id: m.id, name: m.name, avatar_url: m.avatar_url }))
+  /**
+   * Anyone internal, not just whoever is already staffed on this service.
+   *
+   * Picking someone new staffs them onto the service as the task saves, the same
+   * way choosing a service the project does not run adds the service. Offering
+   * only the current roster meant leaving the form, staffing them, and coming
+   * back, which is why so much work ended up on whoever happened to be there.
+   *
+   * Staffed members are listed first: they are the likely answer, and the rest
+   * are there for when they are not.
+   */
+  const staffedIds = new Set(members.map((m) => m.id))
+  const assignablePeople = [
+    ...members.map((m) => ({ id: m.id, name: m.name, avatar_url: m.avatar_url })),
+    ...people
+      .filter((p) => p.is_active && !staffedIds.has(p.id))
+      .map((p) => ({ id: p.id, name: p.name, avatar_url: p.avatar_url })),
+  ]
   const priorityOptions = PRIORITY_ORDER.map((p) => ({ value: p, label: PRIORITY_LABELS[p], dot: PRIORITY_DOTS[p] }))
   // Approved/Completed are a sign-off, refused by fn_guard_task_approval for
   // anyone without can_approve_tasks. The task's current status stays listed so
@@ -239,7 +263,13 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
             }
             setAssignees.mutate(
               { taskId: task.id, profileIds: assigneeIds, projectId: task.project_id },
-              { onSuccess: afterAssignees, onError },
+              {
+                onSuccess: () => setReviewers.mutate(
+                  { taskId: task.id, profileIds: reviewerIds, projectId: task.project_id },
+                  { onSuccess: afterAssignees, onError },
+                ),
+                onError,
+              },
             )
           },
           onError,
@@ -269,9 +299,19 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
               dismiss()
               return
             }
+            const withReviewers = () => {
+              if (reviewerIds.length === 0) { onSuccess(); return }
+              setReviewers.mutate(
+                { taskId: row.id, profileIds: reviewerIds, projectId: selectedProject },
+                { onSuccess, onError },
+              )
+            }
             if (assigneeIds.length) {
-              setAssignees.mutate({ taskId: row.id, profileIds: assigneeIds, projectId: selectedProject }, { onSuccess, onError })
-            } else onSuccess()
+              setAssignees.mutate(
+                { taskId: row.id, profileIds: assigneeIds, projectId: selectedProject },
+                { onSuccess: withReviewers, onError },
+              )
+            } else withReviewers()
           },
           onError,
         },
@@ -326,7 +366,7 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
             <RichEditor
               value={descDoc}
               onChange={setDescDoc}
-              mentionItems={memberPeople}
+              mentionItems={assignablePeople}
               placeholder="What does done look like? Type / for commands, @ to mention"
             />
           </div>
@@ -338,7 +378,11 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
           </div>
           <div className="space-y-1.5">
             <label className="text-label font-ui font-semibold text-text-2 uppercase tracking-wider">Assignees</label>
-            <MultiSelectPeople value={assigneeIds} onChange={setAssigneeIds} options={memberPeople} closeOnSelect />
+            <MultiSelectPeople value={assigneeIds} onChange={setAssigneeIds} options={assignablePeople} closeOnSelect />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-label font-ui font-semibold text-text-2 uppercase tracking-wider">Reviewers</label>
+            <MultiSelectPeople value={reviewerIds} onChange={setReviewerIds} options={assignablePeople} closeOnSelect />
           </div>
           <div className="space-y-1.5">
             <label className="text-label font-ui font-semibold text-text-2 uppercase tracking-wider">Priority</label>

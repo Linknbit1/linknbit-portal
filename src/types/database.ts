@@ -4352,6 +4352,39 @@ export type Database = {
           },
         ]
       }
+      task_reviewers: {
+        Row: {
+          created_at: string
+          profile_id: string
+          task_id: string
+        }
+        Insert: {
+          created_at?: string
+          profile_id: string
+          task_id: string
+        }
+        Update: {
+          created_at?: string
+          profile_id?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_reviewers_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_reviewers_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       task_time_entries: {
         Row: {
           billable: boolean
