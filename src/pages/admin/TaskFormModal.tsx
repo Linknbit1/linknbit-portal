@@ -20,6 +20,7 @@ import { useSyncMentions } from '../../hooks/useMentions'
 import { TaskTimeTracker } from '../../components/shared/TaskTimeTracker'
 import { useSetTaskAssignees } from '../../hooks/useTaskAssignees'
 import { useSetTaskReviewers } from '../../hooks/useTaskReviewers'
+import { useTaskStatuses } from '../../hooks/useTaskStatuses'
 import { useUploadAttachment } from '../../hooks/useAttachments'
 import { useCanAccess } from '../../hooks/useRoleFlags'
 import { useToast } from '../../components/ui/toast-context'
@@ -27,10 +28,9 @@ import { formatFileSize } from '../../lib/attachment'
 import { cn } from '../../lib/cn'
 import { docToPlainText, extractMentionIds, fromDbDoc, plainTextToDoc, toDbDoc } from '../../lib/richText'
 import type { JSONContent } from '@tiptap/react'
-import { PRIORITY_LABELS, STATUS_LABELS, toDateInput, toTimeInput, fromDateTimeInput } from '../../lib/utils'
+import { PRIORITY_LABELS, toDateInput, toTimeInput, fromDateTimeInput } from '../../lib/utils'
 import type { TaskListItem } from '../../api/tasks'
-import { SIGN_OFF_STATUSES } from '../../types'
-import type { Priority, TaskStatus } from '../../types'
+import type { Priority } from '../../types'
 
 interface TaskFormModalProps {
   /** Locks the task to this project (project detail view). Omit for the global picker. */
@@ -53,14 +53,11 @@ const PRIORITY_DOTS: Record<Priority, string> = {
   critical: '#F4364C', high: '#F59E0B', medium: '#60A5FA', low: '#8A8A8A',
 }
 
-const STATUS_ORDER: TaskStatus[] = ['backlog', 'todo', 'in_progress', 'review', 'approved', 'completed', 'blocked']
 const PRIORITY_ORDER: Priority[] = ['critical', 'high', 'medium', 'low']
 
-const isStatus = (v: string): v is TaskStatus => (STATUS_ORDER as string[]).includes(v)
 const isPriority = (v: string): v is Priority => (PRIORITY_ORDER as string[]).includes(v)
 
 function toPriority(v: string | null | undefined): Priority { return v && isPriority(v) ? v : 'medium' }
-function toStatus(v: string | null | undefined): TaskStatus { return v && isStatus(v) ? v : 'todo' }
 
 export function TaskFormModal({ projectId, projectServiceId, task, defaultStageId, onClose }: TaskFormModalProps) {
   const toast = useToast()
@@ -82,6 +79,7 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
   const { data: services = [] } = useProjectServices(selectedProject || undefined)
   const { data: catalog = [] } = useServices()
   const { data: allMembers = [] } = useProjectServiceMembers(selectedProject || undefined)
+  const { data: taskStatuses = [] } = useTaskStatuses()
   // Everyone internal, so somebody can be put on a task before they are staffed.
   const { data: people = [] } = usePeople()
   const addService = useAddProjectService()
@@ -131,7 +129,9 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
   const [assigneeIds, setAssigneeIds] = useState<string[]>(task?.assignees.map((a) => a.id) ?? [])
   const [reviewerIds, setReviewerIds] = useState<string[]>(task?.reviewers.map((r) => r.id) ?? [])
   const [priority, setPriority] = useState<Priority>(toPriority(task?.priority))
-  const [status, setStatus] = useState<TaskStatus>(toStatus(task?.status))
+  // Open-ended now: a new column added on the Statuses screen is a valid value
+  // here without this file knowing about it.
+  const [status, setStatus] = useState<string>(task?.status ?? '')
   // Deadline only — a task is "due by", not "scheduled from". start_date is left
   // untouched on existing rows rather than silently wiped.
   const [dueDay, setDueDay] = useState(toDateInput(task?.due_date))
@@ -182,9 +182,12 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
   // Approved/Completed are a sign-off, refused by fn_guard_task_approval for
   // anyone without can_approve_tasks. The task's current status stays listed so
   // editing an approved task doesn't blank the field.
-  const statusOptions = STATUS_ORDER
-    .filter((s) => canSignOff || !SIGN_OFF_STATUSES.includes(s) || s === task?.status)
-    .map((s) => ({ value: s, label: STATUS_LABELS[s] }))
+  // Sign-off columns are hidden from anyone who cannot move a task into one,
+  // except the status the task already has, so editing an approved task does not
+  // blank the field.
+  const statusOptions = taskStatuses
+    .filter((s) => canSignOff || !s.is_signoff || s.key === task?.status)
+    .map((s) => ({ value: s.key, label: s.label }))
 
   const pending = createTask.isPending || updateTask.isPending || addService.isPending || moveTask.isPending || uploadAttachment.isPending
 
@@ -390,7 +393,7 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
           </div>
           <div className="space-y-1.5">
             <label className="text-label font-ui font-semibold text-text-2 uppercase tracking-wider">Status</label>
-            <Select value={status} onChange={(v) => { if (isStatus(v)) setStatus(v) }} options={statusOptions} />
+            <Select value={status} onChange={setStatus} options={statusOptions} />
           </div>
         </div>
         <div className="space-y-1.5">

@@ -31,11 +31,38 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: '1.23.0',
+    date: '2026-08-30',
+    title: 'Boards you can shape',
+    highlight:
+      'Task board columns can now be added, renamed, recoloured and reordered, and you choose which one tells a task’s reviewers it is their turn.',
+    entries: [
+      {
+        kind: 'added',
+        text: 'Task statuses are no longer a fixed set of seven. Add the columns your work actually moves through, rename them, give them colours, and put them in the order you use. Every board follows immediately.',
+      },
+      {
+        kind: 'added',
+        text: 'One column can be marked as the one that notifies reviewers. Drag a card into it and whoever is named reviewer on that task hears about it. It follows the marker rather than the word, so a column called QA or Client sign-off works exactly the same.',
+      },
+      {
+        kind: 'improved',
+        text: 'A column can also be marked as needing sign-off, which only people who may approve tasks can move into, or as finished, which drops the task off My Day. A column still holding tasks cannot be deleted.',
+      },
+      {
+        kind: 'improved',
+        text: 'Project statuses have been taken off the Statuses screen. They are not board columns, nothing drags between them, and having them there implied a flexibility that was never there.',
+      },
+      {
+        kind: 'improved',
+        text: 'Teams now appear in their service colour when you tag one with @, so Design, Development and Marketing are recognisable before you have read the name.',
+      },
+    ],
+  },
+  {
     version: '1.22.0',
     date: '2026-08-29',
     title: 'One place for who takes part, and reports that stay in your lane',
-    highlight:
-      'Attendance, standup, timesheet, the task timer and points now answer to one screen, reports are scoped to the projects and people you actually answer for, and filing leave for somebody else is back.',
     entries: [
       {
         kind: 'added',

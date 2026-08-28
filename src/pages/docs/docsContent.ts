@@ -331,7 +331,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
           'A message that tags you, tags a team you are on, or carries an @everyone is banded in amber so you can find it scrolling back, not only when the notification arrives.',
           'Under your last message, "Seen by" shows who has caught up. It follows how far each person has read the conversation.',
           'A conversation you have read can be marked unread again from its menu, for when you cannot deal with it yet.',
-          'Type @ and a team name to tag a whole team. Only some roles may do this; for everyone else the text still appears but reaches nobody.',
+          'Type @ and a team name to tag a whole team. Teams are listed in their service colour, so Design, Development and Marketing are recognisable before you read the name. Only some roles may tag one; for everyone else the text still appears but reaches nobody.',
           'Deleting a message deletes the files attached to it, and they leave the Files panel with it. The message itself stays as a note that something was removed.',
           'Removing a file from the message box before you send cancels it, even mid-upload.',
         ],
@@ -369,7 +369,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
             title: 'Move a task forward',
             steps: [
               'Open the task from the board, the list, or My Day. It opens in a side panel over its project, wherever you came from.',
-              'Change its status, Backlog, To Do, In Progress, Review, Approved, Completed or Blocked.',
+              'Change its status. The columns are whatever your admins have set up on Settings → Task statuses.',
               'Tick off subtasks as you finish them; the progress bar follows.',
               'Leave a comment to bring someone in, using @ to notify them.',
               'Name a reviewer if somebody has to check it. They are notified the moment it moves to Review.',
@@ -389,6 +389,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
           'Deleting a task or a project deletes its files as well. There is no archive to recover them from, so download anything worth keeping first.',
           'Watch a task to be notified about it even when it is not assigned to you.',
           'Reviewers work like assignees: a task can have several, and a reviewer can open the task they are reviewing whether or not it is theirs.',
+          'Reviewers are notified when a card is dragged into whichever column is marked as the review column on Settings → Task statuses. It follows the marker, not the word, so a column called QA or Client sign-off works the same.',
           'You can assign or name a reviewer who is not staffed on the service yet. Choosing them adds them to it, the same way choosing a service the project does not run adds the service.',
           'The description box is the same whether you are creating a task or editing one. Type / for formatting commands and @ to tag someone; a person tagged while the task is being created is notified once it is saved.',
         ],
@@ -972,6 +973,38 @@ export const DOC_CHAPTERS: DocChapter[] = [
               'The person who submitted it is notified either way.',
             ],
           },
+        ],
+      },
+      {
+        id: 'task-statuses',
+        title: 'The board columns',
+        summary:
+          'Add, rename, recolour and reorder the columns every task board uses, and choose which one notifies reviewers.',
+        where: 'Settings → Statuses',
+        roles: ['super_admin', 'admin'],
+        procedures: [
+          {
+            title: 'Add a column',
+            steps: [
+              'Open Settings → Statuses.',
+              'Pick a colour, type a name, and press Add column.',
+              'It appears on every task board straight away, at the end.',
+            ],
+          },
+          {
+            title: 'Choose which column notifies reviewers',
+            steps: [
+              'Find the column that means "somebody needs to check this".',
+              'Press the button on its row so it reads "Notifies reviewers".',
+              'From then on, dragging a card into it notifies whoever is named reviewer on that task.',
+            ],
+          },
+        ],
+        notes: [
+          'Only one column can notify reviewers, so a card never produces two alerts.',
+          'Sign-off columns can only be moved into by someone allowed to approve tasks. Finished columns drop off My Day and Your work.',
+          'A column still holding tasks cannot be deleted. Move them somewhere else first.',
+          'Renaming a column keeps every task in it, and keeps whatever it was marked as. Behaviour follows the marks, never the name.',
         ],
       },
       {

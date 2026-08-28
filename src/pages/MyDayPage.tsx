@@ -21,6 +21,7 @@ import { useWaitingOnYou } from '../hooks/useWaitingOnYou'
 import { useRunningTimeEntry, useStartTimer, useStopTimer } from '../hooks/useTimeEntries'
 import { useMyPermissions } from '../hooks/usePermissions'
 import { useTeammateIds } from '../hooks/useScopeFilter'
+import { useTaskStatuses } from '../hooks/useTaskStatuses'
 import { ADMINISTRATOR } from '../api/permissions'
 import { projectTaskDrawerHref } from '../constants/notifications'
 import { formatStamp } from '../lib/utils'
@@ -36,8 +37,8 @@ function localToday(): string {
 const fmtClock = (iso: string): string =>
   new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })
 
-/** Statuses that mean the work is finished, so it drops off the day. */
-const DONE_STATUSES = new Set(['completed', 'approved'])
+// Which statuses mean "finished" is a property of the column now, not a fixed
+// pair of keys, so a board with its own Shipped column drops off here too.
 
 /**
  * A clock that ticks, rather than `Date.now()` read during render. Reading the
@@ -343,6 +344,12 @@ export default function MyDayPage() {
     !!permissions && (permissions.includes(ADMINISTRATOR) || permissions.includes('can_manage_attendance'))
   const teammates = useTeammateIds(true)
 
+  const { data: taskStatuses = [] } = useTaskStatuses()
+  const doneStatuses = useMemo(
+    () => new Set(taskStatuses.filter((s) => s.is_done).map((s) => s.key)),
+    [taskStatuses],
+  )
+
   const { data: running } = useRunningTimeEntry()
   const startTimer = useStartTimer()
   const stopTimer = useStopTimer()
@@ -371,7 +378,7 @@ export default function MyDayPage() {
   const myWork = useMemo(() => {
     const mine = (tasksQ.data ?? []).filter(
       (t) =>
-        !DONE_STATUSES.has(t.status) &&
+        !doneStatuses.has(t.status) &&
         (t.assignees.some((a) => a.id === myId) || t.assignee?.id === myId),
     )
     const buckets: { task: TaskListItem; bucket: Bucket }[] = []
@@ -386,7 +393,7 @@ export default function MyDayPage() {
     return buckets.sort(
       (a, b) => order[a.bucket] - order[b.bucket] || a.task.title.localeCompare(b.task.title),
     )
-  }, [tasksQ.data, myId, today])
+  }, [tasksQ.data, myId, today, doneStatuses])
 
   const away = useMemo(
     () =>

@@ -3,9 +3,6 @@ import { Navigate, useParams } from 'react-router-dom'
 import {
   Shield, ChevronRight, CircleDot, Loader2, Shapes, IdCard, Plus, Trash2, Smartphone, Bell, Eye,
   CalendarCheck, ClipboardList, Trophy, type LucideIcon, UserCheck } from 'lucide-react'
-import { useStatusLabels, useStatusOverrides, useSaveStatusLabel, useResetStatusLabel } from '../../hooks/useStatusLabels'
-import { STATUS_LABELS, PROJECT_STATUS_LABELS } from '../../lib/utils'
-import type { StatusScope } from '../../api/statusLabels'
 import { Topbar } from '../../components/layout/Topbar'
 import { StackScreen } from '../../components/layout/StackScreen'
 import { HubRow } from '../../components/layout/MobileHub'
@@ -37,6 +34,7 @@ import { StandupSettingsPanel } from '../../components/settings/StandupSettingsP
 import { GamificationRulesPanel } from '../../components/settings/GamificationRulesPanel'
 import { isPermissionLocked, LOCKED_REASON } from '../../lib/roleLocks'
 import { ParticipationMatrix } from '../../components/shared/ParticipationMatrix'
+import { TaskStatusesPanel } from '../../components/shared/TaskStatusesPanel'
 import { cn } from '../../lib/cn'
 
 type Tab =
@@ -190,128 +188,6 @@ function ServicesPanel({ canManage }: { canManage: boolean }) {
 
 // ── Status names & colours ───────────────────────────────────────────────────────
 
-/** The fixed keys, in board order. New ones can't be added — see status_labels. */
-const TASK_STATUS_KEYS: string[] = ['backlog', 'todo', 'in_progress', 'review', 'approved', 'completed', 'blocked']
-const PROJECT_STATUS_KEYS: string[] = ['todo', 'in_progress', 'ongoing', 'awaiting_client', 'blocked', 'on_hold', 'completed']
-
-function StatusRow({ scope, statusKey, fallbackLabel, canManage }: {
-  scope: StatusScope
-  statusKey: string
-  fallbackLabel: string
-  canManage: boolean
-}) {
-  const toast = useToast()
-  const overrides = useStatusOverrides(scope)
-  const { mutate: save, isPending: saving } = useSaveStatusLabel()
-  const { mutate: reset, isPending: resetting } = useResetStatusLabel()
-
-  const current = overrides[statusKey]
-  const [label, setLabel] = useState(current?.label ?? fallbackLabel)
-  const [color, setColor] = useState(current?.color ?? '#8A93A3')
-  const dirty = label !== (current?.label ?? fallbackLabel) || color !== (current?.color ?? '#8A93A3')
-
-  return (
-    <div className="grid grid-cols-[36px_1fr_auto] items-center gap-3 border-b border-border-subtle px-4 py-2.5 last:border-0">
-      <input
-        type="color"
-        value={color}
-        disabled={!canManage}
-        onChange={(e) => setColor(e.target.value)}
-        className="size-8 cursor-pointer rounded-md border border-border-default bg-transparent disabled:cursor-default"
-        aria-label={`${fallbackLabel} colour`}
-      />
-      <div className="flex min-w-0 items-center gap-2">
-        <input
-          value={label}
-          disabled={!canManage}
-          onChange={(e) => setLabel(e.target.value)}
-          className="w-52 rounded-md border border-border-default bg-surface-inset px-3 py-1.5 font-ui text-[13px] text-text-1 outline-none focus:border-border-focus disabled:opacity-70"
-        />
-        {/* The key is what the database and every trigger use; it never changes. */}
-        <span className="truncate font-mono text-[10px] text-text-4">{statusKey}</span>
-      </div>
-      {canManage && (
-        <div className="flex items-center gap-1.5">
-          {dirty && (
-            <Button
-              size="sm"
-              variant="secondary"
-              disabled={saving || !label.trim()}
-              onClick={() => save(
-                { scope, key: statusKey, label, color },
-                { onSuccess: () => toast('Status updated', 'success'), onError: () => toast('Could not save that status', 'error') },
-              )}
-            >
-              Save
-            </Button>
-          )}
-          {current && !dirty && (
-            <button
-              onClick={() => reset({ scope, key: statusKey }, {
-                onSuccess: () => { setLabel(fallbackLabel); toast('Reset to default', 'success') },
-                onError: () => toast('Could not reset that status', 'error'),
-              })}
-              disabled={resetting}
-              className="p-1.5 font-mono text-[10.5px] text-text-4 transition-colors hover:text-text-1"
-              title="Reset to the built-in name and colour"
-            >
-              Reset
-            </button>
-          )}
-        </div>
-      )}
-    </div>
-  )
-}
-
-function StatusGroup({ title, scope, keys, labels, canManage }: {
-  title: string
-  scope: StatusScope
-  keys: string[]
-  labels: Record<string, string>
-  canManage: boolean
-}) {
-  return (
-    <div className="overflow-hidden rounded-xl border border-border-default bg-surface-1">
-      <div className="grid grid-cols-[36px_1fr_auto] gap-3 border-b border-border-subtle bg-surface-2 px-4 py-2">
-        <span className="font-mono text-[10px] uppercase tracking-wider text-text-4" />
-        <span className="font-mono text-[10px] uppercase tracking-wider text-text-4">{title}</span>
-        <span />
-      </div>
-      {keys.map((k) => (
-        <StatusRow key={k} scope={scope} statusKey={k} fallbackLabel={labels[k] ?? k} canManage={canManage} />
-      ))}
-    </div>
-  )
-}
-
-function StatusesPanel({ canManage }: { canManage: boolean }) {
-  const { isLoading } = useStatusLabels()
-
-  return (
-    <div>
-      <h2 className="mb-1 font-display text-[16px] font-bold text-text-1">Statuses</h2>
-      <p className="mb-5 font-ui text-[13px] text-text-3">
-        Rename and recolour the statuses used on task and project boards. The set itself is fixed -
-        automations like project progress and completion alerts are keyed to these, so statuses can
-        be renamed but not added or removed. Reset puts one back to its built-in name and colour.
-      </p>
-
-      {isLoading ? (
-        <div className="flex justify-center py-10 text-text-4"><Loader2 size={18} className="animate-spin" /></div>
-      ) : (
-        <div className="space-y-5">
-          <StatusGroup title="Task statuses" scope="task" keys={TASK_STATUS_KEYS} labels={STATUS_LABELS} canManage={canManage} />
-          <StatusGroup title="Project statuses" scope="project" keys={PROJECT_STATUS_KEYS} labels={PROJECT_STATUS_LABELS} canManage={canManage} />
-        </div>
-      )}
-
-      {!canManage && <p className="mt-3 font-mono text-[11px] text-text-4">Only Super Admins and Admins can manage statuses.</p>}
-    </div>
-  )
-}
-
-// ── Designations management ─────────────────────────────────────────────────────
 
 function DesignationRow({ designation, canManage }: { designation: Designation; canManage: boolean }) {
   const toast = useToast()
@@ -612,7 +488,7 @@ export default function SettingsPage({ mobileSection }: { mobileSection?: string
     : tab === 'standup'      ? <StandupSettingsPanel />
     : tab === 'gamification' ? <GamificationRulesPanel />
     : tab === 'services'     ? <ServicesPanel canManage={canEditFlags} />
-    : tab === 'statuses'     ? <StatusesPanel canManage={canEditFlags} />
+    : tab === 'statuses'     ? <TaskStatusesPanel canManage={canEditFlags} />
     : tab === 'designations' ? <DesignationsPanel canManage={canManageDesignations} />
     : <PermissionsPanel canEdit={canManageRoles} />
 

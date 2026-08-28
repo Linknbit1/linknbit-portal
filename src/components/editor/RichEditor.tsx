@@ -29,7 +29,7 @@ interface RichEditorProps {
    * Teams offerable as @team-name. The id is the team's own uuid, which is what
    * lets the notifier tell a team tag from a person without a second field.
    */
-  teamItems?: { id: string; name: string }[]
+  teamItems?: { id: string; name: string; color?: string | null }[]
   /** Project files/links taggable with # (kept fresh via a ref). */
   fileItems?: FileMentionItem[]
   /** Compact composer mode: Enter submits (Shift+Enter = newline). */
@@ -89,7 +89,9 @@ export function RichEditor({
             const teams = teamsRef.current
               .filter((t) => t.name.toLowerCase().includes(q))
               .slice(0, 4)
-              .map((t) => ({ id: t.id, label: t.name, avatar: { name: '#', url: null } }))
+              // Carries the team's service colour so Design, Development and
+              // Marketing read the same here as their chips do elsewhere.
+              .map((t) => ({ id: t.id, label: t.name, color: t.color ?? undefined }))
 
             // Pinned to the very top, the way Discord lists it.
             return everyoneRef.current && 'everyone'.startsWith(q)

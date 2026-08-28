@@ -17,6 +17,7 @@ import { Select } from '../../components/ui/Select'
 import { MultiSelectPeople } from '../../components/ui/MultiSelectPeople'
 import { useSetTaskAssignees } from '../../hooks/useTaskAssignees'
 import { useSetTaskReviewers } from '../../hooks/useTaskReviewers'
+import { useTaskStatuses } from '../../hooks/useTaskStatuses'
 import { DateTimeRangePicker } from '../../components/ui/DateTimeRangePicker'
 import { DurationInput } from '../../components/ui/DurationInput'
 import { TaskTimeTracker } from '../../components/shared/TaskTimeTracker'
@@ -30,7 +31,7 @@ import { SaveIndicator } from '../../components/shared/SaveIndicator'
 import { AttachmentUploader } from '../../components/shared/AttachmentUploader'
 import { useToast } from '../../components/ui/toast-context'
 import { useSaveStatus } from '../../hooks/useSaveStatus'
-import { formatRelativeTime, PRIORITY_LABELS, STATUS_LABELS } from '../../lib/utils'
+import { formatRelativeTime, PRIORITY_LABELS } from '../../lib/utils'
 import { useTask, useUpdateTask, useDeleteTask, useTaskDeleteImpact } from '../../hooks/useTasks'
 import { useStages } from '../../hooks/useStages'
 import { useProject } from '../../hooks/useProjects'
@@ -48,13 +49,10 @@ import { useAuthContext } from '../../context/AuthContext'
 import { useCanAccess } from '../../hooks/useRoleFlags'
 import { MoveTaskModal } from '../../components/shared/MoveTaskModal'
 import { describeTaskActivity } from '../../lib/taskActivity'
-import { SIGN_OFF_STATUSES } from '../../types'
-import type { Priority, TaskStatus } from '../../types'
+import type { Priority } from '../../types'
 
-const STATUS_ORDER: TaskStatus[] = ['backlog', 'todo', 'in_progress', 'review', 'approved', 'completed', 'blocked']
 const PRIORITY_ORDER: Priority[] = ['critical', 'high', 'medium', 'low']
 const PRIORITY_DOTS: Record<Priority, string> = { critical: '#F4364C', high: '#F59E0B', medium: '#60A5FA', low: '#8A8A8A' }
-const isStatus = (v: string): v is TaskStatus => (STATUS_ORDER as string[]).includes(v)
 const isPriority = (v: string): v is Priority => (PRIORITY_ORDER as string[]).includes(v)
 
 /**
@@ -154,6 +152,7 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
   const projectId = task?.project_id
   const { data: stages = [] } = useStages(projectId)
   const { data: allMembers = [] } = useProjectServiceMembers(projectId)
+  const { data: taskStatuses = [] } = useTaskStatuses()
   // Only for the mention list: a project's managers are taggable on its tasks.
   const { data: project } = useProject(projectId)
   // Assignable people are the ones staffed on this task's service, not the whole project.
@@ -293,9 +292,9 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
   }
 
   const stageOptions = [{ value: '', label: 'No stage' }, ...stages.map((s) => ({ value: s.id, label: s.name }))]
-  const statusOptions = STATUS_ORDER
-    .filter((s) => canSignOff || !SIGN_OFF_STATUSES.includes(s) || s === task?.status)
-    .map((s) => ({ value: s, label: STATUS_LABELS[s] }))
+  const statusOptions = taskStatuses
+    .filter((s) => canSignOff || !s.is_signoff || s.key === task?.status)
+    .map((s) => ({ value: s.key, label: s.label }))
   const priorityOptions = PRIORITY_ORDER.map((p) => ({ value: p, label: PRIORITY_LABELS[p], dot: PRIORITY_DOTS[p] }))
 
   const addSubtask = () => {
@@ -390,7 +389,7 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
       {/* Properties — label on the left, control on the right, two columns */}
       <div className="grid grid-cols-1 gap-x-8 gap-y-0.5 sm:grid-cols-2">
         <PropertyRow icon={CircleDot} label="Status">
-          <Select value={task.status} onChange={(v) => { if (isStatus(v)) patch({ status: v }) }} options={statusOptions} size="sm" />
+          <Select value={task.status} onChange={(v) => patch({ status: v })} options={statusOptions} size="sm" />
         </PropertyRow>
         <PropertyRow icon={UserRound} label="Assignees">
           <MultiSelectPeople

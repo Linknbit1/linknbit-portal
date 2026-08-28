@@ -9,6 +9,12 @@ export interface SuggestionItem {
   hint?: string
   avatar?: { name: string; url?: string | null }
   icon?: ReactNode
+  /**
+   * A team's service colour. Arbitrary hex from the services table, so it is
+   * applied inline: a Design team reads violet, Development cyan, Marketing
+   * amber, exactly as the chips do everywhere else.
+   */
+  color?: string
   // Slash-command items carry an action; passed straight back via command(item).
   [key: string]: unknown
 }
@@ -50,9 +56,24 @@ export const SuggestionList = forwardRef<SuggestionListRef, SuggestionListProps>
             i === index ? 'bg-surface-3' : 'hover:bg-surface-3/60',
           )}
         >
-          {item.avatar && <Avatar name={item.avatar.name} src={item.avatar.url ?? undefined} size="xs" />}
+          {item.color ? (
+            <span
+              className="flex size-6 shrink-0 items-center justify-center rounded-sm border font-ui text-[11px] font-bold"
+              style={{ background: `${item.color}22`, borderColor: `${item.color}59`, color: item.color }}
+              aria-hidden
+            >
+              #
+            </span>
+          ) : (
+            item.avatar && <Avatar name={item.avatar.name} src={item.avatar.url ?? undefined} size="xs" />
+          )}
           {item.icon && <span className="text-text-3 shrink-0 flex items-center">{item.icon}</span>}
-          <span className="flex-1 min-w-0 truncate">{item.label}</span>
+          <span
+            className="flex-1 min-w-0 truncate"
+            style={item.color ? { color: item.color } : undefined}
+          >
+            {item.label}
+          </span>
           {item.hint && <span className="text-[11px] text-text-4 shrink-0">{item.hint}</span>}
         </button>
       ))}

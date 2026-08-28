@@ -4504,6 +4504,53 @@ export type Database = {
           },
         ]
       }
+      task_statuses: {
+        Row: {
+          color: string
+          is_default: boolean
+          is_done: boolean
+          is_review: boolean
+          is_signoff: boolean
+          key: string
+          label: string
+          sort_order: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          color: string
+          is_default?: boolean
+          is_done?: boolean
+          is_review?: boolean
+          is_signoff?: boolean
+          key: string
+          label: string
+          sort_order?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          color?: string
+          is_default?: boolean
+          is_done?: boolean
+          is_review?: boolean
+          is_signoff?: boolean
+          key?: string
+          label?: string
+          sort_order?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_statuses_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       task_time_entries: {
         Row: {
           billable: boolean
@@ -4713,6 +4760,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "stages"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_status_fkey"
+            columns: ["status"]
+            isOneToOne: false
+            referencedRelation: "task_statuses"
+            referencedColumns: ["key"]
           },
         ]
       }

@@ -15,6 +15,7 @@ import { useChannelReactions, useToggleReaction } from '../../hooks/useMessageRe
 import { useRealtimeChatMessages } from '../../hooks/realtime/useRealtimeChatMessages'
 import { useCanAccess } from '../../hooks/useRoleFlags'
 import { useTeams } from '../../hooks/useTeams'
+import { useServices } from '../../hooks/useServices'
 import { useTeamMembers } from '../../hooks/useTeamMembers'
 import { EVERYONE_MENTION_ID } from '../../lib/richText'
 import { useAuthContext } from '../../context/AuthContext'
@@ -78,10 +79,13 @@ export function ChatThread({ channelId, hideHeader }: ChatThreadProps) {
   // still type the text, it just reaches nobody, which is how @everyone behaves.
   const canMentionTeams = useCanAccess('can_mention_teams')
   const { data: teams = [] } = useTeams()
-  const teamItems = useMemo(
-    () => (canMentionTeams ? teams.map((t) => ({ id: t.id, name: t.name })) : []),
-    [canMentionTeams, teams],
-  )
+  const { data: services = [] } = useServices()
+  const teamItems = useMemo(() => {
+    if (!canMentionTeams) return []
+    // teams.service_type is a service slug, which is where the colour lives.
+    const colorBySlug = new Map(services.map((s) => [s.slug, s.color]))
+    return teams.map((t) => ({ id: t.id, name: t.name, color: colorBySlug.get(t.service_type) ?? null }))
+  }, [canMentionTeams, teams, services])
 
   /**
    * Ids that make a message "about me": my own, plus every team I am on, plus

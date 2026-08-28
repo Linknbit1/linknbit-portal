@@ -23,7 +23,7 @@ interface MessageComposerProps {
   channelId: string
   mentionItems: PersonMini[]
   /** Teams offerable as @team-name; empty when the sender may not tag one. */
-  teamItems?: { id: string; name: string }[]
+  teamItems?: { id: string; name: string; color?: string | null }[]
   placeholder?: string
   editing?: { id: string; doc: JSONContent | null } | null
   onCancelEdit?: () => void

@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
-  AlertCircle, Ban, BadgeCheck, CheckCircle2, Circle, CircleDashed, CircleDotDashed, Eye,
-  CornerUpRight, GitBranch, Layers, MessageSquare, MoreHorizontal, Paperclip, Timer, Trash2, type LucideIcon,
+  AlertCircle, Eye,
+  CornerUpRight, GitBranch, Layers, MessageSquare, MoreHorizontal, Paperclip, Timer, Trash2,
 } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { Avatar, AvatarGroup } from '../ui/Avatar'
@@ -14,70 +14,45 @@ import { ConfirmDialog } from '../ui/ConfirmDialog'
 import { Popover } from '../ui/Popover'
 import { MoveTaskModal } from './MoveTaskModal'
 import { useCanAccess } from '../../hooks/useRoleFlags'
-import { useStatusOverrides } from '../../hooks/useStatusLabels'
 import { ProgressBar } from '../ui/ProgressBar'
 import { isOverdue, formatStamp } from '../../lib/utils'
 import { formatEstimate } from '../../lib/duration'
 import type { TaskListItem } from '../../api/tasks'
-import { SIGN_OFF_STATUSES } from '../../types'
-import type { TaskStatus } from '../../types'
+import { useTaskStatuses } from '../../hooks/useTaskStatuses'
+import type { TaskStatusRow } from '../../api/taskStatuses'
 
 interface Column {
-  status: TaskStatus
+  status: string
   label: string
-  icon: LucideIcon
-  /** Header tint, text and border — one hue per column so the board reads at a glance. */
-  header: string
-  /** Border used while a card is dragged over this column. */
-  dropBorder: string
+  /** Arbitrary hex from the statuses screen, so the tints are built at runtime. */
+  color: string
+  /** Moving a card here needs can_approve_tasks. */
+  isSignoff: boolean
+  /** Moving a card here notifies the task's reviewers. */
+  isReview: boolean
 }
 
 /**
- * One column per status, in workflow order. Previously Backlog was folded into
- * To Do and Approved into Done, which meant two statuses could not be reached by
- * dragging at all.
+ * The columns, built from the statuses table.
  *
- * The palette runs cool → active → done rather than reusing StatusChip's colours:
- * the chips give in_progress and approved the same green, which would leave two
- * adjacent headers indistinguishable.
+ * They used to be a hard-coded array here, which meant a status could not be
+ * added, renamed or reordered without a deploy, and the review column was
+ * whichever one happened to be called "review". Everything visual now derives
+ * from the row's own colour, so a new column looks like it belongs without
+ * anyone picking Tailwind classes for it.
+ *
+ * The tints are built inline because the colour is arbitrary hex chosen by an
+ * admin at runtime, which is the one case the styling rules allow for.
  */
-const COLUMNS: Column[] = [
-  {
-    status: 'backlog', label: 'Backlog', icon: CircleDashed,
-    header: 'bg-[rgba(138,147,163,0.14)] text-[#8A93A3] border-[rgba(138,147,163,0.28)]',
-    dropBorder: 'border-[#8A93A3]',
-  },
-  {
-    status: 'todo', label: 'To Do', icon: Circle,
-    header: 'bg-[rgba(96,165,250,0.13)] text-[#60A5FA] border-[rgba(96,165,250,0.3)]',
-    dropBorder: 'border-[#60A5FA]',
-  },
-  {
-    status: 'in_progress', label: 'In Progress', icon: CircleDotDashed,
-    header: 'bg-[rgba(245,158,11,0.14)] text-[#F59E0B] border-[rgba(245,158,11,0.3)]',
-    dropBorder: 'border-[#F59E0B]',
-  },
-  {
-    status: 'review', label: 'Review', icon: Eye,
-    header: 'bg-[rgba(167,139,250,0.14)] text-[#A78BFA] border-[rgba(167,139,250,0.3)]',
-    dropBorder: 'border-[#A78BFA]',
-  },
-  {
-    status: 'approved', label: 'Approved', icon: BadgeCheck,
-    header: 'bg-[rgba(34,197,94,0.13)] text-[#22C55E] border-[rgba(34,197,94,0.3)]',
-    dropBorder: 'border-[#22C55E]',
-  },
-  {
-    status: 'completed', label: 'Completed', icon: CheckCircle2,
-    header: 'bg-[rgba(45,212,191,0.13)] text-[#2DD4BF] border-[rgba(45,212,191,0.3)]',
-    dropBorder: 'border-[#2DD4BF]',
-  },
-  {
-    status: 'blocked', label: 'Blocked', icon: Ban,
-    header: 'bg-[rgba(244,54,76,0.12)] text-[#F4364C] border-[rgba(244,54,76,0.3)]',
-    dropBorder: 'border-[#F4364C]',
-  },
-]
+function columnsFrom(statuses: TaskStatusRow[]): Column[] {
+  return statuses.map((s) => ({
+    status: s.key,
+    label: s.label,
+    color: s.color,
+    isSignoff: s.is_signoff,
+    isReview: s.is_review,
+  }))
+}
 
 /**
  * The scheduled window. Falls back to a single stamp when only one end is set,
@@ -221,15 +196,15 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
   const deleteTask = useDeleteTask()
   const [dragId, setDragId] = useState<string | null>(null)
   const [dragOver, setDragOver] = useState<string | null>(null)
+  const { data: statuses = [] } = useTaskStatuses()
+  const columns = useMemo(() => columnsFrom(statuses), [statuses])
   const [pendingDelete, setPendingDelete] = useState<TaskListItem | null>(null)
   const [pendingMove, setPendingMove] = useState<TaskListItem | null>(null)
   const canMoveTask = useCanAccess('can_manage_projects')
   const canSignOff = useCanAccess('can_approve_tasks')
-  // Admin renames/recolours from Settings → Statuses win over the built-ins.
-  const statusMeta = useStatusOverrides('task')
   const boardRef = useDragScroll<HTMLDivElement>()
   // Optimistic status overrides so a dropped card moves instantly (no refetch flicker).
-  const [optimistic, setOptimistic] = useState<Record<string, TaskStatus>>({})
+  const [optimistic, setOptimistic] = useState<Record<string, string>>({})
 
   // Drop each override once the server data catches up to it (reconciling optimistic
   // drag state with refetched tasks — a legitimate prop-derived sync).
@@ -245,14 +220,14 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
     })
   }, [tasks])
 
-  const statusOf = (t: TaskListItem): TaskStatus => optimistic[t.id] ?? (t.status as TaskStatus)
+  const statusOf = (t: TaskListItem): string => optimistic[t.id] ?? t.status
 
   const handleDrop = (col: Column) => {
     setDragOver(null)
     const id = dragId
     setDragId(null)
     if (!id) return
-    if (SIGN_OFF_STATUSES.includes(col.status) && !canSignOff) {
+    if (col.isSignoff && !canSignOff) {
       toast('Only a project manager or team lead can mark a task approved or completed', 'error')
       return
     }
@@ -275,15 +250,14 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
     // boardRef adds click-and-hold panning: grab any empty part of the board —
     // gutters, column background, below the last card — and drag sideways.
     <div ref={boardRef} className="flex min-h-80 flex-1 snap-x snap-mandatory gap-2.5 overflow-x-auto pb-2 lg:snap-none lg:gap-3">
-      {COLUMNS.map((col) => {
+      {columns.map((col) => {
         const items = tasks.filter((t) => statusOf(t) === col.status)
-        const Icon = col.icon
         return (
           <div
             key={col.status}
             onDragOver={(e) => {
               e.preventDefault()
-              if (SIGN_OFF_STATUSES.includes(col.status) && !canSignOff) return
+              if (col.isSignoff && !canSignOff) return
               setDragOver(col.status)
             }}
             onDragLeave={() => setDragOver((c) => (c === col.status ? null : c))}
@@ -294,15 +268,22 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
               // fixed lane. Seven columns will not fit a laptop, so the board
               // scrolls sideways rather than squeezing every card thin.
               'w-[86vw] shrink-0 sm:w-87.5 lg:w-auto lg:min-w-87.5 lg:flex-1',
-              dragOver === col.status ? cn(col.dropBorder, 'bg-surface-2/40') : 'border-border-default bg-surface-1/60',
+              dragOver === col.status ? 'bg-surface-2/40' : 'border-border-default bg-surface-1/60',
             )}
+            style={dragOver === col.status ? { borderColor: col.color } : undefined}
           >
             {/* Coloured, iconed header — the column's identity, ClickUp style. */}
-            <div className={cn('mb-2 flex shrink-0 items-center gap-2 rounded-md border px-2.5 py-2', col.header)}>
-              <Icon size={14} className="shrink-0" />
+            <div
+              className="mb-2 flex shrink-0 items-center gap-2 rounded-md border px-2.5 py-2"
+              style={{ background: `${col.color}22`, borderColor: `${col.color}4D`, color: col.color }}
+            >
+              <span className="size-2 shrink-0 rounded-full bg-current" aria-hidden />
               <span className="min-w-0 flex-1 truncate font-ui text-[11.5px] font-bold uppercase tracking-wider">
-                {statusMeta[col.status]?.label ?? col.label}
+                {col.label}
               </span>
+              {col.isReview && (
+                <Eye size={12} className="shrink-0 opacity-70" aria-label="Reviewers are notified here" />
+              )}
               <span className="shrink-0 font-mono text-[11px] font-bold tabular-nums">{items.length}</span>
             </div>
             {/* overscroll-y-contain, not overscroll-contain: the vertical axis
