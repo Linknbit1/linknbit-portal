@@ -1,12 +1,12 @@
 import { useRef, useState } from 'react'
-import { MoreVertical, CheckCheck, LogOut, Trash2, Bell, BellOff } from 'lucide-react'
+import { MoreVertical, CheckCheck, LogOut, Trash2, Bell, BellOff, Circle } from 'lucide-react'
 import { Popover } from '../ui/Popover'
 import { ConfirmDialog } from '../ui/ConfirmDialog'
 import { useToast } from '../ui/toast-context'
 import { useCanAccess } from '../../hooks/useRoleFlags'
 import { useHideChannel, useDeleteChannel } from '../../hooks/useChannels'
 import { useLeaveChannel, useSetChannelMuted } from '../../hooks/useChannelMembers'
-import { useMarkChannelRead } from '../../hooks/useMessages'
+import { useMarkChannelRead, useMarkChannelUnread } from '../../hooks/useMessages'
 import { cn } from '../../lib/cn'
 import type { ChannelListItem } from '../../api/channels'
 
@@ -34,6 +34,7 @@ export function ConversationMenu({ channel, title, hasUnread, onRemoved }: Conve
 
   const canManageAll = useCanAccess('can_manage_all_channels')
   const { mutate: markRead } = useMarkChannelRead()
+  const { mutate: markUnread } = useMarkChannelUnread()
   const { mutate: hide, isPending: hiding } = useHideChannel()
   const { mutate: leave, isPending: leaving } = useLeaveChannel()
   const { mutate: destroy, isPending: destroying } = useDeleteChannel()
@@ -91,12 +92,27 @@ export function ConversationMenu({ channel, title, hasUnread, onRemoved }: Conve
 
       <Popover anchorRef={btnRef} open={open} onClose={() => setOpen(false)}>
         <div className="w-52 rounded-md border border-border-strong bg-surface-2 p-1 shadow-lg">
-          {hasUnread && (
+          {hasUnread ? (
             <button
               className={itemClass}
               onClick={() => { markRead(channel.id); setOpen(false) }}
             >
               <CheckCheck size={13} /> Mark as read
+            </button>
+          ) : (
+            // Only offered on a conversation that is already read: on an unread
+            // one it would do nothing you can see.
+            <button
+              className={itemClass}
+              onClick={() => {
+                markUnread(
+                  { channelId: channel.id },
+                  { onError: () => toast('Could not mark it unread', 'error') },
+                )
+                setOpen(false)
+              }}
+            >
+              <Circle size={13} /> Mark as unread
             </button>
           )}
 

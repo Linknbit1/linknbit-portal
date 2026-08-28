@@ -2705,6 +2705,115 @@ export type Database = {
           },
         ]
       }
+      participation_modules: {
+        Row: {
+          description: string | null
+          key: string
+          label: string
+          sort_order: number
+        }
+        Insert: {
+          description?: string | null
+          key: string
+          label: string
+          sort_order?: number
+        }
+        Update: {
+          description?: string | null
+          key?: string
+          label?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      participation_overrides: {
+        Row: {
+          is_required: boolean
+          module_key: string
+          note: string | null
+          profile_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          is_required: boolean
+          module_key: string
+          note?: string | null
+          profile_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          is_required?: boolean
+          module_key?: string
+          note?: string | null
+          profile_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "participation_overrides_module_key_fkey"
+            columns: ["module_key"]
+            isOneToOne: false
+            referencedRelation: "participation_modules"
+            referencedColumns: ["key"]
+          },
+          {
+            foreignKeyName: "participation_overrides_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "participation_overrides_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      participation_role_defaults: {
+        Row: {
+          is_required: boolean
+          module_key: string
+          role: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          is_required: boolean
+          module_key: string
+          role: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          is_required?: boolean
+          module_key?: string
+          role?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "participation_role_defaults_module_key_fkey"
+            columns: ["module_key"]
+            isOneToOne: false
+            referencedRelation: "participation_modules"
+            referencedColumns: ["key"]
+          },
+          {
+            foreignKeyName: "participation_role_defaults_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       permissions: {
         Row: {
           category: string
@@ -5085,6 +5194,10 @@ export type Database = {
       fn_auto_checkout_missing: { Args: never; Returns: undefined }
       fn_award_badges: { Args: { p_profile_id: string }; Returns: undefined }
       fn_can_report_on: { Args: { p_profile: string }; Returns: boolean }
+      fn_can_report_on_project: {
+        Args: { p_project: string }
+        Returns: boolean
+      }
       fn_chat_unread_counts: {
         Args: never
         Returns: {
@@ -5164,6 +5277,10 @@ export type Database = {
           p_type: string
         }
         Returns: undefined
+      }
+      fn_participates: {
+        Args: { p_module: string; p_profile: string }
+        Returns: boolean
       }
       fn_purge_old_notifications: { Args: never; Returns: undefined }
       fn_recalc_project_progress: {

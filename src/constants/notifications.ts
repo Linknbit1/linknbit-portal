@@ -91,7 +91,8 @@ export const NOTIFICATION_GROUPS: NotificationGroup[] = [
     label: 'Chat',
     items: [
       { type: 'chat_message', label: 'New messages', description: 'When someone messages you or posts in a channel you are in' },
-      { type: 'chat_mention', label: 'Mentions',     description: 'When someone @mentions you in chat, reaches you even in a muted conversation' },
+      { type: 'chat_mention', label: 'Mentions',     description: 'When someone @mentions you, or a team you are on, in chat. Reaches you even in a muted conversation' },
+      { type: 'chat_reply',   label: 'Replies',      description: 'When someone replies to a message of yours, muted conversation or not' },
       { type: 'chat_added',   label: 'Added to a channel', description: 'When someone adds you to a channel or group chat' },
     ],
   },

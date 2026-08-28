@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { Trash2, Pencil, SmilePlus } from 'lucide-react'
+import { Trash2, Pencil, SmilePlus, Reply, CornerUpLeft } from 'lucide-react'
 import { Avatar } from '../ui/Avatar'
 import { PersonLink } from '../shared/PersonLink'
 import { RichRenderer } from '../editor/RichRenderer'
@@ -24,6 +24,11 @@ interface MessageBubbleProps {
   onDelete: (id: string) => void
   onEdit: (message: MessageWithAuthor) => void
   onToggleReaction: (messageId: string, emoji: string) => void
+  onReply: (message: MessageWithAuthor) => void
+  /** Scrolls the thread to the quoted message and flashes it. */
+  onJumpTo: (messageId: string) => void
+  /** Tags me by name, tags a team I am on, or carries an @everyone. */
+  tagsMe: boolean
 }
 
 /**
@@ -53,6 +58,7 @@ function timeOf(iso: string): string {
 
 export function MessageBubble({
   message, startsGroup, canModerate, myProfileId, attachments, reactions, onDelete, onEdit, onToggleReaction,
+  onReply, onJumpTo, tagsMe,
 }: MessageBubbleProps) {
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [reactOpen, setReactOpen] = useState(false)
@@ -74,7 +80,19 @@ export function MessageBubble({
   }
 
   return (
-    <div className={cn('group flex gap-3 px-4 py-0.5 hover:bg-surface-1/40', startsGroup && 'mt-4')}>
+    <div
+      id={`msg-${message.id}`}
+      className={cn(
+        'group flex gap-3 px-4 py-0.5 target:bg-brand-red/10',
+        // A message aimed at you keeps a warning-tinted band and a left edge, so
+        // it is findable when scrolling back through a busy channel rather than
+        // only at the moment the notification arrives.
+        tagsMe
+          ? 'border-l-2 border-warning bg-warning/8 hover:bg-warning/12'
+          : 'hover:bg-surface-1/40',
+        startsGroup && 'mt-4',
+      )}
+    >
       {startsGroup ? (
         // PersonLink opens the shared profile card, so chat behaves like every
         // other place a person is shown.
@@ -102,6 +120,37 @@ export function MessageBubble({
             {message.edited_at && <span className="font-mono text-[11px] text-text-4">(edited)</span>}
           </div>
         )}
+        {/* What this message answers. A reply whose original was deleted keeps
+            the quote as a tombstone rather than silently losing the thread. */}
+        {message.reply_to_id && (
+          <button
+            type="button"
+            onClick={() => message.reply_to && onJumpTo(message.reply_to.id)}
+            disabled={!message.reply_to || !!message.reply_to.deleted_at}
+            className={cn(
+              'mb-1 flex w-full max-w-lg items-center gap-1.5 rounded-sm border-l-2 border-border-strong',
+              'bg-surface-2/60 px-2 py-1 text-left transition-colors',
+              message.reply_to && !message.reply_to.deleted_at && 'hover:border-brand-red hover:bg-surface-2',
+            )}
+          >
+            <CornerUpLeft size={11} className="shrink-0 text-text-4" />
+            {message.reply_to && !message.reply_to.deleted_at ? (
+              <>
+                <span className="shrink-0 font-ui text-[11.5px] font-semibold text-text-3">
+                  {message.reply_to.author?.name ?? 'Unknown'}
+                </span>
+                <span className="truncate font-ui text-[11.5px] text-text-4">
+                  {message.reply_to.body_text || 'Attachment'}
+                </span>
+              </>
+            ) : (
+              <span className="font-ui text-[11.5px] italic text-text-4">
+                The message this replies to was deleted
+              </span>
+            )}
+          </button>
+        )}
+
         {/* break-words stops an unbroken URL or long token from forcing the
             whole thread to scroll sideways on a narrow screen. */}
         <div className={cn('font-ui text-[15px] leading-relaxed wrap-break-word text-text-2', pending && 'opacity-60')}>
@@ -119,6 +168,13 @@ export function MessageBubble({
 
       {!pending && (
         <div className="flex shrink-0 items-start gap-1 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:focus-within:opacity-100">
+          <button
+            onClick={() => onReply(message)}
+            aria-label="Reply to message"
+            className="size-7 rounded-sm flex items-center justify-center text-text-3 hover:text-text-1 hover:bg-surface-3"
+          >
+            <Reply size={13} />
+          </button>
           <button
             ref={reactBtnRef}
             onClick={() => setReactOpen((v) => !v)}

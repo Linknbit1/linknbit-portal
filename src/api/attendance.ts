@@ -902,19 +902,30 @@ export interface GrantWfhPayload extends SubmitWfhPayload {
   profile_id: string
 }
 
+/**
+ * WFH granted to somebody by an admin or HR.
+ *
+ * Who grants it decides whether it is already settled. An admin's grant applies
+ * at once; HR's waits for an admin, the same segregation enterLeaveForEmployee
+ * has always had. This function used to insert `approved` whoever called it,
+ * so HR could put somebody on WFH with nobody reviewing it.
+ */
 export async function grantWfh(
   payload: GrantWfhPayload,
   grantedBy: string,
 ): Promise<WfhRequest> {
+  const { data: me } = await supabase.from('profiles').select('role').eq('id', grantedBy).single()
+  const appliesDirectly = me?.role === 'admin' || me?.role === 'super_admin'
+
   const { data, error } = await supabase
     .from('wfh_requests')
     .insert({
       ...payload,
       day_part: payload.day_part ?? 'full',
-      status: 'approved',
       granted_directly: true,
-      reviewed_by: grantedBy,
-      reviewed_at: new Date().toISOString(),
+      ...(appliesDirectly
+        ? { status: 'approved', reviewed_by: grantedBy, reviewed_at: new Date().toISOString() }
+        : { status: 'pending' }),
     })
     .select()
     .single()

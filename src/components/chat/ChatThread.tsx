@@ -14,6 +14,9 @@ import { useMessageAttachments } from '../../hooks/useMessageAttachments'
 import { useChannelReactions, useToggleReaction } from '../../hooks/useMessageReactions'
 import { useRealtimeChatMessages } from '../../hooks/realtime/useRealtimeChatMessages'
 import { useCanAccess } from '../../hooks/useRoleFlags'
+import { useTeams } from '../../hooks/useTeams'
+import { useTeamMembers } from '../../hooks/useTeamMembers'
+import { EVERYONE_MENTION_ID } from '../../lib/richText'
 import { useAuthContext } from '../../context/AuthContext'
 import { fromDbDoc } from '../../lib/richText'
 import { channelTitle, dmCounterpart } from './chatUtils'
@@ -41,6 +44,7 @@ export function ChatThread({ channelId, hideHeader }: ChatThreadProps) {
   const { data: reactions = [] } = useChannelReactions(channelId)
   const { mutate: toggleReaction } = useToggleReaction()
   const [editing, setEditing] = useState<{ id: string; doc: JSONContent | null } | null>(null)
+  const [replyTo, setReplyTo] = useState<MessageWithAuthor | null>(null)
   const [infoOpen, setInfoOpen] = useState(false)
 
   useRealtimeChatMessages(channelId)
@@ -50,10 +54,52 @@ export function ChatThread({ channelId, hideHeader }: ChatThreadProps) {
     if (channelId) markRead(channelId)
   }, [channelId, messages.length, markRead])
 
+  /**
+   * Who has read as far as a given message.
+   *
+   * Derived from last_read_at rather than stored per message: a receipt table
+   * would be one row per member per message for information that this single
+   * timestamp already carries. You are excluded, since your own message being
+   * seen by you is not news.
+   */
+  const readersOf = useMemo(() => (message: MessageWithAuthor) =>
+    members.filter((m) =>
+      m.id !== profile?.id
+      && m.last_read_at
+      && new Date(m.last_read_at).getTime() >= new Date(message.created_at).getTime()),
+  [members, profile?.id])
+
   const mentionItems = useMemo(
     () => members.map((m) => ({ id: m.id, name: m.name, avatar_url: m.avatar_url })),
     [members],
   )
+
+  // Only offered to people allowed to use it. Someone without the permission can
+  // still type the text, it just reaches nobody, which is how @everyone behaves.
+  const canMentionTeams = useCanAccess('can_mention_teams')
+  const { data: teams = [] } = useTeams()
+  const teamItems = useMemo(
+    () => (canMentionTeams ? teams.map((t) => ({ id: t.id, name: t.name })) : []),
+    [canMentionTeams, teams],
+  )
+
+  /**
+   * Ids that make a message "about me": my own, plus every team I am on, plus
+   * the @everyone sentinel. Compared against the ids in each message's doc so
+   * the thread can pick out the ones that were aimed at me.
+   */
+  const { data: memberships = [] } = useTeamMembers()
+  // Read out once so the memo depends on the id rather than the whole profile,
+  // which is what the React Compiler needs to keep the memoization.
+  const myId = profile?.id
+  const myMentionIds = useMemo(() => {
+    const ids = new Set<string>([EVERYONE_MENTION_ID])
+    if (myId) ids.add(myId)
+    for (const m of memberships) {
+      if (m.profile_id === myId) ids.add(m.team_id)
+    }
+    return ids
+  }, [memberships, myId])
 
   const title = channel ? channelTitle(channel, profile?.id) : ''
   const counterpart = channel ? dmCounterpart(channel, profile?.id) : null
@@ -65,10 +111,22 @@ export function ChatThread({ channelId, hideHeader }: ChatThreadProps) {
         bodyText: payload.bodyText,
         bodyDoc: payload.bodyDoc,
         attachmentIds: payload.attachmentIds,
+        replyToId: replyTo?.id ?? null,
+        // The quote for the optimistic bubble, so the reply renders complete
+        // rather than losing its context until the realtime row arrives.
+        replyTo: replyTo
+          ? {
+              id: replyTo.id,
+              body_text: replyTo.body_text,
+              deleted_at: null,
+              author: replyTo.author ? { id: replyTo.author.id, name: replyTo.author.name } : null,
+            }
+          : null,
         author: profile ? { id: profile.id, name: profile.name, avatar_url: profile.avatar_url, role: profile.role } : null,
       },
       { onError: () => toast('Message failed to send', 'error') },
     )
+    setReplyTo(null)
   }
 
   return (
@@ -134,6 +192,9 @@ export function ChatThread({ channelId, hideHeader }: ChatThreadProps) {
             onEdit={(m: MessageWithAuthor) => setEditing({ id: m.id, doc: fromDbDoc(m.body_doc) })}
             onToggleReaction={(messageId, emoji) =>
               toggleReaction({ messageId, emoji, channelId }, { onError: () => toast('Could not react to that message', 'error') })}
+            onReply={setReplyTo}
+            readersOf={readersOf}
+            myMentionIds={myMentionIds}
           />
         </div>
 
@@ -159,6 +220,9 @@ export function ChatThread({ channelId, hideHeader }: ChatThreadProps) {
         editing={editing}
         onCancelEdit={() => setEditing(null)}
         onSend={handleSend}
+        teamItems={teamItems}
+        replyTo={replyTo}
+        onCancelReply={() => setReplyTo(null)}
         onSaveEdit={(payload) => {
           if (!editing) return
           editMessage(

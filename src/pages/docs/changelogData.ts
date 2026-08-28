@@ -31,11 +31,67 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: '1.22.0',
+    date: '2026-08-29',
+    title: 'One place for who takes part, and reports that stay in your lane',
+    highlight:
+      'Attendance, standup, timesheet, the task timer and points now answer to one screen, reports are scoped to the projects and people you actually answer for, and filing leave for somebody else is back.',
+    entries: [
+      {
+        kind: 'added',
+        text: 'Settings → Participation is one grid of who is expected to check in, submit a standup, appear on the timesheet, run the task timer and earn points. It replaces a checkbox on the person, a separate standup screen, and a permission you had to remove; the timesheet and the timer had no way to exclude anyone at all.',
+      },
+      {
+        kind: 'improved',
+        text: 'Reports now show the projects you answer for. A team lead sees projects running their team’s service, a project manager sees the ones they manage, and opening a project report you have no part in is refused rather than answered.',
+      },
+      {
+        kind: 'added',
+        feature: 'can_manage_attendance',
+        text: 'Filing leave or working from home for somebody else is back, as "Add for someone else" on the Requests screen. An admin doing it applies it at once; when HR does it, an admin still approves. That rule existed already and had simply lost its way in.',
+      },
+      {
+        kind: 'fixed',
+        feature: 'can_manage_attendance',
+        text: 'Granting somebody working from home used to be approved on the spot whoever did it, so HR could put a person on WFH with nobody reviewing it. It now waits for an admin, the way filing leave for somebody always has.',
+      },
+      {
+        kind: 'improved',
+        text: 'The Requests screen says whose requests you are looking at, and the type filters only appear for people who review them. You could only ever see your own, but the screen read as though it were the whole company’s.',
+      },
+    ],
+  },
+  {
+    version: '1.21.0',
+    date: '2026-08-29',
+    title: 'Replies, read receipts and team tags',
+    entries: [
+      {
+        kind: 'added',
+        text: 'Reply to a specific message. Hover it, press the reply arrow, and your message carries a quote of theirs; pressing the quote jumps back to the original. A reply reaches the person you answered even in a muted conversation, the same way a mention does.',
+      },
+      {
+        kind: 'added',
+        text: '"Seen by" appears under your most recent message, showing who has caught up. It reads how far each person has got in the conversation, so nothing new is recorded and nobody is tracked message by message.',
+      },
+      {
+        kind: 'added',
+        text: 'A message that tags you, tags a team you are on, or carries an @everyone is banded in amber. Scrolling back through a busy channel, the ones meant for you are now findable rather than lost in the run.',
+      },
+      {
+        kind: 'added',
+        text: 'Type @ and a team name to tag a whole team. It reaches that team’s members who are in the conversation, muted or not. Because it is loud, it takes its own permission, held by admins, HR, project managers and team leads. For anyone else the text still reads as written and notifies nobody.',
+      },
+      {
+        kind: 'added',
+        text: 'A conversation you have already read can be marked unread again from its menu, for the ones you cannot deal with yet.',
+      },
+    ],
+  },
+  {
     version: '1.20.0',
     date: '2026-08-29',
     title: 'Reviewers, and picking anyone you like',
-    highlight:
-      'A task can now say who is checking it, not just who is doing it, and you can put someone on a task before they are staffed on the service. Choosing them staffs them.',
     entries: [
       {
         kind: 'added',

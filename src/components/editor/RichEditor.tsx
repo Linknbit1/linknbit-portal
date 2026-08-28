@@ -25,6 +25,11 @@ interface RichEditorProps {
   mentionItems?: PersonMini[]
   /** Offer @everyone in the mention list. Chat only — a task doc has no room to tag. */
   allowEveryone?: boolean
+  /**
+   * Teams offerable as @team-name. The id is the team's own uuid, which is what
+   * lets the notifier tell a team tag from a person without a second field.
+   */
+  teamItems?: { id: string; name: string }[]
   /** Project files/links taggable with # (kept fresh via a ref). */
   fileItems?: FileMentionItem[]
   /** Compact composer mode: Enter submits (Shift+Enter = newline). */
@@ -37,12 +42,14 @@ interface RichEditorProps {
 }
 
 export function RichEditor({
-  value, onChange, onBlur, placeholder, mentionItems = [], allowEveryone, fileItems, compact, onSubmit, className, autoFocus, onEditorReady,
+  value, onChange, onBlur, placeholder, mentionItems = [], allowEveryone, teamItems, fileItems, compact, onSubmit, className, autoFocus, onEditorReady,
 }: RichEditorProps) {
   const mentionsRef = useRef(mentionItems)
   useEffect(() => { mentionsRef.current = mentionItems }, [mentionItems])
   const everyoneRef = useRef(allowEveryone)
   useEffect(() => { everyoneRef.current = allowEveryone }, [allowEveryone])
+  const teamsRef = useRef(teamItems ?? [])
+  useEffect(() => { teamsRef.current = teamItems ?? [] }, [teamItems])
   const filesRef = useRef(fileItems ?? [])
   useEffect(() => { filesRef.current = fileItems ?? [] }, [fileItems])
   const enableFileRefs = fileItems !== undefined
@@ -77,10 +84,17 @@ export function RichEditor({
               .filter((p) => p.name.toLowerCase().includes(q))
               .slice(0, 8)
               .map((p) => ({ id: p.id, label: p.name, avatar: { name: p.name, url: p.avatar_url } }))
-            // Pinned to the top, the way Discord lists it.
+            // Teams above people: there are few of them and they are the
+            // broader stroke, so burying them under eight names would hide them.
+            const teams = teamsRef.current
+              .filter((t) => t.name.toLowerCase().includes(q))
+              .slice(0, 4)
+              .map((t) => ({ id: t.id, label: t.name, avatar: { name: '#', url: null } }))
+
+            // Pinned to the very top, the way Discord lists it.
             return everyoneRef.current && 'everyone'.startsWith(q)
-              ? [{ id: EVERYONE_MENTION_ID, label: 'everyone', avatar: { name: '@', url: null } }, ...people]
-              : people
+              ? [{ id: EVERYONE_MENTION_ID, label: 'everyone', avatar: { name: '@', url: null } }, ...teams, ...people]
+              : [...teams, ...people]
           },
           render: renderSuggestion(SuggestionList),
         },

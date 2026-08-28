@@ -1,6 +1,6 @@
 import { useRef, useState, type DragEvent } from 'react'
 import { type Editor, type JSONContent } from '@tiptap/react'
-import { SendHorizonal, X, Paperclip, Smile } from 'lucide-react'
+import { SendHorizonal, X, Paperclip, Smile, CornerUpLeft } from 'lucide-react'
 import { RichEditor } from '../editor/RichEditor'
 import { EmojiPicker } from './EmojiPicker'
 import { ChatAttachmentChips, type PendingUpload } from './ChatAttachmentChips'
@@ -22,15 +22,20 @@ export interface ComposerPayload {
 interface MessageComposerProps {
   channelId: string
   mentionItems: PersonMini[]
+  /** Teams offerable as @team-name; empty when the sender may not tag one. */
+  teamItems?: { id: string; name: string }[]
   placeholder?: string
   editing?: { id: string; doc: JSONContent | null } | null
   onCancelEdit?: () => void
   onSend: (payload: ComposerPayload) => void
+  /** The message being answered, shown above the input until sent or cancelled. */
+  replyTo?: { id: string; body_text: string; author: { name: string } | null } | null
+  onCancelReply?: () => void
   onSaveEdit?: (payload: { bodyText: string; bodyDoc: Json | null }) => void
 }
 
 export function MessageComposer({
-  channelId, mentionItems, placeholder, editing, onCancelEdit, onSend, onSaveEdit,
+  channelId, mentionItems, teamItems, placeholder, editing, onCancelEdit, onSend, onSaveEdit, replyTo, onCancelReply,
 }: MessageComposerProps) {
   const toast = useToast()
   const [doc, setDoc] = useState<JSONContent>(editing?.doc ?? emptyDoc())
@@ -147,6 +152,25 @@ export function MessageComposer({
       onDragLeave={() => setDragOver(false)}
       onDrop={onDrop}
     >
+      {/* What you are answering. Editing wins: you cannot do both at once, and
+          showing two banners would leave it ambiguous which the Send applies to. */}
+      {!editing && replyTo && (
+        <div className="mb-1.5 flex items-center gap-2 rounded-sm border-l-2 border-brand-red bg-surface-2/60 px-2 py-1">
+          <CornerUpLeft size={12} className="shrink-0 text-text-4" />
+          <span className="min-w-0 flex-1 truncate font-ui text-[11.5px] text-text-3">
+            Replying to <span className="font-semibold text-text-2">{replyTo.author?.name ?? 'Unknown'}</span>
+            {replyTo.body_text ? `: ${replyTo.body_text}` : ''}
+          </span>
+          <button
+            onClick={onCancelReply}
+            className="shrink-0 text-text-3 transition-colors hover:text-text-1"
+            aria-label="Cancel reply"
+          >
+            <X size={13} />
+          </button>
+        </div>
+      )}
+
       {editing && (
         <div className="flex items-center gap-2 mb-1.5 px-1">
           <span className="font-mono text-[10px] uppercase tracking-wider text-text-4">Editing message</span>
@@ -178,6 +202,7 @@ export function MessageComposer({
             onChange={setDoc}
             onEditorReady={(editor) => { editorRef.current = editor }}
             mentionItems={mentionItems}
+            teamItems={teamItems}
           allowEveryone
             placeholder={placeholder ?? 'Write a message…'}
             compact

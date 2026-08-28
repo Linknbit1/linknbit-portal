@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react'
-import { Loader2, Home, Plane, AlertCircle, Hourglass, Check, X, Inbox, CalendarX2 } from 'lucide-react'
+import { Loader2, Home, Plane, AlertCircle, Hourglass, Check, X, Inbox, CalendarX2, Plus } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { Avatar } from '../ui/Avatar'
 import { PersonLink } from './PersonLink'
+import { Button } from '../ui/Button'
+import { EnterRequestForEmployeeModal } from './EnterRequestForEmployeeModal'
 import { formatDate } from '../../lib/utils'
 import { DAY_PART_LABEL } from '../../lib/dayParts'
 import { useAuthContext } from '../../context/AuthContext'
@@ -219,6 +221,7 @@ export function AttendanceRequests() {
   // Which row has its day strip open. One at a time: the strip is a wide row of
   // chips, and several open at once turns the queue into a wall.
   const [editingDays, setEditingDays] = useState<string | null>(null)
+  const [entering, setEntering] = useState(false)
 
   const reviewLeave = useReviewLeave()
   const reviewWfh = useReviewWfh()
@@ -373,7 +376,27 @@ export function AttendanceRequests() {
 
   return (
     <div className="flex flex-col gap-4">
+      {/* Says whose requests these are. Without it the screen reads as the whole
+          company's queue to someone who is only ever shown their own, which is
+          what made it look like everybody could see everybody. */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="font-ui text-[12.5px] text-text-3">
+          {canReview
+            ? 'Every request you are able to decide on.'
+            : 'Your requests. Only you and whoever reviews them can see these.'}
+        </p>
+        {canReview && (
+          <Button size="sm" variant="secondary" iconLeft={<Plus size={14} />} onClick={() => setEntering(true)}>
+            Add for someone else
+          </Button>
+        )}
+      </div>
+
       <div className="flex flex-col gap-3">
+        {/* The type chips are a reviewer's tool: they exist to work a queue down
+            by kind. On your own handful of requests they were the second of two
+            filter rows filtering almost nothing. */}
+        {canReview && (
         <div className="flex flex-wrap items-center gap-2">
           <FilterChip active={kind === 'all'} onClick={() => setKind('all')} count={totalPending}>
             All types
@@ -394,6 +417,7 @@ export function AttendanceRequests() {
             )
           })}
         </div>
+        )}
 
         <div className="flex flex-wrap items-center gap-2">
           {STATUS_FILTERS.map((f) => (
@@ -536,6 +560,8 @@ export function AttendanceRequests() {
           })
         )}
       </div>
+
+      {entering && <EnterRequestForEmployeeModal onClose={() => setEntering(false)} />}
     </div>
   )
 }

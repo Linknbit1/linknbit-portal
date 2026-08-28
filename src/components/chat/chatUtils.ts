@@ -1,3 +1,5 @@
+import { extractMentionIds, fromDbDoc } from '../../lib/richText'
+import type { Json } from '../../types/database'
 import type { ChannelListItem } from '../../api/channels'
 import type { PersonMini } from '../../api/projects'
 
@@ -34,4 +36,21 @@ export function startsNewGroup(
 
 export function isOptimistic(id: string): boolean {
   return id.startsWith('optimistic-')
+}
+
+/**
+ * Was this message aimed at me?
+ *
+ * True when it tags me by name, tags a team I am on, or carries an @everyone.
+ * Read straight out of the stored doc rather than from a flag on the row: the
+ * mention ids are already in the body, and a denormalised "mentions" column
+ * would be one more thing to keep true.
+ */
+export function mentionsMe(
+  message: { body_doc: Json | null; author_id: string | null },
+  myMentionIds: ReadonlySet<string>,
+): boolean {
+  // Your own message tagging your own team is not a message aimed at you.
+  if (message.author_id && myMentionIds.has(message.author_id)) return false
+  return extractMentionIds(fromDbDoc(message.body_doc)).some((id) => myMentionIds.has(id))
 }

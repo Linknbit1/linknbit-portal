@@ -327,6 +327,11 @@ export const DOC_CHAPTERS: DocChapter[] = [
         ],
         notes: [
           'Some channels are private; you will only see them if you have been added.',
+          'Reply to a particular message with the arrow that appears when you hover it. Your reply carries a quote of theirs, and pressing the quote jumps to the original.',
+          'A message that tags you, tags a team you are on, or carries an @everyone is banded in amber so you can find it scrolling back, not only when the notification arrives.',
+          'Under your last message, "Seen by" shows who has caught up. It follows how far each person has read the conversation.',
+          'A conversation you have read can be marked unread again from its menu, for when you cannot deal with it yet.',
+          'Type @ and a team name to tag a whole team. Only some roles may do this; for everyone else the text still appears but reaches nobody.',
           'Deleting a message deletes the files attached to it, and they leave the Files panel with it. The message itself stays as a note that something was removed.',
           'Removing a file from the message box before you send cancels it, even mid-upload.',
         ],
@@ -721,7 +726,8 @@ export const DOC_CHAPTERS: DocChapter[] = [
         ],
         notes: [
           'Leave, WFH, overtime and exceptions all queue up together. The type filters carry their own pending counts, so you can see where the backlog is without opening each one.',
-          'Everyone can read the queue; Approve and Reject appear only for those who manage attendance.',
+          'You only ever see your own requests here, plus anyone whose requests you review. Nobody sees a colleague’s leave unless it is their job to decide on it.',
+          'Whoever manages attendance can file leave or WFH for somebody else with "Add for someone else". An admin doing that applies it straight away; when HR does it, an admin still has to approve it.',
           'An approved leave or WFH day updates your attendance record for that day automatically.',
           'On a first-half day off you are not due in until the second half starts, so your arrival is judged against that time plus the usual grace, coming in before it counts as on time, not late.',
           'A multi-day request is listed under every day it covers, so the team can see who is off on a given date. It is still one request: the Approve and Reject buttons appear only on its first day.',
@@ -969,10 +975,40 @@ export const DOC_CHAPTERS: DocChapter[] = [
         ],
       },
       {
+        id: 'participation',
+        title: 'Who takes part in what',
+        summary:
+          'One grid saying who is expected to check in, submit a standup, appear on the timesheet, run the task timer, and earn points.',
+        where: 'Settings → Participation',
+        roles: ['super_admin', 'admin', 'hr'],
+        procedures: [
+          {
+            title: 'Exclude one person from one thing',
+            steps: [
+              'Open Settings → Participation.',
+              'Find them, and click the cell under the module in question.',
+              'Clicking moves it between taking part, excluded, and following their role default.',
+            ],
+          },
+          {
+            title: 'Change it for a whole role',
+            steps: [
+              'Use the "Everyone on ..." row at the top of the grid.',
+              'Everybody on that role follows it, unless they have been set individually.',
+            ],
+          },
+        ],
+        notes: [
+          'A faint mark is inherited from the role. A solid one was decided for that person, and beats the role.',
+          'These used to be in three different places and two of them did not exist: attendance was a checkbox on the person, standup had its own screen, and gamification meant taking a permission away. It is one question, so it is now one screen.',
+          'Excluding somebody from attendance stops them being counted as missing. Excluding them from standup stops them being asked for one or marked late.',
+        ],
+      },
+      {
         id: 'standup-settings',
         title: 'Standup rules and who submits',
         summary:
-          'When the standup opens, what it is worth, how much has to be written, and which roles or people have to submit one.',
+          'When the standup opens, what it is worth, and how much has to be written. Who has to submit one is set on Settings → Participation, with everything else the same question applies to.',
         where: 'Settings → Standup',
         feature: 'can_manage_standups',
         procedures: [

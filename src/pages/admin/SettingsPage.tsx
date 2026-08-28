@@ -2,8 +2,7 @@ import React, { useMemo, useState } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
 import {
   Shield, ChevronRight, CircleDot, Loader2, Shapes, IdCard, Plus, Trash2, Smartphone, Bell, Eye,
-  CalendarCheck, ClipboardList, Trophy, type LucideIcon,
-} from 'lucide-react'
+  CalendarCheck, ClipboardList, Trophy, type LucideIcon, UserCheck } from 'lucide-react'
 import { useStatusLabels, useStatusOverrides, useSaveStatusLabel, useResetStatusLabel } from '../../hooks/useStatusLabels'
 import { STATUS_LABELS, PROJECT_STATUS_LABELS } from '../../lib/utils'
 import type { StatusScope } from '../../api/statusLabels'
@@ -37,10 +36,12 @@ import { AttendanceRulesPanel } from '../../components/settings/AttendanceRulesP
 import { StandupSettingsPanel } from '../../components/settings/StandupSettingsPanel'
 import { GamificationRulesPanel } from '../../components/settings/GamificationRulesPanel'
 import { isPermissionLocked, LOCKED_REASON } from '../../lib/roleLocks'
+import { ParticipationMatrix } from '../../components/shared/ParticipationMatrix'
 import { cn } from '../../lib/cn'
 
 type Tab =
   | 'devices' | 'notifications'
+  | 'participation'
   | 'attendance' | 'standup' | 'gamification'
   | 'services' | 'statuses' | 'designations' | 'permissions'
 
@@ -55,6 +56,8 @@ const SETTINGS_SECTIONS: { key: Tab; label: string; icon: LucideIcon }[] = [
   // The three rule-sets that used to live inside their own modules. Only the
   // configuration moved — the registers, approvals and quest board stay where
   // the work happens.
+  // One screen for the question all three of these used to answer separately.
+  { key: 'participation', label: 'Participation', icon: UserCheck },
   { key: 'attendance',   label: 'Attendance',   icon: CalendarCheck },
   { key: 'standup',      label: 'Standup',      icon: ClipboardList },
   { key: 'gamification', label: 'Gamification', icon: Trophy },
@@ -67,6 +70,7 @@ const SETTINGS_SECTIONS: { key: Tab; label: string; icon: LucideIcon }[] = [
 function visibleSectionsFor(role: string | undefined): typeof SETTINGS_SECTIONS {
   return SETTINGS_SECTIONS.filter(({ key }) => {
     if (key === 'devices' || key === 'notifications') return !!role
+    if (key === 'participation') return role === 'super_admin' || role === 'admin' || role === 'hr'
     if (key === 'attendance')   return role === 'super_admin' || role === 'admin' || role === 'hr'
     if (key === 'standup')      return role === 'super_admin' || role === 'admin' || role === 'hr'
     if (key === 'gamification') return role === 'super_admin' || role === 'admin' || role === 'hr'
@@ -603,6 +607,7 @@ export default function SettingsPage({ mobileSection }: { mobileSection?: string
       </div>
     )
     : tab === 'notifications' ? <NotificationPreferencesCard />
+    : tab === 'participation' ? <ParticipationMatrix />
     : tab === 'attendance'   ? <AttendanceRulesPanel />
     : tab === 'standup'      ? <StandupSettingsPanel />
     : tab === 'gamification' ? <GamificationRulesPanel />
