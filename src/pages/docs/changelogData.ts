@@ -13,11 +13,34 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: 'v1.16',
+    date: '2026-08-28',
+    title: 'My Day, sharpened',
+    highlight:
+      'Your work now shows each task’s status and detail, tasks open in the project side panel instead of a page of their own, Out today is scoped to your teams, and a mention stops waiting on you once you have replied.',
+    entries: [
+      {
+        kind: 'improved',
+        text: 'Your work now carries each task’s status and priority, its due date, and counts of subtasks, comments and attachments, along with anyone it is shared with. Overdue and Due today became flags beside the status rather than a chip standing in for it, so a task can read as In review and overdue at the same time.',
+      },
+      {
+        kind: 'improved',
+        text: 'Clicking a task in Your work opens it in the side panel of its project, with the board still behind it — the same panel the board itself uses. Closing it leaves you where you were instead of on a page you have to navigate back from.',
+      },
+      {
+        kind: 'improved',
+        text: 'Out today now lists the people you share a team with rather than the whole company. Being on several teams widens it on its own, and HR and admins still see everybody. The full roster is one click away under Roster.',
+      },
+      {
+        kind: 'fixed',
+        text: 'A mention stops sitting in Waiting on you once you have replied on that task. It used to stay until somebody thought to mark the notification read, so a thread you had already answered kept a number on the menu.',
+      },
+    ],
+  },
+  {
     version: 'v1.15',
     date: '2026-08-26',
     title: 'One less screen, and a clearer name',
-    highlight:
-      'Inbox is now called Notifications, and the Dashboard has been retired — signing in takes you straight to My Day.',
     entries: [
       {
         kind: 'improved',

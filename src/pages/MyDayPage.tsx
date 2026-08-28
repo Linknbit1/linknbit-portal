@@ -3,12 +3,15 @@ import { Link } from 'react-router-dom'
 import {
   CalendarClock, Video, Play, Square, CircleDot, ClipboardList,
   Bell, Home, Plane, ArrowRight, Loader2, CheckCircle2,
+  GitBranch, MessageSquare, Paperclip, Timer, CalendarDays,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '../lib/cn'
 import { Topbar } from '../components/layout/Topbar'
-import { Avatar } from '../components/ui/Avatar'
+import { Avatar, AvatarGroup } from '../components/ui/Avatar'
 import { AttendanceCheckInCard } from '../components/shared/AttendanceCheckInCard'
+import { StatusChip } from '../components/shared/StatusChip'
+import { PriorityChip } from '../components/shared/PriorityChip'
 import { useAuthContext } from '../context/AuthContext'
 import { useMyMeetings } from '../hooks/useBd'
 import { useTasks } from '../hooks/useTasks'
@@ -16,6 +19,12 @@ import { useStandupWindow } from '../hooks/useStandups'
 import { useDayRoster } from '../hooks/useAttendance'
 import { useWaitingOnYou } from '../hooks/useWaitingOnYou'
 import { useRunningTimeEntry, useStartTimer, useStopTimer } from '../hooks/useTimeEntries'
+import { useMyPermissions } from '../hooks/usePermissions'
+import { useTeammateIds } from '../hooks/useScopeFilter'
+import { ADMINISTRATOR } from '../api/permissions'
+import { projectTaskDrawerHref } from '../constants/notifications'
+import { formatStamp } from '../lib/utils'
+import { formatEstimate } from '../lib/duration'
 import type { TaskListItem } from '../api/tasks'
 import type { BdMeeting } from '../types'
 
@@ -150,15 +159,33 @@ function MeetingRow({
 
 type Bucket = 'overdue' | 'today' | 'in_progress'
 
-const BUCKET_META: Record<Bucket, { label: string; className: string }> = {
+/**
+ * The urgency flag, which answers "why is this on today's list" — a different
+ * question from the task's own status, which now sits beside it. `in_progress`
+ * has no flag: the status chip already says so, and two chips repeating each
+ * other is what made the row hard to scan.
+ */
+const BUCKET_META: Record<Bucket, { label: string; className: string } | null> = {
   overdue: { label: 'Overdue', className: 'bg-error/10 text-error border-error/30' },
   today: { label: 'Due today', className: 'bg-warning/12 text-warning border-warning/30' },
-  in_progress: { label: 'In progress', className: 'bg-service-dev/12 text-service-dev border-service-dev/30' },
+  in_progress: null,
+}
+
+/** One count with its icon — the same vocabulary the board cards use. */
+function MetaCount({ icon: Icon, count, label }: { icon: LucideIcon; count: number; label: string }) {
+  if (count <= 0) return null
+  return (
+    <span className="flex items-center gap-1 font-mono text-[10.5px]" title={`${count} ${label}`}>
+      <Icon size={11} />
+      {count}
+    </span>
+  )
 }
 
 function TaskRow({
   task,
   bucket,
+  myId,
   runningTaskId,
   onStart,
   onStop,
@@ -166,54 +193,116 @@ function TaskRow({
 }: {
   task: TaskListItem
   bucket: Bucket
+  myId: string
   runningTaskId: string | null
   onStart: (id: string) => void
   onStop: () => void
   busy: boolean
 }) {
   const running = runningTaskId === task.id
-  const meta = BUCKET_META[bucket]
+  const flag = BUCKET_META[bucket]
+  const estimate = formatEstimate(task.estimated_minutes)
+  const service = task.project_service?.service ?? null
+  // Everyone else on the task — that it is shared changes how you pick it up.
+  const others = task.assignees.filter((a) => a.id !== myId)
+
+  // Opens the task in the project drawer rather than on its own page, so the
+  // board stays behind it and closing lands you back in context. Tasks with no
+  // project (rare, but possible) keep the standalone page.
+  const href = task.project
+    ? projectTaskDrawerHref(task.project.id, task.id)
+    : `/admin/tasks/${task.id}`
 
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 px-4 py-2.5 border-b border-border-subtle last:border-0">
-      <div className="min-w-0 flex-1">
+    <div className="flex flex-col gap-1.5 px-4 py-3 border-b border-border-subtle last:border-0">
+      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
         <Link
-          to={`/admin/tasks/${task.id}`}
-          className="block font-ui font-medium text-[13px] text-text-1 truncate hover:text-brand-red"
+          to={href}
+          className="min-w-0 flex-1 font-ui font-medium text-[13px] text-text-1 truncate hover:text-brand-red"
         >
           {task.title}
         </Link>
-        <p className="font-ui text-[11.5px] text-text-4 truncate">
-          {task.project?.name ?? 'No project'}
-          {task.stage?.name ? ` · ${task.stage.name}` : ''}
-        </p>
+
+        <StatusChip status={task.status} />
+        <PriorityChip priority={task.priority} />
+        {flag && (
+          <span
+            className={cn(
+              'inline-flex items-center px-1.5 py-0.5 rounded-sm border',
+              'font-ui text-[10.5px] font-semibold uppercase tracking-wider whitespace-nowrap',
+              flag.className,
+            )}
+          >
+            {flag.label}
+          </span>
+        )}
+
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => (running ? onStop() : onStart(task.id))}
+          aria-label={running ? 'Stop timer' : 'Start timer'}
+          className={cn(
+            'inline-flex items-center gap-1 px-2 py-1 rounded-sm border font-ui text-[11.5px] font-semibold transition-colors disabled:opacity-50',
+            running
+              ? 'border-brand-red/30 bg-brand-red/12 text-brand-red hover:bg-brand-red/20'
+              : 'border-border-default bg-surface-2 text-text-3 hover:text-text-1',
+          )}
+        >
+          {running ? <Square size={11} /> : <Play size={11} />}
+          {running ? 'Stop' : 'Start'}
+        </button>
       </div>
 
-      <span
-        className={cn(
-          'inline-flex items-center px-1.5 py-0.5 rounded-sm border',
-          'font-ui text-[10.5px] font-semibold uppercase tracking-wider whitespace-nowrap',
-          meta.className,
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-text-4">
+        {service && (
+          <span className="flex items-center gap-1.5 font-ui text-[11.5px] min-w-0">
+            {/* The service colour is admin-set per row, so it can only be inline. */}
+            <span
+              className="size-1.5 rounded-full shrink-0"
+              style={{ background: service.color }}
+              aria-hidden
+            />
+            <span className="truncate">{service.name}</span>
+          </span>
         )}
-      >
-        {meta.label}
-      </span>
-
-      <button
-        type="button"
-        disabled={busy}
-        onClick={() => (running ? onStop() : onStart(task.id))}
-        aria-label={running ? 'Stop timer' : 'Start timer'}
-        className={cn(
-          'inline-flex items-center gap-1 px-2 py-1 rounded-sm border font-ui text-[11.5px] font-semibold transition-colors disabled:opacity-50',
-          running
-            ? 'border-brand-red/30 bg-brand-red/12 text-brand-red hover:bg-brand-red/20'
-            : 'border-border-default bg-surface-2 text-text-3 hover:text-text-1',
+        <span className="font-ui text-[11.5px] truncate min-w-0">
+          {task.project?.name ?? 'No project'}
+          {task.stage?.name ? ` · ${task.stage.name}` : ''}
+        </span>
+        {task.due_date && (
+          <span
+            className={cn('flex items-center gap-1 font-mono text-[10.5px]', bucket === 'overdue' && 'text-error')}
+            title="Due date"
+          >
+            <CalendarDays size={11} />
+            {formatStamp(task.due_date)}
+          </span>
         )}
-      >
-        {running ? <Square size={11} /> : <Play size={11} />}
-        {running ? 'Stop' : 'Start'}
-      </button>
+        {task.subtask_count > 0 && (
+          <span className="flex items-center gap-1 font-mono text-[10.5px]" title="Subtasks done">
+            <GitBranch size={11} />
+            {task.subtask_done}/{task.subtask_count}
+          </span>
+        )}
+        <MetaCount icon={MessageSquare} count={task.comment_count} label="comments" />
+        <MetaCount icon={Paperclip} count={task.attachment_count} label="attachments" />
+        {estimate && (
+          <span className="flex items-center gap-1 font-mono text-[10.5px]" title="Time estimate">
+            <Timer size={11} />
+            {estimate}
+          </span>
+        )}
+        {others.length > 0 && (
+          <span className="ml-auto flex items-center gap-1.5" title="Also assigned">
+            <AvatarGroup
+              users={others.map((a) => ({ id: a.id, name: a.name, avatarUrl: a.avatar_url }))}
+              max={3}
+              size="xs"
+            />
+          </span>
+        )}
+      </div>
     </div>
   )
 }
@@ -243,6 +332,16 @@ export default function MyDayPage() {
   // Same source as Notifications and its badge, so the three can never disagree
   // about whether something is waiting.
   const { items: waiting, total: waitingTotal } = useWaitingOnYou()
+
+  // Out today is scoped to the people this person actually works alongside.
+  // Attendance managers (HR, admins) see the whole company, because chasing an
+  // unexplained absence anywhere is their job; everybody else — an employee on
+  // one team, a PM on five — sees whoever shares a team with them. One rule,
+  // and it widens on its own as somebody joins more teams.
+  const { data: permissions } = useMyPermissions()
+  const seesEveryone =
+    !!permissions && (permissions.includes(ADMINISTRATOR) || permissions.includes('can_manage_attendance'))
+  const teammates = useTeammateIds(true)
 
   const { data: running } = useRunningTimeEntry()
   const startTimer = useStartTimer()
@@ -290,9 +389,19 @@ export default function MyDayPage() {
   }, [tasksQ.data, myId, today])
 
   const away = useMemo(
-    () => (rosterQ.data ?? []).filter((r) => r.status === 'leave' || r.status === 'wfh'),
-    [rosterQ.data],
+    () =>
+      (rosterQ.data ?? []).filter(
+        (r) =>
+          (r.status === 'leave' || r.status === 'wfh') &&
+          r.profile_id !== myId &&
+          (seesEveryone || teammates.has(r.profile_id)),
+      ),
+    [rosterQ.data, myId, seesEveryone, teammates],
   )
+
+  // Somebody on no team at all would otherwise stare at "Everybody is in" for
+  // ever, which reads as a fact rather than as an empty scope.
+  const hasScope = seesEveryone || teammates.size > 1
 
   const standup = windowQ.data
 
@@ -370,6 +479,7 @@ export default function MyDayPage() {
                     key={task.id}
                     task={task}
                     bucket={bucket}
+                    myId={myId}
                     runningTaskId={running?.task?.id ?? null}
                     onStart={(id) => startTimer.mutate(id)}
                     onStop={() => stopTimer.mutate()}
@@ -451,8 +561,10 @@ export default function MyDayPage() {
             >
               {rosterQ.isLoading ? (
                 <Empty>Loading…</Empty>
+              ) : !hasScope ? (
+                <Empty>You are not on a team yet, so there is nobody to show here.</Empty>
               ) : away.length === 0 ? (
-                <Empty>Everybody is in.</Empty>
+                <Empty>{seesEveryone ? 'Everybody is in.' : 'Everybody on your teams is in.'}</Empty>
               ) : (
                 away.map((person) => (
                   <div

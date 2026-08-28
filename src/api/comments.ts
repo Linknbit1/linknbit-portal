@@ -23,6 +23,36 @@ export async function fetchComments(taskId: string): Promise<CommentWithAuthor[]
   return data
 }
 
+/**
+ * The most recent time `profileId` commented on each of `taskIds`, keyed by task.
+ * Tasks they have never commented on are simply absent.
+ *
+ * Used to decide whether an @mention is still waiting on them: being tagged is a
+ * request for a reply, so a reply on the thread settles it — whether or not the
+ * notification itself was ever opened.
+ */
+export async function fetchMyLatestCommentAt(
+  profileId: string,
+  taskIds: string[],
+): Promise<Record<string, string>> {
+  if (!profileId || taskIds.length === 0) return {}
+
+  const { data, error } = await supabase
+    .from('comments')
+    .select('task_id, created_at')
+    .eq('author_id', profileId)
+    .in('task_id', taskIds)
+    .order('created_at', { ascending: false })
+  if (error) throw error
+
+  const latest: Record<string, string> = {}
+  // Newest first, so the first row seen for a task is its most recent comment.
+  for (const row of data) {
+    if (row.task_id && !(row.task_id in latest)) latest[row.task_id] = row.created_at
+  }
+  return latest
+}
+
 export async function createComment(taskId: string, args: CreateCommentArgs): Promise<CommentRow> {
   const { data: auth } = await supabase.auth.getUser()
   const { data, error } = await supabase

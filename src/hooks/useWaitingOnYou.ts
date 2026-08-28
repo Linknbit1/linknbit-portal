@@ -12,6 +12,7 @@ import {
 } from './useAttendance'
 import { useClaimableQuestCount, useGamificationPendingCount } from './useGamification'
 import { useNotifications } from './useNotifications'
+import { useMyLatestCommentAt } from './useComments'
 import { notificationHref } from '../constants/notifications'
 
 /**
@@ -39,7 +40,8 @@ export interface WaitingItem {
  * Here a zero is a promise that nothing is stuck on you.
  *
  * Mentions are the one notification type that counts, because being tagged is a
- * request for a reply, not an announcement.
+ * request for a reply, not an announcement — and they stop counting once that
+ * reply exists, whether or not the notification was ever opened.
  *
  * Every query is capability-gated so an employee never fires a manager's queue.
  */
@@ -63,6 +65,23 @@ export function useWaitingOnYou(): { items: WaitingItem[]; total: number } {
   const { data: gamificationPending = 0 } = useGamificationPendingCount(enabled && canReviewGamification)
   const { data: claimableQuests = 0 } = useClaimableQuestCount(enabled)
   const { data: notifications = [] } = useNotifications(profile?.id ?? '')
+
+  const unreadMentions = useMemo(
+    () => notifications.filter((n) => !n.read && n.type === 'mention'),
+    [notifications],
+  )
+
+  // A comment mention is recorded against the task the comment belongs to (see
+  // fn_notify_mention), so one lookup per task answers every mention on it.
+  const mentionTaskIds = useMemo(() => {
+    const ids = new Set<string>()
+    for (const n of unreadMentions) {
+      if (n.resource_type === 'task' && n.resource_id) ids.add(n.resource_id)
+    }
+    return [...ids]
+  }, [unreadMentions])
+
+  const { data: repliedAt = {} } = useMyLatestCommentAt(profile?.id ?? '', mentionTaskIds)
 
   return useMemo(() => {
     const items: WaitingItem[] = []
@@ -106,10 +125,14 @@ export function useWaitingOnYou(): { items: WaitingItem[]; total: number } {
     // Unread mentions, individually — each is a specific person waiting on a reply.
     // One with no resolvable destination is dropped rather than listed as a dead
     // row: an item you cannot open is not something you can act on.
-    for (const n of notifications) {
-      if (n.read || n.type !== 'mention') continue
+    for (const n of unreadMentions) {
       const href = notificationHref(n.resource_type, n.resource_id, n.type)
       if (!href) continue
+      // Answered: they commented on that thread after being tagged. Marking the
+      // notification read is not the signal — people reply from the task itself
+      // and never open the list, which left the row stuck there for good.
+      const replied = n.resource_id ? repliedAt[n.resource_id] : undefined
+      if (replied && new Date(replied).getTime() > new Date(n.created_at).getTime()) continue
       items.push({
         id: `mention:${n.id}`,
         label: n.title,
@@ -133,5 +156,5 @@ export function useWaitingOnYou(): { items: WaitingItem[]; total: number } {
     }
 
     return { items, total: items.reduce((sum, item) => sum + item.count, 0) }
-  }, [approvals, leave, wfh, exceptions, overtime, gamificationPending, claimableQuests, notifications])
+  }, [approvals, leave, wfh, exceptions, overtime, gamificationPending, claimableQuests, unreadMentions, repliedAt])
 }
