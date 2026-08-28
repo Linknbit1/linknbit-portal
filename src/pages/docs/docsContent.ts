@@ -402,7 +402,8 @@ export const DOC_CHAPTERS: DocChapter[] = [
           },
         ],
         notes: [
-          'How wide the switch goes depends on your role. If you work on tasks, you see the ones assigned to you, and there is no switch to show. That is simply what the screen is. Team leads and project managers can also see the work of anyone they share a team with. Admins and finance can see everything.',
+          'How wide the switch goes depends on your role. If you work on tasks, you see the ones assigned to you, and there is no switch to show. That is simply what the screen is. A team lead also sees the work of anyone they share a team with. Admins and finance see everything.',
+          'Managing a project is separate from your role. Whoever manages a project sees every task in it, and that holds for an admin or a team lead named as a manager just as much as for a project manager.',
           'A team means anyone who shares a team with you, including yourself. Someone on several teams counts on all of them, so joining another team widens what you see.',
           'This is not only what the screen shows: work that is not yours is not sent to your browser at all, and a link to it opens a page saying it is unavailable.',
           'Unassigned work stays visible to team leads and project managers on the project, so a backlog can still be handed out.',

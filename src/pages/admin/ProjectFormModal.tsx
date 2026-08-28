@@ -4,12 +4,13 @@ import { Modal } from '../../components/ui/Modal'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Select } from '../../components/ui/Select'
+import { MultiSelectPeople } from '../../components/ui/MultiSelectPeople'
 import { DatePicker } from '../../components/ui/DatePicker'
 import { Toggle } from '../../components/ui/Toggle'
 import { useClients } from '../../hooks/useClients'
 import { usePeople } from '../../hooks/usePeople'
 import { useServices } from '../../hooks/useServices'
-import { useCreateProject, useUpdateProject } from '../../hooks/useProjects'
+import { useCreateProject, useUpdateProject, useSetProjectManagers } from '../../hooks/useProjects'
 import { useUsableTemplates } from '../../hooks/useTemplates'
 import { useCanAccess } from '../../hooks/useRoleFlags'
 import { useToast } from '../../components/ui/toast-context'
@@ -44,7 +45,12 @@ export function ProjectFormModal({ project, onClose }: ProjectFormModalProps) {
   const [serviceIds, setServiceIds] = useState<string[]>([])
   // Optional per-service starting pipeline, keyed by service id.
   const [templateByService, setTemplateByService] = useState<Record<string, string>>({})
-  const [managerId, setManagerId] = useState(project?.manager_id ?? '')
+  // A project can be run by several people. Seeded from the join table, with
+  // the legacy column as the fallback for a project loaded before it was
+  // backfilled.
+  const [managerIds, setManagerIds] = useState<string[]>(
+    project?.managers?.map((m) => m.id) ?? (project?.manager_id ? [project.manager_id] : []),
+  )
   const [status, setStatus] = useState<ProjectStatus>(project?.status ?? 'todo')
   const [startDate, setStartDate] = useState(project?.start_date ?? '')
   const [deadline, setDeadline] = useState(project?.deadline ?? '')
@@ -60,21 +66,18 @@ export function ProjectFormModal({ project, onClose }: ProjectFormModalProps) {
   // field matches the project header instead of quietly reading "Unassigned"
   // while the project is still recorded as theirs. `Select` keeps them
   // unpickable for any other project.
-  const departedManager = project?.manager && project.manager.is_active === false ? project.manager : null
+  const departedManagers = (project?.managers ?? []).filter((m) => m.is_active === false)
   const managerOptions = [
-    { value: '', label: 'Unassigned' },
-    ...(departedManager
-      ? [{
-          value: departedManager.id,
-          label: `${departedManager.name}, deactivated`,
-          avatar: { name: departedManager.name, url: departedManager.avatar_url },
-          departed: true,
-        }]
-      : []),
-    ...people.filter((p) => p.is_active).map((p) => ({ value: p.id, label: p.name, avatar: { name: p.name, url: p.avatar_url } })),
+    ...departedManagers.map((m) => ({
+      id: m.id,
+      name: `${m.name}, deactivated`,
+      avatar_url: m.avatar_url,
+    })),
+    ...people.filter((p) => p.is_active).map((p) => ({ id: p.id, name: p.name, avatar_url: p.avatar_url })),
   ]
   const statusOptions = STATUS_ORDER.map((s) => ({ value: s, label: PROJECT_STATUS_LABELS[s] }))
-  const pending = createProject.isPending || updateProject.isPending
+  const setManagers = useSetProjectManagers()
+  const pending = createProject.isPending || updateProject.isPending || setManagers.isPending
 
   const handleSubmit = () => {
     if (!name.trim()) { toast('Project name is required', 'error'); return }
@@ -82,7 +85,10 @@ export function ProjectFormModal({ project, onClose }: ProjectFormModalProps) {
     const payload = {
       name: name.trim(),
       client_id: clientId || null,
-      manager_id: managerId || null,
+      // The column follows the join table via a trigger, so it is only sent on
+      // create, to give a brand-new project its first manager. Editing goes
+      // through setManagers, which is the side that can hold more than one.
+      ...(isEdit ? {} : { manager_id: managerIds[0] ?? null }),
       status,
       start_date: startDate || null,
       deadline: deadline || null,
@@ -93,11 +99,33 @@ export function ProjectFormModal({ project, onClose }: ProjectFormModalProps) {
     const onSuccess = () => { toast(isEdit ? 'Project updated' : 'Project created', 'success'); onClose() }
     const onError = (e: unknown) => toast(e instanceof Error ? e.message : 'Save failed', 'error')
 
-    if (isEdit) updateProject.mutate({ id: project.id, updates: payload }, { onSuccess, onError })
-    else createProject.mutate(
-      { payload, services: serviceIds.map((serviceId) => ({ serviceId, templateId: templateByService[serviceId] })) },
-      { onSuccess, onError },
-    )
+    if (isEdit) {
+      updateProject.mutate(
+        { id: project.id, updates: payload },
+        {
+          // Managers last: it decides who can see the project at all, so it
+          // should not land before the edit it belongs to.
+          onSuccess: () => setManagers.mutate(
+            { projectId: project.id, profileIds: managerIds },
+            { onSuccess, onError },
+          ),
+          onError,
+        },
+      )
+    } else {
+      createProject.mutate(
+        { payload, services: serviceIds.map((serviceId) => ({ serviceId, templateId: templateByService[serviceId] })) },
+        {
+          onSuccess: (row) => {
+            // The first manager arrived with the row; anyone else is added now.
+            if (managerIds.length > 1) {
+              setManagers.mutate({ projectId: row.id, profileIds: managerIds }, { onSuccess, onError })
+            } else onSuccess()
+          },
+          onError,
+        },
+      )
+    }
   }
 
   return (
@@ -179,11 +207,12 @@ export function ProjectFormModal({ project, onClose }: ProjectFormModalProps) {
             <Select value={clientId} onChange={setClientId} options={clientOptions} placeholder="Select client…" />
           </div>
           <div className="space-y-1.5">
-            <label className="text-label font-ui font-semibold text-text-2 uppercase tracking-wider">Project manager</label>
-            <Select value={managerId} onChange={setManagerId} options={managerOptions} placeholder="Unassigned" />
-            {departedManager && managerId === departedManager.id && (
+            <label className="text-label font-ui font-semibold text-text-2 uppercase tracking-wider">Project managers</label>
+            <MultiSelectPeople value={managerIds} onChange={setManagerIds} options={managerOptions} />
+            {departedManagers.some((m) => managerIds.includes(m.id)) && (
               <p className="font-mono text-[10.5px] text-brand-red">
-                {departedManager.name} has left the company, pick a replacement.
+                {departedManagers.filter((m) => managerIds.includes(m.id)).map((m) => m.name).join(', ')}
+                {' '}has left the company, pick a replacement.
               </p>
             )}
           </div>

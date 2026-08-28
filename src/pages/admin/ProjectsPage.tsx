@@ -114,9 +114,9 @@ export default function ProjectsPage() {
   // Managers who have left but still hold projects are listed too — otherwise the
   // one filter that would find the projects needing a new owner can't name them.
   const departedManagers = useMemo(() => {
-    const byId = new Map<string, ProjectListItem['manager']>()
+    const byId = new Map<string, ProjectListItem['managers'][number]>()
     for (const p of projects) {
-      if (p.manager && p.manager.is_active === false) byId.set(p.manager.id, p.manager)
+      for (const m of p.managers) if (m.is_active === false) byId.set(m.id, m)
     }
     return [...byId.values()]
   }, [projects])

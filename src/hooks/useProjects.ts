@@ -1,9 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   fetchProjects, fetchProject, createProject, updateProject, updateProjectStatus,
+  setProjectManagers,
   type ProjectFilters, type ProjectStatus, type NewProjectService,
 } from '../api/projects'
 import { deleteProjectCascade, fetchProjectDeleteImpact } from '../api/deleteCascade'
+import { TASK_KEYS } from './useTasks'
 import type { TablesInsert, TablesUpdate } from '../types/database'
 
 export const PROJECT_KEYS = {
@@ -63,6 +65,23 @@ export function useUpdateProjectStatus() {
     onSuccess: (_, v) => {
       qc.invalidateQueries({ queryKey: PROJECT_KEYS.all })
       qc.invalidateQueries({ queryKey: PROJECT_KEYS.detail(v.id) })
+    },
+  })
+}
+
+/**
+ * Sets who manages a project. Invalidates tasks too: managing a project is what
+ * decides whether its work is visible at all, so the caller's task lists change
+ * the moment this lands.
+ */
+export function useSetProjectManagers() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ projectId, profileIds }: { projectId: string; profileIds: string[] }) =>
+      setProjectManagers(projectId, profileIds),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: PROJECT_KEYS.all })
+      qc.invalidateQueries({ queryKey: TASK_KEYS.all })
     },
   })
 }

@@ -2898,6 +2898,49 @@ export type Database = {
           },
         ]
       }
+      project_managers: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          profile_id: string
+          project_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          profile_id: string
+          project_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          profile_id?: string
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_managers_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_managers_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_managers_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_services: {
         Row: {
           created_at: string
@@ -4195,6 +4238,39 @@ export type Database = {
           },
         ]
       }
+      storage_cleanup_queue: {
+        Row: {
+          attempts: number
+          bucket_id: string
+          deleted_at: string | null
+          id: number
+          last_error: string | null
+          queued_at: string
+          reason: string
+          storage_path: string
+        }
+        Insert: {
+          attempts?: number
+          bucket_id: string
+          deleted_at?: string | null
+          id?: number
+          last_error?: string | null
+          queued_at?: string
+          reason: string
+          storage_path: string
+        }
+        Update: {
+          attempts?: number
+          bucket_id?: string
+          deleted_at?: string | null
+          id?: number
+          last_error?: string | null
+          queued_at?: string
+          reason?: string
+          storage_path?: string
+        }
+        Relationships: []
+      }
       subtasks: {
         Row: {
           assignee_id: string | null
@@ -5058,6 +5134,7 @@ export type Database = {
         }[]
       }
       fn_request_currency_rates: { Args: never; Returns: undefined }
+      fn_request_storage_cleanup: { Args: never; Returns: undefined }
       fn_set_channel_muted: {
         Args: { p_channel_id: string; p_muted: boolean }
         Returns: undefined
@@ -5112,6 +5189,11 @@ export type Database = {
           xp_on_time: number
         }[]
       }
+      fn_sweep_abandoned_chat_uploads: {
+        Args: { p_grace?: string }
+        Returns: number
+      }
+      fn_sweep_orphan_storage: { Args: { p_grace?: string }; Returns: number }
       fn_sync_channel_role: {
         Args: { p_channel_id: string; p_role: string }
         Returns: undefined
@@ -5169,6 +5251,7 @@ export type Database = {
         Args: { p_date: string; p_entries: Json; p_profile: string }
         Returns: undefined
       }
+      fn_verify_janitor_secret: { Args: { p_secret: string }; Returns: boolean }
       fn_working_day_minutes: { Args: never; Returns: number }
       fn_working_overlap_minutes: {
         Args: { p_from: string; p_to: string }
@@ -5214,6 +5297,7 @@ export type Database = {
       is_internal: { Args: never; Returns: boolean }
       is_permission_hidden: { Args: { p_key: string }; Returns: boolean }
       is_project_creator: { Args: { p_project_id: string }; Returns: boolean }
+      is_project_manager: { Args: { p_project_id: string }; Returns: boolean }
       is_project_member: { Args: { p_project_id: string }; Returns: boolean }
       is_role_hidden: { Args: { p_role_id: string }; Returns: boolean }
       is_service_member: {
@@ -5471,6 +5555,15 @@ export type Database = {
       submit_standup: {
         Args: { p_entries: Json; p_notes?: string }
         Returns: string
+      }
+      task_visible: {
+        Args: {
+          p_assignee_id: string
+          p_created_by: string
+          p_project_id: string
+          p_task_id: string
+        }
+        Returns: boolean
       }
       timesheet_roster: {
         Args: { p_date: string }

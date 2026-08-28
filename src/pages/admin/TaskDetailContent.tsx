@@ -32,6 +32,8 @@ import { useSaveStatus } from '../../hooks/useSaveStatus'
 import { formatRelativeTime, PRIORITY_LABELS, STATUS_LABELS } from '../../lib/utils'
 import { useTask, useUpdateTask, useDeleteTask, useTaskDeleteImpact } from '../../hooks/useTasks'
 import { useStages } from '../../hooks/useStages'
+import { useProject } from '../../hooks/useProjects'
+import type { PersonMini } from '../../api/projects'
 import { useProjectServiceMembers } from '../../hooks/useProjectServices'
 import { useProjectFiles, useTaskAttachments } from '../../hooks/useAttachments'
 import { fileKind } from '../../lib/attachment'
@@ -151,11 +153,35 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
   const projectId = task?.project_id
   const { data: stages = [] } = useStages(projectId)
   const { data: allMembers = [] } = useProjectServiceMembers(projectId)
+  // Only for the mention list: a project's managers are taggable on its tasks.
+  const { data: project } = useProject(projectId)
   // Assignable people are the ones staffed on this task's service, not the whole project.
   const members = useMemo(
     () => allMembers.filter((m) => m.project_service_id === task?.project_service_id),
     [allMembers, task?.project_service_id],
   )
+
+  /**
+   * Who can be tagged here: the people staffed on this service, plus whoever
+   * manages the project.
+   *
+   * A manager is not necessarily staffed on any service of the project they
+   * run, so without this the one person who answers for the work could not be
+   * pulled into a conversation about it.
+   */
+  const mentionPeople = useMemo(() => {
+    // PersonMini is all the editor needs, and it is the common shape between a
+    // service member and a manager.
+    const byId = new Map<string, PersonMini>(
+      members.map((m) => [m.id, { id: m.id, name: m.name, avatar_url: m.avatar_url }]),
+    )
+    for (const m of project?.managers ?? []) {
+      if (!byId.has(m.id) && m.is_active !== false) {
+        byId.set(m.id, { id: m.id, name: m.name, avatar_url: m.avatar_url })
+      }
+    }
+    return [...byId.values()]
+  }, [members, project?.managers])
 
   /**
    * The staffed members, plus anyone already assigned who has since left.
@@ -438,7 +464,7 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
           // form, board card excerpts and the activity feed, none of which can
           // read ProseMirror JSON. Writing only `doc` left all three blank.
           onSave={(doc) => patch({ doc, description: docToPlainText(fromDbDoc(doc)) || null })}
-          mentionItems={members}
+          mentionItems={mentionPeople}
           fileItems={fileItems}
           source={{ type: 'task', id: task.id, projectId: task.project_id }}
           placeholder="Add description… type / for commands, @ to mention"
@@ -595,7 +621,7 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
                           <RichEditor
                             value={editingComment.doc}
                             onChange={(doc) => setEditingComment((prev) => (prev ? { ...prev, doc } : prev))}
-                            mentionItems={members}
+                            mentionItems={mentionPeople}
                             compact
                             onSubmit={saveCommentEdit}
                             placeholder="Edit your comment…"
@@ -644,7 +670,7 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
               onChange={setCommentDoc}
               compact
               onSubmit={sendComment}
-              mentionItems={members}
+              mentionItems={mentionPeople}
               fileItems={fileItems}
               placeholder="Write a comment… @ to mention, # to attach a file"
             />

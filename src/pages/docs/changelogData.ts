@@ -31,11 +31,34 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: '1.19.0',
+    date: '2026-08-29',
+    title: 'A project can have more than one manager',
+    highlight:
+      'Projects now take several managers, all of whom can open the project, see its work and be tagged in it. What a project manager sees follows the projects they run rather than the teams they happen to sit on.',
+    entries: [
+      {
+        kind: 'added',
+        text: 'A project takes any number of managers instead of exactly one. Co-managed work no longer has to nominate a figurehead and leave the other manager invisible to everything that asks who runs it.',
+      },
+      {
+        kind: 'improved',
+        text: 'Managing a project now means you can open it and see every task in it, even with no service staffing at all. Managing something you could not open was the state a manager was genuinely in.',
+      },
+      {
+        kind: 'improved',
+        text: 'A project manager now sees the work of the projects they manage, rather than the work of whoever shares a team with them. A manager answers for their projects, and that is now what the portal shows them.',
+      },
+      {
+        kind: 'improved',
+        text: 'A project’s managers can be tagged in comments on its tasks, whether or not they are staffed on the service the task belongs to. The one person answering for the work could not previously be pulled into a conversation about it.',
+      },
+    ],
+  },
+  {
     version: '1.18.0',
     date: '2026-08-29',
     title: 'Files that go when their owner does',
-    highlight:
-      'Deleting a message, task, project or channel now takes its files with it, and a project that somebody logged a standup against can be deleted at all.',
     entries: [
       {
         kind: 'fixed',

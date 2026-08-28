@@ -319,9 +319,9 @@ export default function ProjectDetailPage() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-5">
             <Meta
               icon={UserCircle}
-              label="Manager"
-              value={project.manager?.name ?? '-'}
-              badge={project.manager?.is_active === false ? <DepartedBadge /> : undefined}
+              label={project.managers.length > 1 ? 'Managers' : 'Manager'}
+              value={project.managers.length > 0 ? project.managers.map((m) => m.name).join(', ') : '-'}
+              badge={project.managers.some((m) => m.is_active === false) ? <DepartedBadge /> : undefined}
             />
             <Meta icon={Calendar} label="Deadline" value={project.deadline ? formatDate(project.deadline) : '-'} danger={!!project.deadline && isOverdue(project.deadline) && project.status !== 'completed'} />
             {canViewBudget && <Meta icon={Wallet} label="Budget" value={project.budget ? formatCurrency(project.budget) : '-'} />}

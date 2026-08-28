@@ -59,7 +59,7 @@ export function useTeammateIds(active: boolean): ReadonlySet<string> {
  * ride along on ProjectListItem, so this costs no extra query.
  */
 export function useScopedProjects<
-  T extends { manager_id: string | null; members: { id: string }[] },
+  T extends { manager_id: string | null; managers: { id: string }[]; members: { id: string }[] },
 >(projects: T[]): T[] {
   const { scope } = useScope()
   const { profile } = useAuthContext()
@@ -71,7 +71,9 @@ export function useScopedProjects<
     const owns = (id: string | null) =>
       scope === 'mine' ? id === myId : id !== null && teammates.has(id)
     return projects.filter(
-      (p) => owns(p.manager_id) || p.members.some((m) => owns(m.id)),
+      // Every manager counts, not just the primary one in the legacy column:
+      // a project you co-manage is as much yours as one you manage alone.
+      (p) => p.managers.some((m) => owns(m.id)) || owns(p.manager_id) || p.members.some((m) => owns(m.id)),
     )
   }, [projects, scope, myId, teammates])
 }
