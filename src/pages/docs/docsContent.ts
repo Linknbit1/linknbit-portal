@@ -660,6 +660,14 @@ export const DOC_CHAPTERS: DocChapter[] = [
             ],
           },
           {
+            title: 'Take one day out of a longer request',
+            steps: [
+              'Find the leave or WFH request in the queue. It needs to cover more than one day.',
+              'Press Days. Every day the request covers is listed.',
+              'Press the day you want to drop, then press it again to confirm.',
+            ],
+          },
+          {
             title: 'Fix a wrong attendance record',
             steps: [
               'Raise an Exception request for the day in question.',
@@ -676,6 +684,9 @@ export const DOC_CHAPTERS: DocChapter[] = [
           'A multi-day request is listed under every day it covers, so the team can see who is off on a given date. It is still one request: the Approve and Reject buttons appear only on its first day.',
           'A WFH request covers a date range, so a whole week away from the office is one request and one approval.',
           'A partial WFH day is not a day off: you work one half from home and the other half from the office, so check in as normal for the office half. Because it splits a single day, it cannot span a range.',
+          'A day taken out of a longer request is removed from that person’s attendance straight away, and a leave day comes back to their balance. Their remaining days stay approved, so nobody has to reapply for the rest of the week.',
+          'Removing a day from the middle of a range leaves two requests, one for the days before and one for the days after. That is the same leave, still approved, simply no longer covering the day in between.',
+          'A single-day or half-day request has no day to take out. Reject it instead.',
           'You can edit or withdraw a request while it is still pending.',
           'Nobody can approve their own request, whatever their role.',
         ],

@@ -58,6 +58,8 @@ import {
   fetchLeaveBalancesByProfile,
   fetchOvertimeByProfile,
   reviewLeaveRequest,
+  removeLeaveDay,
+  removeWfhDay,
   deleteLeaveRequest,
   fetchMyLeaveBalances,
 } from '../api/attendance'
@@ -734,6 +736,28 @@ export function useUpdateLeave() {
     },
   })
 }
+
+/**
+ * Removing one day from a leave or WFH range touches the request, the attendance
+ * rows it had written, and (for leave) the person's balance, so all four caches
+ * have to give way. Same invalidation set as a delete, for the same reason.
+ */
+function useRemoveRangeDay(remove: (requestId: string, date: string) => Promise<void>) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ requestId, date }: { requestId: string; date: string }) => remove(requestId, date),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['attendance', 'leave'] })
+      qc.invalidateQueries({ queryKey: ['attendance', 'wfh'] })
+      qc.invalidateQueries({ queryKey: ['attendance', 'all'] })
+      qc.invalidateQueries({ queryKey: ['attendance', 'monthly'] })
+      qc.invalidateQueries({ queryKey: ATTENDANCE_KEYS.myLeaveBalances })
+    },
+  })
+}
+
+export const useRemoveLeaveDay = () => useRemoveRangeDay(removeLeaveDay)
+export const useRemoveWfhDay = () => useRemoveRangeDay(removeWfhDay)
 
 export function useReviewLeave() {
   const qc = useQueryClient()

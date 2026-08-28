@@ -5216,8 +5216,16 @@ export type Database = {
         Returns: string
       }
       release_quest_claim: { Args: { p_claim_id: string }; Returns: undefined }
+      remove_leave_day: {
+        Args: { p_date: string; p_request_id: string }
+        Returns: undefined
+      }
       remove_project_service: {
         Args: { p_project_service_id: string }
+        Returns: undefined
+      }
+      remove_wfh_day: {
+        Args: { p_date: string; p_request_id: string }
         Returns: undefined
       }
       report_employee_backlog: {

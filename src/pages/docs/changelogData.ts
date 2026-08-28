@@ -13,11 +13,26 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: 'v1.19',
+    date: '2026-08-28',
+    title: 'Drop a single day from a longer request',
+    highlight:
+      'A week of leave no longer has to be rejected wholesale because one day of it changed. Whoever manages attendance can take that day out and leave the rest approved.',
+    entries: [
+      {
+        kind: 'added',
+        text: 'Leave and WFH requests covering more than one day now have a Days button in the queue. It lists every day the request covers, and any one of them can be removed. Removing takes two clicks, because it rewrites that day of somebody’s attendance.',
+      },
+      {
+        kind: 'improved',
+        text: 'The rest of the request stays approved, so nobody reapplies for the days that never changed. A leave day removed this way goes back to the person’s balance, and their attendance for that day returns to a normal working day. Taking a day out of the middle leaves two requests, one either side of the gap.',
+      },
+    ],
+  },
+  {
     version: 'v1.18',
     date: '2026-08-28',
     title: 'Less chrome, fewer dead ends',
-    highlight:
-      'Screens no longer print their own name twice, a task always opens in the side panel over its project, and the project board is gone in favour of Pipeline.',
     entries: [
       {
         kind: 'improved',

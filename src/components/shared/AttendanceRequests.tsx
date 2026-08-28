@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Loader2, Home, Plane, AlertCircle, Hourglass, Check, X, Inbox } from 'lucide-react'
+import { Loader2, Home, Plane, AlertCircle, Hourglass, Check, X, Inbox, CalendarX2 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { Avatar } from '../ui/Avatar'
@@ -19,6 +19,8 @@ import {
   useReviewWfh,
   useReviewException,
   useReviewOvertime,
+  useRemoveLeaveDay,
+  useRemoveWfhDay,
 } from '../../hooks/useAttendance'
 
 /**
@@ -74,14 +76,73 @@ interface UnifiedRequest {
   profileId: string
   name: string
   avatarUrl: string | null
-  /** First day the request affects — the sort key. */
+  /** First day the request affects, and the sort key. */
   date: string
+  /** Last day, so a range can be broken back down into the days it covers. */
+  endDate: string
+  /** Half days cover a single day, so they can never have one taken out. */
+  isFullDay: boolean
   dateLabel: string
   /** The one line that distinguishes this request from another of the same kind. */
   detail: string
   reason: string
   status: string
   createdAt: string
+}
+
+/** Every calendar day a range covers, as ISO strings. */
+function daysBetween(start: string, end: string): string[] {
+  const out: string[] = []
+  for (const d = new Date(`${start}T00:00:00`); d <= new Date(`${end}T00:00:00`); d.setDate(d.getDate() + 1)) {
+    out.push(new Intl.DateTimeFormat('en-CA').format(d))
+  }
+  return out
+}
+
+/**
+ * The days a leave or WFH range covers, each removable on its own.
+ *
+ * Removing takes two clicks rather than one. It is not undoable from here, and
+ * it rewrites that person's attendance for the day, which is too much to hang
+ * off a stray click in a dense list.
+ */
+function DayStrip({
+  days,
+  busy,
+  onRemove,
+}: {
+  days: string[]
+  busy: boolean
+  onRemove: (day: string) => void
+}) {
+  const [armed, setArmed] = useState<string | null>(null)
+
+  return (
+    <div className="flex w-full flex-wrap items-center gap-1.5 border-t border-border-subtle pt-2">
+      <span className="font-ui text-[11px] text-text-4">Remove a day:</span>
+      {days.map((day) => {
+        const isArmed = armed === day
+        return (
+          <button
+            key={day}
+            type="button"
+            disabled={busy}
+            onClick={() => (isArmed ? onRemove(day) : setArmed(day))}
+            onBlur={() => setArmed((a) => (a === day ? null : a))}
+            className={cn(
+              'inline-flex items-center gap-1 rounded-sm border px-2 py-0.5 font-mono text-[11px] transition-colors disabled:opacity-50',
+              isArmed
+                ? 'border-error/40 bg-error/12 text-error'
+                : 'border-border-default bg-surface-2 text-text-3 hover:border-border-strong hover:text-text-1',
+            )}
+          >
+            {isArmed ? 'Remove?' : formatDate(day)}
+            <X size={10} />
+          </button>
+        )
+      })}
+    </div>
+  )
 }
 
 /** "12 Mar → 15 Mar 2026", collapsing a single-day range. */
@@ -153,6 +214,12 @@ export function AttendanceRequests() {
   const excQ = useAllAttendanceExceptions()
   const otQ = useAllOvertimeRequests()
 
+  const removeLeaveDay = useRemoveLeaveDay()
+  const removeWfhDay = useRemoveWfhDay()
+  // Which row has its day strip open. One at a time: the strip is a wide row of
+  // chips, and several open at once turns the queue into a wall.
+  const [editingDays, setEditingDays] = useState<string | null>(null)
+
   const reviewLeave = useReviewLeave()
   const reviewWfh = useReviewWfh()
   const reviewException = useReviewException()
@@ -172,6 +239,8 @@ export function AttendanceRequests() {
         name: r.profiles?.name ?? '-',
         avatarUrl: r.profiles?.avatar_url ?? null,
         date: r.start_date,
+        endDate: r.end_date,
+        isFullDay: r.day_part === 'full',
         dateLabel: fmtRange(r.start_date, r.end_date),
         detail: [r.leave_types?.name, r.day_part !== 'full' ? DAY_PART_LABEL[r.day_part] : null]
           .filter(Boolean)
@@ -190,6 +259,8 @@ export function AttendanceRequests() {
         name: r.profiles?.name ?? '-',
         avatarUrl: r.profiles?.avatar_url ?? null,
         date: r.start_date,
+        endDate: r.end_date,
+        isFullDay: r.day_part === 'full',
         dateLabel: fmtRange(r.start_date, r.end_date),
         detail: r.day_part !== 'full' ? DAY_PART_LABEL[r.day_part] : 'Full day',
         reason: r.reason,
@@ -206,6 +277,8 @@ export function AttendanceRequests() {
         name: r.profiles?.name ?? '-',
         avatarUrl: r.profiles?.avatar_url ?? null,
         date: r.date,
+        endDate: r.date,
+        isFullDay: true,
         dateLabel: formatDate(r.date),
         detail: `${r.exception_type.replace(/_/g, ' ')} · ${r.requested_time}`,
         reason: r.reason,
@@ -222,6 +295,8 @@ export function AttendanceRequests() {
         name: r.profiles?.name ?? '-',
         avatarUrl: r.profiles?.avatar_url ?? null,
         date: r.date,
+        endDate: r.date,
+        isFullDay: true,
         dateLabel: formatDate(r.date),
         detail: `${r.hours}h · ${r.start_time}–${r.end_time}`,
         reason: r.reason,
@@ -252,6 +327,20 @@ export function AttendanceRequests() {
   )
 
   const totalPending = all.filter((r) => r.status === 'pending').length
+
+  const removingDay = removeLeaveDay.isPending || removeWfhDay.isPending
+
+  const removeDay = (row: UnifiedRequest, day: string) => {
+    const mutation = row.kind === 'leave' ? removeLeaveDay : removeWfhDay
+    mutation.mutate(
+      { requestId: row.id, date: day },
+      {
+        onSuccess: () => toast(`${formatDate(day)} removed from the request`, 'success'),
+        onError: (e: unknown) =>
+          toast(e instanceof Error ? e.message : 'Could not remove that day', 'error'),
+      },
+    )
+  }
 
   const isReviewing =
     reviewLeave.isPending ||
@@ -335,9 +424,11 @@ export function AttendanceRequests() {
           visible.map((row) => {
             const meta = KIND_META[row.kind]
             const Icon = meta.icon
+            const rowKey = `${row.kind}:${row.id}`
+            const stripOpen = editingDays === rowKey
             return (
               <div
-                key={`${row.kind}:${row.id}`}
+                key={rowKey}
                 className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 border-b border-border-subtle last:border-0"
               >
                 <div className="flex items-center gap-2.5 min-w-0 flex-1">
@@ -407,6 +498,38 @@ export function AttendanceRequests() {
                   >
                     {row.status}
                   </span>
+                )}
+
+                {/* Only a multi-day, full-day leave or WFH range has days to take
+                    out. Everything else is a single day, where rejecting the
+                    request is the operation that applies. */}
+                {canReview
+                  && (row.kind === 'leave' || row.kind === 'wfh')
+                  && row.isFullDay
+                  && row.endDate > row.date
+                  && (row.status === 'approved' || row.status === 'pending') && (
+                  <button
+                    type="button"
+                    onClick={() => setEditingDays((cur) => (cur === rowKey ? null : rowKey))}
+                    aria-expanded={stripOpen}
+                    className={cn(
+                      'inline-flex items-center gap-1 rounded-sm border px-2 py-1 font-ui text-[11.5px] font-semibold transition-colors',
+                      stripOpen
+                        ? 'border-brand-red/30 bg-brand-red/12 text-brand-red'
+                        : 'border-border-default bg-surface-2 text-text-3 hover:text-text-1',
+                    )}
+                  >
+                    <CalendarX2 size={12} />
+                    Days
+                  </button>
+                )}
+
+                {stripOpen && (
+                  <DayStrip
+                    days={daysBetween(row.date, row.endDate)}
+                    busy={removingDay}
+                    onRemove={(day) => removeDay(row, day)}
+                  />
                 )}
               </div>
             )

@@ -1041,6 +1041,28 @@ export async function enterLeaveForEmployee(payload: EnterLeavePayload): Promise
 }
 
 // Employee edits their own leave request while it's still pending (RLS-gated).
+/**
+ * Takes one day out of a multi-day leave range, shrinking it or splitting it in
+ * two. The RPC does the whole job server-side: the attendance rows for that day
+ * are unwound by the existing sync trigger and the day count recomputes itself.
+ */
+export async function removeLeaveDay(requestId: string, date: string): Promise<void> {
+  const { error } = await supabase.rpc('remove_leave_day', {
+    p_request_id: requestId,
+    p_date: date,
+  })
+  if (error) throw error
+}
+
+/** The WFH counterpart of removeLeaveDay. */
+export async function removeWfhDay(requestId: string, date: string): Promise<void> {
+  const { error } = await supabase.rpc('remove_wfh_day', {
+    p_request_id: requestId,
+    p_date: date,
+  })
+  if (error) throw error
+}
+
 // `days` is recomputed by the trg_leave_set_days BEFORE-UPDATE trigger.
 export async function updateLeaveRequest(
   id: string,
