@@ -37,11 +37,17 @@ export const MESSAGE_PAGE_SIZE = 50
  * supabase-js infers the row type from it, and a concatenation widens it to
  * `string` and loses that inference. Only one level is followed, so a reply to
  * a reply quotes what it answers rather than the whole chain.
+ *
+ * `messages!reply_to_id` hints the embed by COLUMN, not by constraint name.
+ * PostgREST resolves a self-referential embed that way, and the constraint-name
+ * form every other join here uses fails with PGRST200 "could not find a
+ * relationship between 'messages' and 'messages'", which reads like a missing
+ * foreign key rather than the wrong kind of hint.
  */
 export async function fetchMessages(channelId: string, before?: string): Promise<MessageWithAuthor[]> {
   let query = supabase
     .from('messages')
-    .select('*, author:profiles!messages_author_id_fkey(id,name,avatar_url,role), reply_to:messages!messages_reply_to_id_fkey(id,body_text,deleted_at,author:profiles!messages_author_id_fkey(id,name))')
+    .select('*, author:profiles!messages_author_id_fkey(id,name,avatar_url,role), reply_to:messages!reply_to_id(id,body_text,deleted_at,author:profiles!messages_author_id_fkey(id,name))')
     .eq('channel_id', channelId)
     .order('created_at', { ascending: false })
     .limit(MESSAGE_PAGE_SIZE)
