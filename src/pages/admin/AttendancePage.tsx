@@ -115,6 +115,7 @@ import {
   type EnrolledDeviceWithProfile,
 } from "../../hooks/useEnrolledDevices";
 import { useCanAccess } from "../../hooks/useRoleFlags";
+import { isDecidableBy } from "../../lib/requestReview";
 import type { AttendanceWithProfile } from "../../api/attendance";
 import { downloadCsv } from "../../lib/csv";
 import { cn } from "../../lib/cn";
@@ -1021,6 +1022,8 @@ function GrantWfhModal({
   const toast = useToast();
   const { profile } = useAuthContext();
   const grantMut = useGrantWfh();
+  // Skipping the queue is a permission, never a role — see CLAUDE.md.
+  const appliesDirectly = useCanAccess("can_apply_attendance_directly");
   const { data: people = [] } = useActiveProfiles();
   const [profileId, setProfileId] = useState("");
   const [dayPart, setDayPart] = useState<DayPart>("full");
@@ -1045,8 +1048,14 @@ function GrantWfhModal({
           reason: reason.trim(),
         },
         grantedBy: profile?.id ?? "",
+        appliesDirectly,
       });
-      toast("WFH granted, marked on attendance", "success");
+      toast(
+        appliesDirectly
+          ? "WFH granted, marked on attendance"
+          : "WFH submitted for approval",
+        "success",
+      );
       onClose();
       setProfileId("");
       setReason("");
@@ -1181,7 +1190,7 @@ export function WFHRequestsTab() {
   const { data: requests = [] } = useAllWfhRequests();
   const reviewMut = useReviewWfh();
   const deleteMut = useDeleteWfh();
-  const isAdmin = profile?.role === "admin" || profile?.role === "super_admin";
+  const canDelete = useCanAccess("can_delete_attendance_records");
   const [grantOpen, setGrantOpen] = useState(false);
   const [rejectTarget, setRejectTarget] =
     useState<WfhRequestWithProfile | null>(null);
@@ -1352,7 +1361,7 @@ export function WFHRequestsTab() {
                             <SpanContinuation dayNum={span.dayNum} total={span.total} />
                           )}
                           <RequestStatusChip status={req.status} />
-                          {isAdmin && (
+                          {canDelete && (
                             <button
                               onClick={() => setDeleteTarget(req)}
                               className="text-text-4 hover:text-error transition-colors shrink-0"
@@ -1628,11 +1637,9 @@ function AddLeaveModal({
   const toast = useToast();
   const { profile } = useAuthContext();
   const enterMut = useEnterLeaveForEmployee();
+  const appliesDirectly = useCanAccess("can_apply_attendance_directly");
   const { data: people = [] } = useActiveProfiles();
   const { data: types = [] } = useLeaveTypes(true);
-  // Admins apply directly; HR entries go to an admin for approval. (RLS enforces this too.)
-  const appliesDirectly =
-    profile?.role === "admin" || profile?.role === "super_admin";
   const [profileId, setProfileId] = useState("");
   const [leaveTypeId, setLeaveTypeId] = useState("");
   const [startDate, setStartDate] = useState(localToday);
@@ -1663,17 +1670,20 @@ function AddLeaveModal({
     if (!canSubmit) return;
     try {
       const result = await enterMut.mutateAsync({
-        profile_id: profileId,
-        leave_type_id: leaveTypeId,
-        start_date: startDate,
-        end_date: effectiveEnd,
-        reason: reason.trim(),
-        day_part: dayPart,
+        payload: {
+          profile_id: profileId,
+          leave_type_id: leaveTypeId,
+          start_date: startDate,
+          end_date: effectiveEnd,
+          reason: reason.trim(),
+          day_part: dayPart,
+        },
+        appliesDirectly,
       });
       toast(
         result.status === "approved"
           ? "Leave added and applied to attendance"
-          : "Leave added, pending admin approval",
+          : "Leave added, pending approval",
         "success",
       );
       onClose();
@@ -1805,7 +1815,8 @@ export function LeaveTab() {
   const deleteTypeMut = useDeleteLeaveType();
   const reviewMut = useReviewLeave();
   const deleteMut = useDeleteLeave();
-  const isAdmin = profile?.role === "admin" || profile?.role === "super_admin";
+  const canDelete = useCanAccess("can_delete_attendance_records");
+  const canApproveRequests = useCanAccess("can_approve_requests");
 
   const [typeModalOpen, setTypeModalOpen] = useState(false);
   const [editingType, setEditingType] = useState<LeaveType | null>(null);
@@ -1993,11 +2004,15 @@ export function LeaveTab() {
                           its Day N of M qualifier show on every day. */}
                       {span.total > 1 && !span.isFirstShown ? null : req.status ===
                         "pending" ? (
-                        // On-behalf (entered_by) entries can only be approved by an
-                        // admin/super_admin — and nobody reviews their own request.
-                        (req.entered_by && !isAdmin) || req.profile_id === profile?.id ? (
+                        // The RLS rule, mirrored: nobody decides on their own
+                        // request, or on one they filed for somebody else.
+                        !canApproveRequests
+                        || !isDecidableBy(
+                          { profile_id: req.profile_id, entered_by: req.entered_by },
+                          profile?.id,
+                        ) ? (
                           <span className="inline-flex items-center px-2 py-0.5 rounded-xs border border-warning/25 bg-warning/10 text-warning text-[11px] font-mono font-semibold shrink-0 whitespace-nowrap">
-                            Awaiting admin
+                            Waiting on someone else
                           </span>
                         ) : (
                           <div className="flex items-center gap-1.5 shrink-0">
@@ -2023,7 +2038,7 @@ export function LeaveTab() {
                         <SpanContinuation dayNum={span.dayNum} total={span.total} />
                       )}
                       <RequestStatusChip status={req.status} />
-                      {isAdmin && (
+                      {canDelete && (
                         <button
                           onClick={() => setDeleteTarget(req)}
                           className="shrink-0 text-text-4 hover:text-error transition-colors"
@@ -2190,8 +2205,11 @@ export function EnrolledDevicesTab() {
   // Approving/reactivating a device authorises check-in. Admins/super_admins approve any
   // device; HR approve others' devices but not their own (self-approval is blocked, RLS too).
   // Anyone with access to this tab may deactivate (block).
-  const isAdmin = profile?.role === "admin" || profile?.role === "super_admin";
-  const isHr = profile?.role === "hr";
+  const canApproveRequests = useCanAccess("can_approve_requests");
+  // Approving your own enrolment is the one self-review the portal allows, and
+  // it takes the same permission that lets somebody skip the approval queue
+  // elsewhere — the "no second pair of eyes needed" key.
+  const canSelfApprove = useCanAccess("can_apply_attendance_directly");
   const { data: devices = [], isLoading } = useEnrolledDevices();
   const approveMutation = useApproveDevice();
   const deactivateMutation = useDeactivateDevice();
@@ -2272,8 +2290,9 @@ export function EnrolledDevicesTab() {
   };
 
   const DeviceRow = ({ d }: { d: (typeof devices)[number] }) => {
-    // HR cannot approve/reactivate their own device; admins can approve anyone's.
-    const canApproveThis = isAdmin || (isHr && d.profile_id !== profile?.id);
+    // Nobody reviews their own, unless they hold the key that says they may.
+    const canApproveThis =
+      canApproveRequests && (d.profile_id !== profile?.id || canSelfApprove);
     const isShared = sharedFingerprints.has(d.device_fingerprint);
     const sharedWith = isShared
       ? (fingerprintMap.get(d.device_fingerprint) ?? [])
@@ -2378,9 +2397,9 @@ export function EnrolledDevicesTab() {
             )}
             {!d.approved_by && d.is_active && !canApproveThis && (
               <span className="font-ui text-[11px] text-text-4 italic">
-                {isHr && d.profile_id === profile?.id
+                {d.profile_id === profile?.id
                   ? "You can’t approve your own device"
-                  : "Admin approval required"}
+                  : "Someone who can approve requests has to sign this off"}
               </span>
             )}
             {canDeleteDevices && (
@@ -2546,7 +2565,7 @@ export function EnrolledDevicesTab() {
 export function ExceptionsTab() {
   const toast = useToast();
   const { profile } = useAuthContext();
-  const isAdmin = profile?.role === "admin" || profile?.role === "super_admin";
+  const canDelete = useCanAccess("can_delete_attendance_records");
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [rejectTarget, setRejectTarget] = useState<string | null>(null);
@@ -2750,7 +2769,7 @@ export function ExceptionsTab() {
                             )
                           ) : null}
                           <RequestStatusChip status={exc.status} />
-                          {isAdmin && (
+                          {canDelete && (
                             <button
                               onClick={() => setDeleteTarget(excWp)}
                               className="text-text-4 hover:text-error transition-colors shrink-0"
@@ -3829,7 +3848,7 @@ export function HolidaysTab() {
 export function OvertimeTab() {
   const toast = useToast();
   const { profile } = useAuthContext();
-  const isAdmin = profile?.role === "admin" || profile?.role === "super_admin";
+  const canDelete = useCanAccess("can_delete_attendance_records");
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1); // 1-indexed
@@ -4072,7 +4091,7 @@ export function OvertimeTab() {
                             )
                           ) : null}
                           <RequestStatusChip status={req.status} />
-                          {isAdmin && (
+                          {canDelete && (
                             <button
                               onClick={() =>
                                 setDeleteTarget({

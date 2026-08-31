@@ -6,6 +6,7 @@ import { DatePicker } from '../ui/DatePicker'
 import { TimePicker } from '../ui/TimePicker'
 import { useToast } from '../ui/toast-context'
 import { useAuthContext } from '../../context/AuthContext'
+import { useCanAccess } from '../../hooks/useRoleFlags'
 import { usePeople } from '../../hooks/usePeople'
 import {
   useLeaveTypes, useEnterLeaveForEmployee, useGrantWfh,
@@ -83,9 +84,9 @@ export function EnterRequestForEmployeeModal({ onClose }: EnterRequestForEmploye
   const [endTime, setEndTime] = useState('')
 
   const isRange = kind === 'leave' || kind === 'wfh'
-  // Only the range kinds can bypass the queue, and only for an admin.
-  const appliesDirectly =
-    isRange && (profile?.role === 'admin' || profile?.role === 'super_admin')
+  // Whether this entry skips the queue is a permission, not a role, and it
+  // applies to all four kinds — an admin bypasses the queue everywhere.
+  const appliesDirectly = useCanAccess('can_apply_attendance_directly')
   const pending =
     enterLeave.isPending || grantWfh.isPending || enterException.isPending || enterOvertime.isPending
 
@@ -118,12 +119,15 @@ export function EnterRequestForEmployeeModal({ onClose }: EnterRequestForEmploye
       if (kind === 'leave') {
         enterLeave.mutate(
           {
-            profile_id: profileId,
-            leave_type_id: leaveTypeId,
-            start_date: startDate,
-            end_date: endDate,
-            day_part: dayPart as 'full' | 'first_half' | 'second_half',
-            reason: reason.trim(),
+            payload: {
+              profile_id: profileId,
+              leave_type_id: leaveTypeId,
+              start_date: startDate,
+              end_date: endDate,
+              day_part: dayPart as 'full' | 'first_half' | 'second_half',
+              reason: reason.trim(),
+            },
+            appliesDirectly,
           },
           { onSuccess: done, onError: failed },
         )
@@ -138,6 +142,7 @@ export function EnterRequestForEmployeeModal({ onClose }: EnterRequestForEmploye
               reason: reason.trim(),
             },
             grantedBy: profile?.id ?? '',
+            appliesDirectly,
           },
           { onSuccess: done, onError: failed },
         )
@@ -162,6 +167,7 @@ export function EnterRequestForEmployeeModal({ onClose }: EnterRequestForEmploye
             return_time: exceptionType === 'out_of_office' ? returnTime : undefined,
             reason: reason.trim(),
           },
+          appliesDirectly,
         },
         { onSuccess: done, onError: failed },
       )
@@ -180,6 +186,7 @@ export function EnterRequestForEmployeeModal({ onClose }: EnterRequestForEmploye
           hours: overtimeHours,
           reason: reason.trim(),
         },
+        appliesDirectly,
       },
       { onSuccess: done, onError: failed },
     )
@@ -206,10 +213,8 @@ export function EnterRequestForEmployeeModal({ onClose }: EnterRequestForEmploye
       <div className="space-y-4 p-5">
         <p className="rounded-sm border border-border-default bg-surface-2 px-3 py-2 font-ui text-[12px] text-text-3">
           {appliesDirectly
-            ? 'This applies straight away and updates their attendance for those days.'
-            : isRange
-              ? 'This waits for approval and does not touch their attendance until it is given. Not by you — nobody decides on a request they filed — so it goes to another approver.'
-              : 'This always waits for approval, whoever enters it, because it rewrites a day already on record. It changes nothing until somebody approves it in Requests, and that has to be another approver: nobody decides on a request they filed.'}
+            ? 'This applies straight away and updates their record — you are allowed to enter attendance without approval.'
+            : 'This waits for approval and changes nothing until it is given. Not by you: nobody decides on a request they filed, so it goes to another approver.'}
         </p>
 
         <div className="flex flex-wrap gap-1 rounded-sm border border-border-default bg-surface-1 p-1">

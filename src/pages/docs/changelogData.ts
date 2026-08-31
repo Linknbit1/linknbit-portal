@@ -66,6 +66,10 @@ export const RELEASES: ChangelogRelease[] = [
         text: 'The requests queue has one set of tabs instead of two rows of chips. Pending, Approved, Rejected and All are the tabs, with the number still waiting on Pending; the request type moved into a dropdown beside them, keeping its per-kind counts. Two bars of chips read as two things competing to say what the list was.',
       },
       {
+        kind: 'improved',
+        text: 'Skipping the approval queue is now a permission of its own — "Apply attendance without approval" — instead of being wired to the words "admin" and "super admin". It also covers all four kinds: an exception or an overtime claim entered by somebody holding it now applies at once, where before only leave and WFH did. The same people can do the same things today; what changed is that it can now be granted to anybody.',
+      },
+      {
         kind: 'added',
         text: 'Every time picker has a "Now" shortcut, the way every date picker has "Today". It fills in the current time rounded to the picker\u2019s own step — nearest, so 11:07 on a quarter-hour field reads 11:00 rather than a quarter past an hour that has not happened. On a field with an earliest allowed time, Now goes dim when it would land before it. The start/end picker sets whichever side you are editing instead of saving, since a start without an end is not something to commit on one tap.',
       },

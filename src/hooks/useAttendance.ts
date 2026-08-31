@@ -577,8 +577,8 @@ export function useDeleteWfh() {
 export function useGrantWfh() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ payload, grantedBy }: { payload: GrantWfhPayload; grantedBy: string }) =>
-      grantWfh(payload, grantedBy),
+    mutationFn: ({ payload, grantedBy, appliesDirectly }: { payload: GrantWfhPayload; grantedBy: string; appliesDirectly: boolean }) =>
+      grantWfh(payload, grantedBy, appliesDirectly),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['attendance', 'wfh'] })
       qc.invalidateQueries({ queryKey: ['attendance', 'all'] })
@@ -718,7 +718,8 @@ export function useSubmitLeave() {
 export function useEnterLeaveForEmployee() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (payload: EnterLeavePayload) => enterLeaveForEmployee(payload),
+    mutationFn: ({ payload, appliesDirectly }: { payload: EnterLeavePayload; appliesDirectly: boolean }) =>
+      enterLeaveForEmployee(payload, appliesDirectly),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['attendance', 'leave'] })
       qc.invalidateQueries({ queryKey: ['attendance', 'all'] })
@@ -736,8 +737,8 @@ export function useEnterLeaveForEmployee() {
 export function useEnterExceptionForEmployee() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ profileId, payload }: { profileId: string; payload: RequestExceptionPayload }) =>
-      enterExceptionForEmployee(profileId, payload),
+    mutationFn: ({ profileId, payload, appliesDirectly }: { profileId: string; payload: RequestExceptionPayload; appliesDirectly: boolean }) =>
+      enterExceptionForEmployee(profileId, payload, appliesDirectly),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['attendance', 'exceptions'] }),
   })
 }
@@ -745,8 +746,8 @@ export function useEnterExceptionForEmployee() {
 export function useEnterOvertimeForEmployee() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ profileId, payload }: { profileId: string; payload: SubmitOvertimePayload }) =>
-      enterOvertimeForEmployee(profileId, payload),
+    mutationFn: ({ profileId, payload, appliesDirectly }: { profileId: string; payload: SubmitOvertimePayload; appliesDirectly: boolean }) =>
+      enterOvertimeForEmployee(profileId, payload, appliesDirectly),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['attendance', 'overtime'] }),
   })
 }

@@ -366,14 +366,15 @@ export async function requestException(payload: RequestExceptionPayload): Promis
 /**
  * File an exception for somebody else.
  *
- * Always pending, whoever files it — unlike leave and WFH, where an admin's
- * entry applies at once. An exception rewrites a day that is already on the
- * record, so it goes through the queue like any other; the filer can approve it
- * in the next click if they hold that too.
+ * `appliesDirectly` is the caller's `can_apply_attendance_directly`, which is
+ * what decides whether this lands approved or queued. Passed in rather than
+ * looked up here: an api function writes what it is told, and RLS is what
+ * actually refuses an entry the caller may not make.
  */
 export async function enterExceptionForEmployee(
   profileId: string,
   payload: RequestExceptionPayload,
+  appliesDirectly: boolean,
 ): Promise<AttendanceException> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
@@ -387,6 +388,9 @@ export async function enterExceptionForEmployee(
       requested_time: payload.requested_time,
       return_time: payload.return_time ?? null,
       reason: payload.reason,
+      ...(appliesDirectly
+        ? { status: 'approved', reviewed_by: user.id, reviewed_at: new Date().toISOString() }
+        : { status: 'pending' }),
     })
     .select()
     .single()
@@ -745,16 +749,24 @@ export async function submitOvertimeRequest(
   return data
 }
 
-/** File an overtime claim for somebody else. Always pending — see enterExceptionForEmployee. */
+/** File an overtime claim for somebody else. See enterExceptionForEmployee. */
 export async function enterOvertimeForEmployee(
   profileId: string,
   payload: SubmitOvertimePayload,
+  appliesDirectly: boolean,
 ): Promise<OvertimeRequest> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
   const { data, error } = await supabase
     .from('overtime_requests')
-    .insert({ ...payload, profile_id: profileId, entered_by: user.id })
+    .insert({
+      ...payload,
+      profile_id: profileId,
+      entered_by: user.id,
+      ...(appliesDirectly
+        ? { status: 'approved', reviewed_by: user.id, reviewed_at: new Date().toISOString() }
+        : { status: 'pending' }),
+    })
     .select()
     .single()
   if (error) throw error
@@ -981,10 +993,8 @@ export interface GrantWfhPayload extends SubmitWfhPayload {
 export async function grantWfh(
   payload: GrantWfhPayload,
   grantedBy: string,
+  appliesDirectly: boolean,
 ): Promise<WfhRequest> {
-  const { data: me } = await supabase.from('profiles').select('role').eq('id', grantedBy).single()
-  const appliesDirectly = me?.role === 'admin' || me?.role === 'super_admin'
-
   const { data, error } = await supabase
     .from('wfh_requests')
     .insert({
@@ -1098,13 +1108,13 @@ export interface EnterLeavePayload extends SubmitLeavePayload {
 // entered_by = the actor. Admins/super_admins apply it directly (inserted 'approved'
 // → trg_leave_sync writes attendance immediately); HR always creates it 'pending' for
 // an admin to approve. RLS enforces both the status gate and the approval segregation.
-export async function enterLeaveForEmployee(payload: EnterLeavePayload): Promise<LeaveRequest> {
+export async function enterLeaveForEmployee(
+  payload: EnterLeavePayload,
+  appliesDirectly: boolean,
+): Promise<LeaveRequest> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
   const { profile_id, ...rest } = payload
-
-  const { data: me } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-  const appliesDirectly = me?.role === 'admin' || me?.role === 'super_admin'
 
   const { data, error } = await supabase
     .from('leave_requests')

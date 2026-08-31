@@ -621,6 +621,64 @@ export function useRealtimeComments(taskId: string) {
 
 ---
 
+## Permission Rules
+
+**Nothing is ever attached to a role. Roles exist only to carry permissions.**
+
+A role is a bag of permission keys and a name people recognise. It is never the
+thing a rule tests. The moment code asks "is this person an admin?" instead of
+"may this person do this?", a role invented on the Roles screen can no longer be
+given that ability however it is configured, and renaming a role silently
+changes behaviour.
+
+This holds everywhere — RLS policies, Postgres functions, hooks, components,
+route guards, notification targeting, badge counts.
+
+```sql
+-- Never
+current_user_role() IN ('super_admin', 'admin')
+EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = ANY(ARRAY['admin','hr']))
+
+-- Always
+has_feature('can_approve_requests')
+```
+
+```ts
+// Never
+const canApprove = profile?.role === 'admin' || profile?.role === 'super_admin'
+const isManager = MGMT_ROLES.includes(profile?.role ?? '')
+
+// Always
+const canApprove = useCanAccess('can_approve_requests')
+```
+
+### When no permission fits
+
+Add one. A new key in `permissions`, granted in the same migration to whichever
+roles hold that ability today, so the change is a change of mechanism and not of
+who can do what. Name it for the ability, not for the role that happens to have
+it: `can_apply_attendance_directly`, not `can_admin_attendance`.
+
+Two roles holding identical permissions is not a problem to solve by reaching
+for the role name — it means the distinction you are drawing does not exist yet
+and needs its own key.
+
+### Data is not a role
+
+Facts about a record stay facts: being on `project_managers` for a project,
+being staffed on a service, being a task's assignee, having filed a request. Do
+not invent permissions for these — check the data. `is_project_manager(id)` is
+correct; `has_feature('can_be_project_manager')` is not.
+
+### The two exceptions
+
+- `is_internal()` — the client/staff boundary, which is what the whole
+  permission system sits inside rather than something it grants.
+- `profiles.role` as a **label**: `RoleBadge`, a directory column, a default
+  landing page. Displaying a role is fine. Deciding with it is not.
+
+---
+
 ## Security Rules
 
 ### Data storage
@@ -694,6 +752,12 @@ These extend the existing "Code Style" rules and take precedence.
 - No copying TanStack Query data into `useState`
 - No Realtime subscriptions inline in components — use `src/hooks/realtime/`
 - No prop drilling beyond 2 component levels
+
+**Permissions**
+
+- No role names in any rule — no `current_user_role() IN (...)`, no `profiles.role = ANY(...)`, no `profile?.role === 'admin'`, no role arrays like `MGMT_ROLES` used as a gate
+- No new capability without a permission key to hang it on
+- No permission named after a role instead of the ability it grants
 
 **Security**
 
