@@ -14,6 +14,7 @@ import { useClaimableQuestCount, useGamificationPendingCount } from './useGamifi
 import { useNotifications } from './useNotifications'
 import { useMyLatestCommentAt } from './useComments'
 import { notificationHref } from '../constants/notifications'
+import { countDecidable } from '../lib/requestReview'
 
 /**
  * One thing blocking someone — either you, or somebody waiting on you.
@@ -99,7 +100,15 @@ export function useWaitingOnYou(): { items: WaitingItem[]; total: number } {
       })
     }
 
-    const attendanceTotal = leave.length + wfh.length + exceptions.length + overtime.length
+    // Only what this person can actually clear. A request they filed for
+    // somebody else is pending on an approver who is not them, so counting it
+    // here would put a number on the badge that they alone cannot make go away —
+    // and would hide, inside one total, the ones that really are theirs.
+    const attendanceTotal =
+      countDecidable(leave, profile?.id)
+      + countDecidable(wfh, profile?.id)
+      + countDecidable(exceptions, profile?.id)
+      + countDecidable(overtime, profile?.id)
     if (attendanceTotal > 0) {
       items.push({
         id: 'attendance',
@@ -156,5 +165,5 @@ export function useWaitingOnYou(): { items: WaitingItem[]; total: number } {
     }
 
     return { items, total: items.reduce((sum, item) => sum + item.count, 0) }
-  }, [approvals, leave, wfh, exceptions, overtime, gamificationPending, claimableQuests, unreadMentions, repliedAt])
+  }, [approvals, leave, wfh, exceptions, overtime, gamificationPending, claimableQuests, unreadMentions, repliedAt, profile?.id])
 }

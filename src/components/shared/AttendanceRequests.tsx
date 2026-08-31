@@ -8,6 +8,7 @@ import { Button } from '../ui/Button'
 import { Select } from '../ui/Select'
 import { Tabs } from '../ui/Tabs'
 import { matchesQuery } from '../ui/optionSearch'
+import { isDecidableBy } from '../../lib/requestReview'
 import { EnterRequestForEmployeeModal } from './EnterRequestForEmployeeModal'
 import { formatDate } from '../../lib/utils'
 import { DAY_PART_LABEL } from '../../lib/dayParts'
@@ -377,7 +378,7 @@ export function AttendanceRequests() {
    * a database error back, which reads as a fault rather than as the rule.
    */
   const canDecide = (row: UnifiedRequest): boolean =>
-    canReview && row.profileId !== profile?.id && row.enteredById !== profile?.id
+    canReview && isDecidableBy({ profile_id: row.profileId, entered_by: row.enteredById }, profile?.id)
 
   function review(row: UnifiedRequest, decision: ReviewStatus) {
     if (!profile) return

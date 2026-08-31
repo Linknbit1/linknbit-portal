@@ -39,6 +39,7 @@ import {
 import { useEnrolledDevices } from '../../hooks/useEnrolledDevices'
 import { useClaimableQuestCount, useGamificationPendingCount } from '../../hooks/useGamification'
 import { useAuthContext } from '../../context/AuthContext'
+import { countDecidable } from '../../lib/requestReview'
 
 /**
  * Sidebar sections, in render order. The flat list had grown to 14 top-level
@@ -333,8 +334,14 @@ export function useNavItems(): NavItem[] {
   // Leave, WFH, exceptions and overtime share one queue now, so their pending
   // counts sum onto that single row rather than four that no longer exist.
   const attendanceByPath: Record<string, number> = {
+    // Only the ones this person can decide. Somebody who files a request for a
+    // colleague cannot approve it, so counting it on their badge is a number
+    // they can never clear — and it buries the ones that are theirs.
     '/attendance/requests':
-      leavePending.length + wfhPending.length + excPending.length + otPending.length,
+      countDecidable(leavePending, profile?.id)
+      + countDecidable(wfhPending, profile?.id)
+      + countDecidable(excPending, profile?.id)
+      + countDecidable(otPending, profile?.id),
   }
   const attendanceTotal = Object.values(attendanceByPath).reduce((a, n) => a + n, 0)
   const gamificationByPath: Record<string, number> = {
