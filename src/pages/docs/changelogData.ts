@@ -83,7 +83,7 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'fixed',
-        text: 'Taking somebody off a service now takes them off its tasks too. Assigning a person to a task adds them to that service, and removing them from it used to leave them assignee and reviewer on the work — off the roster, still holding the job. Removing now says how many tasks they are on and asks first; their comments stay where they are.',
+        text: 'Taking somebody off a service now takes them off its tasks too. Assigning a person to a task adds them to that service, and removing them from it used to leave them assignee and reviewer on the work — off the roster, still holding the job. Removing now asks first, showing how many tasks they are assignee and reviewer on in the same boxes a project deletion uses; their comments stay where they are.',
       },
       {
         kind: 'fixed',

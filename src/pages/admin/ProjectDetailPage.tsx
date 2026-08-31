@@ -15,6 +15,7 @@ import { Select } from '../../components/ui/Select'
 import { DepartedBadge } from '../../components/ui/DepartedBadge'
 import { Popover } from '../../components/ui/Popover'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
+import { ImpactSummary } from '../../components/ui/ImpactSummary'
 import { ServiceChip } from '../../components/shared/ServiceChip'
 import { StatusChip } from '../../components/shared/StatusChip'
 import { PriorityChip } from '../../components/shared/PriorityChip'
@@ -663,15 +664,15 @@ export default function ProjectDetailPage() {
         open={confirmProjectDelete}
         title="Delete project?"
         message={
-          <DeleteImpactMessage
-            subject={project.name}
+          <ImpactSummary
+            lead={<><strong className="text-text-1">{project.name}</strong> will be deleted after confirmation.</>}
             loading={projectDeleteImpactLoading}
-            lines={[
-              ['Tasks', projectDeleteImpact?.tasks],
-              ['Stages', projectDeleteImpact?.stages],
-              ['Comments', projectDeleteImpact?.comments],
-              ['Attachments', projectDeleteImpact?.attachments],
-              ['Subtasks', projectDeleteImpact?.subtasks],
+            counts={[
+              { label: 'Tasks', value: projectDeleteImpact?.tasks },
+              { label: 'Stages', value: projectDeleteImpact?.stages },
+              { label: 'Comments', value: projectDeleteImpact?.comments },
+              { label: 'Attachments', value: projectDeleteImpact?.attachments },
+              { label: 'Subtasks', value: projectDeleteImpact?.subtasks },
             ]}
             note="The project and its tasks will be hidden from active lists. Related comments, files, stages, subtasks, and assignees will be removed."
           />
@@ -733,34 +734,6 @@ export default function ProjectDetailPage() {
   )
 }
 
-function DeleteImpactMessage({
-  subject, loading, lines, note,
-}: {
-  subject: string
-  loading: boolean
-  lines: [string, number | undefined][]
-  note: string
-}) {
-  return (
-    <div className="space-y-3">
-      <p><strong className="text-text-1">{subject}</strong> will be deleted after confirmation.</p>
-      {loading ? (
-        <p className="text-text-3">Checking linked records...</p>
-      ) : (
-        <div className="grid grid-cols-2 gap-2">
-          {lines.map(([label, value]) => (
-            <div key={label} className="rounded-md border border-border-default bg-surface-2 px-3 py-2">
-              <p className="font-mono text-[10px] uppercase tracking-wider text-text-4">{label}</p>
-              <p className="font-display text-[18px] font-bold text-text-1">{value ?? 0}</p>
-            </div>
-          ))}
-        </div>
-      )}
-      <p className="text-text-3">{note}</p>
-    </div>
-  )
-}
-
 function Meta({ icon: Icon, label, value, danger, badge }: { icon: typeof Calendar; label: string; value: string; danger?: boolean; badge?: ReactNode }) {
   return (
     <div>
@@ -795,31 +768,22 @@ function UnstaffMemberDialog({
   const { data: load, isLoading } = useServiceMemberTaskLoad(projectServiceId, member.id)
 
   const plural = (n: number) => (n === 1 ? 'task' : 'tasks')
-  const roles = [
-    load?.assigned ? `assignee on ${load.assigned} ${plural(load.assigned)}` : null,
-    load?.reviewing ? `reviewer on ${load.reviewing} ${plural(load.reviewing)}` : null,
-  ].filter(Boolean)
-
-  const message = isLoading ? (
-    <span>Checking what {member.name} is working on…</span>
-  ) : roles.length > 0 ? (
-    <span>
-      <strong className="text-text-1">{member.name}</strong> is {roles.join(' and ')} in{' '}
-      {serviceName}. Removing them takes them off that work as well. Anything they have said
-      in a comment stays where it is.
-    </span>
-  ) : (
-    <span>
-      <strong className="text-text-1">{member.name}</strong> is not on any task in {serviceName},
-      so this only takes them off the roster.
-    </span>
-  )
 
   return (
     <ConfirmDialog
       open
       title={`Remove ${member.name} from ${serviceName}?`}
-      message={message}
+      message={
+        <ImpactSummary
+          lead={<><strong className="text-text-1">{member.name}</strong> will be taken off {serviceName}.</>}
+          loading={isLoading}
+          counts={[
+            { label: 'Assignee on', value: load?.assigned },
+            { label: 'Reviewer on', value: load?.reviewing },
+          ]}
+          note="They are removed from that work as well, so it reads as unassigned rather than as theirs. Anything they have said in a comment stays where it is."
+        />
+      }
       confirmLabel="Remove"
       pendingLabel="Removing…"
       isPending={unstaff.isPending}

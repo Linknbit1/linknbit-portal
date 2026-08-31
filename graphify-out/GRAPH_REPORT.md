@@ -1,11 +1,11 @@
 # Graph Report - linknbit-portal  (2026-08-31)
 
 ## Corpus Check
-- 432 files · ~570,687 words
+- 433 files · ~570,927 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 3156 nodes · 4381 edges · 93 communities detected
+- 3157 nodes · 4381 edges · 93 communities detected
 - Extraction: 81% EXTRACTED · 19% INFERRED · 0% AMBIGUOUS · INFERRED: 817 edges (avg confidence: 0.79)
 - Token cost: 0 input · 0 output
 
@@ -77,7 +77,6 @@
 - [[_COMMUNITY_Community 85|Community 85]]
 - [[_COMMUNITY_Community 179|Community 179]]
 - [[_COMMUNITY_Community 180|Community 180]]
-- [[_COMMUNITY_Community 224|Community 224]]
 - [[_COMMUNITY_Community 225|Community 225]]
 - [[_COMMUNITY_Community 226|Community 226]]
 - [[_COMMUNITY_Community 227|Community 227]]
@@ -103,6 +102,7 @@
 - [[_COMMUNITY_Community 247|Community 247]]
 - [[_COMMUNITY_Community 248|Community 248]]
 - [[_COMMUNITY_Community 249|Community 249]]
+- [[_COMMUNITY_Community 250|Community 250]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `select()` - 235 edges
@@ -398,107 +398,107 @@ Nodes (1): graphify
 Cohesion: 1.0
 Nodes (1): TODO tasks
 
-### Community 224 - "Community 224"
+### Community 225 - "Community 225"
 Cohesion: 1.0
 Nodes (1): Configuration for the ZKTeco bridge.  Everything is environment-driven so the
 
-### Community 225 - "Community 225"
+### Community 226 - "Community 226"
 Cohesion: 1.0
 Nodes (1): Minimal .env reader — avoids a python-dotenv dependency on the Pi.      Existi
 
-### Community 226 - "Community 226"
+### Community 227 - "Community 227"
 Cohesion: 1.0
 Nodes (1): Resolve the office's public IPv4 address from the Pi.  This is deliberately NO
 
-### Community 227 - "Community 227"
+### Community 228 - "Community 228"
 Cohesion: 1.0
 Nodes (1): Pin name resolution to A records for the duration of the block.      Belt and
 
-### Community 228 - "Community 228"
+### Community 229 - "Community 229"
 Cohesion: 1.0
 Nodes (1): Accept only a bare, globally routable IPv4 address.      A captive portal or a
 
-### Community 229 - "Community 229"
+### Community 230 - "Community 230"
 Cohesion: 1.0
 Nodes (1): Return the public IPv4 two providers agree on, or None.      Providers are tri
 
-### Community 230 - "Community 230"
+### Community 231 - "Community 231"
 Cohesion: 1.0
 Nodes (1): Durable local punch spool.  The Pi must never lose a punch to a WAN outage, so
 
-### Community 231 - "Community 231"
+### Community 232 - "Community 232"
 Cohesion: 1.0
 Nodes (1): Stable idempotency key. Must be computed identically on every retry.
 
-### Community 232 - "Community 232"
+### Community 233 - "Community 233"
 Cohesion: 1.0
 Nodes (1): Record a punch. Returns True if it was new to the spool.
 
-### Community 233 - "Community 233"
+### Community 234 - "Community 234"
 Cohesion: 1.0
 Nodes (1): Trim old acked rows so the SD card doesn't fill over years of use.          Ke
 
-### Community 234 - "Community 234"
+### Community 235 - "Community 235"
 Cohesion: 1.0
 Nodes (1): HTTP client for the attendance-biometric-punch edge function.  All three Pi→se
 
-### Community 235 - "Community 235"
+### Community 236 - "Community 236"
 Cohesion: 1.0
 Nodes (1): Raised when a message could not be delivered after all retries.
 
-### Community 236 - "Community 236"
+### Community 237 - "Community 237"
 Cohesion: 1.0
 Nodes (1): Deliver a batch. A 200 means every punch in it is durably stored.
 
-### Community 237 - "Community 237"
+### Community 238 - "Community 238"
 Cohesion: 1.0
 Nodes (1): Report terminal health, and let the server refresh the office IP.          `in
 
-### Community 238 - "Community 238"
+### Community 239 - "Community 239"
 Cohesion: 1.0
 Nodes (1): Push enrolled users so admins can link enroll numbers by name.          Names
 
-### Community 239 - "Community 239"
-Cohesion: 1.0
-Nodes (1): One device read: sync clock, pull the log into the spool, report health.
-
 ### Community 240 - "Community 240"
 Cohesion: 1.0
-Nodes (1): Send unacked punches in batches. Returns how many were acked.
+Nodes (1): One device read: sync clock, pull the log into the spool, report health.
 
 ### Community 241 - "Community 241"
 Cohesion: 1.0
-Nodes (1): Thin wrapper over pyzk for the K40.  Why polling rather than pyzk's live_captu
+Nodes (1): Send unacked punches in batches. Returns how many were acked.
 
 ### Community 242 - "Community 242"
 Cohesion: 1.0
-Nodes (1): The device reports naive wall-clock time in its own timezone.      Attach the
+Nodes (1): Thin wrapper over pyzk for the K40.  Why polling rather than pyzk's live_captu
 
 ### Community 243 - "Community 243"
 Cohesion: 1.0
-Nodes (1): Connection-scoped device handle. Use as a context manager.
+Nodes (1): The device reports naive wall-clock time in its own timezone.      Attach the
 
 ### Community 244 - "Community 244"
 Cohesion: 1.0
-Nodes (1): Push the Pi's (NTP-backed) clock to the device.          The K40 keeps its own
+Nodes (1): Connection-scoped device handle. Use as a context manager.
 
 ### Community 245 - "Community 245"
 Cohesion: 1.0
-Nodes (1): Clear the device's attendance log ONLY.          Never call clear_data() — tha
+Nodes (1): Push the Pi's (NTP-backed) clock to the device.          The K40 keeps its own
 
 ### Community 246 - "Community 246"
 Cohesion: 1.0
-Nodes (1): In-memory stand-in used by --fake-device.      Exists so the spool, dedupe, ba
+Nodes (1): Clear the device's attendance log ONLY.          Never call clear_data() — tha
 
 ### Community 247 - "Community 247"
 Cohesion: 1.0
-Nodes (1): One device read: sync clock, pull the log into the spool, report health.
+Nodes (1): In-memory stand-in used by --fake-device.      Exists so the spool, dedupe, ba
 
 ### Community 248 - "Community 248"
 Cohesion: 1.0
-Nodes (1): Send unacked punches in batches. Returns how many were acked.
+Nodes (1): One device read: sync clock, pull the log into the spool, report health.
 
 ### Community 249 - "Community 249"
+Cohesion: 1.0
+Nodes (1): Send unacked punches in batches. Returns how many were acked.
+
+### Community 250 - "Community 250"
 Cohesion: 1.0
 Nodes (1): Push enrolled users so admins can link enroll numbers by name.          Names tr
 
@@ -533,68 +533,68 @@ Nodes (1): Push enrolled users so admins can link enroll numbers by name.       
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 180`** (2 nodes): `TODO tasks`, `todo.md`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 224`** (1 nodes): `Configuration for the ZKTeco bridge.  Everything is environment-driven so the`
+- **Thin community `Community 225`** (1 nodes): `Configuration for the ZKTeco bridge.  Everything is environment-driven so the`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 225`** (1 nodes): `Minimal .env reader — avoids a python-dotenv dependency on the Pi.      Existi`
+- **Thin community `Community 226`** (1 nodes): `Minimal .env reader — avoids a python-dotenv dependency on the Pi.      Existi`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 226`** (1 nodes): `Resolve the office's public IPv4 address from the Pi.  This is deliberately NO`
+- **Thin community `Community 227`** (1 nodes): `Resolve the office's public IPv4 address from the Pi.  This is deliberately NO`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 227`** (1 nodes): `Pin name resolution to A records for the duration of the block.      Belt and`
+- **Thin community `Community 228`** (1 nodes): `Pin name resolution to A records for the duration of the block.      Belt and`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 228`** (1 nodes): `Accept only a bare, globally routable IPv4 address.      A captive portal or a`
+- **Thin community `Community 229`** (1 nodes): `Accept only a bare, globally routable IPv4 address.      A captive portal or a`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 229`** (1 nodes): `Return the public IPv4 two providers agree on, or None.      Providers are tri`
+- **Thin community `Community 230`** (1 nodes): `Return the public IPv4 two providers agree on, or None.      Providers are tri`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 230`** (1 nodes): `Durable local punch spool.  The Pi must never lose a punch to a WAN outage, so`
+- **Thin community `Community 231`** (1 nodes): `Durable local punch spool.  The Pi must never lose a punch to a WAN outage, so`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 231`** (1 nodes): `Stable idempotency key. Must be computed identically on every retry.`
+- **Thin community `Community 232`** (1 nodes): `Stable idempotency key. Must be computed identically on every retry.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 232`** (1 nodes): `Record a punch. Returns True if it was new to the spool.`
+- **Thin community `Community 233`** (1 nodes): `Record a punch. Returns True if it was new to the spool.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 233`** (1 nodes): `Trim old acked rows so the SD card doesn't fill over years of use.          Ke`
+- **Thin community `Community 234`** (1 nodes): `Trim old acked rows so the SD card doesn't fill over years of use.          Ke`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 234`** (1 nodes): `HTTP client for the attendance-biometric-punch edge function.  All three Pi→se`
+- **Thin community `Community 235`** (1 nodes): `HTTP client for the attendance-biometric-punch edge function.  All three Pi→se`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 235`** (1 nodes): `Raised when a message could not be delivered after all retries.`
+- **Thin community `Community 236`** (1 nodes): `Raised when a message could not be delivered after all retries.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 236`** (1 nodes): `Deliver a batch. A 200 means every punch in it is durably stored.`
+- **Thin community `Community 237`** (1 nodes): `Deliver a batch. A 200 means every punch in it is durably stored.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 237`** (1 nodes): `Report terminal health, and let the server refresh the office IP.          `in`
+- **Thin community `Community 238`** (1 nodes): `Report terminal health, and let the server refresh the office IP.          `in`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 238`** (1 nodes): `Push enrolled users so admins can link enroll numbers by name.          Names`
+- **Thin community `Community 239`** (1 nodes): `Push enrolled users so admins can link enroll numbers by name.          Names`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 239`** (1 nodes): `One device read: sync clock, pull the log into the spool, report health.`
+- **Thin community `Community 240`** (1 nodes): `One device read: sync clock, pull the log into the spool, report health.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 240`** (1 nodes): `Send unacked punches in batches. Returns how many were acked.`
+- **Thin community `Community 241`** (1 nodes): `Send unacked punches in batches. Returns how many were acked.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 241`** (1 nodes): `Thin wrapper over pyzk for the K40.  Why polling rather than pyzk's live_captu`
+- **Thin community `Community 242`** (1 nodes): `Thin wrapper over pyzk for the K40.  Why polling rather than pyzk's live_captu`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 242`** (1 nodes): `The device reports naive wall-clock time in its own timezone.      Attach the`
+- **Thin community `Community 243`** (1 nodes): `The device reports naive wall-clock time in its own timezone.      Attach the`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 243`** (1 nodes): `Connection-scoped device handle. Use as a context manager.`
+- **Thin community `Community 244`** (1 nodes): `Connection-scoped device handle. Use as a context manager.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 244`** (1 nodes): `Push the Pi's (NTP-backed) clock to the device.          The K40 keeps its own`
+- **Thin community `Community 245`** (1 nodes): `Push the Pi's (NTP-backed) clock to the device.          The K40 keeps its own`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 245`** (1 nodes): `Clear the device's attendance log ONLY.          Never call clear_data() — tha`
+- **Thin community `Community 246`** (1 nodes): `Clear the device's attendance log ONLY.          Never call clear_data() — tha`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 246`** (1 nodes): `In-memory stand-in used by --fake-device.      Exists so the spool, dedupe, ba`
+- **Thin community `Community 247`** (1 nodes): `In-memory stand-in used by --fake-device.      Exists so the spool, dedupe, ba`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 247`** (1 nodes): `One device read: sync clock, pull the log into the spool, report health.`
+- **Thin community `Community 248`** (1 nodes): `One device read: sync clock, pull the log into the spool, report health.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 248`** (1 nodes): `Send unacked punches in batches. Returns how many were acked.`
+- **Thin community `Community 249`** (1 nodes): `Send unacked punches in batches. Returns how many were acked.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 249`** (1 nodes): `Push enrolled users so admins can link enroll numbers by name.          Names tr`
+- **Thin community `Community 250`** (1 nodes): `Push enrolled users so admins can link enroll numbers by name.          Names tr`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `toast()` connect `Community 1` to `Community 34`, `Community 4`, `Community 37`, `Community 6`, `Community 10`, `Community 44`, `Community 77`, `Community 14`, `Community 16`, `Community 49`, `Community 19`, `Community 20`, `Community 21`, `Community 53`, `Community 23`, `Community 61`, `Community 30`?**
-  _High betweenness centrality (0.143) - this node is a cross-community bridge._
+  _High betweenness centrality (0.148) - this node is a cross-community bridge._
 - **Why does `select()` connect `Community 0` to `Community 34`, `Community 6`, `Community 70`, `Community 10`, `Community 11`, `Community 14`, `Community 47`, `Community 17`, `Community 18`, `Community 60`?**
-  _High betweenness centrality (0.109) - this node is a cross-community bridge._
+  _High betweenness centrality (0.111) - this node is a cross-community bridge._
 - **Why does `useAuthContext()` connect `Community 4` to `Community 2`, `Community 3`, `Community 7`, `Community 10`, `Community 15`?**
-  _High betweenness centrality (0.088) - this node is a cross-community bridge._
+  _High betweenness centrality (0.077) - this node is a cross-community bridge._
 - **Are the 233 inferred relationships involving `select()` (e.g. with `isDeactivated()` and `auditOnce()`) actually correct?**
   _`select()` has 233 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 69 inferred relationships involving `toast()` (e.g. with `add()` and `openFile()`) actually correct?**

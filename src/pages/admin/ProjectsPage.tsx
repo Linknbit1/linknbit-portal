@@ -15,6 +15,7 @@ import { AvatarGroup } from '../../components/ui/Avatar'
 import { ProgressBar } from '../../components/ui/ProgressBar'
 import { Skeleton } from '../../components/ui/Skeleton'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
+import { ImpactSummary } from '../../components/ui/ImpactSummary'
 import { ServiceChip } from '../../components/shared/ServiceChip'
 import { StatusChip } from '../../components/shared/StatusChip'
 import { cn } from '../../lib/cn'
@@ -208,16 +209,17 @@ export default function ProjectsPage() {
         open={!!pendingDelete}
         title="Delete project?"
         message={
-          <DeleteImpactMessage
-            subject={pendingDelete?.name ?? ''}
+          <ImpactSummary
+            lead={<><strong className="text-text-1">{pendingDelete?.name ?? ''}</strong> will be deleted after confirmation.</>}
             loading={deleteImpactLoading}
-            lines={[
-              ['Tasks', deleteImpact?.tasks],
-              ['Stages', deleteImpact?.stages],
-              ['Comments', deleteImpact?.comments],
-              ['Attachments', deleteImpact?.attachments],
-              ['Subtasks', deleteImpact?.subtasks],
+            counts={[
+              { label: 'Tasks', value: deleteImpact?.tasks },
+              { label: 'Stages', value: deleteImpact?.stages },
+              { label: 'Comments', value: deleteImpact?.comments },
+              { label: 'Attachments', value: deleteImpact?.attachments },
+              { label: 'Subtasks', value: deleteImpact?.subtasks },
             ]}
+            note="Related task comments, files, stages, subtasks, and assignee links will be removed before the project leaves active lists."
           />
         }
         confirmLabel="Delete project"
@@ -405,33 +407,6 @@ function ListView({ projects, onOpen, onDelete, canDelete }: { projects: Project
           ))}
         </tbody>
       </table>
-    </div>
-  )
-}
-
-function DeleteImpactMessage({
-  subject, loading, lines,
-}: {
-  subject: string
-  loading: boolean
-  lines: [string, number | undefined][]
-}) {
-  return (
-    <div className="space-y-3">
-      <p><strong className="text-text-1">{subject}</strong> will be deleted after confirmation.</p>
-      {loading ? (
-        <p className="text-text-3">Checking linked records...</p>
-      ) : (
-        <div className="grid grid-cols-2 gap-2">
-          {lines.map(([label, value]) => (
-            <div key={label} className="rounded-md border border-border-default bg-surface-2 px-3 py-2">
-              <p className="font-mono text-[10px] uppercase tracking-wider text-text-4">{label}</p>
-              <p className="font-display text-[18px] font-bold text-text-1">{value ?? 0}</p>
-            </div>
-          ))}
-        </div>
-      )}
-      <p className="text-text-3">Related task comments, files, stages, subtasks, and assignee links will be removed before the project leaves active lists.</p>
     </div>
   )
 }
