@@ -4,29 +4,28 @@ import { cn } from '../../lib/cn'
 import { formatDayHeading } from '../../lib/dateGroups'
 import type { MonthFilter } from '../../hooks/useMonthFilter'
 
-/** Month stepper + "All months" toggle, for a SectionToolbar. Pass hideAllMonths to
- *  drop the toggle where an "all months" view doesn't apply (e.g. member profile). */
-export function MonthStepper({ filter, hideAllMonths = false }: { filter: MonthFilter; hideAllMonths?: boolean }) {
+/**
+ * "All months" toggle, then the month stepper — the switch that decides whether
+ * the stepper applies at all reads before the thing it governs, not after it.
+ *
+ * `hideAllMonths` drops the toggle where an all-months view makes no sense (the
+ * member profile). `hideCurrent` drops the "Current" badge for a toolbar that
+ * cannot afford the pill changing width: the badge appears only on this month,
+ * so stepping onto it would resize the control and nudge its neighbours. The
+ * next arrow already goes dead on the current month, which says the same thing
+ * without occupying space that comes and goes.
+ */
+export function MonthStepper({
+  filter,
+  hideAllMonths = false,
+  hideCurrent = false,
+}: {
+  filter: MonthFilter
+  hideAllMonths?: boolean
+  hideCurrent?: boolean
+}) {
   return (
     <>
-      <PeriodStepper
-        icon={Calendar}
-        label={filter.label}
-        // "All months" is much shorter than "September 2026"; without a floor the
-        // pill resized on every toggle and shoved whatever sat beside it.
-        labelClassName="min-w-30 text-center"
-        onPrev={filter.prevMonth}
-        onNext={filter.nextMonth}
-        disablePrev={filter.allMonths}
-        disableNext={filter.allMonths || filter.isCurrentMonth}
-        className={cn(filter.allMonths && 'opacity-50')}
-      >
-        {!filter.allMonths && filter.isCurrentMonth && (
-          <span className="ml-1 px-1.5 py-0.5 rounded-xs bg-brand-red/10 border border-brand-red/20 text-brand-red text-[10px] font-mono font-semibold uppercase tracking-wide">
-            Current
-          </span>
-        )}
-      </PeriodStepper>
       {!hideAllMonths && (
         <button
           type="button"
@@ -42,6 +41,24 @@ export function MonthStepper({ filter, hideAllMonths = false }: { filter: MonthF
           All months
         </button>
       )}
+      <PeriodStepper
+        icon={Calendar}
+        label={filter.label}
+        // "All months" is much shorter than "September 2026"; without a floor the
+        // pill resized on every toggle and shoved whatever sat beside it.
+        labelClassName="min-w-28 text-center text-[12.5px]"
+        onPrev={filter.prevMonth}
+        onNext={filter.nextMonth}
+        disablePrev={filter.allMonths}
+        disableNext={filter.allMonths || filter.isCurrentMonth}
+        className={cn(filter.allMonths && 'opacity-50')}
+      >
+        {!hideCurrent && !filter.allMonths && filter.isCurrentMonth && (
+          <span className="ml-1 px-1.5 py-0.5 rounded-xs bg-brand-red/10 border border-brand-red/20 text-brand-red text-[10px] font-mono font-semibold uppercase tracking-wide">
+            Current
+          </span>
+        )}
+      </PeriodStepper>
     </>
   )
 }

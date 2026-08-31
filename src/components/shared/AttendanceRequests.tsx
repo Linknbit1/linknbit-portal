@@ -449,9 +449,10 @@ export function AttendanceRequests() {
             controls on one line. The top row is which slice you are looking at
             and what you can do to it; the bottom row narrows whatever that is.
 
-            Every slot is a fixed width and the month stepper sits last, so
-            nothing reflows when a control's own label changes — toggling "All
-            months" used to resize its pill and shove the search box sideways. */}
+            Every slot is a fixed width, and the month controls are pinned hard
+            right with nothing after them, so no label change can disturb a
+            neighbour — toggling "All months" used to resize its pill and shove
+            the search box sideways. */}
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-border-subtle px-4 py-3">
           <Tabs
             variant="pill"
@@ -501,16 +502,22 @@ export function AttendanceRequests() {
               className="w-44 shrink-0"
             />
           )}
-          <MonthStepper filter={month} />
           {narrowed && (
             <button
               type="button"
               onClick={() => { setKind('all'); setPerson('all'); setQuery(''); month.setAllMonths(true) }}
-              className="ml-auto shrink-0 font-ui text-[11.5px] font-semibold text-text-3 underline-offset-2 transition-colors hover:text-text-1 hover:underline"
+              className="shrink-0 font-ui text-[11.5px] font-semibold text-text-3 underline-offset-2 transition-colors hover:text-text-1 hover:underline"
             >
               Clear filters
             </button>
           )}
+          {/* Period sits apart from the rest, hard right: it is the one filter
+              that is a range rather than a value, and nothing follows it, so its
+              own width can never disturb anything else. The Current badge is off
+              for the same reason — see MonthStepper. */}
+          <div className="ml-auto flex items-center gap-2">
+            <MonthStepper filter={month} hideCurrent />
+          </div>
         </div>
 
         {isLoading ? (

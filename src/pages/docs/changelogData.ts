@@ -67,7 +67,11 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'improved',
-        text: 'The requests queue no longer repeats its own name under the page title, and its filters sit in their own row under the tabs instead of seven controls competing on one line. Every control has a fixed slot, so switching "All months" on and off stops shoving the search box sideways. A Clear filters link appears once anything is narrowed.',
+        text: 'The month stepper now reads "All months" first and the month after it, on every screen that has one — the switch deciding whether a period applies belongs before the period, not after it. The month name is set smaller, to sit with the controls beside it rather than above them.',
+      },
+      {
+        kind: 'improved',
+        text: 'The requests queue no longer repeats its own name under the page title, and its filters sit in their own row under the tabs instead of seven controls competing on one line. Type and employee sit left, the month controls hard right with nothing after them, and every slot has a fixed width — so switching "All months" on and off no longer shoves the search box sideways. A Clear filters link appears once anything is narrowed.',
       },
       {
         kind: 'added',
