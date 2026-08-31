@@ -98,6 +98,7 @@ interface UnifiedRequest {
   detail: string
   reason: string
   /** Who filed it, when that was not the person it is about. */
+  enteredById: string | null
   enteredByName: string | null
   status: string
   createdAt: string
@@ -236,6 +237,7 @@ export function AttendanceRequests() {
           .filter(Boolean)
           .join(' · '),
         reason: r.reason,
+        enteredById: r.entered_by,
         enteredByName: r.entered_by_profile?.name ?? null,
         status: r.status,
         createdAt: r.created_at,
@@ -255,6 +257,7 @@ export function AttendanceRequests() {
         dateLabel: fmtRange(r.start_date, r.end_date),
         detail: r.day_part !== 'full' ? DAY_PART_LABEL[r.day_part] : 'Full day',
         reason: r.reason,
+        enteredById: null,
         enteredByName: null,
         status: r.status,
         createdAt: r.created_at,
@@ -274,6 +277,7 @@ export function AttendanceRequests() {
         dateLabel: formatDate(r.date),
         detail: `${r.exception_type.replace(/_/g, ' ')} · ${r.requested_time}`,
         reason: r.reason,
+        enteredById: r.entered_by,
         enteredByName: r.entered_by_profile?.name ?? null,
         status: r.status,
         createdAt: r.created_at,
@@ -293,6 +297,7 @@ export function AttendanceRequests() {
         dateLabel: formatDate(r.date),
         detail: `${r.hours}h · ${r.start_time}–${r.end_time}`,
         reason: r.reason,
+        enteredById: r.entered_by,
         enteredByName: r.entered_by_profile?.name ?? null,
         status: r.status,
         createdAt: r.created_at,
@@ -364,6 +369,15 @@ export function AttendanceRequests() {
     reviewWfh.isPending ||
     reviewException.isPending ||
     reviewOvertime.isPending
+
+  /**
+   * Whether this viewer can decide on this row, mirroring the RLS rule: you may
+   * not review your own request, and you may not review one you filed for
+   * somebody else. Offering the buttons anyway meant pressing them and getting
+   * a database error back, which reads as a fault rather than as the rule.
+   */
+  const canDecide = (row: UnifiedRequest): boolean =>
+    canReview && row.profileId !== profile?.id && row.enteredById !== profile?.id
 
   function review(row: UnifiedRequest, decision: ReviewStatus) {
     if (!profile) return
@@ -516,7 +530,7 @@ export function AttendanceRequests() {
                   {row.detail && <span className="text-text-3">{row.detail}</span>}
                 </div>
 
-                {row.status === 'pending' && canReview ? (
+                {row.status === 'pending' && canDecide(row) ? (
                   <div className="flex items-center gap-1.5">
                     <button
                       type="button"
@@ -544,8 +558,17 @@ export function AttendanceRequests() {
                       'text-[10.5px] font-ui font-semibold uppercase tracking-wider whitespace-nowrap',
                       STATUS_PILL[row.status] ?? 'bg-surface-2 text-text-3 border-border-default',
                     )}
+                    title={
+                      row.status === 'pending' && canReview && !canDecide(row)
+                        ? row.enteredById === profile?.id
+                          ? 'You filed this one, so somebody else has to decide on it'
+                          : 'You cannot decide on your own request'
+                        : undefined
+                    }
                   >
-                    {row.status}
+                    {row.status === 'pending' && canReview && !canDecide(row)
+                      ? 'Waiting on someone else'
+                      : row.status}
                   </span>
                 )}
 

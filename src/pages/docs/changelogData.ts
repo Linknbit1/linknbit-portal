@@ -82,6 +82,14 @@ export const RELEASES: ChangelogRelease[] = [
         text: 'A long reason on a request wraps onto as many lines as it needs instead of being cut off mid-sentence, and the queue tabs are sized to sit with the controls beside them.',
       },
       {
+        kind: 'fixed',
+        text: 'Pressing Approve on a request you filed for somebody else no longer returns a database error. You were never allowed to decide on one — putting a request in and waving it through are meant to be two people — but the queue offered the buttons anyway. It now shows those rows as "Waiting on someone else", and says why on hover.',
+      },
+      {
+        kind: 'improved',
+        text: 'Who may decide on a request is no longer a list of role names. It is the rule itself: you cannot review your own request, or one you filed for somebody else, and anyone else who can approve requests may. Nothing changes about who signs off what today; a role built on the Roles screen now gets the reach it was given.',
+      },
+      {
         kind: 'improved',
         text: 'Deleting a task now deletes it, the same as a project. It used to leave the task as a hidden row while its comments, files and subtasks were already gone for good — a husk nothing could reach, since every list filters it out and no screen shows it. Hours logged against the task go with it, so the confirmation now counts those too.',
       },

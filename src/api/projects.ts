@@ -105,7 +105,6 @@ export async function fetchProjects(filters: ProjectFilters = {}): Promise<Proje
   let query = supabase
     .from('projects')
     .select(PROJECT_SELECT)
-    .is('deleted_at', null)
     .order('created_at', { ascending: false })
 
   if (filters.status) query = query.eq('status', filters.status)
@@ -140,7 +139,6 @@ export async function fetchProject(id: string): Promise<ProjectListItem | null> 
     .from('projects')
     .select(PROJECT_SELECT)
     .eq('id', id)
-    .is('deleted_at', null)
     .maybeSingle()
   if (error) throw error
   if (!data) return null
@@ -197,16 +195,6 @@ export async function updateProject(id: string, updates: TablesUpdate<'projects'
 
 export async function updateProjectStatus(id: string, status: ProjectStatus): Promise<ProjectRow> {
   return updateProject(id, { status })
-}
-
-/** Soft delete — moves the project to the admin-only trash view. */
-export async function deleteProject(id: string): Promise<void> {
-  const { data: auth } = await supabase.auth.getUser()
-  const { error } = await supabase
-    .from('projects')
-    .update({ deleted_at: new Date().toISOString(), deleted_by: auth.user?.id ?? null })
-    .eq('id', id)
-  if (error) throw error
 }
 
 /**

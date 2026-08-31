@@ -415,6 +415,23 @@ export async function updateException(
   return data
 }
 
+/**
+ * The row a review just wrote, or a sentence saying why it did not.
+ *
+ * Reviewing goes through RLS, and a request the viewer may not decide on simply
+ * matches no rows — which `.single()` reported as PGRST116, "cannot coerce the
+ * result to a single JSON object". That is the database describing its own
+ * disappointment, not an answer anybody can act on.
+ */
+function reviewedOrRefused<T>(row: T | null): T {
+  if (!row) {
+    throw new Error(
+      'You cannot decide on this request. Somebody who did not file it has to review it.',
+    )
+  }
+  return row
+}
+
 export async function reviewException(
   id: string,
   status: 'approved' | 'rejected',
@@ -429,9 +446,9 @@ export async function reviewException(
     })
     .eq('id', id)
     .select()
-    .single()
+    .maybeSingle()
   if (error) throw error
-  return data
+  return reviewedOrRefused(data)
 }
 
 // Admin-only hard delete (RLS: admin/super_admin). Note: an OOO exception that already
@@ -829,9 +846,9 @@ export async function reviewOvertimeRequest(
     })
     .eq('id', id)
     .select()
-    .single()
+    .maybeSingle()
   if (error) throw error
-  return data
+  return reviewedOrRefused(data)
 }
 
 // Admin-only hard delete (RLS: admin/super_admin). Overtime aggregates at read time,
@@ -936,9 +953,9 @@ export async function reviewWfhRequest(
     })
     .eq('id', id)
     .select()
-    .single()
+    .maybeSingle()
   if (error) throw error
-  return data
+  return reviewedOrRefused(data)
 }
 
 // Admin-only hard delete (RLS: admin/super_admin). The trg_wfh_sync trigger now fires on
@@ -1234,9 +1251,9 @@ export async function reviewLeaveRequest(
     })
     .eq('id', id)
     .select()
-    .single()
+    .maybeSingle()
   if (error) throw error
-  return data
+  return reviewedOrRefused(data)
 }
 
 // Admin-only hard delete (RLS: admin/super_admin). The trg_leave_sync trigger now fires on

@@ -174,26 +174,18 @@ export interface PersonProject {
 // One row per service the person works on, so someone on both Design and
 // Development of a project shows up under each.
 //
-// Deleted projects are excluded, like every other project list. This is reached
-// through service_members rather than projects, so it does not inherit the
-// `.is('deleted_at', null)` those lists carry — and a project deleted before
-// `delete_project_cascade` existed still has its service_members rows, so
-// without this filter a soft-deleted project stayed on the profile forever. It
-// opened when clicked and then failed to delete with `project_not_found`, the
-// RPC's own words for "already deleted".
-//
-// Filtered here rather than in the query: `deleted_at` sits two embeds deep, and
-// the `!inner` hint needed to constrain it server-side is easy to get subtly
-// wrong for the sake of a handful of rows.
+// A deleted project no longer needs filtering out here: deleting one removes its
+// project_services and service_members with it, so no row is left pointing at a
+// project that is gone.
 export async function fetchPersonProjects(profileId: string): Promise<PersonProject[]> {
   const { data, error } = await supabase
     .from('service_members')
-    .select('role_in_service,project_service:project_services(id,service:services(slug),project:projects(id,name,status,deleted_at))')
+    .select('role_in_service,project_service:project_services(id,service:services(slug),project:projects(id,name,status))')
     .eq('profile_id', profileId)
   if (error) throw error
   return data.flatMap((m) => {
     const project = m.project_service?.project
-    if (!project || project.deleted_at) return []
+    if (!project) return []
     return [{
       project_service_id: m.project_service?.id ?? project.id,
       id: project.id,

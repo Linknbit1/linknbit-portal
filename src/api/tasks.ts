@@ -46,7 +46,6 @@ export async function fetchTasks(filters: TaskFilters = {}): Promise<TaskListIte
   let query = supabase
     .from('tasks')
     .select(TASK_SELECT)
-    .is('deleted_at', null)
     .is('parent_task_id', null)
     .order('board_order', { ascending: true })
     .order('created_at', { ascending: false })
@@ -138,11 +137,3 @@ export async function moveTask({ taskId, projectServiceId, stageId }: MoveTaskAr
   if (error) throw error
 }
 
-export async function deleteTask(id: string): Promise<void> {
-  const { data: auth } = await supabase.auth.getUser()
-  const { error } = await supabase
-    .from('tasks')
-    .update({ deleted_at: new Date().toISOString(), deleted_by: auth.user?.id ?? null })
-    .eq('id', id)
-  if (error) throw error
-}
