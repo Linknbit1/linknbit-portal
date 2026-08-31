@@ -13,16 +13,17 @@ import { fileKind, formatFileSize } from '../../lib/attachment'
 import { formatRelativeTime } from '../../lib/utils'
 import type { MessageAttachmentRow } from '../../api/messageAttachments'
 
-type Tab = 'media' | 'links' | 'files'
+export type ChannelFileTab = 'media' | 'links' | 'files'
 
-const TABS: { id: Tab; label: string; icon: typeof ImageIcon }[] = [
+/** Exported so the info panel can render these alongside its Members tab. */
+export const CHANNEL_FILE_TABS: { id: ChannelFileTab; label: string; icon: typeof ImageIcon }[] = [
   { id: 'media', label: 'Media', icon: ImageIcon },
   { id: 'links', label: 'Links', icon: Link2 },
   { id: 'files', label: 'Files', icon: FileIcon },
 ]
 
 /** Splits a conversation's shared items the way WhatsApp does. */
-function bucketOf(a: MessageAttachmentRow): Tab {
+function bucketOf(a: MessageAttachmentRow): ChannelFileTab {
   if (a.kind === 'link') return 'links'
   const kind = fileKind(a.mime_type, a.file_name)
   return kind === 'image' || kind === 'video' ? 'media' : 'files'
@@ -30,13 +31,14 @@ function bucketOf(a: MessageAttachmentRow): Tab {
 
 interface ChannelFilesPanelProps {
   channelId: string
+  /** Controlled by the info panel, which owns the shared tab strip. */
+  tab: ChannelFileTab
 }
 
-export function ChannelFilesPanel({ channelId }: ChannelFilesPanelProps) {
+export function ChannelFilesPanel({ channelId, tab }: ChannelFilesPanelProps) {
   const toast = useToast()
   const { profile } = useAuthContext()
   const canDeleteAny = useCanAccess('can_administer_channels')
-  const [tab, setTab] = useState<Tab>('media')
   const [confirming, setConfirming] = useState<MessageAttachmentRow | null>(null)
   const { data: attachments = [], isLoading } = useMessageAttachments(channelId)
   const { mutate: deleteAttachment, isPending: deleting } = useDeleteChatAttachment()
@@ -76,21 +78,6 @@ export function ChannelFilesPanel({ channelId }: ChannelFilesPanelProps) {
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      <div className="flex items-center gap-1 p-2 border-b border-border-default">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            className={cn(
-              'flex items-center gap-1.5 px-2.5 h-7 rounded-sm font-ui text-[12px] transition-colors',
-              tab === t.id ? 'bg-surface-3 text-text-1' : 'text-text-3 hover:text-text-1',
-            )}
-          >
-            <t.icon size={13} /> {t.label}
-          </button>
-        ))}
-      </div>
-
       <div className="flex-1 overflow-y-auto p-2">
         {isLoading ? (
           <div className="space-y-2">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-14" />)}</div>
