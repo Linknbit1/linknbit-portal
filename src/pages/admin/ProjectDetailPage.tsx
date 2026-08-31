@@ -519,26 +519,42 @@ export default function ProjectDetailPage() {
 
         {/* People belong to a service, so the team reads as one block per service. */}
         {activeTab === 'team' && (
-          // Wrapping flex rather than a fixed grid: cards share the row when
-          // there are several services and one card stretches the full width when
-          // there is only one, instead of being stranded in a half-width column.
-          // items-start keeps a one-person service from being padded out to match
-          // the tallest card in its row.
-          <div className="flex flex-wrap items-start gap-4">
-            {services.map((s) => {
+          // Full-width panels stacked, not a wrapping row: a project with one
+          // service used to leave a card marooned in the left half of an empty
+          // screen, and the tab is read top-to-bottom anyway — "who is on
+          // Design, who is on Development" — not compared side by side.
+          <div className="space-y-4">
+            {services.length === 0 ? (
+              <div className="flex flex-col items-center gap-2 rounded-xl border border-border-default bg-surface-1 px-4 py-14 text-center">
+                <span className="flex size-11 items-center justify-center rounded-full bg-surface-2 text-text-3"><Users size={19} /></span>
+                <p className="font-ui text-[13px] text-text-2">This project has no services yet</p>
+                <p className="font-ui text-[11.5px] text-text-4">People are staffed onto a service, so add one first.</p>
+                {canManage && (
+                  <Button size="sm" variant="secondary" className="mt-1" iconLeft={<Plus size={13} />} onClick={() => setShowAddService(true)}>
+                    Add a service
+                  </Button>
+                )}
+              </div>
+            ) : services.map((s) => {
               const roster = members.filter((m) => m.project_service_id === s.id)
               return (
-                <div key={s.id} className="flex min-w-0 flex-1 basis-96 flex-col overflow-hidden rounded-xl border border-border-default bg-surface-1">
-                  <div className="flex flex-wrap items-center gap-2 border-b border-border-subtle bg-surface-2/30 px-4 py-3">
-                    {s.service && <ServiceChip service={s.service.slug} />}
-                    <span className="rounded-sm bg-surface-2 px-2 py-0.5 font-mono text-[10px] text-text-3">
-                      {roster.length} {roster.length === 1 ? 'member' : 'members'}
-                    </span>
-                    {canManage && (
-                      <Button size="sm" variant="secondary" className="ml-auto" iconLeft={<Plus size={13} />} onClick={() => setAddMemberFor(s.id)}>
-                        Add members
-                      </Button>
-                    )}
+                <div key={s.id} className="overflow-hidden rounded-xl border border-border-default bg-surface-1">
+                  {/* The service colour runs down the edge of its own block, so
+                      three stacked panels are told apart at a glance. */}
+                  <div className="flex items-stretch border-b border-border-subtle bg-surface-2/30">
+                    <span className="w-0.75 shrink-0" style={{ background: s.service?.color ?? 'transparent' }} aria-hidden />
+                    <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 px-4 py-3">
+                      {s.service && <ServiceChip service={s.service.slug} />}
+                      <span className="font-ui text-[13px] font-semibold text-text-1">{s.service?.name ?? 'Service'}</span>
+                      <span className="rounded-sm bg-surface-2 px-2 py-0.5 font-mono text-[10px] text-text-3">
+                        {roster.length} {roster.length === 1 ? 'member' : 'members'}
+                      </span>
+                      {canManage && (
+                        <Button size="sm" variant="secondary" className="ml-auto" iconLeft={<Plus size={13} />} onClick={() => setAddMemberFor(s.id)}>
+                          Add members
+                        </Button>
+                      )}
+                    </div>
                   </div>
                   {roster.length === 0 ? (
                     <div className="flex flex-col items-center gap-2 py-10 text-center">
@@ -547,14 +563,14 @@ export default function ProjectDetailPage() {
                       <p className="font-ui text-[11.5px] text-text-4">Add people individually or pull in a whole team at once.</p>
                     </div>
                   ) : (
-                    // auto-fill rather than a fixed column count: the same card
-                    // reads well whether it is sharing the row with two others or
-                    // spanning the screen alone.
-                    <div className="grid gap-2 p-4 grid-cols-[repeat(auto-fill,minmax(200px,1fr))]">
+                    // Fixed column counts rather than auto-fill: the panel is now
+                    // always full width, and auto-fill left a three-person service
+                    // trailing four empty tracks across the rest of the row.
+                    <div className="grid gap-2 p-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
                       {roster.map((m) => (
                         <div
                           key={m.id}
-                          className="group flex items-center gap-3 rounded-lg border border-border-subtle bg-surface-2/40 px-3 py-2.5 transition-colors hover:border-border-default"
+                          className="group flex items-center gap-3 rounded-lg border border-border-subtle bg-surface-2/40 px-3 py-2.5 transition-colors hover:border-border-default hover:bg-surface-2/70"
                         >
                           <Avatar name={m.name} src={m.avatar_url ?? undefined} size="sm" personId={m.id} />
                           <div className="min-w-0 flex-1">
@@ -569,7 +585,7 @@ export default function ProjectDetailPage() {
                                 { projectId: id, projectServiceId: s.id, profileId: m.id },
                                 { onError: (e) => toast(e instanceof Error ? e.message : 'Failed', 'error') },
                               )}
-                              className="flex size-7 shrink-0 items-center justify-center rounded-sm text-text-4 opacity-0 transition-all hover:bg-error/10 hover:text-error group-hover:opacity-100"
+                              className="flex size-7 shrink-0 items-center justify-center rounded-sm text-text-4 opacity-0 transition-all hover:bg-error/10 hover:text-error group-hover:opacity-100 focus-visible:opacity-100"
                               aria-label={`Remove ${m.name} from ${s.service?.name ?? 'service'}`}
                             >
                               <X size={13} />

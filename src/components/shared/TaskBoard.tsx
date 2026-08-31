@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
-  AlertCircle, Eye,
+  AlertCircle, Archive, Ban, BadgeCheck, Circle, CircleCheck, CircleDashed, CircleDot, Eye,
   CornerUpRight, GitBranch, Layers, MessageSquare, MoreHorizontal, Paperclip, Timer, Trash2,
 } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { Avatar, AvatarGroup } from '../ui/Avatar'
 import { PriorityChip } from './PriorityChip'
@@ -30,6 +31,32 @@ interface Column {
   isSignoff: boolean
   /** Moving a card here notifies the task's reviewers. */
   isReview: boolean
+  /** Header glyph — read off the column's meaning, never stored. */
+  icon: LucideIcon
+}
+
+/**
+ * The glyph that sits in front of a column's name, ClickUp style.
+ *
+ * Read from the column rather than stored on it: the key is matched first
+ * because it is what an admin actually named the thing, and the flags catch
+ * anything renamed or invented on the Statuses screen. A column nobody's
+ * pattern matches still gets a shape, so a new one never renders headerless.
+ */
+function iconFor(s: TaskStatusRow): LucideIcon {
+  const key = s.key.toLowerCase()
+  if (/block|stuck|hold/.test(key)) return Ban
+  if (/backlog|icebox|parked|idea/.test(key)) return Archive
+  if (/approv|sign_?off/.test(key)) return BadgeCheck
+  if (/complete|done|shipped|closed/.test(key)) return CircleCheck
+  if (/review|qa|check|test/.test(key)) return Eye
+  if (/progress|doing|active|wip|started/.test(key)) return CircleDashed
+  if (/todo|to_?do|open|new|queued|ready/.test(key)) return Circle
+  if (s.is_review) return Eye
+  if (s.is_signoff) return BadgeCheck
+  if (s.is_done) return CircleCheck
+  if (s.is_default) return Circle
+  return CircleDot
 }
 
 /**
@@ -51,6 +78,7 @@ function columnsFrom(statuses: TaskStatusRow[]): Column[] {
     color: s.color,
     isSignoff: s.is_signoff,
     isReview: s.is_review,
+    icon: iconFor(s),
   }))
 }
 
@@ -263,28 +291,41 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
             onDragLeave={() => setDragOver((c) => (c === col.status ? null : c))}
             onDrop={() => handleDrop(col)}
             className={cn(
-              'flex h-full snap-start flex-col rounded-lg border p-2.5 transition-colors',
+              'flex h-full snap-start flex-col overflow-hidden rounded-lg border p-2.5 transition-colors',
               // Near-full width on a phone so cards stay readable, then a roomy
               // fixed lane. Seven columns will not fit a laptop, so the board
-              // scrolls sideways rather than squeezing every card thin.
-              'w-[86vw] shrink-0 sm:w-87.5 lg:w-auto lg:min-w-87.5 lg:flex-1',
+              // scrolls sideways rather than squeezing every card thin — which
+              // is why the lane is sized for the card rather than the viewport.
+              'w-[86vw] shrink-0 sm:w-100 lg:w-auto lg:min-w-100 lg:flex-1',
               dragOver === col.status ? 'bg-surface-2/40' : 'border-border-default bg-surface-1/60',
             )}
             style={dragOver === col.status ? { borderColor: col.color } : undefined}
           >
-            {/* Coloured, iconed header — the column's identity, ClickUp style. */}
-            <div
-              className="mb-2 flex shrink-0 items-center gap-2 rounded-md border px-2.5 py-2"
-              style={{ background: `${col.color}22`, borderColor: `${col.color}4D`, color: col.color }}
-            >
-              <span className="size-2 shrink-0 rounded-full bg-current" aria-hidden />
-              <span className="min-w-0 flex-1 truncate font-ui text-[11.5px] font-bold uppercase tracking-wider">
-                {col.label}
-              </span>
-              {col.isReview && (
-                <Eye size={12} className="shrink-0 opacity-70" aria-label="Reviewers are notified here" />
-              )}
-              <span className="shrink-0 font-mono text-[11px] font-bold tabular-nums">{items.length}</span>
+            {/* Coloured, iconed header — the column's identity, ClickUp style.
+                The bar above it repeats the colour at full strength so a lane is
+                identifiable from the edge of the screen, where the tinted panel
+                alone is too faint to tell two columns apart. */}
+            <div className="mb-2 shrink-0 overflow-hidden rounded-md border" style={{ borderColor: `${col.color}4D` }}>
+              <div className="h-0.75 w-full" style={{ background: col.color }} aria-hidden />
+              <div
+                className="flex items-center gap-2 px-2.5 py-2"
+                style={{ background: `${col.color}1F`, color: col.color }}
+                title={col.isReview ? 'Reviewers are notified when a task lands here' : undefined}
+              >
+                <col.icon size={14} className="shrink-0" aria-hidden />
+                <span className="min-w-0 flex-1 truncate font-ui text-[11.5px] font-bold uppercase tracking-wider">
+                  {col.label}
+                </span>
+                {col.isReview && (
+                  <Eye size={12} className="shrink-0 opacity-70" aria-label="Reviewers are notified here" />
+                )}
+                <span
+                  className="shrink-0 rounded-sm px-1.5 py-0.5 font-mono text-[11px] font-bold tabular-nums"
+                  style={{ background: `${col.color}26` }}
+                >
+                  {items.length}
+                </span>
+              </div>
             </div>
             {/* overscroll-y-contain, not overscroll-contain: the vertical axis
                 must not chain to the page when a column bottoms out, but the

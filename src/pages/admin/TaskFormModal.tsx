@@ -130,7 +130,8 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
   const [reviewerIds, setReviewerIds] = useState<string[]>(task?.reviewers.map((r) => r.id) ?? [])
   const [priority, setPriority] = useState<Priority>(toPriority(task?.priority))
   // Open-ended now: a new column added on the Statuses screen is a valid value
-  // here without this file knowing about it.
+  // here without this file knowing about it. Empty until the statuses arrive —
+  // `effectiveStatus` below is what the form actually reads.
   const [status, setStatus] = useState<string>(task?.status ?? '')
   // Deadline only — a task is "due by", not "scheduled from". start_date is left
   // untouched on existing rows rather than silently wiped.
@@ -187,7 +188,15 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
   // blank the field.
   const statusOptions = taskStatuses
     .filter((s) => canSignOff || !s.is_signoff || s.key === task?.status)
-    .map((s) => ({ value: s.key, label: s.label }))
+    .map((s) => ({ value: s.key, label: s.label, dot: s.color }))
+  /**
+   * Statuses only arrive after first paint, so a new task starts with nothing
+   * picked. Falling back to the column marked default is what the board itself
+   * assumes; sending the empty string instead reached Postgres as a task_statuses
+   * foreign key violation the moment somebody saved without touching the field.
+   */
+  const defaultStatusKey = taskStatuses.find((s) => s.is_default)?.key ?? taskStatuses[0]?.key ?? ''
+  const effectiveStatus = statusOptions.some((o) => o.value === status) ? status : defaultStatusKey
 
   const pending = createTask.isPending || updateTask.isPending || addService.isPending || moveTask.isPending || uploadAttachment.isPending
 
@@ -212,6 +221,7 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
     if (!title.trim()) { toast('Task title is required', 'error'); return }
     if (!description.trim()) { toast('A description is required', 'error'); return }
     if (!dueAt) { toast('A deadline is required', 'error'); return }
+    if (!effectiveStatus) { toast('Statuses are still loading — try again in a moment', 'error'); return }
     const onSuccess = () => { toast(isEdit ? 'Task updated' : 'Task created', 'success'); dismiss() }
     const onError = (e: unknown) => toast(e instanceof Error ? e.message : 'Save failed', 'error')
 
@@ -242,7 +252,7 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
             description: description.trim(),
             doc: toDbDoc(descDoc),
             stage_id: stageId || null,
-            priority, status, due_date: dueAt, client_visible: clientVisible,
+            priority, status: effectiveStatus, due_date: dueAt, client_visible: clientVisible,
             estimated_minutes: estimatedMinutes,
           },
         },
@@ -288,7 +298,7 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
           doc: toDbDoc(descDoc),
           stage_id: stageId || null,
           assignee_id: assigneeIds[0] ?? null,
-          priority, status, due_date: dueAt, client_visible: clientVisible,
+          priority, status: effectiveStatus, due_date: dueAt, client_visible: clientVisible,
           estimated_minutes: estimatedMinutes,
         },
         {
@@ -393,7 +403,7 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
           </div>
           <div className="space-y-1.5">
             <label className="text-label font-ui font-semibold text-text-2 uppercase tracking-wider">Status</label>
-            <Select value={status} onChange={setStatus} options={statusOptions} />
+            <Select value={effectiveStatus} onChange={setStatus} options={statusOptions} />
           </div>
         </div>
         <div className="space-y-1.5">

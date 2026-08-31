@@ -31,11 +31,38 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: '1.24.1',
+    date: '2026-08-31',
+    title: 'Boards that read like boards',
+    highlight:
+      'A new task no longer has to have its status picked by hand, board columns carry their colour and an icon, the lanes are wider, and a project’s Team tab uses the whole screen.',
+    entries: [
+      {
+        kind: 'fixed',
+        text: 'Creating a task no longer fails with a database error. The status box started empty and the save sent that emptiness to the database, which refused it. A new task now starts on the default column, so it saves whether or not you touch the field.',
+      },
+      {
+        kind: 'improved',
+        text: 'Board columns look like what they are. Each one wears its colour as a bar across the top of its header, with an icon in front of its name read from what the column means — a bin for Blocked, an eye for Review, a tick for Completed. Custom columns get one too.',
+      },
+      {
+        kind: 'improved',
+        text: 'Board lanes are wider, so card titles, dates and assignees stop being squeezed. The board still scrolls sideways when there are more columns than screen.',
+      },
+      {
+        kind: 'improved',
+        text: 'A project’s Team tab uses the full width instead of stranding one service card in the left half of an empty screen. Each service is its own block, colour-marked down the edge, with its people in a grid that fills the row.',
+      },
+      {
+        kind: 'improved',
+        text: 'A project with no services yet says so on its Team tab, with a way to add one, instead of showing nothing at all.',
+      },
+    ],
+  },
+  {
     version: '1.24.0',
     date: '2026-08-30',
     title: 'Channels you can actually run',
-    highlight:
-      'Channels have managers instead of an owner, you can say who is allowed to post, headings can be renamed, and pinned items finally show what they are.',
     entries: [
       {
         kind: 'improved',

@@ -398,6 +398,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
           'Reviewers work like assignees: a task can have several, and a reviewer can open the task they are reviewing whether or not it is theirs.',
           'Reviewers are notified when a card is dragged into whichever column is marked as the review column on Settings → Task statuses. It follows the marker, not the word, so a column called QA or Client sign-off works the same.',
           'You can assign or name a reviewer who is not staffed on the service yet. Choosing them adds them to it, the same way choosing a service the project does not run adds the service.',
+          'A new task opens on the default column and can be saved as it stands; the status picker is there for starting one somewhere else.',
           'The description box is the same whether you are creating a task or editing one. Type / for formatting commands and @ to tag someone; a person tagged while the task is being created is notified once it is saved.',
         ],
       },
@@ -1012,6 +1013,8 @@ export const DOC_CHAPTERS: DocChapter[] = [
           'Sign-off columns can only be moved into by someone allowed to approve tasks. Finished columns drop off My Day and Your work.',
           'A column still holding tasks cannot be deleted. Move them somewhere else first.',
           'Renaming a column keeps every task in it, and keeps whatever it was marked as. Behaviour follows the marks, never the name.',
+          'On the board, each column wears its colour as a bar across the top of its header and an icon in front of its name. The icon is read from what the column means, so a new one called QA or Sign-off arrives with a sensible glyph without anyone choosing it.',
+          'The column marked as the default is where every new task starts, so leaving the status alone while writing one is a valid answer.',
         ],
       },
       {
