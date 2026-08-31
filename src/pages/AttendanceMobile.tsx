@@ -250,10 +250,12 @@ export function AttendanceSectionScreen() {
       : undefined
     if (!desktopEntry) return <Navigate to="/attendance" replace />
     return (
+      // No heading under the Topbar: it carries the section's name already, and
+      // printing the same string twice, 60px apart, is not a hierarchy. The
+      // mobile stack screens have never done it either.
       <div className="flex flex-col flex-1">
         <Topbar title={desktopEntry.title} />
         <div className="px-4 py-6 lg:px-8 lg:py-7 flex flex-col gap-6">
-          <h2 className="font-display font-bold text-[22px] text-text-1">{desktopEntry.title}</h2>
           {/* Managers check in/out here too — Daily Records is the landing page. */}
           {section === 'records' && <AttendanceCheckInCard />}
           {desktopEntry.render()}

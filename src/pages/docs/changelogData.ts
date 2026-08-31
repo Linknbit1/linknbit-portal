@@ -66,6 +66,14 @@ export const RELEASES: ChangelogRelease[] = [
         text: 'The requests queue has one set of tabs instead of two rows of chips. Pending, Approved, Rejected and All are the tabs, with the number still waiting on Pending; the request type moved into a dropdown beside them, keeping its per-kind counts. Two bars of chips read as two things competing to say what the list was.',
       },
       {
+        kind: 'improved',
+        text: 'The requests queue no longer repeats its own name under the page title, and its filters sit in their own row under the tabs instead of seven controls competing on one line. Every control has a fixed slot, so switching "All months" on and off stops shoving the search box sideways. A Clear filters link appears once anything is narrowed.',
+      },
+      {
+        kind: 'added',
+        text: 'The requests queue can be narrowed by month and by employee, with All months and All employees as the starting point so nothing pending is hidden until you ask for it. A leave range spanning a month boundary shows under both months.',
+      },
+      {
         kind: 'added',
         text: 'You can search the requests queue by person, reason or type. It sits on the right of the toolbar, away from the filters.',
       },
@@ -80,6 +88,10 @@ export const RELEASES: ChangelogRelease[] = [
       {
         kind: 'fixed',
         text: 'A long reason on a request wraps onto as many lines as it needs instead of being cut off mid-sentence, and the queue tabs are sized to sit with the controls beside them.',
+      },
+      {
+        kind: 'improved',
+        text: 'A request entered for somebody now carries an "Added by ‹name›" chip in the queue, beside the type, so you can tell at a glance which requests an employee raised themselves and which HR put in on their behalf. It used to be the dimmest line on the row, under the reason. Search matches the filer\u2019s name too.',
       },
       {
         kind: 'improved',

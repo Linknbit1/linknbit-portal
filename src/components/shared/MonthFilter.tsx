@@ -12,6 +12,9 @@ export function MonthStepper({ filter, hideAllMonths = false }: { filter: MonthF
       <PeriodStepper
         icon={Calendar}
         label={filter.label}
+        // "All months" is much shorter than "September 2026"; without a floor the
+        // pill resized on every toggle and shoved whatever sat beside it.
+        labelClassName="min-w-30 text-center"
         onPrev={filter.prevMonth}
         onNext={filter.nextMonth}
         disablePrev={filter.allMonths}

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Loader2, Home, Plane, AlertCircle, Hourglass, Check, X, Inbox, CalendarX2, Plus, Search } from 'lucide-react'
+import { Loader2, Home, Plane, AlertCircle, Hourglass, Check, X, Inbox, CalendarX2, Plus, Search, UserPlus } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { Avatar } from '../ui/Avatar'
@@ -9,6 +9,8 @@ import { Select } from '../ui/Select'
 import { Tabs } from '../ui/Tabs'
 import { matchesQuery } from '../ui/optionSearch'
 import { isDecidableBy } from '../../lib/requestReview'
+import { useMonthFilter } from '../../hooks/useMonthFilter'
+import { MonthStepper } from './MonthFilter'
 import { EnterRequestForEmployeeModal } from './EnterRequestForEmployeeModal'
 import { formatDate } from '../../lib/utils'
 import { DAY_PART_LABEL } from '../../lib/dayParts'
@@ -197,6 +199,12 @@ export function AttendanceRequests() {
   const [kind, setKind] = useState<RequestKind | 'all'>('all')
   const [status, setStatus] = useState<StatusFilter>('pending')
   const [query, setQuery] = useState('')
+  const [person, setPerson] = useState('all')
+  // The same stepper the attendance tabs use, "All months" toggle included, so
+  // the two screens narrow a period the same way. Opens on All: a queue that
+  // started on the current month would hide a request pending for next month,
+  // which is exactly the request somebody needs to see.
+  const month = useMonthFilter(true)
 
   // Fetch unfiltered and narrow in memory: the counts on the type chips have to
   // reflect the whole queue, not the slice currently on screen.
@@ -324,12 +332,39 @@ export function AttendanceRequests() {
         (r) =>
           (kind === 'all' || r.kind === kind) &&
           (status === 'all' || r.status === status) &&
-          // The person is what anyone searches a queue for; the reason and the
-          // type are matched too so "sick" or "overtime" find something.
-          matchesQuery(query, r.name, r.reason, r.detail, KIND_META[r.kind].label),
+          (person === 'all' || r.profileId === person) &&
+          // Overlap, not the first day: a range that starts in one month and
+          // ends in the next belongs to both.
+          month.overlapsMonth(r.date, r.endDate) &&
+          // The person is what anyone searches a queue for; the reason, the type
+          // and whoever filed it are matched too so "sick", "overtime" or an HR
+          // name all find something.
+          matchesQuery(query, r.name, r.reason, r.detail, KIND_META[r.kind].label, r.enteredByName),
       ),
-    [all, kind, status, query],
+    [all, kind, status, person, month, query],
   )
+
+  /**
+   * Only the people who actually appear in the queue. A picker listing everybody
+   * internal would be mostly rows that filter to nothing, and the answer to
+   * "whose requests are these" is already in the data on screen.
+   */
+  const peopleOptions = useMemo(() => {
+    const byId = new Map<string, { name: string; avatarUrl: string | null }>()
+    for (const r of all) {
+      if (!byId.has(r.profileId)) byId.set(r.profileId, { name: r.name, avatarUrl: r.avatarUrl })
+    }
+    return [
+      { value: 'all', label: 'All employees' },
+      ...[...byId.entries()]
+        .sort((a, b) => a[1].name.localeCompare(b[1].name))
+        .map(([id, p]) => ({
+          value: id,
+          label: p.name,
+          avatar: { name: p.name, url: p.avatarUrl },
+        })),
+    ]
+  }, [all])
 
   const totalPending = all.filter((r) => r.status === 'pending').length
 
@@ -350,6 +385,10 @@ export function AttendanceRequests() {
       dot: KIND_META[k].dot,
     })),
   ]
+
+  // Drives the Clear filters escape hatch: a queue narrowed four ways and
+  // showing nothing should say so in one click rather than four.
+  const narrowed = kind !== 'all' || person !== 'all' || !month.allMonths || query.trim() !== ''
 
   const removingDay = removeLeaveDay.isPending || removeWfhDay.isPending
 
@@ -405,19 +444,14 @@ export function AttendanceRequests() {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Says whose requests these are. Without it the screen reads as the whole
-          company's queue to someone who is only ever shown their own, which is
-          what made it look like everybody could see everybody. */}
-      <p className="font-ui text-[12.5px] text-text-3">
-        {canReview
-          ? 'Every request you are able to decide on.'
-          : 'Your requests. Only you and whoever reviews them can see these.'}
-      </p>
-
       <div className="border border-border-default bg-surface-1">
-        {/* One row: the tabs say which slice, everything after them narrows it.
-            Search and the add action sit right, away from the filters, so the
-            eye lands on the tabs first and on the queue immediately below. */}
+        {/* Two rows, because they answer two questions and mixing them put seven
+            controls on one line. The top row is which slice you are looking at
+            and what you can do to it; the bottom row narrows whatever that is.
+
+            Every slot is a fixed width and the month stepper sits last, so
+            nothing reflows when a control's own label changes — toggling "All
+            months" used to resize its pill and shove the search box sideways. */}
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-border-subtle px-4 py-3">
           <Tabs
             variant="pill"
@@ -427,17 +461,6 @@ export function AttendanceRequests() {
             onChange={(k) => { if (isStatusFilter(k)) setStatus(k) }}
             className="shrink-0"
           />
-          {/* A reviewer's tool: it exists to work a queue down by kind. On your
-              own handful of requests it filters almost nothing. */}
-          {canReview && (
-            <Select
-              size="sm"
-              value={kind}
-              onChange={(v) => setKind(v === 'all' || isKind(v) ? v : 'all')}
-              options={typeOptions}
-              className="w-40 shrink-0"
-            />
-          )}
           <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
             <div className="relative w-full min-w-40 sm:w-52">
               <Search size={13} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-text-4" />
@@ -457,6 +480,39 @@ export function AttendanceRequests() {
           </div>
         </div>
 
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-border-subtle bg-surface-2/20 px-4 py-2.5">
+          {/* A reviewer's tools: on your own handful of requests they narrow
+              almost nothing, so an employee gets the month stepper alone. */}
+          {canReview && (
+            <Select
+              size="sm"
+              value={kind}
+              onChange={(v) => setKind(v === 'all' || isKind(v) ? v : 'all')}
+              options={typeOptions}
+              className="w-36 shrink-0"
+            />
+          )}
+          {canReview && (
+            <Select
+              size="sm"
+              value={person}
+              onChange={setPerson}
+              options={peopleOptions}
+              className="w-44 shrink-0"
+            />
+          )}
+          <MonthStepper filter={month} />
+          {narrowed && (
+            <button
+              type="button"
+              onClick={() => { setKind('all'); setPerson('all'); setQuery(''); month.setAllMonths(true) }}
+              className="ml-auto shrink-0 font-ui text-[11.5px] font-semibold text-text-3 underline-offset-2 transition-colors hover:text-text-1 hover:underline"
+            >
+              Clear filters
+            </button>
+          )}
+        </div>
+
         {isLoading ? (
           <div className="flex justify-center py-12 text-text-4">
             <Loader2 size={18} className="animate-spin" />
@@ -471,9 +527,11 @@ export function AttendanceRequests() {
             <span className="font-ui text-[13px]">
               {query.trim()
                 ? `Nothing matches “${query.trim()}”.`
-                : status === 'pending'
-                  ? 'Nothing is waiting for a decision.'
-                  : 'No requests match.'}
+                : !month.allMonths
+                  ? `Nothing in ${month.label}.`
+                  : status === 'pending'
+                    ? 'Nothing is waiting for a decision.'
+                    : 'No requests match.'}
             </span>
           </div>
         ) : (
@@ -507,11 +565,6 @@ export function AttendanceRequests() {
                     <span className="block font-ui text-[11.5px]/snug text-text-4 wrap-break-word">
                       {row.reason}
                     </span>
-                    {row.enteredByName && (
-                      <span className="mt-0.5 block font-mono text-[10px] text-text-4">
-                        Filed by {row.enteredByName}
-                      </span>
-                    )}
                   </div>
                 </div>
 
@@ -525,6 +578,20 @@ export function AttendanceRequests() {
                   <Icon size={11} />
                   {meta.label}
                 </span>
+
+                {/* Who put it in, when that was not the person it is about.
+                    On the scan line beside the type rather than as a third
+                    line under the reason: it decides who has to act on the
+                    row, so it cannot be the dimmest thing on it. */}
+                {row.enteredByName && (
+                  <span
+                    className="inline-flex items-center gap-1 rounded-sm border border-brand-red/25 bg-brand-red/10 px-2 py-0.5 font-ui text-[10.5px] font-semibold uppercase tracking-wider whitespace-nowrap text-brand-red"
+                    title={`${row.enteredByName} filed this for ${row.name}, so somebody else has to decide on it`}
+                  >
+                    <UserPlus size={11} className="shrink-0" />
+                    Added by {row.enteredByName}
+                  </span>
+                )}
 
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11.5px] text-text-2 tabular-nums">
                   <span className="text-text-1">{row.dateLabel}</span>

@@ -16,14 +16,28 @@ export interface MonthFilter {
   label: string
   /** True when a 'YYYY-MM-DD' falls in the selected month (always true for "All months"). */
   inMonth: (date: string) => boolean
+  /**
+   * True when a range touches the selected month at all — a week of leave that
+   * starts in March and ends in April belongs to both, and filtering on its
+   * first day alone would lose it from one of them.
+   */
+  overlapsMonth: (start: string, end: string) => boolean
 }
 
-/** Month stepper state shared by the request tabs (mirrors the Overtime tab). */
-export function useMonthFilter(): MonthFilter {
+/**
+ * Month stepper state shared by the request tabs (mirrors the Overtime tab).
+ *
+ * `startAllMonths` is for a screen whose job is "what still needs doing" rather
+ * than "what happened in a period". A queue that opens on the current month
+ * silently hides anything pending for next month, which is the one thing it
+ * exists to show — so the requests queue opens wide and narrows on demand,
+ * while a report opens on the month you are reporting on.
+ */
+export function useMonthFilter(startAllMonths = false): MonthFilter {
   const now = new Date()
   const [year, setYear] = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth() + 1)
-  const [allMonths, setAllMonths] = useState(false)
+  const [allMonths, setAllMonths] = useState(startAllMonths)
 
   const prefix = `${year}-${String(month).padStart(2, '0')}`
   return {
@@ -36,5 +50,9 @@ export function useMonthFilter(): MonthFilter {
     isCurrentMonth: year === now.getFullYear() && month === now.getMonth() + 1,
     label: allMonths ? 'All months' : `${MONTH_NAMES[month - 1]} ${year}`,
     inMonth: (date: string) => allMonths || date.startsWith(prefix),
+    // '-31' is a safe upper bound: ISO dates sort lexicographically and no day
+    // is higher, so no month needs its real length looked up.
+    overlapsMonth: (start: string, end: string) =>
+      allMonths || (start <= `${prefix}-31` && end >= `${prefix}-01`),
   }
 }
