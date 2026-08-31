@@ -746,6 +746,8 @@ export const DOC_CHAPTERS: DocChapter[] = [
           'You only ever see your own requests here, plus anyone whose requests you review. Nobody sees a colleague’s leave unless it is their job to decide on it.',
           'Whoever manages attendance can file any of the four for somebody else with "Add for someone else". Leave and WFH apply straight away when an admin enters them and wait for approval when anybody else does. An exception or an overtime claim always joins the queue as pending, whoever files it — it rewrites a day that is already recorded, so somebody still says yes to it.',
           'You cannot decide on a request you filed for somebody else, any more than on your own. It shows as "Waiting on someone else" in your queue, and another approver picks it up. The point is that putting a request in and waving it through are two people.',
+          'Filing one for somebody notifies everyone who can approve it, naming you: "Mahnoor added leave for Yasir". Nothing you enter sits in a queue nobody has been told about.',
+          'The count on the Attendance row in the sidebar is what is waiting on you, not what is waiting. A request you filed is not counted there — you are the one person who cannot clear it — so a zero means nothing is stuck on you, and a number means it is yours to act on.',
           'A request filed for you by someone else says who filed it, under the reason. Nothing lands on your record with no name against it.',
           'An approved leave or WFH day updates your attendance record for that day automatically.',
           'On a first-half day off you are not due in until the second half starts, so your arrival is judged against that time plus the usual grace, coming in before it counts as on time, not late.',

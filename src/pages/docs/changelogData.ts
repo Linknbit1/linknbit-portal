@@ -82,6 +82,10 @@ export const RELEASES: ChangelogRelease[] = [
         text: 'A long reason on a request wraps onto as many lines as it needs instead of being cut off mid-sentence, and the queue tabs are sized to sit with the controls beside them.',
       },
       {
+        kind: 'improved',
+        text: 'The attendance count in the sidebar is now what is waiting on you rather than what is waiting. A request you filed for somebody else drops off your own count — you are the one person who cannot approve it — and shows on the counts of the people who can. Whoever has to sign off what HR enters can now see that it is theirs, instead of it hiding inside a total everybody shared.',
+      },
+      {
         kind: 'fixed',
         text: 'Pressing Approve on a request you filed for somebody else no longer returns a database error. You were never allowed to decide on one — putting a request in and waving it through are meant to be two people — but the queue offered the buttons anyway. It now shows those rows as "Waiting on someone else", and says why on hover.',
       },

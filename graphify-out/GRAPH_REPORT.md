@@ -1,12 +1,12 @@
 # Graph Report - linknbit-portal  (2026-08-31)
 
 ## Corpus Check
-- 433 files · ~571,729 words
+- 434 files · ~572,250 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 3157 nodes · 4385 edges · 88 communities detected
-- Extraction: 81% EXTRACTED · 19% INFERRED · 0% AMBIGUOUS · INFERRED: 817 edges (avg confidence: 0.79)
+- 3160 nodes · 4389 edges · 91 communities detected
+- Extraction: 81% EXTRACTED · 19% INFERRED · 0% AMBIGUOUS · INFERRED: 819 edges (avg confidence: 0.79)
 - Token cost: 0 input · 0 output
 
 ## Community Hubs (Navigation)
@@ -34,9 +34,9 @@
 - [[_COMMUNITY_Community 21|Community 21]]
 - [[_COMMUNITY_Community 22|Community 22]]
 - [[_COMMUNITY_Community 23|Community 23]]
+- [[_COMMUNITY_Community 24|Community 24]]
 - [[_COMMUNITY_Community 25|Community 25]]
 - [[_COMMUNITY_Community 26|Community 26]]
-- [[_COMMUNITY_Community 27|Community 27]]
 - [[_COMMUNITY_Community 28|Community 28]]
 - [[_COMMUNITY_Community 29|Community 29]]
 - [[_COMMUNITY_Community 30|Community 30]]
@@ -45,36 +45,36 @@
 - [[_COMMUNITY_Community 33|Community 33]]
 - [[_COMMUNITY_Community 34|Community 34]]
 - [[_COMMUNITY_Community 35|Community 35]]
+- [[_COMMUNITY_Community 36|Community 36]]
 - [[_COMMUNITY_Community 37|Community 37]]
-- [[_COMMUNITY_Community 39|Community 39]]
+- [[_COMMUNITY_Community 38|Community 38]]
 - [[_COMMUNITY_Community 40|Community 40]]
-- [[_COMMUNITY_Community 41|Community 41]]
+- [[_COMMUNITY_Community 42|Community 42]]
 - [[_COMMUNITY_Community 43|Community 43]]
 - [[_COMMUNITY_Community 44|Community 44]]
-- [[_COMMUNITY_Community 45|Community 45]]
 - [[_COMMUNITY_Community 46|Community 46]]
 - [[_COMMUNITY_Community 47|Community 47]]
+- [[_COMMUNITY_Community 48|Community 48]]
 - [[_COMMUNITY_Community 49|Community 49]]
-- [[_COMMUNITY_Community 50|Community 50]]
-- [[_COMMUNITY_Community 53|Community 53]]
-- [[_COMMUNITY_Community 54|Community 54]]
-- [[_COMMUNITY_Community 57|Community 57]]
-- [[_COMMUNITY_Community 58|Community 58]]
+- [[_COMMUNITY_Community 51|Community 51]]
+- [[_COMMUNITY_Community 52|Community 52]]
+- [[_COMMUNITY_Community 55|Community 55]]
+- [[_COMMUNITY_Community 56|Community 56]]
+- [[_COMMUNITY_Community 59|Community 59]]
 - [[_COMMUNITY_Community 60|Community 60]]
 - [[_COMMUNITY_Community 62|Community 62]]
-- [[_COMMUNITY_Community 65|Community 65]]
-- [[_COMMUNITY_Community 66|Community 66]]
+- [[_COMMUNITY_Community 64|Community 64]]
+- [[_COMMUNITY_Community 67|Community 67]]
+- [[_COMMUNITY_Community 68|Community 68]]
+- [[_COMMUNITY_Community 71|Community 71]]
 - [[_COMMUNITY_Community 72|Community 72]]
-- [[_COMMUNITY_Community 73|Community 73]]
-- [[_COMMUNITY_Community 75|Community 75]]
 - [[_COMMUNITY_Community 76|Community 76]]
-- [[_COMMUNITY_Community 77|Community 77]]
+- [[_COMMUNITY_Community 78|Community 78]]
+- [[_COMMUNITY_Community 79|Community 79]]
 - [[_COMMUNITY_Community 80|Community 80]]
-- [[_COMMUNITY_Community 174|Community 174]]
-- [[_COMMUNITY_Community 175|Community 175]]
-- [[_COMMUNITY_Community 220|Community 220]]
-- [[_COMMUNITY_Community 221|Community 221]]
-- [[_COMMUNITY_Community 222|Community 222]]
+- [[_COMMUNITY_Community 83|Community 83]]
+- [[_COMMUNITY_Community 177|Community 177]]
+- [[_COMMUNITY_Community 178|Community 178]]
 - [[_COMMUNITY_Community 223|Community 223]]
 - [[_COMMUNITY_Community 224|Community 224]]
 - [[_COMMUNITY_Community 225|Community 225]]
@@ -98,6 +98,9 @@
 - [[_COMMUNITY_Community 243|Community 243]]
 - [[_COMMUNITY_Community 244|Community 244]]
 - [[_COMMUNITY_Community 245|Community 245]]
+- [[_COMMUNITY_Community 246|Community 246]]
+- [[_COMMUNITY_Community 247|Community 247]]
+- [[_COMMUNITY_Community 248|Community 248]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `select()` - 235 edges
@@ -127,23 +130,23 @@
 
 ### Community 0 - "Community 0"
 Cohesion: 0.01
-Nodes (228): fetchApprovals(), requestApproval(), reviewApproval(), inferContentType(), addAttachmentLink(), fetchAttachmentById(), fetchAttachments(), fetchProjectFiles() (+220 more)
+Nodes (225): fetchApprovals(), requestApproval(), reviewApproval(), inferContentType(), addAttachmentLink(), fetchAttachmentById(), fetchAttachments(), fetchProjectFiles() (+217 more)
 
 ### Community 1 - "Community 1"
 Cohesion: 0.02
-Nodes (219): submit(), submit(), createTask(), handleSend(), handleSync(), submit(), submit(), $() (+211 more)
+Nodes (217): submit(), submit(), createTask(), handleSync(), submit(), submit(), $(), addColumn() (+209 more)
 
 ### Community 2 - "Community 2"
 Cohesion: 0.02
-Nodes (76): AddProjectMemberModal(), AppShell(), useBd(), ChannelSettingsModal(), ClientFormModal(), CreateChannelModal(), HandoffModal(), ImpersonationBanner() (+68 more)
+Nodes (73): AddProjectMemberModal(), useBd(), ChannelSettingsModal(), ClientFormModal(), CreateChannelModal(), HandoffModal(), ImpersonationBanner(), LeadDrawer() (+65 more)
 
 ### Community 3 - "Community 3"
 Cohesion: 0.02
 Nodes (28): passes(), can(), filterNavItems(), groupNavItems(), useMoreNavGroups(), useMoreNavItems(), useNavGroups(), useNavItems() (+20 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.02
-Nodes (110): 10. Row Level Security Policies, 11. SaaS Scalability, 1. Architecture Overview, 2. Role-Based Access Control, 3. Database Schema, 4. ClickUp Integration, 5. Discord Integration, 6. Real-time Strategy (+102 more)
+Cohesion: 0.03
+Nodes (63): AdminConsolePage(), useCanViewAudit(), useVisibleSections(), AppShell(), AttendancePage(), AuthProvider(), useAuthContext(), if() (+55 more)
 
 ### Community 5 - "Community 5"
 Cohesion: 0.02
@@ -151,43 +154,43 @@ Nodes (104): Always-active conventions (every phase), code:block1 (Phase 0: Proj
 
 ### Community 6 - "Community 6"
 Cohesion: 0.03
-Nodes (60): AdminConsolePage(), useCanViewAudit(), useVisibleSections(), AttendancePage(), AuthProvider(), useAuthContext(), if(), PermissionDetailModal() (+52 more)
+Nodes (58): fileKind(), parseCsv(), previewMode(), validateAttachmentFile(), deleteAttachment(), getAttachmentUrl(), handleDownload(), handleFiles() (+50 more)
 
 ### Community 7 - "Community 7"
-Cohesion: 0.04
-Nodes (56): str(), Config, _int_env(), load(), _load_env_file(), Configuration for the ZKTeco bridge.  Everything is environment-driven so the te, Minimal .env reader — avoids a python-dotenv dependency on the Pi.      Existing, commit() (+48 more)
-
-### Community 8 - "Community 8"
-Cohesion: 0.03
-Nodes (62): computeEmployeeHours(), fetchTargetTotals(), chatContentType(), safeStorageName(), validateChatAttachmentFile(), convert(), fromPkr(), isSupportedCurrency() (+54 more)
-
-### Community 9 - "Community 9"
 Cohesion: 0.03
 Nodes (27): GamificationRulesPanel(), isAuthoritative(), officeTime(), MyStandup(), StandupPage(), StandupTabs(), useAttendanceSettings(), useGamificationParticipants() (+19 more)
 
-### Community 10 - "Community 10"
-Cohesion: 0.03
-Nodes (57): saveMeeting(), saveEdit(), send(), BdDocEditor(), isOptimistic(), mentionsMe(), submit(), detectBrowser() (+49 more)
+### Community 8 - "Community 8"
+Cohesion: 0.05
+Nodes (47): str(), Config, _int_env(), load(), _load_env_file(), Configuration for the ZKTeco bridge.  Everything is environment-driven so the te, Minimal .env reader — avoids a python-dotenv dependency on the Pi.      Existing, commit() (+39 more)
 
-### Community 11 - "Community 11"
+### Community 9 - "Community 9"
 Cohesion: 0.02
 Nodes (83): **10\. Final Notes**, **1\. Overview**, **2\. Core Objectives**, **3\. Core Architecture Philosophy**, **4\. Service-Based System (Core Backbone)**, **5.1 Super Admin**, **5.2 Admin / Operations Manager**, **5.3 Project Manager** (+75 more)
 
-### Community 12 - "Community 12"
+### Community 10 - "Community 10"
 Cohesion: 0.03
-Nodes (41): checkIn(), registerDevice(), checkDayGates(), computeStatus(), localParts(), minutesOf(), resolveCutoffs(), bffFetch() (+33 more)
+Nodes (68): 11. SaaS Scalability, 1. Architecture Overview, 2. Role-Based Access Control, 3. Database Schema, 4. ClickUp Integration, 5. Discord Integration, 6. Real-time Strategy, 7. Audit Logging (+60 more)
+
+### Community 11 - "Community 11"
+Cohesion: 0.04
+Nodes (47): saveMeeting(), saveEdit(), send(), BdDocEditor(), isOptimistic(), mentionsMe(), submit(), detectBrowser() (+39 more)
+
+### Community 12 - "Community 12"
+Cohesion: 0.04
+Nodes (39): createBdTask(), createLead(), fetchActivities(), fetchBdComments(), fetchBdProjects(), fetchBdTasks(), fetchDailyUpdates(), fetchHandoffs() (+31 more)
 
 ### Community 13 - "Community 13"
-Cohesion: 0.03
-Nodes (48): approve(), closeModal(), cn(), confirmDelete(), confirmDeleteDevice(), confirmReject(), deleteType(), exportCsv() (+40 more)
-
-### Community 14 - "Community 14"
-Cohesion: 0.03
-Nodes (31): fileKind(), parseCsv(), previewMode(), validateAttachmentFile(), deleteAttachment(), getAttachmentUrl(), handleDownload(), handleFiles() (+23 more)
-
-### Community 15 - "Community 15"
 Cohesion: 0.04
 Nodes (65): AI Collaboration Rules, API keys, Applying migrations, Approval Flow States, Architecture Discipline, Border Radius, Breaking changes: expand, migrate, contract, ClickUp Integration UI (+57 more)
+
+### Community 14 - "Community 14"
+Cohesion: 0.04
+Nodes (29): checkIn(), registerDevice(), checkDayGates(), computeStatus(), localParts(), minutesOf(), resolveCutoffs(), bffFetch() (+21 more)
+
+### Community 15 - "Community 15"
+Cohesion: 0.05
+Nodes (43): fetchTargetTotals(), datesInRange(), formatDayHeading(), groupByDate(), isoDayKey(), TODAY_KEY(), toDayKey(), formatClock() (+35 more)
 
 ### Community 16 - "Community 16"
 Cohesion: 0.07
@@ -195,377 +198,391 @@ Nodes (46): BdProvider(), addTask(), patch(), toggleChannel(), toggleMember(), h
 
 ### Community 17 - "Community 17"
 Cohesion: 0.05
-Nodes (28): choose(), onKey(), onKeyDown(), dayStr(), isDisabled(), isSelected(), isToday(), select() (+20 more)
+Nodes (35): approve(), closeModal(), cn(), confirmDelete(), confirmDeleteDevice(), confirmReject(), deleteType(), fmtDate() (+27 more)
 
 ### Community 18 - "Community 18"
-Cohesion: 0.06
-Nodes (34): createBdTask(), createLead(), fetchActivities(), fetchBdComments(), fetchBdProjects(), fetchBdTasks(), fetchDailyUpdates(), fetchHandoffs() (+26 more)
+Cohesion: 0.05
+Nodes (28): choose(), onKey(), onKeyDown(), dayStr(), isDisabled(), isSelected(), isToday(), select() (+20 more)
 
 ### Community 19 - "Community 19"
 Cohesion: 0.04
 Nodes (26): validateAvatarFile(), run(), dcExport(), dcFlatten(), DCSection(), DesignCanvas(), done(), failed() (+18 more)
 
 ### Community 20 - "Community 20"
-Cohesion: 0.06
-Nodes (24): daysSince(), end(), endDrag(), followUpTone(), handleDrop(), ScheduleLine(), TaskCardProgress(), taskProgress() (+16 more)
+Cohesion: 0.05
+Nodes (24): exportCsv(), ProjectBacklogDetailPage(), useUrlRange(), importLeads(), downloadCsv(), toCsv(), close(), downloadSample() (+16 more)
 
 ### Community 21 - "Community 21"
+Cohesion: 0.06
+Nodes (25): daysSince(), end(), endDrag(), followUpTone(), handleDrop(), ScheduleLine(), TaskCardProgress(), taskProgress() (+17 more)
+
+### Community 22 - "Community 22"
+Cohesion: 0.05
+Nodes (42): 10. Row Level Security Policies, Attachments, Attendance, Audit Logs, Checklists & Checklist Items, ClickUp Status Mappings, Clients, code:sql (CREATE OR REPLACE FUNCTION current_user_role() RETURNS text ) (+34 more)
+
+### Community 23 - "Community 23"
+Cohesion: 0.06
+Nodes (13): grantLp(), asDifficulty(), difficultyMeta(), handleGrant(), handleRedeem(), onSubmit(), submit(), handleSubmit() (+5 more)
+
+### Community 24 - "Community 24"
+Cohesion: 0.07
+Nodes (10): canDecide(), fmtRange(), itemCls(), cn(), formatDate(), countDecidable(), isDecidableBy(), fmtDay() (+2 more)
+
+### Community 25 - "Community 25"
 Cohesion: 0.07
 Nodes (27): Claude Design Prompt, code:md (Design a comprehensive UI design system for a product called), code:md (Using the Linknbit Unified Operations Portal design system, ), code:md (Using the Linknbit Unified Operations Portal design system, ), code:md (Using the Linknbit Unified Operations Portal design system, ), code:md (Using the Linknbit Unified Operations Portal design system, ), code:md (Design a comprehensive UI design system for a product called), code:md (Using the Linknbit Unified Operations Portal design system e) (+19 more)
 
-### Community 22 - "Community 22"
-Cohesion: 0.08
-Nodes (7): fmtRange(), itemCls(), cn(), formatDate(), fmtDay(), fmtRange(), inScope()
-
-### Community 23 - "Community 23"
+### Community 26 - "Community 26"
 Cohesion: 0.08
 Nodes (25): **1.1 Objectives**, **1.2 Scope**, **1\. Overview & Purpose**, **2\. User Roles & Permissions**, **3.1.1 Activity Log (per lead)**, **3.1.2 Meetings**, **3.1 Lead & Pipeline Management**, **3.2 Channel-wise Outreach Tracking** (+17 more)
 
-### Community 25 - "Community 25"
+### Community 28 - "Community 28"
 Cohesion: 0.13
 Nodes (22): **1.10 Special Shoutouts (Examples)**, **1.11 System Discipline & Participation Restrictions**, **1.12 System Rules Summary**, **1.13 Simple Understanding of System**, **1.14 Final Note**, **1.1 Purpose of the System**, **1.2 System Overview**, **1.3 Currency System (Link Points \- LP)** (+14 more)
 
-### Community 26 - "Community 26"
+### Community 29 - "Community 29"
 Cohesion: 0.09
 Nodes (22): code:block1 (K40 (UDP 4370, LAN)          Raspberry Pi 3B+               ), code:bash (./deploy_to_pi.sh pi@192.168.18.43), code:bash (security delete-generic-password -s linknbit-zk-sudo -a ghay), code:bash (sudo adduser --system --group zkbridge), code:ini (ZK_DEVICE_IP=192.168.18.91), code:bash (sudo systemctl enable --now linknbit-zk), code:bash (# 1. device reachable, clock skew, enrolled users), code:bash (python zk_bridge.py --once --fake-device --dry-run   # read ) (+14 more)
 
-### Community 27 - "Community 27"
-Cohesion: 0.11
-Nodes (11): ProjectBacklogDetailPage(), useUrlRange(), iso(), resolvePreset(), useReportRange(), detailHref(), exportCsv(), ReportsPage() (+3 more)
-
-### Community 28 - "Community 28"
+### Community 30 - "Community 30"
 Cohesion: 0.1
 Nodes (9): handleCreate(), handleUnlink(), mintSecret(), SecretReveal(), TerminalCard(), clockSkewLabel(), terminalHealth(), useRotateTerminalSecret() (+1 more)
 
-### Community 29 - "Community 29"
+### Community 31 - "Community 31"
 Cohesion: 0.09
 Nodes (21): 10. Phase 2: complete, 11. Sequence after this document, 1. The problem, measured, 2. Goals and non-goals, 3. Model, 4. Schema, 5. Resolution, 6. Seeding: identical behaviour on day one (+13 more)
 
-### Community 30 - "Community 30"
+### Community 32 - "Community 32"
 Cohesion: 0.1
 Nodes (20): Academix Mentor, Builders Trade Depot, Completed Work — 17 to 21 August 2026, Cricket Sansar, Design, Development, Greta Grove, Internal work — do not send (+12 more)
 
-### Community 31 - "Community 31"
+### Community 33 - "Community 33"
 Cohesion: 0.1
 Nodes (19): At a glance, Attention needed, Blocked (2), Deadlines already passed, 🎨 Design, 💻 Development, Hours by person, 📣 Marketing (+11 more)
 
-### Community 32 - "Community 32"
+### Community 34 - "Community 34"
 Cohesion: 0.12
 Nodes (13): Attendance, code:php (wp_insert_user([), code:php ([), code:php (current_user_can('manage_options')), code:php (current_user_can('linknbit_war_room_manage')), code:js (const apiRoot = window.linknbitWarRoomSettings.restUrl;), code:php (wp_localize_script('linknbit-war-room', 'linknbitWarRoomSett), Database (+5 more)
 
-### Community 33 - "Community 33"
+### Community 35 - "Community 35"
+Cohesion: 0.17
+Nodes (12): deletePerson(), fetchPeople(), fetchPerson(), fetchPersonProjects(), fetchPersonTeams(), fetchSalary(), functionErrorMessage(), inviteUser() (+4 more)
+
+### Community 36 - "Community 36"
 Cohesion: 0.12
 Nodes (2): showNewEntries(), scrollAncestorToTop()
 
-### Community 34 - "Community 34"
+### Community 37 - "Community 37"
 Cohesion: 0.15
 Nodes (3): fmtClock(), fmtDay(), handleImpersonate()
 
-### Community 35 - "Community 35"
+### Community 38 - "Community 38"
 Cohesion: 0.18
 Nodes (3): asString(), isExceptionType(), parseExceptions()
 
-### Community 37 - "Community 37"
+### Community 40 - "Community 40"
 Cohesion: 0.4
 Nodes (9): glyph(), main(), maskableIconSvg(), out(), png(), render(), splashSvg(), squareIcon() (+1 more)
 
-### Community 39 - "Community 39"
+### Community 42 - "Community 42"
 Cohesion: 0.4
 Nodes (8): b64urlToUint8(), bufToB64url(), getCurrentSubscription(), permissionState(), pushSupported(), subscribeThisDevice(), toBrowserSubscription(), unsubscribeThisDevice()
 
-### Community 40 - "Community 40"
+### Community 43 - "Community 43"
 Cohesion: 0.22
 Nodes (2): exceptionSpan(), parseClock()
 
-### Community 41 - "Community 41"
+### Community 44 - "Community 44"
 Cohesion: 0.22
 Nodes (2): handleCheckIn(), handleRegister()
 
-### Community 43 - "Community 43"
+### Community 46 - "Community 46"
 Cohesion: 0.25
 Nodes (2): useFlatMessages(), useMessages()
 
-### Community 44 - "Community 44"
+### Community 47 - "Community 47"
 Cohesion: 0.43
 Nodes (7): deleteProjectCascade(), deleteStorageObjects(), deleteTaskCascade(), fetchProjectDeleteImpact(), fetchTaskDeleteImpact(), readCount(), taskIdsForProject()
 
-### Community 45 - "Community 45"
+### Community 48 - "Community 48"
 Cohesion: 0.25
 Nodes (6): code:bash (node preview-server.js), Files, Fixes Applied, Preview Login, Viewing It, WordPress Integration Direction
 
-### Community 46 - "Community 46"
-Cohesion: 0.38
-Nodes (4): applyToDocument(), choose(), isThemeId(), themeClass()
-
-### Community 47 - "Community 47"
+### Community 49 - "Community 49"
 Cohesion: 0.33
 Nodes (3): StatusChip(), useStatusLabels(), useStatusOverrides()
 
-### Community 49 - "Community 49"
+### Community 51 - "Community 51"
 Cohesion: 0.48
 Nodes (5): useCreateTaskStatus(), useDeleteTaskStatus(), useSetReviewStatus(), useStatusMutation(), useUpdateTaskStatus()
 
-### Community 50 - "Community 50"
+### Community 52 - "Community 52"
 Cohesion: 0.29
 Nodes (1): handleDrop()
 
-### Community 53 - "Community 53"
-Cohesion: 0.47
-Nodes (4): AttendanceChips(), Dash(), dayPartSuffix(), isFullDayOff()
-
-### Community 54 - "Community 54"
+### Community 55 - "Community 55"
 Cohesion: 0.33
 Nodes (3): useFileViewer(), RichRenderer(), useFileRefClick()
 
-### Community 57 - "Community 57"
+### Community 56 - "Community 56"
+Cohesion: 0.47
+Nodes (4): AttendanceChips(), Dash(), dayPartSuffix(), isFullDayOff()
+
+### Community 59 - "Community 59"
 Cohesion: 0.4
 Nodes (3): fetchChannelMembers(), leaveChannel(), removeChannelMember()
 
-### Community 58 - "Community 58"
+### Community 60 - "Community 60"
 Cohesion: 0.47
 Nodes (5): cn(), CollapsedLane(), endDrag(), handleDrop(), moveTask()
 
-### Community 60 - "Community 60"
+### Community 62 - "Community 62"
 Cohesion: 0.33
 Nodes (5): code:js (export default defineConfig([), code:js (// eslint.config.js), Expanding the ESLint configuration, React Compiler, React + TypeScript + Vite
 
-### Community 62 - "Community 62"
+### Community 64 - "Community 64"
 Cohesion: 0.5
 Nodes (2): addMinutes(), minusMinutes()
 
-### Community 65 - "Community 65"
+### Community 67 - "Community 67"
 Cohesion: 0.4
 Nodes (2): fileRefExtension(), renderSuggestion()
 
-### Community 66 - "Community 66"
+### Community 68 - "Community 68"
 Cohesion: 0.5
 Nodes (2): isIos(), usePwaInstall()
 
-### Community 72 - "Community 72"
+### Community 71 - "Community 71"
 Cohesion: 0.5
 Nodes (1): handleRegister()
 
-### Community 73 - "Community 73"
-Cohesion: 0.83
-Nodes (3): CustomRoleBadge(), RoleBadge(), sizeClass()
-
-### Community 75 - "Community 75"
-Cohesion: 0.83
-Nodes (3): useCurrencyRates(), useCurrencyRateSnapshot(), useRatesFreshness()
+### Community 72 - "Community 72"
+Cohesion: 0.5
+Nodes (1): handleSend()
 
 ### Community 76 - "Community 76"
 Cohesion: 0.83
+Nodes (3): CustomRoleBadge(), RoleBadge(), sizeClass()
+
+### Community 78 - "Community 78"
+Cohesion: 0.83
+Nodes (3): useCurrencyRates(), useCurrencyRateSnapshot(), useRatesFreshness()
+
+### Community 79 - "Community 79"
+Cohesion: 0.83
 Nodes (3): ipInCidr(), parseIpv4(), toInt()
 
-### Community 77 - "Community 77"
+### Community 80 - "Community 80"
 Cohesion: 0.67
 Nodes (2): afterCreate(), openChannel()
 
-### Community 80 - "Community 80"
+### Community 83 - "Community 83"
 Cohesion: 0.5
 Nodes (3): Answer, Q: Why does cn() connect Community 0 to Community 1, Community 10, Community 3, and Community 5?, Source Nodes
 
-### Community 174 - "Community 174"
+### Community 177 - "Community 177"
 Cohesion: 1.0
 Nodes (1): graphify
 
-### Community 175 - "Community 175"
+### Community 178 - "Community 178"
 Cohesion: 1.0
 Nodes (1): TODO tasks
 
-### Community 220 - "Community 220"
+### Community 223 - "Community 223"
 Cohesion: 1.0
 Nodes (1): Configuration for the ZKTeco bridge.  Everything is environment-driven so the
 
-### Community 221 - "Community 221"
+### Community 224 - "Community 224"
 Cohesion: 1.0
 Nodes (1): Minimal .env reader — avoids a python-dotenv dependency on the Pi.      Existi
 
-### Community 222 - "Community 222"
+### Community 225 - "Community 225"
 Cohesion: 1.0
 Nodes (1): Resolve the office's public IPv4 address from the Pi.  This is deliberately NO
 
-### Community 223 - "Community 223"
+### Community 226 - "Community 226"
 Cohesion: 1.0
 Nodes (1): Pin name resolution to A records for the duration of the block.      Belt and
 
-### Community 224 - "Community 224"
+### Community 227 - "Community 227"
 Cohesion: 1.0
 Nodes (1): Accept only a bare, globally routable IPv4 address.      A captive portal or a
 
-### Community 225 - "Community 225"
+### Community 228 - "Community 228"
 Cohesion: 1.0
 Nodes (1): Return the public IPv4 two providers agree on, or None.      Providers are tri
 
-### Community 226 - "Community 226"
+### Community 229 - "Community 229"
 Cohesion: 1.0
 Nodes (1): Durable local punch spool.  The Pi must never lose a punch to a WAN outage, so
 
-### Community 227 - "Community 227"
+### Community 230 - "Community 230"
 Cohesion: 1.0
 Nodes (1): Stable idempotency key. Must be computed identically on every retry.
 
-### Community 228 - "Community 228"
+### Community 231 - "Community 231"
 Cohesion: 1.0
 Nodes (1): Record a punch. Returns True if it was new to the spool.
 
-### Community 229 - "Community 229"
+### Community 232 - "Community 232"
 Cohesion: 1.0
 Nodes (1): Trim old acked rows so the SD card doesn't fill over years of use.          Ke
 
-### Community 230 - "Community 230"
+### Community 233 - "Community 233"
 Cohesion: 1.0
 Nodes (1): HTTP client for the attendance-biometric-punch edge function.  All three Pi→se
 
-### Community 231 - "Community 231"
+### Community 234 - "Community 234"
 Cohesion: 1.0
 Nodes (1): Raised when a message could not be delivered after all retries.
 
-### Community 232 - "Community 232"
+### Community 235 - "Community 235"
 Cohesion: 1.0
 Nodes (1): Deliver a batch. A 200 means every punch in it is durably stored.
 
-### Community 233 - "Community 233"
+### Community 236 - "Community 236"
 Cohesion: 1.0
 Nodes (1): Report terminal health, and let the server refresh the office IP.          `in
 
-### Community 234 - "Community 234"
+### Community 237 - "Community 237"
 Cohesion: 1.0
 Nodes (1): Push enrolled users so admins can link enroll numbers by name.          Names
 
-### Community 235 - "Community 235"
-Cohesion: 1.0
-Nodes (1): One device read: sync clock, pull the log into the spool, report health.
-
-### Community 236 - "Community 236"
-Cohesion: 1.0
-Nodes (1): Send unacked punches in batches. Returns how many were acked.
-
-### Community 237 - "Community 237"
-Cohesion: 1.0
-Nodes (1): Thin wrapper over pyzk for the K40.  Why polling rather than pyzk's live_captu
-
 ### Community 238 - "Community 238"
 Cohesion: 1.0
-Nodes (1): The device reports naive wall-clock time in its own timezone.      Attach the
+Nodes (1): One device read: sync clock, pull the log into the spool, report health.
 
 ### Community 239 - "Community 239"
 Cohesion: 1.0
-Nodes (1): Connection-scoped device handle. Use as a context manager.
+Nodes (1): Send unacked punches in batches. Returns how many were acked.
 
 ### Community 240 - "Community 240"
 Cohesion: 1.0
-Nodes (1): Push the Pi's (NTP-backed) clock to the device.          The K40 keeps its own
+Nodes (1): Thin wrapper over pyzk for the K40.  Why polling rather than pyzk's live_captu
 
 ### Community 241 - "Community 241"
 Cohesion: 1.0
-Nodes (1): Clear the device's attendance log ONLY.          Never call clear_data() — tha
+Nodes (1): The device reports naive wall-clock time in its own timezone.      Attach the
 
 ### Community 242 - "Community 242"
 Cohesion: 1.0
-Nodes (1): In-memory stand-in used by --fake-device.      Exists so the spool, dedupe, ba
+Nodes (1): Connection-scoped device handle. Use as a context manager.
 
 ### Community 243 - "Community 243"
 Cohesion: 1.0
-Nodes (1): One device read: sync clock, pull the log into the spool, report health.
+Nodes (1): Push the Pi's (NTP-backed) clock to the device.          The K40 keeps its own
 
 ### Community 244 - "Community 244"
 Cohesion: 1.0
-Nodes (1): Send unacked punches in batches. Returns how many were acked.
+Nodes (1): Clear the device's attendance log ONLY.          Never call clear_data() — tha
 
 ### Community 245 - "Community 245"
+Cohesion: 1.0
+Nodes (1): In-memory stand-in used by --fake-device.      Exists so the spool, dedupe, ba
+
+### Community 246 - "Community 246"
+Cohesion: 1.0
+Nodes (1): One device read: sync clock, pull the log into the spool, report health.
+
+### Community 247 - "Community 247"
+Cohesion: 1.0
+Nodes (1): Send unacked punches in batches. Returns how many were acked.
+
+### Community 248 - "Community 248"
 Cohesion: 1.0
 Nodes (1): Push enrolled users so admins can link enroll numbers by name.          Names tr
 
 ## Knowledge Gaps
 - **364 isolated node(s):** `Configuration for the ZKTeco bridge.  Everything is environment-driven so the te`, `Minimal .env reader — avoids a python-dotenv dependency on the Pi.      Existing`, `Durable local punch spool.  The Pi must never lose a punch to a WAN outage, so e`, `Stable idempotency key. Must be computed identically on every retry.`, `Record a punch. Returns True if it was new to the spool.` (+359 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **Thin community `Community 33`** (16 nodes): `absolute()`, `actionPhrase()`, `clear()`, `dateMD()`, `diffKeys()`, `headline()`, `ModuleChip()`, `patch()`, `relativeTime()`, `renderValue()`, `roleLabel()`, `showNewEntries()`, `timeHM()`, `scrollAncestorToTop()`, `scroll.ts`, `AuditLogPage.tsx`
+- **Thin community `Community 36`** (16 nodes): `absolute()`, `actionPhrase()`, `clear()`, `dateMD()`, `diffKeys()`, `headline()`, `ModuleChip()`, `patch()`, `relativeTime()`, `renderValue()`, `roleLabel()`, `showNewEntries()`, `timeHM()`, `scrollAncestorToTop()`, `scroll.ts`, `AuditLogPage.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 40`** (10 nodes): `timesheet.ts`, `clockAt()`, `dayState()`, `exceptionSpan()`, `formatClock12()`, `hourTick()`, `isDayOff()`, `minutesInto()`, `parseClock()`, `spanOn()`
+- **Thin community `Community 43`** (10 nodes): `timesheet.ts`, `clockAt()`, `dayState()`, `exceptionSpan()`, `formatClock12()`, `hourTick()`, `isDayOff()`, `minutesInto()`, `parseClock()`, `spanOn()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 41`** (9 nodes): `CheckInCardSkeleton()`, `DeviceNotice()`, `ErrorBanner()`, `fmtHHMM()`, `fmtIso()`, `handleCheckIn()`, `handleRegister()`, `tick()`, `AttendanceCheckInCard.tsx`
+- **Thin community `Community 44`** (9 nodes): `CheckInCardSkeleton()`, `DeviceNotice()`, `ErrorBanner()`, `fmtHHMM()`, `fmtIso()`, `handleCheckIn()`, `handleRegister()`, `tick()`, `AttendanceCheckInCard.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 43`** (9 nodes): `useMessages.ts`, `useDeleteMessage()`, `useEditMessage()`, `useFlatMessages()`, `useMarkChannelRead()`, `useMarkChannelUnread()`, `useMessages()`, `useMessageSearch()`, `useSendMessage()`
+- **Thin community `Community 46`** (9 nodes): `useMessages.ts`, `useDeleteMessage()`, `useEditMessage()`, `useFlatMessages()`, `useMarkChannelRead()`, `useMarkChannelUnread()`, `useMessages()`, `useMessageSearch()`, `useSendMessage()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 50`** (7 nodes): `handleDrop()`, `openEdit()`, `openNew()`, `openProject()`, `sortProjects()`, `taskCountOf()`, `BdProjectsPage.tsx`
+- **Thin community `Community 52`** (7 nodes): `handleDrop()`, `openEdit()`, `openNew()`, `openProject()`, `sortProjects()`, `taskCountOf()`, `BdProjectsPage.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 62`** (5 nodes): `StandupRulesPanel.tsx`, `addMinutes()`, `formatMinutes()`, `handleSave()`, `minusMinutes()`
+- **Thin community `Community 64`** (5 nodes): `StandupRulesPanel.tsx`, `addMinutes()`, `formatMinutes()`, `handleSave()`, `minusMinutes()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 65`** (5 nodes): `fileRefExtension()`, `iconFor()`, `fileMention.tsx`, `suggestionUtils.tsx`, `renderSuggestion()`
+- **Thin community `Community 67`** (5 nodes): `fileRefExtension()`, `iconFor()`, `fileMention.tsx`, `suggestionUtils.tsx`, `renderSuggestion()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 66`** (5 nodes): `usePwaInstall.ts`, `emit()`, `isIos()`, `isStandalone()`, `usePwaInstall()`
+- **Thin community `Community 68`** (5 nodes): `usePwaInstall.ts`, `emit()`, `isIos()`, `isStandalone()`, `usePwaInstall()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 72`** (4 nodes): `fmtDate()`, `handleRegister()`, `statusMeta()`, `MyDevicesCard.tsx`
+- **Thin community `Community 71`** (4 nodes): `fmtDate()`, `handleRegister()`, `statusMeta()`, `MyDevicesCard.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 77`** (4 nodes): `afterCreate()`, `afterRemoved()`, `openChannel()`, `ChatPage.tsx`
+- **Thin community `Community 72`** (4 nodes): `cn()`, `handleSend()`, `readersOf()`, `ChatThread.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 174`** (2 nodes): `AGENTS.md`, `graphify`
+- **Thin community `Community 80`** (4 nodes): `afterCreate()`, `afterRemoved()`, `openChannel()`, `ChatPage.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 175`** (2 nodes): `TODO tasks`, `todo.md`
+- **Thin community `Community 177`** (2 nodes): `AGENTS.md`, `graphify`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 220`** (1 nodes): `Configuration for the ZKTeco bridge.  Everything is environment-driven so the`
+- **Thin community `Community 178`** (2 nodes): `TODO tasks`, `todo.md`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 221`** (1 nodes): `Minimal .env reader — avoids a python-dotenv dependency on the Pi.      Existi`
+- **Thin community `Community 223`** (1 nodes): `Configuration for the ZKTeco bridge.  Everything is environment-driven so the`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 222`** (1 nodes): `Resolve the office's public IPv4 address from the Pi.  This is deliberately NO`
+- **Thin community `Community 224`** (1 nodes): `Minimal .env reader — avoids a python-dotenv dependency on the Pi.      Existi`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 223`** (1 nodes): `Pin name resolution to A records for the duration of the block.      Belt and`
+- **Thin community `Community 225`** (1 nodes): `Resolve the office's public IPv4 address from the Pi.  This is deliberately NO`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 224`** (1 nodes): `Accept only a bare, globally routable IPv4 address.      A captive portal or a`
+- **Thin community `Community 226`** (1 nodes): `Pin name resolution to A records for the duration of the block.      Belt and`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 225`** (1 nodes): `Return the public IPv4 two providers agree on, or None.      Providers are tri`
+- **Thin community `Community 227`** (1 nodes): `Accept only a bare, globally routable IPv4 address.      A captive portal or a`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 226`** (1 nodes): `Durable local punch spool.  The Pi must never lose a punch to a WAN outage, so`
+- **Thin community `Community 228`** (1 nodes): `Return the public IPv4 two providers agree on, or None.      Providers are tri`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 227`** (1 nodes): `Stable idempotency key. Must be computed identically on every retry.`
+- **Thin community `Community 229`** (1 nodes): `Durable local punch spool.  The Pi must never lose a punch to a WAN outage, so`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 228`** (1 nodes): `Record a punch. Returns True if it was new to the spool.`
+- **Thin community `Community 230`** (1 nodes): `Stable idempotency key. Must be computed identically on every retry.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 229`** (1 nodes): `Trim old acked rows so the SD card doesn't fill over years of use.          Ke`
+- **Thin community `Community 231`** (1 nodes): `Record a punch. Returns True if it was new to the spool.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 230`** (1 nodes): `HTTP client for the attendance-biometric-punch edge function.  All three Pi→se`
+- **Thin community `Community 232`** (1 nodes): `Trim old acked rows so the SD card doesn't fill over years of use.          Ke`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 231`** (1 nodes): `Raised when a message could not be delivered after all retries.`
+- **Thin community `Community 233`** (1 nodes): `HTTP client for the attendance-biometric-punch edge function.  All three Pi→se`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 232`** (1 nodes): `Deliver a batch. A 200 means every punch in it is durably stored.`
+- **Thin community `Community 234`** (1 nodes): `Raised when a message could not be delivered after all retries.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 233`** (1 nodes): `Report terminal health, and let the server refresh the office IP.          `in`
+- **Thin community `Community 235`** (1 nodes): `Deliver a batch. A 200 means every punch in it is durably stored.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 234`** (1 nodes): `Push enrolled users so admins can link enroll numbers by name.          Names`
+- **Thin community `Community 236`** (1 nodes): `Report terminal health, and let the server refresh the office IP.          `in`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 235`** (1 nodes): `One device read: sync clock, pull the log into the spool, report health.`
+- **Thin community `Community 237`** (1 nodes): `Push enrolled users so admins can link enroll numbers by name.          Names`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 236`** (1 nodes): `Send unacked punches in batches. Returns how many were acked.`
+- **Thin community `Community 238`** (1 nodes): `One device read: sync clock, pull the log into the spool, report health.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 237`** (1 nodes): `Thin wrapper over pyzk for the K40.  Why polling rather than pyzk's live_captu`
+- **Thin community `Community 239`** (1 nodes): `Send unacked punches in batches. Returns how many were acked.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 238`** (1 nodes): `The device reports naive wall-clock time in its own timezone.      Attach the`
+- **Thin community `Community 240`** (1 nodes): `Thin wrapper over pyzk for the K40.  Why polling rather than pyzk's live_captu`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 239`** (1 nodes): `Connection-scoped device handle. Use as a context manager.`
+- **Thin community `Community 241`** (1 nodes): `The device reports naive wall-clock time in its own timezone.      Attach the`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 240`** (1 nodes): `Push the Pi's (NTP-backed) clock to the device.          The K40 keeps its own`
+- **Thin community `Community 242`** (1 nodes): `Connection-scoped device handle. Use as a context manager.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 241`** (1 nodes): `Clear the device's attendance log ONLY.          Never call clear_data() — tha`
+- **Thin community `Community 243`** (1 nodes): `Push the Pi's (NTP-backed) clock to the device.          The K40 keeps its own`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 242`** (1 nodes): `In-memory stand-in used by --fake-device.      Exists so the spool, dedupe, ba`
+- **Thin community `Community 244`** (1 nodes): `Clear the device's attendance log ONLY.          Never call clear_data() — tha`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 243`** (1 nodes): `One device read: sync clock, pull the log into the spool, report health.`
+- **Thin community `Community 245`** (1 nodes): `In-memory stand-in used by --fake-device.      Exists so the spool, dedupe, ba`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 244`** (1 nodes): `Send unacked punches in batches. Returns how many were acked.`
+- **Thin community `Community 246`** (1 nodes): `One device read: sync clock, pull the log into the spool, report health.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 245`** (1 nodes): `Push enrolled users so admins can link enroll numbers by name.          Names tr`
+- **Thin community `Community 247`** (1 nodes): `Send unacked punches in batches. Returns how many were acked.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 248`** (1 nodes): `Push enrolled users so admins can link enroll numbers by name.          Names tr`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `toast()` connect `Community 1` to `Community 0`, `Community 34`, `Community 6`, `Community 72`, `Community 41`, `Community 10`, `Community 8`, `Community 13`, `Community 14`, `Community 46`, `Community 50`, `Community 19`, `Community 20`, `Community 58`, `Community 27`, `Community 28`?**
-  _High betweenness centrality (0.161) - this node is a cross-community bridge._
-- **Why does `select()` connect `Community 0` to `Community 8`, `Community 10`, `Community 12`, `Community 44`, `Community 17`, `Community 18`, `Community 57`?**
+- **Why does `toast()` connect `Community 1` to `Community 0`, `Community 4`, `Community 37`, `Community 6`, `Community 71`, `Community 11`, `Community 12`, `Community 44`, `Community 15`, `Community 17`, `Community 19`, `Community 20`, `Community 21`, `Community 52`, `Community 23`, `Community 60`, `Community 30`?**
+  _High betweenness centrality (0.155) - this node is a cross-community bridge._
+- **Why does `select()` connect `Community 0` to `Community 35`, `Community 6`, `Community 11`, `Community 12`, `Community 14`, `Community 15`, `Community 47`, `Community 18`, `Community 59`?**
   _High betweenness centrality (0.121) - this node is a cross-community bridge._
-- **Why does `useAuthContext()` connect `Community 6` to `Community 2`, `Community 3`, `Community 9`, `Community 10`, `Community 16`?**
-  _High betweenness centrality (0.091) - this node is a cross-community bridge._
+- **Why does `useAuthContext()` connect `Community 4` to `Community 2`, `Community 3`, `Community 7`, `Community 11`, `Community 16`?**
+  _High betweenness centrality (0.090) - this node is a cross-community bridge._
 - **Are the 233 inferred relationships involving `select()` (e.g. with `isDeactivated()` and `auditOnce()`) actually correct?**
   _`select()` has 233 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 69 inferred relationships involving `toast()` (e.g. with `add()` and `openFile()`) actually correct?**
