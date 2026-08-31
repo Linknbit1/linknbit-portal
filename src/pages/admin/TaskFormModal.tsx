@@ -29,6 +29,7 @@ import { cn } from '../../lib/cn'
 import { docToPlainText, extractMentionIds, fromDbDoc, plainTextToDoc, toDbDoc } from '../../lib/richText'
 import type { JSONContent } from '@tiptap/react'
 import { PRIORITY_LABELS, toDateInput, toTimeInput, fromDateTimeInput } from '../../lib/utils'
+import { IN_PROJECT, NOT_IN_PROJECT, ON_SERVICE, NOT_ON_SERVICE } from '../../constants/pickerGroups'
 import type { TaskListItem } from '../../api/tasks'
 import type { Priority } from '../../types'
 
@@ -48,6 +49,7 @@ interface TaskFormModalProps {
 
 /** Marks a dropdown value as "service the project does not have yet". */
 const NEW_SERVICE = 'new:'
+
 
 const PRIORITY_DOTS: Record<Priority, string> = {
   critical: '#F4364C', high: '#F59E0B', medium: '#60A5FA', low: '#8A8A8A',
@@ -90,16 +92,20 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
    * never receive a Design task. Services the project lacks carry a `new:` value
    * and their block is created on save.
    */
-  const serviceOptions = catalog
+  // Blocks the project already runs come first, so the fallback below lands on a
+  // real service rather than on whichever one the catalogue happens to list first.
+  const serviceEntries = catalog
     .filter((s) => s.is_active)
-    .map((s) => {
-      const block = services.find((ps) => ps.service_id === s.id)
-      return {
-        value: block ? block.id : `${NEW_SERVICE}${s.id}`,
-        label: block ? s.name : `${s.name}, add to project`,
-        dot: s.color,
-      }
-    })
+    .map((s) => ({ service: s, block: services.find((ps) => ps.service_id === s.id) }))
+  const serviceOptions = [
+    ...serviceEntries.filter((e) => e.block),
+    ...serviceEntries.filter((e) => !e.block),
+  ].map(({ service, block }) => ({
+    value: block ? block.id : `${NEW_SERVICE}${service.id}`,
+    label: service.name,
+    dot: service.color,
+    group: block ? IN_PROJECT : NOT_IN_PROJECT,
+  }))
 
   // Switching project invalidates the service; fall back to the first option.
   const effectiveService = serviceOptions.some((o) => o.value === selectedService)
@@ -174,10 +180,10 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
    */
   const staffedIds = new Set(members.map((m) => m.id))
   const assignablePeople = [
-    ...members.map((m) => ({ id: m.id, name: m.name, avatar_url: m.avatar_url })),
+    ...members.map((m) => ({ id: m.id, name: m.name, avatar_url: m.avatar_url, group: ON_SERVICE })),
     ...people
       .filter((p) => p.is_active && !staffedIds.has(p.id))
-      .map((p) => ({ id: p.id, name: p.name, avatar_url: p.avatar_url })),
+      .map((p) => ({ id: p.id, name: p.name, avatar_url: p.avatar_url, group: NOT_ON_SERVICE })),
   ]
   const priorityOptions = PRIORITY_ORDER.map((p) => ({ value: p, label: PRIORITY_LABELS[p], dot: PRIORITY_DOTS[p] }))
   // Approved/Completed are a sign-off, refused by fn_guard_task_approval for

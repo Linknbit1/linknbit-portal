@@ -37,6 +37,8 @@ import { useStages } from '../../hooks/useStages'
 import { useProject } from '../../hooks/useProjects'
 import type { PersonMini } from '../../api/projects'
 import { useProjectServiceMembers } from '../../hooks/useProjectServices'
+import { usePeople } from '../../hooks/usePeople'
+import { ON_SERVICE, NOT_ON_SERVICE } from '../../constants/pickerGroups'
 import { useProjectFiles, useTaskAttachments } from '../../hooks/useAttachments'
 import { fileKind } from '../../lib/attachment'
 import { useSubtasks, useCreateSubtask, useToggleSubtask, useDeleteSubtask } from '../../hooks/useSubtasks'
@@ -152,6 +154,9 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
   const projectId = task?.project_id
   const { data: stages = [] } = useStages(projectId)
   const { data: allMembers = [] } = useProjectServiceMembers(projectId)
+  // Everyone internal, so somebody can be put on a task before they are staffed
+  // — the same offer the create form makes.
+  const { data: people = [] } = usePeople()
   const { data: taskStatuses = [] } = useTaskStatuses()
   // Only for the mention list: a project's managers are taggable on its tasks.
   const { data: project } = useProject(projectId)
@@ -184,21 +189,36 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
   }, [members, project?.managers])
 
   /**
-   * The staffed members, plus anyone already assigned who has since left.
+   * Who the assignee and reviewer pickers offer, in three bands.
    *
-   * Without that second group the picker would drop a departed assignee entirely
-   * — their id stays in `value` but matches no option, so the field would read
-   * "Unassigned" while the row still exists. The task would look like nobody's
-   * problem instead of somebody's to hand over.
+   * The staffed members first, then everyone else internal, then anyone already
+   * on the task who has since left.
+   *
+   * The middle band is the same offer the create form makes, and it was missing
+   * here — so a task could be given to somebody outside the service while being
+   * written, and never afterwards. Picking one of them staffs them onto the
+   * service as the link is written (fn_staff_service_on_task_link), exactly as
+   * choosing a service the project does not run adds the service.
+   *
+   * The last band is not an offer at all: a leaver's id stays in `value`, and
+   * without a matching option the field would read "Unassigned" while the row
+   * still exists — the task would look like nobody's problem instead of
+   * somebody's to hand over.
    */
   const assigneeOptions = useMemo(() => {
-    const staffed = members.map((m) => ({ id: m.id, name: m.name, avatar_url: m.avatar_url }))
+    const staffed = members.map((m) => ({
+      id: m.id, name: m.name, avatar_url: m.avatar_url, group: ON_SERVICE,
+    }))
     const staffedIds = new Set(staffed.map((m) => m.id))
-    const departed = (task?.assignees ?? [])
-      .filter((a) => a.is_active === false && !staffedIds.has(a.id))
+    const unstaffed = people
+      .filter((p) => p.is_active && !staffedIds.has(p.id))
+      .map((p) => ({ id: p.id, name: p.name, avatar_url: p.avatar_url, group: NOT_ON_SERVICE }))
+    const known = new Set([...staffedIds, ...unstaffed.map((p) => p.id)])
+    const departed = [...(task?.assignees ?? []), ...(task?.reviewers ?? [])]
+      .filter((a) => a.is_active === false && !known.has(a.id))
       .map((a) => ({ id: a.id, name: a.name, avatar_url: a.avatar_url, departed: true }))
-    return [...staffed, ...departed]
-  }, [members, task?.assignees])
+    return [...staffed, ...unstaffed, ...departed]
+  }, [members, people, task?.assignees, task?.reviewers])
   const { data: projectFiles = [] } = useProjectFiles(projectId)
   const fileItems = useMemo(() => projectFiles.map((f) => ({
     id: f.id, name: f.file_name, kind: f.kind === 'link' ? 'link' : fileKind(f.mime_type, f.file_name),
@@ -404,7 +424,10 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
                   // Resolved here so the picker updates on click; the save then
                   // catches up in the background.
                   people: ids.flatMap((id) => {
-                    const m = members.find((p) => p.id === id)
+                    // The full option list, not just the staffed members: someone
+                    // picked from outside the service would otherwise vanish from
+                    // the chips until the refetch landed.
+                    const m = assigneeOptions.find((p) => p.id === id)
                     return m ? [{ id: m.id, name: m.name, avatar_url: m.avatar_url }] : []
                   }),
                 },

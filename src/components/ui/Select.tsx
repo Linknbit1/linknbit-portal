@@ -1,9 +1,10 @@
-import { useState, useRef, useEffect, useMemo, type KeyboardEvent } from 'react'
+import { Fragment, useState, useRef, useEffect, useMemo, type KeyboardEvent } from 'react'
 import { Check, ChevronDown, Search } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { Popover } from './Popover'
 import { Avatar } from './Avatar'
 import { DepartedBadge } from './DepartedBadge'
+import { OptionGroupHeading } from './OptionGroupHeading'
 import { SEARCHABLE_BY_DEFAULT, matchesQuery, shouldAutoFocusSearch } from './optionSearch'
 
 export interface SelectOption {
@@ -28,6 +29,13 @@ export interface SelectOption {
    * something that would be too long to display beside it.
    */
   keywords?: string
+  /**
+   * Heading this option sits under. A heading is drawn whenever the group
+   * changes, so options carrying the same group must be adjacent in the array —
+   * the list is never reordered here, because the caller's order is the answer
+   * to which group comes first.
+   */
+  group?: string
 }
 
 interface SelectProps {
@@ -80,7 +88,9 @@ function SelectMenu({ options, value, searchable, onPick, onClose }: SelectMenuP
   // scroll whatever sits behind the portal.
   useEffect(() => {
     const list = listRef.current
-    const row = list?.children[activeIndex]
+    // Queried rather than indexed into children: group headings share the
+    // scroller with the rows, so position no longer equals option index.
+    const row = list?.querySelector(`[data-index="${activeIndex}"]`)
     if (!list || !(row instanceof HTMLElement)) return
     if (row.offsetTop < list.scrollTop) list.scrollTop = row.offsetTop
     else if (row.offsetTop + row.offsetHeight > list.scrollTop + list.clientHeight) {
@@ -125,9 +135,11 @@ function SelectMenu({ options, value, searchable, onPick, onClose }: SelectMenuP
 
       <div ref={listRef} className="max-h-[min(60vh,18rem)] overflow-y-auto">
         {filtered.map((opt, i) => (
+          <Fragment key={opt.value}>
+            {opt.group && opt.group !== filtered[i - 1]?.group && <OptionGroupHeading label={opt.group} />}
           <button
-            key={opt.value}
             type="button"
+            data-index={i}
             onClick={() => onPick(opt.value)}
             onMouseEnter={() => setActive(i)}
             className={cn(
@@ -151,6 +163,7 @@ function SelectMenu({ options, value, searchable, onPick, onClose }: SelectMenuP
             {opt.departed && <DepartedBadge />}
             {opt.value === value && <Check size={13} className="mt-0.5 shrink-0 text-brand-red" />}
           </button>
+          </Fragment>
         ))}
 
         {filtered.length === 0 && (

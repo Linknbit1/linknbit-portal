@@ -55,6 +55,14 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'fixed',
+        text: 'An open task now lets you assign or name a reviewer who is not staffed on its service, and staffs them as it saves. That already worked while writing a task and not afterwards, so a task handed to the wrong service could never be handed on.',
+      },
+      {
+        kind: 'improved',
+        text: 'The service, assignee and reviewer lists on a task are split under two headings: what is already part of the project or service, and what picking will add to it. The rows that quietly did more than the others now say so.',
+      },
+      {
+        kind: 'fixed',
         text: 'Creating a task no longer fails with a database error. The status box started empty and the save sent that emptiness to the database, which refused it. A new task now starts on the default column, so it saves whether or not you touch the field.',
       },
       {

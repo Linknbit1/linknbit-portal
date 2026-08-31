@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
+import { Fragment, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { ChevronDown, Check, Search } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { Popover } from './Popover'
 import { Avatar, AvatarGroup } from './Avatar'
 import { DepartedBadge } from './DepartedBadge'
+import { OptionGroupHeading } from './OptionGroupHeading'
 import { SEARCHABLE_BY_DEFAULT, matchesQuery, shouldAutoFocusSearch } from './optionSearch'
 
 export interface PersonOption {
@@ -17,6 +18,12 @@ export interface PersonOption {
    * looking unassigned.
    */
   departed?: boolean
+  /**
+   * Heading this person sits under. Drawn whenever the group changes, so people
+   * sharing a group must be adjacent in the array — the caller's order decides
+   * which group comes first, and nothing is re-sorted here.
+   */
+  group?: string
 }
 
 interface MultiSelectPeopleProps {
@@ -67,7 +74,9 @@ function PeopleMenu({ options, value, searchable, onToggle, onClose }: PeopleMen
   // scroll whatever sits behind the portal.
   useEffect(() => {
     const list = listRef.current
-    const row = list?.children[activeIndex]
+    // Queried rather than indexed into children: group headings share the
+    // scroller with the rows, so position no longer equals option index.
+    const row = list?.querySelector(`[data-index="${activeIndex}"]`)
     if (!list || !(row instanceof HTMLElement)) return
     if (row.offsetTop < list.scrollTop) list.scrollTop = row.offsetTop
     else if (row.offsetTop + row.offsetHeight > list.scrollTop + list.clientHeight) {
@@ -114,9 +123,11 @@ function PeopleMenu({ options, value, searchable, onToggle, onClose }: PeopleMen
         {filtered.map((o, i) => {
           const on = value.includes(o.id)
           return (
+            <Fragment key={o.id}>
+              {o.group && o.group !== filtered[i - 1]?.group && <OptionGroupHeading label={o.group} />}
             <button
-              key={o.id}
               type="button"
+              data-index={i}
               onClick={() => onToggle(o.id)}
               onMouseEnter={() => setActive(i)}
               className={cn(
@@ -129,6 +140,7 @@ function PeopleMenu({ options, value, searchable, onToggle, onClose }: PeopleMen
               {o.departed && <DepartedBadge />}
               {on && <Check size={13} className="text-brand-red shrink-0" />}
             </button>
+            </Fragment>
           )
         })}
 
