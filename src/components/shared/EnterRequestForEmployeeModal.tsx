@@ -50,9 +50,13 @@ interface EnterRequestForEmployeeModalProps {
  *
  * The two halves behave differently on purpose, and the banner says which one
  * is about to happen. Leave and WFH apply immediately when an admin enters them
- * and wait for one when HR does. An exception rewrites a day that is already on
- * the record and overtime is a claim, so both always go through the queue
- * whoever files them — the filer can approve in the next click if they hold it.
+ * and wait for approval when anybody else does. An exception rewrites a day
+ * already on the record and overtime is a claim, so both always go through the
+ * queue whoever files them.
+ *
+ * Either way the approver is somebody else: nobody decides on a request they
+ * filed. The banner used to end "Approve it there to apply it", which read as an
+ * instruction to the one person guaranteed not to be able to.
  */
 export function EnterRequestForEmployeeModal({ onClose }: EnterRequestForEmployeeModalProps) {
   const toast = useToast()
@@ -204,8 +208,8 @@ export function EnterRequestForEmployeeModal({ onClose }: EnterRequestForEmploye
           {appliesDirectly
             ? 'This applies straight away and updates their attendance for those days.'
             : isRange
-              ? 'This is submitted for an admin to approve. It does not affect their attendance until they do.'
-              : 'This joins the queue as a pending request, whoever files it. Approve it there to apply it.'}
+              ? 'This waits for approval and does not touch their attendance until it is given. Not by you — nobody decides on a request they filed — so it goes to another approver.'
+              : 'This always waits for approval, whoever enters it, because it rewrites a day already on record. It changes nothing until somebody approves it in Requests, and that has to be another approver: nobody decides on a request they filed.'}
         </p>
 
         <div className="flex flex-wrap gap-1 rounded-sm border border-border-default bg-surface-1 p-1">

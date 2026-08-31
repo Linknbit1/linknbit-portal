@@ -81,6 +81,21 @@ export function formatClockLabel(hour24: number, minute: number): string {
 }
 
 /**
+ * The current time as [hour, minute] in 24h, snapped to the nearest `step`.
+ *
+ * Nearest rather than next: a picker set to "now" at 11:07 on a 15-minute step
+ * should read 11:00, not a quarter past an hour that has not happened. Rounding
+ * up to 60 rolls the hour — 11:58 on a 5-minute step is 12:00, not 11:00.
+ */
+export function nowSnappedTo(step: number): [number, number] {
+  const now = new Date()
+  const size = Math.max(step, 1)
+  const hour = now.getHours()
+  const minute = Math.round(now.getMinutes() / size) * size
+  return minute >= 60 ? [(hour + 1) % 24, 0] : [hour, minute]
+}
+
+/**
  * "04 Aug, 09:00 AM" — one scheduled point, in the form DateTimeRangePicker
  * labels its own value with, so a picker and the text beside it agree.
  */

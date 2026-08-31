@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight, CalendarClock, ChevronDown } from 'lucide-re
 import { cn } from '../../lib/cn'
 import { Popover } from './Popover'
 import { TimeWheel } from './TimeWheel'
-import { toDateInput, toTimeInput, fromDateTimeInput, formatClockLabel } from '../../lib/utils'
+import { toDateInput, toTimeInput, fromDateTimeInput, formatClockLabel, nowSnappedTo } from '../../lib/utils'
 
 export interface DateTimeRange {
   start: string | null
@@ -286,6 +286,19 @@ export function DateTimeRangePicker({
                 if (timeSide === 'start') { setSH(h); setSM(m) } else { setEH(h); setEM(m) }
               }}
             />
+            {/* The clock's "Today". It fills whichever side is selected rather
+                than committing, because this picker has two of them and a start
+                without an end is not something to save on one tap. */}
+            <button
+              type="button"
+              onClick={() => {
+                const [h, m] = nowSnappedTo(step)
+                if (timeSide === 'start') { setSH(h); setSM(m) } else { setEH(h); setEM(m) }
+              }}
+              className="border-t border-border-subtle py-2 text-center font-ui text-[11px] text-brand-red transition-colors hover:bg-surface-2 hover:text-brand-red/80"
+            >
+              Set {timeSide} time to now
+            </button>
           </div>
         </div>
 

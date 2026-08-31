@@ -66,6 +66,10 @@ export const RELEASES: ChangelogRelease[] = [
         text: 'The requests queue has one set of tabs instead of two rows of chips. Pending, Approved, Rejected and All are the tabs, with the number still waiting on Pending; the request type moved into a dropdown beside them, keeping its per-kind counts. Two bars of chips read as two things competing to say what the list was.',
       },
       {
+        kind: 'added',
+        text: 'Every time picker has a "Now" shortcut, the way every date picker has "Today". It fills in the current time rounded to the picker\u2019s own step — nearest, so 11:07 on a quarter-hour field reads 11:00 rather than a quarter past an hour that has not happened. On a field with an earliest allowed time, Now goes dim when it would land before it. The start/end picker sets whichever side you are editing instead of saving, since a start without an end is not something to commit on one tap.',
+      },
+      {
         kind: 'improved',
         text: 'The month stepper now reads "All months" first and the month after it, on every screen that has one — the switch deciding whether a period applies belongs before the period, not after it. The month name is set smaller, to sit with the controls beside it rather than above them.',
       },

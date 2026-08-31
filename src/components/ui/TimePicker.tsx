@@ -3,7 +3,7 @@ import { Clock, ChevronDown } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { Popover } from './Popover'
 import { TimeWheel } from './TimeWheel'
-import { formatClockLabel } from '../../lib/utils'
+import { formatClockLabel, nowSnappedTo } from '../../lib/utils'
 
 interface TimePickerProps {
   value: string          // HH:MM (24h) or ''
@@ -75,6 +75,19 @@ export function TimePicker({
     setOpen(false)
   }
 
+  /**
+   * The clock's answer to the calendar's "Today": one tap for the time it is,
+   * committing and closing the same way. Refused when it would land before
+   * `minTime`, which is how the date picker treats a Today outside its range.
+   */
+  const [nowH, nowM] = nowSnappedTo(step)
+  const nowDisabled = !!minParsed && (nowH < minParsed[0] || (nowH === minParsed[0] && nowM < minParsed[1]))
+  const setNow = () => {
+    if (nowDisabled) return
+    onChange(`${fmt2(nowH)}:${fmt2(nowM)}`)
+    setOpen(false)
+  }
+
   const triggerLabel = parsed ? formatClockLabel(parsed[0], parsed[1]) : null
 
   return (
@@ -108,18 +121,30 @@ export function TimePicker({
       >
           <TimeWheel hour={pendingH} minute={pendingM} onChange={pick} step={step} min={minParsed} />
 
-          {/* Footer */}
-          <div className="border-t border-border-subtle px-3 py-2 flex items-center justify-between">
-            <span className="font-mono text-[13px] text-text-2">
-              {formatClockLabel(pendingH, pendingM)}
-            </span>
+          {/* Footer. "Now" sits where the date picker keeps "Today", and behaves
+              the same: it commits on the spot rather than only moving the wheel. */}
+          <div className="border-t border-border-subtle px-3 py-2 flex items-center justify-between gap-2">
             <button
               type="button"
-              onClick={confirm}
-              className="font-ui font-semibold text-[11px] text-brand-red hover:text-brand-red/80 transition-colors"
+              onClick={setNow}
+              disabled={nowDisabled}
+              title={nowDisabled ? 'Now is earlier than the time this can be set to' : undefined}
+              className="font-ui text-[11px] text-brand-red transition-colors hover:text-brand-red/80 disabled:cursor-not-allowed disabled:text-text-4"
             >
-              Done
+              Now
             </button>
+            <div className="flex items-center gap-3">
+              <span className="font-mono text-[13px] text-text-2">
+                {formatClockLabel(pendingH, pendingM)}
+              </span>
+              <button
+                type="button"
+                onClick={confirm}
+                className="font-ui font-semibold text-[11px] text-brand-red hover:text-brand-red/80 transition-colors"
+              >
+                Done
+              </button>
+            </div>
           </div>
       </Popover>
     </div>
