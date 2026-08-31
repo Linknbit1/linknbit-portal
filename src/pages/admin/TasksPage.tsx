@@ -219,15 +219,16 @@ export default function TasksPage() {
         title="Delete task?"
         message={
           <ImpactSummary
-            lead={<><strong className="text-text-1">{pendingDelete?.title ?? ''}</strong> will be deleted after confirmation.</>}
+            lead={<><strong className="text-text-1">{pendingDelete?.title ?? ''}</strong> will be permanently deleted after confirmation.</>}
             loading={deleteImpactLoading}
             counts={[
               { label: 'Comments', value: deleteImpact?.comments },
               { label: 'Attachments', value: deleteImpact?.attachments },
               { label: 'Subtasks', value: deleteImpact?.subtasks },
               { label: 'Assignees', value: deleteImpact?.assignees },
+              { label: 'Time entries', value: deleteImpact?.timeEntries },
             ]}
-            note="Comments, attachments, subtasks, and assignee links will be removed before the task leaves active lists."
+            note="This cannot be undone. The task, its comments, files, subtasks and the time logged against it are removed for good — logged hours leave the timesheet with it."
           />
         }
         confirmLabel="Delete task"

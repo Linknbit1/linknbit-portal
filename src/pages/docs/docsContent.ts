@@ -394,7 +394,9 @@ export const DOC_CHAPTERS: DocChapter[] = [
         ],
         notes: [
           'Files and tasks carry a client-visible switch. When it is off, the client portal never shows the item.',
-          'Deleting a task or a project deletes its files as well. There is no archive to recover them from, so download anything worth keeping first.',
+          'Deleting a project or a task is permanent. Everything under it goes with it — tasks, comments, files, stages, subtasks, staffing, and the hours logged against the work. There is no archive and nothing to restore from, so download anything worth keeping first.',
+          'Logged time is the one to watch. Hours recorded against a task leave the timesheet when the task does, so a month that has already been reported on will read differently afterwards.',
+          'The confirmation counts what will go before you press it, logged time included. If a number looks wrong, that is the moment to stop.',
           'Watch a task to be notified about it even when it is not assigned to you.',
           'Reviewers work like assignees: a task can have several, and a reviewer can open the task they are reviewing whether or not it is theirs.',
           'Reviewers are notified when a card is dragged into whichever column is marked as the review column on Settings → Task statuses. It follows the marker, not the word, so a column called QA or Client sign-off works the same.',

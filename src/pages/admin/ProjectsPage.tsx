@@ -210,7 +210,7 @@ export default function ProjectsPage() {
         title="Delete project?"
         message={
           <ImpactSummary
-            lead={<><strong className="text-text-1">{pendingDelete?.name ?? ''}</strong> will be deleted after confirmation.</>}
+            lead={<><strong className="text-text-1">{pendingDelete?.name ?? ''}</strong> will be permanently deleted after confirmation.</>}
             loading={deleteImpactLoading}
             counts={[
               { label: 'Tasks', value: deleteImpact?.tasks },
@@ -218,8 +218,9 @@ export default function ProjectsPage() {
               { label: 'Comments', value: deleteImpact?.comments },
               { label: 'Attachments', value: deleteImpact?.attachments },
               { label: 'Subtasks', value: deleteImpact?.subtasks },
+              { label: 'Time entries', value: deleteImpact?.timeEntries },
             ]}
-            note="Related task comments, files, stages, subtasks, and assignee links will be removed before the project leaves active lists."
+            note="This cannot be undone. The project, its tasks, comments, files, stages, subtasks, staffing and all time logged against its tasks are removed for good — there is nothing left to restore from."
           />
         }
         confirmLabel="Delete project"

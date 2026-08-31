@@ -416,8 +416,8 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
         title="Delete task?"
         message={
           <span>
-            <strong className="text-text-1">{pendingDelete?.title}</strong> will be deleted, along with its
-            comments, attachments, subtasks and logged time.
+            <strong className="text-text-1">{pendingDelete?.title}</strong> will be permanently deleted,
+            along with its comments, attachments, subtasks and logged time. This cannot be undone.
           </span>
         }
         confirmLabel="Delete task"

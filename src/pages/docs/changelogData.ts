@@ -82,6 +82,18 @@ export const RELEASES: ChangelogRelease[] = [
         text: 'A long reason on a request wraps onto as many lines as it needs instead of being cut off mid-sentence, and the queue tabs are sized to sit with the controls beside them.',
       },
       {
+        kind: 'improved',
+        text: 'Deleting a task now deletes it, the same as a project. It used to leave the task as a hidden row while its comments, files and subtasks were already gone for good — a husk nothing could reach, since every list filters it out and no screen shows it. Hours logged against the task go with it, so the confirmation now counts those too.',
+      },
+      {
+        kind: 'improved',
+        text: 'Deleting a project now deletes it. It used to hide the project and its tasks while permanently removing everything else — comments, files, stages, staffing — and there was no screen to find a hidden project on and no way to restore one, so the half that looked recoverable never was. The confirmation says plainly that it cannot be undone.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Deleting a project that had a linked file — a Google Doc rather than an upload — no longer reports a failure it did not have. The link has no file behind it, and the empty entry made the whole clean-up request fail after the deletion had already gone through.',
+      },
+      {
         kind: 'fixed',
         text: 'Taking somebody off a service now takes them off its tasks too. Assigning a person to a task adds them to that service, and removing them from it used to leave them assignee and reviewer on the work — off the roster, still holding the job. Removing now asks first, showing how many tasks they are assignee and reviewer on in the same boxes a project deletion uses; their comments stay where they are.',
       },
