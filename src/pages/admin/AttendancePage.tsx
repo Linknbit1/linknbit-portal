@@ -731,18 +731,6 @@ export function DailyRecordsTab() {
             placeholder="Select date…"
             className="w-40"
           />
-          <div className="relative flex-1 max-w-55">
-            <Search
-              size={13}
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-4"
-            />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search member..."
-              className="w-full pl-7 pr-3 py-1.5 bg-surface-inset border border-border-default rounded-md text-[12.5px] font-ui text-text-1 placeholder:text-text-4 outline-none focus:border-border-focus"
-            />
-          </div>
           <Select
             size="sm"
             value={statusFilter}
@@ -752,7 +740,23 @@ export function DailyRecordsTab() {
               ...RECORD_FILTERS.map((f) => ({ value: f.value, label: f.label })),
             ]}
           />
-          <div className="ml-auto flex items-center gap-2">
+          {/* Search sits with the actions on the right, not in the middle of the
+              filters: what narrows the table by rule is on one side, what you
+              reach for by hand is on the other. Same order as the requests queue. */}
+          <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
+            <div className="relative w-full min-w-40 sm:w-55">
+              <Search
+                size={13}
+                className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-text-4"
+              />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search member..."
+                aria-label="Search members"
+                className="w-full pl-7 pr-3 py-1.5 bg-surface-inset border border-border-default rounded-md text-[12.5px] font-ui text-text-1 placeholder:text-text-4 outline-none focus:border-border-focus"
+              />
+            </div>
             <Button size="sm" variant="secondary" onClick={exportCsv}>
               <Download size={13} /> Export
             </Button>

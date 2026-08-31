@@ -363,6 +363,37 @@ export async function requestException(payload: RequestExceptionPayload): Promis
   return data
 }
 
+/**
+ * File an exception for somebody else.
+ *
+ * Always pending, whoever files it — unlike leave and WFH, where an admin's
+ * entry applies at once. An exception rewrites a day that is already on the
+ * record, so it goes through the queue like any other; the filer can approve it
+ * in the next click if they hold that too.
+ */
+export async function enterExceptionForEmployee(
+  profileId: string,
+  payload: RequestExceptionPayload,
+): Promise<AttendanceException> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+  const { data, error } = await supabase
+    .from('attendance_exceptions')
+    .insert({
+      profile_id: profileId,
+      entered_by: user.id,
+      exception_type: payload.exception_type,
+      date: payload.date,
+      requested_time: payload.requested_time,
+      return_time: payload.return_time ?? null,
+      reason: payload.reason,
+    })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
 // Employee edits their own exception request while it's still pending (RLS-gated).
 export async function updateException(
   id: string,
@@ -478,6 +509,8 @@ export async function fetchMonthlyAttendance(
 
 export interface AttendanceExceptionWithProfile extends AttendanceException {
   profiles: { name: string; avatar_url: string | null } | null
+  // Set when somebody with can_manage_attendance filed it for them; null for self-submitted.
+  entered_by_profile: { name: string } | null
 }
 
 export async function fetchAllAttendanceExceptions(
@@ -485,7 +518,7 @@ export async function fetchAllAttendanceExceptions(
 ): Promise<AttendanceExceptionWithProfile[]> {
   let q = supabase
     .from('attendance_exceptions')
-    .select('*, profiles!attendance_exceptions_profile_id_fkey(name, avatar_url)')
+    .select('*, profiles!attendance_exceptions_profile_id_fkey(name, avatar_url), entered_by_profile:profiles!attendance_exceptions_entered_by_fkey(name)')
     .order('created_at', { ascending: false })
   if (filters.profileId) q = q.eq('profile_id', filters.profileId)
   if (filters.date)      q = q.eq('date', filters.date)
@@ -669,6 +702,8 @@ export async function removeCompanyWfhDay(id: string): Promise<void> {
 
 export interface OvertimeRequestWithProfile extends OvertimeRequest {
   profiles: { name: string; avatar_url: string | null } | null
+  // Set when somebody with can_manage_attendance filed it for them; null for self-submitted.
+  entered_by_profile: { name: string } | null
 }
 
 export interface SubmitOvertimePayload {
@@ -687,6 +722,22 @@ export async function submitOvertimeRequest(
   const { data, error } = await supabase
     .from('overtime_requests')
     .insert({ ...payload, profile_id: user.id })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+/** File an overtime claim for somebody else. Always pending — see enterExceptionForEmployee. */
+export async function enterOvertimeForEmployee(
+  profileId: string,
+  payload: SubmitOvertimePayload,
+): Promise<OvertimeRequest> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+  const { data, error } = await supabase
+    .from('overtime_requests')
+    .insert({ ...payload, profile_id: profileId, entered_by: user.id })
     .select()
     .single()
   if (error) throw error
@@ -725,7 +776,7 @@ export async function fetchAllOvertimeRequests(
 ): Promise<OvertimeRequestWithProfile[]> {
   let q = supabase
     .from('overtime_requests')
-    .select('*, profiles!overtime_requests_profile_id_fkey(name, avatar_url)')
+    .select('*, profiles!overtime_requests_profile_id_fkey(name, avatar_url), entered_by_profile:profiles!overtime_requests_entered_by_fkey(name)')
     .order('date', { ascending: false })
   if (status) q = q.eq('status', status)
   const { data, error } = await q

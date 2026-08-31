@@ -361,6 +361,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
         notes: [
           'The service switcher at the top of a project changes everything below it.',
           'You are staffed onto a service, not onto the project as a whole.',
+          'Being given a task adds you to its service, so a project’s Team tab fills itself as work is handed out. Taking somebody off a service takes them off its tasks as well — you are told how many first — and their comments stay where they are.',
           'Inside a project, Board and Pipeline are two views of the same tasks: Board groups them by status, Pipeline by the stage of the service they belong to.',
           'The Projects list itself has no board. Cards, Table and Backlog are ways of finding a project; moving one along is done inside it.',
         ],
@@ -714,8 +715,9 @@ export const DOC_CHAPTERS: DocChapter[] = [
           {
             title: 'Work through what is waiting',
             steps: [
-              'Open People → Attendance → Requests. It opens on Pending.',
-              'Narrow to one kind with the type filters if you want to clear leave before anything else.',
+              'Open People → Attendance → Requests. It opens on Pending, with the number still to decide on the tab.',
+              'Pick a type from the dropdown beside the tabs if you want to clear leave before anything else.',
+              'Search on the right for a name or a reason when you are after one request rather than the whole queue.',
               'Press Approve or Reject on the row. The list updates in place.',
             ],
           },
@@ -737,9 +739,11 @@ export const DOC_CHAPTERS: DocChapter[] = [
           },
         ],
         notes: [
-          'Leave, WFH, overtime and exceptions all queue up together. The type filters carry their own pending counts, so you can see where the backlog is without opening each one.',
+          'Leave, WFH, overtime and exceptions all queue up together. The type dropdown carries each kind’s pending count, so you can see where the backlog is without opening each one.',
+          'The tabs are the only thing that changes which slice you are looking at — Pending, Approved, Rejected, All. Type and search narrow whatever the tab is showing rather than replacing it.',
           'You only ever see your own requests here, plus anyone whose requests you review. Nobody sees a colleague’s leave unless it is their job to decide on it.',
-          'Whoever manages attendance can file leave or WFH for somebody else with "Add for someone else". An admin doing that applies it straight away; when HR does it, an admin still has to approve it.',
+          'Whoever manages attendance can file any of the four for somebody else with "Add for someone else". Leave and WFH apply straight away when an admin enters them and wait for one when HR does. An exception or an overtime claim always joins the queue as pending, whoever files it — it rewrites a day that is already recorded, so somebody still says yes to it.',
+          'A request filed for you by someone else says who filed it, under the reason. Nothing lands on your record with no name against it.',
           'An approved leave or WFH day updates your attendance record for that day automatically.',
           'On a first-half day off you are not due in until the second half starts, so your arrival is judged against that time plus the usual grace, coming in before it counts as on time, not late.',
           'A multi-day request is listed under every day it covers, so the team can see who is off on a given date. It is still one request: the Approve and Reject buttons appear only on its first day.',

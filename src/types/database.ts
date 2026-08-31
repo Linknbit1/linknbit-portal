@@ -261,6 +261,7 @@ export type Database = {
           actual_return: string | null
           created_at: string
           date: string
+          entered_by: string | null
           exception_type: string
           id: string
           profile_id: string
@@ -277,6 +278,7 @@ export type Database = {
           actual_return?: string | null
           created_at?: string
           date: string
+          entered_by?: string | null
           exception_type: string
           id?: string
           profile_id: string
@@ -293,6 +295,7 @@ export type Database = {
           actual_return?: string | null
           created_at?: string
           date?: string
+          entered_by?: string | null
           exception_type?: string
           id?: string
           profile_id?: string
@@ -305,6 +308,13 @@ export type Database = {
           status?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "attendance_exceptions_entered_by_fkey"
+            columns: ["entered_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "attendance_exceptions_profile_id_fkey"
             columns: ["profile_id"]
@@ -2653,6 +2663,7 @@ export type Database = {
           created_at: string
           date: string
           end_time: string
+          entered_by: string | null
           hours: number
           id: string
           profile_id: string
@@ -2668,6 +2679,7 @@ export type Database = {
           created_at?: string
           date: string
           end_time: string
+          entered_by?: string | null
           hours: number
           id?: string
           profile_id: string
@@ -2683,6 +2695,7 @@ export type Database = {
           created_at?: string
           date?: string
           end_time?: string
+          entered_by?: string | null
           hours?: number
           id?: string
           profile_id?: string
@@ -2695,6 +2708,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "overtime_requests_entered_by_fkey"
+            columns: ["entered_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "overtime_requests_profile_id_fkey"
             columns: ["profile_id"]
@@ -5700,6 +5720,14 @@ export type Database = {
         Args: { p_id: string; p_secret: string }
         Returns: undefined
       }
+      service_member_task_load: {
+        Args: { p_profile_id: string; p_project_service_id: string }
+        Returns: {
+          assigned: number
+          reviewing: number
+          tasks: number
+        }[]
+      }
       set_employee_of_the_month: {
         Args: {
           p_month: number
@@ -5841,6 +5869,13 @@ export type Database = {
       unlink_zk_enrollment: {
         Args: { p_profile_id: string }
         Returns: undefined
+      }
+      unstaff_service_member: {
+        Args: { p_profile_id: string; p_project_service_id: string }
+        Returns: {
+          unassigned: number
+          unreviewed: number
+        }[]
       }
       update_standup: {
         Args: { p_entries: Json; p_notes?: string; p_standup_id: string }

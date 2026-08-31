@@ -127,11 +127,42 @@ export async function addServiceMembers(projectServiceId: string, profileIds: st
   if (error) throw error
 }
 
-export async function removeServiceMember(projectServiceId: string, profileId: string): Promise<void> {
-  const { error } = await supabase
-    .from('service_members')
-    .delete()
-    .eq('project_service_id', projectServiceId)
-    .eq('profile_id', profileId)
-  if (error) throw error
+/** What a person is still holding in a service block, live tasks only. */
+export interface ServiceMemberTaskLoad {
+  assigned: number
+  reviewing: number
+  tasks: number
 }
+
+export async function fetchServiceMemberTaskLoad(
+  projectServiceId: string,
+  profileId: string,
+): Promise<ServiceMemberTaskLoad> {
+  const { data, error } = await supabase.rpc('service_member_task_load', {
+    p_project_service_id: projectServiceId,
+    p_profile_id: profileId,
+  })
+  if (error) throw error
+  return data?.[0] ?? { assigned: 0, reviewing: 0, tasks: 0 }
+}
+
+/**
+ * Takes somebody off a service block and off its tasks in one statement.
+ *
+ * Assigning a person to a task staffs them onto its service, so unstaffing them
+ * without undoing that left them off the roster and still holding the work.
+ * Their comments stay: what they said about a task is a record of the
+ * conversation, not a claim on it.
+ */
+export async function unstaffServiceMember(
+  projectServiceId: string,
+  profileId: string,
+): Promise<{ unassigned: number; unreviewed: number }> {
+  const { data, error } = await supabase.rpc('unstaff_service_member', {
+    p_project_service_id: projectServiceId,
+    p_profile_id: profileId,
+  })
+  if (error) throw error
+  return data?.[0] ?? { unassigned: 0, unreviewed: 0 }
+}
+

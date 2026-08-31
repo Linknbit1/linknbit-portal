@@ -62,6 +62,30 @@ export const RELEASES: ChangelogRelease[] = [
         text: 'The service, assignee and reviewer lists on a task are split under two headings: what is already part of the project or service, and what picking will add to it. The rows that quietly did more than the others now say so.',
       },
       {
+        kind: 'improved',
+        text: 'The requests queue has one set of tabs instead of two rows of chips. Pending, Approved, Rejected and All are the tabs, with the number still waiting on Pending; the request type moved into a dropdown beside them, keeping its per-kind counts. Two bars of chips read as two things competing to say what the list was.',
+      },
+      {
+        kind: 'added',
+        text: 'You can search the requests queue by person, reason or type. It sits on the right of the toolbar, away from the filters.',
+      },
+      {
+        kind: 'improved',
+        text: 'Search on Daily Records moved to the right of its toolbar, beside Export and Mark Attendance, so filters sit on one side and what you reach for by hand on the other.',
+      },
+      {
+        kind: 'added',
+        text: '"Add for someone else" now covers exceptions and overtime, not just leave and WFH. Both always join the queue as pending, whoever files them, and both record who filed them — a request entered for you shows that name under the reason.',
+      },
+      {
+        kind: 'fixed',
+        text: 'A long reason on a request wraps onto as many lines as it needs instead of being cut off mid-sentence, and the queue tabs are sized to sit with the controls beside them.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Taking somebody off a service now takes them off its tasks too. Assigning a person to a task adds them to that service, and removing them from it used to leave them assignee and reviewer on the work — off the roster, still holding the job. Removing now says how many tasks they are on and asks first; their comments stay where they are.',
+      },
+      {
         kind: 'fixed',
         text: 'Creating a task no longer fails with a database error. The status box started empty and the save sent that emptiness to the database, which refused it. A new task now starts on the default column, so it saves whether or not you touch the field.',
       },

@@ -373,7 +373,7 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
                   )}
                   <p className="font-ui font-medium text-body-sm/snug text-text-1">{t.title}</p>
                   {t.description && (
-                    <p className="mt-1 line-clamp-2 font-ui text-[11.5px] leading-snug text-text-4">{t.description}</p>
+                    <p className="mt-1 line-clamp-2 font-ui text-[11.5px]/snug text-text-4">{t.description}</p>
                   )}
                   {(t.start_date || t.due_date) && (
                     <div className="mt-2 min-w-0">

@@ -1,9 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   fetchProjectServices, fetchProjectServicesFor, addProjectService, removeProjectService,
-  fetchProjectServiceMembers, addServiceMembers, removeServiceMember,
+  fetchProjectServiceMembers, addServiceMembers,
+  fetchServiceMemberTaskLoad, unstaffServiceMember,
 } from '../api/projectServices'
 import { PROJECT_KEYS } from './useProjects'
+import { TASK_KEYS } from './useTasks'
 
 export const PROJECT_SERVICE_KEYS = {
   all: ['project_services'] as const,
@@ -79,11 +81,33 @@ export function useAddServiceMembers() {
   })
 }
 
-export function useRemoveServiceMember() {
+/**
+ * What removing this person would take with it. Only fetched while the
+ * confirmation is open — it is a question asked once, at the moment of asking.
+ */
+export function useServiceMemberTaskLoad(
+  projectServiceId: string | undefined,
+  profileId: string | undefined,
+) {
+  return useQuery({
+    queryKey: ['service_members', 'task_load', projectServiceId ?? '', profileId ?? ''],
+    queryFn: () => fetchServiceMemberTaskLoad(projectServiceId!, profileId!),
+    enabled: !!projectServiceId && !!profileId,
+  })
+}
+
+/** Removes them from the block and from its tasks. See unstaffServiceMember. */
+export function useUnstaffServiceMember() {
+  const qc = useQueryClient()
   const invalidate = useProjectInvalidation()
   return useMutation({
     mutationFn: ({ projectServiceId, profileId }: { projectId: string; projectServiceId: string; profileId: string }) =>
-      removeServiceMember(projectServiceId, profileId),
-    onSuccess: (_, v) => invalidate(v.projectId),
+      unstaffServiceMember(projectServiceId, profileId),
+    onSuccess: (_, v) => {
+      invalidate(v.projectId)
+      // The roster is not the only thing that moved: every board and list
+      // showing those tasks is now holding an assignee who is no longer on them.
+      qc.invalidateQueries({ queryKey: TASK_KEYS.all })
+    },
   })
 }

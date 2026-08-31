@@ -1,10 +1,13 @@
 import { useMemo, useState } from 'react'
-import { Loader2, Home, Plane, AlertCircle, Hourglass, Check, X, Inbox, CalendarX2, Plus } from 'lucide-react'
+import { Loader2, Home, Plane, AlertCircle, Hourglass, Check, X, Inbox, CalendarX2, Plus, Search } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { Avatar } from '../ui/Avatar'
 import { PersonLink } from './PersonLink'
 import { Button } from '../ui/Button'
+import { Select } from '../ui/Select'
+import { Tabs } from '../ui/Tabs'
+import { matchesQuery } from '../ui/optionSearch'
 import { EnterRequestForEmployeeModal } from './EnterRequestForEmployeeModal'
 import { formatDate } from '../../lib/utils'
 import { DAY_PART_LABEL } from '../../lib/dayParts'
@@ -38,6 +41,8 @@ interface KindMeta {
   label: string
   icon: LucideIcon
   chip: string
+  /** The same accent as `chip`, as a value the type dropdown can put in a dot. */
+  dot: string
 }
 
 const KIND_META: Record<RequestKind, KindMeta> = {
@@ -45,21 +50,25 @@ const KIND_META: Record<RequestKind, KindMeta> = {
     label: 'Leave',
     icon: Plane,
     chip: 'bg-service-design/12 text-service-design border-service-design/30',
+    dot: 'var(--color-service-design)',
   },
   wfh: {
     label: 'WFH',
     icon: Home,
     chip: 'bg-service-dev/12 text-service-dev border-service-dev/30',
+    dot: 'var(--color-service-dev)',
   },
   exception: {
     label: 'Exception',
     icon: AlertCircle,
     chip: 'bg-warning/12 text-warning border-warning/30',
+    dot: 'var(--color-warning)',
   },
   overtime: {
     label: 'Overtime',
     icon: Hourglass,
     chip: 'bg-service-mkt/12 text-service-mkt border-service-mkt/30',
+    dot: 'var(--color-service-mkt)',
   },
 }
 
@@ -88,6 +97,8 @@ interface UnifiedRequest {
   /** The one line that distinguishes this request from another of the same kind. */
   detail: string
   reason: string
+  /** Who filed it, when that was not the person it is about. */
+  enteredByName: string | null
   status: string
   createdAt: string
 }
@@ -160,36 +171,11 @@ const STATUS_FILTERS: { id: StatusFilter; label: string }[] = [
   { id: 'all', label: 'All' },
 ]
 
-function FilterChip({
-  active,
-  onClick,
-  children,
-  count,
-}: {
-  active: boolean
-  onClick: () => void
-  children: React.ReactNode
-  count?: number
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={cn(
-        'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm border text-[12px] font-ui font-semibold transition-colors',
-        active
-          ? 'bg-brand-red/15 text-brand-red border-brand-red/30'
-          : 'bg-surface-1 text-text-3 border-border-default hover:text-text-1',
-      )}
-    >
-      {children}
-      {count != null && count > 0 && (
-        <span className="font-mono text-[10.5px] tabular-nums opacity-80">{count}</span>
-      )}
-    </button>
-  )
-}
+const isStatusFilter = (v: string): v is StatusFilter =>
+  STATUS_FILTERS.some((f) => f.id === v)
+
+const isKind = (v: string): v is RequestKind =>
+  (KIND_ORDER as string[]).includes(v)
 
 /**
  * Every request awaiting — or already given — a decision, in one queue.
@@ -208,6 +194,7 @@ export function AttendanceRequests() {
 
   const [kind, setKind] = useState<RequestKind | 'all'>('all')
   const [status, setStatus] = useState<StatusFilter>('pending')
+  const [query, setQuery] = useState('')
 
   // Fetch unfiltered and narrow in memory: the counts on the type chips have to
   // reflect the whole queue, not the slice currently on screen.
@@ -249,6 +236,7 @@ export function AttendanceRequests() {
           .filter(Boolean)
           .join(' · '),
         reason: r.reason,
+        enteredByName: r.entered_by_profile?.name ?? null,
         status: r.status,
         createdAt: r.created_at,
       })
@@ -267,6 +255,7 @@ export function AttendanceRequests() {
         dateLabel: fmtRange(r.start_date, r.end_date),
         detail: r.day_part !== 'full' ? DAY_PART_LABEL[r.day_part] : 'Full day',
         reason: r.reason,
+        enteredByName: null,
         status: r.status,
         createdAt: r.created_at,
       })
@@ -285,6 +274,7 @@ export function AttendanceRequests() {
         dateLabel: formatDate(r.date),
         detail: `${r.exception_type.replace(/_/g, ' ')} · ${r.requested_time}`,
         reason: r.reason,
+        enteredByName: r.entered_by_profile?.name ?? null,
         status: r.status,
         createdAt: r.created_at,
       })
@@ -303,6 +293,7 @@ export function AttendanceRequests() {
         dateLabel: formatDate(r.date),
         detail: `${r.hours}h · ${r.start_time}–${r.end_time}`,
         reason: r.reason,
+        enteredByName: r.entered_by_profile?.name ?? null,
         status: r.status,
         createdAt: r.created_at,
       })
@@ -324,12 +315,35 @@ export function AttendanceRequests() {
   const visible = useMemo(
     () =>
       all.filter(
-        (r) => (kind === 'all' || r.kind === kind) && (status === 'all' || r.status === status),
+        (r) =>
+          (kind === 'all' || r.kind === kind) &&
+          (status === 'all' || r.status === status) &&
+          // The person is what anyone searches a queue for; the reason and the
+          // type are matched too so "sick" or "overtime" find something.
+          matchesQuery(query, r.name, r.reason, r.detail, KIND_META[r.kind].label),
       ),
-    [all, kind, status],
+    [all, kind, status, query],
   )
 
   const totalPending = all.filter((r) => r.status === 'pending').length
+
+  // One tab bar, on the axis that decides what to do with a row. The type used
+  // to be a second bar of chips above this one, which read as two sets of tabs
+  // competing to say what the list was — it is a filter, so it looks like one.
+  const statusTabs = STATUS_FILTERS.map((f) => ({
+    key: f.id,
+    label: f.label,
+    badge: f.id === 'pending' && totalPending > 0 ? totalPending : undefined,
+  }))
+
+  const typeOptions = [
+    { value: 'all', label: 'All types' },
+    ...KIND_ORDER.map((k) => ({
+      value: k,
+      label: pendingByKind[k] ? `${KIND_META[k].label} (${pendingByKind[k]})` : KIND_META[k].label,
+      dot: KIND_META[k].dot,
+    })),
+  ]
 
   const removingDay = removeLeaveDay.isPending || removeWfhDay.isPending
 
@@ -379,56 +393,55 @@ export function AttendanceRequests() {
       {/* Says whose requests these are. Without it the screen reads as the whole
           company's queue to someone who is only ever shown their own, which is
           what made it look like everybody could see everybody. */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="font-ui text-[12.5px] text-text-3">
-          {canReview
-            ? 'Every request you are able to decide on.'
-            : 'Your requests. Only you and whoever reviews them can see these.'}
-        </p>
-        {canReview && (
-          <Button size="sm" variant="secondary" iconLeft={<Plus size={14} />} onClick={() => setEntering(true)}>
-            Add for someone else
-          </Button>
-        )}
-      </div>
-
-      <div className="flex flex-col gap-3">
-        {/* The type chips are a reviewer's tool: they exist to work a queue down
-            by kind. On your own handful of requests they were the second of two
-            filter rows filtering almost nothing. */}
-        {canReview && (
-        <div className="flex flex-wrap items-center gap-2">
-          <FilterChip active={kind === 'all'} onClick={() => setKind('all')} count={totalPending}>
-            All types
-          </FilterChip>
-          {KIND_ORDER.map((k) => {
-            const meta = KIND_META[k]
-            const Icon = meta.icon
-            return (
-              <FilterChip
-                key={k}
-                active={kind === k}
-                onClick={() => setKind(k)}
-                count={pendingByKind[k]}
-              >
-                <Icon size={12} />
-                {meta.label}
-              </FilterChip>
-            )
-          })}
-        </div>
-        )}
-
-        <div className="flex flex-wrap items-center gap-2">
-          {STATUS_FILTERS.map((f) => (
-            <FilterChip key={f.id} active={status === f.id} onClick={() => setStatus(f.id)}>
-              {f.label}
-            </FilterChip>
-          ))}
-        </div>
-      </div>
+      <p className="font-ui text-[12.5px] text-text-3">
+        {canReview
+          ? 'Every request you are able to decide on.'
+          : 'Your requests. Only you and whoever reviews them can see these.'}
+      </p>
 
       <div className="border border-border-default bg-surface-1">
+        {/* One row: the tabs say which slice, everything after them narrows it.
+            Search and the add action sit right, away from the filters, so the
+            eye lands on the tabs first and on the queue immediately below. */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-border-subtle px-4 py-3">
+          <Tabs
+            variant="pill"
+            size="sm"
+            tabs={statusTabs}
+            activeKey={status}
+            onChange={(k) => { if (isStatusFilter(k)) setStatus(k) }}
+            className="shrink-0"
+          />
+          {/* A reviewer's tool: it exists to work a queue down by kind. On your
+              own handful of requests it filters almost nothing. */}
+          {canReview && (
+            <Select
+              size="sm"
+              value={kind}
+              onChange={(v) => setKind(v === 'all' || isKind(v) ? v : 'all')}
+              options={typeOptions}
+              className="w-40 shrink-0"
+            />
+          )}
+          <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
+            <div className="relative w-full min-w-40 sm:w-52">
+              <Search size={13} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-text-4" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={canReview ? 'Search people or reasons…' : 'Search your requests…'}
+                aria-label="Search requests"
+                className="w-full rounded-md border border-border-default bg-surface-inset py-1.5 pl-7 pr-3 font-ui text-[12.5px] text-text-1 outline-none placeholder:text-text-4 focus:border-border-focus"
+              />
+            </div>
+            {canReview && (
+              <Button size="sm" variant="secondary" iconLeft={<Plus size={14} />} onClick={() => setEntering(true)}>
+                Add for someone else
+              </Button>
+            )}
+          </div>
+        </div>
+
         {isLoading ? (
           <div className="flex justify-center py-12 text-text-4">
             <Loader2 size={18} className="animate-spin" />
@@ -441,7 +454,11 @@ export function AttendanceRequests() {
           <div className="flex flex-col items-center gap-2 px-4 py-12 text-center text-text-4">
             <Inbox size={20} />
             <span className="font-ui text-[13px]">
-              {status === 'pending' ? 'Nothing is waiting for a decision.' : 'No requests match.'}
+              {query.trim()
+                ? `Nothing matches “${query.trim()}”.`
+                : status === 'pending'
+                  ? 'Nothing is waiting for a decision.'
+                  : 'No requests match.'}
             </span>
           </div>
         ) : (
@@ -455,7 +472,10 @@ export function AttendanceRequests() {
                 key={rowKey}
                 className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 border-b border-border-subtle last:border-0"
               >
-                <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                {/* items-start, not centre: the reason wraps to as many lines as
+                    it needs — a reason worth writing is worth reading — and the
+                    avatar should stay level with the name, not float mid-block. */}
+                <div className="flex min-w-56 flex-1 items-start gap-2.5">
                   <Avatar
                     name={row.name}
                     src={row.avatarUrl ?? undefined}
@@ -465,13 +485,18 @@ export function AttendanceRequests() {
                   <div className="min-w-0">
                     <PersonLink
                       personId={row.profileId}
-                      className="block font-ui font-medium text-[13px] text-text-1 truncate"
+                      className="block truncate font-ui font-medium text-[13px] text-text-1"
                     >
                       {row.name}
                     </PersonLink>
-                    <span className="block font-ui text-[11.5px] text-text-4 truncate">
+                    <span className="block font-ui text-[11.5px]/snug text-text-4 wrap-break-word">
                       {row.reason}
                     </span>
+                    {row.enteredByName && (
+                      <span className="mt-0.5 block font-mono text-[10px] text-text-4">
+                        Filed by {row.enteredByName}
+                      </span>
+                    )}
                   </div>
                 </div>
 

@@ -14,6 +14,7 @@ import {
   fetchAttendanceExceptions,
   fetchAllAttendanceExceptions,
   requestException,
+  enterExceptionForEmployee,
   updateException,
   reviewException,
   deleteException,
@@ -33,6 +34,7 @@ import {
   fetchAllOvertimeRequests,
   fetchMonthlyOvertime,
   submitOvertimeRequest,
+  enterOvertimeForEmployee,
   updateOvertimeRequest,
   reviewOvertimeRequest,
   deleteOvertimeRequest,
@@ -722,6 +724,30 @@ export function useEnterLeaveForEmployee() {
       qc.invalidateQueries({ queryKey: ['attendance', 'all'] })
       qc.invalidateQueries({ queryKey: ['attendance', 'monthly'] })
     },
+  })
+}
+
+/**
+ * HR/admin files an exception or an overtime claim on somebody's behalf.
+ *
+ * Both land pending whoever files them, so unlike leave there is no attendance
+ * row written here — only the queue changes.
+ */
+export function useEnterExceptionForEmployee() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ profileId, payload }: { profileId: string; payload: RequestExceptionPayload }) =>
+      enterExceptionForEmployee(profileId, payload),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['attendance', 'exceptions'] }),
+  })
+}
+
+export function useEnterOvertimeForEmployee() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ profileId, payload }: { profileId: string; payload: SubmitOvertimePayload }) =>
+      enterOvertimeForEmployee(profileId, payload),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['attendance', 'overtime'] }),
   })
 }
 

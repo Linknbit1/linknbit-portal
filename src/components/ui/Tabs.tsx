@@ -22,10 +22,15 @@ interface TabsProps {
   activeKey: string
   onChange: (key: string) => void
   variant?: 'underline' | 'pill'
+  /**
+   * `sm` matches the h-8 filter controls — a tab strip sitting in a toolbar
+   * beside a Select and a search box reads as oversized at the page size.
+   */
+  size?: 'sm' | 'md'
   className?: string
 }
 
-export function Tabs({ tabs, activeKey, onChange, variant = 'underline', className }: TabsProps) {
+export function Tabs({ tabs, activeKey, onChange, variant = 'underline', size = 'md', className }: TabsProps) {
   const listRef = useRef<HTMLDivElement>(null)
 
   // Keep the selected tab centered as the user moves through a scrollable strip.
@@ -50,16 +55,19 @@ export function Tabs({ tabs, activeKey, onChange, variant = 'underline', classNa
             aria-selected={active}
             onClick={() => onChange(tab.key)}
             className={cn(
-              'inline-flex items-center gap-2 font-ui font-medium text-body-sm transition-colors duration-150 focus:outline-none shrink-0 whitespace-nowrap',
+              'inline-flex items-center font-ui font-medium transition-colors duration-150 focus:outline-none shrink-0 whitespace-nowrap',
+              size === 'sm' ? 'gap-1.5 text-[11.5px]' : 'gap-2 text-body-sm',
               variant === 'underline'
                 ? cn(
-                    'px-3 pb-2.5 pt-1 border-b-2 -mb-px',
+                    'border-b-2 -mb-px',
+                    size === 'sm' ? 'px-2.5 pb-2 pt-0.5' : 'px-3 pb-2.5 pt-1',
                     active
                       ? 'border-brand-red text-text-1'
                       : 'border-transparent text-text-3 hover:text-text-2',
                   )
                 : cn(
-                    'px-3 py-1.5 rounded-sm',
+                    'rounded-sm',
+                    size === 'sm' ? 'px-2.5 py-1' : 'px-3 py-1.5',
                     active ? 'bg-surface-2 text-text-1' : 'text-text-3 hover:text-text-2',
                   ),
             )}
@@ -68,7 +76,8 @@ export function Tabs({ tabs, activeKey, onChange, variant = 'underline', classNa
             {tab.badge !== undefined && (
               <span
                 className={cn(
-                  'px-1.5 py-0.5 rounded-sm text-[10px] font-bold',
+                  'rounded-sm font-bold',
+                  size === 'sm' ? 'px-1 py-px text-[9.5px]' : 'px-1.5 py-0.5 text-[10px]',
                   active ? 'bg-brand-red text-white' : 'bg-surface-3 text-text-3',
                 )}
               >

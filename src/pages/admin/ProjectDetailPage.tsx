@@ -38,7 +38,8 @@ import { useDeleteProject, useProject, useProjectDeleteImpact, useUpdateProject 
 import { useServiceStages, useDeleteStage } from '../../hooks/useStages'
 import { useTasks } from '../../hooks/useTasks'
 import {
-  useProjectServices, useProjectServiceMembers, useRemoveServiceMember, useRemoveProjectService,
+  useProjectServices, useProjectServiceMembers, useUnstaffServiceMember, useServiceMemberTaskLoad,
+  useRemoveProjectService,
 } from '../../hooks/useProjectServices'
 import { useServices } from '../../hooks/useServices'
 import { useUsableTemplates, useApplyTemplate } from '../../hooks/useTemplates'
@@ -180,7 +181,6 @@ export default function ProjectDetailPage() {
   const deleteProject = useDeleteProject()
   const watch = useProjectWatch(id)
   const deleteStage = useDeleteStage()
-  const removeMember = useRemoveServiceMember()
   const removeService = useRemoveProjectService()
   const requestApproval = useRequestApproval()
   const reviewApproval = useReviewApproval()
@@ -203,6 +203,10 @@ export default function ProjectDetailPage() {
   // Which service the "add member" modal is filling — the picker is per service now.
   const [addMemberFor, setAddMemberFor] = useState<string | null>(null)
   const [pendingServiceRemoval, setPendingServiceRemoval] = useState<string | null>(null)
+  // Who is about to be taken off which block. Assigning somebody to a task
+  // staffs them onto its service, so unstaffing has to answer for the tasks
+  // that put them there rather than quietly leaving them holding the work.
+  const [pendingUnstaff, setPendingUnstaff] = useState<{ serviceId: string; member: { id: string; name: string }; serviceName: string } | null>(null)
   const [showAddService, setShowAddService] = useState(false)
   const [showStageForm, setShowStageForm] = useState(false)
   const [editingStage, setEditingStage] = useState<StageRow | null>(null)
@@ -581,10 +585,11 @@ export default function ProjectDetailPage() {
                           </div>
                           {canManage && (
                             <button
-                              onClick={() => removeMember.mutate(
-                                { projectId: id, projectServiceId: s.id, profileId: m.id },
-                                { onError: (e) => toast(e instanceof Error ? e.message : 'Failed', 'error') },
-                              )}
+                              onClick={() => setPendingUnstaff({
+                                serviceId: s.id,
+                                member: { id: m.id, name: m.name },
+                                serviceName: s.service?.name ?? 'this service',
+                              })}
                               className="flex size-7 shrink-0 items-center justify-center rounded-sm text-text-4 opacity-0 transition-all hover:bg-error/10 hover:text-error group-hover:opacity-100 focus-visible:opacity-100"
                               aria-label={`Remove ${m.name} from ${s.service?.name ?? 'service'}`}
                             >
@@ -614,6 +619,15 @@ export default function ProjectDetailPage() {
           options={unusedServices.map((c) => ({ id: c.id, name: c.name, color: c.color }))}
           onAdded={setPickedServiceId}
           onClose={() => setShowAddService(false)}
+        />
+      )}
+      {pendingUnstaff && (
+        <UnstaffMemberDialog
+          projectId={id}
+          projectServiceId={pendingUnstaff.serviceId}
+          serviceName={pendingUnstaff.serviceName}
+          member={pendingUnstaff.member}
+          onClose={() => setPendingUnstaff(null)}
         />
       )}
       {addMemberFor && (
@@ -756,6 +770,77 @@ function Meta({ icon: Icon, label, value, danger, badge }: { icon: typeof Calend
         {badge}
       </p>
     </div>
+  )
+}
+
+interface UnstaffMemberDialogProps {
+  projectId: string
+  projectServiceId: string
+  serviceName: string
+  member: { id: string; name: string }
+  onClose: () => void
+}
+
+/**
+ * Confirms taking somebody off a service block, saying what it costs.
+ *
+ * Its own component so the "what are they still holding" query only exists
+ * while the question is being asked, and is asked fresh each time.
+ */
+function UnstaffMemberDialog({
+  projectId, projectServiceId, serviceName, member, onClose,
+}: UnstaffMemberDialogProps) {
+  const toast = useToast()
+  const unstaff = useUnstaffServiceMember()
+  const { data: load, isLoading } = useServiceMemberTaskLoad(projectServiceId, member.id)
+
+  const plural = (n: number) => (n === 1 ? 'task' : 'tasks')
+  const roles = [
+    load?.assigned ? `assignee on ${load.assigned} ${plural(load.assigned)}` : null,
+    load?.reviewing ? `reviewer on ${load.reviewing} ${plural(load.reviewing)}` : null,
+  ].filter(Boolean)
+
+  const message = isLoading ? (
+    <span>Checking what {member.name} is working on…</span>
+  ) : roles.length > 0 ? (
+    <span>
+      <strong className="text-text-1">{member.name}</strong> is {roles.join(' and ')} in{' '}
+      {serviceName}. Removing them takes them off that work as well. Anything they have said
+      in a comment stays where it is.
+    </span>
+  ) : (
+    <span>
+      <strong className="text-text-1">{member.name}</strong> is not on any task in {serviceName},
+      so this only takes them off the roster.
+    </span>
+  )
+
+  return (
+    <ConfirmDialog
+      open
+      title={`Remove ${member.name} from ${serviceName}?`}
+      message={message}
+      confirmLabel="Remove"
+      pendingLabel="Removing…"
+      isPending={unstaff.isPending}
+      onConfirm={() => unstaff.mutate(
+        { projectId, projectServiceId, profileId: member.id },
+        {
+          onSuccess: (result) => {
+            const freed = result.unassigned + result.unreviewed
+            toast(
+              freed > 0
+                ? `${member.name} removed, and taken off ${freed} ${plural(freed)}`
+                : `${member.name} removed`,
+              'success',
+            )
+            onClose()
+          },
+          onError: (e) => toast(e instanceof Error ? e.message : 'Failed', 'error'),
+        },
+      )}
+      onClose={onClose}
+    />
   )
 }
 
