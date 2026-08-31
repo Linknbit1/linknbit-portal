@@ -31,12 +31,28 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
-    version: '1.24.1',
+    version: '1.25.0',
     date: '2026-08-31',
     title: 'Boards that read like boards',
     highlight:
-      'A new task no longer has to have its status picked by hand, board columns carry their colour and an icon, the lanes are wider, and a project’s Team tab uses the whole screen.',
+      'A task you raise stays visible even before you assign it, leads see their whole service block, board columns carry their colour and an icon, and a project’s Team tab uses the whole screen.',
     entries: [
+      {
+        kind: 'fixed',
+        text: 'A task you create no longer disappears the moment you save it. Mine kept what was assigned to you and My team kept what was assigned to a teammate, so a task with nobody on it yet fell through both. Anything you raised is now yours until you hand it over.',
+      },
+      {
+        kind: 'added',
+        text: 'My team now shows every task in a service block you or a teammate are staffed on, not only the ones somebody is already assigned to. A lead sees the whole of their own block, including the work still waiting to be handed out.',
+      },
+      {
+        kind: 'improved',
+        text: 'Whoever manages a project now sees every task in it across all of its services, wherever they look — the projects list, the Tasks board, or the project itself.',
+      },
+      {
+        kind: 'improved',
+        text: 'How far the Mine / My team / Everyone switch reaches is decided by what your roles allow rather than by what a role is called, so a role built on the Roles screen gets exactly the reach it was given.',
+      },
       {
         kind: 'fixed',
         text: 'Creating a task no longer fails with a database error. The status box started empty and the save sent that emptiness to the database, which refused it. A new task now starts on the default column, so it saves whether or not you touch the field.',

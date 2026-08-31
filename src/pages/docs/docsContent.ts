@@ -406,7 +406,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
         id: 'scope-switch',
         title: 'Mine, my team, or everyone',
         summary:
-          'A switch on the projects and tasks screens that decides whose work they are showing. How far it goes depends on your role. It stays put as you move between screens.',
+          'A switch on the projects and tasks screens that decides whose work they are showing. How far it goes depends on what you have been given. It stays put as you move between screens.',
         where: 'Delivery → Projects or Tasks, in the filter row',
         procedures: [
           {
@@ -419,13 +419,15 @@ export const DOC_CHAPTERS: DocChapter[] = [
           },
         ],
         notes: [
-          'How wide the switch goes depends on your role. If you work on tasks, you see the ones assigned to you, and there is no switch to show. That is simply what the screen is. A team lead also sees the work of anyone they share a team with. Admins and finance see everything.',
-          'Managing a project is separate from your role. Whoever manages a project sees every task in it, and that holds for an admin or a team lead named as a manager just as much as for a project manager.',
+          'How wide the switch goes depends on what your roles allow, not on what any one of them is called. If you work on tasks, you see the ones assigned to you, and there is no switch to show. That is simply what the screen is.',
+          'My team is wider than "assigned to a teammate". It also holds every task in a service block you or a teammate are staffed on, whether or not anybody is on it yet. A lead therefore sees the whole of their own block, including work still waiting to be handed out.',
+          'Managing a project is separate from all of this. Whoever manages a project sees every task in it, across every service, and that holds for an admin or a team lead named as a manager just as much as for a project manager.',
+          'Anything you raised yourself stays under Mine even before it is assigned to anybody, so a task does not vanish the moment you save it.',
           'A team means anyone who shares a team with you, including yourself. Someone on several teams counts on all of them, so joining another team widens what you see.',
           'This is not only what the screen shows: work that is not yours is not sent to your browser at all, and a link to it opens a page saying it is unavailable.',
           'Unassigned work stays visible to team leads and project managers on the project, so a backlog can still be handed out.',
           'Mine also keeps tasks that merely tag you, since being mentioned is how work often reaches you before it is formally assigned. Opening one still needs it to be assigned to you.',
-          'A banner across the top says which lens is on and how many rows it hid, so a nearly empty board is never a mystery. It stays quiet when the lens is already as wide as your role goes.',
+          'A banner across the top says which lens is on and how many rows it hid, so a nearly empty board is never a mystery. It stays quiet when the lens is already as wide as yours goes.',
           'The switch only appears on the screens it affects, and is remembered per device.',
         ],
       },

@@ -1,9 +1,8 @@
 import { UserRound, Users, Globe } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '../../lib/cn'
-import { useAuthContext } from '../../context/AuthContext'
 import { useScope } from '../../context/ScopeContext'
-import { SCOPE_LABEL, scopesFor, type Scope } from '../../constants/scopes'
+import { SCOPE_LABEL, scopesUpTo, type Scope } from '../../constants/scopes'
 
 const SCOPE_ICON: Record<Scope, LucideIcon> = {
   mine: UserRound,
@@ -33,14 +32,13 @@ interface ScopeSwitchProps {
  * The selected segment is brand-red because a filter you have forgotten about
  * is worse than no filter.
  *
- * Only the scopes the role may choose are offered, and a role with a single
- * option gets no switch at all — a one-button group is a control that does
- * nothing, and it advertises a view the person cannot reach.
+ * Only the scopes the viewer's permissions allow are offered, and someone with
+ * a single option gets no switch at all — a one-button group is a control that
+ * does nothing, and it advertises a view the person cannot reach.
  */
 export function ScopeSwitch({ compact = false, size = 'md', className }: ScopeSwitchProps) {
-  const { profile } = useAuthContext()
-  const { scope, setScope } = useScope()
-  const options = scopesFor(profile?.role)
+  const { scope, setScope, maxScope } = useScope()
+  const options = scopesUpTo(maxScope)
 
   if (options.length < 2) return null
 

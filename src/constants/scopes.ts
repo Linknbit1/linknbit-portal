@@ -16,43 +16,46 @@ export const SCOPE_LABEL: Record<Scope, string> = {
 }
 
 /**
- * The widest scope each role may look through.
+ * The widest scope a set of permissions may look through.
  *
- * A cap, not a preference: an employee sees their own work on every screen that
- * has a lens, a team lead or PM can widen to the people they share a team with,
- * and only the roles that answer for the whole company get "Everyone". Finance
- * is there because billing questions are company-wide by nature.
+ * A cap, not a preference. It used to be a map of role names, which meant a role
+ * invented on the Roles screen could never be given a delivery lead's reach
+ * however it was configured — backwards for a portal whose roles are data.
  *
- * This mirrors can_access_task() in the database, which is what actually decides.
- * Offering a lens wider than that rule would just render an empty board — so HR
- * sits at `mine` here for the same reason it is absent there: it never had
- * blanket access to delivery work, and this is not the change that grants it.
+ * These are the same two keys `task_visible()` reads in the database, so the
+ * lens can never offer a view RLS would then return empty:
  *
- * A role missing from this map gets `mine` — a new role should have to be given
- * reach deliberately rather than inherit it by being forgotten.
+ *   can_view_all_tasks   everything in the portal          → Everyone
+ *   can_view_team_tasks  your services and your teammates  → My team
+ *   neither              your own work                     → Mine
+ *
+ * A project's own manager sees the whole project regardless, but that is a fact
+ * about one project rather than a lens, so it is enforced in RLS and in the task
+ * filter, not here.
  */
-const MAX_SCOPE_BY_ROLE: Record<string, Scope> = {
-  super_admin: 'everyone',
-  admin: 'everyone',
-  finance: 'everyone',
-  project_manager: 'team',
-  team_lead: 'team',
-  hr: 'mine',
-  employee: 'mine',
+export const SCOPE_PERMISSION: Record<Exclude<Scope, 'mine'>, string> = {
+  everyone: 'can_view_all_tasks',
+  team: 'can_view_team_tasks',
 }
 
-export function maxScopeFor(role: string | null | undefined): Scope {
-  if (!role) return 'mine'
-  return MAX_SCOPE_BY_ROLE[role] ?? 'mine'
+/** Mirrors has_feature(): the `administrator` permission grants every other one. */
+const ADMINISTRATOR = 'administrator'
+
+export function maxScopeFrom(permissions: readonly string[] | undefined): Scope {
+  if (!permissions) return 'mine'
+  const has = (key: string) => permissions.includes(ADMINISTRATOR) || permissions.includes(key)
+  if (has(SCOPE_PERMISSION.everyone)) return 'everyone'
+  if (has(SCOPE_PERMISSION.team)) return 'team'
+  return 'mine'
 }
 
-/** The scopes a role may choose between — always a prefix of SCOPES. */
-export function scopesFor(role: string | null | undefined): readonly Scope[] {
-  return SCOPES.slice(0, SCOPES.indexOf(maxScopeFor(role)) + 1)
+/** The scopes someone may choose between — always a prefix of SCOPES. */
+export function scopesUpTo(max: Scope): readonly Scope[] {
+  return SCOPES.slice(0, SCOPES.indexOf(max) + 1)
 }
 
-/** Narrows a scope to what the role is allowed, leaving allowed values alone. */
-export function clampScope(scope: Scope, role: string | null | undefined): Scope {
-  const allowed = scopesFor(role)
+/** Narrows a scope to what is allowed, leaving allowed values alone. */
+export function clampScope(scope: Scope, max: Scope): Scope {
+  const allowed = scopesUpTo(max)
   return allowed.includes(scope) ? scope : allowed[allowed.length - 1]
 }

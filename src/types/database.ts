@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.17"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -5530,6 +5530,10 @@ export type Database = {
         Returns: boolean
       }
       is_task_assignee: { Args: { p_task_id: string }; Returns: boolean }
+      is_team_service: {
+        Args: { p_project_service_id: string }
+        Returns: boolean
+      }
       join_reward_pool: { Args: { p_pool_id: string }; Returns: undefined }
       leave_reward_pool: { Args: { p_pool_id: string }; Returns: undefined }
       link_zk_enrollment: {
@@ -5786,6 +5790,7 @@ export type Database = {
           p_assignee_id: string
           p_created_by: string
           p_project_id: string
+          p_project_service_id: string
           p_task_id: string
         }
         Returns: boolean

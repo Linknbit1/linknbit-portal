@@ -100,6 +100,22 @@ export async function fetchProjectServiceMembers(projectId: string): Promise<Ser
   )
 }
 
+/**
+ * Every service-staffing row in the portal, as bare ids.
+ *
+ * Read whole rather than per project because the question it answers spans all
+ * of them at once: "is this task sitting in a service block my team works in?"
+ * RLS on service_members is is_internal(), and the table is one row per person
+ * per service block, so this stays small.
+ */
+export async function fetchServiceStaffing(): Promise<{ project_service_id: string; profile_id: string }[]> {
+  const { data, error } = await supabase
+    .from('service_members')
+    .select('project_service_id, profile_id')
+  if (error) throw error
+  return data
+}
+
 export async function addServiceMembers(projectServiceId: string, profileIds: string[]): Promise<void> {
   if (profileIds.length === 0) return
   const { error } = await supabase

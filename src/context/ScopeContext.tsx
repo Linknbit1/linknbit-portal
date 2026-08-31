@@ -1,11 +1,11 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react'
-import { SCOPES, clampScope, maxScopeFor, type Scope } from '../constants/scopes'
-import { useAuthContext } from './AuthContext'
+import { SCOPES, clampScope, maxScopeFrom, type Scope } from '../constants/scopes'
+import { useMyPermissions } from '../hooks/usePermissions'
 
 interface ScopeValue {
   scope: Scope
   setScope: (next: Scope) => void
-  /** The widest scope this role may choose — the switch renders up to it. */
+  /** The widest scope the viewer's permissions allow — the switch renders up to it. */
   maxScope: Scope
 }
 
@@ -39,16 +39,21 @@ function readStored(): Scope {
  * Persisted to localStorage because it is a view preference — no auth or
  * profile data, which is what the storage rules actually guard against.
  *
- * The role's cap is applied on the way out rather than on the way in, so a
- * stored "everyone" from a wider role (or from before the caps existed) is
- * narrowed for this session without being overwritten — someone promoted back
- * finds their setting where they left it.
+ * The cap is applied on the way out rather than on the way in, so a stored
+ * "everyone" from a wider set of permissions (or from before the caps existed)
+ * is narrowed for this session without being overwritten — someone granted it
+ * back finds their setting where they left it.
+ *
+ * The cap comes from permissions, not from the role name, and permissions
+ * arrive a moment after the app does. Until they land nothing is clamped:
+ * narrowing to "Mine" first and widening a beat later would empty every board
+ * on the way past, which reads as data loss rather than as loading.
  */
 export function ScopeProvider({ children }: { children: ReactNode }) {
-  const { profile } = useAuthContext()
+  const { data: permissions } = useMyPermissions()
   const [stored, setStoredState] = useState<Scope>(readStored)
-  const maxScope = maxScopeFor(profile?.role)
-  const scope = clampScope(stored, profile?.role)
+  const maxScope = permissions ? maxScopeFrom(permissions) : stored
+  const scope = clampScope(stored, maxScope)
 
   const setScope = useCallback((next: Scope) => {
     setStoredState(next)

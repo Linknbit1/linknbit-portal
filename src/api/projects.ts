@@ -210,6 +210,19 @@ export async function deleteProject(id: string): Promise<void> {
 }
 
 /**
+ * Projects this person manages. The task lens uses it to widen a manager's view
+ * to the whole project, which is what managing one means.
+ */
+export async function fetchManagedProjectIds(profileId: string): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('project_managers')
+    .select('project_id')
+    .eq('profile_id', profileId)
+  if (error) throw error
+  return data.map((r) => r.project_id)
+}
+
+/**
  * Replaces the whole set of managers for a project.
  *
  * A diff rather than delete-then-insert: wiping the table first would, for a
