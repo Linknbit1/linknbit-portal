@@ -85,8 +85,9 @@ export function MessageBubble({
   const reactBtnRef = useRef<HTMLButtonElement>(null)
   const mine = message.author_id === myProfileId
   const pending = isOptimistic(message.id)
-  // Swipe right to reply, as in WhatsApp. Off while a message is still sending:
-  // it has no server id yet, so nothing could be quoted against it.
+  // Drag right to reply, as in WhatsApp — finger or mouse. Off while a message
+  // is still sending: it has no server id yet, so nothing could be quoted
+  // against it.
   const swipe = useSwipeToReply(() => onReply(message), !pending)
 
   if (message.deleted_at) {
@@ -126,7 +127,9 @@ export function MessageBubble({
         // touch-pan-y: the browser keeps vertical scrolling, we take the
         // horizontal gesture. Without it the swipe never reaches our handlers.
         'group relative flex touch-pan-y gap-3 px-4 py-0.5 target:bg-brand-red/10',
-        !swipe.dragging && 'transition-transform duration-200',
+        // Only while the drag is live, so text stays selectable the rest of the
+        // time — a mouse drag cannot be a selection and a swipe at once.
+        swipe.dragging ? 'select-none' : 'transition-transform duration-200',
         // A message aimed at you keeps a warning-tinted band and a left edge, so
         // it is findable when scrolling back through a busy channel rather than
         // only at the moment the notification arrives.

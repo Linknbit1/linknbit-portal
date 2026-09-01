@@ -39,7 +39,7 @@ export const RELEASES: ChangelogRelease[] = [
     entries: [
       {
         kind: 'added',
-        text: 'Swipe a message to the right on a phone or tablet to reply to it, the way a messaging app does. The reply arrow on hover is still there on a computer.',
+        text: 'Drag a message to the right to reply to it, the way a messaging app does — swipe on a phone or tablet, or drag with the mouse on a computer. A reply arrow appears as you go and turns red once you have gone far enough. The arrow on hover still does the same thing.',
       },
       {
         kind: 'added',

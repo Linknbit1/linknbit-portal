@@ -1540,8 +1540,8 @@
     "hash": "104b8fbe4e463ec76857941b2e791d07"
   },
   "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/chat/MessageBubble.tsx": {
-    "mtime": 1788246282.2983754,
-    "hash": "23c1ba6dd501c3190b70553ea355eecc"
+    "mtime": 1788247910.203608,
+    "hash": "e9958ac74009e2f65f3341a81f1a6d88"
   },
   "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/chat/ReadTicks.tsx": {
     "mtime": 1788245389.5366359,
@@ -2096,8 +2096,8 @@
     "hash": "58c66965d1bba99cc00b44635cf4e96d"
   },
   "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/useSwipeToReply.ts": {
-    "mtime": 1788246226.0232089,
-    "hash": "5c0c14061eea7df3f7b999ace3bb84b0"
+    "mtime": 1788247897.2333312,
+    "hash": "47cf8fc534c9f561495f8b51a2f5753f"
   },
   "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/useMessages.ts": {
     "mtime": 1788242270.945798,
@@ -2808,16 +2808,16 @@
     "hash": "460c62ebc59d3d6868ab4b370795d564"
   },
   "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/docs/changelogData.ts": {
-    "mtime": 1788246661.7720883,
-    "hash": "bc902f7221cf3542b1243480c05e986d"
+    "mtime": 1788248003.212744,
+    "hash": "e1e6de031eb568293c3503600a0cc02f"
   },
   "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/docs/ChangelogPage.tsx": {
     "mtime": 1788242271.1116009,
     "hash": "f567f283608db6a9409b87647ffde140"
   },
   "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/docs/docsContent.ts": {
-    "mtime": 1788246661.7266917,
-    "hash": "cb2e637234fd6060b32c2b7e3e0ac412"
+    "mtime": 1788248003.1638925,
+    "hash": "636b3f21cb79b253533ec6e5609b2c3e"
   },
   "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/docs/DocumentationPage.tsx": {
     "mtime": 1788242271.1122677,

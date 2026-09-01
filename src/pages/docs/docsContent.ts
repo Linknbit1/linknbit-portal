@@ -335,7 +335,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
           'Reply to a particular message with the arrow that appears when you hover it. Your reply carries a quote of theirs, and pressing the quote jumps to the original.',
           'A message that tags you, tags a team you are on, or carries an @everyone is banded in amber so you can find it scrolling back, not only when the notification arrives.',
           'The date is said once, on a divider between the days, and it stays pinned to the top as you scroll — so a long scroll back always tells you which day you are in. Each message carries only its time; hover it for the full date.',
-          'On a phone or tablet, swipe a message to the right to reply to it. On a computer, use the arrow that appears when you hover it.',
+          'Drag a message to the right to reply to it — swipe it on a phone or tablet, or drag it with the mouse on a computer. A reply arrow appears as you go and turns red once you have gone far enough; let go there. The arrow that appears when you hover a message does the same thing.',
           'Your own messages carry a tick, in the bottom-right corner of the message. A clock means it is still going, one grey tick means sent, two grey means some of the room has read it, two coloured means everybody has. Hover a tick to see who.',
           'In a direct message there is only one other person, so it goes from one tick to two coloured. In a channel the two grey ticks tell you it has reached some people without claiming it reached all of them.',
           'Ticks turn as soon as somebody opens the conversation, without refreshing and without waiting for them to reply.',
