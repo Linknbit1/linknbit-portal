@@ -30,6 +30,9 @@ export function useRealtimeChatMessages(channelId: string | undefined) {
         // receipts have moved. Refreshing them here means the sender's ticks
         // never wait on a separate channel_members event to arrive.
         queryClient.invalidateQueries({ queryKey: CHANNEL_MEMBER_KEYS.byChannel(channelId) })
+        // Deleting a message clears its reactions server-side, so the cached
+        // rows for it are dead the moment this fires.
+        queryClient.invalidateQueries({ queryKey: REACTION_KEYS.byChannel(channelId) })
       })
       .on('postgres_changes', { event: '*', table: 'message_attachments', ...scope }, () => {
         queryClient.invalidateQueries({ queryKey: MESSAGE_ATTACHMENT_KEYS.byChannel(channelId) })

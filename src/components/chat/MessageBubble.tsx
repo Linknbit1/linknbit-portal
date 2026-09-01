@@ -11,7 +11,8 @@ import { EmojiPicker } from './EmojiPicker'
 import { cn } from '../../lib/cn'
 import { fromDbDoc } from '../../lib/richText'
 import { ReadTicks } from './ReadTicks'
-import { isOptimistic, receiptState } from './chatUtils'
+import { isOptimistic, receiptState, replyPreviewText } from './chatUtils'
+import { ReplyThumbnail } from './ReplyThumbnail'
 import type { MessageWithAuthor } from '../../api/messages'
 import type { MessageAttachmentRow } from '../../api/messageAttachments'
 import type { ReactionGroup } from '../../hooks/useMessageReactions'
@@ -39,6 +40,8 @@ interface MessageBubbleProps {
   receipt: { id: string; name: string }[] | null
   /** People in the conversation other than you, so "everyone" can be tested. */
   audience: number
+  /** The first file on the message being answered, so the quote can show it. */
+  replyAttachment?: MessageAttachmentRow | null
 }
 
 /**
@@ -78,7 +81,7 @@ function timeOf(iso: string): string {
 
 export function MessageBubble({
   message, startsGroup, canModerate, myProfileId, attachments, reactions, onDelete, onEdit, onToggleReaction,
-  onReply, onJumpTo, tagsMe, receipt, audience,
+  onReply, onJumpTo, tagsMe, receipt, audience, replyAttachment,
 }: MessageBubbleProps) {
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [reactOpen, setReactOpen] = useState(false)
@@ -190,11 +193,12 @@ export function MessageBubble({
             <CornerUpLeft size={11} className="shrink-0 text-text-4" />
             {message.reply_to && !message.reply_to.deleted_at ? (
               <>
+                <ReplyThumbnail attachment={replyAttachment} />
                 <span className="shrink-0 font-ui text-[11.5px] font-semibold text-text-3">
                   {message.reply_to.author?.name ?? 'Unknown'}
                 </span>
                 <span className="truncate font-ui text-[11.5px] text-text-4">
-                  {message.reply_to.body_text || 'Attachment'}
+                  {replyPreviewText(message.reply_to.body_text, replyAttachment)}
                 </span>
               </>
             ) : (

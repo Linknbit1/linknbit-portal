@@ -1,0 +1,14 @@
+-- Make a removed reaction reach the other people in the conversation.
+--
+-- Realtime filters postgres_changes against the record in the WAL. Under the
+-- default replica identity a DELETE only logs the primary key, so the client's
+-- `channel_id=eq.<id>` filter has no channel_id to match and the event is
+-- dropped before anyone sees it.
+--
+-- The effect was that taking a reaction off — and now, deleting a message,
+-- which clears its reactions — updated only the browser that did it. Everyone
+-- else kept the pill until something unrelated refetched.
+--
+-- FULL logs the whole old row, which is what the filter needs. The table is
+-- small and its rows are tiny, so the extra WAL is not worth optimising.
+ALTER TABLE message_reactions REPLICA IDENTITY FULL;

@@ -242,6 +242,7 @@ export function ChatThread({ channelId, hideHeader }: ChatThreadProps) {
         onSend={handleSend}
         teamItems={teamItems}
         replyTo={replyTo}
+        replyAttachment={replyTo ? attachments.find((a) => a.message_id === replyTo.id) : null}
         onCancelReply={() => setReplyTo(null)}
         onSaveEdit={(payload) => {
           if (!editing) return

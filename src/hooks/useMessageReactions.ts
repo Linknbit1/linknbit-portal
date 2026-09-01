@@ -25,10 +25,17 @@ export function useToggleReaction() {
   })
 }
 
+export interface ReactionPerson {
+  id: string
+  name: string
+  avatarUrl: string | null
+}
+
 export interface ReactionGroup {
   emoji: string
   count: number
-  names: string[]
+  /** Everyone who picked this one, in the order they did. */
+  people: ReactionPerson[]
   mine: boolean
 }
 
@@ -41,9 +48,11 @@ export function groupReactions(
   const byEmoji = new Map<string, ReactionGroup>()
   for (const r of reactions) {
     if (r.message_id !== messageId) continue
-    const group = byEmoji.get(r.emoji) ?? { emoji: r.emoji, count: 0, names: [], mine: false }
+    const group = byEmoji.get(r.emoji) ?? { emoji: r.emoji, count: 0, people: [], mine: false }
     group.count += 1
-    if (r.profile?.name) group.names.push(r.profile.name)
+    if (r.profile) {
+      group.people.push({ id: r.profile.id, name: r.profile.name, avatarUrl: r.profile.avatar_url })
+    }
     if (r.profile_id === myProfileId) group.mine = true
     byEmoji.set(r.emoji, group)
   }

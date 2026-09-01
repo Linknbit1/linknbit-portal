@@ -2,6 +2,8 @@ import { extractMentionIds, fromDbDoc } from '../../lib/richText'
 import type { Json } from '../../types/database'
 import type { ChannelListItem } from '../../api/channels'
 import type { PersonMini } from '../../api/projects'
+import type { MessageAttachmentRow } from '../../api/messageAttachments'
+import { fileKind } from '../../lib/attachment'
 
 /** DMs have no stored name — they're labelled by whoever the other person is. */
 export function channelTitle(channel: ChannelListItem, myProfileId: string | undefined): string {
@@ -133,4 +135,16 @@ export function dayLabel(iso: string): string {
     month: 'long',
     ...(date.getFullYear() === now.getFullYear() ? {} : { year: 'numeric' }),
   })
+}
+
+/**
+ * What to call the message being answered. An image-only message has no text to
+ * quote, so its filename stands in rather than the word "Attachment".
+ */
+export function replyPreviewText(bodyText: string, attachment?: MessageAttachmentRow | null): string {
+  if (bodyText) return bodyText
+  if (!attachment) return 'Attachment'
+  return fileKind(attachment.mime_type, attachment.file_name) === 'image'
+    ? 'Photo'
+    : attachment.file_name
 }

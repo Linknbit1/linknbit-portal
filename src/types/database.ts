@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       approvals: {
@@ -5129,6 +5154,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      am_i_standup_participant: { Args: never; Returns: boolean }
       announce_release: {
         Args: { p_body: string; p_title: string; p_version: string }
         Returns: number
@@ -5540,6 +5566,7 @@ export type Database = {
       is_channel_member: { Args: { p_channel_id: string }; Returns: boolean }
       is_channel_owner: { Args: { p_channel_id: string }; Returns: boolean }
       is_internal: { Args: never; Returns: boolean }
+      is_internal_profile: { Args: { p_profile: string }; Returns: boolean }
       is_permission_hidden: { Args: { p_key: string }; Returns: boolean }
       is_project_creator: { Args: { p_project_id: string }; Returns: boolean }
       is_project_manager: { Args: { p_project_id: string }; Returns: boolean }
@@ -5583,7 +5610,13 @@ export type Database = {
         }[]
       }
       my_permissions: { Args: never; Returns: string[] }
+      my_role_rank: { Args: never; Returns: number }
       open_reward_pool: { Args: { p_reward_id: string }; Returns: string }
+      profile_has_feature: {
+        Args: { p_key: string; p_profile: string }
+        Returns: boolean
+      }
+      profiles_with_feature: { Args: { p_key: string }; Returns: string[] }
       redeem_reward: {
         Args: { p_profile_id: string; p_reward_id: string }
         Returns: string
@@ -6012,6 +6045,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       queue_status: ["pending", "processing", "done", "failed"],

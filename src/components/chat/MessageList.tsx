@@ -37,12 +37,14 @@ interface MessageListProps {
  */
 function DayDivider({ iso }: { iso: string }) {
   return (
-    <div className="sticky top-0 z-10 flex items-center gap-3 px-4 py-2">
-      <span className="h-px flex-1 bg-border-subtle" />
+    // The rules run the full width of the thread, inset just enough not to touch
+    // the edges. Pinned, so a long scroll back always names the day you are in.
+    <div className="sticky top-0 z-10 flex items-center gap-3 px-3 py-2">
+      <span className="h-px min-w-4 flex-1 bg-border-default" />
       <span className="shrink-0 rounded-sm border border-border-default bg-surface-2 px-2.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-text-3">
         {dayLabel(iso)}
       </span>
-      <span className="h-px flex-1 bg-border-subtle" />
+      <span className="h-px min-w-4 flex-1 bg-border-default" />
     </div>
   )
 }
@@ -166,6 +168,8 @@ export function MessageList({
               tagsMe={mentionsMe(m, myMentionIds)}
               receipt={m.author_id === myProfileId && !isOptimistic(m.id) ? readersOf(m) : null}
               audience={audienceSize}
+              // Already bucketed above, so the quote costs no extra lookup.
+              replyAttachment={m.reply_to_id ? attachmentsByMessage.get(m.reply_to_id)?.[0] : undefined}
             />
           ))}
         </section>

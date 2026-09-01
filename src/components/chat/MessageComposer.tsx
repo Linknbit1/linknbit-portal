@@ -1,16 +1,20 @@
-import { useRef, useState, type DragEvent } from 'react'
+import { useEffect, useRef, useState, type DragEvent } from 'react'
 import { type Editor, type JSONContent } from '@tiptap/react'
 import { SendHorizonal, X, Paperclip, Smile, CornerUpLeft } from 'lucide-react'
 import { RichEditor } from '../editor/RichEditor'
 import { EmojiPicker } from './EmojiPicker'
-import { ChatAttachmentChips, type PendingUpload } from './ChatAttachmentChips'
+import { ChatAttachmentTray, type PendingUpload } from './ChatAttachmentTray'
+import { ReplyThumbnail } from './ReplyThumbnail'
+import { replyPreviewText } from './chatUtils'
 import { useToast } from '../ui/toast-context'
 import { cn } from '../../lib/cn'
 import { docToPlainText, emptyDoc, isEmptyDoc, toDbDoc } from '../../lib/richText'
-import { validateChatAttachmentFile } from '../../lib/chatAttachment'
+import { validateChatAttachmentFile, pastedFileName } from '../../lib/chatAttachment'
+import { fileKind } from '../../lib/attachment'
 import { useDeleteChatAttachment, useUploadChatAttachment } from '../../hooks/useMessageAttachments'
 import type { PersonMini } from '../../api/projects'
 import type { Json } from '../../types/database'
+import type { MessageAttachmentRow } from '../../api/messageAttachments'
 import { randomUUID } from '../../lib/uuid'
 
 export interface ComposerPayload {
@@ -30,12 +34,14 @@ interface MessageComposerProps {
   onSend: (payload: ComposerPayload) => void
   /** The message being answered, shown above the input until sent or cancelled. */
   replyTo?: { id: string; body_text: string; author: { name: string } | null } | null
+  /** Its first file, so a reply to a picture shows the picture. */
+  replyAttachment?: MessageAttachmentRow | null
   onCancelReply?: () => void
   onSaveEdit?: (payload: { bodyText: string; bodyDoc: Json | null }) => void
 }
 
 export function MessageComposer({
-  channelId, mentionItems, teamItems, placeholder, editing, onCancelEdit, onSend, onSaveEdit, replyTo, onCancelReply,
+  channelId, mentionItems, teamItems, placeholder, editing, onCancelEdit, onSend, onSaveEdit, replyTo, replyAttachment, onCancelReply,
 }: MessageComposerProps) {
   const toast = useToast()
   const [doc, setDoc] = useState<JSONContent>(editing?.doc ?? emptyDoc())
@@ -60,9 +66,22 @@ export function MessageComposer({
    */
   const cancelledRef = useRef<Set<string>>(new Set())
 
+  /**
+   * Mirrors `pending` so unmount can revoke the object URLs it is holding.
+   * The composer is remounted by key whenever the message being edited changes,
+   * so this is a path that actually gets taken.
+   */
+  const pendingRef = useRef<PendingUpload[]>([])
+  useEffect(() => { pendingRef.current = pending }, [pending])
+  useEffect(() => () => { for (const p of pendingRef.current) if (p.previewUrl) URL.revokeObjectURL(p.previewUrl) }, [])
+
   /** Take a staged file back out, and take the upload with it. */
   const removePending = (localId: string, attachmentId: string | null) => {
-    setPending((prev) => prev.filter((p) => p.localId !== localId))
+    setPending((prev) => {
+      const going = prev.find((p) => p.localId === localId)
+      if (going?.previewUrl) URL.revokeObjectURL(going.previewUrl)
+      return prev.filter((p) => p.localId !== localId)
+    })
     if (attachmentId) {
       // Already uploaded: the row and its file can go straight away.
       dropAttachment({ id: attachmentId, storagePath: null, channelId })
@@ -75,13 +94,22 @@ export function MessageComposer({
   const hasUploading = pending.some((p) => p.attachmentId === null && !p.error)
 
   const addFiles = (files: FileList | File[]) => {
-    for (const file of Array.from(files)) {
+    for (const raw of Array.from(files)) {
+      // Everything off the clipboard is called "image.png". Naming it by the
+      // moment it was pasted is what tells two screenshots apart later, in the
+      // Files panel where the name is all there is.
+      const file = pastedFileName(raw)
       const problem = validateChatAttachmentFile(file)
       if (problem) { toast(problem, 'error'); continue }
 
       const localId = randomUUID()
+      // Shown immediately, from the local file — waiting for the upload to
+      // finish before showing a preview would defeat the point of one.
+      const previewUrl = fileKind(file.type, file.name) === 'image'
+        ? URL.createObjectURL(file)
+        : undefined
       setPending((prev) => [...prev, {
-        localId, name: file.name, size: file.size, mimeType: file.type, progress: 0, attachmentId: null,
+        localId, name: file.name, size: file.size, mimeType: file.type, progress: 0, attachmentId: null, previewUrl,
       }])
 
       upload(
@@ -117,7 +145,10 @@ export function MessageComposer({
 
   const reset = () => {
     setDoc(emptyDoc())
-    setPending([])
+    setPending((prev) => {
+      for (const p of prev) if (p.previewUrl) URL.revokeObjectURL(p.previewUrl)
+      return []
+    })
     setEditorKey((k) => k + 1)
   }
 
@@ -157,9 +188,12 @@ export function MessageComposer({
       {!editing && replyTo && (
         <div className="mb-1.5 flex items-center gap-2 rounded-sm border-l-2 border-brand-red bg-surface-2/60 px-2 py-1">
           <CornerUpLeft size={12} className="shrink-0 text-text-4" />
+          {/* A reply to a screenshot has no text to quote, so without the
+              picture the banner names the wrong thing. */}
+          <ReplyThumbnail attachment={replyAttachment} />
           <span className="min-w-0 flex-1 truncate font-ui text-[11.5px] text-text-3">
             Replying to <span className="font-semibold text-text-2">{replyTo.author?.name ?? 'Unknown'}</span>
-            {replyTo.body_text ? `: ${replyTo.body_text}` : ''}
+            {`: ${replyPreviewText(replyTo.body_text, replyAttachment)}`}
           </span>
           <button
             onClick={onCancelReply}
@@ -185,7 +219,7 @@ export function MessageComposer({
       )}
 
       {!editing && (
-        <ChatAttachmentChips
+        <ChatAttachmentTray
           pending={pending}
           onRemove={(localId) => {
             const chip = pending.find((p) => p.localId === localId)
@@ -202,6 +236,9 @@ export function MessageComposer({
             value={doc}
             onChange={setDoc}
             onEditorReady={(editor) => { editorRef.current = editor }}
+            // Consumed here so ProseMirror does not also paste the markup a
+            // copied web image carries alongside the file.
+            onPasteFiles={(files) => { addFiles(files); return true }}
             mentionItems={mentionItems}
             teamItems={teamItems}
           allowEveryone
