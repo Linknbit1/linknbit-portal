@@ -37,36 +37,16 @@ interface MessageListProps {
  * stamped onto every message. Pinned, so a long scroll back always names the
  * day you are in.
  *
- * The glass behind it is only worn while it is actually pinned. A divider
- * drifting up through the middle of the thread is just a divider — glazing it
- * there would blur a band across the conversation for no reason, and there is
- * no CSS selector for "stuck", so it is observed.
+ * `stuck` is decided by the list rather than by the divider itself: only one
+ * divider can be pinned at a time, and that is a fact about the whole thread,
+ * not something each one can work out about itself without duplicating the
+ * measurement. A divider drifting up through the middle of the conversation is
+ * just a divider — glazing that would blur a band across the thread for no
+ * reason.
  */
-function DayDivider({ iso, scrollRef }: { iso: string; scrollRef: React.RefObject<HTMLDivElement | null> }) {
-  const ref = useRef<HTMLDivElement>(null)
-  const [stuck, setStuck] = useState(false)
-
-  useEffect(() => {
-    const el = ref.current
-    const root = scrollRef.current
-    if (!el || !root) return
-
-    // threshold 1 + a 1px bite out of the root's top: the callback fires exactly
-    // when the element starts and stops being clipped at the top edge. The
-    // boundingClientRect test then separates "clipped at the top because it is
-    // pinned" from "clipped at the bottom because it is scrolling into view".
-    const observer = new IntersectionObserver(
-      ([entry]) => setStuck(
-        !!entry.rootBounds && entry.boundingClientRect.top <= entry.rootBounds.top + 1,
-      ),
-      { root, threshold: [1], rootMargin: '-1px 0px 0px 0px' },
-    )
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [scrollRef])
-
+function DayDivider({ iso, stuck }: { iso: string; stuck: boolean }) {
   return (
-    <div ref={ref} className="sticky top-0 z-20 px-3 py-2">
+    <div className="sticky top-0 z-20 px-3 py-2">
       {/* Three bands, strongest across the divider and easing off below it —
           see .chat-day-glass: a mask would have killed the blur outright. */}
       {stuck && (
@@ -136,6 +116,47 @@ export function MessageList({
     return out
   }, [messages])
 
+  /**
+   * Which day's divider is currently pinned to the top, by index — -1 when none
+   * is (you are at the very top of the thread, where the first divider is still
+   * sitting at its natural place).
+   *
+   * A section is pinned once its top has passed above the scrollport's, and the
+   * LAST such section is the one on screen: an earlier one has been pushed out
+   * by this one. Measured on scroll rather than observed per divider, because
+   * "which one is pinned" is a fact about the whole thread — one observer per
+   * day would have each of them re-deriving it, and none of them able to see
+   * that another had won.
+   */
+  const sectionRefs = useRef<(HTMLElement | null)[]>([])
+  const [pinnedDay, setPinnedDay] = useState(-1)
+
+  useEffect(() => {
+    const root = scrollRef.current
+    if (!root) return
+
+    let frame = 0
+    const measure = () => {
+      frame = 0
+      const rootTop = root.getBoundingClientRect().top
+      let index = -1
+      sectionRefs.current.forEach((el, i) => {
+        if (el && el.getBoundingClientRect().top <= rootTop + 1) index = i
+      })
+      setPinnedDay(index)
+    }
+    // Coalesced to one measurement per frame: scroll fires far faster than the
+    // screen updates, and this reads layout.
+    const onScroll = () => { if (!frame) frame = requestAnimationFrame(measure) }
+
+    measure()
+    root.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      root.removeEventListener('scroll', onScroll)
+      if (frame) cancelAnimationFrame(frame)
+    }
+  }, [days.length])
+
   // Follow the conversation only when a genuinely new message lands, so
   // loading older history doesn't yank the viewport to the bottom.
   useEffect(() => {
@@ -179,11 +200,11 @@ export function MessageList({
         </div>
       )}
 
-      {days.map((day) => (
+      {days.map((day, dayIndex) => (
         // One section per day, so its divider stays pinned for the whole run of
         // that day's messages rather than for a single one.
-        <section key={day.key}>
-          <DayDivider iso={day.iso} scrollRef={scrollRef} />
+        <section key={day.key} ref={(el) => { sectionRefs.current[dayIndex] = el }}>
+          <DayDivider iso={day.iso} stuck={dayIndex === pinnedDay} />
           {day.items.map((m, i) => (
             <MessageBubble
               key={m.id}
