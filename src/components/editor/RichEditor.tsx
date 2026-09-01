@@ -8,7 +8,7 @@ import Mention from '@tiptap/extension-mention'
 import { Bold, Italic, Strikethrough, Code as CodeIcon, Link as LinkIcon, Check, Unlink } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { SlashCommand } from './slashCommand'
-import { renderSuggestion } from './suggestionUtils'
+import { renderSuggestion, isSuggestionOpen } from './suggestionUtils'
 import { SuggestionList } from './SuggestionList'
 import type { PersonMini } from '../../api/projects'
 import { fileRefExtension, type FileMentionItem } from './fileMention'
@@ -118,7 +118,10 @@ export function RichEditor({
     editorProps: {
       attributes: { class: 'prose-editor focus:outline-none' },
       handleKeyDown: (_view, event) => {
-        if (compact && event.key === 'Enter' && !event.shiftKey) {
+        // Not while a @mention, / command or # file list is open: there Enter
+        // means "pick this one". Returning false hands the key to the suggestion
+        // plugin, which ProseMirror only reaches after these props.
+        if (compact && event.key === 'Enter' && !event.shiftKey && !isSuggestionOpen()) {
           onSubmitRef.current?.()
           return true
         }

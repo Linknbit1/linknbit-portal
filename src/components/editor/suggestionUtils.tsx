@@ -1,6 +1,19 @@
 import { ReactRenderer, type Editor } from '@tiptap/react'
 import type { ComponentType } from 'react'
 
+const SUGGESTION_OPEN_ATTR = 'data-suggestion-open'
+
+/**
+ * Is a suggestion list on screen right now?
+ *
+ * The composer submits on Enter, and ProseMirror asks `editorProps.handleKeyDown`
+ * before it asks any plugin — so without this check, Enter sent the message
+ * instead of picking the person you were half way through @mentioning.
+ */
+export function isSuggestionOpen(): boolean {
+  return !!document.querySelector(`[${SUGGESTION_OPEN_ATTR}]`)
+}
+
 /** Ref API a suggestion list must expose so the editor can forward key events. */
 export interface SuggestionListRef {
   onKeyDown: (props: { event: KeyboardEvent }) => boolean
@@ -71,6 +84,11 @@ export function renderSuggestion<P extends object>(List: ComponentType<P>) {
         // TipTap's suggestion runtime supplies { items, command, … } as the props;
         // the editor is an Editor at runtime. Types can't express this contract.
         component = new ReactRenderer(List, { props: props as unknown as P, editor: props.editor as Editor })
+        // Marks the popup as open for isSuggestionOpen() below. An attribute on
+        // the element itself rather than a counter: if a popup is ever torn down
+        // without onExit, the mark goes with the element, where a counter would
+        // stay stuck and break the Enter key for the rest of the session.
+        component.element.setAttribute(SUGGESTION_OPEN_ATTR, '')
         document.body.appendChild(component.element)
         placeAfterPaint(props.clientRect)
       },

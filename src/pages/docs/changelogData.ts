@@ -38,6 +38,10 @@ export const RELEASES: ChangelogRelease[] = [
       'Read ticks in Chat now turn the moment somebody opens the conversation, carry a state while a message is still sending, sit in the corner of the message rather than on a line of their own — and appear in the conversation list too.',
     entries: [
       {
+        kind: 'fixed',
+        text: 'Pressing Enter to pick someone from the @mention list no longer sends the message half-written. Enter picks the highlighted name; it only sends once the list has closed. The same applies to the / command and # file lists.',
+      },
+      {
         kind: 'improved',
         text: 'Chat now reads as a conversation. Every message sits in its own container — yours down the right in the brand colour, everybody else\'s down the left — with the time, the edited note and the ticks in the bottom corner of the message itself. In a one-to-one nobody is named above their messages any more; which side it is on already says who sent it.',
       },
