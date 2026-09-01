@@ -1544,8 +1544,8 @@
     "hash": "88d0c20b0aaf0aed09f04abcf0ebff3f"
   },
   "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/chat/MessageList.tsx": {
-    "mtime": 1788255436.3946853,
-    "hash": "ba0b5d0e42845d897e4f33de84b247e1"
+    "mtime": 1788256569.7003942,
+    "hash": "1bb7c43c8c0aa3a70779da7cd4a5a501"
   },
   "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/chat/ConversationInfoPanel.tsx": {
     "mtime": 1788246163.901064,
@@ -1556,8 +1556,8 @@
     "hash": "104b8fbe4e463ec76857941b2e791d07"
   },
   "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/chat/MessageBubble.tsx": {
-    "mtime": 1788255375.138549,
-    "hash": "ce94e36bff29bb56d3e4466bec08a284"
+    "mtime": 1788256491.9834921,
+    "hash": "1e2f4d344d7e15738772c317130f8799"
   },
   "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/chat/ReadTicks.tsx": {
     "mtime": 1788245389.5366359,
@@ -1868,8 +1868,8 @@
     "hash": "15784ca6f8b2e376bf59b0a889930a1d"
   },
   "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/editor/RichEditor.tsx": {
-    "mtime": 1788248524.9413679,
-    "hash": "a464c239200799c2dba67ce2dbb70169"
+    "mtime": 1788256233.0958176,
+    "hash": "3b73db7a2d21291ab2d8dcfa5c268559"
   },
   "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/editor/BdDocEditor.tsx": {
     "mtime": 1788242270.8651857,
@@ -1884,8 +1884,8 @@
     "hash": "a6a2d3bd88d8e298b83fbc7315f747bc"
   },
   "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/editor/suggestionUtils.tsx": {
-    "mtime": 1785748480.9736898,
-    "hash": "034d7700ddf9d060496cf4198cf34468"
+    "mtime": 1788256233.0149174,
+    "hash": "927d47a6b6c9a14f433be91c92cbe0f3"
   },
   "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/editor/fileMention.tsx": {
     "mtime": 1784712836.826101,
@@ -2824,8 +2824,8 @@
     "hash": "460c62ebc59d3d6868ab4b370795d564"
   },
   "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/docs/changelogData.ts": {
-    "mtime": 1788256129.633423,
-    "hash": "e7496e3348903171af26d742b54f74d1"
+    "mtime": 1788256296.7906282,
+    "hash": "520558e7390780c76e31dfd1ca89e942"
   },
   "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/docs/ChangelogPage.tsx": {
     "mtime": 1788242271.1116009,
