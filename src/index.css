@@ -508,28 +508,66 @@
   }
 
   /* The glass behind a chat day divider.
-     It behaves like a header, so it blurs what passes under it rather than
-     letting the conversation cut across its rules — but a hard-edged bar
-     stamped across a thread reads as chrome, so both the blur and the tint
-     are faded out at the bottom by the mask. The element bleeds past its row
-     to give the fade somewhere to happen. */
+
+     It behaves like a header, so the conversation blurs as it passes behind
+     rather than showing through a translucent bar.
+
+     Built as three stacked bands rather than one blurred layer under a mask,
+     because those two cancel: an element carrying a mask becomes a backdrop
+     root, which leaves its own backdrop-filter with nothing behind it to
+     sample, and the blur silently does nothing. Each band instead blurs its own
+     strip — hardest across the divider itself, easing off below it — which is
+     what reads as a fade. The wrapper stays plain for the same reason: any
+     mask, filter or opacity on it would make the bands' blur inert too. */
   .chat-day-glass {
     position: absolute;
     /* A generous bleed upward, not a neat one: the divider sticks to the top of
        the scrollport, so anything above it is clipped and costs nothing — while
        a bleed that falls short leaves a band where the conversation slides past
        unblurred, which is worse than no glass at all. */
-    inset: -3rem 0 -1rem;
+    inset: -3rem 0 -1.4rem;
     pointer-events: none;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    background: linear-gradient(
-      to bottom,
-      color-mix(in srgb, var(--color-bg-base) 62%, transparent),
-      transparent
-    );
-    mask-image: linear-gradient(to bottom, #000 0%, #000 46%, transparent 100%);
-    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 46%, transparent 100%);
+  }
+
+  .chat-day-glass > span {
+    position: absolute;
+    left: 0;
+    right: 0;
+    display: block;
+  }
+
+  .chat-day-glass > span:nth-child(1) {
+    top: 0;
+    bottom: 1.4rem;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    background: color-mix(in srgb, var(--color-bg-base) 60%, transparent);
+  }
+
+  .chat-day-glass > span:nth-child(2) {
+    bottom: 0.7rem;
+    height: 0.72rem;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    background: color-mix(in srgb, var(--color-bg-base) 34%, transparent);
+  }
+
+  .chat-day-glass > span:nth-child(3) {
+    bottom: 0;
+    height: 0.72rem;
+    backdrop-filter: blur(2.5px);
+    -webkit-backdrop-filter: blur(2.5px);
+    background: color-mix(in srgb, var(--color-bg-base) 15%, transparent);
+  }
+
+  /* The build's CSS targets drop the unprefixed backdrop-filter and keep only
+     the -webkit- form, which every engine but Gecko accepts. Restating it
+     behind @supports survives that pass, so Firefox gets the blur too. */
+  @supports (backdrop-filter: blur(1px)) {
+    .chat-day-glass > span:nth-child(1) { backdrop-filter: blur(12px); }
+    .chat-day-glass > span:nth-child(2) { backdrop-filter: blur(6px); }
+    .chat-day-glass > span:nth-child(3) { backdrop-filter: blur(2.5px); }
+    .topbar-glass { backdrop-filter: blur(10px); }
   }
 }
 

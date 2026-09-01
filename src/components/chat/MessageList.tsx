@@ -67,7 +67,13 @@ function DayDivider({ iso, scrollRef }: { iso: string; scrollRef: React.RefObjec
 
   return (
     <div ref={ref} className="sticky top-0 z-20 px-3 py-2">
-      {stuck && <span aria-hidden className="chat-day-glass" />}
+      {/* Three bands, strongest across the divider and easing off below it —
+          see .chat-day-glass: a mask would have killed the blur outright. */}
+      {stuck && (
+        <span aria-hidden className="chat-day-glass">
+          <span /><span /><span />
+        </span>
+      )}
       <span className="relative flex items-center gap-3">
         <span className="h-px min-w-4 flex-1 bg-border-default" />
         <span className="shrink-0 rounded-sm border border-border-default bg-surface-2 px-2.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-text-3">

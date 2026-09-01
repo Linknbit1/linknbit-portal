@@ -305,7 +305,18 @@ export function MessageBubble({
         </div>
 
         {!pending && (
-          <div className="flex shrink-0 items-center gap-0.5 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:focus-within:opacity-100">
+          <div
+            className={cn(
+              'flex shrink-0 items-center gap-0.5 opacity-100 transition-opacity',
+              'lg:opacity-0 lg:group-hover:opacity-100 lg:focus-within:opacity-100',
+              // Invisible is not the same as absent. On your own messages the row
+              // is reversed, so this block sits to the LEFT of the bubble —
+              // exactly where a drag-to-reply starts — and while it was merely
+              // transparent it still took the pointer, so the gesture saw a
+              // button and stood down. Hidden means untouchable.
+              'lg:pointer-events-none lg:group-hover:pointer-events-auto lg:focus-within:pointer-events-auto',
+            )}
+          >
             <button
               onClick={() => onReply(message)}
               aria-label="Reply to message"
