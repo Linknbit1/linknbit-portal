@@ -13,6 +13,7 @@ import { ProfileRoles } from '../../components/shared/ProfileRoles'
 import { useToast } from '../../components/ui/toast-context'
 import { useTeams, useCreateTeam, useUpdateTeam } from '../../hooks/useTeams'
 import { usePeople } from '../../hooks/usePeople'
+import { useProfilesWithFeature } from '../../hooks/usePermissions'
 import { useServices } from '../../hooks/useServices'
 import { useDesignations } from '../../hooks/useDesignations'
 import { useTeamMembers, useAddTeamMember, useRemoveTeamMember } from '../../hooks/useTeamMembers'
@@ -40,17 +41,19 @@ function TeamModal({ team, people, serviceOptions, onClose }: {
   const [leadId, setLeadId] = useState(team?.lead_id ?? '')
   const isPending = creating || updating
 
-  // Only users who hold the Team Lead role may lead a team. Keep the current
-  // lead selectable even if their role later changed, so editing doesn't drop it.
+  // Whoever holds can_lead_team may lead one — a permission, so a role built on
+  // the Roles screen can be given it. The current lead stays selectable even if
+  // that later changes, so editing a team doesn't silently drop them.
+  const leadCandidates = useProfilesWithFeature('can_lead_team')
   const leadOptions = useMemo(() => {
-    const eligible = people.filter((p) => p.role === 'team_lead')
+    const eligible = people.filter((p) => leadCandidates.has(p.id))
     const opts = [{ value: '', label: 'No lead' }, ...eligible.map((p) => ({ value: p.id, label: p.name, avatar: { name: p.name, url: p.avatar_url } }))]
     if (team?.lead_id && !eligible.some((p) => p.id === team.lead_id)) {
       const cur = people.find((p) => p.id === team.lead_id)
       if (cur) opts.splice(1, 0, { value: cur.id, label: `${cur.name} (current)` })
     }
     return opts
-  }, [people, team])
+  }, [people, team, leadCandidates])
 
   const submit = () => {
     if (!name.trim()) return

@@ -6,6 +6,8 @@ import {
   createRole,
   deleteRole,
   fetchMyPermissions,
+  fetchMyRoleRank,
+  fetchProfilesWithFeature,
   fetchPermissionCatalog,
   fetchProfileRoles,
   fetchRolePermissions,
@@ -21,6 +23,8 @@ import { useAuthContext } from '../context/AuthContext'
 
 export const PERMISSION_KEYS = {
   mine: ['permissions', 'mine'] as const,
+  myRank: ['permissions', 'my-rank'] as const,
+  holders: (key: string) => ['permissions', 'holders', key] as const,
   catalog: ['permissions', 'catalog'] as const,
   roles: ['permissions', 'roles'] as const,
   rolePermissions: ['permissions', 'role_permissions'] as const,
@@ -34,6 +38,32 @@ export const PERMISSION_KEYS = {
  * invalidate it through the mutation hooks below; a change made by someone else
  * lands on the next refetch.
  */
+/**
+ * The signed-in user's rank in the role ladder. Used wherever the question is
+ * "may I act on somebody who holds that role?" — which is about standing, not
+ * about a capability, and so is the one thing permissions cannot express.
+ */
+export function useMyRoleRank(): number {
+  const { accessToken } = useAuthContext()
+  const { data } = useQuery({
+    queryKey: PERMISSION_KEYS.myRank,
+    queryFn: fetchMyRoleRank,
+    enabled: !!accessToken,
+    staleTime: 5 * 60 * 1000,
+  })
+  return data ?? -1
+}
+
+/** Ids of everyone holding a permission. For pickers whose question is "who may be chosen". */
+export function useProfilesWithFeature(key: string): ReadonlySet<string> {
+  const { data = [] } = useQuery({
+    queryKey: PERMISSION_KEYS.holders(key),
+    queryFn: () => fetchProfilesWithFeature(key),
+    staleTime: 5 * 60 * 1000,
+  })
+  return useMemo(() => new Set(data), [data])
+}
+
 export function useMyPermissions() {
   const { accessToken } = useAuthContext()
   return useQuery({

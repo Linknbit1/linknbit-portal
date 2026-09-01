@@ -32,8 +32,6 @@ import { useProjectFiles } from '../../hooks/useAttachments'
 import { cn } from '../../lib/cn'
 import { formatDate, formatCurrency, isOverdue, ROLE_LABELS } from '../../lib/utils'
 import { fileKind } from '../../lib/attachment'
-import { isAuthoritative } from '../../lib/roles'
-import { useAuthContext } from '../../context/AuthContext'
 import { useToast } from '../../components/ui/toast-context'
 import { useDeleteProject, useProject, useProjectDeleteImpact, useUpdateProject } from '../../hooks/useProjects'
 import { useServiceStages, useDeleteStage } from '../../hooks/useStages'
@@ -131,8 +129,7 @@ export default function ProjectDetailPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const toast = useToast()
-  const { profile } = useAuthContext()
-  const canManage = isAuthoritative(profile?.role)
+  const canManage = useCanAccess('can_manage_projects')
 
   const { data: project, isLoading } = useProject(id)
   const { data: services = [] } = useProjectServices(id)

@@ -1,4 +1,4 @@
-// Role-based access for People & Teams management.
+// Authority for People & Teams management.
 // Mirrors the SQL helpers can_manage_target() / can_grant_role() and the
 // authority model enforced by the admin_*_profile RPCs.
 import type { UserRole } from '../types'
@@ -8,31 +8,27 @@ export const INTERNAL_ROLES = [
 ] as const
 export type InternalRole = (typeof INTERNAL_ROLES)[number]
 
-const has = (list: readonly string[], role: string | null | undefined): boolean =>
-  !!role && list.includes(role)
+/**
+ * Authority is a rank, not a name.
+ *
+ * `roles.position` is the ladder the Roles screen reorders, and `my_role_rank()`
+ * is the caller's place on it — the same pair `can_manage_target()` and
+ * `can_grant_role()` enforce in SQL, so the buttons this hides are the ones the
+ * database would refuse anyway.
+ *
+ * Rank is deliberately not a permission: "may I act on somebody who holds that
+ * role" is about standing between two people, which no capability key can say.
+ * Whether you may manage people at all IS a permission — useCanManagePeople().
+ */
+export const outranks = (myRank: number, targetRank: number | undefined): boolean =>
+  targetRank !== undefined && myRank >= targetRank
 
-// NOTE: "can this role manage people at all?" is now a feature flag —
-// use useCanManagePeople() from src/hooks/useRoleFlags.ts. What remains here is the
-// authority HIERARCHY (who outranks whom), which is not a toggleable capability.
-
-/** Only super_admin/admin may edit personal details (name, avatar). HR cannot. */
-export const canEditDetails = (role: string | null | undefined): boolean =>
-  has(['super_admin', 'admin'], role)
-
-/** Can the actor manage (role/team/active) a user who currently holds targetRole? */
-export function canManageTarget(actor: string | null | undefined, targetRole: string): boolean {
-  if (actor === 'super_admin') return true
-  if (actor === 'admin') return targetRole !== 'super_admin'
-  if (actor === 'hr') return targetRole !== 'super_admin' && targetRole !== 'admin'
-  return false
-}
-
-/** Roles the actor is allowed to grant. */
-export function assignableRoles(actor: string | null | undefined): InternalRole[] {
-  if (actor === 'super_admin') return [...INTERNAL_ROLES]
-  if (actor === 'admin') return INTERNAL_ROLES.filter((r) => r !== 'super_admin')
-  if (actor === 'hr') return INTERNAL_ROLES.filter((r) => r !== 'super_admin' && r !== 'admin')
-  return []
+/** Roles the actor may grant: everything at or below their own rank. */
+export function assignableRoleSlugs(
+  myRank: number,
+  roles: readonly { slug: string; position: number }[],
+): string[] {
+  return roles.filter((r) => r.position <= myRank).map((r) => r.slug)
 }
 
 // ── Account lifecycle status ──────────────────────────────────────────────────
@@ -50,13 +46,11 @@ export function accountStatus(p: {
   return 'invited'
 }
 
-/** Can the actor set another user's password? (Excludes self — handled in the UI.) */
-export const canSetPassword = (actor: string | null | undefined, targetRole: string): boolean =>
-  canManageTarget(actor, targetRole)
-
-/** Can the actor re-send an invite to a user who hasn't onboarded yet? */
-export const canResendInvite = (actor: string | null | undefined, targetRole: string): boolean =>
-  canManageTarget(actor, targetRole)
+/**
+ * Setting a password and re-sending an invite are the same authority question as
+ * managing somebody, so they ask it the same way.
+ */
+export const canActOnRank = outranks
 
 /**
  * Is this one of the nine built-in roles? Custom roles created in Settings ▸ Roles

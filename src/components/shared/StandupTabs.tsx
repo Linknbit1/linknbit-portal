@@ -1,9 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import { ClipboardList, Users, History, Settings as SettingsIcon, type LucideIcon } from 'lucide-react'
 import { cn } from '../../lib/cn'
-import { useAuthContext } from '../../context/AuthContext'
-import { useCanAccess } from '../../hooks/useRoleFlags'
-import { isAuthoritative } from '../../lib/roles'
+import { useCanAccess, useCanAccessAny } from '../../hooks/useRoleFlags'
 
 interface StandupTab {
   to: string
@@ -18,8 +16,7 @@ interface StandupTab {
  * mobile, where "More" only lists top-level items.
  */
 export function StandupTabs() {
-  const { profile } = useAuthContext()
-  const canReviewTeam = isAuthoritative(profile?.role)
+  const canReviewTeam = useCanAccessAny(['can_view_standups', 'can_view_team_standups'])
   const canManage = useCanAccess('can_manage_standups')
 
   const tabs: StandupTab[] = [

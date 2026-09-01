@@ -40,6 +40,25 @@ export function useCanAccess(featureKey: string): boolean {
   return useFeatureAccess(featureKey).allowed
 }
 
+/**
+ * Any one of these keys is enough. Mirrors the nav's array form of `feature`,
+ * for a screen two different capabilities can open — a standup board reachable
+ * by whoever reviews everyone's and by whoever reviews their team's.
+ */
+export function useAnyFeatureAccess(featureKeys: readonly string[]): FeatureAccess {
+  const { data: permissions, isLoading } = useMyPermissions()
+
+  if (!permissions) return { allowed: false, isLoading }
+
+  const allowed =
+    permissions.includes(ADMINISTRATOR) || featureKeys.some((key) => permissions.includes(key))
+  return { allowed, isLoading: false }
+}
+
+export function useCanAccessAny(featureKeys: readonly string[]): boolean {
+  return useAnyFeatureAccess(featureKeys).allowed
+}
+
 // ── Named capability hooks ────────────────────────────────────────────────────
 
 export const useCanManagePeople = () => useCanAccess('can_manage_people')

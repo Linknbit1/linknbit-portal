@@ -22,13 +22,14 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { showWipFeatures } from '../../lib/featureFlags'
-import { SETTINGS_ROLES, ATTENDANCE_ADMIN_LANDING_ROLES } from '../../constants/roles'
+import { isInternalRole } from '../../lib/roles'
 import { useMyPermissions } from '../../hooks/usePermissions'
 import { ADMINISTRATOR } from '../../api/permissions'
 import { useAuditNewCount } from '../../hooks/useAuditLog'
 import { useWaitingOnYou } from '../../hooks/useWaitingOnYou'
 import { useChatUnreadTotal } from '../../hooks/useChatUnreadCount'
 import { useTeams } from '../../hooks/useTeams'
+import { useAmIStandupParticipant } from '../../hooks/useStandups'
 import { useMyUpcomingMeetingCount } from '../../hooks/useBd'
 import {
   useAllLeaveRequests,
@@ -80,8 +81,14 @@ export interface NavItem {
   badge?: number
   // Not yet production-ready — only rendered in development builds.
   devOnly?: boolean
-  // If set, only rendered for these roles.
-  roles?: readonly string[]
+  /** Hidden from the client portal's roles. The one non-permission audience split. */
+  internalOnly?: boolean
+  /**
+   * Only for people expected to file a standup. Settings-driven (a role default
+   * plus a per-person override), so it is a fact about the person rather than a
+   * capability — asked of the database, not guessed from a list of roles.
+   */
+  standupParticipant?: boolean
   /**
    * Capability required to see this item. A string = that flag; an array = ANY of
    * them. Keeps the sidebar honest: if a role cannot use a destination, it is not
@@ -115,8 +122,7 @@ const ATTENDANCE_CHILDREN: NavItem[] = [
   { label: 'Requests',         icon: CalendarCheck, to: '/attendance/requests' },
   // Only for the roles whose parent link goes to the management side — HR's
   // "Attendance" already lands on this exact page, so offering it twice is noise.
-  { label: 'My Attendance',    icon: CalendarCheck, to: '/attendance/me',         feature: 'can_manage_attendance',
-    roles: ATTENDANCE_ADMIN_LANDING_ROLES },
+  { label: 'My Attendance',    icon: CalendarCheck, to: '/attendance/me',         feature: 'can_manage_attendance' },
   { label: 'Daily Records',    icon: CalendarCheck, to: '/attendance/records',    feature: 'can_manage_attendance' },
 ]
 
@@ -162,18 +168,12 @@ const BD_CHILDREN: NavItem[] = [
   { label: 'Performance',    icon: TrendingUp, to: '/bd/performance', feature: 'can_view_bd' },
 ]
 
-// Everyone internal except finance: finance is never required to submit a standup and
-// cannot view the team tab, so the page is a dead end for them.
-const STANDUP_ROLES = ['super_admin', 'admin', 'hr', 'project_manager', 'team_lead', 'employee'] as const
-
-/** Roles with a team board to review — the same set `isAuthoritative()` covers. */
-const STANDUP_REVIEW_ROLES = ['super_admin', 'admin', 'hr', 'project_manager', 'team_lead'] as const
-
 /** Standup sub-pages — each is its own route at /standup/:section. */
 const STANDUP_CHILDREN: NavItem[] = [
-  { label: 'My Standup', icon: ClipboardList, to: '/standup',          roles: STANDUP_ROLES },
-  { label: 'Team',       icon: ClipboardList, to: '/standup/team',     roles: STANDUP_REVIEW_ROLES },
-  { label: 'History',    icon: ClipboardList, to: '/standup/history',  roles: STANDUP_ROLES },
+  { label: 'My Standup', icon: ClipboardList, to: '/standup',          standupParticipant: true },
+  { label: 'Team',       icon: ClipboardList, to: '/standup/team',
+    feature: ['can_view_standups', 'can_view_team_standups'] },
+  { label: 'History',    icon: ClipboardList, to: '/standup/history',  standupParticipant: true },
 ]
 
 /**
@@ -195,7 +195,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Chat', icon: MessageCircle, to: '/chat', group: 'workspace', matchPrefix: '/chat', primaryMobile: true },
   // A daily personal ritual for employees; reviewers reach the team board through
   // its own sub-page, so it belongs here rather than under People.
-  { label: 'Standup', icon: ClipboardList, to: '/standup', group: 'workspace', matchPrefix: '/standup', roles: STANDUP_ROLES, children: STANDUP_CHILDREN },
+  { label: 'Standup', icon: ClipboardList, to: '/standup', group: 'workspace', matchPrefix: '/standup', children: STANDUP_CHILDREN },
   // A private pin-board. Gated on a capability rather than a role so it can be
   // handed to anyone from Settings; the notes themselves are owner-only in RLS.
   { label: 'My Notes', icon: StickyNote, to: '/notes', group: 'workspace', feature: 'can_use_sticky_notes' },
@@ -203,7 +203,7 @@ export const NAV_ITEMS: NavItem[] = [
   // section and ungated: the people pulled into a negotiation — team leads, a
   // PM — hold no can_view_bd, and an invitation they cannot see is no
   // invitation. The page shows only the viewer's own schedule.
-  { label: 'My Meetings', icon: CalendarClock, to: '/my-meetings', group: 'workspace', roles: SETTINGS_ROLES },
+  { label: 'My Meetings', icon: CalendarClock, to: '/my-meetings', group: 'workspace', internalOnly: true },
 
   // Delivery — winning the work, then doing it. Ordered by the lifecycle a piece
   // of work actually travels (lead → client → project → task) rather than by
@@ -247,13 +247,20 @@ export const NAV_ITEMS: NavItem[] = [
 
   // Pinned to the footer — see NAV_GROUPS. Personal for most roles (My Devices,
   // Notifications); the admin-only sections filter themselves in-page.
-  { label: 'Settings', icon: Settings, to: '/settings', group: 'bottom', roles: SETTINGS_ROLES },
+  { label: 'Settings', icon: Settings, to: '/settings', group: 'bottom', internalOnly: true },
 ]
 
 type CanFn = (feature: string) => boolean
 
-/** Pure filter — `can` supplies capability answers so this stays testable. */
-export function filterNavItems(role: string | null | undefined, can: CanFn): NavItem[] {
+/**
+ * Pure filter — `can` supplies capability answers so this stays testable, and
+ * `isStandupParticipant` the one fact about the person that is not a capability.
+ */
+export function filterNavItems(
+  role: string | null | undefined,
+  can: CanFn,
+  isStandupParticipant = true,
+): NavItem[] {
   const hasFeature = (item: NavItem): boolean => {
     if (!item.feature) return true
     return Array.isArray(item.feature)
@@ -262,7 +269,8 @@ export function filterNavItems(role: string | null | undefined, can: CanFn): Nav
   }
   const allowed = (item: NavItem) =>
     (showWipFeatures || !item.devOnly) &&
-    (!item.roles || item.roles.includes(role ?? '')) &&
+    (!item.internalOnly || isInternalRole(role)) &&
+    (!item.standupParticipant || isStandupParticipant) &&
     hasFeature(item)
 
   return NAV_ITEMS.filter(allowed).map((item) => {
@@ -270,7 +278,7 @@ export function filterNavItems(role: string | null | undefined, can: CanFn): Nav
     // Send non-managers — and HR, who manages attendance but is a tracked
     // employee — to their own attendance view rather than an admin URL.
     const landsOnAdminView =
-      can('can_manage_attendance') && ATTENDANCE_ADMIN_LANDING_ROLES.includes(role ?? '')
+      can('can_manage_attendance')
     const to = item.matchPrefix === '/attendance'
       ? (landsOnAdminView ? '/attendance/today' : '/attendance')
       : item.to
@@ -329,6 +337,7 @@ export function useNavItems(): NavItem[] {
   // Meetings still ahead of you, hosting or invited. Ungated like the page
   // itself — anyone can be pulled into a client call, so this is not a BD count.
   const { data: upcomingMeetings = 0 } = useMyUpcomingMeetingCount(!!profile)
+  const amStandupParticipant = useAmIStandupParticipant()
 
   const devicesPending = devices.filter((d) => !d.approved_by && d.is_active).length
   // Leave, WFH, exceptions and overtime share one queue now, so their pending
@@ -354,7 +363,7 @@ export function useNavItems(): NavItem[] {
   const { total: waitingTotal } = useWaitingOnYou()
 
   // Surface live counts on the relevant items (parent shows the section total).
-  return filterNavItems(role, can).flatMap((item) => {
+  return filterNavItems(role, can, amStandupParticipant).flatMap((item) => {
     if (item.label === 'My Team') {
       return myTeamId ? [{ ...item, to: `/teams/${myTeamId}` }] : []
     }

@@ -12,6 +12,7 @@ import {
   useTaskTimeEntries, useUpdateTimeEntry,
 } from '../../hooks/useTimeEntries'
 import { useAuthContext } from '../../context/AuthContext'
+import { useCanAccess } from '../../hooks/useRoleFlags'
 import { cn } from '../../lib/cn'
 import { formatClock, formatMinutes, secondsBetween } from '../../lib/duration'
 import { formatStamp, formatStampTime } from '../../lib/utils'
@@ -24,9 +25,6 @@ interface TaskTimeTrackerProps {
   estimatedMinutes?: number | null
   className?: string
 }
-
-/** Roles allowed to correct someone else's timesheet — mirrors p_tte_write_managed. */
-const TIMESHEET_MANAGERS = ['super_admin', 'admin', 'project_manager']
 
 /** Entries shown before the list asks to be expanded. */
 const ENTRY_PREVIEW_COUNT = 5
@@ -202,7 +200,8 @@ export function TaskTimeTracker({ taskId, estimatedMinutes, className }: TaskTim
   const [showAllEntries, setShowAllEntries] = useState(false)
   const [pendingDelete, setPendingDelete] = useState<TimeEntry | null>(null)
 
-  const managesTimesheets = !!profile && TIMESHEET_MANAGERS.includes(profile.role)
+  // Mirrors p_tte_write_managed.
+  const managesTimesheets = useCanAccess('can_manage_timesheets')
   const canEditEntry = (entry: TimeEntry) => entry.profile_id === profile?.id || managesTimesheets
   const visibleEntries = showAllEntries ? entries : entries.slice(0, ENTRY_PREVIEW_COUNT)
 

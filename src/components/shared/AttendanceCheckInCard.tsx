@@ -14,8 +14,8 @@ import {
 import { useMyTerminalGate } from '../../hooks/useBiometric'
 import { useCurrentDevice } from '../../hooks/useCurrentDevice'
 import { useRegisterDevice } from '../../hooks/useEnrolledDevices'
+import { useCanAccess } from '../../hooks/useRoleFlags'
 import { useAuthContext } from '../../context/AuthContext'
-import { MGMT_ROLES } from '../../constants/roles'
 import { useToast } from '../ui/toast-context'
 import { Button } from '../ui/Button'
 import { cn } from '../../lib/cn'
@@ -119,7 +119,7 @@ export function AttendanceCheckInCard() {
     useCurrentDevice()
   const { profile } = useAuthContext()
   // Raw fingerprint hash is HR/admin-only; everyone still sees the device name.
-  const canSeeFingerprint = MGMT_ROLES.includes(profile?.role ?? '')
+  const canSeeFingerprint = useCanAccess('can_manage_attendance')
 
   const [errorMsg, setErrorMsg]           = useState<string | null>(null)
   const [clock, setClock]                 = useState('')

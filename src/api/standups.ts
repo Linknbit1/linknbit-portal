@@ -6,6 +6,17 @@ export type StandupEntryRow = Tables<'standup_entries'>
 export type StandupRoleSettingRow = Tables<'standup_role_settings'>
 export type StandupParticipantRow = Tables<'standup_participants'>
 
+/**
+ * Am I expected to file a standup? Settings-driven — a role default plus a
+ * per-person override — so the nav asks the database rather than restating the
+ * rule as a list of roles that goes stale.
+ */
+export async function fetchAmIStandupParticipant(): Promise<boolean> {
+  const { data, error } = await supabase.rpc('am_i_standup_participant')
+  if (error) throw error
+  return data ?? false
+}
+
 /** Per-person answer to "must submit a standup"; `inherit` = follow the role default. */
 export type ParticipationMode = 'inherit' | 'required' | 'excluded'
 

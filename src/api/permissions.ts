@@ -20,6 +20,25 @@ export async function fetchMyPermissions(): Promise<string[]> {
   return data ?? []
 }
 
+/**
+ * How high the signed-in user sits in the role ladder — the max `position` of
+ * the roles they hold. Answered by SQL so the ladder has one definition: the
+ * same my_role_rank() that can_grant_role() and admin_update_profile_details()
+ * enforce server-side.
+ */
+export async function fetchMyRoleRank(): Promise<number> {
+  const { data, error } = await supabase.rpc('my_role_rank')
+  if (error) throw error
+  return data ?? -1
+}
+
+/** Everyone who holds a permission — what a "who may be picked" list needs. */
+export async function fetchProfilesWithFeature(key: string): Promise<string[]> {
+  const { data, error } = await supabase.rpc('profiles_with_feature', { p_key: key })
+  if (error) throw error
+  return data ?? []
+}
+
 export async function fetchPermissionCatalog(): Promise<PermissionRow[]> {
   const { data, error } = await supabase
     .from('permissions')

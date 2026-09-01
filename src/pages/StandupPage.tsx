@@ -9,8 +9,8 @@ import { StandupTabs } from '../components/shared/StandupTabs'
 import { StandupCard } from '../components/shared/StandupCard'
 import { cn } from '../lib/cn'
 import { hhmm, officeTime } from '../lib/standup'
+import { useCanAccessAny } from '../hooks/useRoleFlags'
 import { useAuthContext } from '../context/AuthContext'
-import { isAuthoritative } from '../lib/roles'
 import { useStandupWindow, useWindowCountdown, useMyStandup } from '../hooks/useStandups'
 import { StandupForm } from './StandupForm'
 import type { StandupWindow } from '../api/standups'
@@ -31,9 +31,8 @@ export default function StandupPage() {
 }
 
 function MyStandup({ win }: { win: StandupWindow }) {
-  const { profile: viewer } = useAuthContext()
   // Only reviewers actually have a team view to be pointed at.
-  const canReviewTeam = isAuthoritative(viewer?.role)
+  const canReviewTeam = useCanAccessAny(['can_view_standups', 'can_view_team_standups'])
   const [editing, setEditing] = useState(false)
   const untilOpen = useWindowCountdown(win.server_now, win.opens_at)
   const untilOnTime = useWindowCountdown(win.server_now, win.on_time_until)

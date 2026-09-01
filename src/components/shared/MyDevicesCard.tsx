@@ -3,8 +3,7 @@ import { Card } from '../ui/Card'
 import { Button } from '../ui/Button'
 import { useCurrentDevice } from '../../hooks/useCurrentDevice'
 import { useRegisterDevice } from '../../hooks/useEnrolledDevices'
-import { useAuthContext } from '../../context/AuthContext'
-import { MGMT_ROLES } from '../../constants/roles'
+import { useCanAccess } from '../../hooks/useRoleFlags'
 import { useToast } from '../ui/toast-context'
 import { cn } from '../../lib/cn'
 import type { EnrolledDevice } from '../../api/attendance'
@@ -20,12 +19,11 @@ const fmtDate = (iso: string | null) =>
 
 export function MyDevicesCard() {
   const toast = useToast()
-  const { profile } = useAuthContext()
   const { fingerprint, fingerprintHint, deviceName, ready, status, devices, privileged } = useCurrentDevice()
   const registerMut = useRegisterDevice()
   // The raw fingerprint hash is only meaningful to HR/admin (device governance);
   // employees and team leads see device name + status only.
-  const canSeeFingerprint = MGMT_ROLES.includes(profile?.role ?? '')
+  const canSeeFingerprint = useCanAccess('can_manage_attendance')
 
   const handleRegister = async () => {
     try {

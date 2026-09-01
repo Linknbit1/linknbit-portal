@@ -1,30 +1,14 @@
-export const MGMT_ROLES: readonly string[] = ['super_admin', 'admin', 'hr']
-
 /**
- * Roles whose /attendance landing is the management view. HR manages attendance
- * but is also a tracked employee, so HR lands on their own record instead and
- * reaches the management sections through the sidebar (or "My Attendance" on
- * mobile). Everyone with `can_manage_attendance` can still open /attendance/me.
+ * Roles as data, not as rules.
+ *
+ * Everything that used to live here was a gate — MGMT_ROLES, SETTINGS_ROLES,
+ * ATTENDANCE_ADMIN_LANDING_ROLES, STANDUP_REVIEW_ROLES, CLIENT_ROLES — and every
+ * one is now a permission. See the Permission Rules section of CLAUDE.md, and
+ * `lib/roles.ts` for the client/staff boundary, which is the one exception.
+ *
+ * What remains is a list of options for a picker, which is a fact about the
+ * shape of the org rather than a decision about what anyone may do.
  */
-export const ATTENDANCE_ADMIN_LANDING_ROLES: readonly string[] = ['super_admin', 'admin']
-// Everyone internal can open Settings — the personal sections (My Devices,
-// Notifications) belong to all staff. The admin-only sections filter themselves
-// in-page via visibleSectionsFor(), so widening the route is safe: HR still
-// can't see Services, an employee only sees their own two sections.
-export const SETTINGS_ROLES: readonly string[] = [
-  'super_admin', 'admin', 'hr', 'project_manager', 'team_lead', 'employee', 'finance',
-]
-
-/**
- * Roles that review other people's standups. Leads and PMs are included but see
- * only their own team — that scoping lives in RLS, not here.
- */
-export const STANDUP_REVIEW_ROLES: readonly string[] = [
-  'super_admin', 'admin', 'hr', 'project_manager', 'team_lead',
-]
-
-/** Client-portal roles. The /client/* tree is restricted to these. */
-export const CLIENT_ROLES: readonly string[] = ['client_owner', 'client_member', 'super_admin']
 
 /**
  * Roles a chat channel can be granted to. Client-portal roles are excluded —

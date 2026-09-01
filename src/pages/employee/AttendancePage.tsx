@@ -50,7 +50,7 @@ import {
 import { AttendanceCheckInCard } from '../../components/shared/AttendanceCheckInCard'
 import { MyDevicesCard } from '../../components/shared/MyDevicesCard'
 import { TeamAttendancePanel } from '../../components/shared/TeamAttendancePanel'
-import { useAuthContext } from '../../context/AuthContext'
+import { useCanAccess } from '../../hooks/useRoleFlags'
 import { useToast } from '../../components/ui/toast-context'
 import { cn } from '../../lib/cn'
 import { AttendanceChips } from '../../components/shared/AttendanceChips'
@@ -59,7 +59,6 @@ import { DAY_PART_LABEL, DAY_PART_OPTIONS, toDayPart } from '../../lib/dayParts'
 import { formatDayRange as fmtDayRange } from '../../lib/dateGroups'
 import { ModalShell } from '../../components/ui/ModalShell'
 import { formatHoursMinutes } from '../../lib/attendanceHours'
-import { showsInlineTeamAttendance } from '../../lib/roles'
 
 function localToday(): string {
   return new Intl.DateTimeFormat('en-CA').format(new Date())
@@ -1211,8 +1210,7 @@ export function MyAttendanceSections() {
   const [month, setMonth] = useState(now.getMonth() + 1) // 1-indexed
 
   const { data: history = [], isLoading } = useMyMonthlyAttendance(year, month)
-  const { profile } = useAuthContext()
-  const canSeeTeam = showsInlineTeamAttendance(profile?.role)
+  const canSeeTeam = useCanAccess('can_view_cross_team_attendance')
 
   const prevMonth = () => {
     if (month === 1) { setYear((y) => y - 1); setMonth(12) }

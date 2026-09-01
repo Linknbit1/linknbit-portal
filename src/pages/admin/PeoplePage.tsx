@@ -29,10 +29,11 @@ import {
 } from '../../hooks/usePeople'
 import type { Person, InviteResult } from '../../api/people'
 import {
-  canEditDetails, canManageTarget, assignableRoles, toUserRole,
-  accountStatus, canSetPassword, canResendInvite, type AccountStatus,
+  outranks, assignableRoleSlugs, toUserRole, INTERNAL_ROLES, type InternalRole,
+  accountStatus, type AccountStatus,
 } from '../../lib/peopleAccess'
-import { useCanManagePeople } from '../../hooks/useRoleFlags'
+import { useCanAccess, useCanManagePeople } from '../../hooks/useRoleFlags'
+import { useMyRoleRank, useRoles } from '../../hooks/usePermissions'
 import { ROLE_LABELS } from '../../lib/utils'
 import { cn } from '../../lib/cn'
 import { ModalShell } from '../../components/ui/ModalShell'
@@ -71,8 +72,8 @@ function TeamPicker({ teams, value, onChange }: { teams: { id: string; name: str
 
 // ── Invite modal ─────────────────────────────────────────────────────────────────
 
-function InviteModal({ actorRole, teams, designationOptions, onClose }: {
-  actorRole: string
+function InviteModal({ authority, teams, designationOptions, onClose }: {
+  authority: Authority
   teams: { id: string; name: string }[]
   designationOptions: Option[]
   onClose: () => void
@@ -88,7 +89,8 @@ function InviteModal({ actorRole, teams, designationOptions, onClose }: {
   const [result, setResult] = useState<InviteResult | null>(null)
   const [copied, setCopied] = useState(false)
 
-  const roleOptions = assignableRoles(actorRole).map((r) => ({ value: r, label: ROLE_LABELS[toUserRole(r)] }))
+  const roleOptions = assignableRoleSlugs(authority.myRank, authority.ladder)
+    .map((r) => ({ value: r, label: ROLE_LABELS[toUserRole(r)] }))
 
   const submit = () => {
     invite(
@@ -168,11 +170,23 @@ function InviteModal({ actorRole, teams, designationOptions, onClose }: {
   )
 }
 
+/**
+ * Where the viewer stands on the role ladder, and how to place anyone else on
+ * it. Threaded as one object because every action on a person asks the same two
+ * questions, and passing a role name around is what this replaced.
+ */
+export interface Authority {
+  myRank: number
+  rankOf: (roleSlug: string) => number | undefined
+  /** Every internal role, so a picker can offer the ones at or below your rank. */
+  ladder: { slug: string; position: number }[]
+}
+
 // ── Edit drawer ──────────────────────────────────────────────────────────────────
 
-function EditDrawer({ person, actorRole, isSelf, teams, designationOptions, currentTeamIds, onClose }: {
+function EditDrawer({ person, authority, isSelf, teams, designationOptions, currentTeamIds, onClose }: {
   person: Person
-  actorRole: string
+  authority: Authority
   isSelf: boolean
   teams: { id: string; name: string }[]
   designationOptions: Option[]
@@ -184,8 +198,12 @@ function EditDrawer({ person, actorRole, isSelf, teams, designationOptions, curr
   const { mutateAsync: saveDetails, isPending: savingDetails } = useUpdatePersonDetails()
   const { mutateAsync: saveTeams, isPending: savingTeams } = useSetProfileTeams()
 
-  const mayManage = canManageTarget(actorRole, person.role)
-  const mayDetails = canEditDetails(actorRole) && !(actorRole === 'admin' && person.role === 'super_admin')
+  const canEditAnyProfile = useCanAccess('can_edit_any_profile')
+  const canManagePeople = useCanManagePeople()
+  const mayManage = outranks(authority.myRank, authority.rankOf(person.role))
+  // Editing someone's details still needs you to outrank them: the rank check is
+  // what stopped an admin renaming a super admin.
+  const mayDetails = canEditAnyProfile && mayManage
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [name, setName] = useState(person.name)
@@ -200,7 +218,8 @@ function EditDrawer({ person, actorRole, isSelf, teams, designationOptions, curr
   const [allowedCheckIn, setAllowedCheckIn] = useState(origAllowedCheckIn)
   const [attendanceExcluded, setAttendanceExcluded] = useState(person.attendance_excluded)
 
-  const roleOptions = assignableRoles(actorRole).map((r) => ({ value: r, label: ROLE_LABELS[toUserRole(r)] }))
+  const roleOptions = assignableRoleSlugs(authority.myRank, authority.ladder)
+    .map((r) => ({ value: r, label: ROLE_LABELS[toUserRole(r)] }))
   const isPending = savingRole || savingDetails || savingTeams
 
   const sameTeams = (a: string[], b: string[]) => a.length === b.length && [...a].sort().join() === [...b].sort().join()
@@ -333,9 +352,7 @@ function EditDrawer({ person, actorRole, isSelf, teams, designationOptions, curr
           <p className="font-ui text-[12.5px] text-text-3 flex items-center gap-2"><ShieldAlert size={14} className="text-text-4" /> You don't have permission to change this user's role.</p>
         )}
 
-        {['super_admin', 'admin', 'hr'].includes(actorRole) && (
-          <SalaryCard profileId={person.id} context="admin" />
-        )}
+        {canManagePeople && <SalaryCard profileId={person.id} context="admin" />}
       </div>
     </Drawer>
   )
@@ -467,9 +484,9 @@ function MenuItem({ icon: Icon, label, onClick, danger }: {
   )
 }
 
-function PersonActionsMenu({ person, myRole, myId, onEdit, onToggleActive, onDelete, onChangePassword, onResend }: {
+function PersonActionsMenu({ person, authority, myId, onEdit, onToggleActive, onDelete, onChangePassword, onResend }: {
   person: Person
-  myRole: string
+  authority: Authority
   myId: string
   onEdit: () => void
   onToggleActive: () => void
@@ -478,11 +495,13 @@ function PersonActionsMenu({ person, myRole, myId, onEdit, onToggleActive, onDel
   onResend: () => void
 }) {
   const canManagePeople = useCanManagePeople()
-  const mayManage = canManageTarget(myRole, person.role)
-  const mayEdit = mayManage || canEditDetails(myRole)
-  const mayDelete = (myRole === 'super_admin' || myRole === 'admin') && mayManage
-  const mayPassword = canSetPassword(myRole, person.role) && person.id !== myId
-  const mayResend = canResendInvite(myRole, person.role) && accountStatus(person) === 'invited'
+  const canEditAnyProfile = useCanAccess('can_edit_any_profile')
+  const canDeletePeople = useCanAccess('can_delete_people')
+  const mayManage = outranks(authority.myRank, authority.rankOf(person.role))
+  const mayEdit = mayManage || canEditAnyProfile
+  const mayDelete = canDeletePeople && mayManage
+  const mayPassword = mayManage && person.id !== myId
+  const mayResend = mayManage && accountStatus(person) === 'invited'
   const showAnyAction = canManagePeople && (mayEdit || mayManage || mayPassword || mayResend)
 
   const triggerRef = useRef<HTMLButtonElement>(null)
@@ -558,9 +577,9 @@ type RowActions = {
   onResend: () => void
 }
 
-function PersonTableRow({ person, myRole, myId, teamLabels, designationName, ...actions }: {
+function PersonTableRow({ person, authority, myId, teamLabels, designationName, ...actions }: {
   person: Person
-  myRole: string
+  authority: Authority
   myId: string
   teamLabels: string[]
   designationName: string | null
@@ -588,15 +607,15 @@ function PersonTableRow({ person, myRole, myId, teamLabels, designationName, ...
       <AccountStatusChip person={person} />
       <div className="flex items-center justify-end gap-1">
         <StartDMButton profileId={person.id} name={person.name} role={person.role} />
-        <PersonActionsMenu person={person} myRole={myRole} myId={myId} {...actions} />
+        <PersonActionsMenu person={person} authority={authority} myId={myId} {...actions} />
       </div>
     </div>
   )
 }
 
-function PersonCard({ person, myRole, myId, teamLabels, designationName, ...actions }: {
+function PersonCard({ person, authority, myId, teamLabels, designationName, ...actions }: {
   person: Person
-  myRole: string
+  authority: Authority
   myId: string
   teamLabels: string[]
   designationName: string | null
@@ -618,7 +637,7 @@ function PersonCard({ person, myRole, myId, teamLabels, designationName, ...acti
             <p className="mt-1 truncate font-mono text-[11.5px] text-text-3">{person.email}</p>
           </div>
           <StartDMButton profileId={person.id} name={person.name} role={person.role} />
-          <PersonActionsMenu person={person} myRole={myRole} myId={myId} {...actions} />
+          <PersonActionsMenu person={person} authority={authority} myId={myId} {...actions} />
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <ProfileRoles profileId={person.id} fallbackRole={person.role} />
@@ -672,7 +691,7 @@ function EmptyPeopleState() {
 
 type ListProps = {
   people: Person[]
-  myRole: string
+  authority: Authority
   myId: string
   teamsByProfile: Map<string, string[]>
   designationName: Map<string, string>
@@ -695,7 +714,7 @@ function rowActions(p: Person, l: ListProps): RowActions {
 }
 
 function PeopleTable(props: ListProps) {
-  const { people, myRole, myId, teamsByProfile, designationName } = props
+  const { people, authority, myId, teamsByProfile, designationName } = props
   return (
     <div className="hidden overflow-visible rounded-lg border border-border-default bg-surface-1 shadow-[0_18px_50px_rgba(0,0,0,0.12)] lg:block">
       <div className={cn('grid gap-4 rounded-t-lg border-b border-border-subtle bg-surface-2 px-5 py-3', GRID_COLS)}>
@@ -713,7 +732,7 @@ function PeopleTable(props: ListProps) {
             <PersonTableRow
               key={p.id}
               person={p}
-              myRole={myRole}
+              authority={authority}
               myId={myId}
               teamLabels={teamsByProfile.get(p.id) ?? []}
               designationName={p.designation_id ? designationName.get(p.designation_id) ?? null : null}
@@ -727,7 +746,7 @@ function PeopleTable(props: ListProps) {
 }
 
 function PeopleCards(props: ListProps) {
-  const { people, myRole, myId, teamsByProfile, designationName } = props
+  const { people, authority, myId, teamsByProfile, designationName } = props
   if (people.length === 0) {
     return (
       <div className="rounded-lg border border-border-default bg-surface-1">
@@ -742,7 +761,7 @@ function PeopleCards(props: ListProps) {
         <PersonCard
           key={p.id}
           person={p}
-          myRole={myRole}
+          authority={authority}
           myId={myId}
           teamLabels={teamsByProfile.get(p.id) ?? []}
           designationName={p.designation_id ? designationName.get(p.designation_id) ?? null : null}
@@ -758,8 +777,20 @@ function PeopleCards(props: ListProps) {
 export default function PeoplePage() {
   const toast = useToast()
   const { profile } = useAuthContext()
-  const myRole = profile?.role ?? ''
   const myId = profile?.id ?? ''
+  // Authority is a rank on the role ladder, not a role name — see lib/peopleAccess.
+  const myRank = useMyRoleRank()
+  const { data: allRoles = [] } = useRoles()
+  const authority: Authority = useMemo(
+    () => ({
+      myRank,
+      rankOf: (slug: string) => allRoles.find((r) => r.slug === slug)?.position,
+      ladder: allRoles
+        .filter((r) => INTERNAL_ROLES.includes(r.slug as InternalRole))
+        .map((r) => ({ slug: r.slug, position: r.position })),
+    }),
+    [myRank, allRoles],
+  )
   // Inviting is the same capability as managing people (was canInvite = canManagePeople).
   const canInvite = useCanManagePeople()
 
@@ -900,21 +931,21 @@ export default function PeoplePage() {
         ) : (
           <>
             <div className="lg:hidden">
-              <PeopleCards people={filtered} myRole={myRole} myId={myId} teamsByProfile={teamsByProfile} designationName={designationName} onEdit={setEditing} onToggleActive={toggleActive} onDelete={removePerson} onChangePassword={setPasswordFor} onResend={resendInviteFor} />
+              <PeopleCards people={filtered} authority={authority} myId={myId} teamsByProfile={teamsByProfile} designationName={designationName} onEdit={setEditing} onToggleActive={toggleActive} onDelete={removePerson} onChangePassword={setPasswordFor} onResend={resendInviteFor} />
             </div>
             {viewMode === 'table' ? (
-              <PeopleTable people={filtered} myRole={myRole} myId={myId} teamsByProfile={teamsByProfile} designationName={designationName} onEdit={setEditing} onToggleActive={toggleActive} onDelete={removePerson} onChangePassword={setPasswordFor} onResend={resendInviteFor} />
+              <PeopleTable people={filtered} authority={authority} myId={myId} teamsByProfile={teamsByProfile} designationName={designationName} onEdit={setEditing} onToggleActive={toggleActive} onDelete={removePerson} onChangePassword={setPasswordFor} onResend={resendInviteFor} />
             ) : (
               <div className="hidden lg:block">
-                <PeopleCards people={filtered} myRole={myRole} myId={myId} teamsByProfile={teamsByProfile} designationName={designationName} onEdit={setEditing} onToggleActive={toggleActive} onDelete={removePerson} onChangePassword={setPasswordFor} onResend={resendInviteFor} />
+                <PeopleCards people={filtered} authority={authority} myId={myId} teamsByProfile={teamsByProfile} designationName={designationName} onEdit={setEditing} onToggleActive={toggleActive} onDelete={removePerson} onChangePassword={setPasswordFor} onResend={resendInviteFor} />
               </div>
             )}
           </>
         )}
       </div>
 
-      {inviteOpen && <InviteModal actorRole={myRole} teams={teams.map((t) => ({ id: t.id, name: t.name }))} designationOptions={designationOptions} onClose={() => setInviteOpen(false)} />}
-      {editing && <EditDrawer person={editing} actorRole={myRole} isSelf={editing.id === myId} teams={teams.map((t) => ({ id: t.id, name: t.name }))} designationOptions={designationOptions} currentTeamIds={teamIdsByProfile.get(editing.id) ?? []} onClose={() => setEditing(null)} />}
+      {inviteOpen && <InviteModal authority={authority} teams={teams.map((t) => ({ id: t.id, name: t.name }))} designationOptions={designationOptions} onClose={() => setInviteOpen(false)} />}
+      {editing && <EditDrawer person={editing} authority={authority} isSelf={editing.id === myId} teams={teams.map((t) => ({ id: t.id, name: t.name }))} designationOptions={designationOptions} currentTeamIds={teamIdsByProfile.get(editing.id) ?? []} onClose={() => setEditing(null)} />}
       {passwordFor && <ChangePasswordModal person={passwordFor} onClose={() => setPasswordFor(null)} />}
     </div>
   )

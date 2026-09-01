@@ -8,6 +8,7 @@ import { DatePicker } from '../../components/ui/DatePicker'
 import { MultiSelectPeople } from '../../components/ui/MultiSelectPeople'
 import { useToast } from '../../components/ui/toast-context'
 import { useClients } from '../../hooks/useClients'
+import { useProfilesWithFeature } from '../../hooks/usePermissions'
 import { usePeople } from '../../hooks/usePeople'
 import { useServices } from '../../hooks/useServices'
 import { useUsableTemplates } from '../../hooks/useTemplates'
@@ -57,6 +58,8 @@ export function HandoffModal({ open, lead, onClose }: HandoffModalProps) {
   const { handOffLead } = useBd()
   const { data: services = [] } = useServices()
   const { data: people = [] } = usePeople()
+  // Whoever may run a project is who a handoff can be given to.
+  const projectManagers = useProfilesWithFeature('can_manage_projects')
   const { data: clients = [] } = useClients()
   const { data: templates = [] } = useUsableTemplates(open)
 
@@ -104,7 +107,7 @@ export function HandoffModal({ open, lead, onClose }: HandoffModalProps) {
 
   // Only staff who actually run projects should appear as the receiving PM.
   const managers = people.filter(
-    (p) => p.is_active && ['project_manager', 'admin', 'super_admin', 'team_lead'].includes(p.role),
+    (p) => p.is_active && projectManagers.has(p.id),
   )
   const staffOptions = people
     .filter((p) => p.is_active)

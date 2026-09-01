@@ -12,8 +12,8 @@ import { DatePicker } from '../../components/ui/DatePicker'
 import { HoverCard } from '../../components/ui/HoverCard'
 import { PersonLink } from '../../components/shared/PersonLink'
 import { AttendanceChips } from '../../components/shared/AttendanceChips'
+import { useCanAccess } from '../../hooks/useRoleFlags'
 import { useToast } from '../../components/ui/toast-context'
-import { useSession } from '../../hooks/useAuth'
 import { useActiveTimers, useTimesheetRoster, useTimesheetSegments } from '../../hooks/useReports'
 import { useAttendanceSettings } from '../../hooks/useAttendance'
 import type { TimesheetPerson, TimesheetSegment } from '../../api/reports'
@@ -93,7 +93,6 @@ interface Row {
  */
 export function TimesheetContent() {
   const toast = useToast()
-  const { profile } = useSession()
   const [date, setDate] = useState(() => iso(new Date()))
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState('all')
@@ -197,12 +196,11 @@ export function TimesheetContent() {
     toast(`Exported ${rows.length} people`, 'success')
   }
 
-  const scopeNote =
-    profile?.role === 'team_lead' || profile?.role === 'project_manager'
-      ? 'Everyone who shares a team with you.'
-      : profile?.role === 'employee'
-        ? 'Your own day.'
-        : 'Everyone in the company.'
+  // Exactly what p_tte_select allows: your own, your teammates', or everyone's.
+  const canViewAllTime = useCanAccess('can_view_all_timesheets')
+  const scopeNote = canViewAllTime
+    ? 'Everyone in the company.'
+    : 'You, and anyone who shares a team with you.'
 
   return (
     <div className="flex flex-col gap-5">

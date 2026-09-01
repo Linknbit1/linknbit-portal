@@ -13,7 +13,7 @@ import { notificationHref } from '../../constants/notifications'
 import { groupNotifications, groupTitle } from '../../lib/notificationGroups'
 import { formatRelativeTime } from '../../lib/utils'
 import { isUserRole } from '../../lib/peopleAccess'
-import { SETTINGS_ROLES } from '../../constants/roles'
+import { isInternalRole } from '../../lib/roles'
 
 interface TopbarProps {
   title?: string
@@ -280,7 +280,7 @@ export function Topbar({ title, breadcrumb, className, back, actions }: TopbarPr
                 </div>
                 {/* Gated on the same key as the /members/:id route guard, so the
                     entry never appears to someone the guard would turn away. */}
-                {SETTINGS_ROLES.includes(profile.role) && (
+                {isInternalRole(profile.role) && (
                   <button
                     role="menuitem"
                     onClick={() => { setMenuOpen(false); navigate(`/members/${profile.id}`) }}

@@ -3,7 +3,7 @@ import { MessageCircle, Loader2 } from 'lucide-react'
 import { useToast } from '../ui/toast-context'
 import { useAuthContext } from '../../context/AuthContext'
 import { useCreateDM } from '../../hooks/useChannels'
-import { CLIENT_ROLES } from '../../constants/roles'
+import { isClientRole } from '../../lib/roles'
 import { cn } from '../../lib/cn'
 
 interface StartDMButtonProps {
@@ -27,8 +27,8 @@ export function StartDMButton({ profileId, name, role, variant = 'icon', classNa
   const { mutate: createDM, isPending } = useCreateDM()
 
   const isSelf = profile?.id === profileId
-  const viewerIsClient = CLIENT_ROLES.includes(profile?.role ?? '')
-  if (isSelf || viewerIsClient || CLIENT_ROLES.includes(role)) return null
+  // Chat is internal-only, on both sides of the conversation.
+  if (isSelf || isClientRole(profile?.role) || isClientRole(role)) return null
 
   const open = () => {
     createDM(profileId, {

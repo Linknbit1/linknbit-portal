@@ -16,7 +16,9 @@ import { Toggle } from '../../components/ui/Toggle'
 import { useToast } from '../../components/ui/toast-context'
 import { useAuthContext } from '../../context/AuthContext'
 import { useIsDesktop } from '../../hooks/useMediaQuery'
-import { useCanManageRoles } from '../../hooks/useRoleFlags'
+import { useMyPermissions } from '../../hooks/usePermissions'
+import { ADMINISTRATOR } from '../../api/permissions'
+import { useCanAccess, useCanManagePeople, useCanManageRoles } from '../../hooks/useRoleFlags'
 import {
   usePermissionCatalog, useRolePermissions, useRoles, useSetRolePermission,
 } from '../../hooks/usePermissions'
@@ -44,7 +46,7 @@ type Tab =
   | 'services' | 'statuses' | 'designations' | 'permissions'
 
 // Mobile section metadata: drives the hub rows + stack-screen titles. Visibility is
-// role-gated (see visibleSectionsFor): Services → super_admin/admin; Designations →
+// permission-gated (see SECTION_FEATURE): Services → can_manage_services; Designations →
 // super_admin/admin/hr; Permissions → super_admin/admin and only when WIP is enabled.
 const SETTINGS_SECTIONS: { key: Tab; label: string; icon: LucideIcon }[] = [
   // Personal — every signed-in staff member.
@@ -65,20 +67,31 @@ const SETTINGS_SECTIONS: { key: Tab; label: string; icon: LucideIcon }[] = [
   { key: 'permissions',  label: 'Permissions',  icon: Shield },
 ]
 
-function visibleSectionsFor(role: string | undefined): typeof SETTINGS_SECTIONS {
+/**
+ * Which sections this viewer gets. Every one is a permission — the personal two
+ * are open to anybody signed in, since My Devices and Notifications are yours.
+ */
+const SECTION_FEATURE: Record<string, string> = {
+  participation: 'can_manage_standups',
+  attendance:    'can_manage_attendance',
+  standup:       'can_manage_standups',
+  gamification:  'can_govern_gamification',
+  services:      'can_manage_services',
+  statuses:      'can_manage_services',
+  designations:  'can_manage_people',
+  // Now that permissions genuinely drive RLS, this panel has to exist in
+  // production — it is the only way to administer capabilities.
+  permissions:   'can_manage_roles',
+}
+
+function visibleSections(
+  signedIn: boolean,
+  can: (key: string) => boolean,
+): typeof SETTINGS_SECTIONS {
   return SETTINGS_SECTIONS.filter(({ key }) => {
-    if (key === 'devices' || key === 'notifications') return !!role
-    if (key === 'participation') return role === 'super_admin' || role === 'admin' || role === 'hr'
-    if (key === 'attendance')   return role === 'super_admin' || role === 'admin' || role === 'hr'
-    if (key === 'standup')      return role === 'super_admin' || role === 'admin' || role === 'hr'
-    if (key === 'gamification') return role === 'super_admin' || role === 'admin' || role === 'hr'
-    if (key === 'services')     return role === 'super_admin' || role === 'admin'
-    if (key === 'statuses')     return role === 'super_admin' || role === 'admin'
-    if (key === 'designations') return role === 'super_admin' || role === 'admin' || role === 'hr'
-    // Now that flags genuinely drive RLS, this panel has to exist in production —
-    // it is the only way to administer capabilities.
-    if (key === 'permissions')  return role === 'super_admin' || role === 'admin'
-    return false
+    if (key === 'devices' || key === 'notifications') return signedIn
+    const feature = SECTION_FEATURE[key]
+    return !!feature && can(feature)
   })
 }
 
@@ -457,13 +470,18 @@ function PermissionsPanel({ canEdit }: { canEdit: boolean }) {
 export default function SettingsPage({ mobileSection }: { mobileSection?: string } = {}) {
   const { profile } = useAuthContext()
   const isDesktop = useIsDesktop()
-  const canEditFlags = profile?.role === 'super_admin' || profile?.role === 'admin'
-  const canManageDesignations = canEditFlags || profile?.role === 'hr'
+  const canEditFlags = useCanAccess('can_manage_services')
+  const canManageDesignations = useCanManagePeople()
   // Permissions is the one panel already converted off role checks; Services and
   // Designations follow in Phase 2.
   const canManageRoles = useCanManageRoles()
 
-  const sections = useMemo(() => visibleSectionsFor(profile?.role), [profile?.role])
+  const { data: permissions } = useMyPermissions()
+  const sections = useMemo(
+    () => visibleSections(!!profile, (key) =>
+      !!permissions && (permissions.includes(ADMINISTRATOR) || permissions.includes(key))),
+    [profile, permissions],
+  )
   const [activeTab, setActiveTab] = useState<Tab>(sections[0]?.key ?? 'designations')
   const showHub = !isDesktop && !mobileSection
 

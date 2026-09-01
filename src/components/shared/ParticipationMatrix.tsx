@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Check, Minus, Search, X } from 'lucide-react'
+import { isInternalRole } from '../../lib/roles'
 import { cn } from '../../lib/cn'
 import { Input } from '../ui/Input'
 import { Avatar } from '../ui/Avatar'
@@ -62,7 +63,7 @@ export function ParticipationMatrix() {
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase()
     return people
-      .filter((p) => p.is_active && p.role !== 'client_owner' && p.role !== 'client_member')
+      .filter((p) => p.is_active && isInternalRole(p.role))
       .filter((p) => !q || p.name.toLowerCase().includes(q))
       .sort((a, b) =>
         ROLE_ORDER.indexOf(a.role) - ROLE_ORDER.indexOf(b.role) || a.name.localeCompare(b.name))

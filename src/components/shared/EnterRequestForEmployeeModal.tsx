@@ -5,6 +5,7 @@ import { Select } from '../ui/Select'
 import { DatePicker } from '../ui/DatePicker'
 import { TimePicker } from '../ui/TimePicker'
 import { useToast } from '../ui/toast-context'
+import { isInternalRole } from '../../lib/roles'
 import { useAuthContext } from '../../context/AuthContext'
 import { useCanAccess } from '../../hooks/useRoleFlags'
 import { usePeople } from '../../hooks/usePeople'
@@ -91,7 +92,7 @@ export function EnterRequestForEmployeeModal({ onClose }: EnterRequestForEmploye
     enterLeave.isPending || grantWfh.isPending || enterException.isPending || enterOvertime.isPending
 
   const peopleOptions = people
-    .filter((p) => p.is_active && p.role !== 'client_owner' && p.role !== 'client_member')
+    .filter((p) => p.is_active && isInternalRole(p.role))
     .map((p) => ({ value: p.id, label: p.name, avatar: { name: p.name, url: p.avatar_url } }))
 
   const timeLabel = EXCEPTION_TYPES.find((t) => t.value === exceptionType)?.timeLabel ?? 'At'

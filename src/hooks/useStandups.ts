@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
+  fetchAmIStandupParticipant,
   fetchStandupWindow, submitStandup, updateStandup, fetchStandupsByDate, fetchMyStandups,
   fetchMyStandup, fetchStandupRoster, fetchStandupRoleSettings, fetchStandupParticipants,
   setStandupRoleRequirement, setStandupParticipation,
@@ -10,6 +11,7 @@ import {
 import type { TablesUpdate } from '../types/database'
 
 export const STANDUP_KEYS = {
+  amParticipant: ['standups', 'am-participant'] as const,
   window: ['standup', 'window'] as const,
   byDate: (date: string) => ['standups', 'date', date] as const,
   mine: (profileId: string) => ['standups', 'mine', profileId] as const,
@@ -206,4 +208,14 @@ export function useSetStandupParticipation() {
       setStandupParticipation(profileId, mode, note),
     onSuccess: invalidate,
   })
+}
+
+/** Whether the signed-in user is expected to file a standup. Drives the nav item. */
+export function useAmIStandupParticipant(): boolean {
+  const { data } = useQuery({
+    queryKey: STANDUP_KEYS.amParticipant,
+    queryFn: fetchAmIStandupParticipant,
+    staleTime: 5 * 60 * 1000,
+  })
+  return data ?? false
 }

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Navigate } from 'react-router-dom'
+import { isClientRole } from '../../lib/roles'
 import { useAuthContext } from '../../context/AuthContext'
 
 function FullPageSpinner() {
@@ -24,7 +25,7 @@ export function HomeRedirect() {
   const { accessToken, profile, loading } = useAuthContext()
   if (loading) return <FullPageSpinner />
   if (!accessToken) return <Navigate to="/login" replace />
-  const isClient = profile?.role === 'client_owner' || profile?.role === 'client_member'
+  const isClient = isClientRole(profile?.role)
   // Internal staff land on My Day: the first thing someone needs on opening the
   // portal is their own next few hours.
   return <Navigate to={isClient ? '/client/dashboard' : '/my-day'} replace />

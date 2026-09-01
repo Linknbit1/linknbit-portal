@@ -41,16 +41,20 @@ export default function TeamDetailPage() {
   const members = people.filter((p) => memberIds.has(p.id))
   const lead = people.find((p) => p.id === team?.lead_id)
 
-  const role = profile?.role
+  const canViewAllAttendance = useCanAccess('can_view_all_attendance')
+  const canViewTeamAttendance = useCanAccess('can_view_team_attendance')
+  const canManageServices = useCanAccess('can_manage_services')
+  const canManageProjects = useCanAccess('can_manage_projects')
   const isLead = !!profile && team?.lead_id === profile.id
   const isOnTeam = !!profile && memberIds.has(profile.id)
-  const isAdmin = role === 'super_admin' || role === 'admin'
 
-  // Supervisors of this team see its attendance; HR/admin see every team's.
-  const canSeeAttendance = isAdmin || canManageAttendance || isLead || role === 'project_manager'
-  // Templates: the team's lead, a PM staffed on the team, or an admin — mirrors
-  // can_manage_team_templates() in SQL, so the tab never shows an empty list.
-  const canSeeTemplates = isAdmin || isLead || (role === 'project_manager' && isOnTeam)
+  // Whoever may see all attendance or team attendance, plus this team's own lead.
+  const canSeeAttendance =
+    canViewAllAttendance || canViewTeamAttendance || canManageAttendance || isLead
+  // Mirrors can_manage_team_templates() in SQL exactly, so the tab never shows
+  // a list the database will not let them touch.
+  const canSeeTemplates =
+    canManageServices || isLead || (canManageProjects && isOnTeam)
 
   const tabs: { key: Tab; label: string; icon: typeof Users; visible: boolean }[] = [
     { key: 'overview',   label: 'Overview',   icon: Users,          visible: true },

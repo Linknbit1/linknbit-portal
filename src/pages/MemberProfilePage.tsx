@@ -35,12 +35,10 @@ import { AttendanceChips } from '../components/shared/AttendanceChips'
 import type { Person, PersonTeam, PersonProject } from '../api/people'
 import type { TaskListItem } from '../api/tasks'
 import type { LeaveRequestWithType, WfhRequest } from '../api/attendance'
+import { useCanAccess } from '../hooks/useRoleFlags'
+import { useMyRoleRank, useRoles } from '../hooks/usePermissions'
 import { DAY_PART_LABEL } from '../lib/dayParts'
 import { formatHoursMinutes } from '../lib/attendanceHours'
-
-const GOVERNOR_ROLES = ['super_admin', 'admin', 'hr', 'project_manager']
-const HR_ADMIN_ROLES = ['super_admin', 'admin', 'hr']
-const ADMIN_ROLES = ['super_admin', 'admin']
 
 const ATT_STATUS: Record<string, { label: string; cls: string; dot: string }> = {
   present:  { label: 'Present',  cls: 'bg-success/10 text-success border-success/30',                     dot: 'bg-success' },
@@ -173,15 +171,20 @@ export default function MemberProfilePage() {
     ? designations.find((d) => d.id === person.designation_id)?.name ?? null
     : null
 
-  const viewerRole = viewer?.role ?? ''
   const isSelf = viewer?.id === id
-  const isGovernor = GOVERNOR_ROLES.includes(viewerRole)
-  const isTeamLead = viewerRole === 'team_lead'
+  const canViewAllAttendance = useCanAccess('can_view_all_attendance')
+  const canViewTeamAttendance = useCanAccess('can_view_team_attendance')
+  const canSeeAnySalary = useCanAccess('can_view_salaries')
+  const canImpersonateOthers = useCanAccess('can_impersonate')
+  const myRank = useMyRoleRank()
+  const { data: allRoles = [] } = useRoles()
+  const roleRank = (slug: string) => allRoles.find((r) => r.slug === slug)?.position
 
   const { data: leave = [] } = useLeaveByProfile(id)
   const { data: wfh = [] } = useWfhByProfile(id)
-  const canSeeTimeOff = isSelf || isGovernor || (isTeamLead && (leave.length > 0 || wfh.length > 0))
-  const canSeeSalary = isSelf || HR_ADMIN_ROLES.includes(viewerRole)
+  const canSeeTimeOff =
+    isSelf || canViewAllAttendance || (canViewTeamAttendance && (leave.length > 0 || wfh.length > 0))
+  const canSeeSalary = isSelf || canSeeAnySalary
 
   const [tab, setTab] = useState<Tab>('overview')
 
@@ -193,9 +196,10 @@ export default function MemberProfilePage() {
     !!person &&
     !isSelf &&
     person.is_active &&
-    (viewerRole === 'super_admin'
-      ? person.role !== 'super_admin'
-      : viewerRole === 'admin' && !ADMIN_ROLES.includes(person.role))
+    // You may only step into somebody you outrank — the same ladder the
+    // admin_* RPCs enforce, so the button matches what the server will allow.
+    canImpersonateOthers &&
+    myRank > (roleRank(person.role) ?? Number.MAX_SAFE_INTEGER)
   const handleImpersonate = async () => {
     if (!person) return
     setImpersonatePending(true)

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getDeviceToken, getDeviceFingerprint, getDeviceName } from '../lib/deviceUtils'
 import { useMyEnrolledDevices } from './useEnrolledDevices'
-import { useAuthContext } from '../context/AuthContext'
+import { useCanAccess } from './useRoleFlags'
 
 // 'privileged' = admin/super_admin (auto-approved on check-in, never gated).
 export type CurrentDeviceStatus = 'privileged' | 'approved' | 'pending' | 'blocked' | 'unregistered'
@@ -17,7 +17,6 @@ interface BraveNavigator extends Navigator {
 // on a single source of truth. `fingerprint` carries the stable token (the identity);
 // `fingerprintHint` carries the specs hash, stored as a soft signal only.
 export function useCurrentDevice() {
-  const { profile } = useAuthContext()
   const [fingerprint, setFingerprint] = useState('')
   const [fingerprintHint, setFingerprintHint] = useState('')
   const [deviceName, setDeviceName] = useState('')
@@ -40,7 +39,7 @@ export function useCurrentDevice() {
     })
   }, [])
 
-  const privileged = profile?.role === 'admin' || profile?.role === 'super_admin'
+  const privileged = useCanAccess('can_manage_attendance')
   // Ready = we know both the identity and the user's registered devices, so a status
   // decision won't flash the wrong state. Privileged users never need the device list.
   const ready = privileged || (deviceReady && !devicesLoading)

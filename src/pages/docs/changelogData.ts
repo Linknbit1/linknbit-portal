@@ -67,6 +67,10 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'improved',
+        text: 'Nothing anywhere in the portal decides anything by role any more — screens, menus, buttons and route guards included. Everything that used to ask "is this person an admin?" now asks whether they are allowed. Ten new permissions carry what had no key before, each granted to exactly the roles that had the ability by name, so nobody can do more or less than yesterday. A role you build on the Roles screen can now be given any of it, and renaming a role no longer changes what anybody can do.',
+      },
+      {
+        kind: 'improved',
         text: 'Nothing in the database decides anything by role any more. Twenty-eight rules — ten access policies and eighteen functions — asked whether somebody was an admin instead of whether they were allowed; they now all read a permission. Six new keys carry what had no key before: managing the company calendar, viewing and editing logged time, applying attendance without approval, and two internal ones. Every key was granted to exactly the roles that had the ability by name, so nobody can do more or less than yesterday — but a role you build yourself can now be given any of it.',
       },
       {

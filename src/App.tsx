@@ -6,7 +6,6 @@ import { PrivateRoute, HomeRedirect } from './components/layout/PrivateRoute'
 import { RoleGuard } from './components/layout/RoleGuard'
 import { AppShell } from './components/layout/AppShell'
 import { ClientShell } from './components/layout/ClientShell'
-import { SETTINGS_ROLES, CLIENT_ROLES, STANDUP_REVIEW_ROLES } from './constants/roles'
 
 import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
@@ -96,7 +95,7 @@ export default function App() {
                 <Route path="/my-day" element={<MyDayPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
                 {/* Public (to all internal staff) member profile — tiered sections gated by role/RLS */}
-                <Route path="/members/:id" element={<RoleGuard allowedRoles={SETTINGS_ROLES}><MemberProfilePage /></RoleGuard>} />
+                <Route path="/members/:id" element={<RoleGuard audience="internal"><MemberProfilePage /></RoleGuard>} />
                 <Route path="/more" element={<MorePage />} />
                 {/* Handbook + changelog. Inside PrivateRoute, so both are staff-only;
                     the handbook filters its own chapters by role and capability. */}
@@ -115,7 +114,7 @@ export default function App() {
                 {/* Team board: reviewers only. RLS scopes leads/PMs to their own team. */}
                 <Route
                   path="/standup/team"
-                  element={<RoleGuard allowedRoles={STANDUP_REVIEW_ROLES}><StandupTeamPage /></RoleGuard>}
+                  element={<RoleGuard feature={['can_view_standups', 'can_view_team_standups']}><StandupTeamPage /></RoleGuard>}
                 />
                 <Route path="/standup/history" element={<StandupHistoryPage />} />
                 <Route
@@ -133,34 +132,34 @@ export default function App() {
                 <Route path="/gamification/:section" element={<GamificationSectionScreen />} />
                 <Route
                   path="/settings"
-                  element={<RoleGuard allowedRoles={SETTINGS_ROLES}><SettingsPage /></RoleGuard>}
+                  element={<RoleGuard audience="internal"><SettingsPage /></RoleGuard>}
                 />
                 <Route
                   path="/settings/:section"
-                  element={<RoleGuard allowedRoles={SETTINGS_ROLES}><SettingsSectionScreen /></RoleGuard>}
+                  element={<RoleGuard audience="internal"><SettingsSectionScreen /></RoleGuard>}
                 />
 
                 {/* Directory — readable by all internal staff; actions gated in-page */}
                 <Route
                   path="/people"
-                  element={<RoleGuard allowedRoles={SETTINGS_ROLES}><PeoplePage /></RoleGuard>}
+                  element={<RoleGuard audience="internal"><PeoplePage /></RoleGuard>}
                 />
                 <Route
                   path="/teams"
-                  element={<RoleGuard allowedRoles={SETTINGS_ROLES}><TeamsPage /></RoleGuard>}
+                  element={<RoleGuard audience="internal"><TeamsPage /></RoleGuard>}
                 />
                 {/* Single team — roster is open to all internal staff; the
                     attendance and template tabs gate themselves in-page. */}
                 <Route
                   path="/teams/:id"
-                  element={<RoleGuard allowedRoles={SETTINGS_ROLES}><TeamDetailPage /></RoleGuard>}
+                  element={<RoleGuard audience="internal"><TeamDetailPage /></RoleGuard>}
                 />
 
                 {/* Projects, Tasks & Clients — live for internal staff (RLS scopes data) */}
-                <Route path="/projects" element={<RoleGuard allowedRoles={SETTINGS_ROLES}><AdminProjectsPage /></RoleGuard>} />
-                <Route path="/projects/:id" element={<RoleGuard allowedRoles={SETTINGS_ROLES}><AdminProjectDetailPage /></RoleGuard>} />
-                <Route path="/tasks" element={<RoleGuard allowedRoles={SETTINGS_ROLES}><TasksPage /></RoleGuard>} />
-                <Route path="/tasks/:id" element={<RoleGuard allowedRoles={SETTINGS_ROLES}><AdminTaskDetailPage /></RoleGuard>} />
+                <Route path="/projects" element={<RoleGuard audience="internal"><AdminProjectsPage /></RoleGuard>} />
+                <Route path="/projects/:id" element={<RoleGuard audience="internal"><AdminProjectDetailPage /></RoleGuard>} />
+                <Route path="/tasks" element={<RoleGuard audience="internal"><TasksPage /></RoleGuard>} />
+                <Route path="/tasks/:id" element={<RoleGuard audience="internal"><AdminTaskDetailPage /></RoleGuard>} />
                 <Route path="/clients" element={<RoleGuard feature="can_manage_clients"><ClientsPage /></RoleGuard>} />
                 <Route path="/admin/audit" element={<RoleGuard feature="can_view_audit_log"><AuditLogPage /></RoleGuard>} />
 
@@ -202,7 +201,7 @@ export default function App() {
                     and nothing else about the pipeline. */}
                 <Route
                   path="/my-meetings"
-                  element={<RoleGuard allowedRoles={SETTINGS_ROLES}><MyMeetingsPage /></RoleGuard>}
+                  element={<RoleGuard audience="internal"><MyMeetingsPage /></RoleGuard>}
                 />
                 {/* Business Development. Guarded by the same capability as the
                     sidebar row, so the URL can no more be reached without it
@@ -228,7 +227,7 @@ export default function App() {
               </Route>
 
               {/* Client portal (light mode) */}
-              <Route element={<PrivateRoute><RoleGuard allowedRoles={CLIENT_ROLES} redirectTo="/my-day"><ClientShell /></RoleGuard></PrivateRoute>}>
+              <Route element={<PrivateRoute><RoleGuard audience="client" redirectTo="/my-day"><ClientShell /></RoleGuard></PrivateRoute>}>
                 <Route path="/client" element={<Navigate to="/client/dashboard" replace />} />
                 <Route path="/client/dashboard" element={<ClientDashboardPage />} />
                 <Route path="/client/projects" element={<ClientProjectsPage />} />

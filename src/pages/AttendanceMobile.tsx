@@ -9,9 +9,8 @@ import { MobileHub, HubRow, type HubRowItem } from '../components/layout/MobileH
 import { StackScreen } from '../components/layout/StackScreen'
 import { Topbar } from '../components/layout/Topbar'
 import { PeriodStepper } from '../components/ui/PeriodStepper'
-import { useAuthContext } from '../context/AuthContext'
+import { useCanAccess } from '../hooks/useRoleFlags'
 import { useIsDesktop } from '../hooks/useMediaQuery'
-import { MGMT_ROLES } from '../constants/roles'
 import { useMyMonthlyAttendance } from '../hooks/useAttendance'
 import {
   useAllWfhRequests, useAllLeaveRequests, useAllAttendanceExceptions, useAllOvertimeRequests,
@@ -36,7 +35,6 @@ import { MyDevicesCard } from '../components/shared/MyDevicesCard'
 import {
   TeamRoster, TeamWfhList, TeamLeaveList, TeamExceptionsList, TeamOvertimeList,
 } from '../components/shared/TeamAttendancePanel'
-import { showsInlineTeamAttendance } from '../lib/roles'
 
 interface SectionEntry {
   title: string
@@ -190,8 +188,7 @@ function AdminAttendanceHub() {
 function EmployeeAttendanceHub() {
   const { year, month, stepper } = useMonthFilter()
   const { data: history = [], isLoading } = useMyMonthlyAttendance(year, month)
-  const { profile } = useAuthContext()
-  const canSeeTeam = showsInlineTeamAttendance(profile?.role)
+  const canSeeTeam = useCanAccess('can_view_cross_team_attendance')
 
   const items: HubRowItem[] = [
     { to: '/attendance/today',      label: 'Today',          icon: CalendarCheck },
@@ -219,17 +216,17 @@ function EmployeeAttendanceHub() {
 
 /** Mobile-only landing for /attendance: role-aware hub. */
 export function AttendanceHub() {
-  const { profile } = useAuthContext()
-  return MGMT_ROLES.includes(profile?.role ?? '') ? <AdminAttendanceHub /> : <EmployeeAttendanceHub />
+  const canManageAttendance = useCanAccess('can_manage_attendance')
+  return canManageAttendance ? <AdminAttendanceHub /> : <EmployeeAttendanceHub />
 }
 
 /** Mobile-only /attendance/:section stack screen; redirects on desktop. */
 export function AttendanceSectionScreen() {
   const isDesktop = useIsDesktop()
-  const { profile } = useAuthContext()
   const { section } = useParams()
 
-  const isMgmtRole = MGMT_ROLES.includes(profile?.role ?? '')
+  const canManageAttendance = useCanAccess('can_manage_attendance')
+  const canSeeTeam = useCanAccess('can_view_cross_team_attendance')
 
   // Self-service view for the roles whose /attendance is the management landing.
   // Same on both breakpoints — only the back affordance differs.
@@ -246,7 +243,7 @@ export function AttendanceSectionScreen() {
   // navigates here rather than switching an in-page tab).
   if (isDesktop) {
     const desktopEntry = section
-      ? (OPEN_SECTIONS[section] ?? (isMgmtRole ? ADMIN_SECTIONS[section] : undefined))
+      ? (OPEN_SECTIONS[section] ?? (canManageAttendance ? ADMIN_SECTIONS[section] : undefined))
       : undefined
     if (!desktopEntry) return <Navigate to="/attendance" replace />
     return (
@@ -264,15 +261,12 @@ export function AttendanceSectionScreen() {
     )
   }
 
-  const canSeeTeam = showsInlineTeamAttendance(profile?.role)
-
   // Team Attendance is its own sub-hub of stack screens (not a single panel).
   if (section === 'team') {
     return canSeeTeam ? <TeamHub /> : <Navigate to="/attendance" replace />
   }
 
-  const isMgmt = MGMT_ROLES.includes(profile?.role ?? '')
-  const map = isMgmt ? ADMIN_SECTIONS : EMPLOYEE_SECTIONS
+  const map = canManageAttendance ? ADMIN_SECTIONS : EMPLOYEE_SECTIONS
   const entry = section ? map[section] : undefined
   if (!entry) return <Navigate to="/attendance" replace />
 
@@ -282,12 +276,10 @@ export function AttendanceSectionScreen() {
 /** Mobile-only /attendance/team/:sub stack screen; redirects on desktop. */
 export function TeamAttendanceSectionScreen() {
   const isDesktop = useIsDesktop()
-  const { profile } = useAuthContext()
   const { sub } = useParams()
+  const canSeeTeam = useCanAccess('can_view_cross_team_attendance')
 
   if (isDesktop) return <Navigate to="/attendance" replace />
-
-  const canSeeTeam = showsInlineTeamAttendance(profile?.role)
   if (!canSeeTeam) return <Navigate to="/attendance" replace />
 
   const entry = TEAM_SECTIONS.find((s) => s.key === sub)
