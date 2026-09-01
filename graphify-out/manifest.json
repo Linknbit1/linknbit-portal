@@ -1268,8 +1268,8 @@
     "hash": "9ce7efd2b7a9aeb529bd86529c4e16dd"
   },
   "/Users/zainmalik/Documents/projects/linknbit-portal/public/sw.js": {
-    "mtime": 1788242270.8377166,
-    "hash": "19820bba242bef957b3987db27ae2fb7"
+    "mtime": 1788250015.5827205,
+    "hash": "51d24d7d7aa924d23b7e1a2c8939fdfe"
   },
   "/Users/zainmalik/Documents/projects/linknbit-portal/scripts/generate-pwa-assets.mjs": {
     "mtime": 1788242270.8390753,
@@ -1512,8 +1512,8 @@
     "hash": "36ee429dd7166ed3b1e9dd0b3174b748"
   },
   "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/chat/ChatThread.tsx": {
-    "mtime": 1788249303.8099802,
-    "hash": "43936b1795859250a8d2af235052ecce"
+    "mtime": 1788255436.4505138,
+    "hash": "2a199230a26c865d0f4bbfa0728d12cb"
   },
   "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/chat/ChannelFilesPanel.tsx": {
     "mtime": 1788242270.8538747,
@@ -1536,16 +1536,16 @@
     "hash": "22da82ce73e2549e77480dcc8edcdc13"
   },
   "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/chat/ConversationListRow.tsx": {
-    "mtime": 1788249704.554866,
-    "hash": "974c20c80a05b4dca06c200889d3a31b"
+    "mtime": 1788255807.4523468,
+    "hash": "bae6a365dcefad9f70aa3a436ddd21fe"
   },
   "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/chat/ReplyThumbnail.tsx": {
     "mtime": 1788249234.7176678,
     "hash": "88d0c20b0aaf0aed09f04abcf0ebff3f"
   },
   "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/chat/MessageList.tsx": {
-    "mtime": 1788249258.9075723,
-    "hash": "801a631ccd99d3e49a27aa07637e55fe"
+    "mtime": 1788255436.3946853,
+    "hash": "ba0b5d0e42845d897e4f33de84b247e1"
   },
   "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/chat/ConversationInfoPanel.tsx": {
     "mtime": 1788246163.901064,
@@ -1556,8 +1556,8 @@
     "hash": "104b8fbe4e463ec76857941b2e791d07"
   },
   "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/chat/MessageBubble.tsx": {
-    "mtime": 1788249258.8606124,
-    "hash": "dcd88fd78242cf130409b78fc9a3c4ba"
+    "mtime": 1788255375.138549,
+    "hash": "ce94e36bff29bb56d3e4466bec08a284"
   },
   "/Users/zainmalik/Documents/projects/linknbit-portal/src/components/chat/ReadTicks.tsx": {
     "mtime": 1788245389.5366359,
@@ -2176,8 +2176,8 @@
     "hash": "d5868517dbafbdb87f6ebe34c8030bee"
   },
   "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/realtime/useRealtimeChannelList.ts": {
-    "mtime": 1785748481.0084958,
-    "hash": "8c5498bae3400c5172c37568f2814df1"
+    "mtime": 1788255807.5093718,
+    "hash": "4d582fbdcbb6200b196f2a2254bd90d0"
   },
   "/Users/zainmalik/Documents/projects/linknbit-portal/src/hooks/realtime/useRealtimeNotifications.ts": {
     "mtime": 1788242270.937986,
@@ -2388,8 +2388,8 @@
     "hash": "69930223f8afd45f18f3fa0cb3abb2ac"
   },
   "/Users/zainmalik/Documents/projects/linknbit-portal/src/api/channels.ts": {
-    "mtime": 1788249614.882163,
-    "hash": "2f8cee2ed2a47bb181fbc78e17d049a2"
+    "mtime": 1788255639.5183542,
+    "hash": "57624d211e392bd30bb03a6baabe9fd9"
   },
   "/Users/zainmalik/Documents/projects/linknbit-portal/src/api/channelCategories.ts": {
     "mtime": 1786618328.1066306,
@@ -2824,16 +2824,16 @@
     "hash": "460c62ebc59d3d6868ab4b370795d564"
   },
   "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/docs/changelogData.ts": {
-    "mtime": 1788249968.9952564,
-    "hash": "cd89ffa803cc5dfdb738352ffc2b2a80"
+    "mtime": 1788256129.633423,
+    "hash": "e7496e3348903171af26d742b54f74d1"
   },
   "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/docs/ChangelogPage.tsx": {
     "mtime": 1788242271.1116009,
     "hash": "f567f283608db6a9409b87647ffde140"
   },
   "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/docs/docsContent.ts": {
-    "mtime": 1788249968.9568136,
-    "hash": "93fb2cc6669ad6460e16f77dd48f7045"
+    "mtime": 1788256129.5759592,
+    "hash": "c3d208b53bd27dda0395def4ba9f89d0"
   },
   "/Users/zainmalik/Documents/projects/linknbit-portal/src/pages/docs/DocumentationPage.tsx": {
     "mtime": 1788242271.1122677,

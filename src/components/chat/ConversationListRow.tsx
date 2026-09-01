@@ -32,6 +32,13 @@ export function ConversationListRow({ channel, myProfileId, unread, active, onCl
   // ticks belong to a message you sent, not to one you never did.
   const draft = useChatDrafts().drafts[channel.id]
 
+  // A reaction that landed after the newest message is the last thing that
+  // happened here, so it is what the row should say — the way WhatsApp reports
+  // one rather than leaving the row on a message nobody has touched since.
+  const reaction = channel.last_reaction
+  const reactionIsLatest = !!reaction
+    && (!channel.last_message_at || reaction.at > channel.last_message_at)
+
   return (
     // A container rather than one big button, so the actions menu isn't a
     // button nested inside a button.
@@ -62,9 +69,10 @@ export function ConversationListRow({ channel, myProfileId, unread, active, onCl
             </span>
             {channel.is_private && <Lock size={11} className="shrink-0 text-text-4" aria-label="Private channel" />}
             {channel.muted && <BellOff size={11} className="shrink-0 text-text-4" aria-label="Muted" />}
-            {channel.last_message_at && (
+            {/* Whichever happened last, so the time agrees with the line below it. */}
+            {(reactionIsLatest ? reaction?.at : channel.last_message_at) && (
               <span className="ml-auto shrink-0 font-mono text-[10.5px] text-text-4">
-                {formatRelativeTime(channel.last_message_at)}
+                {formatRelativeTime((reactionIsLatest && reaction ? reaction.at : channel.last_message_at)!)}
               </span>
             )}
           </span>
@@ -72,7 +80,7 @@ export function ConversationListRow({ channel, myProfileId, unread, active, onCl
             {/* Ahead of the preview, where a messaging app puts it: the tick
                 belongs to the line it describes, and leading it keeps every row
                 in the list aligned however long the preview runs. */}
-            {!draft && lastIsMine && (
+            {!draft && !reactionIsLatest && lastIsMine && (
               <ReadTicks
                 state={receiptState(channel.last_message_seen_by, audience)}
                 audience={audience}
@@ -80,9 +88,17 @@ export function ConversationListRow({ channel, myProfileId, unread, active, onCl
               />
             )}
             <span className="min-w-0 flex-1 truncate font-ui text-[13px] text-text-3">
-              {draft
-                ? <><span className="font-semibold text-brand-red">Draft: </span>{draft.text}</>
-                : channel.last_message_preview || 'No messages yet'}
+              {draft ? (
+                <><span className="font-semibold text-brand-red">Draft: </span>{draft.text}</>
+              ) : reactionIsLatest && reaction ? (
+                <>
+                  <span className="mr-1">{reaction.emoji}</span>
+                  {reaction.byMe ? 'You reacted' : `${reaction.by} reacted`}
+                  {reaction.targetIsMine && !reaction.byMe ? ' to your message' : `: ${reaction.target}`}
+                </>
+              ) : (
+                channel.last_message_preview || 'No messages yet'
+              )}
             </span>
             {unread > 0 && (
               <span className="flex h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-sm bg-brand-red px-1.5 font-mono text-[10px] font-bold text-white">

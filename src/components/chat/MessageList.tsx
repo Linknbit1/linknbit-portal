@@ -28,6 +28,8 @@ interface MessageListProps {
   audienceSize: number
   /** My id, my teams' ids and the @everyone sentinel: what makes a message mine. */
   myMentionIds: ReadonlySet<string>
+  /** Name senders above their bubbles — channels and group DMs, not one-to-ones. */
+  showAuthor: boolean
 }
 
 /**
@@ -52,7 +54,7 @@ function DayDivider({ iso }: { iso: string }) {
 export function MessageList({
   messages, isLoading, hasNextPage, isFetchingNextPage, onLoadOlder,
   canModerate, myProfileId, attachments, reactions, onDelete, onEdit, onToggleReaction, onReply, readersOf,
-  audienceSize, myMentionIds,
+  audienceSize, myMentionIds, showAuthor,
 }: MessageListProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -170,6 +172,7 @@ export function MessageList({
               audience={audienceSize}
               // Already bucketed above, so the quote costs no extra lookup.
               replyAttachment={m.reply_to_id ? attachmentsByMessage.get(m.reply_to_id)?.[0] : undefined}
+              showAuthor={showAuthor}
             />
           ))}
         </section>

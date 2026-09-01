@@ -215,6 +215,9 @@ export function ChatThread({ channelId, hideHeader }: ChatThreadProps) {
             readersOf={readersOf}
             audienceSize={members.filter((m) => m.id !== profile?.id).length}
             myMentionIds={myMentionIds}
+            // In a one-to-one the side a bubble sits on already says who sent
+            // it, so the name above every run is noise.
+            showAuthor={channel?.kind !== 'dm'}
           />
         </div>
 

@@ -17,6 +17,20 @@ export interface ChannelListItem extends ChannelRow {
   last_message_author_id: string | null
   /** How many members other than you have read as far as that newest message. */
   last_message_seen_by: number
+  /**
+   * The newest reaction in the conversation, when it happened after the newest
+   * message. A reaction is the last thing that happened as much as a message is,
+   * and a list that ignores it looks stale.
+   */
+  last_reaction: {
+    emoji: string
+    at: string
+    by: string
+    byMe: boolean
+    /** What was reacted to, already shortened for the row. */
+    target: string
+    targetIsMine: boolean
+  } | null
   /** When the viewer removed this from their own list, if they did. */
   hidden_at?: string | null
   /** Whether the viewer silenced notifications for this conversation. */
@@ -33,6 +47,13 @@ export interface CreateChannelArgs {
   roles?: string[]
   /** Confidential: only channel managers may add people. */
   isPrivate?: boolean
+}
+
+/** The most recent thing to happen in a conversation, whatever kind it was. */
+function lastActivityAt(c: { last_message_at: string | null; last_reaction: { at: string } | null; updated_at: string | null }): string {
+  return [c.last_message_at, c.last_reaction?.at, c.updated_at]
+    .filter((t): t is string => !!t)
+    .reduce((newest, t) => (t > newest ? t : newest), '')
 }
 
 /**
@@ -75,7 +96,7 @@ export async function fetchChannels(): Promise<ChannelListItem[]> {
 
   const { data, error } = await supabase
     .from('channels')
-    .select('*, channel_members(profile_id,hidden_at,notifications_muted,can_manage,last_read_at,profile:profiles(id,name,avatar_url)), messages(author_id,body_text,created_at,message_attachments(file_name,mime_type))')
+    .select('*, channel_members(profile_id,hidden_at,notifications_muted,can_manage,last_read_at,profile:profiles(id,name,avatar_url)), messages(author_id,body_text,created_at,message_attachments(file_name,mime_type)), message_reactions(emoji,created_at,profile_id,profile:profiles(id,name),message:messages(body_text,author_id,message_attachments(file_name,mime_type)))')
     .order('updated_at', { ascending: false })
     // A deleted message leaves a tombstone in the thread, but it must not be the
     // line that represents the conversation in the list -- the preview would go
@@ -87,6 +108,9 @@ export async function fetchChannels(): Promise<ChannelListItem[]> {
     // one-line preview.
     .order('created_at', { referencedTable: 'messages', ascending: false })
     .limit(1, { referencedTable: 'messages' })
+    // Only the newest reaction, for the same reason: the row shows one line.
+    .order('created_at', { referencedTable: 'message_reactions', ascending: false })
+    .limit(1, { referencedTable: 'message_reactions' })
   if (error) throw error
 
   return data
@@ -103,8 +127,19 @@ export async function fetchChannels(): Promise<ChannelListItem[]> {
         : (c.channel_members ?? []).filter(
             (m) => m.profile_id !== me && m.last_read_at && new Date(m.last_read_at).getTime() >= latestMs,
           ).length
+      const reaction = c.message_reactions?.[0] ?? null
       return {
         ...c,
+        last_reaction: reaction && reaction.message
+          ? {
+              emoji: reaction.emoji,
+              at: reaction.created_at,
+              by: reaction.profile?.name ?? 'Someone',
+              byMe: reaction.profile_id === me,
+              target: messagePreview(reaction.message.body_text, reaction.message.message_attachments) ?? 'a message',
+              targetIsMine: reaction.message.author_id === me,
+            }
+          : null,
         members: (c.channel_members ?? []).flatMap((m) => (m.profile ? [m.profile] : [])),
         last_message_at: latest?.created_at ?? null,
         last_message_preview: latest ? messagePreview(latest.body_text, latest.message_attachments) : null,
@@ -118,6 +153,11 @@ export async function fetchChannels(): Promise<ChannelListItem[]> {
     // A conversation you removed from your list stays hidden until someone
     // sends something new, which is what makes "delete" non-destructive.
     .filter((c) => !c.hidden_at || (c.last_message_at !== null && c.last_message_at > c.hidden_at))
+    // Newest activity first, worked out from the activity itself rather than
+    // trusting channels.updated_at to have been bumped — a reaction is the last
+    // thing that happened as much as a message is, and neither should need a
+    // column kept in step for the list to be in the right order.
+    .sort((a, b) => lastActivityAt(b).localeCompare(lastActivityAt(a)))
 }
 
 /** Removes a conversation from your own list only; history and other members are untouched. */
@@ -146,6 +186,7 @@ export async function fetchChannel(id: string): Promise<ChannelListItem | null> 
     last_message_preview: null,
     last_message_author_id: null,
     last_message_seen_by: 0,
+    last_reaction: null,
   }
 }
 

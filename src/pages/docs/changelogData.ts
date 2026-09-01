@@ -38,6 +38,18 @@ export const RELEASES: ChangelogRelease[] = [
       'Read ticks in Chat now turn the moment somebody opens the conversation, carry a state while a message is still sending, sit in the corner of the message rather than on a line of their own — and appear in the conversation list too.',
     entries: [
       {
+        kind: 'improved',
+        text: 'Chat now reads as a conversation. Every message sits in its own container — yours down the right in the brand colour, everybody else\'s down the left — with the time, the edited note and the ticks in the bottom corner of the message itself. In a one-to-one nobody is named above their messages any more; which side it is on already says who sent it.',
+      },
+      {
+        kind: 'fixed',
+        text: 'The conversation list is ordered by whatever happened last, worked out from the messages and reactions themselves. A new message now moves its conversation to the top.',
+      },
+      {
+        kind: 'added',
+        text: 'When the last thing in a conversation was a reaction, the list says so — "Ghayas reacted 👍 to your message" — instead of showing a message nobody has touched since.',
+      },
+      {
         kind: 'added',
         text: 'Paste an image straight into the message box. It shows at full size above the box before it goes, so you can check you pasted the right one, and you can send a message with it.',
       },

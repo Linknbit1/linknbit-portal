@@ -42,6 +42,11 @@ interface MessageBubbleProps {
   audience: number
   /** The first file on the message being answered, so the quote can show it. */
   replyAttachment?: MessageAttachmentRow | null
+  /**
+   * Name the sender above their bubble. True in channels and group DMs, false
+   * in a one-to-one — there, the side the bubble sits on already says who.
+   */
+  showAuthor?: boolean
 }
 
 /**
@@ -79,9 +84,45 @@ function timeOf(iso: string): string {
   return `${day}, ${time}`
 }
 
+/**
+ * Time, an "edited" note, and — on your own messages — the read ticks.
+ *
+ * Lives at the bottom-right of the bubble either way, but is rendered before
+ * the text and floated when there is text: that is what keeps a short message's
+ * time on its own line ("perfect  3:13 PM") instead of pushing it to a line of
+ * its own, and lets a paragraph wrap around it into the corner.
+ */
+function MessageStamp({ message, mine, receipt, audience, pending, className }: {
+  message: MessageWithAuthor
+  mine: boolean
+  receipt: { id: string; name: string }[] | null
+  audience: number
+  pending: boolean
+  className?: string
+}) {
+  return (
+    <span className={cn('flex items-center justify-end gap-1', className)}>
+      {message.edited_at && <span className="font-mono text-[9.5px] italic text-text-4">edited</span>}
+      <span
+        title={timeOf(message.created_at)}
+        className="whitespace-nowrap font-mono text-[10px] text-text-4"
+      >
+        {clockOf(message.created_at)}
+      </span>
+      {mine && (
+        <ReadTicks
+          state={receiptState(receipt?.length ?? 0, audience, pending)}
+          audience={audience}
+          readerNames={receipt?.map((r) => r.name)}
+        />
+      )}
+    </span>
+  )
+}
+
 export function MessageBubble({
   message, startsGroup, canModerate, myProfileId, attachments, reactions, onDelete, onEdit, onToggleReaction,
-  onReply, onJumpTo, tagsMe, receipt, audience, replyAttachment,
+  onReply, onJumpTo, tagsMe, receipt, audience, replyAttachment, showAuthor,
 }: MessageBubbleProps) {
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [reactOpen, setReactOpen] = useState(false)
@@ -93,11 +134,17 @@ export function MessageBubble({
   // against it.
   const swipe = useSwipeToReply(() => onReply(message), !pending)
 
+  const hasBody = !!(message.body_text || message.body_doc)
+  const stamp = { message, mine, receipt, audience, pending }
+
   if (message.deleted_at) {
     return (
-      <div className={cn('flex gap-3 px-4 py-1', startsGroup && 'mt-4')}>
-        <span className="w-10 shrink-0" />
-        <p className="flex items-baseline gap-1.5 font-ui text-[13.5px] italic text-text-4">
+      <div className={cn('flex px-3 py-0.5', mine && 'justify-end', startsGroup && 'mt-3')}>
+        <p className={cn(
+          'flex max-w-[78%] items-baseline gap-1.5 rounded-lg border border-border-subtle',
+          'bg-surface-1/60 px-3 py-1.5 font-ui text-[13px] italic text-text-4',
+          !mine && 'ml-10',
+        )}>
           This message was deleted
           {/* The deletion time, not created_at — that's the moment that matters here. */}
           <span className="font-mono text-[10px] not-italic">{timeOf(message.deleted_at)}</span>
@@ -123,178 +170,176 @@ export function MessageBubble({
         <Reply size={16} />
       </span>
 
-    <div
-      id={`msg-${message.id}`}
-      style={swipe.offset ? { transform: `translateX(${swipe.offset}px)` } : undefined}
-      className={cn(
-        // touch-pan-y: the browser keeps vertical scrolling, we take the
-        // horizontal gesture. Without it the swipe never reaches our handlers.
-        'group relative flex touch-pan-y gap-3 px-4 py-0.5 target:bg-brand-red/10',
-        // Only while the drag is live, so text stays selectable the rest of the
-        // time — a mouse drag cannot be a selection and a swipe at once.
-        swipe.dragging ? 'select-none' : 'transition-transform duration-200',
-        // A message aimed at you keeps a warning-tinted band and a left edge, so
-        // it is findable when scrolling back through a busy channel rather than
-        // only at the moment the notification arrives.
-        tagsMe
-          ? 'border-l-2 border-warning bg-warning/8 hover:bg-warning/12'
-          : 'hover:bg-surface-1/40',
-        startsGroup && 'mt-4',
-      )}
-    >
-      {startsGroup ? (
-        // PersonLink opens the shared profile card, so chat behaves like every
-        // other place a person is shown.
-        <Avatar
-          name={message.author?.name ?? '?'}
-          src={message.author?.avatar_url ?? undefined}
-          size="lg"
-          personId={message.author?.id}
-        />
-      ) : (
-        <span className="flex w-10 shrink-0 items-start justify-end pt-1">
-          {/* nowrap: the gutter is the avatar's width, and "11:56 AM" is a shade
-              wider than that — it used to break onto a second line rather than
-              overhang into the row's own padding, which is empty anyway. */}
-          <span
-            title={timeOf(message.created_at)}
-            className="whitespace-nowrap font-mono text-[10px] text-text-4 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100"
-          >
-            {clockOf(message.created_at)}
-          </span>
-        </span>
-      )}
-
-      <div className="min-w-0 flex-1">
-        {startsGroup && (
-          <div className="flex flex-wrap items-baseline gap-2">
-            <PersonLink personId={message.author?.id} className="font-ui text-[14.5px] font-semibold text-text-1">
-              {message.author?.name ?? 'Unknown'}
-            </PersonLink>
-            <span title={timeOf(message.created_at)} className="whitespace-nowrap font-mono text-[11px] text-text-4">
-              {clockOf(message.created_at)}
-            </span>
-            {message.edited_at && <span className="font-mono text-[11px] text-text-4">(edited)</span>}
-          </div>
+      <div
+        id={`msg-${message.id}`}
+        style={swipe.offset ? { transform: `translateX(${swipe.offset}px)` } : undefined}
+        className={cn(
+          // touch-pan-y: the browser keeps vertical scrolling, we take the
+          // horizontal gesture. Without it the swipe never reaches our handlers.
+          'group relative flex touch-pan-y items-end gap-2 px-3 py-0.5',
+          // Your own messages run down the right, everyone else's down the left —
+          // which side a message sits on is the fastest "who said this" there is,
+          // faster than reading a name.
+          mine && 'flex-row-reverse',
+          swipe.dragging ? 'select-none' : 'transition-transform duration-200',
+          startsGroup && 'mt-3',
         )}
-        {/* What this message answers. A reply whose original was deleted keeps
-            the quote as a tombstone rather than silently losing the thread. */}
-        {message.reply_to_id && (
-          <button
-            type="button"
-            onClick={() => message.reply_to && onJumpTo(message.reply_to.id)}
-            disabled={!message.reply_to || !!message.reply_to.deleted_at}
+      >
+        {/* Only for other people, and only once per run: your own avatar tells
+            you nothing, and repeating theirs on every line is noise. The spacer
+            keeps a run's bubbles on one edge. */}
+        {mine ? null : startsGroup ? (
+          // PersonLink opens the shared profile card, so chat behaves like every
+          // other place a person is shown.
+          <Avatar
+            name={message.author?.name ?? '?'}
+            src={message.author?.avatar_url ?? undefined}
+            size="md"
+            personId={message.author?.id}
+          />
+        ) : (
+          <span className="w-8 shrink-0" />
+        )}
+
+        <div className={cn('flex min-w-0 max-w-[80%] flex-col sm:max-w-[70%] lg:max-w-[62%]', mine && 'items-end')}>
+          <div
             className={cn(
-              'mb-1 flex w-full max-w-lg items-center gap-1.5 rounded-sm border-l-2 border-border-strong',
-              'bg-surface-2/60 px-2 py-1 text-left transition-colors',
-              message.reply_to && !message.reply_to.deleted_at && 'hover:border-brand-red hover:bg-surface-2',
+              'min-w-0 rounded-lg border transition-colors',
+              // Tighter around a picture: padding around an image is a frame
+              // nobody asked for.
+              hasBody ? 'px-3 py-2' : 'p-1.5',
+              mine
+                ? 'border-brand-red/25 bg-brand-red/13'
+                : 'border-border-default bg-surface-2',
+              // A message aimed at you is ringed rather than tinted, so it stays
+              // findable when scrolling back without losing which side it is on.
+              tagsMe && 'border-warning/60 ring-1 ring-warning/35',
+              pending && 'opacity-70',
             )}
           >
-            <CornerUpLeft size={11} className="shrink-0 text-text-4" />
-            {message.reply_to && !message.reply_to.deleted_at ? (
-              <>
-                <ReplyThumbnail attachment={replyAttachment} />
-                <span className="shrink-0 font-ui text-[11.5px] font-semibold text-text-3">
-                  {message.reply_to.author?.name ?? 'Unknown'}
-                </span>
-                <span className="truncate font-ui text-[11.5px] text-text-4">
-                  {replyPreviewText(message.reply_to.body_text, replyAttachment)}
-                </span>
-              </>
-            ) : (
-              <span className="font-ui text-[11.5px] italic text-text-4">
-                The message this replies to was deleted
-              </span>
+            {/* Their name, once per run, and only where there is more than one
+                person it could be. */}
+            {showAuthor && startsGroup && !mine && (
+              <PersonLink
+                personId={message.author?.id}
+                className="mb-0.5 block font-ui text-[12.5px] font-semibold text-brand-red"
+              >
+                {message.author?.name ?? 'Unknown'}
+              </PersonLink>
             )}
-          </button>
-        )}
 
-        {/* The ticks ride the bottom-right corner of the message, level with its
-            last line, the way every messaging app places them — they used to sit
-            on a line of their own underneath, left-aligned, which read as a
-            stray icon rather than as part of the message. */}
-        <div className="flex items-end gap-2">
-          <div className="min-w-0 flex-1">
+            {/* What this message answers. A reply whose original was deleted keeps
+                the quote as a tombstone rather than silently losing the thread. */}
+            {message.reply_to_id && (
+              <button
+                type="button"
+                onClick={() => message.reply_to && onJumpTo(message.reply_to.id)}
+                disabled={!message.reply_to || !!message.reply_to.deleted_at}
+                className={cn(
+                  'mb-1.5 flex w-full items-center gap-1.5 rounded-sm border-l-2 border-brand-red/60',
+                  'bg-surface-inset/70 px-2 py-1 text-left transition-colors',
+                  message.reply_to && !message.reply_to.deleted_at && 'hover:bg-surface-inset',
+                )}
+              >
+                <CornerUpLeft size={11} className="shrink-0 text-text-4" />
+                {message.reply_to && !message.reply_to.deleted_at ? (
+                  <>
+                    <ReplyThumbnail attachment={replyAttachment} />
+                    <span className="shrink-0 font-ui text-[11.5px] font-semibold text-text-3">
+                      {message.reply_to.author?.name ?? 'Unknown'}
+                    </span>
+                    <span className="truncate font-ui text-[11.5px] text-text-4">
+                      {replyPreviewText(message.reply_to.body_text, replyAttachment)}
+                    </span>
+                  </>
+                ) : (
+                  <span className="font-ui text-[11.5px] italic text-text-4">
+                    The message this replies to was deleted
+                  </span>
+                )}
+              </button>
+            )}
+
+            {/* Floated, and emitted BEFORE the text: that is what lets a short
+                message keep its time on the same line ("perfect  3:13 PM")
+                while a paragraph wraps around it and leaves it in the corner. */}
+            {hasBody && <MessageStamp {...stamp} className="float-right ml-2 mt-1" />}
+
             {/* break-words stops an unbroken URL or long token from forcing the
                 whole thread to scroll sideways on a narrow screen. */}
-            <div className={cn('font-ui text-[15px] leading-relaxed wrap-break-word text-text-2', pending && 'opacity-60')}>
-              {message.body_text || message.body_doc ? (
-                message.body_doc
+            {hasBody && (
+              <div className="font-ui text-[14.5px] leading-relaxed wrap-break-word text-text-1">
+                {message.body_doc
                   ? <RichRenderer doc={fromDbDoc(message.body_doc)} />
-                  : <p className="whitespace-pre-wrap">{message.body_text}</p>
-              ) : null}
-            </div>
+                  : <p className="whitespace-pre-wrap">{message.body_text}</p>}
+              </div>
+            )}
 
             {attachments.map((a) => <MessageAttachment key={a.id} attachment={a} />)}
+
+            {/* A picture has no text to flow around, so its stamp is a plain
+                row beneath it instead. */}
+            {!hasBody && <MessageStamp {...stamp} className="px-1 pb-0.5 pt-1" />}
           </div>
 
-          {mine && (
-            <ReadTicks
-              state={receiptState(receipt?.length ?? 0, audience, pending)}
-              audience={audience}
-              readerNames={receipt?.map((r) => r.name)}
-            />
-          )}
+          <ReactionBar groups={reactions} onToggle={(emoji) => onToggleReaction(message.id, emoji)} />
         </div>
 
-        <ReactionBar groups={reactions} onToggle={(emoji) => onToggleReaction(message.id, emoji)} />
+        {!pending && (
+          <div className="flex shrink-0 items-center gap-0.5 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:focus-within:opacity-100">
+            <button
+              onClick={() => onReply(message)}
+              aria-label="Reply to message"
+              className="flex size-7 items-center justify-center rounded-sm text-text-3 hover:bg-surface-3 hover:text-text-1"
+            >
+              <Reply size={13} />
+            </button>
+            <button
+              ref={reactBtnRef}
+              onClick={() => setReactOpen((v) => !v)}
+              aria-label="Add reaction"
+              className="flex size-7 items-center justify-center rounded-sm text-text-3 hover:bg-surface-3 hover:text-text-1"
+            >
+              <SmilePlus size={13} />
+            </button>
+            {mine && (
+              <button
+                onClick={() => onEdit(message)}
+                aria-label="Edit message"
+                className="flex size-7 items-center justify-center rounded-sm text-text-3 hover:bg-surface-3 hover:text-text-1"
+              >
+                <Pencil size={13} />
+              </button>
+            )}
+            {(mine || canModerate) && (
+              <button
+                onClick={() => setConfirmOpen(true)}
+                aria-label="Delete message"
+                className="flex size-7 items-center justify-center rounded-sm text-text-3 hover:bg-surface-3 hover:text-error"
+              >
+                <Trash2 size={13} />
+              </button>
+            )}
+          </div>
+        )}
+
+        <EmojiPicker
+          open={reactOpen}
+          onClose={() => setReactOpen(false)}
+          anchorRef={reactBtnRef}
+          onPick={(emoji) => onToggleReaction(message.id, emoji)}
+        />
+
+        <ConfirmDialog
+          open={confirmOpen}
+          onClose={() => setConfirmOpen(false)}
+          onConfirm={() => { onDelete(message.id); setConfirmOpen(false) }}
+          title="Delete message"
+          message="This removes the message for everyone in the conversation."
+          confirmLabel="Delete"
+          danger
+        />
       </div>
-
-      {!pending && (
-        <div className="flex shrink-0 items-start gap-1 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:focus-within:opacity-100">
-          <button
-            onClick={() => onReply(message)}
-            aria-label="Reply to message"
-            className="size-7 rounded-sm flex items-center justify-center text-text-3 hover:text-text-1 hover:bg-surface-3"
-          >
-            <Reply size={13} />
-          </button>
-          <button
-            ref={reactBtnRef}
-            onClick={() => setReactOpen((v) => !v)}
-            aria-label="Add reaction"
-            className="size-7 rounded-sm flex items-center justify-center text-text-3 hover:text-text-1 hover:bg-surface-3"
-          >
-            <SmilePlus size={13} />
-          </button>
-          {mine && (
-            <button
-              onClick={() => onEdit(message)}
-              aria-label="Edit message"
-              className="size-7 rounded-sm flex items-center justify-center text-text-3 hover:text-text-1 hover:bg-surface-3"
-            >
-              <Pencil size={13} />
-            </button>
-          )}
-          {(mine || canModerate) && (
-            <button
-              onClick={() => setConfirmOpen(true)}
-              aria-label="Delete message"
-              className="size-7 rounded-sm flex items-center justify-center text-text-3 hover:text-error hover:bg-surface-3"
-            >
-              <Trash2 size={13} />
-            </button>
-          )}
-        </div>
-      )}
-
-      <EmojiPicker
-        open={reactOpen}
-        onClose={() => setReactOpen(false)}
-        anchorRef={reactBtnRef}
-        onPick={(emoji) => onToggleReaction(message.id, emoji)}
-      />
-
-      <ConfirmDialog
-        open={confirmOpen}
-        onClose={() => setConfirmOpen(false)}
-        onConfirm={() => { onDelete(message.id); setConfirmOpen(false) }}
-        title="Delete message"
-        message="This removes the message for everyone in the conversation."
-        confirmLabel="Delete"
-        danger
-      />
-    </div>
     </div>
   )
 }
