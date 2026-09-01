@@ -198,6 +198,7 @@ export function MessageComposer({
         <div className="min-w-0 flex-1 rounded-md border border-border-default bg-surface-inset py-2.5 pl-3.5 pr-2 text-[15px] transition-colors focus-within:border-border-focus">
           <RichEditor
             key={editorKey}
+            className="composer-editor"
             value={doc}
             onChange={setDoc}
             onEditorReady={(editor) => { editorRef.current = editor }}

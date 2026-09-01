@@ -9,6 +9,13 @@ export interface ChannelListItem extends ChannelRow {
   members: PersonMini[]
   last_message_at: string | null
   last_message_preview: string | null
+  /**
+   * Who sent the newest message. The list draws read ticks on a row only when
+   * the last word in it was yours, the same rule the thread uses per message.
+   */
+  last_message_author_id: string | null
+  /** How many members other than you have read as far as that newest message. */
+  last_message_seen_by: number
   /** When the viewer removed this from their own list, if they did. */
   hidden_at?: string | null
   /** Whether the viewer silenced notifications for this conversation. */
@@ -38,7 +45,7 @@ export async function fetchChannels(): Promise<ChannelListItem[]> {
 
   const { data, error } = await supabase
     .from('channels')
-    .select('*, channel_members(profile_id,hidden_at,notifications_muted,can_manage,profile:profiles(id,name,avatar_url)), messages(body_text,created_at)')
+    .select('*, channel_members(profile_id,hidden_at,notifications_muted,can_manage,last_read_at,profile:profiles(id,name,avatar_url)), messages(author_id,body_text,created_at)')
     .order('updated_at', { ascending: false })
     // A deleted message leaves a tombstone in the thread, but it must not be the
     // line that represents the conversation in the list -- the preview would go
@@ -56,11 +63,23 @@ export async function fetchChannels(): Promise<ChannelListItem[]> {
     .map((c) => {
       const latest = c.messages?.[0] ?? null
       const membership = (c.channel_members ?? []).find((m) => m.profile_id === me)
+      // Read as far as the newest message, which is all a row-level tick needs.
+      // Parsed rather than compared as strings: both are ISO timestamps today,
+      // but a tick silently stuck on "sent" is a poor way to find out that
+      // stopped being true.
+      const latestMs = latest ? new Date(latest.created_at).getTime() : null
+      const seenBy = latestMs === null
+        ? 0
+        : (c.channel_members ?? []).filter(
+            (m) => m.profile_id !== me && m.last_read_at && new Date(m.last_read_at).getTime() >= latestMs,
+          ).length
       return {
         ...c,
         members: (c.channel_members ?? []).flatMap((m) => (m.profile ? [m.profile] : [])),
         last_message_at: latest?.created_at ?? null,
         last_message_preview: latest?.body_text ?? null,
+        last_message_author_id: latest?.author_id ?? null,
+        last_message_seen_by: seenBy,
         hidden_at: membership?.hidden_at ?? null,
         muted: membership?.notifications_muted ?? false,
         can_manage: membership?.can_manage ?? false,
@@ -91,8 +110,12 @@ export async function fetchChannel(id: string): Promise<ChannelListItem | null> 
     ...data,
     members: (data.channel_members ?? []).flatMap((m) => (m.profile ? [m.profile] : [])),
     can_manage: mine?.can_manage ?? false,
+    // The list row is what shows a preview and its ticks; the open thread draws
+    // its own per-message ones, so this shape carries none.
     last_message_at: null,
     last_message_preview: null,
+    last_message_author_id: null,
+    last_message_seen_by: 0,
   }
 }
 

@@ -59,10 +59,13 @@ export function ConversationInfoPanel({ channel, counterpart, title, memberCount
     <div className="flex h-full min-h-0 flex-col">
       {isDM && counterpart ? (
         <div className="shrink-0 border-b border-border-default p-4">
+          {/* No "Message <name>" here — this panel only opens from inside their
+              DM, so the button would reopen the conversation you are reading. */}
           <UserProfileBody
             profileId={counterpart.id}
             fallbackName={counterpart.name}
             fallbackAvatar={counterpart.avatar_url}
+            showMessageAction={false}
           />
         </div>
       ) : (

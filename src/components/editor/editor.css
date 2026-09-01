@@ -3,6 +3,17 @@
 
 .prose-editor { min-height: 2.25rem; }
 
+/* The chat composer grows with what you type and then scrolls, the way a
+   message box should: a long message must not push the conversation off the
+   screen. Scoped to the ProseMirror element rather than the wrapper so the
+   selection toolbar, which is its sibling, is not trapped inside the scroller.
+   Document editors are deliberately left uncapped — they are the page. */
+.rich-editor.composer-editor .ProseMirror {
+  max-height: 40vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
 .rich-editor .ProseMirror,
 .rich-content .ProseMirror {
   outline: none;
@@ -10,6 +21,12 @@
   font-family: var(--font-ui, inherit);
   font-size: 13.5px;
   line-height: 1.6;
+  /* Wrap onto the next line instead of growing the box. Without this, a long
+     unbroken run — a URL, a path, a token — has no break point, so the editor's
+     min-content width grows with it and drags the whole column wider. `anywhere`
+     rather than `break-word` so the run also stops counting toward that
+     min-content width, which is what actually stops the growth. */
+  overflow-wrap: anywhere;
 }
 
 .rich-editor .ProseMirror p.is-editor-empty:first-child::before {

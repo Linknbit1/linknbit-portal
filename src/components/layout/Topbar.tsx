@@ -5,10 +5,10 @@ import { cn } from '../../lib/cn'
 import { useCommandPalette } from '../../context/CommandPaletteContext'
 import { PinPageButton } from './PinPageButton'
 import { Avatar } from '../ui/Avatar'
-import { ProfileRoles } from '../shared/ProfileRoles'
 import { useAuthContext } from '../../context/AuthContext'
 import { useNavChrome } from './MobileNavContext'
 import { useNotifications, useMarkGroupRead, useMarkAllRead } from '../../hooks/useNotifications'
+import { useDesignationName } from '../../hooks/useDesignations'
 import { notificationHref } from '../../constants/notifications'
 import { groupNotifications, groupTitle } from '../../lib/notificationGroups'
 import { formatRelativeTime } from '../../lib/utils'
@@ -31,6 +31,10 @@ export function Topbar({ title, breadcrumb, className, back, actions }: TopbarPr
   const { profile, signOut } = useAuthContext()
   const { setOpen: setPaletteOpen } = useCommandPalette()
   const profileId = profile?.id ?? ''
+  // What you do, not what you are allowed to do. Roles are the permissions
+  // mechanism; the line under your own name should read as a job title, and
+  // "Admin · Developer" reads as neither.
+  const designation = useDesignationName(profile?.designation_id)
 
   // Report this screen's back affordance to the shell so the mobile bottom tab
   // bar can hide itself on pushed/drill-in screens. useLayoutEffect (pre-paint)
@@ -276,7 +280,11 @@ export function Topbar({ title, breadcrumb, className, back, actions }: TopbarPr
                 <div className="px-4 py-2.5 border-b border-border-subtle">
                   <p className="font-ui font-semibold text-[12.5px] text-text-1 truncate">{profile.name}</p>
                   <p className="font-mono text-[10.5px] text-text-4 truncate">{profile.email}</p>
-                  <ProfileRoles profileId={profile.id} fallbackRole={profile.role} className="mt-1.5" />
+                  {/* Nothing at all when no designation is set: falling back to
+                      the role would put back exactly what this replaced. */}
+                  {designation && (
+                    <p className="mt-1.5 truncate font-ui text-[11.5px] text-text-3">{designation}</p>
+                  )}
                 </div>
                 {/* Gated on the same key as the /members/:id route guard, so the
                     entry never appears to someone the guard would turn away. */}

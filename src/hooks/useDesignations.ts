@@ -12,6 +12,19 @@ export function useDesignations() {
   return useQuery({ queryKey: DESIGNATION_KEYS.all, queryFn: fetchDesignations, staleTime: 5 * 60_000 })
 }
 
+/**
+ * A person's designation by name, or null when they have none set.
+ *
+ * Reads the shared catalogue, which is cached for five minutes and deduped by
+ * TanStack Query — so a job title shown beside a name costs nothing extra
+ * wherever it appears.
+ */
+export function useDesignationName(designationId: string | null | undefined): string | null {
+  const { data: designations = [] } = useDesignations()
+  if (!designationId) return null
+  return designations.find((d) => d.id === designationId)?.name ?? null
+}
+
 export function useDesignationUsage(id: string, enabled: boolean) {
   return useQuery({
     queryKey: DESIGNATION_KEYS.usage(id),

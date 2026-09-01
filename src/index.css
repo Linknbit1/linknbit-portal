@@ -510,6 +510,17 @@
   }
   .animate-hover-card { animation: hover-card-in 120ms ease-out; }
 
+  /* A read receipt changing state is a status change, not an entrance: the tick
+     settles into place instead of sliding in, so a thread full of your own
+     messages never reads as movement. 180ms is long enough to notice that
+     something resolved and short enough that a fast run of replies does not
+     turn the right-hand edge into a flicker. */
+  @keyframes tick-settle {
+    from { opacity: 0.3; transform: scale(0.75); }
+    to   { opacity: 1;   transform: scale(1); }
+  }
+  .animate-tick { animation: tick-settle 180ms ease-out; }
+
   /* Number inputs without the stepper arrows.
      The tiny up/down chevrons are a hazard on a duration field: they are easy to
      hit by accident, they nudge by one when nobody wants a one-minute change,

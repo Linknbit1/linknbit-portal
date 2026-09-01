@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
-import { Trash2, Pencil, SmilePlus, Reply, CornerUpLeft, Check, CheckCheck } from 'lucide-react'
+import { Trash2, Pencil, SmilePlus, Reply, CornerUpLeft } from 'lucide-react'
+import { useSwipeToReply } from '../../hooks/useSwipeToReply'
 import { Avatar } from '../ui/Avatar'
 import { PersonLink } from '../shared/PersonLink'
 import { RichRenderer } from '../editor/RichRenderer'
@@ -9,7 +10,8 @@ import { ReactionBar } from './ReactionBar'
 import { EmojiPicker } from './EmojiPicker'
 import { cn } from '../../lib/cn'
 import { fromDbDoc } from '../../lib/richText'
-import { isOptimistic } from './chatUtils'
+import { ReadTicks } from './ReadTicks'
+import { isOptimistic, receiptState } from './chatUtils'
 import type { MessageWithAuthor } from '../../api/messages'
 import type { MessageAttachmentRow } from '../../api/messageAttachments'
 import type { ReactionGroup } from '../../hooks/useMessageReactions'
@@ -31,7 +33,8 @@ interface MessageBubbleProps {
   tagsMe: boolean
   /**
    * Who else has read this. Null on other people's messages and on one still
-   * sending, which is what decides whether ticks are drawn at all.
+   * sending — a message in flight has no receipts yet, and shows a clock.
+   * Whether ticks are drawn at all is decided by whose message it is.
    */
   receipt: { id: string; name: string }[] | null
   /** People in the conversation other than you, so "everyone" can be tested. */
@@ -39,9 +42,19 @@ interface MessageBubbleProps {
 }
 
 /**
+ * Just the clock. The day is said once, on the divider above the run, so a
+ * message repeating it would be noise — and "Yesterday 2:45 PM" does not fit
+ * the 40px gutter, which is what made it wrap onto two lines.
+ */
+function clockOf(iso: string): string {
+  return new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })
+}
+
+/**
  * Time with am/pm, plus a date once the message isn't from today — "2:45 PM"
  * for today, "Yesterday 2:45 PM", then "12 Jul, 2:45 PM" (with the year when
- * it isn't the current one).
+ * it isn't the current one). Kept for the places that stand apart from the
+ * day dividers: the deletion note, and the tooltip on a message's own time.
  */
 function timeOf(iso: string): string {
   const date = new Date(iso)
@@ -72,6 +85,9 @@ export function MessageBubble({
   const reactBtnRef = useRef<HTMLButtonElement>(null)
   const mine = message.author_id === myProfileId
   const pending = isOptimistic(message.id)
+  // Swipe right to reply, as in WhatsApp. Off while a message is still sending:
+  // it has no server id yet, so nothing could be quoted against it.
+  const swipe = useSwipeToReply(() => onReply(message), !pending)
 
   if (message.deleted_at) {
     return (
@@ -87,10 +103,30 @@ export function MessageBubble({
   }
 
   return (
+    // The outer element stays put and holds the gesture; only the inner row
+    // slides, so the reply arrow is revealed from underneath rather than being
+    // dragged along with it.
+    <div className="relative overflow-hidden" {...swipe.handlers}>
+      <span
+        aria-hidden
+        className={cn(
+          'pointer-events-none absolute inset-y-0 left-2 flex items-center transition-colors',
+          swipe.armed ? 'text-brand-red' : 'text-text-4',
+        )}
+        // Fades in with the drag, so a gesture abandoned early leaves no trace.
+        style={{ opacity: Math.min(1, swipe.offset / 40) }}
+      >
+        <Reply size={16} />
+      </span>
+
     <div
       id={`msg-${message.id}`}
+      style={swipe.offset ? { transform: `translateX(${swipe.offset}px)` } : undefined}
       className={cn(
-        'group flex gap-3 px-4 py-0.5 target:bg-brand-red/10',
+        // touch-pan-y: the browser keeps vertical scrolling, we take the
+        // horizontal gesture. Without it the swipe never reaches our handlers.
+        'group relative flex touch-pan-y gap-3 px-4 py-0.5 target:bg-brand-red/10',
+        !swipe.dragging && 'transition-transform duration-200',
         // A message aimed at you keeps a warning-tinted band and a left edge, so
         // it is findable when scrolling back through a busy channel rather than
         // only at the moment the notification arrives.
@@ -111,8 +147,14 @@ export function MessageBubble({
         />
       ) : (
         <span className="flex w-10 shrink-0 items-start justify-end pt-1">
-          <span className="font-mono text-[10px] text-text-4 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100">
-            {timeOf(message.created_at)}
+          {/* nowrap: the gutter is the avatar's width, and "11:56 AM" is a shade
+              wider than that — it used to break onto a second line rather than
+              overhang into the row's own padding, which is empty anyway. */}
+          <span
+            title={timeOf(message.created_at)}
+            className="whitespace-nowrap font-mono text-[10px] text-text-4 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100"
+          >
+            {clockOf(message.created_at)}
           </span>
         </span>
       )}
@@ -123,7 +165,9 @@ export function MessageBubble({
             <PersonLink personId={message.author?.id} className="font-ui text-[14.5px] font-semibold text-text-1">
               {message.author?.name ?? 'Unknown'}
             </PersonLink>
-            <span className="font-mono text-[11px] text-text-4">{timeOf(message.created_at)}</span>
+            <span title={timeOf(message.created_at)} className="whitespace-nowrap font-mono text-[11px] text-text-4">
+              {clockOf(message.created_at)}
+            </span>
             {message.edited_at && <span className="font-mono text-[11px] text-text-4">(edited)</span>}
           </div>
         )}
@@ -158,19 +202,33 @@ export function MessageBubble({
           </button>
         )}
 
-        {/* break-words stops an unbroken URL or long token from forcing the
-            whole thread to scroll sideways on a narrow screen. */}
-        <div className={cn('font-ui text-[15px] leading-relaxed wrap-break-word text-text-2', pending && 'opacity-60')}>
-          {message.body_text || message.body_doc ? (
-            message.body_doc
-              ? <RichRenderer doc={fromDbDoc(message.body_doc)} />
-              : <p className="whitespace-pre-wrap">{message.body_text}</p>
-          ) : null}
+        {/* The ticks ride the bottom-right corner of the message, level with its
+            last line, the way every messaging app places them — they used to sit
+            on a line of their own underneath, left-aligned, which read as a
+            stray icon rather than as part of the message. */}
+        <div className="flex items-end gap-2">
+          <div className="min-w-0 flex-1">
+            {/* break-words stops an unbroken URL or long token from forcing the
+                whole thread to scroll sideways on a narrow screen. */}
+            <div className={cn('font-ui text-[15px] leading-relaxed wrap-break-word text-text-2', pending && 'opacity-60')}>
+              {message.body_text || message.body_doc ? (
+                message.body_doc
+                  ? <RichRenderer doc={fromDbDoc(message.body_doc)} />
+                  : <p className="whitespace-pre-wrap">{message.body_text}</p>
+              ) : null}
+            </div>
+
+            {attachments.map((a) => <MessageAttachment key={a.id} attachment={a} />)}
+          </div>
+
+          {mine && (
+            <ReadTicks
+              state={receiptState(receipt?.length ?? 0, audience, pending)}
+              audience={audience}
+              readerNames={receipt?.map((r) => r.name)}
+            />
+          )}
         </div>
-
-        {attachments.map((a) => <MessageAttachment key={a.id} attachment={a} />)}
-
-        {receipt && <ReadTicks readers={receipt} audience={audience} />}
 
         <ReactionBar groups={reactions} onToggle={(emoji) => onToggleReaction(message.id, emoji)} />
       </div>
@@ -230,46 +288,6 @@ export function MessageBubble({
         danger
       />
     </div>
-  )
-}
-
-/**
- * Read ticks, the way a messaging app does them.
- *
- * One grey tick means sent and nobody has caught up. Two grey means some of the
- * room has, two coloured means all of it has. In a direct message there is only
- * one other person, so it goes straight from one tick to two coloured, which is
- * the behaviour people already expect.
- *
- * Drawn only on your own messages: ticks on somebody else's message would be
- * telling them something they cannot act on, and would double the noise in a
- * busy channel.
- *
- * The names sit in the title rather than on screen. "Seen by" spelled out under
- * every message is a wall of text in a channel, and in a DM it says what one
- * blue tick already said.
- */
-function ReadTicks({ readers, audience }: { readers: { id: string; name: string }[]; audience: number }) {
-  const seen = readers.length
-  const all = audience > 0 && seen >= audience
-  const label = seen === 0
-    ? 'Sent'
-    : all
-      ? (audience === 1 ? `Read by ${readers[0].name}` : 'Read by everyone')
-      : `Read by ${readers.map((r) => r.name).join(', ')}`
-
-  return (
-    <span
-      title={label}
-      aria-label={label}
-      className={cn(
-        'mt-0.5 inline-flex items-center leading-none',
-        all ? 'text-info' : 'text-text-4',
-      )}
-    >
-      {seen === 0
-        ? <Check size={13} />
-        : <CheckCheck size={13} />}
-    </span>
+    </div>
   )
 }

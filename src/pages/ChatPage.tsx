@@ -61,7 +61,10 @@ export default function ChatPage() {
   return (
     <div className="flex flex-col flex-1 min-h-0">
       <Topbar title="Chat" />
-      <div className="flex-1 min-h-0 grid grid-cols-[300px_1fr]">
+      {/* minmax(0,1fr), not 1fr: a grid track defaults to a min of auto, so a long
+          unbroken message or a full composer could push the thread column wider
+          than the screen and take the layout with it. */}
+      <div className="flex-1 min-h-0 grid grid-cols-[300px_minmax(0,1fr)]">
         <ConversationListPane
           activeChannelId={channelId}
           onSelect={openChannel}

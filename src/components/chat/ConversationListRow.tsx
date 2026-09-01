@@ -3,7 +3,8 @@ import { Avatar } from '../ui/Avatar'
 import { ConversationMenu } from './ConversationMenu'
 import { cn } from '../../lib/cn'
 import { formatRelativeTime } from '../../lib/utils'
-import { channelTitle, dmCounterpart } from './chatUtils'
+import { ReadTicks } from './ReadTicks'
+import { channelTitle, dmCounterpart, receiptState } from './chatUtils'
 import type { ChannelListItem } from '../../api/channels'
 
 interface ConversationListRowProps {
@@ -18,6 +19,12 @@ interface ConversationListRowProps {
 export function ConversationListRow({ channel, myProfileId, unread, active, onClick, onRemoved }: ConversationListRowProps) {
   const title = channelTitle(channel, myProfileId)
   const counterpart = dmCounterpart(channel, myProfileId)
+
+  // Ticks on the row only when the last word in the conversation was yours —
+  // the same rule the thread uses per message. On somebody else's message the
+  // row already says everything you can act on.
+  const lastIsMine = !!myProfileId && channel.last_message_author_id === myProfileId
+  const audience = Math.max(0, channel.members.length - 1)
 
   return (
     // A container rather than one big button, so the actions menu isn't a
@@ -55,8 +62,18 @@ export function ConversationListRow({ channel, myProfileId, unread, active, onCl
               </span>
             )}
           </span>
-          <span className="mt-0.5 flex items-center gap-2">
-            <span className="flex-1 truncate font-ui text-[13px] text-text-3">
+          <span className="mt-0.5 flex items-center gap-1.5">
+            {/* Ahead of the preview, where a messaging app puts it: the tick
+                belongs to the line it describes, and leading it keeps every row
+                in the list aligned however long the preview runs. */}
+            {lastIsMine && (
+              <ReadTicks
+                state={receiptState(channel.last_message_seen_by, audience)}
+                audience={audience}
+                size="list"
+              />
+            )}
+            <span className="min-w-0 flex-1 truncate font-ui text-[13px] text-text-3">
               {channel.last_message_preview || 'No messages yet'}
             </span>
             {unread > 0 && (

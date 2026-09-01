@@ -35,7 +35,8 @@ export function ChatThread({ channelId, hideHeader }: ChatThreadProps) {
   // Read out once: several memos below depend on the id, not the whole profile.
   const myId = profile?.id
   const { data: channel } = useChannel(channelId)
-  const { data: members = [] } = useChannelMembers(channelId)
+  // live: these rows carry every member's last_read_at, which is what draws the ticks.
+  const { data: members = [] } = useChannelMembers(channelId, { live: true })
   const canModerate = useCanAccess('can_administer_channels')
 
   const { messages, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } = useFlatMessages(channelId)
@@ -148,7 +149,7 @@ export function ChatThread({ channelId, hideHeader }: ChatThreadProps) {
   }
 
   return (
-    <div className="flex flex-col flex-1 min-h-0">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       {!hideHeader && (
         <header className="h-14 shrink-0 border-b border-border-default bg-surface-1 px-4 flex items-center gap-3">
           {channel?.kind === 'channel' ? (

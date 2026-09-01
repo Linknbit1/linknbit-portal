@@ -31,11 +31,62 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: '1.26.0',
+    date: '2026-09-01',
+    title: 'Ticks that keep up',
+    highlight:
+      'Read ticks in Chat now turn the moment somebody opens the conversation, carry a state while a message is still sending, sit in the corner of the message rather than on a line of their own — and appear in the conversation list too.',
+    entries: [
+      {
+        kind: 'added',
+        text: 'Swipe a message to the right on a phone or tablet to reply to it, the way a messaging app does. The reply arrow on hover is still there on a computer.',
+      },
+      {
+        kind: 'added',
+        text: 'Chat now puts a date divider between the days, and it stays pinned to the top as you scroll — so scrolling back through a long conversation always tells you which day you are reading.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Notifications about a leave, WFH, exception or overtime request now open the requests queue on that kind, instead of landing on Attendance and leaving you to find the row. Holidays, company WFH days and working Saturdays open the calendar.',
+      },
+      {
+        kind: 'fixed',
+        text: 'A message time no longer wraps onto two lines. It also no longer repeats the date on every message, now that the divider above the day carries it.',
+      },
+      {
+        kind: 'improved',
+        text: 'The account menu now shows your designation under your name rather than your roles. Roles decide what you can open; the line under your name should say what you do.',
+      },
+      {
+        kind: 'improved',
+        text: 'The details panel of a direct message no longer offers a "Message" button for the person whose conversation you already have open.',
+      },
+      {
+        kind: 'added',
+        text: 'The conversation list now carries the same ticks. When the last word in a conversation was yours, its row shows whether it has been read, so you can see what is still waiting on somebody without opening it.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Ticks now turn as soon as the other person opens the conversation. They used to sit on one grey tick until that person replied, which read as though nobody had seen the message.',
+      },
+      {
+        kind: 'improved',
+        text: 'A message still on its way now shows a clock, so a tick goes clock → one tick → read instead of appearing out of nothing once it lands.',
+      },
+      {
+        kind: 'improved',
+        text: 'Ticks sit in the bottom-right corner of the message, level with its last line, instead of on a line of their own underneath it.',
+      },
+      {
+        kind: 'fixed',
+        text: 'The message box now wraps onto a new line as you type. A long message, or a pasted link with no spaces in it, used to stretch the box wider and wider and drag the conversation across with it. It also stops growing once it is tall enough and scrolls instead, so a long message never pushes the conversation off the screen.',
+      },
+    ],
+  },
+  {
     version: '1.25.0',
     date: '2026-08-31',
     title: 'Boards that read like boards',
-    highlight:
-      'A task you raise stays visible even before you assign it, leads see their whole service block, board columns carry their colour and an icon, and a project’s Team tab uses the whole screen.',
     entries: [
       {
         kind: 'fixed',

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import { MessageSquare } from 'lucide-react'
 import { Skeleton } from '../ui/Skeleton'
 import { MessageBubble } from './MessageBubble'
-import { startsNewGroup, isOptimistic, mentionsMe } from './chatUtils'
+import { startsNewGroup, isOptimistic, mentionsMe, isSameDay, dayLabel } from './chatUtils'
 import { groupReactions } from '../../hooks/useMessageReactions'
 import type { MessageWithAuthor } from '../../api/messages'
 import type { MessageAttachmentRow } from '../../api/messageAttachments'
@@ -28,6 +28,23 @@ interface MessageListProps {
   audienceSize: number
   /** My id, my teams' ids and the @everyone sentinel: what makes a message mine. */
   myMentionIds: ReadonlySet<string>
+}
+
+/**
+ * The day a run of messages belongs to, said once between the days rather than
+ * stamped onto every message. Sticky, so scrolling back through a long history
+ * always answers "which day am I in?" without scrolling to find the divider.
+ */
+function DayDivider({ iso }: { iso: string }) {
+  return (
+    <div className="sticky top-0 z-10 flex items-center gap-3 px-4 py-2">
+      <span className="h-px flex-1 bg-border-subtle" />
+      <span className="shrink-0 rounded-sm border border-border-default bg-surface-2 px-2.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-text-3">
+        {dayLabel(iso)}
+      </span>
+      <span className="h-px flex-1 bg-border-subtle" />
+    </div>
+  )
 }
 
 export function MessageList({
@@ -67,6 +84,19 @@ export function MessageList({
     }
     return map
   }, [attachments])
+
+  // Messages bucketed into calendar days, in order. Built here rather than
+  // decided per message so each day's divider and its messages share a parent,
+  // which is what lets the divider stick.
+  const days = useMemo(() => {
+    const out: { key: string; iso: string; items: MessageWithAuthor[] }[] = []
+    for (const m of messages) {
+      const current = out[out.length - 1]
+      if (current && isSameDay(current.iso, m.created_at)) current.items.push(m)
+      else out.push({ key: m.id, iso: m.created_at, items: [m] })
+    }
+    return out
+  }, [messages])
 
   // Follow the conversation only when a genuinely new message lands, so
   // loading older history doesn't yank the viewport to the bottom.
@@ -111,24 +141,34 @@ export function MessageList({
         </div>
       )}
 
-      {messages.map((m, i) => (
-        <MessageBubble
-          key={m.id}
-          message={m}
-          startsGroup={startsNewGroup(m, messages[i - 1])}
-          canModerate={canModerate}
-          myProfileId={myProfileId}
-          attachments={attachmentsByMessage.get(m.id) ?? []}
-          reactions={groupReactions(reactions, m.id, myProfileId)}
-          onDelete={onDelete}
-          onEdit={onEdit}
-          onToggleReaction={onToggleReaction}
-          onReply={onReply}
-          onJumpTo={jumpTo}
-          tagsMe={mentionsMe(m, myMentionIds)}
-          receipt={m.author_id === myProfileId && !isOptimistic(m.id) ? readersOf(m) : null}
-          audience={audienceSize}
-        />
+      {days.map((day) => (
+        // One section per day, so its divider stays pinned for the whole run of
+        // that day's messages rather than for a single one.
+        <section key={day.key}>
+          <DayDivider iso={day.iso} />
+          {day.items.map((m, i) => (
+            <MessageBubble
+              key={m.id}
+              message={m}
+              // Previous within the day: the first message after a divider always
+              // carries its author and time, or the run reads as though it went
+              // straight through the night.
+              startsGroup={startsNewGroup(m, day.items[i - 1])}
+              canModerate={canModerate}
+              myProfileId={myProfileId}
+              attachments={attachmentsByMessage.get(m.id) ?? []}
+              reactions={groupReactions(reactions, m.id, myProfileId)}
+              onDelete={onDelete}
+              onEdit={onEdit}
+              onToggleReaction={onToggleReaction}
+              onReply={onReply}
+              onJumpTo={jumpTo}
+              tagsMe={mentionsMe(m, myMentionIds)}
+              receipt={m.author_id === myProfileId && !isOptimistic(m.id) ? readersOf(m) : null}
+              audience={audienceSize}
+            />
+          ))}
+        </section>
       ))}
 
       <div ref={bottomRef} />
