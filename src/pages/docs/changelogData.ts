@@ -39,6 +39,14 @@ export const RELEASES: ChangelogRelease[] = [
     entries: [
       {
         kind: 'improved',
+        text: 'Scrolling up in a conversation loads its older messages by itself — the "Load older messages" button is gone, and your place in the thread is kept as they arrive.',
+      },
+      {
+        kind: 'fixed',
+        text: 'The sender\'s picture now sits level with the top of their messages instead of drifting down beside a long one.',
+      },
+      {
+        kind: 'improved',
         text: 'A picture sent with a message now sits above its text rather than under it, and the date divider behaves like a header — the conversation blurs softly as it passes behind, and only while the divider is actually pinned to the top.',
       },
       {

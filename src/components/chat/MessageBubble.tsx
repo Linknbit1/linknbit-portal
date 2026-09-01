@@ -181,7 +181,11 @@ export function MessageBubble({
         className={cn(
           // touch-pan-y: the browser keeps vertical scrolling, we take the
           // horizontal gesture. Without it the swipe never reaches our handlers.
-          'group relative flex touch-pan-y items-end gap-2 px-3 py-0.5',
+          // items-start, not items-end: the avatar belongs level with the top of
+          // the run it labels. Aligned to the bottom it drifted down the side of
+          // a long first message and ended up beside text the person had not
+          // even started saying yet.
+          'group relative flex touch-pan-y items-start gap-2 px-3 py-0.5',
           // Your own messages run down the right, everyone else's down the left —
           // which side a message sits on is the fastest "who said this" there is,
           // faster than reading a name.

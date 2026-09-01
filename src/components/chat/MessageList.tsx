@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { MessageSquare } from 'lucide-react'
 import { Skeleton } from '../ui/Skeleton'
 import { MessageBubble } from './MessageBubble'
@@ -151,6 +151,55 @@ export function MessageList({
     }
   }, [days.length])
 
+  /**
+   * Older messages load themselves as you reach the top, rather than waiting to
+   * be asked. The sentinel sits above the first message and the root is grown
+   * 300px upward, so a page is already on its way before you actually get there.
+   *
+   * onLoadOlder is read through a ref: the caller builds it inline, so depending
+   * on it directly would tear down and rebuild the observer on every render.
+   */
+  const topSentinel = useRef<HTMLDivElement>(null)
+  const loadOlderRef = useRef(onLoadOlder)
+  useEffect(() => { loadOlderRef.current = onLoadOlder }, [onLoadOlder])
+
+  /**
+   * How far the reading position was from the BOTTOM when a page was asked for.
+   *
+   * Prepending older messages moves everything down by however tall they are,
+   * so a kept scrollTop would land somewhere else entirely. Distance from the
+   * bottom does not move when content is added above it, which is what makes it
+   * the thing to hold on to.
+   */
+  const restoreFromBottom = useRef<number | null>(null)
+
+  useEffect(() => {
+    const root = scrollRef.current
+    const sentinel = topSentinel.current
+    if (!root || !sentinel || !hasNextPage || isFetchingNextPage) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return
+        restoreFromBottom.current = root.scrollHeight - root.scrollTop
+        loadOlderRef.current()
+      },
+      { root, rootMargin: '300px 0px 0px 0px' },
+    )
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [hasNextPage, isFetchingNextPage])
+
+  // Put the reading position back before the browser paints, so the older page
+  // arrives without the thread appearing to jump.
+  useLayoutEffect(() => {
+    const root = scrollRef.current
+    const keep = restoreFromBottom.current
+    if (!root || keep === null) return
+    restoreFromBottom.current = null
+    root.scrollTop = root.scrollHeight - keep
+  }, [messages.length])
+
   // Follow the conversation only when a genuinely new message lands, so
   // loading older history doesn't yank the viewport to the bottom.
   useEffect(() => {
@@ -182,16 +231,12 @@ export function MessageList({
 
   return (
     <div ref={scrollRef} className="flex-1 overflow-y-auto py-3">
-      {hasNextPage && (
-        <div className="flex justify-center pb-3">
-          <button
-            onClick={onLoadOlder}
-            disabled={isFetchingNextPage}
-            className="font-ui text-[12px] text-text-3 hover:text-text-1 disabled:opacity-50 transition-colors"
-          >
-            {isFetchingNextPage ? 'Loading…' : 'Load older messages'}
-          </button>
-        </div>
+      <div ref={topSentinel} aria-hidden />
+
+      {/* No button: reaching the top is the request. This only reports that the
+          answer is on its way. */}
+      {isFetchingNextPage && (
+        <p className="pb-3 text-center font-ui text-[12px] text-text-4">Loading older messages…</p>
       )}
 
       {days.map((day, dayIndex) => (
