@@ -39,6 +39,30 @@ export const RELEASES: ChangelogRelease[] = [
     entries: [
       {
         kind: 'added',
+        text: 'Paste an image straight into the message box. It shows at full size above the box before it goes, so you can check you pasted the right one, and you can send a message with it.',
+      },
+      {
+        kind: 'added',
+        text: 'Hover a reaction to see who picked it — press and hold on a phone. The count on its own never answered the question anybody had.',
+      },
+      {
+        kind: 'added',
+        text: 'A conversation you have typed in but not sent now shows "Draft:" and the text in the list, so an unfinished message is not lost behind another conversation. Drafts are kept while the portal is open, not across a reload.',
+      },
+      {
+        kind: 'fixed',
+        text: 'You now get one reaction per message. Picking a second emoji moves yours instead of stacking another beside it, and pressing your own still takes it off.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Deleting a message now takes its reactions with it, and removing a reaction reaches everyone else in the conversation rather than only your own screen.',
+      },
+      {
+        kind: 'fixed',
+        text: 'A conversation whose last message was a picture no longer reads as "No messages yet" in the list — it says what was sent.',
+      },
+      {
+        kind: 'added',
         text: 'Drag a message to the right to reply to it, the way a messaging app does — swipe on a phone or tablet, or drag with the mouse on a computer. A reply arrow appears as you go and turns red once you have gone far enough. The arrow on hover still does the same thing.',
       },
       {

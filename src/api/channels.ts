@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase'
 import type { Tables } from '../types/database'
 import type { PersonMini } from './projects'
+import { fileKind, type FileKind } from '../lib/attachment'
 
 export type ChannelRow = Tables<'channels'>
 export type ChannelKind = 'channel' | 'dm' | 'group_dm'
@@ -35,6 +36,35 @@ export interface CreateChannelArgs {
 }
 
 /**
+ * The one line that stands for a message in the conversation list.
+ *
+ * A message can be a picture and nothing else, in which case body_text is empty
+ * — and an empty preview used to fall through to "No messages yet", which said
+ * the conversation was empty when it plainly was not. Naming the kind of file
+ * is what the messaging apps do, and it is what somebody scanning the list can
+ * actually use.
+ */
+function messagePreview(
+  bodyText: string | null,
+  attachments: { file_name: string; mime_type: string | null }[] | null,
+): string | null {
+  if (bodyText) return bodyText
+
+  const first = attachments?.[0]
+  if (!first) return null
+
+  const more = (attachments?.length ?? 0) - 1
+  const label = LABEL_BY_KIND[fileKind(first.mime_type ?? '', first.file_name)] ?? first.file_name
+  return more > 0 ? `${label} +${more}` : label
+}
+
+const LABEL_BY_KIND: Partial<Record<FileKind, string>> = {
+  image: 'Photo',
+  video: 'Video',
+  audio: 'Voice message',
+}
+
+/**
  * Every channel the caller belongs to (RLS scopes this to their memberships),
  * newest activity first. Member profiles come along so DM rows can render the
  * other person's name/avatar without a second round-trip.
@@ -45,7 +75,7 @@ export async function fetchChannels(): Promise<ChannelListItem[]> {
 
   const { data, error } = await supabase
     .from('channels')
-    .select('*, channel_members(profile_id,hidden_at,notifications_muted,can_manage,last_read_at,profile:profiles(id,name,avatar_url)), messages(author_id,body_text,created_at)')
+    .select('*, channel_members(profile_id,hidden_at,notifications_muted,can_manage,last_read_at,profile:profiles(id,name,avatar_url)), messages(author_id,body_text,created_at,message_attachments(file_name,mime_type))')
     .order('updated_at', { ascending: false })
     // A deleted message leaves a tombstone in the thread, but it must not be the
     // line that represents the conversation in the list -- the preview would go
@@ -77,7 +107,7 @@ export async function fetchChannels(): Promise<ChannelListItem[]> {
         ...c,
         members: (c.channel_members ?? []).flatMap((m) => (m.profile ? [m.profile] : [])),
         last_message_at: latest?.created_at ?? null,
-        last_message_preview: latest?.body_text ?? null,
+        last_message_preview: latest ? messagePreview(latest.body_text, latest.message_attachments) : null,
         last_message_author_id: latest?.author_id ?? null,
         last_message_seen_by: seenBy,
         hidden_at: membership?.hidden_at ?? null,

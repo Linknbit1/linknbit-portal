@@ -5,6 +5,7 @@ import { cn } from '../../lib/cn'
 import { formatRelativeTime } from '../../lib/utils'
 import { ReadTicks } from './ReadTicks'
 import { channelTitle, dmCounterpart, receiptState } from './chatUtils'
+import { useChatDrafts } from '../../context/ChatDraftsContext'
 import type { ChannelListItem } from '../../api/channels'
 
 interface ConversationListRowProps {
@@ -25,6 +26,11 @@ export function ConversationListRow({ channel, myProfileId, unread, active, onCl
   // row already says everything you can act on.
   const lastIsMine = !!myProfileId && channel.last_message_author_id === myProfileId
   const audience = Math.max(0, channel.members.length - 1)
+
+  // Something typed here and never sent. It takes the preview's place: what you
+  // owe this conversation matters more than the last thing said in it, and the
+  // ticks belong to a message you sent, not to one you never did.
+  const draft = useChatDrafts().drafts[channel.id]
 
   return (
     // A container rather than one big button, so the actions menu isn't a
@@ -66,7 +72,7 @@ export function ConversationListRow({ channel, myProfileId, unread, active, onCl
             {/* Ahead of the preview, where a messaging app puts it: the tick
                 belongs to the line it describes, and leading it keeps every row
                 in the list aligned however long the preview runs. */}
-            {lastIsMine && (
+            {!draft && lastIsMine && (
               <ReadTicks
                 state={receiptState(channel.last_message_seen_by, audience)}
                 audience={audience}
@@ -74,7 +80,9 @@ export function ConversationListRow({ channel, myProfileId, unread, active, onCl
               />
             )}
             <span className="min-w-0 flex-1 truncate font-ui text-[13px] text-text-3">
-              {channel.last_message_preview || 'No messages yet'}
+              {draft
+                ? <><span className="font-semibold text-brand-red">Draft: </span>{draft.text}</>
+                : channel.last_message_preview || 'No messages yet'}
             </span>
             {unread > 0 && (
               <span className="flex h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-sm bg-brand-red px-1.5 font-mono text-[10px] font-bold text-white">

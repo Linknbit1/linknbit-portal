@@ -7,6 +7,7 @@ import { ChatAttachmentTray, type PendingUpload } from './ChatAttachmentTray'
 import { ReplyThumbnail } from './ReplyThumbnail'
 import { replyPreviewText } from './chatUtils'
 import { useToast } from '../ui/toast-context'
+import { useChatDrafts } from '../../context/ChatDraftsContext'
 import { cn } from '../../lib/cn'
 import { docToPlainText, emptyDoc, isEmptyDoc, toDbDoc } from '../../lib/richText'
 import { validateChatAttachmentFile, pastedFileName } from '../../lib/chatAttachment'
@@ -44,7 +45,12 @@ export function MessageComposer({
   channelId, mentionItems, teamItems, placeholder, editing, onCancelEdit, onSend, onSaveEdit, replyTo, replyAttachment, onCancelReply,
 }: MessageComposerProps) {
   const toast = useToast()
-  const [doc, setDoc] = useState<JSONContent>(editing?.doc ?? emptyDoc())
+  const { drafts, setDraft, clearDraft } = useChatDrafts()
+  // An edit is not a draft: it belongs to one message, and seeding it from the
+  // conversation's unsent text would silently rewrite what you meant to fix.
+  const [doc, setDoc] = useState<JSONContent>(
+    editing?.doc ?? drafts[channelId]?.doc ?? emptyDoc(),
+  )
   // Remounts the editor to reset content — RichEditor deliberately never syncs
   // `value` back in while mounted.
   const [editorKey, setEditorKey] = useState(0)
@@ -143,8 +149,14 @@ export function MessageComposer({
     if (e.dataTransfer.files.length > 0) addFiles(e.dataTransfer.files)
   }
 
+  const onDocChange = (next: JSONContent) => {
+    setDoc(next)
+    if (!editing) setDraft(channelId, { doc: next, text: docToPlainText(next) })
+  }
+
   const reset = () => {
     setDoc(emptyDoc())
+    clearDraft(channelId)
     setPending((prev) => {
       for (const p of prev) if (p.previewUrl) URL.revokeObjectURL(p.previewUrl)
       return []
@@ -234,7 +246,7 @@ export function MessageComposer({
             key={editorKey}
             className="composer-editor"
             value={doc}
-            onChange={setDoc}
+            onChange={onDocChange}
             onEditorReady={(editor) => { editorRef.current = editor }}
             // Consumed here so ProseMirror does not also paste the markup a
             // copied web image carries alongside the file.
