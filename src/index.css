@@ -507,6 +507,24 @@
     -webkit-backdrop-filter: blur(10px);
   }
 
+  /* Chat wallpaper: the mark, tiled and turned almost all the way down.
+
+     A sibling layer behind the thread rather than a wrapper around it — an
+     ancestor carrying opacity would become a backdrop root and quietly kill the
+     day divider's blur.
+
+     3.5% is deliberate. A watermark you notice is a watermark competing with
+     the conversation; this one should only register as texture. */
+  .chat-wallpaper {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: url('/brand/linknbit-mark-dark.svg');
+    background-repeat: repeat;
+    background-size: 116px;
+    opacity: 0.035;
+  }
+
   /* The glass behind a chat day divider.
 
      One layer, blurred and masked. Splitting it into bands to fake a fade was a

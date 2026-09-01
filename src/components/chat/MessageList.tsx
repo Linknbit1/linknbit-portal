@@ -230,7 +230,11 @@ export function MessageList({
   }
 
   return (
-    <div ref={scrollRef} className="flex-1 overflow-y-auto py-3">
+    // relative so the thread paints above the wallpaper behind it: both are
+    // positioned, and the later sibling wins — no z-index needed, and none
+    // wanted, since an isolated stacking context here would become a backdrop
+    // root and kill the day divider's blur.
+    <div ref={scrollRef} className="relative flex-1 overflow-y-auto py-3">
       <div ref={topSentinel} aria-hidden />
 
       {/* No button: reaching the top is the request. This only reports that the

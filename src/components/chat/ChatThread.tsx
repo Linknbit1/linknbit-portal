@@ -196,7 +196,10 @@ export function ChatThread({ channelId, hideHeader }: ChatThreadProps) {
       )}
 
       <div className="flex-1 min-h-0 flex">
-        <div className="flex-1 min-w-0 flex flex-col min-h-0">
+        <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
+          {/* Wallpaper sits behind the thread as a sibling, never as a wrapper:
+              opacity on an ancestor would make the day divider's blur inert. */}
+          <span aria-hidden className="chat-wallpaper" />
           <MessageList
             messages={messages}
             isLoading={isLoading}
