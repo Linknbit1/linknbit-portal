@@ -146,7 +146,7 @@ export function MessageBubble({
     return (
       <div className={cn('flex px-3 py-0.5', mine && 'justify-end', startsGroup && 'mt-3')}>
         <p className={cn(
-          'flex max-w-[78%] items-baseline gap-1.5 rounded-lg border border-border-subtle',
+          'flex max-w-[78%] items-baseline gap-1.5 rounded-bubble border border-border-subtle',
           'bg-surface-1/60 px-3 py-1.5 font-ui text-[13px] italic text-text-4',
           !mine && 'ml-10',
         )}>
@@ -209,7 +209,12 @@ export function MessageBubble({
         <div className={cn('flex min-w-0 max-w-[80%] flex-col sm:max-w-[70%] lg:max-w-[62%]', mine && 'items-end')}>
           <div
             className={cn(
-              'relative min-w-0 rounded-lg border transition-colors',
+              'relative min-w-0 rounded-bubble border transition-colors',
+              // The corner facing the sender is squared off on the first bubble
+              // of a run — the flat edge points at the avatar the way a tail
+              // would, and the rest of the run stays fully rounded so a burst of
+              // messages reads as one block.
+              startsGroup && (mine ? 'rounded-tr-none' : 'rounded-tl-none'),
               // Tighter around a picture: padding around an image is a frame
               // nobody asked for.
               hasBody ? 'px-3 py-2' : 'p-1.5',
@@ -265,6 +270,12 @@ export function MessageBubble({
               </button>
             )}
 
+            {/* Files first: a picture sent with a line of text IS the message,
+                and the text is its caption — a caption above the picture reads
+                as a separate thought that happens to have an image under it.
+                Every messaging app stacks them this way round. */}
+            {attachments.map((a) => <MessageAttachment key={a.id} attachment={a} />)}
+
             {/* break-words stops an unbroken URL or long token from forcing the
                 whole thread to scroll sideways on a narrow screen.
 
@@ -284,8 +295,6 @@ export function MessageBubble({
             )}
 
             {hasBody && <MessageStamp {...stamp} className="absolute bottom-1.5 right-2.5" />}
-
-            {attachments.map((a) => <MessageAttachment key={a.id} attachment={a} />)}
 
             {/* A picture has no text to flow around, so its stamp is a plain
                 row beneath it instead. */}

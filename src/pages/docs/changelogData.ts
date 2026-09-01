@@ -38,6 +38,14 @@ export const RELEASES: ChangelogRelease[] = [
       'Read ticks in Chat now turn the moment somebody opens the conversation, carry a state while a message is still sending, sit in the corner of the message rather than on a line of their own — and appear in the conversation list too.',
     entries: [
       {
+        kind: 'improved',
+        text: 'A picture sent with a message now sits above its text rather than under it, and the date divider behaves like a header — the conversation blurs softly as it passes behind, and only while the divider is actually pinned to the top.',
+      },
+      {
+        kind: 'added',
+        text: 'When the newest message in a conversation is deleted, the list says "You deleted this message" or names who did, instead of quietly falling back to an older message and looking stale.',
+      },
+      {
         kind: 'fixed',
         text: 'Pressing Enter to pick someone from the @mention list no longer sends the message half-written. Enter picks the highlighted name; it only sends once the list has closed. The same applies to the / command and # file lists.',
       },

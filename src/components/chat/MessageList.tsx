@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { MessageSquare } from 'lucide-react'
 import { Skeleton } from '../ui/Skeleton'
 import { MessageBubble } from './MessageBubble'
@@ -34,22 +34,47 @@ interface MessageListProps {
 
 /**
  * The day a run of messages belongs to, said once between the days rather than
- * stamped onto every message. Sticky, so scrolling back through a long history
- * always answers "which day am I in?" without scrolling to find the divider.
+ * stamped onto every message. Pinned, so a long scroll back always names the
+ * day you are in.
+ *
+ * The glass behind it is only worn while it is actually pinned. A divider
+ * drifting up through the middle of the thread is just a divider — glazing it
+ * there would blur a band across the conversation for no reason, and there is
+ * no CSS selector for "stuck", so it is observed.
  */
-function DayDivider({ iso }: { iso: string }) {
+function DayDivider({ iso, scrollRef }: { iso: string; scrollRef: React.RefObject<HTMLDivElement | null> }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [stuck, setStuck] = useState(false)
+
+  useEffect(() => {
+    const el = ref.current
+    const root = scrollRef.current
+    if (!el || !root) return
+
+    // threshold 1 + a 1px bite out of the root's top: the callback fires exactly
+    // when the element starts and stops being clipped at the top edge. The
+    // boundingClientRect test then separates "clipped at the top because it is
+    // pinned" from "clipped at the bottom because it is scrolling into view".
+    const observer = new IntersectionObserver(
+      ([entry]) => setStuck(
+        !!entry.rootBounds && entry.boundingClientRect.top <= entry.rootBounds.top + 1,
+      ),
+      { root, threshold: [1], rootMargin: '-1px 0px 0px 0px' },
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [scrollRef])
+
   return (
-    // Pinned, so a long scroll back always names the day you are in — but the
-    // container takes no z-index of its own. The rules then sit in the same
-    // layer as the message rows, which are later in the DOM and so paint over
-    // them: they slide UNDER the conversation instead of ruling a line across
-    // it. Only the label is lifted, because only the label has to stay readable.
-    <div className="sticky top-0 flex items-center gap-3 px-3 py-2">
-      <span className="h-px min-w-4 flex-1 bg-border-default" />
-      <span className="relative z-20 shrink-0 rounded-sm border border-border-default bg-surface-2 px-2.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-text-3">
-        {dayLabel(iso)}
+    <div ref={ref} className="sticky top-0 z-20 px-3 py-2">
+      {stuck && <span aria-hidden className="chat-day-glass" />}
+      <span className="relative flex items-center gap-3">
+        <span className="h-px min-w-4 flex-1 bg-border-default" />
+        <span className="shrink-0 rounded-sm border border-border-default bg-surface-2 px-2.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-text-3">
+          {dayLabel(iso)}
+        </span>
+        <span className="h-px min-w-4 flex-1 bg-border-default" />
       </span>
-      <span className="h-px min-w-4 flex-1 bg-border-default" />
     </div>
   )
 }
@@ -152,7 +177,7 @@ export function MessageList({
         // One section per day, so its divider stays pinned for the whole run of
         // that day's messages rather than for a single one.
         <section key={day.key}>
-          <DayDivider iso={day.iso} />
+          <DayDivider iso={day.iso} scrollRef={scrollRef} />
           {day.items.map((m, i) => (
             <MessageBubble
               key={m.id}

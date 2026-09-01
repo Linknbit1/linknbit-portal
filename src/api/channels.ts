@@ -17,6 +17,8 @@ export interface ChannelListItem extends ChannelRow {
   last_message_author_id: string | null
   /** How many members other than you have read as far as that newest message. */
   last_message_seen_by: number
+  /** The newest message was deleted, so the row says so instead of showing it. */
+  last_message_deleted: boolean
   /**
    * The newest reaction in the conversation, when it happened after the newest
    * message. A reaction is the last thing that happened as much as a message is,
@@ -96,13 +98,12 @@ export async function fetchChannels(): Promise<ChannelListItem[]> {
 
   const { data, error } = await supabase
     .from('channels')
-    .select('*, channel_members(profile_id,hidden_at,notifications_muted,can_manage,last_read_at,profile:profiles(id,name,avatar_url)), messages(author_id,body_text,created_at,message_attachments(file_name,mime_type)), message_reactions(emoji,created_at,profile_id,profile:profiles(id,name),message:messages(body_text,author_id,message_attachments(file_name,mime_type)))')
+    .select('*, channel_members(profile_id,hidden_at,notifications_muted,can_manage,last_read_at,profile:profiles(id,name,avatar_url)), messages(author_id,body_text,created_at,deleted_at,message_attachments(file_name,mime_type)), message_reactions(emoji,created_at,profile_id,profile:profiles(id,name),message:messages(body_text,author_id,message_attachments(file_name,mime_type)))')
     .order('updated_at', { ascending: false })
-    // A deleted message leaves a tombstone in the thread, but it must not be the
-    // line that represents the conversation in the list -- the preview would go
-    // on quoting text that is no longer there. Filtering the embedded rows (no
-    // `!inner`) keeps channels that have nothing left to preview.
-    .is('messages.deleted_at', null)
+    // Deleted messages are NOT filtered out: the newest one is still the last
+    // thing that happened, and WhatsApp says so rather than quietly falling back
+    // to an older message and looking stale. Its text is never shown — the row
+    // renders "You deleted this message" from the flag below.
     // Only the newest surviving message per channel. Without these two the
     // nested select would pull each channel's entire history just to render a
     // one-line preview.
@@ -142,7 +143,10 @@ export async function fetchChannels(): Promise<ChannelListItem[]> {
           : null,
         members: (c.channel_members ?? []).flatMap((m) => (m.profile ? [m.profile] : [])),
         last_message_at: latest?.created_at ?? null,
-        last_message_preview: latest ? messagePreview(latest.body_text, latest.message_attachments) : null,
+        last_message_preview: latest && !latest.deleted_at
+          ? messagePreview(latest.body_text, latest.message_attachments)
+          : null,
+        last_message_deleted: !!latest?.deleted_at,
         last_message_author_id: latest?.author_id ?? null,
         last_message_seen_by: seenBy,
         hidden_at: membership?.hidden_at ?? null,
@@ -186,6 +190,7 @@ export async function fetchChannel(id: string): Promise<ChannelListItem | null> 
     last_message_preview: null,
     last_message_author_id: null,
     last_message_seen_by: 0,
+    last_message_deleted: false,
     last_reaction: null,
   }
 }

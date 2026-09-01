@@ -39,6 +39,14 @@ export function ConversationListRow({ channel, myProfileId, unread, active, onCl
   const reactionIsLatest = !!reaction
     && (!channel.last_message_at || reaction.at > channel.last_message_at)
 
+  // A deletion is the last thing that happened, and saying so is more honest
+  // than quietly showing an older message as though nothing had changed.
+  const deletedBy = channel.last_message_deleted
+    ? lastIsMine
+      ? 'You'
+      : channel.members.find((m) => m.id === channel.last_message_author_id)?.name ?? 'Someone'
+    : null
+
   return (
     // A container rather than one big button, so the actions menu isn't a
     // button nested inside a button.
@@ -80,7 +88,8 @@ export function ConversationListRow({ channel, myProfileId, unread, active, onCl
             {/* Ahead of the preview, where a messaging app puts it: the tick
                 belongs to the line it describes, and leading it keeps every row
                 in the list aligned however long the preview runs. */}
-            {!draft && !reactionIsLatest && lastIsMine && (
+            {/* No ticks on a message that no longer exists. */}
+            {!draft && !reactionIsLatest && !deletedBy && lastIsMine && (
               <ReadTicks
                 state={receiptState(channel.last_message_seen_by, audience)}
                 audience={audience}
@@ -90,6 +99,8 @@ export function ConversationListRow({ channel, myProfileId, unread, active, onCl
             <span className="min-w-0 flex-1 truncate font-ui text-[13px] text-text-3">
               {draft ? (
                 <><span className="font-semibold text-brand-red">Draft: </span>{draft.text}</>
+              ) : deletedBy && !reactionIsLatest ? (
+                <span className="italic">{deletedBy} deleted this message</span>
               ) : reactionIsLatest && reaction ? (
                 <>
                   <span className="mr-1">{reaction.emoji}</span>

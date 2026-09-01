@@ -215,6 +215,13 @@
   --radius-xl: 0px;
   --radius-full: 999px;
 
+  /* The one shape that is deliberately not square. A chat bubble is read as an
+     object — a thing somebody handed you — and the whole grammar of a messaging
+     thread rests on that. It gets its own token rather than un-squaring the
+     scale above, so the exception stays confined to chat and stays in one
+     place if it is ever revisited. */
+  --radius-bubble: 10px;
+
   /* ── Box shadows ── */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.55);
@@ -498,6 +505,31 @@
     background: var(--color-topbar-glass);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
+  }
+
+  /* The glass behind a chat day divider.
+     It behaves like a header, so it blurs what passes under it rather than
+     letting the conversation cut across its rules — but a hard-edged bar
+     stamped across a thread reads as chrome, so both the blur and the tint
+     are faded out at the bottom by the mask. The element bleeds past its row
+     to give the fade somewhere to happen. */
+  .chat-day-glass {
+    position: absolute;
+    /* A generous bleed upward, not a neat one: the divider sticks to the top of
+       the scrollport, so anything above it is clipped and costs nothing — while
+       a bleed that falls short leaves a band where the conversation slides past
+       unblurred, which is worse than no glass at all. */
+    inset: -3rem 0 -1rem;
+    pointer-events: none;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    background: linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--color-bg-base) 62%, transparent),
+      transparent
+    );
+    mask-image: linear-gradient(to bottom, #000 0%, #000 46%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 46%, transparent 100%);
   }
 }
 
