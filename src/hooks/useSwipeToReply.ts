@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 /**
  * Per input type, because a finger and a mouse are not doing the same thing.
@@ -84,11 +84,45 @@ export function useSwipeToReply(onTrigger: () => void, enabled = true): SwipeToR
     setOffset(0)
   }
 
+  /**
+   * The drag always ends, even when the row's own pointerup never arrives.
+   *
+   * A captured pointer normally reports back, but there are paths where it does
+   * not: the window loses focus mid-drag, the browser cancels the gesture, the
+   * pointer is released over something that swallowed the event. Any one of them
+   * left the row translated with no way back — the stuck message.
+   *
+   * These run on the bubble phase, so the row's own handler has already fired
+   * and triggered the reply if it earned one; this only guarantees the reset.
+   */
+  useEffect(() => {
+    if (!dragging) return
+    const end = () => {
+      start.current = null
+      axis.current = 'undecided'
+      buzzed.current = false
+      offsetRef.current = 0
+      setDragging(false)
+      setArmed(false)
+      setOffset(0)
+    }
+    window.addEventListener('pointerup', end)
+    window.addEventListener('pointercancel', end)
+    window.addEventListener('blur', end)
+    return () => {
+      window.removeEventListener('pointerup', end)
+      window.removeEventListener('pointercancel', end)
+      window.removeEventListener('blur', end)
+    }
+  }, [dragging])
+
   if (!enabled) return { offset: 0, armed: false, dragging: false, handlers: NO_HANDLERS }
 
   const tuning = () => (start.current?.mouse ? TUNING.mouse : TUNING.touch)
 
   const finish = (e: React.PointerEvent) => {
+    // A second finger lifting must not end the first one's drag.
+    if (start.current && e.pointerId !== start.current.id) return
     if (e.currentTarget.hasPointerCapture?.(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
     const passed = axis.current === 'horizontal' && offsetRef.current >= tuning().threshold
     reset()
@@ -105,6 +139,9 @@ export function useSwipeToReply(onTrigger: () => void, enabled = true): SwipeToR
         // Left button only, and never a drag that begins on a control.
         if (mouse && e.button !== 0) return
         if (e.target instanceof Element && e.target.closest(INTERACTIVE)) return
+        // One gesture at a time: a second finger landing mid-drag would take
+        // over the first one's start point and leave the row somewhere odd.
+        if (start.current) return
 
         start.current = { x: e.clientX, y: e.clientY, id: e.pointerId, mouse }
         axis.current = 'undecided'
