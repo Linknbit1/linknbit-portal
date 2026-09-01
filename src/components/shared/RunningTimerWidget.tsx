@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Square, Loader2, Timer, ChevronRight } from 'lucide-react'
+import { Square, Loader2, Timer, ChevronRight, GripVertical } from 'lucide-react'
 import { useRunningTimeEntry, useStopTimer } from '../../hooks/useTimeEntries'
 import { useIsDesktop } from '../../hooks/useMediaQuery'
 import { useToast } from '../ui/toast-context'
@@ -23,18 +23,82 @@ function useElapsed(startedAt: string | undefined): number {
   return startedAt ? secondsBetween(startedAt, null, now) : 0
 }
 
+/** Keeps the widget clear of the very top and bottom of the screen. */
+const EDGE_GAP = 16
+const TOP_GAP = 72
+
+/**
+ * Drag the widget up and down its own edge.
+ *
+ * Vertical only: it is docked to the right, and letting it wander horizontally
+ * would just mean it could be dropped somewhere it covers something else — the
+ * problem this exists to solve.
+ *
+ * `bottom` in pixels, or null while it has not been moved, in which case the
+ * class-based position applies and the widget keeps its responsive placement.
+ */
+function useVerticalDrag(ref: React.RefObject<HTMLElement | null>) {
+  const [bottom, setBottom] = useState<number | null>(null)
+  const [dragging, setDragging] = useState(false)
+  const from = useRef<{ y: number; bottom: number } | null>(null)
+
+  const clamp = (value: number, height: number) =>
+    Math.max(EDGE_GAP, Math.min(value, window.innerHeight - height - TOP_GAP))
+
+  // A window that shrinks — a phone rotating, a desktop split — must not leave
+  // the widget parked off-screen where it cannot be reached to move back.
+  useEffect(() => {
+    const onResize = () => {
+      const el = ref.current
+      if (!el) return
+      setBottom((current) => (current === null ? null : clamp(current, el.offsetHeight)))
+    }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [ref])
+
+  return {
+    bottom,
+    dragging,
+    handlers: {
+      onPointerDown: (e: React.PointerEvent) => {
+        // Never from a control: the stop button is the one thing that must not
+        // become a drag handle by accident.
+        if (e.target instanceof Element && e.target.closest('button')) return
+        const el = ref.current
+        if (!el) return
+        e.currentTarget.setPointerCapture?.(e.pointerId)
+        from.current = {
+          y: e.clientY,
+          bottom: window.innerHeight - el.getBoundingClientRect().bottom,
+        }
+        setDragging(true)
+      },
+      onPointerMove: (e: React.PointerEvent) => {
+        const start = from.current
+        const el = ref.current
+        if (!start || !el) return
+        // Up is positive: bottom grows as the pointer rises.
+        setBottom(clamp(start.bottom + (start.y - e.clientY), el.offsetHeight))
+      },
+      onPointerUp: () => { from.current = null; setDragging(false) },
+      onPointerCancel: () => { from.current = null; setDragging(false) },
+    },
+  }
+}
+
 /**
  * The running timer, pinned for as long as it runs — so closing the task drawer
  * never hides the fact that the clock is going. Mounted once in the app shell;
  * renders nothing when no timer is active.
  *
- * Bottom-LEFT, not right. Bottom-right is where interfaces put the thing you
- * press: a send button, a save, a floating action. A panel parked there is not
- * an overlay, it is a lid — it sat on top of the chat composer's Send and there
- * was no way to move it.
+ * Docked to the right edge and draggable up and down it, because there is no
+ * corner that is free on every screen: bottom-right covers a send button,
+ * bottom-left covers the sidebar's own footer. Rather than guess, it starts
+ * somewhere sensible and moves wherever it is put.
  *
- * And collapsed to a pill by default on a phone, where 20rem of card is most of
- * the screen. The clock and the stop button are what the widget is FOR; the task
+ * Collapsed to a pill by default on a phone, where 20rem of card is most of the
+ * screen. The clock and the stop button are what the widget is FOR; the task
  * and project are what you expand it to check.
  */
 export function RunningTimerWidget() {
@@ -43,6 +107,8 @@ export function RunningTimerWidget() {
   const { data: running } = useRunningTimeEntry()
   const stopTimer = useStopTimer()
 
+  const cardRef = useRef<HTMLElement>(null)
+  const drag = useVerticalDrag(cardRef)
   const isDesktop = useIsDesktop()
   // null = not chosen, so follow the screen. Once someone opens or closes it,
   // their choice holds for as long as the timer runs.
@@ -70,24 +136,26 @@ export function RunningTimerWidget() {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 12, scale: 0.96 }}
           transition={{ type: 'spring', damping: 26, stiffness: 320 }}
+          ref={cardRef}
+          {...drag.handlers}
+          style={drag.bottom === null ? undefined : { bottom: drag.bottom }}
           aria-label="Running timer"
           className={cn(
-            'fixed left-4 z-40 overflow-hidden rounded-lg',
+            'fixed right-4 z-40 touch-none select-none overflow-hidden rounded-lg',
+            drag.dragging ? 'cursor-grabbing' : 'cursor-grab',
             // A warm red-tinted surface carries the "running" state instead of a
             // top rule — visible against the page without shouting.
             'border border-brand-red/35 bg-[linear-gradient(140deg,rgba(224,20,20,0.16),rgba(19,28,40,0.98)_62%)]',
             'shadow-[0_18px_50px_rgba(0,0,0,0.5)] backdrop-blur-sm',
-            // Clears the mobile tab bar (4rem + safe area), and on a phone that
-            // offset also puts it above the chat composer rather than over it.
-            'bottom-[calc(5rem+env(safe-area-inset-bottom))] lg:bottom-6',
-            // Past the sidebar on desktop, whose own footer holds the install
-            // row — the bottom-left corner is no more free than the right one.
-            // Offset from the token, so it moves if the sidebar ever does.
-            'lg:left-[calc(var(--width-sidebar)+1.5rem)]',
+            // Where it starts: clear of the mobile tab bar (4rem + safe area),
+            // and lower on desktop. Dropped the moment it is dragged.
+            drag.bottom === null && 'bottom-[calc(5rem+env(safe-area-inset-bottom))] lg:bottom-6',
+            'lg:right-6',
             open && 'w-[min(20rem,calc(100vw-2rem))]',
           )}
         >
           <div className={cn('flex items-center', open ? 'gap-3 p-3' : 'gap-2 p-2')}>
+            <GripVertical size={13} className="-mr-1 shrink-0 text-text-4" aria-hidden />
             <span className={cn(
               'relative flex shrink-0 items-center justify-center rounded-md bg-brand-red/12 text-brand-red',
               open ? 'size-9' : 'size-7',
