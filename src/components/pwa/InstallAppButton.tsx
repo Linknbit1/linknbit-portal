@@ -86,7 +86,8 @@ export function InstallAppButton({ className }: { className?: string }) {
         // destinations above it, for a prompt most people act on once.
         title={showNative ? 'Open faster from your device' : 'See how to add it on iPhone'}
         className={cn(
-          'w-full flex h-7 items-center gap-2 px-2 rounded-sm font-ui text-[12.5px] leading-none',
+          // Matches a sidebar row, minus the leading-none that clipped their labels.
+          'w-full flex h-7 items-center gap-2 px-2 rounded-sm font-ui text-[12.5px]/normal',
           'text-text-3 hover:bg-surface-2 hover:text-text-1 transition-colors',
           className,
         )}

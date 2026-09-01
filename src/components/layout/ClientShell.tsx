@@ -320,7 +320,7 @@ export function ClientShell() {
               >
                 IS
               </span>
-              <div className="hidden sm:flex flex-col items-start leading-none">
+              <div className="hidden sm:flex flex-col items-start leading-tight">
                 <span className="font-semibold text-[13px]" style={{ color: '#1A1612' }}>
                   Imran Shah
                 </span>

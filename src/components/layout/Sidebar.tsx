@@ -174,7 +174,10 @@ function BrandMenu() {
  */
 const rowCls = (active: boolean) =>
   cn(
-    'flex h-7 items-center gap-2 px-2 rounded-sm font-ui text-[12.5px] leading-none transition-colors relative',
+    // No leading-none: the row is h-7 and centred, so line-height never set its
+    // height — it only squeezed the line box until truncate's overflow clipped
+    // the tails off g, p and y in labels like Gamification.
+    'flex h-7 items-center gap-2 px-2 rounded-sm font-ui text-[12.5px]/normal transition-colors relative',
     active
       ? 'bg-brand-red/13 text-white font-medium nav-active-indicator'
       : 'text-text-2 font-normal hover:bg-surface-2 hover:text-text-1',
@@ -250,7 +253,8 @@ function NavRow({ item, pathname, activePath, allItems }: {
               <div
                 key={child.to}
                 className={cn(
-                  'group/child flex h-6 items-center gap-2 pl-2 pr-1 rounded-sm font-ui text-[12px] leading-none transition-colors',
+                  // Same as the parent row: h-6 sets the height, not line-height.
+                  'group/child flex h-6 items-center gap-2 pl-2 pr-1 rounded-sm font-ui text-caption transition-colors',
                   active ? 'text-white bg-brand-red/13 font-medium' : 'text-text-3 hover:text-text-1 hover:bg-surface-2',
                 )}
               >

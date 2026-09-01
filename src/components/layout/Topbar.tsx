@@ -102,7 +102,7 @@ export function Topbar({ title, breadcrumb, className, back, actions }: TopbarPr
           <span className="font-mono text-[11px] text-text-4 uppercase tracking-wider hidden sm:inline">{breadcrumb}</span>
         )}
         {title && (
-          <h1 className="font-display font-bold text-[17px] lg:text-[20px] text-text-1 leading-none tracking-tight m-0 truncate">
+          <h1 className="font-display font-bold text-[17px]/tight lg:text-[20px]/tight text-text-1 tracking-tight m-0 truncate">
             {title}
           </h1>
         )}

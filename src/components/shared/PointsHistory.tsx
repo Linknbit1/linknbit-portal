@@ -45,7 +45,7 @@ function SummaryCard({ icon: Icon, tint, value, label }: {
         <Icon size={19} />
       </div>
       <div className="min-w-0">
-        <p className="font-display font-bold text-[24px] text-text-1 leading-none truncate">{value}</p>
+        <p className="font-display font-bold text-[24px]/tight text-text-1 truncate">{value}</p>
         <p className="font-ui text-[11.5px] text-text-3 mt-0.5">{label}</p>
       </div>
     </div>
