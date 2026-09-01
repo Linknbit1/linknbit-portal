@@ -214,7 +214,7 @@ export function MessageBubble({
               // nobody asked for.
               hasBody ? 'px-3 py-2' : 'p-1.5',
               mine
-                ? 'border-brand-red/25 bg-brand-red/13'
+                ? 'border-chat-out-border bg-chat-out'
                 : 'border-border-default bg-surface-2',
               // A message aimed at you is ringed rather than tinted, so it stays
               // findable when scrolling back without losing which side it is on.

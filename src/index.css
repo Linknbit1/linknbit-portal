@@ -102,6 +102,18 @@
   --color-surface-3: #272727;
   --color-surface-inset: #0D0D0D;
 
+  /* ── Chat bubbles ──
+     Opaque on purpose, for the same reason the surfaces above are: a translucent
+     bubble lets whatever is behind it through, and the day divider's rule was
+     showing straight across the outgoing ones. No z-index fixes a see-through
+     fill — the fill has to be solid.
+
+     Mixed from the brand colour rather than fixed, so every theme gets its own
+     outgoing bubble out of the colour it already defines. Custom properties
+     resolve where they are used, so a theme class on <html> reaches these. */
+  --color-chat-out: color-mix(in srgb, var(--color-brand-red) 15%, var(--color-surface-2));
+  --color-chat-out-border: color-mix(in srgb, var(--color-brand-red) 34%, var(--color-surface-2));
+
   /* ── Borders ── */
   --color-border-default: #272727;
   --color-border-subtle: #1C1C1C;
