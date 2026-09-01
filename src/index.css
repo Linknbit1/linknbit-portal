@@ -521,6 +521,25 @@
   }
   .animate-tick { animation: tick-settle 180ms ease-out; }
 
+  /* Room on the LAST line of a message for the stamp that sits in the bubble's
+     corner.
+
+     A float would work only for a one-line message: it attaches where it is
+     inserted, so on a paragraph it rides the FIRST line and the time ends up at
+     the top. Reserving an inline box at the end of the last block is what puts
+     the time beside a short message and in the corner under a long one — the
+     WhatsApp behaviour — and it needs no measurement of the text.
+
+     The width comes from --stamp-w, because it depends on whether the message
+     carries read ticks and an "edited" note. */
+  .chat-stamp-gap > p:last-child::after,
+  .chat-stamp-gap > .rich-content > :last-child::after {
+    content: '';
+    display: inline-block;
+    width: var(--stamp-w, 3.5rem);
+    height: 1px;
+  }
+
   /* Number inputs without the stepper arrows.
      The tiny up/down chevrons are a hazard on a duration field: they are easy to
      hit by accident, they nudge by one when nobody wants a one-minute change,

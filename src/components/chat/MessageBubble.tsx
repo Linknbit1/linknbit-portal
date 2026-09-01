@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, type CSSProperties } from 'react'
 import { Trash2, Pencil, SmilePlus, Reply, CornerUpLeft } from 'lucide-react'
 import { useSwipeToReply } from '../../hooks/useSwipeToReply'
 import { Avatar } from '../ui/Avatar'
@@ -136,6 +136,11 @@ export function MessageBubble({
 
   const hasBody = !!(message.body_text || message.body_doc)
   const stamp = { message, mine, receipt, audience, pending }
+  // What the corner stamp will occupy, so the last line can leave room for it.
+  // Measured in the pieces it is built from rather than by reading the DOM: the
+  // parts are fixed-width (tabular time, a 16px tick slot) and a layout effect
+  // to measure them would cost a second paint on every message in the thread.
+  const stampWidth = 46 + (mine ? 20 : 0) + (message.edited_at ? 34 : 0)
 
   if (message.deleted_at) {
     return (
@@ -204,7 +209,7 @@ export function MessageBubble({
         <div className={cn('flex min-w-0 max-w-[80%] flex-col sm:max-w-[70%] lg:max-w-[62%]', mine && 'items-end')}>
           <div
             className={cn(
-              'min-w-0 rounded-lg border transition-colors',
+              'relative min-w-0 rounded-lg border transition-colors',
               // Tighter around a picture: padding around an image is a frame
               // nobody asked for.
               hasBody ? 'px-3 py-2' : 'p-1.5',
@@ -260,20 +265,25 @@ export function MessageBubble({
               </button>
             )}
 
-            {/* Floated, and emitted BEFORE the text: that is what lets a short
-                message keep its time on the same line ("perfect  3:13 PM")
-                while a paragraph wraps around it and leaves it in the corner. */}
-            {hasBody && <MessageStamp {...stamp} className="float-right ml-2 mt-1" />}
-
             {/* break-words stops an unbroken URL or long token from forcing the
-                whole thread to scroll sideways on a narrow screen. */}
+                whole thread to scroll sideways on a narrow screen.
+
+                chat-stamp-gap opens a hole at the end of the last line, which is
+                where the absolutely-placed stamp below then sits — so the time
+                lands beside a short message and in the corner under a long one,
+                exactly as it does in WhatsApp. */}
             {hasBody && (
-              <div className="font-ui text-[14.5px] leading-relaxed wrap-break-word text-text-1">
+              <div
+                className="chat-stamp-gap font-ui text-[14.5px] leading-relaxed wrap-break-word text-text-1"
+                style={{ '--stamp-w': `${stampWidth}px` } as CSSProperties}
+              >
                 {message.body_doc
                   ? <RichRenderer doc={fromDbDoc(message.body_doc)} />
                   : <p className="whitespace-pre-wrap">{message.body_text}</p>}
               </div>
             )}
+
+            {hasBody && <MessageStamp {...stamp} className="absolute bottom-1.5 right-2.5" />}
 
             {attachments.map((a) => <MessageAttachment key={a.id} attachment={a} />)}
 

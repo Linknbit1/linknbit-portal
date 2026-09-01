@@ -39,11 +39,14 @@ interface MessageListProps {
  */
 function DayDivider({ iso }: { iso: string }) {
   return (
-    // The rules run the full width of the thread, inset just enough not to touch
-    // the edges. Pinned, so a long scroll back always names the day you are in.
-    <div className="sticky top-0 z-10 flex items-center gap-3 px-3 py-2">
+    // Pinned, so a long scroll back always names the day you are in — but the
+    // container takes no z-index of its own. The rules then sit in the same
+    // layer as the message rows, which are later in the DOM and so paint over
+    // them: they slide UNDER the conversation instead of ruling a line across
+    // it. Only the label is lifted, because only the label has to stay readable.
+    <div className="sticky top-0 flex items-center gap-3 px-3 py-2">
       <span className="h-px min-w-4 flex-1 bg-border-default" />
-      <span className="shrink-0 rounded-sm border border-border-default bg-surface-2 px-2.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-text-3">
+      <span className="relative z-20 shrink-0 rounded-sm border border-border-default bg-surface-2 px-2.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-text-3">
         {dayLabel(iso)}
       </span>
       <span className="h-px min-w-4 flex-1 bg-border-default" />
