@@ -67,6 +67,10 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'improved',
+        text: 'Nothing in the database decides anything by role any more. Twenty-eight rules — ten access policies and eighteen functions — asked whether somebody was an admin instead of whether they were allowed; they now all read a permission. Six new keys carry what had no key before: managing the company calendar, viewing and editing logged time, applying attendance without approval, and two internal ones. Every key was granted to exactly the roles that had the ability by name, so nobody can do more or less than yesterday — but a role you build yourself can now be given any of it.',
+      },
+      {
+        kind: 'improved',
         text: 'Skipping the approval queue is now a permission of its own — "Apply attendance without approval" — instead of being wired to the words "admin" and "super admin". It also covers all four kinds: an exception or an overtime claim entered by somebody holding it now applies at once, where before only leave and WFH did. The same people can do the same things today; what changed is that it can now be granted to anybody.',
       },
       {
