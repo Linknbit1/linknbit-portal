@@ -81,6 +81,20 @@ export function MessageComposer({
   useEffect(() => { pendingRef.current = pending }, [pending])
   useEffect(() => () => { for (const p of pendingRef.current) if (p.previewUrl) URL.revokeObjectURL(p.previewUrl) }, [])
 
+  /**
+   * Choosing a message to reply to is already the decision to write something,
+   * so the caret is put in the box rather than waiting to be asked for. Keyed on
+   * the id, not the object: the parent rebuilds that on every render, and
+   * refocusing on each one would steal the caret back mid-sentence.
+   *
+   * `end` rather than plain focus, so replying to a second message without
+   * sending the first leaves the caret after what is already typed.
+   */
+  const replyToId = replyTo?.id ?? null
+  useEffect(() => {
+    if (replyToId) editorRef.current?.commands.focus('end')
+  }, [replyToId])
+
   /** Take a staged file back out, and take the upload with it. */
   const removePending = (localId: string, attachmentId: string | null) => {
     setPending((prev) => {
