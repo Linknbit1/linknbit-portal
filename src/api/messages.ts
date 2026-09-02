@@ -14,7 +14,8 @@ export interface RepliedMessage {
 
 export interface MessageWithAuthor extends MessageRow {
   author: { id: string; name: string; avatar_url: string | null; role: string } | null
-  /** Null when this message answers nothing, or the original has been removed. */
+  /** Null when this message answers nothing. A deleted original still arrives,
+   *  carrying its deleted_at, so the quote can say so rather than go missing. */
   reply_to: RepliedMessage | null
 }
 
@@ -33,21 +34,21 @@ export const MESSAGE_PAGE_SIZE = 50
  * One page of a channel's history, oldest-first for rendering. `before` pages
  * backwards through older messages as the user scrolls up.
  *
- * The select stays one literal, including the self-join for `reply_to`:
- * supabase-js infers the row type from it, and a concatenation widens it to
- * `string` and loses that inference. Only one level is followed, so a reply to
- * a reply quotes what it answers rather than the whole chain.
+ * The quoted message is fetched separately rather than embedded. PostgREST can
+ * express a self-referential embed, but not unambiguously here: hinting by the
+ * constraint name is rejected outright (PGRST200 — there is no relationship
+ * between 'messages' and 'messages' by that name), and hinting by the column
+ * resolves the relationship in the wrong direction, returning the replies TO a
+ * message rather than the one it answers. Since most messages have no replies,
+ * that came back empty, and every quote in the app read as a deleted message.
  *
- * `messages!reply_to_id` hints the embed by COLUMN, not by constraint name.
- * PostgREST resolves a self-referential embed that way, and the constraint-name
- * form every other join here uses fails with PGRST200 "could not find a
- * relationship between 'messages' and 'messages'", which reads like a missing
- * foreign key rather than the wrong kind of hint.
+ * A second query costs one round trip when a page contains replies at all, and
+ * says exactly what it wants.
  */
 export async function fetchMessages(channelId: string, before?: string): Promise<MessageWithAuthor[]> {
   let query = supabase
     .from('messages')
-    .select('*, author:profiles!messages_author_id_fkey(id,name,avatar_url,role), reply_to:messages!reply_to_id(id,body_text,deleted_at,author:profiles!messages_author_id_fkey(id,name))')
+    .select('*, author:profiles!messages_author_id_fkey(id,name,avatar_url,role)')
     .eq('channel_id', channelId)
     .order('created_at', { ascending: false })
     .limit(MESSAGE_PAGE_SIZE)
@@ -56,12 +57,30 @@ export async function fetchMessages(channelId: string, before?: string): Promise
 
   const { data, error } = await query
   if (error) throw error
-  // A self-join has no unique constraint telling PostgREST it is to-one, so
-  // `reply_to` arrives as an array of at most one. Flattened here rather than at
-  // every render site.
+
+  const parents = await fetchRepliedMessages(
+    [...new Set(data.flatMap((m) => (m.reply_to_id ? [m.reply_to_id] : [])))],
+  )
+
   return data
-    .map((m) => ({ ...m, reply_to: m.reply_to[0] ?? null }))
+    .map((m) => ({ ...m, reply_to: m.reply_to_id ? parents.get(m.reply_to_id) ?? null : null }))
     .reverse()
+}
+
+/**
+ * The messages a page of replies points at, by id. Only one level is followed,
+ * so a reply to a reply quotes what it answers rather than the whole chain.
+ */
+async function fetchRepliedMessages(ids: string[]): Promise<Map<string, RepliedMessage>> {
+  if (ids.length === 0) return new Map()
+
+  const { data, error } = await supabase
+    .from('messages')
+    .select('id,body_text,deleted_at,author:profiles!messages_author_id_fkey(id,name)')
+    .in('id', ids)
+  if (error) throw error
+
+  return new Map(data.map((m) => [m.id, m]))
 }
 
 export async function createMessage(channelId: string, args: CreateMessageArgs): Promise<MessageRow> {

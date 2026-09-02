@@ -123,6 +123,10 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'fixed',
+        text: 'A reply no longer claims the message it answers was deleted when it plainly was not. The quote shows the original again.',
+      },
+      {
+        kind: 'fixed',
         text: 'Ticks now turn as soon as the other person opens the conversation. They used to sit on one grey tick until that person replied, which read as though nobody had seen the message.',
       },
       {

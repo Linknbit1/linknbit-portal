@@ -267,8 +267,15 @@ export function MessageBubble({
                     </span>
                   </>
                 ) : (
+                  // Only claim deletion when the row actually says so. A quote we
+                  // simply do not have — not loaded, out of page, embed shape not
+                  // what was expected — is not evidence that anything was removed,
+                  // and saying so about a message sitting right there reads as a
+                  // bug in front of the person who just wrote it.
                   <span className="font-ui text-[11.5px] italic text-text-4">
-                    The message this replies to was deleted
+                    {message.reply_to?.deleted_at
+                      ? 'The message this replies to was deleted'
+                      : 'Original message'}
                   </span>
                 )}
               </button>
