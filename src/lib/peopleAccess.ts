@@ -23,6 +23,17 @@ export type InternalRole = (typeof INTERNAL_ROLES)[number]
 export const outranks = (myRank: number, targetRank: number | undefined): boolean =>
   targetRank !== undefined && myRank >= targetRank
 
+/**
+ * The rank ladder, resolved for the signed-in user, in the shape the People and
+ * profile screens ask their authority questions in. Built by `useAuthority()`.
+ */
+export interface Authority {
+  myRank: number
+  rankOf: (roleSlug: string) => number | undefined
+  /** Every internal role, so a picker can offer the ones at or below your rank. */
+  ladder: { slug: string; position: number }[]
+}
+
 /** Roles the actor may grant: everything at or below their own rank. */
 export function assignableRoleSlugs(
   myRank: number,
@@ -75,4 +86,16 @@ export function isUserRole(r: string): r is UserRole {
  */
 export function toUserRole(r: string): UserRole {
   return isUserRole(r) ? r : 'employee'
+}
+
+/**
+ * Turn an admin_*_profile RPC error into something a person can read. The RPCs
+ * raise these codes rather than sentences, so the same mapping serves every
+ * screen that calls them.
+ */
+export function humanizeError(msg: string): string {
+  if (msg.includes('forbidden_target') || msg.includes('forbidden_role') || msg.includes('forbidden')) return 'Not allowed for your role'
+  if (msg.includes('cannot_manage_self') || msg.includes('cannot_change_own_role')) return "You can't change your own role"
+  if (msg.includes('already_active')) return 'This user has already signed in'
+  return msg
 }

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useCanAccess, useCanManageProjects } from '../../hooks/useRoleFlags'
 import {
   List, Columns, Calendar, Plus, Search, ChevronRight, AlertCircle, SlidersHorizontal, Trash2,
-  LayoutGrid, CheckSquare, Users, History,
+  CheckSquare, Users, History,
 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Button } from '../../components/ui/Button'
@@ -32,14 +32,16 @@ import { ProjectFormModal } from './ProjectFormModal'
 import type { ProjectListItem } from '../../api/projects'
 import type { ProjectStatus as AppProjectStatus } from '../../types'
 
-type ViewMode = 'cards' | 'list' | 'backlog'
+type ViewMode = 'list' | 'backlog'
 
 // No board of projects. A board is for moving one thing through stages, and a
 // project's stages live inside it, per service. Dragging a whole project between
 // status columns was a second way to set a field the project page already owns,
 // on a screen whose job is finding a project rather than working one.
+// Cards are not a view any more, they are the phone rendering of the table —
+// eight columns do not fit a phone. So the switcher offers the table and the
+// backlog lens, and the breakpoint decides how the table is drawn.
 const VIEWS: { key: ViewMode; label: string; icon: typeof List }[] = [
-  { key: 'cards', label: 'Cards', icon: LayoutGrid },
   { key: 'list', label: 'Table', icon: List },
   { key: 'backlog', label: 'Backlog', icon: History },
 ]
@@ -71,7 +73,7 @@ function sortProjects(list: ProjectListItem[], sort: string): ProjectListItem[] 
 export default function ProjectsPage() {
   const navigate = useNavigate()
   const { data: services = [] } = useServices()
-  const [view, setView] = useState<ViewMode>('cards')
+  const [view, setView] = useState<ViewMode>('list')
   const [search, setSearch] = useState('')
   const [serviceFilter, setServiceFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
@@ -187,9 +189,14 @@ export default function ProjectsPage() {
         )}
 
         {isLoading ? (
-          <div className={cn(view === 'cards' ? 'grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-3' : 'space-y-2')}>
-            {Array.from({ length: view === 'cards' ? 6 : 5 }).map((_, i) => <Skeleton key={i} className={view === 'cards' ? 'h-52 rounded-lg' : 'h-16'} />)}
-          </div>
+          <>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:hidden">
+              {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-52 rounded-lg" />)}
+            </div>
+            <div className="hidden space-y-2 lg:block">
+              {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-16" />)}
+            </div>
+          </>
         ) : view === 'backlog' && canViewBacklog ? (
           /* Time history across every project the viewer can see. Rendered ahead
              of the empty state because it is about logged time, not projects. */
@@ -198,8 +205,16 @@ export default function ProjectsPage() {
           <EmptyState onNew={() => setShowNew(true)} canCreate={canManageProjects} />
         ) : (
           <>
-            {view === 'cards' && <CardsView projects={shown} onOpen={(id) => navigate(`/projects/${id}`)} onDelete={setPendingDelete} canDelete={canManageProjects} />}
-            {view === 'list' && <ListView projects={shown} onOpen={(id) => navigate(`/projects/${id}`)} onDelete={setPendingDelete} canDelete={canManageProjects} />}
+            {view === 'list' && (
+              <>
+                <div className="lg:hidden">
+                  <CardsView projects={shown} onOpen={(id) => navigate(`/projects/${id}`)} onDelete={setPendingDelete} canDelete={canManageProjects} />
+                </div>
+                <div className="hidden lg:block">
+                  <ListView projects={shown} onOpen={(id) => navigate(`/projects/${id}`)} onDelete={setPendingDelete} canDelete={canManageProjects} />
+                </div>
+              </>
+            )}
           </>
         )}
       </div>
@@ -251,7 +266,7 @@ function EmptyState({ onNew, canCreate }: { onNew: () => void; canCreate: boolea
   )
 }
 
-// ── Cards view (default) ─────────────────────────────────────────────
+// ── Cards view (below lg, where the table cannot fit) ────────────────
 function CardsView({ projects, onOpen, onDelete, canDelete }: { projects: ProjectListItem[]; onOpen: (id: string) => void; onDelete: (project: ProjectListItem) => void; canDelete: boolean }) {
   if (projects.length === 0) {
     return <div className="py-16 text-center font-ui text-[13px] text-text-4">No projects match your filters.</div>

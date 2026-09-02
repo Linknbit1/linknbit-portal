@@ -373,7 +373,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
           'You are staffed onto a service, not onto the project as a whole.',
           'Being given a task adds you to its service, so a project’s Team tab fills itself as work is handed out. Taking somebody off a service takes them off its tasks as well — you are told how many first — and their comments stay where they are.',
           'Inside a project, Board and Pipeline are two views of the same tasks: Board groups them by status, Pipeline by the stage of the service they belong to.',
-          'The Projects list itself has no board. Cards, Table and Backlog are ways of finding a project; moving one along is done inside it.',
+          'The Projects list itself has no board. Table and Backlog are ways of finding a project; moving one along is done inside it. On a phone the table is drawn as cards, because eight columns do not fit.',
         ],
       },
       {
@@ -804,6 +804,10 @@ export const DOC_CHAPTERS: DocChapter[] = [
         summary:
           'Everyone internal, with their role, designation and teams. Names are clickable throughout the portal, on a task, a comment, a standup or a leaderboard, and open the same profile.',
         where: 'People → People',
+        notes: [
+          'Elsewhere a name opens a small profile card so you keep your place. Here it opens the full profile page — the directory is where you came to find somebody.',
+          'On a phone the directory is drawn as cards rather than as the table.',
+        ],
       },
       {
         id: 'member-profile',
@@ -811,6 +815,16 @@ export const DOC_CHAPTERS: DocChapter[] = [
         summary:
           'One page per person: their teams, the projects and services they are staffed on, and their recognition. Sensitive sections such as compensation only appear for the people entitled to see them.',
         where: 'Click any name',
+        procedures: [
+          {
+            title: 'Change what somebody is',
+            steps: [
+              'Open their profile and press Edit. It only appears for people you are senior to.',
+              'Set their role, designation, job type and the teams they belong to.',
+              'Press Save Changes. It is the same form as the one on People, so either place does the job.',
+            ],
+          },
+        ],
       },
       {
         id: 'teams',

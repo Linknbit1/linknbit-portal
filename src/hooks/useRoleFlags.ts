@@ -1,5 +1,7 @@
 import { ADMINISTRATOR } from '../api/permissions'
-import { useMyPermissions } from './usePermissions'
+import { useMemo } from 'react'
+import { useMyPermissions, useMyRoleRank, useRoles } from './usePermissions'
+import { INTERNAL_ROLES, type Authority, type InternalRole } from '../lib/peopleAccess'
 
 /**
  * Capability checks for the signed-in user.
@@ -93,3 +95,44 @@ export function useCanViewConfidential(scope: ConfidentialScope = 'project'): bo
  * it can be granted to a custom role without touching code.
  */
 export const useCanFulfillPayouts = () => useCanAccess('can_fulfill_payouts')
+
+// ── Authority (rank, not permission) ─────────────────────────────────────────
+// Rank answers "may I act on somebody who holds that role", which no capability
+// key can express — see lib/peopleAccess. Every screen that manages a person
+// asks it through this hook so they all read the same ladder.
+
+export function useAuthority(): Authority {
+  const myRank = useMyRoleRank()
+  const { data: allRoles = [] } = useRoles()
+  return useMemo(
+    () => ({
+      myRank,
+      rankOf: (slug: string) => allRoles.find((r) => r.slug === slug)?.position,
+      ladder: allRoles
+        .filter((r) => INTERNAL_ROLES.includes(r.slug as InternalRole))
+        .map((r) => ({ slug: r.slug, position: r.position })),
+    }),
+    [myRank, allRoles],
+  )
+}
+
+/**
+ * May the signed-in user log in as this person?
+ *
+ * Both halves have to hold: the `can_impersonate` permission, and standing —
+ * you may step into an account below you, never a peer's and never one above.
+ * Mirrors what auth-impersonate enforces server-side, so the control only
+ * appears where the edge function would actually mint a session.
+ */
+export function useCanImpersonate(
+  person: { id: string; role: string; is_active: boolean } | null | undefined,
+  myId: string | undefined,
+): boolean {
+  const allowed = useCanAccess('can_impersonate')
+  const { myRank, rankOf } = useAuthority()
+  if (!person || !allowed || person.id === myId || !person.is_active) return false
+  const targetRank = rankOf(person.role)
+  // Strictly below, not outranks(): equal rank is enough to edit somebody, but
+  // not to become them.
+  return targetRank !== undefined && myRank > targetRank
+}

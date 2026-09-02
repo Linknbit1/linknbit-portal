@@ -31,11 +31,30 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: '1.27.0',
+    date: '2026-09-02',
+    title: 'Straight to the person',
+    highlight:
+      'Projects and People are one list again rather than two renderings of it, and a name in the directory now takes you to the person instead of stopping at a card on the way.',
+    entries: [
+      {
+        kind: 'improved',
+        text: 'Projects and People no longer offer a Cards / Table switch. The table is the list; on a phone it is still drawn as cards, because eight columns do not fit one.',
+      },
+      {
+        kind: 'improved',
+        text: 'In the People directory, a name or picture opens that person\u2019s profile page. The small profile card still opens everywhere else in the portal, where you would rather not lose your place.',
+      },
+      {
+        kind: 'added',
+        text: 'A person\u2019s role, designation, job type and teams can now be set from their profile page, not only from People. The Edit button appears on the profiles of people you are senior to, and opens the same form.',
+      },
+    ],
+  },
+  {
     version: '1.26.0',
     date: '2026-09-01',
     title: 'Ticks that keep up',
-    highlight:
-      'Read ticks in Chat now turn the moment somebody opens the conversation, carry a state while a message is still sending, sit in the corner of the message rather than on a line of their own — and appear in the conversation list too.',
     entries: [
       {
         kind: 'improved',

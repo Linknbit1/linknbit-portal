@@ -13,6 +13,7 @@ import { ServiceChip } from '../components/shared/ServiceChip'
 import { StatusChip } from '../components/shared/StatusChip'
 import { SalaryCard } from '../components/shared/SalaryCard'
 import { PersonLink } from '../components/shared/PersonLink'
+import { PersonEditDrawer } from '../components/shared/PersonEditDrawer'
 import { StartDMButton } from '../components/chat/StartDMButton'
 import { MonthStepper } from '../components/shared/MonthFilter'
 import { useAuthContext } from '../context/AuthContext'
@@ -35,8 +36,8 @@ import { AttendanceChips } from '../components/shared/AttendanceChips'
 import type { Person, PersonTeam, PersonProject } from '../api/people'
 import type { TaskListItem } from '../api/tasks'
 import type { LeaveRequestWithType, WfhRequest } from '../api/attendance'
-import { useCanAccess } from '../hooks/useRoleFlags'
-import { useMyRoleRank, useRoles } from '../hooks/usePermissions'
+import { useAuthority, useCanAccess, useCanImpersonate } from '../hooks/useRoleFlags'
+import { outranks } from '../lib/peopleAccess'
 import { DAY_PART_LABEL } from '../lib/dayParts'
 import { formatHoursMinutes } from '../lib/attendanceHours'
 
@@ -160,6 +161,7 @@ export default function MemberProfilePage() {
   const toast = useToast()
   const { profile: viewer, impersonate } = useAuthContext()
   const [impersonatePending, setImpersonatePending] = useState(false)
+  const [editing, setEditing] = useState(false)
 
   const { data: person, isLoading } = usePerson(id)
   const { data: teams = [] } = usePersonTeams(id)
@@ -175,10 +177,14 @@ export default function MemberProfilePage() {
   const canViewAllAttendance = useCanAccess('can_view_all_attendance')
   const canViewTeamAttendance = useCanAccess('can_view_team_attendance')
   const canSeeAnySalary = useCanAccess('can_view_salaries')
-  const canImpersonateOthers = useCanAccess('can_impersonate')
-  const myRank = useMyRoleRank()
-  const { data: allRoles = [] } = useRoles()
-  const roleRank = (slug: string) => allRoles.find((r) => r.slug === slug)?.position
+  const authority = useAuthority()
+  const canImpersonate = useCanImpersonate(person, viewer?.id)
+  const canEditAnyProfile = useCanAccess('can_edit_any_profile')
+  // The drawer enforces this again field by field; this only decides whether the
+  // button is worth showing at all. Editing needs standing over them, and either
+  // the profile-editing permission or a rank high enough to set their role.
+  const canEditPerson =
+    !!person && !isSelf && outranks(authority.myRank, authority.rankOf(person.role))
 
   const { data: leave = [] } = useLeaveByProfile(id)
   const { data: wfh = [] } = useWfhByProfile(id)
@@ -188,18 +194,6 @@ export default function MemberProfilePage() {
 
   const [tab, setTab] = useState<Tab>('overview')
 
-  // "Log in as" is rank-based: you may impersonate someone below you, never a
-  // peer or someone above. So a super admin can step into an admin's account,
-  // an admin cannot step into another admin's, and nobody can take a super
-  // admin's. Mirrors the check the edge function enforces server-side.
-  const canImpersonate =
-    !!person &&
-    !isSelf &&
-    person.is_active &&
-    // You may only step into somebody you outrank — the same ladder the
-    // admin_* RPCs enforce, so the button matches what the server will allow.
-    canImpersonateOthers &&
-    myRank > (roleRank(person.role) ?? Number.MAX_SAFE_INTEGER)
   const handleImpersonate = async () => {
     if (!person) return
     setImpersonatePending(true)
@@ -282,6 +276,15 @@ export default function MemberProfilePage() {
                   <Pencil size={13} /> Edit profile
                 </Link>
               )}
+              {canEditPerson && (
+                <button
+                  onClick={() => setEditing(true)}
+                  className="inline-flex items-center gap-1.5 rounded-sm border border-border-default px-3 py-1.5 font-ui text-[12px] font-medium text-text-2 transition-colors hover:bg-surface-2 hover:text-text-1"
+                  title={canEditAnyProfile ? 'Edit role, teams and details' : 'Edit role and teams'}
+                >
+                  <Pencil size={13} /> Edit
+                </button>
+              )}
               {canImpersonate && (
                 <button
                   onClick={handleImpersonate}
@@ -330,6 +333,8 @@ export default function MemberProfilePage() {
           <RecognitionTab personId={person.id} />
         )}
       </div>
+
+      {editing && <PersonEditDrawer person={person} isSelf={isSelf} onClose={() => setEditing(false)} />}
     </div>
   )
 }

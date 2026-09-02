@@ -168,6 +168,13 @@ export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
   ongoing: 'Ongoing',
 }
 
+export const JOB_TYPE_LABELS: Record<string, string> = {
+  on_site: 'On-site', hybrid: 'Hybrid', remote: 'Remote',
+}
+
+export const JOB_TYPE_OPTIONS: { value: string; label: string }[] =
+  Object.entries(JOB_TYPE_LABELS).map(([value, label]) => ({ value, label }))
+
 export const ROLE_LABELS: Record<UserRole, string> = {
   super_admin: 'Super Admin',
   admin: 'Admin',

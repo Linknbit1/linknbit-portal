@@ -32,9 +32,11 @@ interface AvatarProps {
   src?: string
   /** When set, the avatar links to that member's profile page. */
   personId?: string | null
+  /** Go straight to the profile page instead of opening the mini profile card. */
+  navigateOnly?: boolean
 }
 
-export function Avatar({ name, size = 'md', online, className, src, personId }: AvatarProps) {
+export function Avatar({ name, size = 'md', online, className, src, personId, navigateOnly }: AvatarProps) {
   const body = (
     <span className={cn('relative inline-flex shrink-0', className)}>
       {src ? (
@@ -69,7 +71,7 @@ export function Avatar({ name, size = 'md', online, className, src, personId }: 
 
   if (personId) {
     return (
-      <PersonLink personId={personId} className="inline-flex rounded-full hover:opacity-90 hover:no-underline" ariaLabel={`View ${name}'s profile`}>
+      <PersonLink personId={personId} navigateOnly={navigateOnly} className="inline-flex rounded-full hover:opacity-90 hover:no-underline" ariaLabel={`View ${name}'s profile`}>
         {body}
       </PersonLink>
     )

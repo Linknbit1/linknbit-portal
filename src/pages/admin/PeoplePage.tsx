@@ -1,8 +1,9 @@
 import { useMemo, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
-  Plus, Search, Loader2, X, Mail, Copy, Check, UserCheck, UserX, ShieldAlert,
-  Pencil, Users, Table2, LayoutGrid, BriefcaseBusiness, IdCard, MapPin, Upload, Trash2,
-  MoreVertical, KeyRound, MailPlus,
+  Plus, Search, Loader2, X, Mail, Copy, Check, UserCheck, UserX,
+  Pencil, Users, BriefcaseBusiness, IdCard, MapPin, Trash2,
+  MoreVertical, KeyRound, MailPlus, UserCog,
 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Avatar } from '../../components/ui/Avatar'
@@ -11,64 +12,30 @@ import { StartDMButton } from '../../components/chat/StartDMButton'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Select } from '../../components/ui/Select'
-import { Toggle } from '../../components/ui/Toggle'
-import { TimePicker } from '../../components/ui/TimePicker'
-import { Drawer } from '../../components/ui/Drawer'
-import { ViewToggle, type ViewToggleOption } from '../../components/ui/ViewToggle'
 import { Popover } from '../../components/ui/Popover'
 import { ProfileRoles } from '../../components/shared/ProfileRoles'
-import { SalaryCard } from '../../components/shared/SalaryCard'
+import { PersonEditDrawer } from '../../components/shared/PersonEditDrawer'
+import { TeamPicker } from '../../components/shared/TeamPicker'
 import { useToast } from '../../components/ui/toast-context'
 import { useAuthContext } from '../../context/AuthContext'
 import { useTeams } from '../../hooks/useTeams'
 import { useDesignations } from '../../hooks/useDesignations'
-import { useTeamMembers, useSetProfileTeams } from '../../hooks/useTeamMembers'
+import { useTeamMembers } from '../../hooks/useTeamMembers'
 import {
-  useAllPeople, useInviteUser, useUpdatePersonRole, useUpdatePersonDetails, useSetPersonActive, useDeletePerson,
+  useAllPeople, useInviteUser, useSetPersonActive, useDeletePerson,
   useResendInvite, useSetUserPassword,
 } from '../../hooks/usePeople'
 import type { Person, InviteResult } from '../../api/people'
 import {
-  outranks, assignableRoleSlugs, toUserRole, INTERNAL_ROLES, type InternalRole,
-  accountStatus, type AccountStatus,
+  outranks, assignableRoleSlugs, toUserRole, humanizeError,
+  accountStatus, type AccountStatus, type Authority,
 } from '../../lib/peopleAccess'
-import { useCanAccess, useCanManagePeople } from '../../hooks/useRoleFlags'
-import { useMyRoleRank, useRoles } from '../../hooks/usePermissions'
-import { ROLE_LABELS } from '../../lib/utils'
+import { useAuthority, useCanAccess, useCanImpersonate, useCanManagePeople } from '../../hooks/useRoleFlags'
+import { JOB_TYPE_LABELS, JOB_TYPE_OPTIONS, ROLE_LABELS } from '../../lib/utils'
 import { cn } from '../../lib/cn'
 import { ModalShell } from '../../components/ui/ModalShell'
-import { validateAvatarFile } from '../../lib/avatar'
 
 type Option = { value: string; label: string }
-
-const JOB_TYPE_LABELS: Record<string, string> = {
-  on_site: 'On-site', hybrid: 'Hybrid', remote: 'Remote',
-}
-const JOB_TYPE_OPTIONS: Option[] = [
-  { value: 'on_site', label: 'On-site' },
-  { value: 'hybrid', label: 'Hybrid' },
-  { value: 'remote', label: 'Remote' },
-]
-
-// Multi-select team picker built from the shared Toggle primitive (no native multiselect).
-function TeamPicker({ teams, value, onChange }: { teams: { id: string; name: string }[]; value: string[]; onChange: (ids: string[]) => void }) {
-  if (teams.length === 0) {
-    return <p className="rounded-md border border-dashed border-border-default bg-surface-inset px-3 py-2 font-mono text-[11px] text-text-4">No teams yet</p>
-  }
-  return (
-    <div className="flex max-h-44 flex-col gap-0.5 overflow-y-auto rounded-md border border-border-default bg-surface-inset p-1.5">
-      {teams.map((t) => {
-        const checked = value.includes(t.id)
-        return (
-          <label key={t.id} className="flex cursor-pointer items-center justify-between gap-2 rounded-sm px-2 py-1.5 hover:bg-surface-2">
-            <span className="truncate font-ui text-[12.5px] text-text-2">{t.name}</span>
-            <Toggle checked={checked} onChange={(v) => onChange(v ? [...value, t.id] : value.filter((x) => x !== t.id))} />
-          </label>
-        )
-      })}
-    </div>
-  )
-}
 
 // ── Invite modal ─────────────────────────────────────────────────────────────────
 
@@ -170,201 +137,6 @@ function InviteModal({ authority, teams, designationOptions, onClose }: {
   )
 }
 
-/**
- * Where the viewer stands on the role ladder, and how to place anyone else on
- * it. Threaded as one object because every action on a person asks the same two
- * questions, and passing a role name around is what this replaced.
- */
-export interface Authority {
-  myRank: number
-  rankOf: (roleSlug: string) => number | undefined
-  /** Every internal role, so a picker can offer the ones at or below your rank. */
-  ladder: { slug: string; position: number }[]
-}
-
-// ── Edit drawer ──────────────────────────────────────────────────────────────────
-
-function EditDrawer({ person, authority, isSelf, teams, designationOptions, currentTeamIds, onClose }: {
-  person: Person
-  authority: Authority
-  isSelf: boolean
-  teams: { id: string; name: string }[]
-  designationOptions: Option[]
-  currentTeamIds: string[]
-  onClose: () => void
-}) {
-  const toast = useToast()
-  const { mutateAsync: saveRole, isPending: savingRole } = useUpdatePersonRole()
-  const { mutateAsync: saveDetails, isPending: savingDetails } = useUpdatePersonDetails()
-  const { mutateAsync: saveTeams, isPending: savingTeams } = useSetProfileTeams()
-
-  const canEditAnyProfile = useCanAccess('can_edit_any_profile')
-  const canManagePeople = useCanManagePeople()
-  const mayManage = outranks(authority.myRank, authority.rankOf(person.role))
-  // Editing someone's details still needs you to outrank them: the rank check is
-  // what stopped an admin renaming a super admin.
-  const mayDetails = canEditAnyProfile && mayManage
-
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const [name, setName] = useState(person.name)
-  const [avatarFile, setAvatarFile] = useState<File | null>(null)
-  const [preview, setPreview] = useState<string | null>(null)
-  const [role, setRole] = useState(person.role)
-  const [teamIds, setTeamIds] = useState<string[]>(currentTeamIds)
-  const [designation, setDesignation] = useState(person.designation_id ?? '')
-  const [jobType, setJobType] = useState(person.job_type ?? 'on_site')
-  // Stored as a postgres `time` (HH:MM:SS); the picker works in HH:MM.
-  const origAllowedCheckIn = person.allowed_check_in?.slice(0, 5) ?? ''
-  const [allowedCheckIn, setAllowedCheckIn] = useState(origAllowedCheckIn)
-  const [attendanceExcluded, setAttendanceExcluded] = useState(person.attendance_excluded)
-
-  const roleOptions = assignableRoleSlugs(authority.myRank, authority.ladder)
-    .map((r) => ({ value: r, label: ROLE_LABELS[toUserRole(r)] }))
-  const isPending = savingRole || savingDetails || savingTeams
-
-  const sameTeams = (a: string[], b: string[]) => a.length === b.length && [...a].sort().join() === [...b].sort().join()
-  const detailsChanged = name !== person.name || avatarFile !== null
-  const roleChanged = role !== person.role || (designation || null) !== person.designation_id
-    || jobType !== person.job_type || allowedCheckIn !== origAllowedCheckIn
-    || attendanceExcluded !== person.attendance_excluded
-  const teamsChanged = !sameTeams(teamIds, currentTeamIds)
-
-  const onPickAvatar = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const error = validateAvatarFile(file)
-    if (error) { toast(error, 'error'); return }
-    if (preview) URL.revokeObjectURL(preview)
-    setAvatarFile(file)
-    setPreview(URL.createObjectURL(file))
-  }
-
-  const save = async () => {
-    try {
-      if (mayDetails && detailsChanged) {
-        await saveDetails({ profileId: person.id, name: name.trim(), avatarUrl: person.avatar_url, avatarFile })
-      }
-      if (mayManage && roleChanged) {
-        await saveRole({ profileId: person.id, role, designationId: designation || null, jobType, allowedCheckIn, attendanceExcluded })
-      }
-      if (mayManage && teamsChanged) {
-        await saveTeams({ profileId: person.id, teamIds })
-      }
-      if (preview) URL.revokeObjectURL(preview)
-      toast('Changes saved', 'success')
-      onClose()
-    } catch (e) {
-      toast(e instanceof Error ? humanizeError(e.message) : 'Save failed', 'error')
-    }
-  }
-
-  return (
-    <Drawer
-      open
-      onClose={onClose}
-      title={<div className="flex items-center gap-3"><Avatar name={person.name} src={preview ?? person.avatar_url ?? undefined} size="md" /><div><p className="font-display font-bold text-[15px] text-text-1">{person.name}</p><p className="font-mono text-[11px] text-text-3">{person.email}</p></div></div>}
-      footer={
-        <div className="flex gap-2.5">
-          <Button variant="ghost" size="sm" className="flex-1" onClick={onClose}>Cancel</Button>
-          <Button size="sm" className="flex-1" disabled={isPending || (!detailsChanged && !roleChanged && !teamsChanged)} onClick={save}>
-            {isPending ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />} Save Changes
-          </Button>
-        </div>
-      }
-    >
-      <div className="p-5 flex flex-col gap-5">
-        {mayDetails && (
-          <section className="space-y-3.5">
-            <h4 className="font-mono text-[10px] text-text-4 uppercase tracking-wider">Personal details</h4>
-            <Input label="Name" value={name} onChange={(e) => setName(e.target.value)} />
-            <div>
-              <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Avatar image</label>
-              <div className="flex items-center gap-3 rounded-lg border border-border-default bg-surface-inset p-3">
-                <Avatar name={name || person.name} src={preview ?? person.avatar_url ?? undefined} size="lg" />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-ui text-[12.5px] font-semibold text-text-1">
-                    {avatarFile ? avatarFile.name : 'Upload a new profile image'}
-                  </p>
-                  <p className="mt-0.5 font-mono text-[10.5px] text-text-4">Image files only · max 10 MB</p>
-                </div>
-                <Button size="sm" variant="secondary" onClick={() => fileInputRef.current?.click()}>
-                  <Upload size={13} /> Choose
-                </Button>
-                <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={onPickAvatar} />
-              </div>
-            </div>
-          </section>
-        )}
-
-        {mayManage ? (
-          <section className="space-y-3.5">
-            <h4 className="font-mono text-[10px] text-text-4 uppercase tracking-wider">Role & assignment</h4>
-            <div>
-              <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Role</label>
-              {isSelf ? (
-                <>
-                  <div className="flex items-center gap-2 rounded-md border border-border-default bg-surface-inset px-3 py-2">
-                    <ProfileRoles profileId={person.id} fallbackRole={role} />
-                  </div>
-                  <p className="font-mono text-[10px] text-text-4 mt-1">You can't change your own role.</p>
-                </>
-              ) : (
-                <Select value={role} onChange={setRole} options={roleOptions} />
-              )}
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Designation</label>
-                <Select value={designation} onChange={setDesignation} options={designationOptions} />
-              </div>
-              <div>
-                <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Job type</label>
-                <Select value={jobType} onChange={setJobType} options={JOB_TYPE_OPTIONS} />
-              </div>
-            </div>
-            <div>
-              <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Teams</label>
-              <TeamPicker teams={teams} value={teamIds} onChange={setTeamIds} />
-            </div>
-            <div>
-              <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Allowed check-in</label>
-              <div className="flex items-center gap-2">
-                <div className="flex-1">
-                  <TimePicker value={allowedCheckIn} onChange={setAllowedCheckIn} placeholder="Use office rule…" />
-                </div>
-                {allowedCheckIn && (
-                  <button type="button" onClick={() => setAllowedCheckIn('')} className="shrink-0 rounded-md border border-border-default px-2.5 py-2 text-text-4 transition-colors hover:text-error" title="Clear (use normal office rule)">
-                    <X size={14} />
-                  </button>
-                )}
-              </div>
-              <p className="font-mono text-[10px] text-text-4 mt-1">If set, checking in at or before this time is on-time (grace period ignored). Empty = standard office rule.</p>
-            </div>
-            <div className="flex items-center justify-between gap-3 rounded-md border border-border-default bg-surface-inset px-3 py-2.5">
-              <div className="min-w-0">
-                <p className="font-ui text-[12.5px] font-semibold text-text-1">Exclude from attendance</p>
-                <p className="font-mono text-[10px] text-text-4 mt-0.5">Exempt (e.g. CEO/COO), no check-in, hidden from attendance lists & reports.</p>
-              </div>
-              <Toggle checked={attendanceExcluded} onChange={setAttendanceExcluded} />
-            </div>
-          </section>
-        ) : (
-          <p className="font-ui text-[12.5px] text-text-3 flex items-center gap-2"><ShieldAlert size={14} className="text-text-4" /> You don't have permission to change this user's role.</p>
-        )}
-
-        {canManagePeople && <SalaryCard profileId={person.id} context="admin" />}
-      </div>
-    </Drawer>
-  )
-}
-
-function humanizeError(msg: string): string {
-  if (msg.includes('forbidden_target') || msg.includes('forbidden_role') || msg.includes('forbidden')) return 'Not allowed for your role'
-  if (msg.includes('cannot_manage_self') || msg.includes('cannot_change_own_role')) return "You can't change your own role"
-  if (msg.includes('already_active')) return 'This user has already signed in'
-  return msg
-}
-
 // ── Change password modal (admin/HR — no old password required) ────────────────────
 
 function ChangePasswordModal({ person, onClose }: { person: Person; onClose: () => void }) {
@@ -406,14 +178,7 @@ function ChangePasswordModal({ person, onClose }: { person: Person; onClose: () 
 
 // ── People list views ─────────────────────────────────────────────────────────────
 
-type ViewMode = 'cards' | 'table'
-
 const GRID_COLS = 'grid-cols-[minmax(260px,1.5fr)_150px_minmax(140px,1fr)_140px_120px_124px]'
-
-const PEOPLE_VIEWS: ViewToggleOption<ViewMode>[] = [
-  { value: 'cards', label: 'Cards', icon: LayoutGrid },
-  { value: 'table', label: 'Table', icon: Table2 },
-]
 
 function TeamsCell({ labels }: { labels: string[] }) {
   if (labels.length === 0) {
@@ -494,6 +259,10 @@ function PersonActionsMenu({ person, authority, myId, onEdit, onToggleActive, on
   onChangePassword: () => void
   onResend: () => void
 }) {
+  const navigate = useNavigate()
+  const toast = useToast()
+  const { impersonate } = useAuthContext()
+  const [impersonating, setImpersonating] = useState(false)
   const canManagePeople = useCanManagePeople()
   const canEditAnyProfile = useCanAccess('can_edit_any_profile')
   const canDeletePeople = useCanAccess('can_delete_people')
@@ -502,7 +271,12 @@ function PersonActionsMenu({ person, authority, myId, onEdit, onToggleActive, on
   const mayDelete = canDeletePeople && mayManage
   const mayPassword = mayManage && person.id !== myId
   const mayResend = mayManage && accountStatus(person) === 'invited'
-  const showAnyAction = canManagePeople && (mayEdit || mayManage || mayPassword || mayResend)
+  // Rank-based and permission-based both: you may step into an account below
+  // you, never a peer's. The hook mirrors what auth-impersonate enforces.
+  const mayImpersonate = useCanImpersonate(person, myId)
+  // Impersonation hangs off its own permission, so it opens the menu on its own
+  // rather than riding on can_manage_people like the management actions do.
+  const showAnyAction = (canManagePeople && (mayEdit || mayManage || mayPassword || mayResend)) || mayImpersonate
 
   const triggerRef = useRef<HTMLButtonElement>(null)
   const [open, setOpen] = useState(false)
@@ -510,6 +284,19 @@ function PersonActionsMenu({ person, authority, myId, onEdit, onToggleActive, on
 
   const close = () => { setOpen(false); setConfirm(null) }
   const run = (fn: () => void) => { close(); fn() }
+
+  // Lands on My Day, the same place the profile page's button goes: the point of
+  // stepping into an account is to see what they see when they open the portal.
+  const logInAs = async () => {
+    setImpersonating(true)
+    try {
+      await impersonate(person.id)
+      navigate('/my-day')
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'Could not log in as this member', 'error')
+      setImpersonating(false)
+    }
+  }
 
   if (!showAnyAction) return <span className="block size-8" aria-hidden />
 
@@ -552,6 +339,13 @@ function PersonActionsMenu({ person, authority, myId, onEdit, onToggleActive, on
         ) : (
           <div className="py-1">
             {mayEdit && <MenuItem icon={Pencil} label="Edit" onClick={() => run(onEdit)} />}
+            {mayImpersonate && (
+              <MenuItem
+                icon={impersonating ? Loader2 : UserCog}
+                label={impersonating ? 'Signing in…' : `Log in as ${person.name.split(' ')[0]}`}
+                onClick={() => { setOpen(false); void logInAs() }}
+              />
+            )}
             {mayResend && <MenuItem icon={MailPlus} label="Invite" onClick={() => run(onResend)} />}
             {mayPassword && <MenuItem icon={KeyRound} label="Change password" onClick={() => run(onChangePassword)} />}
             {mayManage && (
@@ -591,10 +385,10 @@ function PersonTableRow({ person, authority, myId, teamLabels, designationName, 
   return (
     <div className={cn('grid items-center gap-4 px-5 py-3.5 transition-colors hover:bg-surface-2/45', GRID_COLS, !person.is_active && 'opacity-60')}>
       <div className="flex min-w-0 items-center gap-3">
-        <Avatar name={person.name} src={person.avatar_url ?? undefined} size="sm" personId={person.id} />
+        <Avatar name={person.name} src={person.avatar_url ?? undefined} size="sm" personId={person.id} navigateOnly />
         <div className="min-w-0">
           <p className="flex items-center gap-2 truncate font-ui text-[13px] font-semibold text-text-1">
-            <PersonLink personId={person.id} className="truncate">{person.name}</PersonLink>
+            <PersonLink personId={person.id} className="truncate" navigateOnly>{person.name}</PersonLink>
             <span className="shrink-0 rounded-sm bg-surface-2 px-1.5 py-0.5 font-display text-[10px] font-bold text-text-2">Lv {person.level}</span>
             {inactiveBadge}
           </p>
@@ -628,10 +422,10 @@ function PersonCard({ person, authority, myId, teamLabels, designationName, ...a
     <article className={cn('overflow-visible rounded-lg border border-border-default bg-surface-1 shadow-[0_14px_40px_rgba(0,0,0,0.14)] transition-colors hover:border-border-strong', !person.is_active && 'opacity-65')}>
       <div className="border-b border-border-subtle bg-[linear-gradient(135deg,rgba(224,20,20,0.055),rgba(34,211,238,0.045)_58%,rgba(20,29,42,0)_100%)] p-4">
         <div className="flex items-start gap-3">
-          <Avatar name={person.name} src={person.avatar_url ?? undefined} size="lg" personId={person.id} />
+          <Avatar name={person.name} src={person.avatar_url ?? undefined} size="lg" personId={person.id} navigateOnly />
           <div className="min-w-0 flex-1">
             <div className="flex min-w-0 items-center gap-2">
-              <PersonLink personId={person.id} className="truncate font-display text-[15px] font-bold leading-tight text-text-1">{person.name}</PersonLink>
+              <PersonLink personId={person.id} className="truncate font-display text-[15px] font-bold leading-tight text-text-1" navigateOnly>{person.name}</PersonLink>
               {inactiveBadge}
             </div>
             <p className="mt-1 truncate font-mono text-[11.5px] text-text-3">{person.email}</p>
@@ -779,18 +573,7 @@ export default function PeoplePage() {
   const { profile } = useAuthContext()
   const myId = profile?.id ?? ''
   // Authority is a rank on the role ladder, not a role name — see lib/peopleAccess.
-  const myRank = useMyRoleRank()
-  const { data: allRoles = [] } = useRoles()
-  const authority: Authority = useMemo(
-    () => ({
-      myRank,
-      rankOf: (slug: string) => allRoles.find((r) => r.slug === slug)?.position,
-      ladder: allRoles
-        .filter((r) => INTERNAL_ROLES.includes(r.slug as InternalRole))
-        .map((r) => ({ slug: r.slug, position: r.position })),
-    }),
-    [myRank, allRoles],
-  )
+  const authority = useAuthority()
   // Inviting is the same capability as managing people (was canInvite = canManagePeople).
   const canInvite = useCanManagePeople()
 
@@ -813,7 +596,6 @@ export default function PeoplePage() {
   const [roleFilter, setRoleFilter] = useState('')
   /** Active is the working set; Inactive is the archive of people who have left. */
   const [statusTab, setStatusTab] = useState<'active' | 'inactive'>('active')
-  const [viewMode, setViewMode] = useState<ViewMode>('cards')
   const [inviteOpen, setInviteOpen] = useState(false)
   const [editing, setEditing] = useState<Person | null>(null)
   const [passwordFor, setPasswordFor] = useState<Person | null>(null)
@@ -921,7 +703,6 @@ export default function PeoplePage() {
               })}
             </div>
             <div className="flex-1 sm:flex-none sm:w-44"><Select value={roleFilter} onChange={setRoleFilter} options={roleFilterOptions} /></div>
-            <ViewToggle value={viewMode} onChange={setViewMode} options={PEOPLE_VIEWS} className="hidden lg:flex" />
             {canInvite && <Button size="sm" className="shrink-0" onClick={() => setInviteOpen(true)}><Plus size={13} /> Invite</Button>}
           </div>
         </div>
@@ -933,19 +714,13 @@ export default function PeoplePage() {
             <div className="lg:hidden">
               <PeopleCards people={filtered} authority={authority} myId={myId} teamsByProfile={teamsByProfile} designationName={designationName} onEdit={setEditing} onToggleActive={toggleActive} onDelete={removePerson} onChangePassword={setPasswordFor} onResend={resendInviteFor} />
             </div>
-            {viewMode === 'table' ? (
-              <PeopleTable people={filtered} authority={authority} myId={myId} teamsByProfile={teamsByProfile} designationName={designationName} onEdit={setEditing} onToggleActive={toggleActive} onDelete={removePerson} onChangePassword={setPasswordFor} onResend={resendInviteFor} />
-            ) : (
-              <div className="hidden lg:block">
-                <PeopleCards people={filtered} authority={authority} myId={myId} teamsByProfile={teamsByProfile} designationName={designationName} onEdit={setEditing} onToggleActive={toggleActive} onDelete={removePerson} onChangePassword={setPasswordFor} onResend={resendInviteFor} />
-              </div>
-            )}
+            <PeopleTable people={filtered} authority={authority} myId={myId} teamsByProfile={teamsByProfile} designationName={designationName} onEdit={setEditing} onToggleActive={toggleActive} onDelete={removePerson} onChangePassword={setPasswordFor} onResend={resendInviteFor} />
           </>
         )}
       </div>
 
       {inviteOpen && <InviteModal authority={authority} teams={teams.map((t) => ({ id: t.id, name: t.name }))} designationOptions={designationOptions} onClose={() => setInviteOpen(false)} />}
-      {editing && <EditDrawer person={editing} authority={authority} isSelf={editing.id === myId} teams={teams.map((t) => ({ id: t.id, name: t.name }))} designationOptions={designationOptions} currentTeamIds={teamIdsByProfile.get(editing.id) ?? []} onClose={() => setEditing(null)} />}
+      {editing && <PersonEditDrawer person={editing} isSelf={editing.id === myId} onClose={() => setEditing(null)} />}
       {passwordFor && <ChangePasswordModal person={passwordFor} onClose={() => setPasswordFor(null)} />}
     </div>
   )
