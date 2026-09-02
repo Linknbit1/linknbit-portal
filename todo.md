@@ -9,4 +9,3 @@
 - I need option of copiying an image from somewhere and pasting it in chat/channel/task comment to upload image in it. I also need image upload option/comment emoji reply option for comments/emoji picker for comment option.
 - There is a bug where if i react to a message and that message is deleted, the emoji reaction stays. fix this bug.
 - I need a time limit to editing/deleting messages and comments so after a specific timespan it cannot be edited/deleted.
-- If message in chat/channel is too long, it takes alot of space and the cross icon disappears and page exceeds screen width. fix this issue please.
