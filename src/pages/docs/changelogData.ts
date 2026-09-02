@@ -49,6 +49,10 @@ export const RELEASES: ChangelogRelease[] = [
         kind: 'added',
         text: 'A person\u2019s role, designation, job type and teams can now be set from their profile page, not only from People. The Edit button appears on the profiles of people you are senior to, and opens the same form.',
       },
+      {
+        kind: 'added',
+        text: 'A third page sits beside the handbook and the changelog: Product purpose \u2014 what this portal is for, what each module replaces, and an honest account of what is live versus still being built. Open it from the arrow beside the logo.',
+      },
     ],
   },
   {

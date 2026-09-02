@@ -18,6 +18,7 @@ import {
   StickyNote,
   BookOpen,
   Tag,
+  Compass,
   TrendingUp,
   type LucideIcon,
 } from 'lucide-react'
@@ -185,6 +186,7 @@ const STANDUP_CHILDREN: NavItem[] = [
 export const BRAND_MENU_LINKS = [
   { to: '/docs', label: 'Documentation', hint: 'How the portal works', icon: BookOpen },
   { to: '/docs/changelog', label: "What's new", hint: 'Every release, newest first', icon: Tag },
+  { to: '/docs/product', label: 'Product purpose', hint: 'What this is for, and how far along', icon: Compass },
 ] as const
 
 export const NAV_ITEMS: NavItem[] = [

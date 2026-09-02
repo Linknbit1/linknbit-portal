@@ -779,3 +779,32 @@ export interface HandoffOutcome {
   stagesCreated: number
   tasksCreated: number
 }
+
+// ── Product purpose page ──────────────────────────────────────────────────────
+// The third docs page: what this portal is for, who it is for, and how far along
+// it is. Structured rather than a slab of prose so the page can render the
+// module table and the build-state columns without parsing markdown.
+
+/** How far along one capability is. Ordered from shipped to not started. */
+export type BuildState = 'live' | 'partial' | 'planned'
+
+/** One row of the "what you can do today" table. */
+export interface ProductModule {
+  name: string
+  /** The tool or habit a team drops when they adopt this module. */
+  replaces: string
+  /** What is actually in it, in the reader's language. */
+  contains: string
+  state: BuildState
+  /** Only for `partial` / `planned`: what is missing, stated plainly. */
+  gap?: string
+}
+
+/** A named block of the roadmap, with the honesty flag the owner reads. */
+export interface RoadmapItem {
+  title: string
+  detail: string
+  state: BuildState
+  /** True when this is the model's inference from the code, not the owner's stated plan. */
+  toConfirm?: boolean
+}

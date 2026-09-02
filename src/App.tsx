@@ -45,6 +45,7 @@ import BdSectionScreen from './pages/bd/BdSectionScreen'
 import BdProjectDetailPage from './pages/bd/BdProjectDetailPage'
 import DocumentationPage from './pages/docs/DocumentationPage'
 import ChangelogPage from './pages/docs/ChangelogPage'
+import ProductPurposePage from './pages/docs/ProductPurposePage'
 
 import ClientDashboardPage from './pages/client/DashboardPage'
 import ClientProjectsPage from './pages/client/ProjectsPage'
@@ -103,6 +104,7 @@ export default function App() {
                     the handbook filters its own chapters by role and capability. */}
                 <Route path="/docs" element={<DocumentationPage />} />
                 <Route path="/docs/changelog" element={<ChangelogPage />} />
+                <Route path="/docs/product" element={<ProductPurposePage />} />
                 {/* Notifications and the "waiting on you" queue, in one place. */}
                 <Route path="/notifications" element={<NotificationsPage />} />
                 <Route path="/chat" element={<ChatPage />} />
