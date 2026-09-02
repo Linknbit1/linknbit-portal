@@ -27,6 +27,21 @@ export interface CreateMessageArgs {
   replyToId?: string | null
 }
 
+/**
+ * Flattens an embed that may arrive either way.
+ *
+ * PostgREST returns a to-one embed as an object and a to-many as an array, and
+ * `reply_to` is a self-referential embed hinted by column — which of the two it
+ * resolves to is not something to build on. Taking `[0]` unconditionally yields
+ * undefined the moment it comes back as an object, and a missing quote is then
+ * indistinguishable from a deleted one, so every reply claims the message it
+ * answers was deleted.
+ */
+function oneOf<T>(embed: T[] | T | null | undefined): T | null {
+  if (embed === null || embed === undefined) return null
+  return Array.isArray(embed) ? embed[0] ?? null : embed
+}
+
 export const MESSAGE_PAGE_SIZE = 50
 
 /**
@@ -56,11 +71,8 @@ export async function fetchMessages(channelId: string, before?: string): Promise
 
   const { data, error } = await query
   if (error) throw error
-  // A self-join has no unique constraint telling PostgREST it is to-one, so
-  // `reply_to` arrives as an array of at most one. Flattened here rather than at
-  // every render site.
   return data
-    .map((m) => ({ ...m, reply_to: m.reply_to[0] ?? null }))
+    .map((m) => ({ ...m, reply_to: oneOf(m.reply_to) }))
     .reverse()
 }
 
