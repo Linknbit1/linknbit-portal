@@ -26,6 +26,36 @@ function SectionLabel({ children }: { children: ReactNode }) {
   )
 }
 
+/**
+ * A conversation row while the list loads — the same shape it will become:
+ * avatar, a name with a time beside it, a line of preview under it.
+ *
+ * Widths step down the list so it reads as a set of different conversations
+ * rather than a stack of identical bars.
+ */
+function RowSkeleton({ nameWidth, previewWidth }: { nameWidth: string; previewWidth: string }) {
+  return (
+    <div className="flex items-center gap-3 border-b border-border-subtle px-3 py-2.5">
+      <Skeleton className="size-10 shrink-0" rounded="md" />
+      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+        <span className="flex items-center gap-2">
+          <Skeleton className={cn('h-3', nameWidth)} rounded="sm" />
+          <Skeleton className="ml-auto h-2.5 w-9" rounded="sm" />
+        </span>
+        <Skeleton className={cn('h-2.5', previewWidth)} rounded="sm" />
+      </div>
+    </div>
+  )
+}
+
+const ROW_SKELETONS = [
+  { nameWidth: 'w-28', previewWidth: 'w-44' },
+  { nameWidth: 'w-20', previewWidth: 'w-32' },
+  { nameWidth: 'w-32', previewWidth: 'w-24' },
+  { nameWidth: 'w-24', previewWidth: 'w-40' },
+  { nameWidth: 'w-16', previewWidth: 'w-28' },
+]
+
 interface ConversationListPaneProps {
   activeChannelId?: string
   onSelect: (channelId: string) => void
@@ -203,7 +233,7 @@ export function ConversationListPane({ activeChannelId, onSelect, onNewChannel, 
 
       <div className="flex-1 overflow-y-auto">
         {isLoading ? (
-          <div className="space-y-2 p-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12" />)}</div>
+          ROW_SKELETONS.map((row, i) => <RowSkeleton key={i} {...row} />)
         ) : shown.length === 0 && messageResults.length === 0 ? (
           <p className="px-6 py-12 text-center font-ui text-[12.5px] text-text-4">
             {channels.length === 0
