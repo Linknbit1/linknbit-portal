@@ -30,7 +30,11 @@ export function ConversationListRow({ channel, myProfileId, unread, active, onCl
   // Something typed here and never sent. It takes the preview's place: what you
   // owe this conversation matters more than the last thing said in it, and the
   // ticks belong to a message you sent, not to one you never did.
-  const draft = useChatDrafts().drafts[channel.id]
+  // Never on the conversation you are in. A draft label is for a conversation
+  // you left something in and walked away from; on the open one it is just your
+  // own typing echoed back a second time, changing under you as you go.
+  const { drafts } = useChatDrafts()
+  const draft = active ? undefined : drafts[channel.id]
 
   // A reaction that landed after the newest message is the last thing that
   // happened here, so it is what the row should say — the way WhatsApp reports

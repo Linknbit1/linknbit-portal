@@ -338,7 +338,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
           'Deleting a message takes its reactions with it.',
           'Conversations are ordered by whatever happened in them last, so a new message or reaction moves that conversation to the top of the list.',
           'When the last thing to happen was a reaction, the list says so — "Ghayas reacted 👍 to your message" — rather than leaving the row on a message nobody has touched since.',
-          'Anything typed and not sent is kept while you are in the portal, and the conversation shows "Draft:" in the list so you can find your way back to it. It is not kept across a reload.',
+          'Anything typed and not sent is kept while you are in the portal. Once you move to another conversation, the one you left shows "Draft:" and the text in the list, so an unfinished message is easy to find your way back to. It is not kept across a reload.',
           'A message that tags you, tags a team you are on, or carries an @everyone is banded in amber so you can find it scrolling back, not only when the notification arrives.',
           'The date is said once, on a divider between the days, and it stays pinned to the top as you scroll — so a long scroll back always tells you which day you are in. Each message carries only its time; hover it for the full date.',
           'Drag a message to the right to reply to it — swipe it on a phone or tablet, or drag it with the mouse on a computer. A reply arrow appears as you go and turns red once you have gone far enough; let go there. The arrow that appears when you hover a message does the same thing.',

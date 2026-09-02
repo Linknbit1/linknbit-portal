@@ -79,7 +79,7 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'added',
-        text: 'A conversation you have typed in but not sent now shows "Draft:" and the text in the list, so an unfinished message is not lost behind another conversation. Drafts are kept while the portal is open, not across a reload.',
+        text: 'Leave a conversation with something typed and not sent, and it now shows "Draft:" and the text in the list, so an unfinished message is not lost behind another conversation. Drafts are kept while the portal is open, not across a reload.',
       },
       {
         kind: 'fixed',
