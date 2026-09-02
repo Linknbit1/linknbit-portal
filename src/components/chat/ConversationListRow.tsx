@@ -3,7 +3,9 @@ import { Avatar } from '../ui/Avatar'
 import { ConversationMenu } from './ConversationMenu'
 import { cn } from '../../lib/cn'
 import { formatRelativeTime } from '../../lib/utils'
-import { channelTitle, dmCounterpart } from './chatUtils'
+import { ReadTicks } from './ReadTicks'
+import { channelTitle, dmCounterpart, receiptState } from './chatUtils'
+import { useChatDrafts } from '../../context/ChatDraftsContext'
 import type { ChannelListItem } from '../../api/channels'
 
 interface ConversationListRowProps {
@@ -18,6 +20,36 @@ interface ConversationListRowProps {
 export function ConversationListRow({ channel, myProfileId, unread, active, onClick, onRemoved }: ConversationListRowProps) {
   const title = channelTitle(channel, myProfileId)
   const counterpart = dmCounterpart(channel, myProfileId)
+
+  // Ticks on the row only when the last word in the conversation was yours —
+  // the same rule the thread uses per message. On somebody else's message the
+  // row already says everything you can act on.
+  const lastIsMine = !!myProfileId && channel.last_message_author_id === myProfileId
+  const audience = Math.max(0, channel.members.length - 1)
+
+  // Something typed here and never sent. It takes the preview's place: what you
+  // owe this conversation matters more than the last thing said in it, and the
+  // ticks belong to a message you sent, not to one you never did.
+  // Never on the conversation you are in. A draft label is for a conversation
+  // you left something in and walked away from; on the open one it is just your
+  // own typing echoed back a second time, changing under you as you go.
+  const { drafts } = useChatDrafts()
+  const draft = active ? undefined : drafts[channel.id]
+
+  // A reaction that landed after the newest message is the last thing that
+  // happened here, so it is what the row should say — the way WhatsApp reports
+  // one rather than leaving the row on a message nobody has touched since.
+  const reaction = channel.last_reaction
+  const reactionIsLatest = !!reaction
+    && (!channel.last_message_at || reaction.at > channel.last_message_at)
+
+  // A deletion is the last thing that happened, and saying so is more honest
+  // than quietly showing an older message as though nothing had changed.
+  const deletedBy = channel.last_message_deleted
+    ? lastIsMine
+      ? 'You'
+      : channel.members.find((m) => m.id === channel.last_message_author_id)?.name ?? 'Someone'
+    : null
 
   return (
     // A container rather than one big button, so the actions menu isn't a
@@ -49,15 +81,39 @@ export function ConversationListRow({ channel, myProfileId, unread, active, onCl
             </span>
             {channel.is_private && <Lock size={11} className="shrink-0 text-text-4" aria-label="Private channel" />}
             {channel.muted && <BellOff size={11} className="shrink-0 text-text-4" aria-label="Muted" />}
-            {channel.last_message_at && (
+            {/* Whichever happened last, so the time agrees with the line below it. */}
+            {(reactionIsLatest ? reaction?.at : channel.last_message_at) && (
               <span className="ml-auto shrink-0 font-mono text-[10.5px] text-text-4">
-                {formatRelativeTime(channel.last_message_at)}
+                {formatRelativeTime((reactionIsLatest && reaction ? reaction.at : channel.last_message_at)!)}
               </span>
             )}
           </span>
-          <span className="mt-0.5 flex items-center gap-2">
-            <span className="flex-1 truncate font-ui text-[13px] text-text-3">
-              {channel.last_message_preview || 'No messages yet'}
+          <span className="mt-0.5 flex items-center gap-1.5">
+            {/* Ahead of the preview, where a messaging app puts it: the tick
+                belongs to the line it describes, and leading it keeps every row
+                in the list aligned however long the preview runs. */}
+            {/* No ticks on a message that no longer exists. */}
+            {!draft && !reactionIsLatest && !deletedBy && lastIsMine && (
+              <ReadTicks
+                state={receiptState(channel.last_message_seen_by, audience)}
+                audience={audience}
+                size="list"
+              />
+            )}
+            <span className="min-w-0 flex-1 truncate font-ui text-[13px] text-text-3">
+              {draft ? (
+                <><span className="font-semibold text-brand-red">Draft: </span>{draft.text}</>
+              ) : deletedBy && !reactionIsLatest ? (
+                <span className="italic">{deletedBy} deleted this message</span>
+              ) : reactionIsLatest && reaction ? (
+                <>
+                  <span className="mr-1">{reaction.emoji}</span>
+                  {reaction.byMe ? 'You reacted' : `${reaction.by} reacted`}
+                  {reaction.targetIsMine && !reaction.byMe ? ' to your message' : `: ${reaction.target}`}
+                </>
+              ) : (
+                channel.last_message_preview || 'No messages yet'
+              )}
             </span>
             {unread > 0 && (
               <span className="flex h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-sm bg-brand-red px-1.5 font-mono text-[10px] font-bold text-white">

@@ -8,12 +8,23 @@ export const CHANNEL_MEMBER_KEYS = {
   byChannel: (channelId: string) => ['channel-members', channelId] as const,
 }
 
-export function useChannelMembers(channelId: string | undefined) {
+/**
+ * `live` is for the open conversation, where these rows are not a roster but a
+ * set of read receipts: every member's `last_read_at` lives here, and it is what
+ * turns the sender's ticks. Realtime already invalidates them, but a receipt
+ * that silently misses its event reads as "the ticks are broken", so the open
+ * thread also refreshes on a slow interval as a floor. Paused in a background
+ * tab — nobody is looking at ticks they cannot see.
+ */
+export function useChannelMembers(channelId: string | undefined, options?: { live?: boolean }) {
+  const live = options?.live ?? false
   return useQuery({
     queryKey: CHANNEL_MEMBER_KEYS.byChannel(channelId ?? ''),
     queryFn: () => fetchChannelMembers(channelId!),
     enabled: !!channelId,
-    staleTime: 30_000,
+    staleTime: live ? 5_000 : 30_000,
+    refetchInterval: live ? 20_000 : false,
+    refetchIntervalInBackground: false,
   })
 }
 

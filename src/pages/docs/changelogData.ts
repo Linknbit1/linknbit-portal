@@ -31,11 +31,118 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: '1.26.0',
+    date: '2026-09-01',
+    title: 'Ticks that keep up',
+    highlight:
+      'Read ticks in Chat now turn the moment somebody opens the conversation, carry a state while a message is still sending, sit in the corner of the message rather than on a line of their own — and appear in the conversation list too.',
+    entries: [
+      {
+        kind: 'improved',
+        text: 'Scrolling up in a conversation loads its older messages by itself — the "Load older messages" button is gone, and your place in the thread is kept as they arrive.',
+      },
+      {
+        kind: 'fixed',
+        text: 'The sender\'s picture now sits level with the top of their messages instead of drifting down beside a long one.',
+      },
+      {
+        kind: 'improved',
+        text: 'A picture sent with a message now sits above its text rather than under it, and the date divider behaves like a header — the conversation blurs softly as it passes behind, and only while the divider is actually pinned to the top.',
+      },
+      {
+        kind: 'added',
+        text: 'When the newest message in a conversation is deleted, the list says "You deleted this message" or names who did, instead of quietly falling back to an older message and looking stale.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Pressing Enter to pick someone from the @mention list no longer sends the message half-written. Enter picks the highlighted name; it only sends once the list has closed. The same applies to the / command and # file lists.',
+      },
+      {
+        kind: 'improved',
+        text: 'Chat now reads as a conversation. Every message sits in its own container — yours down the right in the brand colour, everybody else\'s down the left — with the time, the edited note and the ticks in the bottom corner of the message itself. In a one-to-one nobody is named above their messages any more; which side it is on already says who sent it.',
+      },
+      {
+        kind: 'fixed',
+        text: 'The conversation list is ordered by whatever happened last, worked out from the messages and reactions themselves. A new message now moves its conversation to the top.',
+      },
+      {
+        kind: 'added',
+        text: 'When the last thing in a conversation was a reaction, the list says so — "Ghayas reacted 👍 to your message" — instead of showing a message nobody has touched since.',
+      },
+      {
+        kind: 'added',
+        text: 'Paste an image straight into the message box. It shows at full size above the box before it goes, so you can check you pasted the right one, and you can send a message with it.',
+      },
+      {
+        kind: 'added',
+        text: 'Hover a reaction to see who picked it — press and hold on a phone. The count on its own never answered the question anybody had.',
+      },
+      {
+        kind: 'added',
+        text: 'Leave a conversation with something typed and not sent, and it now shows "Draft:" and the text in the list, so an unfinished message is not lost behind another conversation. Drafts are kept while the portal is open, not across a reload.',
+      },
+      {
+        kind: 'fixed',
+        text: 'You now get one reaction per message. Picking a second emoji moves yours instead of stacking another beside it, and pressing your own still takes it off.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Deleting a message now takes its reactions with it, and removing a reaction reaches everyone else in the conversation rather than only your own screen.',
+      },
+      {
+        kind: 'fixed',
+        text: 'A conversation whose last message was a picture no longer reads as "No messages yet" in the list — it says what was sent.',
+      },
+      {
+        kind: 'added',
+        text: 'Drag a message to the right to reply to it, the way a messaging app does — swipe on a phone or tablet, or drag with the mouse on a computer. A reply arrow appears as you go and turns red once you have gone far enough. The arrow on hover still does the same thing.',
+      },
+      {
+        kind: 'added',
+        text: 'Chat now puts a date divider between the days, and it stays pinned to the top as you scroll — so scrolling back through a long conversation always tells you which day you are reading.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Notifications about a leave, WFH, exception or overtime request now open the requests queue on that kind, instead of landing on Attendance and leaving you to find the row. Holidays, company WFH days and working Saturdays open the calendar.',
+      },
+      {
+        kind: 'fixed',
+        text: 'A message time no longer wraps onto two lines. It also no longer repeats the date on every message, now that the divider above the day carries it.',
+      },
+      {
+        kind: 'improved',
+        text: 'The account menu now shows your designation under your name rather than your roles. Roles decide what you can open; the line under your name should say what you do.',
+      },
+      {
+        kind: 'improved',
+        text: 'The details panel of a direct message no longer offers a "Message" button for the person whose conversation you already have open.',
+      },
+      {
+        kind: 'added',
+        text: 'The conversation list now carries the same ticks. When the last word in a conversation was yours, its row shows whether it has been read, so you can see what is still waiting on somebody without opening it.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Ticks now turn as soon as the other person opens the conversation. They used to sit on one grey tick until that person replied, which read as though nobody had seen the message.',
+      },
+      {
+        kind: 'improved',
+        text: 'A message still on its way now shows a clock, so a tick goes clock → one tick → read instead of appearing out of nothing once it lands.',
+      },
+      {
+        kind: 'improved',
+        text: 'Ticks sit in the bottom-right corner of the message, level with its last line, instead of on a line of their own underneath it.',
+      },
+      {
+        kind: 'fixed',
+        text: 'The message box now wraps onto a new line as you type. A long message, or a pasted link with no spaces in it, used to stretch the box wider and wider and drag the conversation across with it. It also stops growing once it is tall enough and scrolls instead, so a long message never pushes the conversation off the screen.',
+      },
+    ],
+  },
+  {
     version: '1.25.0',
     date: '2026-08-31',
     title: 'Boards that read like boards',
-    highlight:
-      'A task you raise stays visible even before you assign it, leads see their whole service block, board columns carry their colour and an icon, and a project’s Team tab uses the whole screen.',
     entries: [
       {
         kind: 'fixed',

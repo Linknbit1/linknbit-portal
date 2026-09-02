@@ -5,6 +5,7 @@ import { BottomTabBar } from './BottomTabBar'
 import { NavChromeContext } from './MobileNavContext'
 import { cn } from '../../lib/cn'
 import { useAuthContext } from '../../context/AuthContext'
+import { useResyncPushSubscription } from '../../hooks/useNotifications'
 import { useRealtimeNotifications } from '../../hooks/realtime/useRealtimeNotifications'
 import { useRealtimeChannelList } from '../../hooks/realtime/useRealtimeChannelList'
 import { FileViewerProvider } from '../shared/FileViewer'
@@ -39,6 +40,9 @@ export function AppShell() {
   // route and both breakpoints — the toast should never depend on which page
   // or layout happens to be on screen.
   useRealtimeNotifications(profile?.id ?? '')
+  // Push endpoints expire and get pruned server-side; nothing used to put them
+  // back, so people quietly stopped being reachable. This repairs that on load.
+  useResyncPushSubscription(profile?.id ?? '')
 
   // Same reasoning for chat: the conversation list and the sidebar unread badge
   // stay live regardless of which page is open.

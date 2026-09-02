@@ -174,6 +174,14 @@ const GAMIFICATION_REVIEW_TYPES: readonly string[] = [
   'quest_claimed', 'quest_submitted', 'shoutout_pending', 'redemption_pending',
 ]
 
+/**
+ * The requests queue, opened on one kind. The queue reads this off the URL, so
+ * the link carries the tab rather than the reader having to find it.
+ */
+function attendanceRequestHref(kind: 'leave' | 'wfh' | 'exception' | 'overtime'): string {
+  return `/attendance/requests?kind=${kind}`
+}
+
 /** Where a notification should take you when clicked. */
 export function notificationHref(
   resourceType: string | null,
@@ -190,14 +198,24 @@ export function notificationHref(
       return resourceId ? taskNotificationHref(resourceId) : '/notifications'
     case 'project':
       return resourceId ? `/projects/${resourceId}` : '/notifications'
+    // Attendance is a set of sibling screens, so each resource names the one it
+    // is actually on. Landing everyone on /attendance meant "your exception was
+    // approved" opened Today's roster and left you to go and find it.
+    // The four request kinds share one queue, and open it on their own tab.
     case 'leave_request':
+      return attendanceRequestHref('leave')
     case 'wfh_request':
+      return attendanceRequestHref('wfh')
     case 'attendance_exception':
+      return attendanceRequestHref('exception')
     case 'overtime_request':
+      return attendanceRequestHref('overtime')
+    // Holidays, company WFH days and working Saturdays are all marks on the
+    // shared calendar — that is the screen that shows them.
     case 'holiday':
     case 'company_wfh_day':
     case 'working_saturday':
-      return '/attendance'
+      return '/attendance/calendar'
     // /gamification only redirects to the leaderboard, so each resource names
     // the sub-page that actually shows it.
     case 'quest_task':

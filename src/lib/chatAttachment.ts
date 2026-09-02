@@ -94,3 +94,21 @@ export function chatContentType(file: File): string {
   const ext = file.name.split('.').pop()?.toLowerCase() ?? ''
   return EXT_MIME[ext] ?? file.type ?? 'application/octet-stream'
 }
+
+/**
+ * Clipboard images all arrive called "image.png", so a channel accumulates a
+ * column of identical names in its Files panel. Stamped with the moment it was
+ * pasted, each one says which screenshot it is.
+ *
+ * Files chosen or dropped keep the name they came with — that name was a
+ * decision somebody made.
+ */
+export function pastedFileName(file: File): File {
+  if (file.name && !/^image\.[a-z0-9]+$/i.test(file.name)) return file
+
+  const ext = file.name.split('.').pop()?.toLowerCase() || file.type.split('/')[1] || 'png'
+  const now = new Date()
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const stamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} at ${pad(now.getHours())}.${pad(now.getMinutes())}.${pad(now.getSeconds())}`
+  return new File([file], `Pasted image ${stamp}.${ext}`, { type: file.type, lastModified: file.lastModified })
+}

@@ -8,7 +8,7 @@ import Mention from '@tiptap/extension-mention'
 import { Bold, Italic, Strikethrough, Code as CodeIcon, Link as LinkIcon, Check, Unlink } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { SlashCommand } from './slashCommand'
-import { renderSuggestion } from './suggestionUtils'
+import { renderSuggestion, isSuggestionOpen } from './suggestionUtils'
 import { SuggestionList } from './SuggestionList'
 import type { PersonMini } from '../../api/projects'
 import { fileRefExtension, type FileMentionItem } from './fileMention'
@@ -39,10 +39,16 @@ interface RichEditorProps {
   autoFocus?: boolean
   /** Hands the editor instance out so callers can insert content (e.g. emoji). */
   onEditorReady?: (editor: Editor) => void
+  /**
+   * Files arriving on the clipboard — a pasted screenshot, an image copied from
+   * a page. Return true to consume the paste, which stops ProseMirror also
+   * pasting whatever text or markup the clipboard carried alongside the file.
+   */
+  onPasteFiles?: (files: File[]) => boolean
 }
 
 export function RichEditor({
-  value, onChange, onBlur, placeholder, mentionItems = [], allowEveryone, teamItems, fileItems, compact, onSubmit, className, autoFocus, onEditorReady,
+  value, onChange, onBlur, placeholder, mentionItems = [], allowEveryone, teamItems, fileItems, compact, onSubmit, className, autoFocus, onEditorReady, onPasteFiles,
 }: RichEditorProps) {
   const mentionsRef = useRef(mentionItems)
   useEffect(() => { mentionsRef.current = mentionItems }, [mentionItems])
@@ -58,6 +64,8 @@ export function RichEditor({
   useEffect(() => { onSubmitRef.current = onSubmit }, [onSubmit])
   const onBlurRef = useRef(onBlur)
   useEffect(() => { onBlurRef.current = onBlur }, [onBlur])
+  const onPasteFilesRef = useRef(onPasteFiles)
+  useEffect(() => { onPasteFilesRef.current = onPasteFiles }, [onPasteFiles])
   const [linkOpen, setLinkOpen] = useState(false)
   const [linkVal, setLinkVal] = useState('')
 
@@ -110,11 +118,22 @@ export function RichEditor({
     editorProps: {
       attributes: { class: 'prose-editor focus:outline-none' },
       handleKeyDown: (_view, event) => {
-        if (compact && event.key === 'Enter' && !event.shiftKey) {
+        // Not while a @mention, / command or # file list is open: there Enter
+        // means "pick this one". Returning false hands the key to the suggestion
+        // plugin, which ProseMirror only reaches after these props.
+        if (compact && event.key === 'Enter' && !event.shiftKey && !isSuggestionOpen()) {
           onSubmitRef.current?.()
           return true
         }
         return false
+      },
+      // Before ProseMirror's own paste handling, deliberately: an image copied
+      // from a web page arrives as a file AND as <img> markup, and letting both
+      // through would attach the picture and paste a broken image beside it.
+      handlePaste: (_view, event) => {
+        const files = Array.from(event.clipboardData?.files ?? [])
+        if (files.length === 0) return false
+        return onPasteFilesRef.current?.(files) ?? false
       },
     },
     onUpdate: ({ editor: ed }) => onChange(ed.getJSON()),

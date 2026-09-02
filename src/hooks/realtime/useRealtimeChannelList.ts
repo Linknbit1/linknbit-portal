@@ -25,6 +25,9 @@ export function useRealtimeChannelList(enabled: boolean) {
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, invalidate)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'channels' }, invalidate)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'channel_members' }, invalidate)
+      // A reaction is activity too: it can be the newest thing in a conversation,
+      // which changes both what the row says and where it sits in the list.
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'message_reactions' }, invalidate)
       .subscribe()
 
     return () => { supabase.removeChannel(channel) }

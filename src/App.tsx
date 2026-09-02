@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams } from '
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ToastProvider } from './components/ui/Toast'
 import { AuthProvider } from './context/AuthContext'
+import { ChatDraftsProvider } from './context/ChatDraftsContext'
 import { PrivateRoute, HomeRedirect } from './components/layout/PrivateRoute'
 import { RoleGuard } from './components/layout/RoleGuard'
 import { AppShell } from './components/layout/AppShell'
@@ -84,6 +85,7 @@ export default function App() {
       <ToastProvider>
         <BrowserRouter>
           <AuthProvider>
+            <ChatDraftsProvider>
             <Routes>
               <Route path="/" element={<HomeRedirect />} />
               <Route path="/login" element={<LoginPage />} />
@@ -242,6 +244,7 @@ export default function App() {
 
               <Route path="*" element={<HomeRedirect />} />
             </Routes>
+            </ChatDraftsProvider>
           </AuthProvider>
         </BrowserRouter>
       </ToastProvider>

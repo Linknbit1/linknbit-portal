@@ -35,7 +35,8 @@ export function ChatThread({ channelId, hideHeader }: ChatThreadProps) {
   // Read out once: several memos below depend on the id, not the whole profile.
   const myId = profile?.id
   const { data: channel } = useChannel(channelId)
-  const { data: members = [] } = useChannelMembers(channelId)
+  // live: these rows carry every member's last_read_at, which is what draws the ticks.
+  const { data: members = [] } = useChannelMembers(channelId, { live: true })
   const canModerate = useCanAccess('can_administer_channels')
 
   const { messages, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } = useFlatMessages(channelId)
@@ -148,7 +149,7 @@ export function ChatThread({ channelId, hideHeader }: ChatThreadProps) {
   }
 
   return (
-    <div className="flex flex-col flex-1 min-h-0">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       {!hideHeader && (
         <header className="h-14 shrink-0 border-b border-border-default bg-surface-1 px-4 flex items-center gap-3">
           {channel?.kind === 'channel' ? (
@@ -195,7 +196,10 @@ export function ChatThread({ channelId, hideHeader }: ChatThreadProps) {
       )}
 
       <div className="flex-1 min-h-0 flex">
-        <div className="flex-1 min-w-0 flex flex-col min-h-0">
+        <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
+          {/* Wallpaper sits behind the thread as a sibling, never as a wrapper:
+              opacity on an ancestor would make the day divider's blur inert. */}
+          <span aria-hidden className="chat-wallpaper" />
           <MessageList
             messages={messages}
             isLoading={isLoading}
@@ -214,6 +218,9 @@ export function ChatThread({ channelId, hideHeader }: ChatThreadProps) {
             readersOf={readersOf}
             audienceSize={members.filter((m) => m.id !== profile?.id).length}
             myMentionIds={myMentionIds}
+            // In a one-to-one the side a bubble sits on already says who sent
+            // it, so the name above every run is noise.
+            showAuthor={channel?.kind !== 'dm'}
           />
         </div>
 
@@ -241,6 +248,7 @@ export function ChatThread({ channelId, hideHeader }: ChatThreadProps) {
         onSend={handleSend}
         teamItems={teamItems}
         replyTo={replyTo}
+        replyAttachment={replyTo ? attachments.find((a) => a.message_id === replyTo.id) : null}
         onCancelReply={() => setReplyTo(null)}
         onSaveEdit={(payload) => {
           if (!editing) return

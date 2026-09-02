@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { MessageSquare } from 'lucide-react'
 import { Skeleton } from '../ui/Skeleton'
 import { MessageBubble } from './MessageBubble'
-import { startsNewGroup, isOptimistic, mentionsMe } from './chatUtils'
+import { startsNewGroup, isOptimistic, mentionsMe, isSameDay, dayLabel } from './chatUtils'
 import { groupReactions } from '../../hooks/useMessageReactions'
 import type { MessageWithAuthor } from '../../api/messages'
 import type { MessageAttachmentRow } from '../../api/messageAttachments'
@@ -28,12 +28,41 @@ interface MessageListProps {
   audienceSize: number
   /** My id, my teams' ids and the @everyone sentinel: what makes a message mine. */
   myMentionIds: ReadonlySet<string>
+  /** Name senders above their bubbles — channels and group DMs, not one-to-ones. */
+  showAuthor: boolean
+}
+
+/**
+ * The day a run of messages belongs to, said once between the days rather than
+ * stamped onto every message. Pinned, so a long scroll back always names the
+ * day you are in.
+ *
+ * `stuck` is decided by the list rather than by the divider itself: only one
+ * divider can be pinned at a time, and that is a fact about the whole thread,
+ * not something each one can work out about itself without duplicating the
+ * measurement. A divider drifting up through the middle of the conversation is
+ * just a divider — glazing that would blur a band across the thread for no
+ * reason.
+ */
+function DayDivider({ iso, stuck }: { iso: string; stuck: boolean }) {
+  return (
+    <div className="sticky top-0 z-20 px-3 py-2">
+      {stuck && <span aria-hidden className="chat-day-glass" />}
+      <span className="relative flex items-center gap-3">
+        <span className="h-px min-w-4 flex-1 bg-border-default" />
+        <span className="shrink-0 rounded-sm border border-border-default bg-surface-2 px-2.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-text-3">
+          {dayLabel(iso)}
+        </span>
+        <span className="h-px min-w-4 flex-1 bg-border-default" />
+      </span>
+    </div>
+  )
 }
 
 export function MessageList({
   messages, isLoading, hasNextPage, isFetchingNextPage, onLoadOlder,
   canModerate, myProfileId, attachments, reactions, onDelete, onEdit, onToggleReaction, onReply, readersOf,
-  audienceSize, myMentionIds,
+  audienceSize, myMentionIds, showAuthor,
 }: MessageListProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -68,6 +97,109 @@ export function MessageList({
     return map
   }, [attachments])
 
+  // Messages bucketed into calendar days, in order. Built here rather than
+  // decided per message so each day's divider and its messages share a parent,
+  // which is what lets the divider stick.
+  const days = useMemo(() => {
+    const out: { key: string; iso: string; items: MessageWithAuthor[] }[] = []
+    for (const m of messages) {
+      const current = out[out.length - 1]
+      if (current && isSameDay(current.iso, m.created_at)) current.items.push(m)
+      else out.push({ key: m.id, iso: m.created_at, items: [m] })
+    }
+    return out
+  }, [messages])
+
+  /**
+   * Which day's divider is currently pinned to the top, by index — -1 when none
+   * is (you are at the very top of the thread, where the first divider is still
+   * sitting at its natural place).
+   *
+   * A section is pinned once its top has passed above the scrollport's, and the
+   * LAST such section is the one on screen: an earlier one has been pushed out
+   * by this one. Measured on scroll rather than observed per divider, because
+   * "which one is pinned" is a fact about the whole thread — one observer per
+   * day would have each of them re-deriving it, and none of them able to see
+   * that another had won.
+   */
+  const sectionRefs = useRef<(HTMLElement | null)[]>([])
+  const [pinnedDay, setPinnedDay] = useState(-1)
+
+  useEffect(() => {
+    const root = scrollRef.current
+    if (!root) return
+
+    let frame = 0
+    const measure = () => {
+      frame = 0
+      const rootTop = root.getBoundingClientRect().top
+      let index = -1
+      sectionRefs.current.forEach((el, i) => {
+        if (el && el.getBoundingClientRect().top <= rootTop + 1) index = i
+      })
+      setPinnedDay(index)
+    }
+    // Coalesced to one measurement per frame: scroll fires far faster than the
+    // screen updates, and this reads layout.
+    const onScroll = () => { if (!frame) frame = requestAnimationFrame(measure) }
+
+    measure()
+    root.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      root.removeEventListener('scroll', onScroll)
+      if (frame) cancelAnimationFrame(frame)
+    }
+  }, [days.length])
+
+  /**
+   * Older messages load themselves as you reach the top, rather than waiting to
+   * be asked. The sentinel sits above the first message and the root is grown
+   * 300px upward, so a page is already on its way before you actually get there.
+   *
+   * onLoadOlder is read through a ref: the caller builds it inline, so depending
+   * on it directly would tear down and rebuild the observer on every render.
+   */
+  const topSentinel = useRef<HTMLDivElement>(null)
+  const loadOlderRef = useRef(onLoadOlder)
+  useEffect(() => { loadOlderRef.current = onLoadOlder }, [onLoadOlder])
+
+  /**
+   * How far the reading position was from the BOTTOM when a page was asked for.
+   *
+   * Prepending older messages moves everything down by however tall they are,
+   * so a kept scrollTop would land somewhere else entirely. Distance from the
+   * bottom does not move when content is added above it, which is what makes it
+   * the thing to hold on to.
+   */
+  const restoreFromBottom = useRef<number | null>(null)
+
+  useEffect(() => {
+    const root = scrollRef.current
+    const sentinel = topSentinel.current
+    if (!root || !sentinel || !hasNextPage || isFetchingNextPage) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return
+        restoreFromBottom.current = root.scrollHeight - root.scrollTop
+        loadOlderRef.current()
+      },
+      { root, rootMargin: '300px 0px 0px 0px' },
+    )
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [hasNextPage, isFetchingNextPage])
+
+  // Put the reading position back before the browser paints, so the older page
+  // arrives without the thread appearing to jump.
+  useLayoutEffect(() => {
+    const root = scrollRef.current
+    const keep = restoreFromBottom.current
+    if (!root || keep === null) return
+    restoreFromBottom.current = null
+    root.scrollTop = root.scrollHeight - keep
+  }, [messages.length])
+
   // Follow the conversation only when a genuinely new message lands, so
   // loading older history doesn't yank the viewport to the bottom.
   useEffect(() => {
@@ -98,37 +230,50 @@ export function MessageList({
   }
 
   return (
-    <div ref={scrollRef} className="flex-1 overflow-y-auto py-3">
-      {hasNextPage && (
-        <div className="flex justify-center pb-3">
-          <button
-            onClick={onLoadOlder}
-            disabled={isFetchingNextPage}
-            className="font-ui text-[12px] text-text-3 hover:text-text-1 disabled:opacity-50 transition-colors"
-          >
-            {isFetchingNextPage ? 'Loading…' : 'Load older messages'}
-          </button>
-        </div>
+    // relative so the thread paints above the wallpaper behind it: both are
+    // positioned, and the later sibling wins — no z-index needed, and none
+    // wanted, since an isolated stacking context here would become a backdrop
+    // root and kill the day divider's blur.
+    <div ref={scrollRef} className="relative flex-1 overflow-y-auto py-3">
+      <div ref={topSentinel} aria-hidden />
+
+      {/* No button: reaching the top is the request. This only reports that the
+          answer is on its way. */}
+      {isFetchingNextPage && (
+        <p className="pb-3 text-center font-ui text-[12px] text-text-4">Loading older messages…</p>
       )}
 
-      {messages.map((m, i) => (
-        <MessageBubble
-          key={m.id}
-          message={m}
-          startsGroup={startsNewGroup(m, messages[i - 1])}
-          canModerate={canModerate}
-          myProfileId={myProfileId}
-          attachments={attachmentsByMessage.get(m.id) ?? []}
-          reactions={groupReactions(reactions, m.id, myProfileId)}
-          onDelete={onDelete}
-          onEdit={onEdit}
-          onToggleReaction={onToggleReaction}
-          onReply={onReply}
-          onJumpTo={jumpTo}
-          tagsMe={mentionsMe(m, myMentionIds)}
-          receipt={m.author_id === myProfileId && !isOptimistic(m.id) ? readersOf(m) : null}
-          audience={audienceSize}
-        />
+      {days.map((day, dayIndex) => (
+        // One section per day, so its divider stays pinned for the whole run of
+        // that day's messages rather than for a single one.
+        <section key={day.key} ref={(el) => { sectionRefs.current[dayIndex] = el }}>
+          <DayDivider iso={day.iso} stuck={dayIndex === pinnedDay} />
+          {day.items.map((m, i) => (
+            <MessageBubble
+              key={m.id}
+              message={m}
+              // Previous within the day: the first message after a divider always
+              // carries its author and time, or the run reads as though it went
+              // straight through the night.
+              startsGroup={startsNewGroup(m, day.items[i - 1])}
+              canModerate={canModerate}
+              myProfileId={myProfileId}
+              attachments={attachmentsByMessage.get(m.id) ?? []}
+              reactions={groupReactions(reactions, m.id, myProfileId)}
+              onDelete={onDelete}
+              onEdit={onEdit}
+              onToggleReaction={onToggleReaction}
+              onReply={onReply}
+              onJumpTo={jumpTo}
+              tagsMe={mentionsMe(m, myMentionIds)}
+              receipt={m.author_id === myProfileId && !isOptimistic(m.id) ? readersOf(m) : null}
+              audience={audienceSize}
+              // Already bucketed above, so the quote costs no extra lookup.
+              replyAttachment={m.reply_to_id ? attachmentsByMessage.get(m.reply_to_id)?.[0] : undefined}
+              showAuthor={showAuthor}
+            />
+          ))}
+        </section>
       ))}
 
       <div ref={bottomRef} />

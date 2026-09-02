@@ -102,6 +102,18 @@
   --color-surface-3: #272727;
   --color-surface-inset: #0D0D0D;
 
+  /* ── Chat bubbles ──
+     Opaque on purpose, for the same reason the surfaces above are: a translucent
+     bubble lets whatever is behind it through, and the day divider's rule was
+     showing straight across the outgoing ones. No z-index fixes a see-through
+     fill — the fill has to be solid.
+
+     Mixed from the brand colour rather than fixed, so every theme gets its own
+     outgoing bubble out of the colour it already defines. Custom properties
+     resolve where they are used, so a theme class on <html> reaches these. */
+  --color-chat-out: color-mix(in srgb, var(--color-brand-red) 15%, var(--color-surface-2));
+  --color-chat-out-border: color-mix(in srgb, var(--color-brand-red) 34%, var(--color-surface-2));
+
   /* ── Borders ── */
   --color-border-default: #272727;
   --color-border-subtle: #1C1C1C;
@@ -202,6 +214,13 @@
   --radius-lg: 0px;
   --radius-xl: 0px;
   --radius-full: 999px;
+
+  /* The one shape that is deliberately not square. A chat bubble is read as an
+     object — a thing somebody handed you — and the whole grammar of a messaging
+     thread rests on that. It gets its own token rather than un-squaring the
+     scale above, so the exception stays confined to chat and stays in one
+     place if it is ever revisited. */
+  --radius-bubble: 10px;
 
   /* ── Box shadows ── */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
@@ -487,6 +506,87 @@
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
   }
+
+  /* Chat wallpaper.
+
+     Depth, not decoration. A pattern behind a conversation — tiled logo, grid,
+     dots — is something to look at, and there is already something to look at:
+     the messages. So there is no pattern here at all, only a well.
+
+     Three washes. Brand light leaks in from the top-right and bottom-left, the
+     same gesture --app-backdrop makes on the page behind, so the thread reads
+     as part of the app rather than a panel dropped onto it. Over that, a soft
+     darkening through the middle, which is what makes the bubbles sit IN
+     something instead of on top of a flat ground.
+
+     Every value comes from a token, so a theme repaints this with its own
+     colour and never with red it does not use.
+
+     No `opacity` on the element — each layer carries its own alpha instead.
+     That is not fussiness: opacity here would make this a backdrop root and the
+     day divider's blur would quietly stop working. */
+  .chat-wallpaper {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      radial-gradient(
+        76% 56% at 97% -6%,
+        color-mix(in srgb, var(--color-brand-red) 11%, transparent),
+        transparent 70%
+      ),
+      radial-gradient(
+        64% 48% at -3% 106%,
+        color-mix(in srgb, var(--color-brand-red) 7%, transparent),
+        transparent 68%
+      ),
+      radial-gradient(
+        98% 78% at 50% 46%,
+        color-mix(in srgb, var(--color-bg-base) 58%, transparent),
+        transparent 76%
+      );
+  }
+
+
+
+  /* The glass behind a chat day divider.
+
+     One layer, blurred and masked. Splitting it into bands to fake a fade was a
+     mistake: each band's edge is a visible step, which is what read as two and
+     then three sheets of glass stacked on each other. A mask fades the blur
+     itself, continuously, with no edge anywhere.
+
+     The mask and the backdrop-filter sit on the same element deliberately —
+     that is the ordinary progressive-blur technique and it works. What did not
+     work earlier was the pinned-divider detection, so this was never on screen
+     to be judged. */
+  .chat-day-glass {
+    position: absolute;
+    /* A generous bleed upward, not a neat one: the divider sticks to the top of
+       the scrollport, so anything above it is clipped and costs nothing — while
+       a bleed that falls short leaves a band where the conversation slides past
+       unblurred, which is worse than no glass at all. */
+    inset: -3rem 0 -1.25rem;
+    pointer-events: none;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    background: linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--color-bg-base) 60%, transparent) 0%,
+      color-mix(in srgb, var(--color-bg-base) 60%, transparent) 66%,
+      transparent 100%
+    );
+    mask-image: linear-gradient(to bottom, #000 0%, #000 64%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 64%, transparent 100%);
+  }
+
+  /* The build's CSS targets drop the unprefixed backdrop-filter and keep only
+     the -webkit- form, which every engine but Gecko accepts. Restating it
+     behind @supports survives that pass, so Firefox gets the blur too. */
+  @supports (backdrop-filter: blur(1px)) {
+    .chat-day-glass { backdrop-filter: blur(10px); }
+    .topbar-glass { backdrop-filter: blur(10px); }
+  }
 }
 
 @layer utilities {
@@ -509,6 +609,36 @@
     to   { opacity: 1; transform: translate(-50%, calc(-100% - 8px)); }
   }
   .animate-hover-card { animation: hover-card-in 120ms ease-out; }
+
+  /* A read receipt changing state is a status change, not an entrance: the tick
+     settles into place instead of sliding in, so a thread full of your own
+     messages never reads as movement. 180ms is long enough to notice that
+     something resolved and short enough that a fast run of replies does not
+     turn the right-hand edge into a flicker. */
+  @keyframes tick-settle {
+    from { opacity: 0.3; transform: scale(0.75); }
+    to   { opacity: 1;   transform: scale(1); }
+  }
+  .animate-tick { animation: tick-settle 180ms ease-out; }
+
+  /* Room on the LAST line of a message for the stamp that sits in the bubble's
+     corner.
+
+     A float would work only for a one-line message: it attaches where it is
+     inserted, so on a paragraph it rides the FIRST line and the time ends up at
+     the top. Reserving an inline box at the end of the last block is what puts
+     the time beside a short message and in the corner under a long one — the
+     WhatsApp behaviour — and it needs no measurement of the text.
+
+     The width comes from --stamp-w, because it depends on whether the message
+     carries read ticks and an "edited" note. */
+  .chat-stamp-gap > p:last-child::after,
+  .chat-stamp-gap > .rich-content > :last-child::after {
+    content: '';
+    display: inline-block;
+    width: var(--stamp-w, 3.5rem);
+    height: 1px;
+  }
 
   /* Number inputs without the stepper arrows.
      The tiny up/down chevrons are a hazard on a duration field: they are easy to

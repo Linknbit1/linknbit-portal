@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase'
 import type { Tables } from '../types/database'
 import type { PersonMini } from './projects'
+import { fileKind, type FileKind } from '../lib/attachment'
 
 export type ChannelRow = Tables<'channels'>
 export type ChannelKind = 'channel' | 'dm' | 'group_dm'
@@ -9,6 +10,29 @@ export interface ChannelListItem extends ChannelRow {
   members: PersonMini[]
   last_message_at: string | null
   last_message_preview: string | null
+  /**
+   * Who sent the newest message. The list draws read ticks on a row only when
+   * the last word in it was yours, the same rule the thread uses per message.
+   */
+  last_message_author_id: string | null
+  /** How many members other than you have read as far as that newest message. */
+  last_message_seen_by: number
+  /** The newest message was deleted, so the row says so instead of showing it. */
+  last_message_deleted: boolean
+  /**
+   * The newest reaction in the conversation, when it happened after the newest
+   * message. A reaction is the last thing that happened as much as a message is,
+   * and a list that ignores it looks stale.
+   */
+  last_reaction: {
+    emoji: string
+    at: string
+    by: string
+    byMe: boolean
+    /** What was reacted to, already shortened for the row. */
+    target: string
+    targetIsMine: boolean
+  } | null
   /** When the viewer removed this from their own list, if they did. */
   hidden_at?: string | null
   /** Whether the viewer silenced notifications for this conversation. */
@@ -27,6 +51,42 @@ export interface CreateChannelArgs {
   isPrivate?: boolean
 }
 
+/** The most recent thing to happen in a conversation, whatever kind it was. */
+function lastActivityAt(c: { last_message_at: string | null; last_reaction: { at: string } | null; updated_at: string | null }): string {
+  return [c.last_message_at, c.last_reaction?.at, c.updated_at]
+    .filter((t): t is string => !!t)
+    .reduce((newest, t) => (t > newest ? t : newest), '')
+}
+
+/**
+ * The one line that stands for a message in the conversation list.
+ *
+ * A message can be a picture and nothing else, in which case body_text is empty
+ * — and an empty preview used to fall through to "No messages yet", which said
+ * the conversation was empty when it plainly was not. Naming the kind of file
+ * is what the messaging apps do, and it is what somebody scanning the list can
+ * actually use.
+ */
+function messagePreview(
+  bodyText: string | null,
+  attachments: { file_name: string; mime_type: string | null }[] | null,
+): string | null {
+  if (bodyText) return bodyText
+
+  const first = attachments?.[0]
+  if (!first) return null
+
+  const more = (attachments?.length ?? 0) - 1
+  const label = LABEL_BY_KIND[fileKind(first.mime_type ?? '', first.file_name)] ?? first.file_name
+  return more > 0 ? `${label} +${more}` : label
+}
+
+const LABEL_BY_KIND: Partial<Record<FileKind, string>> = {
+  image: 'Photo',
+  video: 'Video',
+  audio: 'Voice message',
+}
+
 /**
  * Every channel the caller belongs to (RLS scopes this to their memberships),
  * newest activity first. Member profiles come along so DM rows can render the
@@ -38,29 +98,57 @@ export async function fetchChannels(): Promise<ChannelListItem[]> {
 
   const { data, error } = await supabase
     .from('channels')
-    .select('*, channel_members(profile_id,hidden_at,notifications_muted,can_manage,profile:profiles(id,name,avatar_url)), messages(body_text,created_at)')
+    .select('*, channel_members(profile_id,hidden_at,notifications_muted,can_manage,last_read_at,profile:profiles(id,name,avatar_url)), messages(author_id,body_text,created_at,deleted_at,message_attachments(file_name,mime_type)), message_reactions(emoji,created_at,profile_id,profile:profiles(id,name),message:messages(body_text,author_id,message_attachments(file_name,mime_type)))')
     .order('updated_at', { ascending: false })
-    // A deleted message leaves a tombstone in the thread, but it must not be the
-    // line that represents the conversation in the list -- the preview would go
-    // on quoting text that is no longer there. Filtering the embedded rows (no
-    // `!inner`) keeps channels that have nothing left to preview.
-    .is('messages.deleted_at', null)
+    // Deleted messages are NOT filtered out: the newest one is still the last
+    // thing that happened, and WhatsApp says so rather than quietly falling back
+    // to an older message and looking stale. Its text is never shown — the row
+    // renders "You deleted this message" from the flag below.
     // Only the newest surviving message per channel. Without these two the
     // nested select would pull each channel's entire history just to render a
     // one-line preview.
     .order('created_at', { referencedTable: 'messages', ascending: false })
     .limit(1, { referencedTable: 'messages' })
+    // Only the newest reaction, for the same reason: the row shows one line.
+    .order('created_at', { referencedTable: 'message_reactions', ascending: false })
+    .limit(1, { referencedTable: 'message_reactions' })
   if (error) throw error
 
   return data
     .map((c) => {
       const latest = c.messages?.[0] ?? null
       const membership = (c.channel_members ?? []).find((m) => m.profile_id === me)
+      // Read as far as the newest message, which is all a row-level tick needs.
+      // Parsed rather than compared as strings: both are ISO timestamps today,
+      // but a tick silently stuck on "sent" is a poor way to find out that
+      // stopped being true.
+      const latestMs = latest ? new Date(latest.created_at).getTime() : null
+      const seenBy = latestMs === null
+        ? 0
+        : (c.channel_members ?? []).filter(
+            (m) => m.profile_id !== me && m.last_read_at && new Date(m.last_read_at).getTime() >= latestMs,
+          ).length
+      const reaction = c.message_reactions?.[0] ?? null
       return {
         ...c,
+        last_reaction: reaction && reaction.message
+          ? {
+              emoji: reaction.emoji,
+              at: reaction.created_at,
+              by: reaction.profile?.name ?? 'Someone',
+              byMe: reaction.profile_id === me,
+              target: messagePreview(reaction.message.body_text, reaction.message.message_attachments) ?? 'a message',
+              targetIsMine: reaction.message.author_id === me,
+            }
+          : null,
         members: (c.channel_members ?? []).flatMap((m) => (m.profile ? [m.profile] : [])),
         last_message_at: latest?.created_at ?? null,
-        last_message_preview: latest?.body_text ?? null,
+        last_message_preview: latest && !latest.deleted_at
+          ? messagePreview(latest.body_text, latest.message_attachments)
+          : null,
+        last_message_deleted: !!latest?.deleted_at,
+        last_message_author_id: latest?.author_id ?? null,
+        last_message_seen_by: seenBy,
         hidden_at: membership?.hidden_at ?? null,
         muted: membership?.notifications_muted ?? false,
         can_manage: membership?.can_manage ?? false,
@@ -69,6 +157,11 @@ export async function fetchChannels(): Promise<ChannelListItem[]> {
     // A conversation you removed from your list stays hidden until someone
     // sends something new, which is what makes "delete" non-destructive.
     .filter((c) => !c.hidden_at || (c.last_message_at !== null && c.last_message_at > c.hidden_at))
+    // Newest activity first, worked out from the activity itself rather than
+    // trusting channels.updated_at to have been bumped — a reaction is the last
+    // thing that happened as much as a message is, and neither should need a
+    // column kept in step for the list to be in the right order.
+    .sort((a, b) => lastActivityAt(b).localeCompare(lastActivityAt(a)))
 }
 
 /** Removes a conversation from your own list only; history and other members are untouched. */
@@ -91,8 +184,14 @@ export async function fetchChannel(id: string): Promise<ChannelListItem | null> 
     ...data,
     members: (data.channel_members ?? []).flatMap((m) => (m.profile ? [m.profile] : [])),
     can_manage: mine?.can_manage ?? false,
+    // The list row is what shows a preview and its ticks; the open thread draws
+    // its own per-message ones, so this shape carries none.
     last_message_at: null,
     last_message_preview: null,
+    last_message_author_id: null,
+    last_message_seen_by: 0,
+    last_message_deleted: false,
+    last_reaction: null,
   }
 }
 

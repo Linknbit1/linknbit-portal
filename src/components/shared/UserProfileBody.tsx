@@ -14,6 +14,11 @@ interface UserProfileBodyProps {
   fallbackAvatar?: string | null
   /** Card is the compact popover variant; panel is the wider sidebar one. */
   variant?: 'card' | 'panel'
+  /**
+   * Offer "Message <name>". Off for the details panel of a DM, where the button
+   * opens the conversation you are already reading.
+   */
+  showMessageAction?: boolean
   onNavigate?: () => void
 }
 
@@ -23,7 +28,7 @@ interface UserProfileBodyProps {
  * can never drift apart.
  */
 export function UserProfileBody({
-  profileId, fallbackName, fallbackAvatar, variant = 'panel', onNavigate,
+  profileId, fallbackName, fallbackAvatar, variant = 'panel', showMessageAction = true, onNavigate,
 }: UserProfileBodyProps) {
   const { data: person } = usePerson(profileId)
   const { data: teams = [] } = usePersonTeams(profileId)
@@ -82,7 +87,7 @@ export function UserProfileBody({
       </div>
 
       <div className="mt-3 flex w-full flex-col gap-1.5">
-        {person && (
+        {person && showMessageAction && (
           <StartDMButton
             profileId={person.id}
             name={person.name}

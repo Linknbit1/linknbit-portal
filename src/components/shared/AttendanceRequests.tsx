@@ -1,3 +1,4 @@
+import { useSearchParams } from 'react-router-dom'
 import { useMemo, useState } from 'react'
 import { Loader2, Home, Plane, AlertCircle, Hourglass, Check, X, Inbox, CalendarX2, Plus, Search, UserPlus } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -181,6 +182,9 @@ const isStatusFilter = (v: string): v is StatusFilter =>
 const isKind = (v: string): v is RequestKind =>
   (KIND_ORDER as string[]).includes(v)
 
+/** ?kind=exception — the tab a link wants this queue to open on. */
+export const REQUEST_KIND_PARAM = 'kind'
+
 /**
  * Every request awaiting — or already given — a decision, in one queue.
  * Reviewing is offered only to people who hold `can_manage_attendance`;
@@ -196,7 +200,15 @@ export function AttendanceRequests() {
     !!permissions &&
     (permissions.includes(ADMINISTRATOR) || permissions.includes('can_manage_attendance'))
 
-  const [kind, setKind] = useState<RequestKind | 'all'>('all')
+  // Seeded from ?kind=, which is how a notification lands on the tab it is
+  // about: "Abbas requested early departure" opens Exceptions, not the whole
+  // queue with his row somewhere in it. Read once — the filter is the user's
+  // from that point, and rewriting the URL as they click would fight them.
+  const [searchParams] = useSearchParams()
+  const [kind, setKind] = useState<RequestKind | 'all'>(() => {
+    const asked = searchParams.get(REQUEST_KIND_PARAM)
+    return asked && isKind(asked) ? asked : 'all'
+  })
   const [status, setStatus] = useState<StatusFilter>('pending')
   const [query, setQuery] = useState('')
   const [person, setPerson] = useState('all')
