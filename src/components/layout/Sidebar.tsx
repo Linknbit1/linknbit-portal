@@ -253,8 +253,11 @@ function NavRow({ item, pathname, activePath, allItems }: {
               <div
                 key={child.to}
                 className={cn(
-                  // Same as the parent row: h-6 sets the height, not line-height.
-                  'group/child flex h-6 items-center gap-2 pl-2 pr-1 rounded-sm font-ui text-caption transition-colors',
+                  // 12px against the parent row's 12.5px, and the leading stated
+                  // rather than left to text-caption's var(--tw-leading, …)
+                  // fallback — the one part of the size that could vary at
+                  // runtime depending on what an ancestor happened to set.
+                  'group/child flex h-6 items-center gap-2 pl-2 pr-1 rounded-sm font-ui text-caption/normal transition-colors',
                   active ? 'text-white bg-brand-red/13 font-medium' : 'text-text-3 hover:text-text-1 hover:bg-surface-2',
                 )}
               >
