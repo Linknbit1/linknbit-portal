@@ -692,9 +692,10 @@ export function AttendanceRequests() {
             the way in for a new request are used constantly — putting all seven
             on the toolbar spent the width that matters on the ones that don't.
 
-            Order is DOM order on desktop and re-ordered on a phone, where the
-            tabs and the compact buttons share the first line and the search box
-            takes the second on its own rather than being squeezed. */}
+            On a phone the tabs take the first line to themselves, and the
+            search box shares the second with the two buttons, which sit to its
+            right where a toolbar's actions belong. On a desktop it is one
+            line: tabs, then search and the buttons pushed right. */}
         <div className="flex flex-wrap items-center gap-2 border-b border-border-subtle pb-3 sm:gap-x-3 sm:px-4 sm:py-3">
           {/* The strip scrolls rather than wraps, so it takes whatever is left
               beside the buttons on a phone and its natural width on a desktop. */}
@@ -705,9 +706,9 @@ export function AttendanceRequests() {
             activeKey={status}
             onChange={(k) => { if (isStatusFilter(k)) setStatus(k) }}
             fill
-            className="order-1 min-w-0 flex-1 sm:max-w-md"
+            className="order-1 w-full min-w-0 sm:w-auto sm:flex-1 sm:max-w-md"
           />
-          <div className="relative order-3 w-full min-w-40 sm:order-2 sm:ml-auto sm:w-52">
+          <div className="relative order-2 min-w-0 flex-1 sm:ml-auto sm:w-52 sm:flex-none">
             <Search size={13} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-text-4" />
             <input
               value={query}
@@ -717,7 +718,7 @@ export function AttendanceRequests() {
               className="w-full rounded-md border border-border-default bg-surface-inset py-1.5 pl-7 pr-3 font-ui text-[12.5px] text-text-1 outline-none placeholder:text-text-4 focus:border-border-focus"
             />
           </div>
-          <div className="order-2 ml-auto flex shrink-0 items-center gap-2 sm:order-3 sm:ml-0">
+          <div className="order-3 flex shrink-0 items-center gap-2">
             <Button
               size="sm"
               variant="secondary"
