@@ -10,6 +10,10 @@ export interface MonthFilter {
   month: number
   allMonths: boolean
   setAllMonths: (v: boolean) => void
+  /** Back to the period this filter opened on. Drives "Clear filters". */
+  reset: () => void
+  /** True when the period has been moved off the one the screen opened on. */
+  isDefault: boolean
   prevMonth: () => void
   nextMonth: () => void
   isCurrentMonth: boolean
@@ -27,11 +31,11 @@ export interface MonthFilter {
 /**
  * Month stepper state shared by the request tabs (mirrors the Overtime tab).
  *
- * `startAllMonths` is for a screen whose job is "what still needs doing" rather
- * than "what happened in a period". A queue that opens on the current month
- * silently hides anything pending for next month, which is the one thing it
- * exists to show — so the requests queue opens wide and narrows on demand,
- * while a report opens on the month you are reporting on.
+ * `startAllMonths` opens on every month rather than this one. Default off: a
+ * screen almost always means "the month I am in", and an all-months list is a
+ * long scroll whose top is rarely what somebody came for. `reset()` returns to
+ * whichever of the two the screen opened on, so Clear filters puts the period
+ * back where the user found it rather than somewhere it has never been.
  */
 export function useMonthFilter(startAllMonths = false): MonthFilter {
   const now = new Date()
@@ -40,14 +44,21 @@ export function useMonthFilter(startAllMonths = false): MonthFilter {
   const [allMonths, setAllMonths] = useState(startAllMonths)
 
   const prefix = `${year}-${String(month).padStart(2, '0')}`
+  const isThisMonth = year === now.getFullYear() && month === now.getMonth() + 1
   return {
     year,
     month,
     allMonths,
     setAllMonths,
+    reset: () => {
+      setYear(now.getFullYear())
+      setMonth(now.getMonth() + 1)
+      setAllMonths(startAllMonths)
+    },
+    isDefault: allMonths === startAllMonths && (startAllMonths || isThisMonth),
     prevMonth: () => { if (month === 1) { setYear((y) => y - 1); setMonth(12) } else setMonth((m) => m - 1) },
     nextMonth: () => { if (month === 12) { setYear((y) => y + 1); setMonth(1) } else setMonth((m) => m + 1) },
-    isCurrentMonth: year === now.getFullYear() && month === now.getMonth() + 1,
+    isCurrentMonth: isThisMonth,
     label: allMonths ? 'All months' : `${MONTH_NAMES[month - 1]} ${year}`,
     inMonth: (date: string) => allMonths || date.startsWith(prefix),
     // '-31' is a safe upper bound: ISO dates sort lexicographically and no day

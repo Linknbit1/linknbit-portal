@@ -50,6 +50,30 @@ export const RELEASES: ChangelogRelease[] = [
         text: 'Approved exceptions \u2014 late arrival, early departure and out of office \u2014 now appear on the calendar day with the time they cover, so you can see a thin day coming without opening the Exceptions list.',
       },
       {
+        kind: 'improved',
+        text: 'The requests queue opens on the current month rather than on every month there has ever been, so the first list you see is the one you meant.',
+      },
+      {
+        kind: 'improved',
+        text: 'Type, employee and period moved off the requests toolbar into a Filters panel \u2014 a drawer on the right on a computer, a sheet you can drag away on a phone. The button counts how many filters are narrowing the queue, and Clear all lives in the panel footer instead of appearing and disappearing mid-toolbar.',
+      },
+      {
+        kind: 'improved',
+        text: 'On a phone the requests toolbar fits its line: the Filters and Add buttons are icons beside the tabs, the search box has the row below to itself, and the card frame around the queue is gone \u2014 on a screen that narrow the border was spending width the list needed.',
+      },
+      {
+        kind: 'improved',
+        text: '\u201cAdd for someone else\u201d opens as a panel rather than a box in the middle of the screen: on the right on a computer, up from the bottom on a phone, where it can be dragged away. Pressing outside slides it shut instead of blinking out, and its four type tabs share the width equally.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Avatars no longer squash into ovals beside a long name or reason \u2014 in the requests queue and everywhere else they are used.',
+      },
+      {
+        kind: 'improved',
+        text: 'My Attendance drops the month stepper and the Present / Late / Absent / Leave cards. The page is where you file and follow your own requests; it now shows this month\u2019s record under them and nothing else.',
+      },
+      {
         kind: 'fixed',
         text: 'Attendance in the sidebar now opens the same place for everybody. It used to jump managers straight past the section\u2019s own front page \u2014 which on a phone landed you on a drilled-in screen with the bottom tabs hidden and no way onward except Back.',
       },

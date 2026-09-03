@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Modal } from '../ui/Modal'
+import { Drawer } from '../ui/Drawer'
+import { useIsDesktop } from '../../hooks/useMediaQuery'
 import { Button } from '../ui/Button'
 import { Select } from '../ui/Select'
 import { DatePicker } from '../ui/DatePicker'
@@ -14,12 +15,16 @@ import {
   useEnterExceptionForEmployee, useEnterOvertimeForEmployee,
 } from '../../hooks/useAttendance'
 import { DAY_PART_LABEL } from '../../lib/dayParts'
+import { cn } from '../../lib/cn'
 
 type Kind = 'leave' | 'wfh' | 'exception' | 'overtime'
 
+// "WFH" rather than "Work from home": the four tabs share the width equally, so
+// the longest label sets how small the others may be — and WFH is what the queue
+// itself calls it everywhere else.
 const KIND_TABS: { id: Kind; label: string }[] = [
   { id: 'leave', label: 'Leave' },
-  { id: 'wfh', label: 'Work from home' },
+  { id: 'wfh', label: 'WFH' },
   { id: 'exception', label: 'Exception' },
   { id: 'overtime', label: 'Overtime' },
 ]
@@ -61,6 +66,13 @@ interface EnterRequestForEmployeeModalProps {
  * instruction to the one person guaranteed not to be able to.
  */
 export function EnterRequestForEmployeeModal({ onClose }: EnterRequestForEmployeeModalProps) {
+  // Mounted by the parent on demand, so `open` starts true and the panel plays
+  // its slide-out before `onExitComplete` unmounts it. Closing straight to
+  // unmount is what made a backdrop press look like the panel had vanished
+  // rather than been put away.
+  const [open, setOpen] = useState(true)
+  const close = () => setOpen(false)
+  const isDesktop = useIsDesktop()
   const toast = useToast()
   const { profile } = useAuthContext()
   const { data: people = [] } = usePeople()
@@ -100,7 +112,7 @@ export function EnterRequestForEmployeeModal({ onClose }: EnterRequestForEmploye
 
   const done = () => {
     toast(appliesDirectly ? 'Applied' : 'Submitted for approval', 'success')
-    onClose()
+    close()
   }
   const failed = (e: unknown) =>
     toast(e instanceof Error ? e.message : 'Could not save that', 'error')
@@ -196,15 +208,17 @@ export function EnterRequestForEmployeeModal({ onClose }: EnterRequestForEmploye
   const label = 'text-label font-ui font-semibold uppercase tracking-wider text-text-2'
 
   return (
-    <Modal
-      open
-      onClose={onClose}
-      title="Add for someone else"
-      size="md"
+    <Drawer
+      open={open}
+      onClose={close}
+      onExitComplete={onClose}
+      side={isDesktop ? 'right' : 'bottom'}
+      width={460}
       busy={pending}
+      title={<h2 className="font-display font-bold text-[16px] text-text-1">Add for someone else</h2>}
       footer={
         <div className="flex gap-2.5">
-          <Button variant="ghost" size="sm" className="flex-1" onClick={onClose} disabled={pending}>Cancel</Button>
+          <Button variant="ghost" size="sm" className="flex-1" onClick={close} disabled={pending}>Cancel</Button>
           <Button size="sm" className="flex-1" onClick={submit} loading={pending}>
             {appliesDirectly ? 'Apply' : 'Submit for approval'}
           </Button>
@@ -218,15 +232,19 @@ export function EnterRequestForEmployeeModal({ onClose }: EnterRequestForEmploye
             : 'This waits for approval and changes nothing until it is given. Not by you: nobody decides on a request they filed, so it goes to another approver.'}
         </p>
 
-        <div className="flex flex-wrap gap-1 rounded-sm border border-border-default bg-surface-1 p-1">
+        {/* Four equal columns rather than a wrapping row: the tabs are the
+            panel's top-level choice, and a strip that fills the width reads as
+            one control instead of four buttons that happened to fit. */}
+        <div className="grid grid-cols-4 gap-1 rounded-sm border border-border-default bg-surface-1 p-1">
           {KIND_TABS.map((k) => (
             <button
               key={k.id}
               type="button"
               onClick={() => setKind(k.id)}
-              className={`h-8 rounded-sm px-3 font-ui text-[12.5px] font-medium transition-colors ${
-                kind === k.id ? 'bg-surface-3 text-text-1' : 'text-text-3 hover:text-text-1'
-              }`}
+              className={cn(
+                'h-8 truncate rounded-sm px-1 font-ui text-[12.5px] font-medium transition-colors',
+                kind === k.id ? 'bg-surface-3 text-text-1' : 'text-text-3 hover:text-text-1',
+              )}
             >
               {k.label}
             </button>
@@ -334,6 +352,6 @@ export function EnterRequestForEmployeeModal({ onClose }: EnterRequestForEmploye
           />
         </div>
       </div>
-    </Modal>
+    </Drawer>
   )
 }

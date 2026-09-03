@@ -24,7 +24,7 @@ import {
 // Employee section components
 import {
   WfhSection, LeaveSection, MyExceptionsSection, OvertimeSection, UpcomingScheduleSection,
-  OooSection, SummaryStats, HistoryTable, MyAttendanceSections,
+  OooSection, HistoryTable, MyAttendanceSections,
 } from './employee/AttendancePage'
 import { AttendanceCheckInCard } from '../components/shared/AttendanceCheckInCard'
 import { TodayRoster } from '../components/shared/TodayRoster'
@@ -186,8 +186,6 @@ function AdminAttendanceHub() {
 }
 
 function EmployeeAttendanceHub() {
-  const { year, month, stepper } = useMonthFilter()
-  const { data: history = [], isLoading } = useMyMonthlyAttendance(year, month)
   const canSeeTeam = useCanAccess('can_view_cross_team_attendance')
 
   const items: HubRowItem[] = [
@@ -204,12 +202,13 @@ function EmployeeAttendanceHub() {
     { to: '/attendance/devices',    label: 'My Devices',     icon: Smartphone },
   ]
 
+  // No month stepper and no Present/Late/Absent/Leave cards: a hub is a set of
+  // doors, and the counts belong behind the History door, which has its own
+  // month filter and is one row down this list.
   return (
     <MobileHub title="My Attendance" items={items}>
       <AttendanceCheckInCard />
       <OooSection />
-      <div className="flex flex-wrap items-center gap-3">{stepper}</div>
-      {!isLoading && <SummaryStats records={history} year={year} month={month} />}
     </MobileHub>
   )
 }

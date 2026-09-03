@@ -2,12 +2,15 @@ import { cn } from '../../lib/cn'
 import { getInitials } from '../../lib/utils'
 import { PersonLink } from '../shared/PersonLink'
 
+// min-w/min-h alongside w/h on purpose: an avatar sits in a flex row beside a
+// name and a reason, and a long enough neighbour will squeeze a plain w-7 into
+// an oval. The minimum is what stops the face deforming as the text grows.
 const SIZE_CLASSES = {
-  xs: 'w-6 h-6 text-[9px]',
-  sm: 'w-7 h-7 text-[10px]',
-  md: 'w-8 h-8 text-[11px]',
-  lg: 'w-10 h-10 text-[13px]',
-  xl: 'w-12 h-12 text-[15px]',
+  xs: 'w-6 h-6 min-w-6 min-h-6 text-[9px]',
+  sm: 'w-7 h-7 min-w-7 min-h-7 text-[10px]',
+  md: 'w-8 h-8 min-w-8 min-h-8 text-[11px]',
+  lg: 'w-10 h-10 min-w-10 min-h-10 text-[13px]',
+  xl: 'w-12 h-12 min-w-12 min-h-12 text-[15px]',
 }
 
 const GRADIENT_COLORS = [
@@ -71,7 +74,7 @@ export function Avatar({ name, size = 'md', online, className, src, personId, na
 
   if (personId) {
     return (
-      <PersonLink personId={personId} navigateOnly={navigateOnly} className="inline-flex rounded-full hover:opacity-90 hover:no-underline" ariaLabel={`View ${name}'s profile`}>
+      <PersonLink personId={personId} navigateOnly={navigateOnly} className="inline-flex shrink-0 rounded-full hover:opacity-90 hover:no-underline" ariaLabel={`View ${name}'s profile`}>
         {body}
       </PersonLink>
     )

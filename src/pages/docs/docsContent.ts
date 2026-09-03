@@ -731,10 +731,10 @@ export const DOC_CHAPTERS: DocChapter[] = [
           {
             title: 'Work through what is waiting',
             steps: [
-              'Open People → Attendance → Requests. It opens on Pending, with the number still to decide on the tab.',
-              'Pick a type from the dropdown beside the tabs if you want to clear leave before anything else.',
-              'Narrow by month, or by employee, when you are working through one person or one period. Both start wide — All months and All employees — so nothing pending is hidden until you ask for it.',
-              'Search on the right for a name or a reason when you are after one request rather than the whole queue.',
+              'Open People → Attendance → Requests. It opens on Pending for this month, with the number still to decide on the tab.',
+              'Press Filters to narrow by type, by employee or by period. The panel opens on the right on a computer and slides up from the bottom on a phone, where you can drag it away when you are done.',
+              'Set the period to All months to see everything still outstanding, including anything filed for a month ahead.',
+              'Search on the toolbar for a name or a reason when you are after one request rather than the whole queue.',
               'Press Approve or Reject on the row. The list updates in place.',
             ],
           },
@@ -756,8 +756,9 @@ export const DOC_CHAPTERS: DocChapter[] = [
           },
         ],
         notes: [
-          'Leave, WFH, overtime and exceptions all queue up together. The type dropdown carries each kind’s pending count, so you can see where the backlog is without opening each one.',
-          'The tabs are the only thing that changes which slice you are looking at — Pending, Approved, Rejected, All. The row under them — type, employee, month — narrows whatever the tab is showing rather than replacing it, and Clear filters puts it all back.',
+          'Leave, WFH, overtime and exceptions all queue up together. The type list inside Filters carries each kind’s pending count, so you can see where the backlog is without opening each one.',
+          'The tabs are the only thing that changes which slice you are looking at — Pending, Approved, Rejected, All. Everything in the Filters panel — type, employee, period — narrows whatever the tab is showing rather than replacing it, and Clear all in the panel puts it back.',
+          'The queue opens on the current month, so a request dated for next month is not in the first list you see. The Filters button carries a count of how many filters are narrowing the queue, and the period is one of them — if something you expected is missing, that count is where to look.',
           'A leave range that starts in one month and ends in the next shows under both, so a week off over a month boundary is never missing from the month you are looking at.',
           'You only ever see your own requests here, plus anyone whose requests you review. Nobody sees a colleague’s leave unless it is their job to decide on it.',
           'Whoever manages attendance can file any of the four for somebody else with "Add for someone else". Whether it applies at once or waits for approval depends on one thing: whether the person entering it is allowed to record attendance without approval. If they are, it takes effect immediately, for all four kinds. If not, it joins the queue.',
@@ -782,8 +783,11 @@ export const DOC_CHAPTERS: DocChapter[] = [
         id: 'my-attendance',
         title: 'Your attendance history',
         summary:
-          'Your record month by month, days present, late arrivals, leave taken and hours worked.',
+          'This month\u2019s record — the days you were in, when you arrived, and the hours against each — under the requests you have filed.',
         where: 'People → Attendance → My Attendance',
+        notes: [
+          'The page shows the month you are in. On a phone, the History row on the attendance hub has a month stepper for looking further back.',
+        ],
       },
       {
         id: 'team-attendance',

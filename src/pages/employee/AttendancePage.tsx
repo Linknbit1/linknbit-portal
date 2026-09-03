@@ -1,9 +1,6 @@
 import { useState } from 'react'
 import {
   CalendarCheck,
-  CheckCircle2,
-  Clock,
-  AlertTriangle,
   Home,
   LogIn,
   LogOut,
@@ -24,7 +21,6 @@ import { Button } from '../../components/ui/Button'
 import { Select } from '../../components/ui/Select'
 import { DatePicker } from '../../components/ui/DatePicker'
 import { TimePicker } from '../../components/ui/TimePicker'
-import { PeriodStepper } from '../../components/ui/PeriodStepper'
 import {
   useMyMonthlyAttendance,
   useMyExceptions,
@@ -35,7 +31,6 @@ import {
   useMyOvertimeRequests,
   useSubmitOvertime,
   useUpdateOvertime,
-  useAttendanceSettings,
   useHolidays,
   useWorkingSaturdays,
   useCompanyWfhDays,
@@ -161,75 +156,6 @@ export function UpcomingScheduleSection() {
 }
 
 // ── Summary stats ─────────────────────────────────────────────────────────────
-
-export function SummaryStats({ records, year, month }: { records: AttendanceRow[]; year: number; month: number }) {
-  const now  = new Date()
-
-  const { data: settings }         = useAttendanceSettings()
-  const { data: holidays = [] }    = useHolidays(year)
-  const { data: workingSats = [] } = useWorkingSaturdays(year)
-
-  // Absent = persisted 'absent' rows (marked by the daily job) + any past working
-  // day in the selected month that has no record yet (not covered by the job). The
-  // two are mutually exclusive: a marked day already has a record, so the gap pass
-  // skips it. For the current month we only count elapsed days (up to now); for a
-  // fully past month the whole month counts; a future month has no gap days.
-  const absent = (() => {
-    const holidaySet    = new Set(holidays.map((h) => h.date))
-    const workingSatSet = new Set(workingSats.map((s) => s.date))
-    const recordSet     = new Set(records.map((r) => r.date))
-    const isCurrentMonth = year === now.getFullYear() && month === now.getMonth() + 1
-    const isFuture = year > now.getFullYear() || (year === now.getFullYear() && month > now.getMonth() + 1)
-    // Exclusive upper bound: now for the current month, first day of next month for a
-    // past month (covers the whole month), and the month start itself for a future month.
-    const endExclusive = isFuture
-      ? new Date(year, month - 1, 1)
-      : isCurrentMonth
-        ? now
-        : new Date(year, month, 1)
-    let gapDays = 0
-    const d = new Date(year, month - 1, 1)
-    while (d < endExclusive) {
-      const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-      const dow = d.getDay()
-      if (dow !== 0 && !(dow === 6 && !settings?.saturday_working && !workingSatSet.has(dateStr)) && !holidaySet.has(dateStr)) {
-        if (!recordSet.has(dateStr)) gapDays++
-      }
-      d.setDate(d.getDate() + 1)
-    }
-    const absentRecords = records.filter((r) => r.status === 'absent').length
-    return absentRecords + gapDays
-  })()
-
-  const totalPresent = records.filter((r) => r.status === 'present').length
-  const late         = records.filter((r) => r.status === 'late').length
-  // Leave is a day kind now; a worked half day counts as half a leave day.
-  const leave        = records.reduce((n, r) =>
-    r.day_type === 'leave' ? n + (r.day_part === 'full' ? 1 : 0.5) : n, 0)
-
-  const stats = [
-    { label: 'Present', value: totalPresent, icon: CheckCircle2,  color: 'text-success',        bg: 'bg-success/10 border-success/20' },
-    { label: 'Late',    value: late,         icon: Clock,          color: 'text-warning',        bg: 'bg-warning/10 border-warning/20' },
-    { label: 'Absent',  value: absent,       icon: AlertTriangle,  color: 'text-error',          bg: 'bg-error/10 border-error/20' },
-    { label: 'Leave',   value: leave,        icon: Home,           color: 'text-service-dev',    bg: 'bg-service-dev/10 border-service-dev/20' },
-  ]
-
-  return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      {stats.map(({ label, value, icon: Icon, color, bg }) => (
-        <div key={label} className="bg-surface-1 border border-border-default rounded-xl p-4 flex flex-col gap-2">
-          <div className={cn('size-9 rounded-lg border flex items-center justify-center', bg)}>
-            <Icon size={16} className={color} />
-          </div>
-          <div>
-            <p className={cn('font-display font-bold text-[28px] leading-none', color)}>{value}</p>
-            <p className="font-ui text-[12px] text-text-3 mt-1">{label}</p>
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
 
 // ── History table ─────────────────────────────────────────────────────────────
 
@@ -1205,22 +1131,17 @@ const MONTH_NAMES = [
  * admins file the same requests employees do, they just don't land here.
  */
 export function MyAttendanceSections() {
+  // This month, fixed. The month stepper and the Present/Late/Absent/Leave
+  // cards that sat above the history table are gone: the page is a place to
+  // file and track your own requests, and a month of counts was a second,
+  // quieter version of the report that already lives under Reports.
   const now = new Date()
-  const [year, setYear] = useState(now.getFullYear())
-  const [month, setMonth] = useState(now.getMonth() + 1) // 1-indexed
+  const year = now.getFullYear()
+  const month = now.getMonth() + 1 // 1-indexed
 
   const { data: history = [], isLoading } = useMyMonthlyAttendance(year, month)
   const canSeeTeam = useCanAccess('can_view_cross_team_attendance')
 
-  const prevMonth = () => {
-    if (month === 1) { setYear((y) => y - 1); setMonth(12) }
-    else setMonth((m) => m - 1)
-  }
-  const nextMonth = () => {
-    if (month === 12) { setYear((y) => y + 1); setMonth(1) }
-    else setMonth((m) => m + 1)
-  }
-  const isCurrentMonth = year === now.getFullYear() && month === now.getMonth() + 1
   const periodLabel = `${MONTH_NAMES[month - 1]} ${year}`
 
   return (
@@ -1249,39 +1170,6 @@ export function MyAttendanceSections() {
           <WfhSection />
           <LeaveSection />
         </div>
-
-        {/* Month filter + summary cards — sit directly above the attendance table */}
-        <div className="flex flex-wrap items-center gap-3">
-          <PeriodStepper
-            icon={Calendar}
-            label={periodLabel}
-            onPrev={prevMonth}
-            onNext={nextMonth}
-            disableNext={isCurrentMonth}
-          >
-            {isCurrentMonth && (
-              <span className="ml-1 px-1.5 py-0.5 rounded-xs bg-brand-red/10 border border-brand-red/20 text-brand-red text-[10px] font-mono font-semibold uppercase tracking-wide">
-                Current
-              </span>
-            )}
-          </PeriodStepper>
-        </div>
-
-        {isLoading ? (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-surface-1 border border-border-default rounded-xl p-4 flex flex-col gap-2 animate-pulse">
-                <div className="size-9 rounded-lg bg-surface-2" />
-                <div>
-                  <div className="h-7 w-10 bg-surface-2 rounded mb-1" />
-                  <div className="h-3 w-14 bg-surface-2 rounded" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <SummaryStats records={history} year={year} month={month} />
-        )}
 
         {/* History */}
         {isLoading ? (

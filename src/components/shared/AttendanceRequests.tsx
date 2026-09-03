@@ -1,13 +1,16 @@
 import { useSearchParams } from 'react-router-dom'
 import { useMemo, useState } from 'react'
-import { Loader2, Home, Plane, AlertCircle, Hourglass, Check, X, Inbox, CalendarX2, Plus, Search, UserPlus } from 'lucide-react'
+import { Loader2, Home, Plane, AlertCircle, Hourglass, Check, X, Inbox, CalendarX2, Plus, Search, UserPlus, SlidersHorizontal } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { cn } from '../../lib/cn'
 import { Avatar } from '../ui/Avatar'
 import { PersonLink } from './PersonLink'
 import { Button } from '../ui/Button'
 import { Select } from '../ui/Select'
 import { Tabs } from '../ui/Tabs'
+import { Drawer } from '../ui/Drawer'
+import { useIsDesktop } from '../../hooks/useMediaQuery'
 import { matchesQuery } from '../ui/optionSearch'
 import { isDecidableBy } from '../../lib/requestReview'
 import { useMonthFilter } from '../../hooks/useMonthFilter'
@@ -213,10 +216,10 @@ export function AttendanceRequests() {
   const [query, setQuery] = useState('')
   const [person, setPerson] = useState('all')
   // The same stepper the attendance tabs use, "All months" toggle included, so
-  // the two screens narrow a period the same way. Opens on All: a queue that
-  // started on the current month would hide a request pending for next month,
-  // which is exactly the request somebody needs to see.
-  const month = useMonthFilter(true)
+  // the two screens narrow a period the same way. Opens on the current month —
+  // the period somebody means when they say "the requests" — with All months one
+  // press away inside the filter panel for anything further out.
+  const month = useMonthFilter()
 
   // Fetch unfiltered and narrow in memory: the counts on the type chips have to
   // reflect the whole queue, not the slice currently on screen.
@@ -231,6 +234,8 @@ export function AttendanceRequests() {
   // chips, and several open at once turns the queue into a wall.
   const [editingDays, setEditingDays] = useState<string | null>(null)
   const [entering, setEntering] = useState(false)
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const isDesktop = useIsDesktop()
 
   const reviewLeave = useReviewLeave()
   const reviewWfh = useReviewWfh()
@@ -398,9 +403,14 @@ export function AttendanceRequests() {
     })),
   ]
 
-  // Drives the Clear filters escape hatch: a queue narrowed four ways and
-  // showing nothing should say so in one click rather than four.
-  const narrowed = kind !== 'all' || person !== 'all' || !month.allMonths || query.trim() !== ''
+  // How many filters are doing something, for the badge on the Filters button:
+  // the panel is closed most of the time, and a queue that is quietly narrowed
+  // with no sign of it is how people conclude a request has gone missing.
+  // Search is not counted — it sits in the toolbar where it can be seen.
+  const activeFilters =
+    (kind !== 'all' ? 1 : 0) + (person !== 'all' ? 1 : 0) + (month.isDefault ? 0 : 1)
+
+  const clearFilters = () => { setKind('all'); setPerson('all'); month.reset() }
 
   const removingDay = removeLeaveDay.isPending || removeWfhDay.isPending
 
@@ -456,79 +466,67 @@ export function AttendanceRequests() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="border border-border-default bg-surface-1">
-        {/* Two rows, because they answer two questions and mixing them put seven
-            controls on one line. The top row is which slice you are looking at
-            and what you can do to it; the bottom row narrows whatever that is.
+      {/* No card on a phone: a border inside a screen that is already only
+          360px wide spends width on chrome and boxes the list in twice. The
+          rows keep their dividers, so the queue still reads as a list. */}
+      <div className="sm:border sm:border-border-default sm:bg-surface-1">
+        {/* One row now. The narrowing controls moved into a panel, because they
+            are set once and then left alone, while the tab, the search box and
+            the way in for a new request are used constantly — putting all seven
+            on the toolbar spent the width that matters on the ones that don't.
 
-            Every slot is a fixed width, and the month controls are pinned hard
-            right with nothing after them, so no label change can disturb a
-            neighbour — toggling "All months" used to resize its pill and shove
-            the search box sideways. */}
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-border-subtle px-4 py-3">
+            Order is DOM order on desktop and re-ordered on a phone, where the
+            tabs and the compact buttons share the first line and the search box
+            takes the second on its own rather than being squeezed. */}
+        <div className="flex flex-wrap items-center gap-2 border-b border-border-subtle pb-3 sm:gap-x-3 sm:px-4 sm:py-3">
+          {/* The strip scrolls rather than wraps, so it takes whatever is left
+              beside the buttons on a phone and its natural width on a desktop. */}
           <Tabs
             variant="pill"
             size="sm"
             tabs={statusTabs}
             activeKey={status}
             onChange={(k) => { if (isStatusFilter(k)) setStatus(k) }}
-            className="shrink-0"
+            className="order-1 min-w-0 flex-1 sm:flex-none sm:shrink-0"
           />
-          <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
-            <div className="relative w-full min-w-40 sm:w-52">
-              <Search size={13} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-text-4" />
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder={canReview ? 'Search people or reasons…' : 'Search your requests…'}
-                aria-label="Search requests"
-                className="w-full rounded-md border border-border-default bg-surface-inset py-1.5 pl-7 pr-3 font-ui text-[12.5px] text-text-1 outline-none placeholder:text-text-4 focus:border-border-focus"
-              />
-            </div>
+          <div className="relative order-3 w-full min-w-40 sm:order-2 sm:ml-auto sm:w-52">
+            <Search size={13} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-text-4" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={canReview ? 'Search people or reasons…' : 'Search your requests…'}
+              aria-label="Search requests"
+              className="w-full rounded-md border border-border-default bg-surface-inset py-1.5 pl-7 pr-3 font-ui text-[12.5px] text-text-1 outline-none placeholder:text-text-4 focus:border-border-focus"
+            />
+          </div>
+          <div className="order-2 ml-auto flex shrink-0 items-center gap-2 sm:order-3 sm:ml-0">
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => setFiltersOpen(true)}
+              aria-label={activeFilters > 0 ? `Filters, ${activeFilters} active` : 'Filters'}
+              className={cn('px-2.5 sm:px-3', activeFilters > 0 && 'border-brand-red/40 text-brand-red')}
+            >
+              <SlidersHorizontal size={14} />
+              <span className="hidden sm:inline">Filters</span>
+              {activeFilters > 0 && (
+                <span className="inline-flex size-4 items-center justify-center rounded-full bg-brand-red font-mono text-[10px] font-semibold text-white">
+                  {activeFilters}
+                </span>
+              )}
+            </Button>
             {canReview && (
-              <Button size="sm" variant="secondary" iconLeft={<Plus size={14} />} onClick={() => setEntering(true)}>
-                Add for someone else
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => setEntering(true)}
+                aria-label="Add a request for someone else"
+                className="px-2.5 sm:px-3"
+              >
+                <Plus size={14} />
+                <span className="hidden sm:inline">Add for someone else</span>
               </Button>
             )}
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-border-subtle bg-surface-2/20 px-4 py-2.5">
-          {/* A reviewer's tools: on your own handful of requests they narrow
-              almost nothing, so an employee gets the month stepper alone. */}
-          {canReview && (
-            <Select
-              size="sm"
-              value={kind}
-              onChange={(v) => setKind(v === 'all' || isKind(v) ? v : 'all')}
-              options={typeOptions}
-              className="w-36 shrink-0"
-            />
-          )}
-          {canReview && (
-            <Select
-              size="sm"
-              value={person}
-              onChange={setPerson}
-              options={peopleOptions}
-              className="w-44 shrink-0"
-            />
-          )}
-          {narrowed && (
-            <button
-              type="button"
-              onClick={() => { setKind('all'); setPerson('all'); setQuery(''); month.setAllMonths(true) }}
-              className="shrink-0 font-ui text-[11.5px] font-semibold text-text-3 underline-offset-2 transition-colors hover:text-text-1 hover:underline"
-            >
-              Clear filters
-            </button>
-          )}
-          {/* Period sits apart from the rest, hard right: it is the one filter
-              that is a range rather than a value, and nothing follows it, so its
-              own width can never disturb anything else. The Current badge is off
-              for the same reason — see MonthStepper. */}
-          <div className="ml-auto flex items-center gap-2">
-            <MonthStepper filter={month} hideCurrent />
           </div>
         </div>
 
@@ -537,11 +535,11 @@ export function AttendanceRequests() {
             <Loader2 size={18} className="animate-spin" />
           </div>
         ) : isError ? (
-          <div className="px-4 py-12 text-center font-ui text-[13px] text-error">
+          <div className="py-12 text-center font-ui text-[13px] text-error sm:px-4">
             Could not load requests. Refresh to try again.
           </div>
         ) : visible.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 px-4 py-12 text-center text-text-4">
+          <div className="flex flex-col items-center gap-2 py-12 text-center text-text-4 sm:px-4">
             <Inbox size={20} />
             <span className="font-ui text-[13px]">
               {query.trim()
@@ -562,7 +560,7 @@ export function AttendanceRequests() {
             return (
               <div
                 key={rowKey}
-                className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 border-b border-border-subtle last:border-0"
+                className="flex flex-wrap items-center gap-x-3 gap-y-2 py-3 border-b border-border-subtle last:border-0 sm:px-4"
               >
                 {/* items-start, not centre: the reason wraps to as many lines as
                     it needs — a reason worth writing is worth reading — and the
@@ -696,7 +694,77 @@ export function AttendanceRequests() {
         )}
       </div>
 
+      {/* Filters live in a panel, not on the toolbar: a right-hand drawer on a
+          desktop and a bottom sheet you can drag away on a phone. Clear all sits
+          in the footer, which is the one place it is always reachable and never
+          in the way — on the toolbar it appeared and vanished with the filters
+          themselves, moving everything beside it each time. */}
+      <Drawer
+        open={filtersOpen}
+        onClose={() => setFiltersOpen(false)}
+        side={isDesktop ? 'right' : 'bottom'}
+        width={380}
+        title={
+          <div>
+            <h2 className="font-display font-semibold text-[15px] text-text-1">Filters</h2>
+            <p className="font-ui text-[12px] text-text-4">
+              {visible.length} of {all.length} requests shown
+            </p>
+          </div>
+        }
+        footer={
+          <div className="flex items-center gap-2">
+            <Button
+              variant="secondary"
+              className="flex-1"
+              disabled={activeFilters === 0}
+              onClick={clearFilters}
+            >
+              Clear all
+            </Button>
+            <Button className="flex-1" onClick={() => setFiltersOpen(false)}>
+              Done
+            </Button>
+          </div>
+        }
+      >
+        <div className="flex flex-col gap-5 p-5">
+          {/* A reviewer's tools: on your own handful of requests they narrow
+              almost nothing, so an employee gets the period alone. */}
+          {canReview && (
+            <FilterField label="Type">
+              <Select
+                value={kind}
+                onChange={(v) => setKind(v === 'all' || isKind(v) ? v : 'all')}
+                options={typeOptions}
+                className="w-full"
+              />
+            </FilterField>
+          )}
+          {canReview && (
+            <FilterField label="Employee">
+              <Select value={person} onChange={setPerson} options={peopleOptions} className="w-full" />
+            </FilterField>
+          )}
+          <FilterField label="Period">
+            <div className="flex flex-wrap items-center gap-2">
+              <MonthStepper filter={month} />
+            </div>
+          </FilterField>
+        </div>
+      </Drawer>
+
       {entering && <EnterRequestForEmployeeModal onClose={() => setEntering(false)} />}
+    </div>
+  )
+}
+
+/** One labelled row in the filter panel — a stack, not a toolbar's line. */
+function FilterField({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <span className="font-mono text-[10.5px] uppercase tracking-wider text-text-4">{label}</span>
+      {children}
     </div>
   )
 }
