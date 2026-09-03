@@ -51,6 +51,14 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'fixed',
+        text: 'Attendance in the sidebar now opens the same place for everybody. It used to jump managers straight past the section\u2019s own front page \u2014 which on a phone landed you on a drilled-in screen with the bottom tabs hidden and no way onward except Back.',
+      },
+      {
+        kind: 'fixed',
+        text: 'The back arrow on every attendance screen returns to the attendance hub rather than retracing your history, so a screen opened from a notification no longer backs out of the section entirely.',
+      },
+      {
+        kind: 'fixed',
         text: 'The calendar reads properly on a phone. Cells show a coloured dot per kind instead of counts that used to break across two lines and stretch a whole week out of shape; press the day for the numbers and the names.',
       },
     ],

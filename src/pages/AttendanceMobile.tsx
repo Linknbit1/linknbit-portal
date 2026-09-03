@@ -270,7 +270,10 @@ export function AttendanceSectionScreen() {
   const entry = section ? map[section] : undefined
   if (!entry) return <Navigate to="/attendance" replace />
 
-  return <StackScreen title={entry.title}>{entry.render()}</StackScreen>
+  // Back goes to the hub, not into history: these screens are also reached from
+  // a notification or a pinned link, and history back would then leave the
+  // section entirely — with the bottom tab bar hidden, that is a dead end.
+  return <StackScreen title={entry.title} back="/attendance">{entry.render()}</StackScreen>
 }
 
 /** Mobile-only /attendance/team/:sub stack screen; redirects on desktop. */
@@ -285,5 +288,9 @@ export function TeamAttendanceSectionScreen() {
   const entry = TEAM_SECTIONS.find((s) => s.key === sub)
   if (!entry) return <Navigate to="/attendance/team" replace />
 
-  return <StackScreen title={entry.title}><TeamCard>{entry.render()}</TeamCard></StackScreen>
+  return (
+    <StackScreen title={entry.title} back="/attendance/team">
+      <TeamCard>{entry.render()}</TeamCard>
+    </StackScreen>
+  )
 }

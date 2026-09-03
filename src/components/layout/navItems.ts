@@ -121,8 +121,8 @@ const ATTENDANCE_CHILDREN: NavItem[] = [
   { label: 'Today',            icon: CalendarCheck, to: '/attendance/today' },
   { label: 'Calendar',         icon: CalendarCheck, to: '/attendance/calendar' },
   { label: 'Requests',         icon: CalendarCheck, to: '/attendance/requests' },
-  // Only for the roles whose parent link goes to the management side — HR's
-  // "Attendance" already lands on this exact page, so offering it twice is noise.
+  // Managers only. For everyone else /attendance already IS this page, so a
+  // second row pointing at their own view would be the same door twice.
   { label: 'My Attendance',    icon: CalendarCheck, to: '/attendance/me',         feature: 'can_manage_attendance' },
   { label: 'Daily Records',    icon: CalendarCheck, to: '/attendance/records',    feature: 'can_manage_attendance' },
 ]
@@ -233,8 +233,13 @@ export const NAV_ITEMS: NavItem[] = [
   // actions inside are gated on can_manage_people; RLS blocks writes regardless.
   { label: 'Teams', icon: Users, to: '/teams', group: 'people' },
   { label: 'People', icon: UserCog, to: '/people', group: 'people' },
-  // `to` is rewritten below: managers land on Daily Records, everyone else on their
-  // own self-service view (the old hardcoded /attendance/records bounced 4 of 7 roles).
+  // Always /attendance, for every role. The route itself is the role split —
+  // it sends managers on to Today and everyone else to their own view — and
+  // that is the only place it belongs. The nav used to rewrite `to` per role as
+  // well, which sent managers straight to a child page: harmless on desktop
+  // (same destination either way) but wrong on a phone, where it skipped the
+  // Attendance hub and dropped them on a drilled-in screen whose back button
+  // hides the bottom tab bar.
   { label: 'Attendance', icon: CalendarCheck, to: '/attendance', group: 'people', matchPrefix: '/attendance', primaryMobile: true, children: ATTENDANCE_CHILDREN },
   { label: 'Gamification', icon: Trophy, to: '/gamification/leaderboard', group: 'people', matchPrefix: '/gamification', primaryMobile: true, children: GAMIFICATION_CHILDREN },
 
@@ -277,14 +282,7 @@ export function filterNavItems(
 
   return NAV_ITEMS.filter(allowed).map((item) => {
     const children = item.children?.filter(allowed)
-    // Send non-managers — and HR, who manages attendance but is a tracked
-    // employee — to their own attendance view rather than an admin URL.
-    const landsOnAdminView =
-      can('can_manage_attendance')
-    const to = item.matchPrefix === '/attendance'
-      ? (landsOnAdminView ? '/attendance/today' : '/attendance')
-      : item.to
-    return { ...item, to, children: children && children.length > 0 ? children : undefined }
+    return { ...item, children: children && children.length > 0 ? children : undefined }
   })
 }
 
