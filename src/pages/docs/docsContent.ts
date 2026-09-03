@@ -672,6 +672,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
         ],
         notes: [
           'Half days are counted apart from full days, so “3 off” always means three people who are gone for the whole day.',
+          'On a phone the cell shows a coloured dot per kind rather than the counts, and holiday names are left to the day panel — a phone cell is too narrow for either. Press the day for the full picture.',
           'In the day list, every leave says whether it is a full day, the first half or the second half. A partial work-from-home says the same, and means the other half is worked from the office.',
           'Approved exceptions — late arrival, early departure, out of office — appear on the day with the time they cover, so a thin day is not mistaken for a full one.',
           'Holidays are shaded and named in the cell, so you can see a long weekend coming without opening anything.',

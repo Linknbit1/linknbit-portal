@@ -49,6 +49,10 @@ export const RELEASES: ChangelogRelease[] = [
         kind: 'added',
         text: 'Approved exceptions \u2014 late arrival, early departure and out of office \u2014 now appear on the calendar day with the time they cover, so you can see a thin day coming without opening the Exceptions list.',
       },
+      {
+        kind: 'fixed',
+        text: 'The calendar reads properly on a phone. Cells show a coloured dot per kind instead of counts that used to break across two lines and stretch a whole week out of shape; press the day for the numbers and the names.',
+      },
     ],
   },
   {

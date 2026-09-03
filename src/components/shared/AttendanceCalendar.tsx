@@ -85,6 +85,69 @@ interface DayCell {
 /** Leave first, then WFH, then exceptions — most-absent to least. */
 const KIND_RANK: Record<Entry['kind'], number> = { leave: 0, wfh: 1, exception: 2 }
 
+/**
+ * One summary of a cell — the same fact drawn two ways.
+ *
+ * A phone gives each cell about 50px. "1 half" breaks across two lines in that
+ * space and stretches the entire week row, so below `sm` a cell shows coloured
+ * dots and the count is read by pressing the day. From `sm` up there is room
+ * for the counted chip, which is the more useful thing when it fits.
+ */
+interface Mark {
+  key: string
+  count: number
+  text: string
+  dot: string
+  chip: string
+  icon?: LucideIcon
+}
+
+function marksFor(entries: Entry[]): Mark[] {
+  const of = (kind: Entry['kind'], partial: boolean) =>
+    entries.filter((e) => e.kind === kind && (e.dayPart !== 'full') === partial).length
+
+  const out: Mark[] = [
+    {
+      key: 'leave',
+      count: of('leave', false),
+      text: 'off',
+      dot: 'bg-service-design',
+      chip: 'border-service-design/30 bg-service-design/12 text-service-design',
+    },
+    {
+      key: 'leave-half',
+      count: of('leave', true),
+      text: '\u00bd off',
+      // Outline only, no fill: half the ink for half the day.
+      dot: 'border border-service-design',
+      chip: 'border-service-design/30 text-service-design',
+    },
+    {
+      key: 'wfh',
+      count: of('wfh', false),
+      text: 'home',
+      dot: 'bg-service-dev',
+      chip: 'border-service-dev/30 bg-service-dev/12 text-service-dev',
+    },
+    {
+      key: 'wfh-half',
+      count: of('wfh', true),
+      text: '\u00bd home',
+      dot: 'border border-service-dev',
+      chip: 'border-service-dev/30 text-service-dev',
+    },
+    {
+      key: 'exception',
+      count: entries.filter((e) => e.kind === 'exception').length,
+      text: '',
+      dot: 'bg-warning',
+      chip: 'border-warning/30 bg-warning/12 text-warning',
+      icon: Clock,
+    },
+  ]
+  return out.filter((m) => m.count > 0)
+}
+
 export function AttendanceCalendar() {
   const now = new Date()
   const [ym, setYm] = useState({ year: now.getFullYear(), month: now.getMonth() + 1 })
@@ -259,17 +322,13 @@ export function AttendanceCalendar() {
 
           <div className="grid grid-cols-7 gap-px bg-border-subtle">
             {Array.from({ length: leadingBlanks }, (_, i) => (
-              <div key={`blank-${i}`} className="bg-surface-1 min-h-20" />
+              <div key={`blank-${i}`} className="bg-surface-1 min-h-14 sm:min-h-20" />
             ))}
 
             {cells.map((cell) => {
               // Full and half days are counted apart: "3 off" that silently
               // includes two half days overstates who is actually missing.
-              const leaveFull = cell.entries.filter((e) => e.kind === 'leave' && e.dayPart === 'full')
-              const leaveHalf = cell.entries.filter((e) => e.kind === 'leave' && e.dayPart !== 'full')
-              const wfhFull = cell.entries.filter((e) => e.kind === 'wfh' && e.dayPart === 'full')
-              const wfhHalf = cell.entries.filter((e) => e.kind === 'wfh' && e.dayPart !== 'full')
-              const exceptions = cell.entries.filter((e) => e.kind === 'exception')
+              const marks = marksFor(cell.entries)
               return (
                 <button
                   key={cell.date}
@@ -277,7 +336,7 @@ export function AttendanceCalendar() {
                   onClick={() => setSelected(cell.date === selected ? null : cell.date)}
                   aria-pressed={cell.date === selected}
                   className={cn(
-                    'min-h-20 p-1.5 flex flex-col gap-1 text-left transition-colors',
+                    'min-h-14 sm:min-h-20 p-1 sm:p-1.5 flex flex-col gap-1 text-left transition-colors',
                     cell.nonWorking ? 'bg-surface-inset' : 'bg-surface-1',
                     cell.holiday && 'bg-service-mkt/10',
                     cell.companyWfh && !cell.holiday && 'bg-service-dev/10',
@@ -298,52 +357,60 @@ export function AttendanceCalendar() {
                     {cell.day}
                   </span>
 
+                  {/* Captions need a line of text to be worth anything, and a
+                      phone cell is about 50px wide. Below `sm` the cell's tint
+                      carries the fact and pressing the day names it. */}
                   {cell.holiday && (
-                    <span className="font-ui text-[10.5px] leading-tight text-service-mkt line-clamp-2">
+                    <span className="hidden sm:line-clamp-2 font-ui text-[10.5px] leading-tight text-service-mkt">
                       {cell.holiday}
                     </span>
                   )}
                   {cell.workingSaturday && !cell.holiday && (
-                    <span className="font-ui text-[10.5px] leading-tight text-text-3">
+                    <span className="hidden sm:block font-ui text-[10.5px] leading-tight text-text-3">
                       Working Saturday
                     </span>
                   )}
                   {cell.companyWfh && !cell.holiday && (
-                    <span className="font-ui text-[10.5px] leading-tight text-service-dev line-clamp-2">
+                    <span className="hidden sm:line-clamp-2 font-ui text-[10.5px] leading-tight text-service-dev">
                       Company WFH
                     </span>
                   )}
 
                   {/* Counts, not avatars: a busy day would otherwise overflow the
                       cell, and the number is the thing being scanned for. */}
-                  <div className="mt-auto flex flex-wrap items-center gap-1">
-                    {leaveFull.length > 0 && (
-                      <span className="px-1 py-px rounded-sm border border-service-design/30 bg-service-design/12 text-service-design font-mono text-[10px] tabular-nums">
-                        {leaveFull.length} off
+                  {marks.length > 0 && (
+                    <div className="mt-auto flex flex-wrap items-center gap-1">
+                      {marks.map((m) => (
+                        <span
+                          key={`dot-${m.key}`}
+                          aria-hidden
+                          className={cn('size-1.5 shrink-0 rounded-full sm:hidden', m.dot)}
+                        />
+                      ))}
+                      {marks.map((m) => {
+                        const Icon = m.icon
+                        return (
+                          <span
+                            key={`chip-${m.key}`}
+                            className={cn(
+                              'hidden sm:inline-flex items-center gap-0.5 whitespace-nowrap',
+                              'px-1 py-px rounded-sm border font-mono text-[10px] tabular-nums',
+                              m.chip,
+                            )}
+                          >
+                            {Icon && <Icon size={9} />}
+                            {m.count}
+                            {m.text && ` ${m.text}`}
+                          </span>
+                        )
+                      })}
+                      {/* The dots carry no number, so the count still has to be
+                          announced for anyone not reading the grid visually. */}
+                      <span className="sr-only sm:hidden">
+                        {marks.map((m) => `${m.count} ${m.text || 'exception'}`).join(', ')}
                       </span>
-                    )}
-                    {leaveHalf.length > 0 && (
-                      <span className="px-1 py-px rounded-sm border border-service-design/30 text-service-design font-mono text-[10px] tabular-nums">
-                        {leaveHalf.length} half
-                      </span>
-                    )}
-                    {wfhFull.length > 0 && (
-                      <span className="px-1 py-px rounded-sm border border-service-dev/30 bg-service-dev/12 text-service-dev font-mono text-[10px] tabular-nums">
-                        {wfhFull.length} home
-                      </span>
-                    )}
-                    {wfhHalf.length > 0 && (
-                      <span className="px-1 py-px rounded-sm border border-service-dev/30 text-service-dev font-mono text-[10px] tabular-nums">
-                        {wfhHalf.length} half home
-                      </span>
-                    )}
-                    {exceptions.length > 0 && (
-                      <span className="inline-flex items-center gap-0.5 px-1 py-px rounded-sm border border-warning/30 bg-warning/12 text-warning font-mono text-[10px] tabular-nums">
-                        <Clock size={9} />
-                        {exceptions.length}
-                      </span>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </button>
               )
             })}
