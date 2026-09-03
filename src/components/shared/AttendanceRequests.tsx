@@ -9,15 +9,18 @@ import { PersonLink } from './PersonLink'
 import { Button } from '../ui/Button'
 import { Select } from '../ui/Select'
 import { Tabs } from '../ui/Tabs'
+import { Toggle } from '../ui/Toggle'
 import { Drawer } from '../ui/Drawer'
 import { useIsDesktop } from '../../hooks/useMediaQuery'
 import { matchesQuery } from '../ui/optionSearch'
 import { isDecidableBy } from '../../lib/requestReview'
 import { useMonthFilter } from '../../hooks/useMonthFilter'
-import { MonthStepper } from './MonthFilter'
+import { MonthStepper, DateGroupHeading } from './MonthFilter'
 import { EnterRequestForEmployeeModal } from './EnterRequestForEmployeeModal'
-import { formatDate } from '../../lib/utils'
+import { formatDate, formatTimeOfDay, formatHoursMinutes } from '../../lib/utils'
 import { DAY_PART_LABEL } from '../../lib/dayParts'
+import { exceptionTypeLabel } from '../../lib/exceptionTypes'
+import { datesInRange, groupByDate } from '../../lib/dateGroups'
 import { useAuthContext } from '../../context/AuthContext'
 import { useMyPermissions } from '../../hooks/usePermissions'
 import { ADMINISTRATOR } from '../../api/permissions'
@@ -100,24 +103,27 @@ interface UnifiedRequest {
   endDate: string
   /** Half days cover a single day, so they can never have one taken out. */
   isFullDay: boolean
-  dateLabel: string
-  /** The one line that distinguishes this request from another of the same kind. */
-  detail: string
+  /**
+   * The facts line, in one order for all four kinds: what it is, when it is,
+   * how much of the day it takes, and the clock times if it has any. Each part
+   * is separately nullable so a row never prints an empty separator, and they
+   * are text rather than chips — a chip is for the handful of things you scan
+   * and filter a queue by, and four of them per row is not a scan line.
+   */
+  /** Leave type or exception type. Null for WFH and overtime, which have none. */
+  what: string | null
+  /** The day, or the range. */
+  whenLabel: string
+  /** How much: "3 days", "Half day · 1st half", "1h 30m". */
+  extent: string | null
+  /** Clock window: "10:40 AM", "05:30 PM – 07:00 PM". */
+  timeLabel: string | null
   reason: string
   /** Who filed it, when that was not the person it is about. */
   enteredById: string | null
   enteredByName: string | null
   status: string
   createdAt: string
-}
-
-/** Every calendar day a range covers, as ISO strings. */
-function daysBetween(start: string, end: string): string[] {
-  const out: string[] = []
-  for (const d = new Date(`${start}T00:00:00`); d <= new Date(`${end}T00:00:00`); d.setDate(d.getDate() + 1)) {
-    out.push(new Intl.DateTimeFormat('en-CA').format(d))
-  }
-  return out
 }
 
 /**
@@ -169,6 +175,27 @@ function DayStrip({
 /** "12 Mar → 15 Mar 2026", collapsing a single-day range. */
 const fmtRange = (start: string, end: string): string =>
   start === end ? formatDate(start) : `${formatDate(start)} → ${formatDate(end)}`
+
+/**
+ * How much of the calendar a leave or WFH request takes.
+ *
+ * A single full day says nothing — the date beside it already did — so it
+ * returns null rather than the noise of "1 day" on most rows in the queue.
+ */
+function extentOf(dayPart: string, days: number): string | null {
+  if (dayPart !== 'full') {
+    const half = DAY_PART_LABEL[dayPart]
+    return half ? `Half day · ${half}` : 'Half day'
+  }
+  if (days > 1) return `${days} days`
+  return null
+}
+
+/** Calendar days a range spans, inclusive. */
+const spanDays = (start: string, end: string): number =>
+  Math.round(
+    (new Date(`${end}T00:00:00`).getTime() - new Date(`${start}T00:00:00`).getTime()) / 86400000,
+  ) + 1
 
 type StatusFilter = 'pending' | 'approved' | 'rejected' | 'all'
 
@@ -235,6 +262,10 @@ export function AttendanceRequests() {
   const [editingDays, setEditingDays] = useState<string | null>(null)
   const [entering, setEntering] = useState(false)
   const [filtersOpen, setFiltersOpen] = useState(false)
+  // Off by default: the flat list answers "what needs deciding", which is what
+  // the queue is for. Grouping answers "who is off on the 14th", which is a
+  // different question and worth a switch rather than a second screen.
+  const [groupByDay, setGroupByDay] = useState(false)
   const isDesktop = useIsDesktop()
 
   const reviewLeave = useReviewLeave()
@@ -258,10 +289,12 @@ export function AttendanceRequests() {
         date: r.start_date,
         endDate: r.end_date,
         isFullDay: r.day_part === 'full',
-        dateLabel: fmtRange(r.start_date, r.end_date),
-        detail: [r.leave_types?.name, r.day_part !== 'full' ? DAY_PART_LABEL[r.day_part] : null]
-          .filter(Boolean)
-          .join(' · '),
+        what: r.leave_types?.name ?? 'Leave',
+        whenLabel: fmtRange(r.start_date, r.end_date),
+        // r.days, not the calendar span: leave is deducted in leave days, and a
+        // range across a weekend costs fewer days than it covers.
+        extent: extentOf(r.day_part, r.days),
+        timeLabel: null,
         reason: r.reason,
         enteredById: r.entered_by,
         enteredByName: r.entered_by_profile?.name ?? null,
@@ -280,8 +313,10 @@ export function AttendanceRequests() {
         date: r.start_date,
         endDate: r.end_date,
         isFullDay: r.day_part === 'full',
-        dateLabel: fmtRange(r.start_date, r.end_date),
-        detail: r.day_part !== 'full' ? DAY_PART_LABEL[r.day_part] : 'Full day',
+        what: null,
+        whenLabel: fmtRange(r.start_date, r.end_date),
+        extent: extentOf(r.day_part, spanDays(r.start_date, r.end_date)),
+        timeLabel: null,
         reason: r.reason,
         enteredById: null,
         enteredByName: null,
@@ -300,8 +335,14 @@ export function AttendanceRequests() {
         date: r.date,
         endDate: r.date,
         isFullDay: true,
-        dateLabel: formatDate(r.date),
-        detail: `${r.exception_type.replace(/_/g, ' ')} · ${r.requested_time}`,
+        what: exceptionTypeLabel(r.exception_type),
+        whenLabel: formatDate(r.date),
+        extent: null,
+        // An out-of-office says when they left and when they came back; the
+        // other two are a single moment.
+        timeLabel: [formatTimeOfDay(r.requested_time), formatTimeOfDay(r.return_time)]
+          .filter(Boolean)
+          .join(' → ') || null,
         reason: r.reason,
         enteredById: r.entered_by,
         enteredByName: r.entered_by_profile?.name ?? null,
@@ -320,8 +361,12 @@ export function AttendanceRequests() {
         date: r.date,
         endDate: r.date,
         isFullDay: true,
-        dateLabel: formatDate(r.date),
-        detail: `${r.hours}h · ${r.start_time}–${r.end_time}`,
+        what: null,
+        whenLabel: formatDate(r.date),
+        extent: formatHoursMinutes(r.hours),
+        timeLabel: [formatTimeOfDay(r.start_time), formatTimeOfDay(r.end_time)]
+          .filter(Boolean)
+          .join(' – ') || null,
         reason: r.reason,
         enteredById: r.entered_by,
         enteredByName: r.entered_by_profile?.name ?? null,
@@ -356,10 +401,28 @@ export function AttendanceRequests() {
           // The person is what anyone searches a queue for; the reason, the type
           // and whoever filed it are matched too so "sick", "overtime" or an HR
           // name all find something.
-          matchesQuery(query, r.name, r.reason, r.detail, KIND_META[r.kind].label, r.enteredByName),
+          matchesQuery(query, r.name, r.reason, r.what, r.extent, KIND_META[r.kind].label, r.enteredByName),
       ),
     [all, kind, status, person, month, query],
   )
+
+  /**
+   * The same rows, bucketed under every day they cover — a week of leave shows
+   * on all five days, which is the whole point of looking at it this way.
+   *
+   * Clamped to the selected month: with a month chosen, a range running into
+   * the next one would otherwise open day headings outside the period the rest
+   * of the screen says you are looking at.
+   */
+  const dayGroups = useMemo(() => {
+    if (!groupByDay) return null
+    return groupByDate(visible, (r) => {
+      const days = datesInRange(r.date, r.endDate)
+      const inPeriod = month.allMonths ? days : days.filter((d) => month.inMonth(d))
+      // A range that only overlaps the month at its edges still belongs to it.
+      return inPeriod.length > 0 ? inPeriod : []
+    })
+  }, [visible, groupByDay, month])
 
   /**
    * Only the people who actually appear in the queue. A picker listing everybody
@@ -409,8 +472,9 @@ export function AttendanceRequests() {
   // Search is not counted — it sits in the toolbar where it can be seen.
   const activeFilters =
     (kind !== 'all' ? 1 : 0) + (person !== 'all' ? 1 : 0) + (month.isDefault ? 0 : 1)
+    + (groupByDay ? 1 : 0)
 
-  const clearFilters = () => { setKind('all'); setPerson('all'); month.reset() }
+  const clearFilters = () => { setKind('all'); setPerson('all'); month.reset(); setGroupByDay(false) }
 
   const removingDay = removeLeaveDay.isPending || removeWfhDay.isPending
 
@@ -464,6 +528,159 @@ export function AttendanceRequests() {
     }
   }
 
+  /**
+   * One row, used by both the flat list and the day-grouped one.
+   *
+   * `showActions` is false for the second and later days of a range: a week of
+   * leave is one request listed under each day it covers, and offering Approve
+   * on every one of those days would suggest there are five decisions to make.
+   */
+  const renderRow = (row: UnifiedRequest, key: string, showActions: boolean) => {
+    const meta = KIND_META[row.kind]
+    const Icon = meta.icon
+    const rowKey = `${row.kind}:${row.id}`
+    const stripOpen = editingDays === rowKey
+    // What / when / how much / clock — in that order for all four kinds, so the
+    // eye lands on the same thing in the same place down the whole queue.
+    const facts = [row.what, row.whenLabel, row.extent, row.timeLabel].filter(Boolean)
+
+    return (
+      <div
+        key={key}
+        className="flex flex-col gap-2 border-b border-border-subtle py-3 last:border-0 sm:flex-row sm:flex-wrap sm:items-start sm:gap-3 sm:px-4"
+      >
+        {/* items-start, not centre: the reason wraps to as many lines as it
+            needs — a reason worth writing is worth reading — and the avatar
+            should stay level with the name, not float mid-block. */}
+        <div className="flex min-w-0 flex-1 items-start gap-2.5">
+          <Avatar name={row.name} src={row.avatarUrl ?? undefined} size="sm" personId={row.profileId} />
+          <div className="min-w-0 flex-1">
+            <PersonLink
+              personId={row.profileId}
+              className="block truncate font-ui font-medium text-[13px] text-text-1"
+            >
+              {row.name}
+            </PersonLink>
+            <p className="flex flex-wrap items-center gap-x-1.5 font-mono text-[11.5px] tabular-nums text-text-2">
+              {facts.map((fact, i) => (
+                <span key={fact} className={i === 0 ? 'text-text-1' : undefined}>
+                  {i > 0 && <span className="mr-1.5 text-text-4">·</span>}
+                  {fact}
+                </span>
+              ))}
+            </p>
+            {row.reason && (
+              <p className="font-ui text-[11.5px]/snug text-text-4 wrap-break-word">{row.reason}</p>
+            )}
+          </div>
+        </div>
+
+        {/* The chips are the two axes you scan and filter by — what kind of
+            request, and where it stands — plus the one exception flag. On a
+            phone they sit under the facts as their own row; on a desktop they
+            are the right-hand rail. */}
+        <div className="flex flex-wrap items-center gap-1.5 pl-9.5 sm:shrink-0 sm:justify-end sm:pl-0">
+          <span
+            className={cn(
+              'inline-flex items-center gap-1.5 rounded-sm border px-2 py-0.5',
+              'font-ui text-[10.5px] font-semibold uppercase tracking-wider whitespace-nowrap',
+              meta.chip,
+            )}
+          >
+            <Icon size={11} />
+            {meta.label}
+          </span>
+
+          {/* Who put it in, when that was not the person it is about: it
+              decides who has to act on the row, so it stays on the scan line
+              rather than becoming a third dim line under the reason. */}
+          {row.enteredByName && (
+            <span
+              className="inline-flex items-center gap-1 rounded-sm border border-brand-red/25 bg-brand-red/10 px-2 py-0.5 font-ui text-[10.5px] font-semibold uppercase tracking-wider whitespace-nowrap text-brand-red"
+              title={`${row.enteredByName} filed this for ${row.name}, so somebody else has to decide on it`}
+            >
+              <UserPlus size={11} className="shrink-0" />
+              Added by {row.enteredByName}
+            </span>
+          )}
+
+          {row.status === 'pending' && showActions && canDecide(row) ? (
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                disabled={isReviewing}
+                onClick={() => review(row, 'approved')}
+                className="inline-flex items-center gap-1 rounded-sm border border-success/30 bg-success/12 px-2.5 py-1 font-ui text-[11.5px] font-semibold text-success hover:bg-success/20 disabled:opacity-50"
+              >
+                <Check size={12} />
+                Approve
+              </button>
+              <button
+                type="button"
+                disabled={isReviewing}
+                onClick={() => review(row, 'rejected')}
+                className="inline-flex items-center gap-1 rounded-sm border border-error/30 bg-error/10 px-2.5 py-1 font-ui text-[11.5px] font-semibold text-error hover:bg-error/20 disabled:opacity-50"
+              >
+                <X size={12} />
+                Reject
+              </button>
+            </div>
+          ) : (
+            <span
+              className={cn(
+                'inline-flex items-center rounded-sm border px-2 py-0.5',
+                'font-ui text-[10.5px] font-semibold uppercase tracking-wider whitespace-nowrap',
+                STATUS_PILL[row.status] ?? 'bg-surface-2 text-text-3 border-border-default',
+              )}
+              title={
+                row.status === 'pending' && canReview && !canDecide(row)
+                  ? row.enteredById === profile?.id
+                    ? 'You filed this one, so somebody else has to decide on it'
+                    : 'You cannot decide on your own request'
+                  : undefined
+              }
+            >
+              {row.status === 'pending' && canReview && !canDecide(row)
+                ? 'Waiting on someone else'
+                : row.status}
+            </span>
+          )}
+
+          {/* Only a multi-day, full-day leave or WFH range has days to take out. */}
+          {showActions
+            && canReview
+            && (row.kind === 'leave' || row.kind === 'wfh')
+            && row.isFullDay
+            && row.endDate > row.date
+            && (row.status === 'approved' || row.status === 'pending') && (
+            <button
+              type="button"
+              onClick={() => setEditingDays((cur) => (cur === rowKey ? null : rowKey))}
+              aria-expanded={stripOpen}
+              className={cn(
+                'inline-flex items-center gap-1 rounded-sm border px-2 py-1 font-ui text-[11.5px] font-semibold transition-colors',
+                stripOpen
+                  ? 'border-brand-red/30 bg-brand-red/12 text-brand-red'
+                  : 'border-border-default bg-surface-2 text-text-3 hover:text-text-1',
+              )}
+            >
+              <CalendarX2 size={12} />
+              Days
+            </button>
+          )}
+        </div>
+
+        {stripOpen && (
+          <DayStrip
+            days={datesInRange(row.date, row.endDate)}
+            busy={removingDay}
+            onRemove={(day) => removeDay(row, day)}
+          />
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col gap-4">
       {/* No card on a phone: a border inside a screen that is already only
@@ -505,7 +722,12 @@ export function AttendanceRequests() {
               variant="secondary"
               onClick={() => setFiltersOpen(true)}
               aria-label={activeFilters > 0 ? `Filters, ${activeFilters} active` : 'Filters'}
-              className={cn('px-2.5 sm:px-3', activeFilters > 0 && 'border-brand-red/40 text-brand-red')}
+              // No text colour here: tailwind-merge cannot tell a custom
+              // `text-<colour>` from a `text-<size>`, so `text-brand-red` was
+              // dropping the Button's own `text-body-sm` and the label jumped
+              // from 13px to 16px the moment a filter was set. The border and
+              // the count carry the active state instead.
+              className={cn('px-2.5 sm:px-3', activeFilters > 0 && 'border-brand-red/40')}
             >
               <SlidersHorizontal size={14} />
               <span className="hidden sm:inline">Filters</span>
@@ -552,145 +774,18 @@ export function AttendanceRequests() {
             </span>
           </div>
         ) : (
-          visible.map((row) => {
-            const meta = KIND_META[row.kind]
-            const Icon = meta.icon
-            const rowKey = `${row.kind}:${row.id}`
-            const stripOpen = editingDays === rowKey
-            return (
-              <div
-                key={rowKey}
-                className="flex flex-wrap items-center gap-x-3 gap-y-2 py-3 border-b border-border-subtle last:border-0 sm:px-4"
-              >
-                {/* items-start, not centre: the reason wraps to as many lines as
-                    it needs — a reason worth writing is worth reading — and the
-                    avatar should stay level with the name, not float mid-block. */}
-                <div className="flex min-w-56 flex-1 items-start gap-2.5">
-                  <Avatar
-                    name={row.name}
-                    src={row.avatarUrl ?? undefined}
-                    size="sm"
-                    personId={row.profileId}
-                  />
-                  <div className="min-w-0">
-                    <PersonLink
-                      personId={row.profileId}
-                      className="block truncate font-ui font-medium text-[13px] text-text-1"
-                    >
-                      {row.name}
-                    </PersonLink>
-                    <span className="block font-ui text-[11.5px]/snug text-text-4 wrap-break-word">
-                      {row.reason}
-                    </span>
-                  </div>
-                </div>
-
-                <span
-                  className={cn(
-                    'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm border',
-                    'text-[10.5px] font-ui font-semibold uppercase tracking-wider whitespace-nowrap',
-                    meta.chip,
+          dayGroups
+            ? dayGroups.map((group) => (
+                <div key={group.date}>
+                  <DateGroupHeading date={group.date} count={group.items.length} />
+                  {group.items.map((row) =>
+                    // Actions ride on the request's own first day, so a range
+                    // offers one decision rather than one per day it covers.
+                    renderRow(row, `${group.date}:${row.kind}:${row.id}`, row.date === group.date),
                   )}
-                >
-                  <Icon size={11} />
-                  {meta.label}
-                </span>
-
-                {/* Who put it in, when that was not the person it is about.
-                    On the scan line beside the type rather than as a third
-                    line under the reason: it decides who has to act on the
-                    row, so it cannot be the dimmest thing on it. */}
-                {row.enteredByName && (
-                  <span
-                    className="inline-flex items-center gap-1 rounded-sm border border-brand-red/25 bg-brand-red/10 px-2 py-0.5 font-ui text-[10.5px] font-semibold uppercase tracking-wider whitespace-nowrap text-brand-red"
-                    title={`${row.enteredByName} filed this for ${row.name}, so somebody else has to decide on it`}
-                  >
-                    <UserPlus size={11} className="shrink-0" />
-                    Added by {row.enteredByName}
-                  </span>
-                )}
-
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11.5px] text-text-2 tabular-nums">
-                  <span className="text-text-1">{row.dateLabel}</span>
-                  {row.detail && <span className="text-text-3">{row.detail}</span>}
                 </div>
-
-                {row.status === 'pending' && canDecide(row) ? (
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      disabled={isReviewing}
-                      onClick={() => review(row, 'approved')}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-sm border border-success/30 bg-success/12 text-success text-[11.5px] font-ui font-semibold hover:bg-success/20 disabled:opacity-50"
-                    >
-                      <Check size={12} />
-                      Approve
-                    </button>
-                    <button
-                      type="button"
-                      disabled={isReviewing}
-                      onClick={() => review(row, 'rejected')}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-sm border border-error/30 bg-error/10 text-error text-[11.5px] font-ui font-semibold hover:bg-error/20 disabled:opacity-50"
-                    >
-                      <X size={12} />
-                      Reject
-                    </button>
-                  </div>
-                ) : (
-                  <span
-                    className={cn(
-                      'inline-flex items-center px-2 py-0.5 rounded-sm border',
-                      'text-[10.5px] font-ui font-semibold uppercase tracking-wider whitespace-nowrap',
-                      STATUS_PILL[row.status] ?? 'bg-surface-2 text-text-3 border-border-default',
-                    )}
-                    title={
-                      row.status === 'pending' && canReview && !canDecide(row)
-                        ? row.enteredById === profile?.id
-                          ? 'You filed this one, so somebody else has to decide on it'
-                          : 'You cannot decide on your own request'
-                        : undefined
-                    }
-                  >
-                    {row.status === 'pending' && canReview && !canDecide(row)
-                      ? 'Waiting on someone else'
-                      : row.status}
-                  </span>
-                )}
-
-                {/* Only a multi-day, full-day leave or WFH range has days to take
-                    out. Everything else is a single day, where rejecting the
-                    request is the operation that applies. */}
-                {canReview
-                  && (row.kind === 'leave' || row.kind === 'wfh')
-                  && row.isFullDay
-                  && row.endDate > row.date
-                  && (row.status === 'approved' || row.status === 'pending') && (
-                  <button
-                    type="button"
-                    onClick={() => setEditingDays((cur) => (cur === rowKey ? null : rowKey))}
-                    aria-expanded={stripOpen}
-                    className={cn(
-                      'inline-flex items-center gap-1 rounded-sm border px-2 py-1 font-ui text-[11.5px] font-semibold transition-colors',
-                      stripOpen
-                        ? 'border-brand-red/30 bg-brand-red/12 text-brand-red'
-                        : 'border-border-default bg-surface-2 text-text-3 hover:text-text-1',
-                    )}
-                  >
-                    <CalendarX2 size={12} />
-                    Days
-                  </button>
-                )}
-
-                {stripOpen && (
-                  <DayStrip
-                    days={daysBetween(row.date, row.endDate)}
-                    busy={removingDay}
-                    onRemove={(day) => removeDay(row, day)}
-                  />
-                )}
-              </div>
-            )
-          })
+              ))
+            : visible.map((row) => renderRow(row, `${row.kind}:${row.id}`, true))
         )}
       </div>
 
@@ -750,6 +845,22 @@ export function AttendanceRequests() {
             <div className="flex flex-wrap items-center gap-2">
               <MonthStepper filter={month} />
             </div>
+          </FilterField>
+
+          <FilterField label="Arrangement">
+            <button
+              type="button"
+              onClick={() => setGroupByDay(!groupByDay)}
+              className="flex items-center gap-3 rounded-sm border border-border-default bg-surface-inset px-3 py-2.5 text-left transition-colors hover:border-border-strong"
+            >
+              <div className="min-w-0 flex-1">
+                <span className="block font-ui text-[13px] text-text-1">Group by day</span>
+                <span className="block font-ui text-[11.5px]/snug text-text-4">
+                  A heading per date, with every request that covers it listed underneath.
+                </span>
+              </div>
+              <Toggle checked={groupByDay} onChange={setGroupByDay} label="Group by day" />
+            </button>
           </FilterField>
         </div>
       </Drawer>

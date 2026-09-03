@@ -81,6 +81,37 @@ export function formatClockLabel(hour24: number, minute: number): string {
 }
 
 /**
+ * A stored time-of-day ('HH:MM' or 'HH:MM:SS') as "09:05 AM".
+ *
+ * Postgres `time` columns come back with seconds attached, and printing them
+ * raw is how "10:40:00" ends up in a sentence meant for a person.
+ */
+export function formatTimeOfDay(t: string | null | undefined): string | null {
+  if (!t) return null
+  const [h, m] = t.split(':')
+  const hour = Number(h)
+  const minute = Number(m)
+  if (Number.isNaN(hour) || Number.isNaN(minute)) return t
+  return formatClockLabel(hour, minute)
+}
+
+/**
+ * Decimal hours as hours and minutes: 0.67 → "40m", 1.5 → "1h 30m", 2 → "2h".
+ *
+ * Overtime is stored as a fraction because that is what it is arithmetic on,
+ * but nobody works 0.67 of an hour — they work forty minutes.
+ */
+export function formatHoursMinutes(hours: number): string {
+  const total = Math.round(hours * 60)
+  if (total <= 0) return '0m'
+  const h = Math.floor(total / 60)
+  const m = total % 60
+  if (h === 0) return `${m}m`
+  if (m === 0) return `${h}h`
+  return `${h}h ${m}m`
+}
+
+/**
  * The current time as [hour, minute] in 24h, snapped to the nearest `step`.
  *
  * Nearest rather than next: a picker set to "now" at 11:07 on a 15-minute step

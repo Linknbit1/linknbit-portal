@@ -733,6 +733,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
             steps: [
               'Open People → Attendance → Requests. It opens on Pending for this month, with the number still to decide on the tab.',
               'Press Filters to narrow by type, by employee or by period. The panel opens on the right on a computer and slides up from the bottom on a phone, where you can drag it away when you are done.',
+              'Turn on Group by day in the same panel to read the queue as a calendar instead of a list: a heading per date, with everything covering that date underneath it.',
               'Set the period to All months to see everything still outstanding, including anything filed for a month ahead.',
               'Search on the toolbar for a name or a reason when you are after one request rather than the whole queue.',
               'Press Approve or Reject on the row. The list updates in place.',
@@ -769,7 +770,9 @@ export const DOC_CHAPTERS: DocChapter[] = [
           'Searching the queue matches whoever filed a request as well as whose it is, so typing an HR person\u2019s name lists everything they entered.',
           'An approved leave or WFH day updates your attendance record for that day automatically.',
           'On a first-half day off you are not due in until the second half starts, so your arrival is judged against that time plus the usual grace, coming in before it counts as on time, not late.',
-          'A multi-day request is listed under every day it covers, so the team can see who is off on a given date. It is still one request: the Approve and Reject buttons appear only on its first day.',
+          'With Group by day on, a multi-day request is listed under every day it covers, so you can see who is off on a given date. It is still one request: the Approve and Reject buttons appear only on its first day.',
+          'Each row reads the same way whatever kind it is: what it is, when, how much of the day, and the clock times if it has any. Only the two things you filter by — the kind and where it stands — are chips, plus the red flag when somebody filed it for someone else.',
+          'Overtime is shown in hours and minutes. Forty minutes reads as 40m, not as 0.67 of an hour.',
           'A WFH request covers a date range, so a whole week away from the office is one request and one approval.',
           'A partial WFH day is not a day off: you work one half from home and the other half from the office, so check in as normal for the office half. Because it splits a single day, it cannot span a range.',
           'A day taken out of a longer request is removed from that person’s attendance straight away, and a leave day comes back to their balance. Their remaining days stay approved, so nobody has to reapply for the rest of the week.',

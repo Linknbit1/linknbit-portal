@@ -71,6 +71,22 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'improved',
+        text: 'Every request row now reads the same way \u2014 what it is, when, how much of the day, and the clock times \u2014 with only the kind and the status left as chips. Leave names its type, an exception names its type and the time, overtime shows the window it covers, and a range says how many days it is.',
+      },
+      {
+        kind: 'added',
+        text: 'Group by day, in the Filters panel: the queue becomes a heading per date with everything covering that date listed under it, which is the view for \u201cwho is off on the 14th\u201d rather than \u201cwhat needs deciding\u201d.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Overtime reads as hours and minutes \u2014 40m, 1h 30m \u2014 instead of 0.67h. Times of day print as 10:40 AM instead of 10:40:00, and an exception is called Late arrival rather than late_arrival.',
+      },
+      {
+        kind: 'fixed',
+        text: 'The Filters button no longer grows its label from 13px to 16px the moment a filter is set.',
+      },
+      {
+        kind: 'improved',
         text: 'My Attendance drops the month stepper and the Present / Late / Absent / Leave cards. The page is where you file and follow your own requests; it now shows this month\u2019s record under them and nothing else.',
       },
       {

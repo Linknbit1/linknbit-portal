@@ -7,8 +7,9 @@ import { cn } from '../../lib/cn'
 import { Avatar } from '../ui/Avatar'
 import { PersonLink } from './PersonLink'
 import { PeriodStepper } from '../ui/PeriodStepper'
-import { formatDate, formatClockLabel } from '../../lib/utils'
+import { formatDate, formatTimeOfDay } from '../../lib/utils'
 import { toDayPart, DAY_PART_LABEL } from '../../lib/dayParts'
+import { exceptionTypeLabel } from '../../lib/exceptionTypes'
 import type { AttendanceDayPart } from '../../types'
 import {
   useHolidays,
@@ -30,22 +31,12 @@ function iso(year: number, month: number, day: number): string {
   return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 }
 
-/** 'HH:MM:SS' time-of-day → "09:05 AM". */
-function fmtClock(t: string | null): string | null {
-  if (!t) return null
-  const [h, m] = t.split(':')
-  const hour = Number(h)
-  const minute = Number(m)
-  if (Number.isNaN(hour) || Number.isNaN(minute)) return t
-  return formatClockLabel(hour, minute)
-}
-
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
-const EXCEPTION_META: Record<string, { label: string; icon: LucideIcon }> = {
-  late_arrival:    { label: 'Late arrival',    icon: Clock },
-  early_departure: { label: 'Early departure', icon: LogOut },
-  out_of_office:   { label: 'Out of office',   icon: DoorOpen },
+const EXCEPTION_ICON: Record<string, LucideIcon> = {
+  late_arrival: Clock,
+  early_departure: LogOut,
+  out_of_office: DoorOpen,
 }
 
 /** The half a partial day covers, so a half day never reads as a whole one. */
@@ -228,9 +219,8 @@ export function AttendanceCalendar() {
       }
       for (const e of exceptionsQ.data ?? []) {
         if (e.date !== date) continue
-        const meta = EXCEPTION_META[e.exception_type]
-        const from = fmtClock(e.requested_time)
-        const to = fmtClock(e.return_time)
+        const from = formatTimeOfDay(e.requested_time)
+        const to = formatTimeOfDay(e.return_time)
         entries.push({
           id: e.id,
           profileId: e.profile_id,
@@ -238,9 +228,9 @@ export function AttendanceCalendar() {
           avatarUrl: e.profiles?.avatar_url ?? null,
           kind: 'exception',
           dayPart: 'full',
-          label: meta?.label ?? e.exception_type.replace(/_/g, ' '),
+          label: exceptionTypeLabel(e.exception_type),
           time: from && to ? `${from} → ${to}` : from,
-          icon: meta?.icon ?? Clock,
+          icon: EXCEPTION_ICON[e.exception_type] ?? Clock,
         })
       }
       entries.sort(
