@@ -2,7 +2,7 @@ import { useState, useRef } from 'react'
 import { ChevronLeft, ChevronRight, CalendarClock, ChevronDown } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { Popover } from './Popover'
-import { TimeWheel } from './TimeWheel'
+import { ClockDial } from './ClockDial'
 import { toDateInput, toTimeInput, fromDateTimeInput, formatClockLabel, nowSnappedTo } from '../../lib/utils'
 
 export interface DateTimeRange {
@@ -278,7 +278,7 @@ export function DateTimeRangePicker({
                 </button>
               ))}
             </div>
-            <TimeWheel
+            <ClockDial
               hour={timeSide === 'start' ? sH : eH}
               minute={timeSide === 'start' ? sM : eM}
               step={step}

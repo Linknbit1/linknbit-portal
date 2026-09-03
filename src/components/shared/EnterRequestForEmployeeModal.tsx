@@ -31,10 +31,13 @@ const KIND_TABS: { id: Kind; label: string }[] = [
 
 type ExceptionType = 'late_arrival' | 'early_departure' | 'out_of_office'
 
+// Labels stay neutral of tense. An exception is filed in advance as often as it
+// is recorded afterwards, so "Arrived at" is wrong half the time and "Will
+// arrive at" the other half; the noun is right in both.
 const EXCEPTION_TYPES: { value: ExceptionType; label: string; timeLabel: string }[] = [
-  { value: 'late_arrival', label: 'Late arrival', timeLabel: 'Arrived at' },
-  { value: 'early_departure', label: 'Early departure', timeLabel: 'Left at' },
-  { value: 'out_of_office', label: 'Out of office', timeLabel: 'Left at' },
+  { value: 'late_arrival', label: 'Late arrival', timeLabel: 'Arrival' },
+  { value: 'early_departure', label: 'Early departure', timeLabel: 'Departure' },
+  { value: 'out_of_office', label: 'Out of office', timeLabel: 'Departure' },
 ]
 
 /** Whole hours to two decimals, so 17:30 → 19:00 reads as 1.5. */
@@ -228,7 +231,7 @@ export function EnterRequestForEmployeeModal({ onClose }: EnterRequestForEmploye
       <div className="space-y-4 p-5">
         <p className="rounded-sm border border-border-default bg-surface-2 px-3 py-2 font-ui text-[12px] text-text-3">
           {appliesDirectly
-            ? 'This applies straight away and updates their record — you are allowed to enter attendance without approval.'
+            ? 'This applies straight away and updates their record. You are allowed to enter attendance without approval.'
             : 'This waits for approval and changes nothing until it is given. Not by you: nobody decides on a request they filed, so it goes to another approver.'}
         </p>
 
@@ -327,7 +330,7 @@ export function EnterRequestForEmployeeModal({ onClose }: EnterRequestForEmploye
                 </div>
               ) : exceptionType === 'out_of_office' ? (
                 <div className="space-y-1.5">
-                  <label className={label}>Back at</label>
+                  <label className={label}>Return</label>
                   <TimePicker value={returnTime} onChange={setReturnTime} step={5} />
                 </div>
               ) : null}

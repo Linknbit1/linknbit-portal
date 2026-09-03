@@ -2,7 +2,7 @@ import { useState, useRef } from 'react'
 import { Clock, ChevronDown } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { Popover } from './Popover'
-import { TimeWheel } from './TimeWheel'
+import { ClockDial } from './ClockDial'
 import { formatClockLabel, nowSnappedTo } from '../../lib/utils'
 
 interface TimePickerProps {
@@ -44,22 +44,33 @@ export function TimePicker({
     return snapped >= 60 ? 0 : snapped
   }
 
+  /**
+   * Where the picker opens when the field is empty.
+   *
+   * The earliest time it will accept, when it has one — not a fixed 9am. A
+   * picker that opens at nine in the morning on a field that cannot go before
+   * half past two shows a face with every hour greyed out and no hint that the
+   * fix is to press PM.
+   */
+  const openingTime = (): [number, number] => {
+    if (parsed) return [parsed[0], Math.min(Math.round(parsed[1] / step) * step, 59)]
+    if (minParsed) return [minParsed[0], snapMin(minParsed[1])]
+    return [9, 0]
+  }
+
   const [open, setOpen] = useState(false)
-  const [pendingH, setPendingH] = useState(parsed?.[0] ?? 9)
-  const [pendingM, setPendingM] = useState(() => {
-    const raw = parsed?.[1] ?? 0
-    return Math.round(raw / step) * step >= 60 ? 0 : Math.round(raw / step) * step
-  })
+  const [pendingH, setPendingH] = useState(() => openingTime()[0])
+  const [pendingM, setPendingM] = useState(() => openingTime()[1])
 
   const triggerRef = useRef<HTMLButtonElement>(null)
 
   const toggleOpen = () => {
     if (disabled) return
     const nextOpen = !open
-    if (nextOpen && parsed) {
-      setPendingH(parsed[0])
-      const snapped = Math.round(parsed[1] / step) * step
-      setPendingM(snapped >= 60 ? 0 : snapped)
+    if (nextOpen) {
+      const [h, m] = openingTime()
+      setPendingH(h)
+      setPendingM(m)
     }
     setOpen(nextOpen)
   }
@@ -119,7 +130,7 @@ export function TimePicker({
         onClose={() => setOpen(false)}
         className="bg-surface-1 border border-border-default rounded-xl shadow-2xl overflow-hidden w-64 max-w-[calc(100vw-2rem)]"
       >
-          <TimeWheel hour={pendingH} minute={pendingM} onChange={pick} step={step} min={minParsed} />
+          <ClockDial hour={pendingH} minute={pendingM} onChange={pick} step={step} min={minParsed} />
 
           {/* Footer. "Now" sits where the date picker keeps "Today", and behaves
               the same: it commits on the spot rather than only moving the wheel. */}

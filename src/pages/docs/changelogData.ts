@@ -99,6 +99,22 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'improved',
+        text: 'Every time field is now a clock face. Press an hour and it moves on to the minutes, or drag the hand round either scale; the reading and AM/PM sit above it. Half past nine is a shape before it is a pair of numbers, and the three scrolling columns made you hunt for a position you already knew.',
+      },
+      {
+        kind: 'added',
+        text: 'Enter time, under every clock: the two boxes become fields you type into, for when you know the answer exactly and 9:47 is quicker said than pointed at. Select time switches back, and Now still fills in this minute from either.',
+      },
+      {
+        kind: 'fixed',
+        text: 'A time field with an earliest allowed time now opens at that time rather than at nine in the morning. Asking for a late arrival this afternoon used to open a clock with every hour greyed out and no sign that the fix was to press PM.',
+      },
+      {
+        kind: 'improved',
+        text: 'Exception times are labelled Arrival, Departure and Return. The same field is filled in before the day as often as after it, so a past-tense label was wrong half the time.',
+      },
+      {
+        kind: 'improved',
         text: 'My Attendance drops the month stepper and the Present / Late / Absent / Leave cards. The page is where you file and follow your own requests; it now shows this month\u2019s record under them and nothing else.',
       },
       {
