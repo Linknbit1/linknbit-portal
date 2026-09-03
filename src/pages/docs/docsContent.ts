@@ -658,21 +658,24 @@ export const DOC_CHAPTERS: DocChapter[] = [
         id: 'attendance-calendar',
         title: 'The month ahead',
         summary:
-          'A month at a glance: public holidays, company off days, working Saturdays, and who is away on which day.',
+          'A month at a glance: public holidays, company off days, working Saturdays, who is away on which day, for how much of it, and who has an approved exception.',
         where: 'People → Attendance → Calendar',
         procedures: [
           {
             title: 'Check coverage before approving time off',
             steps: [
               'Open People → Attendance → Calendar.',
-              'Find the day in question. Each cell counts how many people are off and how many are working from home.',
-              'Press the day to list exactly who, and what kind of leave they are on.',
+              'Find the day in question. Each cell counts full days off, half days, people working from home, and approved exceptions separately.',
+              'Press the day to list exactly who, what kind of leave they are on, and which half of the day it covers.',
             ],
           },
         ],
         notes: [
+          'Half days are counted apart from full days, so “3 off” always means three people who are gone for the whole day.',
+          'In the day list, every leave says whether it is a full day, the first half or the second half. A partial work-from-home says the same, and means the other half is worked from the office.',
+          'Approved exceptions — late arrival, early departure, out of office — appear on the day with the time they cover, so a thin day is not mistaken for a full one.',
           'Holidays are shaded and named in the cell, so you can see a long weekend coming without opening anything.',
-          'Only approved leave and WFH appear here. A request still waiting on a decision is not counted, look in Requests for those.',
+          'Only approved leave, WFH and exceptions appear here. A request still waiting on a decision is not counted, look in Requests for those.',
           'Working Saturdays are labelled; every other Saturday and Sunday is shaded as a non-working day.',
         ],
       },

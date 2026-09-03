@@ -1,16 +1,22 @@
 import { useMemo, useState } from 'react'
-import { Loader2, Palmtree, Home, Plane, CalendarDays } from 'lucide-react'
+import {
+  Loader2, Palmtree, Home, Plane, CalendarDays, Clock, LogOut, DoorOpen, Sunrise, Sunset,
+} from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { Avatar } from '../ui/Avatar'
 import { PersonLink } from './PersonLink'
 import { PeriodStepper } from '../ui/PeriodStepper'
-import { formatDate } from '../../lib/utils'
+import { formatDate, formatClockLabel } from '../../lib/utils'
+import { toDayPart, DAY_PART_LABEL } from '../../lib/dayParts'
+import type { AttendanceDayPart } from '../../types'
 import {
   useHolidays,
   useWorkingSaturdays,
   useCompanyWfhDays,
   useAllLeaveRequests,
   useAllWfhRequests,
+  useAllAttendanceExceptions,
   useAttendanceSettings,
 } from '../../hooks/useAttendance'
 
@@ -24,15 +30,44 @@ function iso(year: number, month: number, day: number): string {
   return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 }
 
+/** 'HH:MM:SS' time-of-day → "09:05 AM". */
+function fmtClock(t: string | null): string | null {
+  if (!t) return null
+  const [h, m] = t.split(':')
+  const hour = Number(h)
+  const minute = Number(m)
+  if (Number.isNaN(hour) || Number.isNaN(minute)) return t
+  return formatClockLabel(hour, minute)
+}
+
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
-/** Someone away on a given day, and how. */
-interface Away {
+const EXCEPTION_META: Record<string, { label: string; icon: LucideIcon }> = {
+  late_arrival:    { label: 'Late arrival',    icon: Clock },
+  early_departure: { label: 'Early departure', icon: LogOut },
+  out_of_office:   { label: 'Out of office',   icon: DoorOpen },
+}
+
+/** The half a partial day covers, so a half day never reads as a whole one. */
+const HALF_ICON: Record<Exclude<AttendanceDayPart, 'full'>, LucideIcon> = {
+  first_half: Sunrise,
+  second_half: Sunset,
+}
+
+/** Someone not on an ordinary full day in the office, and how. */
+interface Entry {
+  /** Request/exception id — a person can appear twice on one day. */
+  id: string
   profileId: string
   name: string
   avatarUrl: string | null
-  kind: 'leave' | 'wfh'
+  kind: 'leave' | 'wfh' | 'exception'
+  /** 'full' for anything that is not an explicitly partial leave or WFH. */
+  dayPart: AttendanceDayPart
   label: string
+  /** Exceptions only — the time window they asked for. */
+  time: string | null
+  icon: LucideIcon
 }
 
 interface DayCell {
@@ -44,8 +79,11 @@ interface DayCell {
   companyWfh: string | null
   workingSaturday: boolean
   nonWorking: boolean
-  away: Away[]
+  entries: Entry[]
 }
+
+/** Leave first, then WFH, then exceptions — most-absent to least. */
+const KIND_RANK: Record<Entry['kind'], number> = { leave: 0, wfh: 1, exception: 2 }
 
 export function AttendanceCalendar() {
   const now = new Date()
@@ -57,11 +95,12 @@ export function AttendanceCalendar() {
   const companyWfhQ = useCompanyWfhDays(ym.year)
   const leaveQ = useAllLeaveRequests('approved')
   const wfhQ = useAllWfhRequests('approved')
+  const exceptionsQ = useAllAttendanceExceptions({ status: 'approved' })
   const settingsQ = useAttendanceSettings()
 
   const isLoading =
     holidaysQ.isLoading || saturdaysQ.isLoading || companyWfhQ.isLoading ||
-    leaveQ.isLoading || wfhQ.isLoading
+    leaveQ.isLoading || wfhQ.isLoading || exceptionsQ.isLoading
 
   const saturdayWorking = settingsQ.data?.saturday_working ?? false
 
@@ -90,30 +129,60 @@ export function AttendanceCalendar() {
       const isSunday = weekday === 6
       const workingSaturday = isSaturday && workingSaturdays.has(date)
 
-      const away: Away[] = []
+      const entries: Entry[] = []
       for (const r of leaveQ.data ?? []) {
         if (date >= r.start_date && date <= r.end_date) {
-          away.push({
+          // A partial day is always a single day; a range is full days throughout.
+          const dayPart = r.start_date === r.end_date ? toDayPart(r.day_part) : 'full'
+          entries.push({
+            id: r.id,
             profileId: r.profile_id,
             name: r.profiles?.name ?? '-',
             avatarUrl: r.profiles?.avatar_url ?? null,
             kind: 'leave',
+            dayPart,
             label: r.leave_types?.name ?? 'Leave',
+            time: null,
+            icon: dayPart === 'full' ? Plane : HALF_ICON[dayPart],
           })
         }
       }
       for (const r of wfhQ.data ?? []) {
         if (date >= r.start_date && date <= r.end_date) {
-          away.push({
+          const dayPart = r.start_date === r.end_date ? toDayPart(r.day_part) : 'full'
+          entries.push({
+            id: r.id,
             profileId: r.profile_id,
             name: r.profiles?.name ?? '-',
             avatarUrl: r.profiles?.avatar_url ?? null,
             kind: 'wfh',
+            dayPart,
             label: 'Working from home',
+            time: null,
+            icon: Home,
           })
         }
       }
-      away.sort((a, b) => a.name.localeCompare(b.name))
+      for (const e of exceptionsQ.data ?? []) {
+        if (e.date !== date) continue
+        const meta = EXCEPTION_META[e.exception_type]
+        const from = fmtClock(e.requested_time)
+        const to = fmtClock(e.return_time)
+        entries.push({
+          id: e.id,
+          profileId: e.profile_id,
+          name: e.profiles?.name ?? '-',
+          avatarUrl: e.profiles?.avatar_url ?? null,
+          kind: 'exception',
+          dayPart: 'full',
+          label: meta?.label ?? e.exception_type.replace(/_/g, ' '),
+          time: from && to ? `${from} → ${to}` : from,
+          icon: meta?.icon ?? Clock,
+        })
+      }
+      entries.sort(
+        (a, b) => KIND_RANK[a.kind] - KIND_RANK[b.kind] || a.name.localeCompare(b.name),
+      )
 
       return {
         date,
@@ -123,10 +192,10 @@ export function AttendanceCalendar() {
         companyWfh: companyWfhByDate.get(date) ?? null,
         workingSaturday,
         nonWorking: isSunday || (isSaturday && !saturdayWorking && !workingSaturday),
-        away,
+        entries,
       }
     })
-  }, [ym, holidaysQ.data, companyWfhQ.data, saturdaysQ.data, leaveQ.data, wfhQ.data, saturdayWorking])
+  }, [ym, holidaysQ.data, companyWfhQ.data, saturdaysQ.data, leaveQ.data, wfhQ.data, exceptionsQ.data, saturdayWorking])
 
   const monthLabel = new Date(ym.year, ym.month - 1, 1).toLocaleDateString('en-US', {
     month: 'long',
@@ -157,7 +226,16 @@ export function AttendanceCalendar() {
           </span>
           <span className="inline-flex items-center gap-1.5">
             <span className="size-2.5 bg-service-design/50 border border-service-design" />
-            On leave
+            Full-day leave
+          </span>
+          {/* Half-filled swatch: the same colour as leave, visibly half of it. */}
+          <span className="inline-flex items-center gap-1.5">
+            <span className="size-2.5 border border-service-design bg-linear-to-r from-service-design/50 to-transparent" />
+            Half day
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="size-2.5 bg-warning/50 border border-warning" />
+            Exception
           </span>
         </div>
       </div>
@@ -185,8 +263,13 @@ export function AttendanceCalendar() {
             ))}
 
             {cells.map((cell) => {
-              const onLeave = cell.away.filter((a) => a.kind === 'leave')
-              const onWfh = cell.away.filter((a) => a.kind === 'wfh')
+              // Full and half days are counted apart: "3 off" that silently
+              // includes two half days overstates who is actually missing.
+              const leaveFull = cell.entries.filter((e) => e.kind === 'leave' && e.dayPart === 'full')
+              const leaveHalf = cell.entries.filter((e) => e.kind === 'leave' && e.dayPart !== 'full')
+              const wfhFull = cell.entries.filter((e) => e.kind === 'wfh' && e.dayPart === 'full')
+              const wfhHalf = cell.entries.filter((e) => e.kind === 'wfh' && e.dayPart !== 'full')
+              const exceptions = cell.entries.filter((e) => e.kind === 'exception')
               return (
                 <button
                   key={cell.date}
@@ -234,14 +317,30 @@ export function AttendanceCalendar() {
                   {/* Counts, not avatars: a busy day would otherwise overflow the
                       cell, and the number is the thing being scanned for. */}
                   <div className="mt-auto flex flex-wrap items-center gap-1">
-                    {onLeave.length > 0 && (
+                    {leaveFull.length > 0 && (
                       <span className="px-1 py-px rounded-sm border border-service-design/30 bg-service-design/12 text-service-design font-mono text-[10px] tabular-nums">
-                        {onLeave.length} off
+                        {leaveFull.length} off
                       </span>
                     )}
-                    {onWfh.length > 0 && (
+                    {leaveHalf.length > 0 && (
+                      <span className="px-1 py-px rounded-sm border border-service-design/30 text-service-design font-mono text-[10px] tabular-nums">
+                        {leaveHalf.length} half
+                      </span>
+                    )}
+                    {wfhFull.length > 0 && (
                       <span className="px-1 py-px rounded-sm border border-service-dev/30 bg-service-dev/12 text-service-dev font-mono text-[10px] tabular-nums">
-                        {onWfh.length} home
+                        {wfhFull.length} home
+                      </span>
+                    )}
+                    {wfhHalf.length > 0 && (
+                      <span className="px-1 py-px rounded-sm border border-service-dev/30 text-service-dev font-mono text-[10px] tabular-nums">
+                        {wfhHalf.length} half home
+                      </span>
+                    )}
+                    {exceptions.length > 0 && (
+                      <span className="inline-flex items-center gap-0.5 px-1 py-px rounded-sm border border-warning/30 bg-warning/12 text-warning font-mono text-[10px] tabular-nums">
+                        <Clock size={9} />
+                        {exceptions.length}
                       </span>
                     )}
                   </div>
@@ -275,44 +374,59 @@ export function AttendanceCalendar() {
             )}
           </h3>
 
-          {selectedCell.away.length === 0 ? (
+          {selectedCell.entries.length === 0 ? (
             <p className="px-4 py-8 text-center font-ui text-[13px] text-text-4">
               Everybody is in on this day.
             </p>
           ) : (
-            selectedCell.away.map((person) => (
-              <div
-                key={`${person.kind}:${person.profileId}`}
-                className="flex flex-wrap items-center gap-x-3 gap-y-1.5 px-4 py-2.5 border-b border-border-subtle last:border-0"
-              >
-                <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                  <Avatar
-                    name={person.name}
-                    src={person.avatarUrl ?? undefined}
-                    size="sm"
-                    personId={person.profileId}
-                  />
-                  <PersonLink
-                    personId={person.profileId}
-                    className="font-ui font-medium text-[13px] text-text-1 truncate"
-                  >
-                    {person.name}
-                  </PersonLink>
-                </div>
-                <span
-                  className={cn(
-                    'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm border',
-                    'text-[10.5px] font-ui font-semibold uppercase tracking-wider whitespace-nowrap',
-                    person.kind === 'leave'
-                      ? 'bg-service-design/12 text-service-design border-service-design/30'
-                      : 'bg-service-dev/12 text-service-dev border-service-dev/30',
-                  )}
+            selectedCell.entries.map((person) => {
+              const Icon = person.icon
+              const half = person.dayPart !== 'full' ? DAY_PART_LABEL[person.dayPart] : null
+              return (
+                <div
+                  key={`${person.kind}:${person.id}`}
+                  className="flex flex-wrap items-center gap-x-3 gap-y-1.5 px-4 py-2.5 border-b border-border-subtle last:border-0"
                 >
-                  {person.kind === 'leave' ? <Plane size={11} /> : <Home size={11} />}
-                  {person.label}
-                </span>
-              </div>
-            ))
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                    <Avatar
+                      name={person.name}
+                      src={person.avatarUrl ?? undefined}
+                      size="sm"
+                      personId={person.profileId}
+                    />
+                    <div className="min-w-0">
+                      <PersonLink
+                        personId={person.profileId}
+                        className="block font-ui font-medium text-[13px] text-text-1 truncate"
+                      >
+                        {person.name}
+                      </PersonLink>
+                      {person.time && (
+                        <span className="font-mono text-[11px] text-text-4">{person.time}</span>
+                      )}
+                    </div>
+                  </div>
+                  <span
+                    className={cn(
+                      'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm border',
+                      'text-[10.5px] font-ui font-semibold uppercase tracking-wider whitespace-nowrap',
+                      person.kind === 'leave'
+                        ? 'bg-service-design/12 text-service-design border-service-design/30'
+                        : person.kind === 'wfh'
+                          ? 'bg-service-dev/12 text-service-dev border-service-dev/30'
+                          : 'bg-warning/12 text-warning border-warning/30',
+                    )}
+                  >
+                    <Icon size={11} />
+                    {person.label}
+                    {/* The half is the whole point of a half day — never let the
+                        type label stand on its own and read as a full one. */}
+                    {half && <span className="opacity-75">· {half}</span>}
+                    {person.kind === 'leave' && !half && <span className="opacity-75">· Full day</span>}
+                  </span>
+                </div>
+              )
+            })
           )}
         </div>
       )}

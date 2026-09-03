@@ -31,11 +31,30 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: '1.28.0',
+    date: '2026-09-03',
+    title: 'Half a day is not a day',
+    highlight:
+      'The attendance calendar now says how much of a day somebody is away for \u2014 full day, first half or second half \u2014 and shows approved exceptions alongside leave instead of leaving them off the month entirely.',
+    entries: [
+      {
+        kind: 'improved',
+        text: 'Leave on the calendar says whether it is a full day, the first half or the second half. The day list spells it out per person, and the cell counts half days apart from full ones, so \u201c3 off\u201d never quietly includes somebody who is in for the afternoon.',
+      },
+      {
+        kind: 'improved',
+        text: 'A partial work-from-home day is marked the same way. It is half at home and half in the office, not a day away, and the calendar now reads that way too.',
+      },
+      {
+        kind: 'added',
+        text: 'Approved exceptions \u2014 late arrival, early departure and out of office \u2014 now appear on the calendar day with the time they cover, so you can see a thin day coming without opening the Exceptions list.',
+      },
+    ],
+  },
+  {
     version: '1.27.0',
     date: '2026-09-02',
     title: 'Straight to the person',
-    highlight:
-      'Projects and People are one list again rather than two renderings of it, and a name in the directory now takes you to the person instead of stopping at a card on the way.',
     entries: [
       {
         kind: 'improved',

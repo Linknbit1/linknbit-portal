@@ -256,7 +256,7 @@ export function TodayRoster() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-3">
-        <DatePicker value={date} onChange={setDate} className="w-37.5" />
+        <DatePicker value={date} onChange={setDate} className="w-44" />
         {date !== localToday() && (
           <button
             type="button"

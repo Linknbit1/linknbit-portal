@@ -106,7 +106,9 @@ export function DatePicker({ value, onChange, minDate, maxDate, allowedDow, plac
         )}
       >
         <Calendar size={13} className="text-text-4 shrink-0" />
-        <span className={cn('flex-1 font-mono text-[13px]', triggerLabel ? 'text-text-1' : 'text-text-4')}>
+        {/* truncate, never wrap: the trigger is a fixed-height control, and a
+            date breaking onto a second line stretches it out of the row. */}
+        <span className={cn('flex-1 truncate font-mono text-[13px]', triggerLabel ? 'text-text-1' : 'text-text-4')}>
           {triggerLabel ?? placeholder}
         </span>
         <ChevronDown size={13} className={cn('text-text-4 shrink-0 transition-transform', open && 'rotate-180')} />

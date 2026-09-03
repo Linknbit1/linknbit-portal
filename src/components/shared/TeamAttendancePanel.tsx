@@ -195,7 +195,7 @@ export function TeamRoster({ memberIds }: TeamScope = {}) {
         <ModeSwitch mode={mode} onChange={setMode} />
         <div className="ml-auto">
           {mode === 'day' ? (
-            <DatePicker value={date} onChange={setDate} className="w-37.5" />
+            <DatePicker value={date} onChange={setDate} className="w-44" />
           ) : (
             <PeriodStepper
               label={monthLabel(ym.year, ym.month)}
