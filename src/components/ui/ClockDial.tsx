@@ -15,11 +15,21 @@ const MINUTE_MARKS = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55]
 /**
  * How far the ring of marks sits from the centre, on the SVG's 0-100 grid.
  *
- * The knob drawn on the selected mark has a radius of 11, so a ring at 39 put
- * its outer edge at 50 — exactly the rim of the face, with the stroke spilling
- * over it. At 28 the whole knob clears the edge.
+ * The face is the container's own round background, so the rim is at 50 and the
+ * ring has to leave room for the knob drawn on it: 35 + 8.5 reaches 43.5, well
+ * clear of the edge it used to spill over.
  */
-const MARK_RADIUS = 28
+const MARK_RADIUS = 35
+
+/**
+ * The knob drawn on the selected mark.
+ *
+ * Sized against the gap between two marks, not against the number inside it:
+ * neighbours on the ring are 2 x 28 x sin(15°) ≈ 14.5 apart, so anything much
+ * over 8 puts the ring on top of the number next door — which is what made the
+ * face look crowded at 11.
+ */
+const KNOB_RADIUS = 8.5
 
 /**
  * Where a mark sits on the face, as a percentage of the dial box. `index` is a
@@ -184,11 +194,6 @@ export function ClockDial({ hour, minute, onChange, step = 5, min = null, classN
 
   const activeIndex = mode === 'hour' ? HOUR_MARKS.indexOf(hour12) : minute / 5
   const hand = pointAt(handAt ?? activeIndex)
-  // A minute off a five-mark gets a smaller knob: it is a position on the face,
-  // not one of the printed numbers, and drawing it the same size looks like a
-  // number has gone missing. Mid-drag it is always the small one — the ring
-  // belongs on a mark, and the hand is between them for most of a drag.
-  const onMark = handAt === null && (mode === 'hour' || minute % 5 === 0)
 
   const boxCls = (active: boolean) =>
     cn(
@@ -199,7 +204,7 @@ export function ClockDial({ hour, minute, onChange, step = 5, min = null, classN
     )
 
   return (
-    <div className={cn('flex flex-col items-center gap-3 p-4', className)}>
+    <div className={cn('flex flex-col items-center gap-2.5 p-3.5', className)}>
       {/* The reading. In dial mode the two boxes say what the face is editing;
           in typing mode they are the fields themselves. */}
       <div className="flex items-start gap-2">
@@ -277,7 +282,7 @@ export function ClockDial({ hour, minute, onChange, step = 5, min = null, classN
           onPointerMove={onPointerMove}
           onPointerUp={endDrag}
           onPointerCancel={endDrag}
-          className="relative aspect-square w-full max-w-56 cursor-pointer touch-none select-none rounded-full bg-surface-inset"
+          className="relative aspect-square w-full max-w-60 cursor-pointer touch-none select-none rounded-full bg-surface-inset"
         >
           {/* The hand. Drawn on the same 0-100 grid the marks are placed on, so
               it lands exactly on them at any size. */}
@@ -287,11 +292,11 @@ export function ClockDial({ hour, minute, onChange, step = 5, min = null, classN
             <circle
               cx={hand.x}
               cy={hand.y}
-              r={onMark ? 11 : 3.5}
+              r={KNOB_RADIUS}
               fill="currentColor"
-              fillOpacity={onMark ? 0.22 : 1}
+              fillOpacity={0.22}
               stroke="currentColor"
-              strokeWidth={onMark ? 1 : 0}
+              strokeWidth={1}
             />
           </svg>
 

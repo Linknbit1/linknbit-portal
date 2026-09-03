@@ -188,7 +188,7 @@ export function DateTimeRangePicker({
         anchorRef={triggerRef}
         open={open}
         onClose={() => setOpen(false)}
-        className="bg-surface-1 border border-border-default rounded-xl shadow-2xl overflow-hidden w-120 max-w-[calc(100vw-2rem)]"
+        className="bg-surface-2 border border-border-strong rounded-xl shadow-pop overflow-hidden w-120 max-w-[calc(100vw-2rem)]"
       >
         <div className="flex flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x divide-border-subtle">
           {/* Calendar — left */}

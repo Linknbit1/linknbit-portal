@@ -118,7 +118,7 @@ export function DatePicker({ value, onChange, minDate, maxDate, allowedDow, plac
         anchorRef={triggerRef}
         open={open}
         onClose={() => setOpen(false)}
-        className="bg-surface-1 border border-border-default rounded-xl shadow-2xl overflow-hidden w-68 max-w-[calc(100vw-2rem)]"
+        className="bg-surface-2 border border-border-strong rounded-xl shadow-pop overflow-hidden w-68 max-w-[calc(100vw-2rem)]"
       >
           {/* Month navigation */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-border-subtle">

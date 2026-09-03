@@ -128,7 +128,7 @@ export function TimePicker({
         anchorRef={triggerRef}
         open={open}
         onClose={() => setOpen(false)}
-        className="bg-surface-1 border border-border-default rounded-xl shadow-2xl overflow-hidden w-64 max-w-[calc(100vw-2rem)]"
+        className="bg-surface-2 border border-border-strong rounded-xl shadow-pop overflow-hidden w-72 max-w-[calc(100vw-2rem)]"
       >
           <ClockDial hour={pendingH} minute={pendingM} onChange={pick} step={step} min={minParsed} />
 

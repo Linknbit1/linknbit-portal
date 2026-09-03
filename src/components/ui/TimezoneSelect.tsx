@@ -106,7 +106,7 @@ export function TimezoneSelect({ value, onChange, className }: TimezoneSelectPro
 
       {/* Dropdown */}
       {open && (
-        <div className="absolute z-50 top-full inset-x-0 mt-1 bg-surface-1 border border-border-default rounded-md shadow-2xl overflow-hidden">
+        <div className="absolute z-50 top-full inset-x-0 mt-1 bg-surface-2 border border-border-strong rounded-md shadow-pop overflow-hidden">
           {/* Search */}
           <div className="flex items-center gap-2 px-3 py-2 border-b border-border-subtle">
             <Search size={12} className="text-text-4 shrink-0" />
