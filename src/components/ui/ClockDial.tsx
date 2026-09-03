@@ -193,7 +193,12 @@ export function ClockDial({ hour, minute, onChange, step = 5, min = null, classN
   }
 
   const activeIndex = mode === 'hour' ? HOUR_MARKS.indexOf(hour12) : minute / 5
-  const hand = pointAt(handAt ?? activeIndex)
+  const handIndex = handAt ?? activeIndex
+  const hand = pointAt(handIndex)
+  // The line stops where the knob starts rather than running to its centre: a
+  // hand is a pointer at something, and one that carries on inside the ring
+  // reads as a line with a bead threaded onto it.
+  const handTip = pointAt(handIndex, MARK_RADIUS - KNOB_RADIUS)
 
   const boxCls = (active: boolean) =>
     cn(
@@ -288,7 +293,7 @@ export function ClockDial({ hour, minute, onChange, step = 5, min = null, classN
               it lands exactly on them at any size. */}
           <svg viewBox="0 0 100 100" className="pointer-events-none absolute inset-0 size-full text-brand-red">
             <circle cx="50" cy="50" r="1.8" fill="currentColor" />
-            <line x1="50" y1="50" x2={hand.x} y2={hand.y} stroke="currentColor" strokeWidth="1.2" />
+            <line x1="50" y1="50" x2={handTip.x} y2={handTip.y} stroke="currentColor" strokeWidth="1.2" />
             <circle
               cx={hand.x}
               cy={hand.y}

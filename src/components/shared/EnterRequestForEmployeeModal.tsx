@@ -111,6 +111,9 @@ export function EnterRequestForEmployeeModal({ onClose }: EnterRequestForEmploye
     .map((p) => ({ value: p.id, label: p.name, avatar: { name: p.name, url: p.avatar_url } }))
 
   const timeLabel = EXCEPTION_TYPES.find((t) => t.value === exceptionType)?.timeLabel ?? 'At'
+  // Overtime runs between two times, and an out-of-office comes back; a late
+  // arrival and an early departure are one moment each.
+  const hasSecondTime = kind === 'overtime' || exceptionType === 'out_of_office'
   const overtimeHours = day && atTime && endTime ? hoursBetween(atTime, endTime) : 0
 
   const done = () => {
@@ -318,7 +321,10 @@ export function EnterRequestForEmployeeModal({ onClose }: EnterRequestForEmploye
               <DatePicker value={day} onChange={setDay} />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            {/* Two columns only when there is a second time to put in one. A
+                late arrival or an early departure is a single moment, and the
+                fixed pair left its field at half width beside an empty slot. */}
+            <div className={cn('grid gap-3', hasSecondTime && 'grid-cols-2')}>
               <div className="space-y-1.5">
                 <label className={label}>{kind === 'overtime' ? 'Started at' : timeLabel}</label>
                 <TimePicker value={atTime} onChange={setAtTime} step={5} />
@@ -349,7 +355,7 @@ export function EnterRequestForEmployeeModal({ onClose }: EnterRequestForEmploye
           <textarea
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            rows={2}
+            rows={4}
             placeholder="Why this is being entered for them."
             className="w-full resize-y rounded-md border border-border-default bg-surface-inset px-3 py-2 font-ui text-body-sm text-text-1 outline-none placeholder:text-text-4 focus:border-border-focus"
           />
