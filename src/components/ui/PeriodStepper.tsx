@@ -18,6 +18,8 @@ interface PeriodStepperProps {
    * controls beside it do not shuffle sideways every time it changes.
    */
   labelClassName?: string
+  /** Stretch to the full width of the parent, the label pill taking the slack. */
+  fill?: boolean
   className?: string
 }
 
@@ -27,15 +29,18 @@ interface PeriodStepperProps {
  * the whole stepper stays on one line (`shrink-0`).
  */
 export function PeriodStepper({
-  label, onPrev, onNext, disablePrev, disableNext, icon: Icon, children, labelClassName, className,
+  label, onPrev, onNext, disablePrev, disableNext, icon: Icon, children, labelClassName, fill = false, className,
 }: PeriodStepperProps) {
   const btn = 'size-8 rounded-sm bg-surface-1 border border-border-default flex items-center justify-center text-text-3 hover:text-text-1 hover:border-border-strong transition-colors disabled:opacity-40 disabled:hover:text-text-3 disabled:hover:border-border-default shrink-0'
   return (
-    <div className={cn('flex items-center gap-2 shrink-0', className)}>
+    <div className={cn('flex items-center gap-2', fill ? 'w-full' : 'shrink-0', className)}>
       <button type="button" onClick={onPrev} disabled={disablePrev} className={btn} aria-label="Previous">
         <ChevronLeft size={15} />
       </button>
-      <div className="h-8 bg-surface-1 border border-border-default rounded-lg px-3.5 flex items-center gap-2 whitespace-nowrap">
+      <div className={cn(
+        'h-8 bg-surface-1 border border-border-default rounded-lg px-3.5 flex items-center gap-2 whitespace-nowrap',
+        fill && 'min-w-0 flex-1 justify-center',
+      )}>
         {Icon && <Icon size={14} className="text-brand-red shrink-0" />}
         <span className={cn('font-display font-semibold text-[14px] text-text-1', labelClassName)}>{label}</span>
         {children}

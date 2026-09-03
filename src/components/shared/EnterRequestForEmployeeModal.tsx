@@ -242,7 +242,7 @@ export function EnterRequestForEmployeeModal({ onClose }: EnterRequestForEmploye
               type="button"
               onClick={() => setKind(k.id)}
               className={cn(
-                'h-8 truncate rounded-sm px-1 font-ui text-[12.5px] font-medium transition-colors',
+                'flex h-8 items-center justify-center truncate rounded-sm px-1 text-center font-ui text-[12.5px] font-medium transition-colors',
                 kind === k.id ? 'bg-surface-3 text-text-1' : 'text-text-3 hover:text-text-1',
               )}
             >

@@ -27,10 +27,16 @@ interface TabsProps {
    * beside a Select and a search box reads as oversized at the page size.
    */
   size?: 'sm' | 'md'
+  /**
+   * Tabs divide the strip equally instead of sitting at their natural widths.
+   * Only for a strip with a width of its own to divide — inside a `w-auto`
+   * parent the zero-basis children would collapse it to nothing.
+   */
+  fill?: boolean
   className?: string
 }
 
-export function Tabs({ tabs, activeKey, onChange, variant = 'underline', size = 'md', className }: TabsProps) {
+export function Tabs({ tabs, activeKey, onChange, variant = 'underline', size = 'md', fill = false, className }: TabsProps) {
   const listRef = useRef<HTMLDivElement>(null)
 
   // Keep the selected tab centered as the user moves through a scrollable strip.
@@ -40,7 +46,10 @@ export function Tabs({ tabs, activeKey, onChange, variant = 'underline', size = 
     <div
       ref={listRef}
       className={cn(
-        'flex items-center overflow-x-auto overflow-y-hidden touch-pan-x no-scrollbar scroll-smooth',
+        'flex items-center overflow-y-hidden scroll-smooth',
+        // A filling strip has nothing to scroll: the tabs are already as wide as
+        // the space allows, so the overflow machinery would only hide a tab.
+        fill ? 'w-full' : 'overflow-x-auto touch-pan-x no-scrollbar',
         variant === 'underline' ? 'border-b border-border-default gap-1' : 'gap-1 bg-surface-inset rounded-md p-1',
         className,
       )}
@@ -55,7 +64,8 @@ export function Tabs({ tabs, activeKey, onChange, variant = 'underline', size = 
             aria-selected={active}
             onClick={() => onChange(tab.key)}
             className={cn(
-              'inline-flex items-center font-ui font-medium transition-colors duration-150 focus:outline-none shrink-0 whitespace-nowrap',
+              'inline-flex items-center font-ui font-medium transition-colors duration-150 focus:outline-none whitespace-nowrap',
+              fill ? 'min-w-0 flex-1 justify-center text-center' : 'shrink-0',
               size === 'sm' ? 'gap-1.5 text-[11.5px]' : 'gap-2 text-body-sm',
               variant === 'underline'
                 ? cn(

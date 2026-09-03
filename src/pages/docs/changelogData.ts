@@ -87,6 +87,18 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'improved',
+        text: 'All months is a switch you can slide rather than a button to guess at: both states are named, the panel slides between them, and the month picker appears only when a month is what you are picking \u2014 taking the full width of the panel when it does.',
+      },
+      {
+        kind: 'improved',
+        text: 'The Pending / Approved / Rejected / All tabs divide the space between them instead of huddling at the left.',
+      },
+      {
+        kind: 'fixed',
+        text: 'The Group by day switch could not be pressed: the row around it was itself a button, and a button inside a button never receives the press.',
+      },
+      {
+        kind: 'improved',
         text: 'My Attendance drops the month stepper and the Present / Late / Absent / Leave cards. The page is where you file and follow your own requests; it now shows this month\u2019s record under them and nothing else.',
       },
       {

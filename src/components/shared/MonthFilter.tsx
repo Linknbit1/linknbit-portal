@@ -1,5 +1,7 @@
 import { Calendar } from 'lucide-react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { PeriodStepper } from '../ui/PeriodStepper'
+import { SlideSwitch } from '../ui/SlideSwitch'
 import { cn } from '../../lib/cn'
 import { formatDayHeading } from '../../lib/dateGroups'
 import type { MonthFilter } from '../../hooks/useMonthFilter'
@@ -19,11 +21,15 @@ export function MonthStepper({
   filter,
   hideAllMonths = false,
   hideCurrent = false,
+  stacked = false,
 }: {
   filter: MonthFilter
   hideAllMonths?: boolean
   hideCurrent?: boolean
+  /** Full-width, two rows — for a filter panel rather than a toolbar. */
+  stacked?: boolean
 }) {
+  if (stacked) return <StackedMonthFilter filter={filter} hideCurrent={hideCurrent} />
   return (
     <>
       {!hideAllMonths && (
@@ -60,6 +66,60 @@ export function MonthStepper({
         )}
       </PeriodStepper>
     </>
+  )
+}
+
+/**
+ * The panel form: a switch that names both states, and the month picker below it
+ * only when a month is what you are picking.
+ *
+ * The toolbar form has to keep the stepper mounted and greyed out, because a
+ * control appearing and disappearing in a row of controls shoves its neighbours
+ * sideways. A panel is a column with room below, so the picker can simply not be
+ * there when "All months" is chosen — a disabled stepper still reads as
+ * something you ought to be able to use.
+ */
+function StackedMonthFilter({ filter, hideCurrent }: { filter: MonthFilter; hideCurrent: boolean }) {
+  return (
+    <div className="flex flex-col gap-2">
+      <SlideSwitch
+        label="Period"
+        value={filter.allMonths ? 'all' : 'one'}
+        onChange={(v) => filter.setAllMonths(v === 'all')}
+        options={[
+          { value: 'all', label: 'All months' },
+          { value: 'one', label: 'One month' },
+        ]}
+      />
+      <AnimatePresence initial={false}>
+        {!filter.allMonths && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.18 }}
+            className="overflow-hidden"
+          >
+            <PeriodStepper
+              fill
+              icon={Calendar}
+              label={filter.label}
+              labelClassName="text-[12.5px]"
+              onPrev={filter.prevMonth}
+              onNext={filter.nextMonth}
+              disableNext={filter.isCurrentMonth}
+              className="pt-0.5"
+            >
+              {!hideCurrent && filter.isCurrentMonth && (
+                <span className="ml-1 px-1.5 py-0.5 rounded-xs bg-brand-red/10 border border-brand-red/20 text-brand-red text-[10px] font-mono font-semibold uppercase tracking-wide">
+                  Current
+                </span>
+              )}
+            </PeriodStepper>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   )
 }
 

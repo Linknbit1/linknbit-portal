@@ -704,7 +704,8 @@ export function AttendanceRequests() {
             tabs={statusTabs}
             activeKey={status}
             onChange={(k) => { if (isStatusFilter(k)) setStatus(k) }}
-            className="order-1 min-w-0 flex-1 sm:flex-none sm:shrink-0"
+            fill
+            className="order-1 min-w-0 flex-1 sm:max-w-md"
           />
           <div className="relative order-3 w-full min-w-40 sm:order-2 sm:ml-auto sm:w-52">
             <Search size={13} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-text-4" />
@@ -842,17 +843,14 @@ export function AttendanceRequests() {
             </FilterField>
           )}
           <FilterField label="Period">
-            <div className="flex flex-wrap items-center gap-2">
-              <MonthStepper filter={month} />
-            </div>
+            <MonthStepper filter={month} stacked />
           </FilterField>
 
           <FilterField label="Arrangement">
-            <button
-              type="button"
-              onClick={() => setGroupByDay(!groupByDay)}
-              className="flex items-center gap-3 rounded-sm border border-border-default bg-surface-inset px-3 py-2.5 text-left transition-colors hover:border-border-strong"
-            >
+            {/* A div, not a button: Toggle is itself a <button>, and nesting one
+                inside another is invalid HTML — React rejects it and the outer
+                press never reaches the switch. The switch is the control. */}
+            <div className="flex items-center gap-3 rounded-sm border border-border-default bg-surface-inset px-3 py-2.5">
               <div className="min-w-0 flex-1">
                 <span className="block font-ui text-[13px] text-text-1">Group by day</span>
                 <span className="block font-ui text-[11.5px]/snug text-text-4">
@@ -860,7 +858,7 @@ export function AttendanceRequests() {
                 </span>
               </div>
               <Toggle checked={groupByDay} onChange={setGroupByDay} label="Group by day" />
-            </button>
+            </div>
           </FilterField>
         </div>
       </Drawer>

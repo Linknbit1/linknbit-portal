@@ -734,7 +734,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
               'Open People → Attendance → Requests. It opens on Pending for this month, with the number still to decide on the tab.',
               'Press Filters to narrow by type, by employee or by period. The panel opens on the right on a computer and slides up from the bottom on a phone, where you can drag it away when you are done.',
               'Turn on Group by day in the same panel to read the queue as a calendar instead of a list: a heading per date, with everything covering that date underneath it.',
-              'Set the period to All months to see everything still outstanding, including anything filed for a month ahead.',
+              'Slide the period switch to All months to see everything still outstanding, including anything filed for a month ahead. The month picker appears only when One month is chosen.',
               'Search on the toolbar for a name or a reason when you are after one request rather than the whole queue.',
               'Press Approve or Reject on the row. The list updates in place.',
             ],
