@@ -31,11 +31,58 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: '1.29.0',
+    date: '2026-09-04',
+    title: 'One queue for a request',
+    highlight:
+      'Leave, WFH, exceptions and overtime are filed, edited and withdrawn in Requests \u2014 by everybody, for themselves or for someone else. My Attendance keeps what it is named after: your day, your leave balance, your devices and your record.',
+    entries: [
+      {
+        kind: 'added',
+        text: 'New request, on the Requests toolbar, for everyone. It opens the same panel for all four kinds \u2014 leave, WFH, exception, overtime \u2014 on the right on a computer and up from the bottom on a phone.',
+      },
+      {
+        kind: 'added',
+        text: 'Whoever manages attendance gets a "Who is this for" field inside that panel, opening on themselves. One button now files your own leave and somebody else\u2019s; there is no separate "Add for someone else".',
+      },
+      {
+        kind: 'added',
+        text: 'Edit and Withdraw on your own pending rows, where an approver sees Approve and Reject. Editing keeps it pending and shows the approver the new version; withdrawing takes it off the queue, and since nothing has been decided, nothing on your record changes.',
+      },
+      {
+        kind: 'added',
+        text: 'A Leave balance card on My Attendance: each kind of leave with the days you have left, and a Request leave button that opens the form with Leave already chosen.',
+      },
+      {
+        kind: 'improved',
+        text: 'The panel says what will happen before you submit, and the three outcomes are no longer worded as one. A request for yourself always waits for approval. An entry for somebody else applies at once if you may record attendance without approval, and otherwise joins the queue \u2014 where you cannot be the one to decide it, so it says who will.',
+      },
+      {
+        kind: 'improved',
+        text: 'The leave type list shows what is left against each allowance while you choose \u2014 "Annual, 12 of 20 left" \u2014 whether the request is yours or one you are entering for somebody else.',
+      },
+      {
+        kind: 'improved',
+        text: 'The queue opens on Pending if you review requests and on All if you do not. Reading your own record, the undecided slice is rarely the one you came for.',
+      },
+      {
+        kind: 'improved',
+        text: 'My Attendance is your day, your leave balance, your devices, what is coming and this month\u2019s record. The four request sections it used to carry were a second copy of the queue, each with its own form and its own list of the same rows.',
+      },
+      {
+        kind: 'improved',
+        text: 'The attendance hub on a phone has one Requests row instead of four per-kind rows, matching how the four review queues were collapsed into one. Old links to WFH, Leave, Exceptions and Overtime land on the right tab of the queue rather than nowhere.',
+      },
+      {
+        kind: 'improved',
+        text: 'A team\u2019s attendance is read on that team\u2019s own page. The Teams panel on My Attendance was not scoped to a team at all \u2014 it showed what Today and Requests already show you.',
+      },
+    ],
+  },
+  {
     version: '1.28.1',
     date: '2026-09-04',
     title: 'The roster, read on a phone',
-    highlight:
-      'Today\u2019s roster keeps the group you are reading pinned under the top bar as you scroll, and on a phone the list finally has the width to say who is in and how.',
     entries: [
       {
         kind: 'improved',

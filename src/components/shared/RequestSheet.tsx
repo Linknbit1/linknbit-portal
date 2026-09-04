@@ -13,28 +13,28 @@ import { usePeople } from '../../hooks/usePeople'
 import {
   useLeaveTypes, useEnterLeaveForEmployee, useGrantWfh,
   useEnterExceptionForEmployee, useEnterOvertimeForEmployee,
+  useSubmitLeave, useUpdateLeave, useSubmitWfh, useUpdateWfh,
+  useRequestException, useUpdateException, useSubmitOvertime, useUpdateOvertime,
+  useMyLeaveBalances, useLeaveBalancesByProfile,
 } from '../../hooks/useAttendance'
-import { DAY_PART_LABEL } from '../../lib/dayParts'
+import { DAY_PART_LABEL, toDayPart } from '../../lib/dayParts'
 import { cn } from '../../lib/cn'
-
-type Kind = 'leave' | 'wfh' | 'exception' | 'overtime'
+import type { AttendanceExceptionType, AttendanceRequestKind } from '../../types'
 
 // "WFH" rather than "Work from home": the four tabs share the width equally, so
 // the longest label sets how small the others may be — and WFH is what the queue
 // itself calls it everywhere else.
-const KIND_TABS: { id: Kind; label: string }[] = [
+const KIND_TABS: { id: AttendanceRequestKind; label: string }[] = [
   { id: 'leave', label: 'Leave' },
   { id: 'wfh', label: 'WFH' },
   { id: 'exception', label: 'Exception' },
   { id: 'overtime', label: 'Overtime' },
 ]
 
-type ExceptionType = 'late_arrival' | 'early_departure' | 'out_of_office'
-
 // Labels stay neutral of tense. An exception is filed in advance as often as it
 // is recorded afterwards, so "Arrived at" is wrong half the time and "Will
 // arrive at" the other half; the noun is right in both.
-const EXCEPTION_TYPES: { value: ExceptionType; label: string; timeLabel: string }[] = [
+const EXCEPTION_TYPES: { value: AttendanceExceptionType; label: string; timeLabel: string }[] = [
   { value: 'late_arrival', label: 'Late arrival', timeLabel: 'Arrival' },
   { value: 'early_departure', label: 'Early departure', timeLabel: 'Departure' },
   { value: 'out_of_office', label: 'Out of office', timeLabel: 'Departure' },
@@ -47,28 +47,68 @@ function hoursBetween(start: string, end: string): number {
   return Math.round(((eh * 60 + em - (sh * 60 + sm)) / 60) * 100) / 100
 }
 
-interface EnterRequestForEmployeeModalProps {
-  onClose: () => void
+/** Local calendar date (`en-CA` renders ISO), not UTC. */
+function localToday(): string {
+  return new Intl.DateTimeFormat('en-CA').format(new Date())
 }
 
+/** Postgres returns `time` as HH:MM:SS; the pickers speak HH:MM. */
+const toHHMM = (t: string | null | undefined): string => (t ? t.slice(0, 5) : '')
+
 /**
- * File any of the four request types for somebody else.
- *
- * Leave and WFH have always been here; exceptions and overtime were not, which
- * made "Add for someone else" mean it only half the time — an HR manager could
- * put someone on leave but not correct the day they were marked late.
- *
- * The two halves behave differently on purpose, and the banner says which one
- * is about to happen. Leave and WFH apply immediately when an admin enters them
- * and wait for approval when anybody else does. An exception rewrites a day
- * already on the record and overtime is a claim, so both always go through the
- * queue whoever files them.
- *
- * Either way the approver is somebody else: nobody decides on a request they
- * filed. The banner used to end "Approve it there to apply it", which read as an
- * instruction to the one person guaranteed not to be able to.
+ * An existing request, opened for editing. Display strings on the queue row are
+ * derived and lossy — a formatted "05:30 PM – 07:00 PM" cannot be put back into
+ * two time pickers — so the row hands the sheet the raw fields instead.
  */
-export function EnterRequestForEmployeeModal({ onClose }: EnterRequestForEmployeeModalProps) {
+export interface RequestDraft {
+  id: string
+  kind: AttendanceRequestKind
+  profileId: string
+  startDate: string
+  endDate: string
+  dayPart: string
+  reason: string
+  leaveTypeId?: string | null
+  exceptionType?: string | null
+  atTime?: string | null
+  returnTime?: string | null
+  endTime?: string | null
+}
+
+interface RequestSheetProps {
+  onClose: () => void
+  /** Which tab to open on — `?new=leave` from the leave balance card. */
+  initialKind?: AttendanceRequestKind
+  /** Editing an existing pending request rather than filing a new one. */
+  editing?: RequestDraft | null
+}
+
+const isExceptionType = (v: string | null | undefined): v is AttendanceExceptionType =>
+  EXCEPTION_TYPES.some((t) => t.value === v)
+
+/**
+ * File a request — your own, or somebody else's — and edit one that is still
+ * pending. One sheet for all four kinds and for both of those jobs, because they
+ * are the same form: what changed between "Add for someone else" and the four
+ * per-kind forms on My Attendance was who the row was for, not what was in it.
+ *
+ * Who it is for follows from a permission, not a role, and defaults to you:
+ * whoever may enter attendance for others gets a Who field, everybody else gets
+ * the same sheet with that one field absent.
+ *
+ * What happens next has three outcomes, and the banner names the one that
+ * applies rather than the two that might:
+ *
+ * - Filing for someone else while holding `can_apply_attendance_directly`
+ *   applies immediately and writes their record.
+ * - Filing for someone else without it queues the request — and the filer is
+ *   never the approver, so it says who will decide instead of implying they can.
+ * - Filing for yourself always queues, whatever you hold. That is not a UI
+ *   choice: the insert policy on all four tables only accepts `status =
+ *   'pending'` when `profile_id = auth.uid()`, so an Apply button here would
+ *   promise something the database refuses.
+ */
+export function RequestSheet({ onClose, initialKind = 'leave', editing = null }: RequestSheetProps) {
   // Mounted by the parent on demand, so `open` starts true and the panel plays
   // its slide-out before `onExitComplete` unmounts it. Closing straight to
   // unmount is what made a backdrop press look like the panel had vanished
@@ -78,37 +118,79 @@ export function EnterRequestForEmployeeModal({ onClose }: EnterRequestForEmploye
   const isDesktop = useIsDesktop()
   const toast = useToast()
   const { profile } = useAuthContext()
+  const isEdit = editing !== null
+
+  const [kind, setKind] = useState<AttendanceRequestKind>(editing?.kind ?? initialKind)
+  const [profileId, setProfileId] = useState(editing?.profileId ?? profile?.id ?? '')
+  const [leaveTypeId, setLeaveTypeId] = useState(editing?.leaveTypeId ?? '')
+  const [startDate, setStartDate] = useState(editing?.startDate ?? localToday)
+  const [endDate, setEndDate] = useState(editing?.endDate ?? localToday)
+  const [dayPart, setDayPart] = useState(editing?.dayPart ?? 'full')
+  const [reason, setReason] = useState(editing?.reason ?? '')
+  // Exception + overtime are single-day, and both are about clock times.
+  const [day, setDay] = useState(editing?.startDate ?? localToday)
+  const [exceptionType, setExceptionType] = useState<AttendanceExceptionType>(
+    isExceptionType(editing?.exceptionType) ? editing.exceptionType : 'late_arrival',
+  )
+  const [atTime, setAtTime] = useState(toHHMM(editing?.atTime))
+  const [returnTime, setReturnTime] = useState(toHHMM(editing?.returnTime))
+  const [endTime, setEndTime] = useState(toHHMM(editing?.endTime))
+
+  const isSelf = !!profile && profileId === profile.id
+  // Entering attendance for somebody else, and skipping the queue when you do,
+  // are two separate abilities — HR holds the first and not the second.
+  const canFileForOthers = useCanAccess('can_manage_attendance')
+  const canApplyDirectly = useCanAccess('can_apply_attendance_directly')
+  const appliesDirectly = !isSelf && canApplyDirectly
+
+  // Shared, already-warm cache (the directory and every people picker read it),
+  // so this costs nothing extra for the employee who never opens the Who field.
   const { data: people = [] } = usePeople()
   const { data: leaveTypes = [] } = useLeaveTypes(true)
+  const myBalances = useMyLeaveBalances()
+  const theirBalances = useLeaveBalancesByProfile(isSelf ? undefined : profileId || undefined)
+  const balances = (isSelf ? myBalances.data : theirBalances.data) ?? []
+
+  const submitLeave = useSubmitLeave()
+  const updateLeave = useUpdateLeave()
+  const submitWfh = useSubmitWfh()
+  const updateWfh = useUpdateWfh()
+  const requestException = useRequestException()
+  const updateException = useUpdateException()
+  const submitOvertime = useSubmitOvertime()
+  const updateOvertime = useUpdateOvertime()
   const enterLeave = useEnterLeaveForEmployee()
   const grantWfh = useGrantWfh()
   const enterException = useEnterExceptionForEmployee()
   const enterOvertime = useEnterOvertimeForEmployee()
 
-  const [kind, setKind] = useState<Kind>('leave')
-  const [profileId, setProfileId] = useState('')
-  const [leaveTypeId, setLeaveTypeId] = useState('')
-  const [startDate, setStartDate] = useState('')
-  const [endDate, setEndDate] = useState('')
-  const [dayPart, setDayPart] = useState('full')
-  const [reason, setReason] = useState('')
-  // Exception + overtime are single-day, and both are about clock times.
-  const [day, setDay] = useState('')
-  const [exceptionType, setExceptionType] = useState<ExceptionType>('late_arrival')
-  const [atTime, setAtTime] = useState('')
-  const [returnTime, setReturnTime] = useState('')
-  const [endTime, setEndTime] = useState('')
-
   const isRange = kind === 'leave' || kind === 'wfh'
-  // Whether this entry skips the queue is a permission, not a role, and it
-  // applies to all four kinds — an admin bypasses the queue everywhere.
-  const appliesDirectly = useCanAccess('can_apply_attendance_directly')
-  const pending =
-    enterLeave.isPending || grantWfh.isPending || enterException.isPending || enterOvertime.isPending
+  const pending = [
+    submitLeave, updateLeave, submitWfh, updateWfh, requestException, updateException,
+    submitOvertime, updateOvertime, enterLeave, grantWfh, enterException, enterOvertime,
+  ].some((m) => m.isPending)
 
   const peopleOptions = people
     .filter((p) => p.is_active && isInternalRole(p.role))
-    .map((p) => ({ value: p.id, label: p.name, avatar: { name: p.name, url: p.avatar_url } }))
+    .map((p) => ({
+      // Your own row is named, not labelled "Me": the field is a list of people
+      // and one of them is you. "(you)" marks it without renaming you.
+      value: p.id,
+      label: p.id === profile?.id ? `${p.name} (you)` : p.name,
+      avatar: { name: p.name, url: p.avatar_url },
+    }))
+
+  // Balances carry the allowance, so they are the option list when we have them:
+  // choosing a type is really choosing which allowance to spend, and the number
+  // belongs on the option rather than a line below it. Falls back to the plain
+  // type list, so a person with no balances configured still sees a usable form
+  // rather than an empty dropdown with no explanation.
+  const leaveOptions = balances.length > 0
+    ? balances.map((b) => ({
+        value: b.type.id,
+        label: `${b.type.name}, ${b.remaining} of ${b.type.days_allowed} left`,
+      }))
+    : leaveTypes.map((t) => ({ value: t.id, label: t.name }))
 
   const timeLabel = EXCEPTION_TYPES.find((t) => t.value === exceptionType)?.timeLabel ?? 'At'
   // Overtime runs between two times, and an out-of-office comes back; a late
@@ -117,11 +199,15 @@ export function EnterRequestForEmployeeModal({ onClose }: EnterRequestForEmploye
   const overtimeHours = day && atTime && endTime ? hoursBetween(atTime, endTime) : 0
 
   const done = () => {
-    toast(appliesDirectly ? 'Applied' : 'Submitted for approval', 'success')
+    toast(
+      isEdit ? 'Request updated' : appliesDirectly ? 'Applied' : 'Submitted for approval',
+      'success',
+    )
     close()
   }
   const failed = (e: unknown) =>
     toast(e instanceof Error ? e.message : 'Could not save that', 'error')
+  const settle = { onSuccess: done, onError: failed }
 
   const submit = () => {
     if (!profileId) { toast('Choose who this is for', 'error'); return }
@@ -135,35 +221,39 @@ export function EnterRequestForEmployeeModal({ onClose }: EnterRequestForEmploye
       }
       if (kind === 'leave' && !leaveTypeId) { toast('Choose a leave type', 'error'); return }
 
+      // The DB column is plain text; `toDayPart` is the one place that narrows it.
+      const part = toDayPart(dayPart)
+
       if (kind === 'leave') {
-        enterLeave.mutate(
-          {
-            payload: {
-              profile_id: profileId,
-              leave_type_id: leaveTypeId,
-              start_date: startDate,
-              end_date: endDate,
-              day_part: dayPart as 'full' | 'first_half' | 'second_half',
-              reason: reason.trim(),
-            },
-            appliesDirectly,
-          },
-          { onSuccess: done, onError: failed },
-        )
-      } else {
+        const payload = {
+          leave_type_id: leaveTypeId,
+          start_date: startDate,
+          end_date: endDate,
+          day_part: part,
+          reason: reason.trim(),
+        }
+        if (isEdit) updateLeave.mutate({ id: editing.id, payload }, settle)
+        else if (isSelf) submitLeave.mutate(payload, settle)
+        else enterLeave.mutate({ payload: { ...payload, profile_id: profileId }, appliesDirectly }, settle)
+        return
+      }
+
+      const payload = {
+        start_date: startDate,
+        end_date: endDate,
+        day_part: part,
+        reason: reason.trim(),
+      }
+      if (isEdit) updateWfh.mutate({ id: editing.id, payload }, settle)
+      else if (isSelf) submitWfh.mutate(payload, settle)
+      else {
         grantWfh.mutate(
           {
-            payload: {
-              profile_id: profileId,
-              start_date: startDate,
-              end_date: endDate,
-              day_part: dayPart as 'full' | 'first_half' | 'second_half',
-              reason: reason.trim(),
-            },
+            payload: { ...payload, profile_id: profileId },
             grantedBy: profile?.id ?? '',
             appliesDirectly,
           },
-          { onSuccess: done, onError: failed },
+          settle,
         )
       }
       return
@@ -172,46 +262,46 @@ export function EnterRequestForEmployeeModal({ onClose }: EnterRequestForEmploye
     if (!day) { toast('Choose the day', 'error'); return }
 
     if (kind === 'exception') {
-      if (!atTime) { toast(`Say what time they ${timeLabel.toLowerCase()}`, 'error'); return }
+      if (!atTime) { toast(`Say what time ${isSelf ? 'you' : 'they'} ${timeLabel.toLowerCase()}`, 'error'); return }
       if (exceptionType === 'out_of_office' && !returnTime) {
-        toast('Say when they came back', 'error'); return
+        toast(isSelf ? 'Say when you came back' : 'Say when they came back', 'error'); return
       }
-      enterException.mutate(
-        {
-          profileId,
-          payload: {
-            exception_type: exceptionType,
-            date: day,
-            requested_time: atTime,
-            return_time: exceptionType === 'out_of_office' ? returnTime : undefined,
-            reason: reason.trim(),
-          },
-          appliesDirectly,
-        },
-        { onSuccess: done, onError: failed },
-      )
+      const payload = {
+        exception_type: exceptionType,
+        date: day,
+        requested_time: atTime,
+        return_time: exceptionType === 'out_of_office' ? returnTime : undefined,
+        reason: reason.trim(),
+      }
+      if (isEdit) updateException.mutate({ id: editing.id, payload }, settle)
+      else if (isSelf) requestException.mutate(payload, settle)
+      else enterException.mutate({ profileId, payload, appliesDirectly }, settle)
       return
     }
 
     if (!atTime || !endTime) { toast('Choose the hours worked', 'error'); return }
     if (overtimeHours <= 0) { toast('The end time is before the start', 'error'); return }
-    enterOvertime.mutate(
-      {
-        profileId,
-        payload: {
-          date: day,
-          start_time: atTime,
-          end_time: endTime,
-          hours: overtimeHours,
-          reason: reason.trim(),
-        },
-        appliesDirectly,
-      },
-      { onSuccess: done, onError: failed },
-    )
+    const payload = {
+      date: day,
+      start_time: atTime,
+      end_time: endTime,
+      hours: overtimeHours,
+      reason: reason.trim(),
+    }
+    if (isEdit) updateOvertime.mutate({ id: editing.id, payload }, settle)
+    else if (isSelf) submitOvertime.mutate(payload, settle)
+    else enterOvertime.mutate({ profileId, payload, appliesDirectly }, settle)
   }
 
   const label = 'text-label font-ui font-semibold uppercase tracking-wider text-text-2'
+
+  const banner = isEdit
+    ? 'Changing a request that is still waiting for a decision. It stays pending, and the approver sees the new version.'
+    : appliesDirectly
+      ? 'This applies straight away and updates their record. You are allowed to enter attendance without approval.'
+      : isSelf
+        ? 'This waits for approval and changes nothing until it is given.'
+        : 'This waits for approval and changes nothing until it is given. Not from you: nobody decides on a request they filed, so an admin or another approver will pick it up in this queue.'
 
   return (
     <Drawer
@@ -221,46 +311,56 @@ export function EnterRequestForEmployeeModal({ onClose }: EnterRequestForEmploye
       side={isDesktop ? 'right' : 'bottom'}
       width={460}
       busy={pending}
-      title={<h2 className="font-display font-bold text-[16px] text-text-1">Add for someone else</h2>}
+      title={
+        <h2 className="font-display font-bold text-[16px] text-text-1">
+          {isEdit ? 'Edit request' : 'New request'}
+        </h2>
+      }
       footer={
         <div className="flex gap-2.5">
           <Button variant="ghost" size="sm" className="flex-1" onClick={close} disabled={pending}>Cancel</Button>
           <Button size="sm" className="flex-1" onClick={submit} loading={pending}>
-            {appliesDirectly ? 'Apply' : 'Submit for approval'}
+            {isEdit ? 'Save changes' : appliesDirectly ? 'Apply' : 'Submit for approval'}
           </Button>
         </div>
       }
     >
       <div className="space-y-4 p-5">
         <p className="rounded-sm border border-border-default bg-surface-2 px-3 py-2 font-ui text-[12px] text-text-3">
-          {appliesDirectly
-            ? 'This applies straight away and updates their record. You are allowed to enter attendance without approval.'
-            : 'This waits for approval and changes nothing until it is given. Not by you: nobody decides on a request they filed, so it goes to another approver.'}
+          {banner}
         </p>
 
         {/* Four equal columns rather than a wrapping row: the tabs are the
             panel's top-level choice, and a strip that fills the width reads as
-            one control instead of four buttons that happened to fit. */}
-        <div className="grid grid-cols-4 gap-1 rounded-sm border border-border-default bg-surface-1 p-1">
-          {KIND_TABS.map((k) => (
-            <button
-              key={k.id}
-              type="button"
-              onClick={() => setKind(k.id)}
-              className={cn(
-                'flex h-8 items-center justify-center truncate rounded-sm px-1 text-center font-ui text-[12.5px] font-medium transition-colors',
-                kind === k.id ? 'bg-surface-3 text-text-1' : 'text-text-3 hover:text-text-1',
-              )}
-            >
-              {k.label}
-            </button>
-          ))}
-        </div>
+            one control instead of four buttons that happened to fit. Editing
+            shows no strip at all — a leave request cannot become an overtime
+            claim, and a disabled row of tabs only invites the attempt. */}
+        {!isEdit && (
+          <div className="grid grid-cols-4 gap-1 rounded-sm border border-border-default bg-surface-1 p-1">
+            {KIND_TABS.map((k) => (
+              <button
+                key={k.id}
+                type="button"
+                onClick={() => setKind(k.id)}
+                className={cn(
+                  'flex h-8 items-center justify-center truncate rounded-sm px-1 text-center font-ui text-[12.5px] font-medium transition-colors',
+                  kind === k.id ? 'bg-surface-3 text-text-1' : 'text-text-3 hover:text-text-1',
+                )}
+              >
+                {k.label}
+              </button>
+            ))}
+          </div>
+        )}
 
-        <div className="space-y-1.5">
-          <label className={label}>Who</label>
-          <Select value={profileId} onChange={setProfileId} options={peopleOptions} placeholder="Choose a person" />
-        </div>
+        {/* Only for people who may file for others, and it opens on themselves —
+            the same button files your own leave and somebody else's. */}
+        {canFileForOthers && !isEdit && (
+          <div className="space-y-1.5">
+            <label className={label}>Who is this for</label>
+            <Select value={profileId} onChange={setProfileId} options={peopleOptions} placeholder="Choose a person" />
+          </div>
+        )}
 
         {kind === 'leave' && (
           <div className="space-y-1.5">
@@ -268,7 +368,7 @@ export function EnterRequestForEmployeeModal({ onClose }: EnterRequestForEmploye
             <Select
               value={leaveTypeId}
               onChange={setLeaveTypeId}
-              options={leaveTypes.map((t) => ({ value: t.id, label: t.name }))}
+              options={leaveOptions}
               placeholder="Choose a type"
             />
           </div>
@@ -279,10 +379,7 @@ export function EnterRequestForEmployeeModal({ onClose }: EnterRequestForEmploye
             <label className={label}>What happened</label>
             <Select
               value={exceptionType}
-              onChange={(v) => {
-                const match = EXCEPTION_TYPES.find((t) => t.value === v)
-                if (match) setExceptionType(match.value)
-              }}
+              onChange={(v) => { if (isExceptionType(v)) setExceptionType(v) }}
               options={EXCEPTION_TYPES.map((t) => ({ value: t.value, label: t.label }))}
             />
           </div>
@@ -356,7 +453,7 @@ export function EnterRequestForEmployeeModal({ onClose }: EnterRequestForEmploye
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             rows={4}
-            placeholder="Why this is being entered for them."
+            placeholder={isSelf ? 'Why you need this.' : 'Why this is being entered for them.'}
             className="w-full resize-y rounded-md border border-border-default bg-surface-inset px-3 py-2 font-ui text-body-sm text-text-1 outline-none placeholder:text-text-4 focus:border-border-focus"
           />
         </div>

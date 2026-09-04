@@ -2,10 +2,10 @@ import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
 import {
-  Users, Home, Plane, AlertCircle, Smartphone, Palmtree, Hourglass,
+  Users, Smartphone, Palmtree,
   CalendarClock, Calendar, CalendarCheck, Inbox, CalendarDays,
 } from 'lucide-react'
-import { MobileHub, HubRow, type HubRowItem } from '../components/layout/MobileHub'
+import { MobileHub, type HubRowItem } from '../components/layout/MobileHub'
 import { StackScreen } from '../components/layout/StackScreen'
 import { Topbar } from '../components/layout/Topbar'
 import { PeriodStepper } from '../components/ui/PeriodStepper'
@@ -23,8 +23,7 @@ import {
 } from './admin/AttendancePage'
 // Employee section components
 import {
-  WfhSection, LeaveSection, MyExceptionsSection, OvertimeSection, UpcomingScheduleSection,
-  OooSection, HistoryTable, MyAttendanceSections,
+  UpcomingScheduleSection, OooSection, HistoryTable, MyAttendanceSections,
 } from './employee/AttendancePage'
 import { AttendanceCheckInCard } from '../components/shared/AttendanceCheckInCard'
 import { TodayRoster } from '../components/shared/TodayRoster'
@@ -32,9 +31,6 @@ import { AttendanceRequests } from '../components/shared/AttendanceRequests'
 import { AttendanceCalendar } from '../components/shared/AttendanceCalendar'
 import { BiometricTerminalsTab } from '../components/shared/BiometricTerminalsTab'
 import { MyDevicesCard } from '../components/shared/MyDevicesCard'
-import {
-  TeamRoster, TeamWfhList, TeamLeaveList, TeamExceptionsList, TeamOvertimeList,
-} from '../components/shared/TeamAttendancePanel'
 
 interface SectionEntry {
   title: string
@@ -123,41 +119,24 @@ function EmployeeHistoryScreen() {
 const EMPLOYEE_SECTIONS: Record<string, SectionEntry> = {
   ...OPEN_SECTIONS,
   history:    { title: 'History',          render: () => <EmployeeHistoryScreen /> },
-  wfh:        { title: 'WFH Requests',     render: () => <WfhSection /> },
-  leave:      { title: 'Leave',            render: () => <LeaveSection /> },
-  exceptions: { title: 'Exceptions',       render: () => <MyExceptionsSection /> },
-  overtime:   { title: 'Overtime',         render: () => <OvertimeSection /> },
   schedule:   { title: 'Schedule',         render: () => <UpcomingScheduleSection /> },
   devices:    { title: 'My Devices',       render: () => <MyDevicesCard /> },
 }
 
-// Team Attendance (team_lead / PM): its own sub-hub of stack screens so the lead
-// drills into Today's Roster, WFH, Leave, etc. instead of in-card tabs. Each list
-// is cardless content, so we wrap it in a card inside the stack screen.
-const TEAM_SECTIONS: { key: string; title: string; label: string; icon: typeof Users; render: () => ReactNode }[] = [
-  { key: 'roster',     title: "Today's Roster", label: "Today's Roster", icon: Users,       render: () => <TeamRoster /> },
-  { key: 'wfh',        title: 'WFH Requests',   label: 'WFH Requests',   icon: Home,        render: () => <TeamWfhList /> },
-  { key: 'leave',      title: 'Leave',          label: 'Leave',          icon: Plane,       render: () => <TeamLeaveList /> },
-  { key: 'exceptions', title: 'Exceptions',     label: 'Exceptions',     icon: AlertCircle, render: () => <TeamExceptionsList /> },
-  { key: 'overtime',   title: 'Overtime',       label: 'Overtime',       icon: Hourglass,   render: () => <TeamOvertimeList /> },
-]
-
-function TeamCard({ children }: { children: ReactNode }) {
-  return <div className="bg-surface-1 border border-border-default rounded-xl overflow-hidden">{children}</div>
-}
-
-/** Mobile team sub-hub: /attendance/team → rows that push /attendance/team/:sub. */
-function TeamHub() {
-  return (
-    <div className="flex flex-col flex-1">
-      <Topbar title="Team Attendance" back="/attendance" />
-      <div className="px-4 py-5 flex flex-col gap-2.5 w-full max-w-content mx-auto">
-        {TEAM_SECTIONS.map((s) => (
-          <HubRow key={s.key} to={`/attendance/team/${s.key}`} label={s.label} icon={s.icon} />
-        ))}
-      </div>
-    </div>
-  )
+/**
+ * Screens that no longer exist, and the queue tab that replaced each.
+ *
+ * WFH, leave, exceptions and overtime each used to be a screen of their own with
+ * a form and a list of the same rows the queue already carries. They are one
+ * screen now. These stay mapped rather than 404ing to the hub because the paths
+ * are in people's pinned pages and in links sent months ago, and landing on the
+ * right tab of the right queue is a better answer than landing on the index.
+ */
+const LEGACY_REQUEST_SECTIONS: Record<string, string> = {
+  wfh: 'wfh',
+  leave: 'leave',
+  exceptions: 'exception',
+  overtime: 'overtime',
 }
 
 function AdminAttendanceHub() {
@@ -186,19 +165,16 @@ function AdminAttendanceHub() {
 }
 
 function EmployeeAttendanceHub() {
-  const canSeeTeam = useCanAccess('can_view_cross_team_attendance')
-
+  // One Requests door, not five. The four per-kind rows led to four screens that
+  // each held a form and a copy of the same rows — the admin hub collapsed its
+  // four queues into this one row a while ago, and this is the same collapse
+  // from the other side.
   const items: HubRowItem[] = [
     { to: '/attendance/today',      label: 'Today',          icon: CalendarCheck },
     { to: '/attendance/calendar',   label: 'Calendar',       icon: CalendarDays },
     { to: '/attendance/requests',   label: 'Requests',       icon: Inbox },
     { to: '/attendance/history',    label: 'History',        icon: CalendarClock },
-    { to: '/attendance/wfh',        label: 'WFH Requests',   icon: Home },
-    { to: '/attendance/leave',      label: 'Leave',          icon: Plane },
-    { to: '/attendance/exceptions', label: 'Exceptions',     icon: AlertCircle },
-    { to: '/attendance/overtime',   label: 'Overtime',       icon: Hourglass },
     { to: '/attendance/schedule',   label: 'Schedule',       icon: Palmtree },
-    ...(canSeeTeam ? [{ to: '/attendance/team', label: 'Team Attendance', icon: Users }] : []),
     { to: '/attendance/devices',    label: 'My Devices',     icon: Smartphone },
   ]
 
@@ -225,7 +201,14 @@ export function AttendanceSectionScreen() {
   const { section } = useParams()
 
   const canManageAttendance = useCanAccess('can_manage_attendance')
-  const canSeeTeam = useCanAccess('can_view_cross_team_attendance')
+
+  // A path that used to be a screen of its own. Only for the people whose
+  // sections these were: an attendance manager still has admin screens at these
+  // keys, and sending them to the queue instead would take a working page away.
+  const legacyKind = section ? LEGACY_REQUEST_SECTIONS[section] : undefined
+  if (legacyKind && !canManageAttendance) {
+    return <Navigate to={`/attendance/requests?kind=${legacyKind}`} replace />
+  }
 
   // Self-service view for the roles whose /attendance is the management landing.
   // Same on both breakpoints — only the back affordance differs.
@@ -260,11 +243,6 @@ export function AttendanceSectionScreen() {
     )
   }
 
-  // Team Attendance is its own sub-hub of stack screens (not a single panel).
-  if (section === 'team') {
-    return canSeeTeam ? <TeamHub /> : <Navigate to="/attendance" replace />
-  }
-
   const map = canManageAttendance ? ADMIN_SECTIONS : EMPLOYEE_SECTIONS
   const entry = section ? map[section] : undefined
   if (!entry) return <Navigate to="/attendance" replace />
@@ -273,23 +251,4 @@ export function AttendanceSectionScreen() {
   // a notification or a pinned link, and history back would then leave the
   // section entirely — with the bottom tab bar hidden, that is a dead end.
   return <StackScreen title={entry.title} back="/attendance">{entry.render()}</StackScreen>
-}
-
-/** Mobile-only /attendance/team/:sub stack screen; redirects on desktop. */
-export function TeamAttendanceSectionScreen() {
-  const isDesktop = useIsDesktop()
-  const { sub } = useParams()
-  const canSeeTeam = useCanAccess('can_view_cross_team_attendance')
-
-  if (isDesktop) return <Navigate to="/attendance" replace />
-  if (!canSeeTeam) return <Navigate to="/attendance" replace />
-
-  const entry = TEAM_SECTIONS.find((s) => s.key === sub)
-  if (!entry) return <Navigate to="/attendance/team" replace />
-
-  return (
-    <StackScreen title={entry.title} back="/attendance/team">
-      <TeamCard>{entry.render()}</TeamCard>
-    </StackScreen>
-  )
 }

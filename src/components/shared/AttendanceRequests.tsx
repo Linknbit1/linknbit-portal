@@ -1,6 +1,6 @@
 import { useSearchParams } from 'react-router-dom'
 import { useMemo, useState } from 'react'
-import { Loader2, Home, Plane, AlertCircle, Hourglass, Check, X, Inbox, CalendarX2, Plus, Search, UserPlus, SlidersHorizontal } from 'lucide-react'
+import { Loader2, Home, Plane, AlertCircle, Hourglass, Check, X, Inbox, CalendarX2, Plus, Search, UserPlus, SlidersHorizontal, Pencil, Trash2 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { cn } from '../../lib/cn'
@@ -16,12 +16,14 @@ import { matchesQuery } from '../ui/optionSearch'
 import { isDecidableBy } from '../../lib/requestReview'
 import { useMonthFilter } from '../../hooks/useMonthFilter'
 import { MonthStepper, DateGroupHeading } from './MonthFilter'
-import { EnterRequestForEmployeeModal } from './EnterRequestForEmployeeModal'
+import { RequestSheet, type RequestDraft } from './RequestSheet'
 import { formatDate, formatTimeOfDay, formatHoursMinutes } from '../../lib/utils'
 import { DAY_PART_LABEL } from '../../lib/dayParts'
+import { ConfirmDialog } from '../ui/ConfirmDialog'
 import { exceptionTypeLabel } from '../../lib/exceptionTypes'
 import { datesInRange, groupByDate } from '../../lib/dateGroups'
 import { useAuthContext } from '../../context/AuthContext'
+import type { AttendanceRequestKind } from '../../types'
 import { useMyPermissions } from '../../hooks/usePermissions'
 import { ADMINISTRATOR } from '../../api/permissions'
 import { useToast } from '../ui/toast-context'
@@ -36,6 +38,10 @@ import {
   useReviewOvertime,
   useRemoveLeaveDay,
   useRemoveWfhDay,
+  useDeleteLeave,
+  useDeleteWfh,
+  useDeleteException,
+  useDeleteOvertime,
 } from '../../hooks/useAttendance'
 
 /**
@@ -43,7 +49,7 @@ import {
  * one queue. They lived on four sidebar rows because each has its own table —
  * an implementation detail nobody filing or approving a request thinks in.
  */
-type RequestKind = 'leave' | 'wfh' | 'exception' | 'overtime'
+type RequestKind = AttendanceRequestKind
 
 type ReviewStatus = 'approved' | 'rejected'
 
@@ -124,6 +130,18 @@ interface UnifiedRequest {
   enteredByName: string | null
   status: string
   createdAt: string
+  /**
+   * Whether the person it is about is also the one who raised it. Only such a
+   * request can be edited or withdrawn by its owner — the same line the RLS
+   * policies draw, so the buttons and the database agree about who may act.
+   */
+  ownFiled: boolean
+  /**
+   * The raw values behind the display fields above, for reopening the request in
+   * the sheet. `whenLabel` and `timeLabel` are formatted and lossy; a time
+   * picker cannot be filled from "05:30 PM – 07:00 PM".
+   */
+  draft: Omit<RequestDraft, 'kind' | 'profileId'>
 }
 
 /**
@@ -214,6 +232,13 @@ const isKind = (v: string): v is RequestKind =>
 
 /** ?kind=exception — the tab a link wants this queue to open on. */
 export const REQUEST_KIND_PARAM = 'kind'
+/**
+ * ?new=leave — open the sheet on that kind, for links that mean "file one"
+ * rather than "show me these". The leave balance card on My Attendance is the
+ * one that needs it: filing lives here now, so the card sends you here with the
+ * form already open rather than keeping a second form of its own.
+ */
+export const REQUEST_NEW_PARAM = 'new'
 
 /**
  * Every request awaiting — or already given — a decision, in one queue.
@@ -234,12 +259,17 @@ export function AttendanceRequests() {
   // about: "Abbas requested early departure" opens Exceptions, not the whole
   // queue with his row somewhere in it. Read once — the filter is the user's
   // from that point, and rewriting the URL as they click would fight them.
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [kind, setKind] = useState<RequestKind | 'all'>(() => {
     const asked = searchParams.get(REQUEST_KIND_PARAM)
     return asked && isKind(asked) ? asked : 'all'
   })
-  const [status, setStatus] = useState<StatusFilter>('pending')
+  // Null until the reader chooses: a reviewer opens on what needs deciding, and
+  // somebody reading their own record opens on all of it. Deriving rather than
+  // seeding means the default settles correctly once permissions load instead of
+  // flipping the tab under a reader who already pressed one.
+  const [statusChoice, setStatusChoice] = useState<StatusFilter | null>(null)
+  const status: StatusFilter = statusChoice ?? (canReview ? 'pending' : 'all')
   const [query, setQuery] = useState('')
   const [person, setPerson] = useState('all')
   // The same stepper the attendance tabs use, "All months" toggle included, so
@@ -260,13 +290,41 @@ export function AttendanceRequests() {
   // Which row has its day strip open. One at a time: the strip is a wide row of
   // chips, and several open at once turns the queue into a wall.
   const [editingDays, setEditingDays] = useState<string | null>(null)
-  const [entering, setEntering] = useState(false)
+  const [entering, setEntering] = useState<AttendanceRequestKind | null>(() => {
+    const asked = searchParams.get(REQUEST_NEW_PARAM)
+    return asked && isKind(asked) ? asked : null
+  })
+  /**
+   * Unlike `?kind=`, which seeds a filter the reader then owns, `?new=` asks for
+   * a one-off action. Left in the URL it would reopen the form on every reload
+   * of a page the reader is only trying to read, so closing the sheet takes it
+   * back out. `replace`, so it does not put the reopened form in the back stack.
+   */
+  const closeSheet = () => {
+    setEntering(null)
+    if (searchParams.has(REQUEST_NEW_PARAM)) {
+      const next = new URLSearchParams(searchParams)
+      next.delete(REQUEST_NEW_PARAM)
+      setSearchParams(next, { replace: true })
+    }
+  }
+  /** The pending request being edited, or withdrawn, by the person who filed it. */
+  const [editingRequest, setEditingRequest] = useState<RequestDraft | null>(null)
+  const [withdrawing, setWithdrawing] = useState<UnifiedRequest | null>(null)
   const [filtersOpen, setFiltersOpen] = useState(false)
   // Off by default: the flat list answers "what needs deciding", which is what
   // the queue is for. Grouping answers "who is off on the 14th", which is a
   // different question and worth a switch rather than a second screen.
   const [groupByDay, setGroupByDay] = useState(false)
   const isDesktop = useIsDesktop()
+
+  const deleteLeave = useDeleteLeave()
+  const deleteWfh = useDeleteWfh()
+  const deleteException = useDeleteException()
+  const deleteOvertime = useDeleteOvertime()
+  const isWithdrawing =
+    deleteLeave.isPending || deleteWfh.isPending
+    || deleteException.isPending || deleteOvertime.isPending
 
   const reviewLeave = useReviewLeave()
   const reviewWfh = useReviewWfh()
@@ -300,6 +358,15 @@ export function AttendanceRequests() {
         enteredByName: r.entered_by_profile?.name ?? null,
         status: r.status,
         createdAt: r.created_at,
+        ownFiled: r.entered_by === null,
+        draft: {
+          id: r.id,
+          startDate: r.start_date,
+          endDate: r.end_date,
+          dayPart: r.day_part,
+          reason: r.reason,
+          leaveTypeId: r.leave_type_id,
+        },
       })
     }
 
@@ -322,6 +389,16 @@ export function AttendanceRequests() {
         enteredByName: null,
         status: r.status,
         createdAt: r.created_at,
+        // wfh_requests has no entered_by; granted_directly is the same fact —
+        // false means the employee raised it rather than being given it.
+        ownFiled: !r.granted_directly,
+        draft: {
+          id: r.id,
+          startDate: r.start_date,
+          endDate: r.end_date,
+          dayPart: r.day_part,
+          reason: r.reason,
+        },
       })
     }
 
@@ -348,6 +425,17 @@ export function AttendanceRequests() {
         enteredByName: r.entered_by_profile?.name ?? null,
         status: r.status,
         createdAt: r.created_at,
+        ownFiled: r.entered_by === null,
+        draft: {
+          id: r.id,
+          startDate: r.date,
+          endDate: r.date,
+          dayPart: 'full',
+          reason: r.reason,
+          exceptionType: r.exception_type,
+          atTime: r.requested_time,
+          returnTime: r.return_time,
+        },
       })
     }
 
@@ -372,6 +460,16 @@ export function AttendanceRequests() {
         enteredByName: r.entered_by_profile?.name ?? null,
         status: r.status,
         createdAt: r.created_at,
+        ownFiled: r.entered_by === null,
+        draft: {
+          id: r.id,
+          startDate: r.date,
+          endDate: r.date,
+          dayPart: 'full',
+          reason: r.reason,
+          atTime: r.start_time,
+          endTime: r.end_time,
+        },
       })
     }
 
@@ -505,6 +603,32 @@ export function AttendanceRequests() {
   const canDecide = (row: UnifiedRequest): boolean =>
     canReview && isDecidableBy({ profile_id: row.profileId, entered_by: row.enteredById }, profile?.id)
 
+  /**
+   * Yours, still pending, and raised by you — the three conditions the new
+   * cancel policies check, restated here so the buttons only appear where the
+   * database would accept them. A request HR entered for you is theirs to
+   * amend, and an approved one has already written attendance rows that only
+   * the admin delete unwinds.
+   */
+  const isOwnPending = (row: UnifiedRequest): boolean =>
+    row.profileId === profile?.id && row.status === 'pending' && row.ownFiled
+
+  function withdraw(row: UnifiedRequest) {
+    const done = {
+      onSuccess: () => {
+        toast(`${KIND_META[row.kind].label} request withdrawn.`, 'success')
+        setWithdrawing(null)
+      },
+      onError: (error: Error) => toast(error.message, 'error'),
+    }
+    switch (row.kind) {
+      case 'leave': deleteLeave.mutate(row.id, done); break
+      case 'wfh': deleteWfh.mutate(row.id, done); break
+      case 'exception': deleteException.mutate(row.id, done); break
+      case 'overtime': deleteOvertime.mutate(row.id, done); break
+    }
+  }
+
   function review(row: UnifiedRequest, decision: ReviewStatus) {
     if (!profile) return
     const done = {
@@ -602,6 +726,32 @@ export function AttendanceRequests() {
               <UserPlus size={11} className="shrink-0" />
               Added by {row.enteredByName}
             </span>
+          )}
+
+          {/* Your own pending request: change it, or take it back. These sit
+              where a reviewer's Approve/Reject would be, because they are the
+              same thing from the other side of the queue — the actions
+              available on this row to this reader. The two are mutually
+              exclusive by construction: you can never decide on your own. */}
+          {showActions && isOwnPending(row) && (
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => setEditingRequest({ ...row.draft, kind: row.kind, profileId: row.profileId })}
+                className="inline-flex items-center gap-1 rounded-sm border border-border-default bg-surface-2 px-2.5 py-1 font-ui text-[11.5px] font-semibold text-text-2 hover:text-text-1"
+              >
+                <Pencil size={12} />
+                Edit
+              </button>
+              <button
+                type="button"
+                onClick={() => setWithdrawing(row)}
+                className="inline-flex items-center gap-1 rounded-sm border border-error/30 bg-error/10 px-2.5 py-1 font-ui text-[11.5px] font-semibold text-error hover:bg-error/20"
+              >
+                <Trash2 size={12} />
+                Withdraw
+              </button>
+            </div>
           )}
 
           {row.status === 'pending' && showActions && canDecide(row) ? (
@@ -704,7 +854,7 @@ export function AttendanceRequests() {
             size="sm"
             tabs={statusTabs}
             activeKey={status}
-            onChange={(k) => { if (isStatusFilter(k)) setStatus(k) }}
+            onChange={(k) => { if (isStatusFilter(k)) setStatusChoice(k) }}
             fill
             className="order-1 w-full min-w-0 sm:w-auto sm:flex-1 sm:max-w-md"
           />
@@ -739,18 +889,20 @@ export function AttendanceRequests() {
                 </span>
               )}
             </Button>
-            {canReview && (
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={() => setEntering(true)}
-                aria-label="Add a request for someone else"
-                className="px-2.5 sm:px-3"
-              >
-                <Plus size={14} />
-                <span className="hidden sm:inline">Add for someone else</span>
-              </Button>
-            )}
+            {/* One button for everybody. It used to be reviewers-only and read
+                "Add for someone else", which left an employee no way to file at
+                all — their four forms lived on another page. Who a request is
+                for is a field inside the sheet now, defaulted to you, so the
+                same button covers both. */}
+            <Button
+              size="sm"
+              onClick={() => setEntering('leave')}
+              aria-label="New request"
+              className="px-2.5 sm:px-3"
+            >
+              <Plus size={14} />
+              <span className="hidden sm:inline">New request</span>
+            </Button>
           </div>
         </div>
 
@@ -864,7 +1016,24 @@ export function AttendanceRequests() {
         </div>
       </Drawer>
 
-      {entering && <EnterRequestForEmployeeModal onClose={() => setEntering(false)} />}
+      {entering && (
+        <RequestSheet initialKind={entering} onClose={closeSheet} />
+      )}
+      {editingRequest && (
+        <RequestSheet editing={editingRequest} onClose={() => setEditingRequest(null)} />
+      )}
+      {withdrawing && (
+        <ConfirmDialog
+          open
+          onClose={() => setWithdrawing(null)}
+          onConfirm={() => withdraw(withdrawing)}
+          title="Withdraw this request?"
+          message={`Your ${KIND_META[withdrawing.kind].label.toLowerCase()} request for ${withdrawing.whenLabel} comes off the queue. Nobody has decided on it yet, so nothing on your record changes.`}
+          confirmLabel="Withdraw"
+          pendingLabel="Withdrawing…"
+          isPending={isWithdrawing}
+        />
+      )}
     </div>
   )
 }

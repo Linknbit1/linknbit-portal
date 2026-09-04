@@ -301,6 +301,10 @@ export type AttendanceStatus = 'present' | 'late' | 'absent'
 export type AttendanceDayType = 'work' | 'leave' | 'wfh' | 'holiday'
 /** How much of the day day_type covers. Only leave and WFH are ever partial. */
 export type AttendanceDayPart = 'full' | 'first_half' | 'second_half'
+/** The four things a person can ask for. Shared by the queue and the request sheet. */
+export type AttendanceRequestKind = 'leave' | 'wfh' | 'exception' | 'overtime'
+/** What an attendance exception says happened. */
+export type AttendanceExceptionType = 'late_arrival' | 'early_departure' | 'out_of_office'
 
 export interface AttendanceRecord {
   id: string

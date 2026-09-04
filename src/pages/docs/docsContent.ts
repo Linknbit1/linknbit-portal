@@ -722,12 +722,20 @@ export const DOC_CHAPTERS: DocChapter[] = [
         where: 'People → Attendance → Requests',
         procedures: [
           {
-            title: 'Request time off or a remote day',
+            title: 'Request time off, a remote day, overtime or a correction',
             steps: [
-              'Open People → Attendance and pick the request you need, Leave, WFH or Overtime.',
-              'Choose the duration: a full day (or range of days), or half a day.',
-              'For a half day, pick which half, first or second.',
-              'Add a reason and submit.',
+              'Open People → Attendance → Requests and press New request.',
+              'Pick the kind along the top: Leave, WFH, Exception or Overtime.',
+              'Choose the duration: a full day (or range of days), or half a day. For a half day, pick which half, first or second.',
+              'Add a reason and press Submit for approval.',
+            ],
+          },
+          {
+            title: 'Change or withdraw a request',
+            steps: [
+              'Find it in Requests. It has to still be pending — once it is decided, ask whoever manages attendance.',
+              'Press Edit to change the dates, the times or the reason. It stays pending and the approver sees the new version.',
+              'Press Withdraw to take it off the queue altogether, then confirm.',
             ],
           },
           {
@@ -760,11 +768,14 @@ export const DOC_CHAPTERS: DocChapter[] = [
         ],
         notes: [
           'Leave, WFH, overtime and exceptions all queue up together. The type list inside Filters carries each kind’s pending count, so you can see where the backlog is without opening each one.',
+          'The queue opens on Pending if you review requests, and on All if you do not \u2014 somebody reading their own record wants the whole of it, not only what is undecided.',
           'The tabs are the only thing that changes which slice you are looking at — Pending, Approved, Rejected, All. Everything in the Filters panel — type, employee, period — narrows whatever the tab is showing rather than replacing it, and Clear all in the panel puts it back.',
           'The queue opens on the current month, so a request dated for next month is not in the first list you see. The Filters button carries a count of how many filters are narrowing the queue, and the period is one of them — if something you expected is missing, that count is where to look.',
           'A leave range that starts in one month and ends in the next shows under both, so a week off over a month boundary is never missing from the month you are looking at.',
           'You only ever see your own requests here, plus anyone whose requests you review. Nobody sees a colleague’s leave unless it is their job to decide on it.',
-          'Whoever manages attendance can file any of the four for somebody else with "Add for someone else". Whether it applies at once or waits for approval depends on one thing: whether the person entering it is allowed to record attendance without approval. If they are, it takes effect immediately, for all four kinds. If not, it joins the queue.',
+          'New request is the same button for everybody. Whoever manages attendance also gets a "Who is this for" field inside it, which opens on themselves — one button files your own leave and somebody else\u2019s.',
+          'Whether an entry for somebody else applies at once or waits for approval depends on one thing: whether the person entering it is allowed to record attendance without approval. If they are, it takes effect immediately, for all four kinds. If not, it joins the queue. The panel says which of the two is about to happen before you submit.',
+          'A request for yourself always waits for approval, whatever you are allowed to do for other people. Nobody records their own attendance.',
           'You cannot decide on a request you filed for somebody else, any more than on your own. It shows as "Waiting on someone else" in your queue, and another approver picks it up. The point is that putting a request in and waving it through are two people.',
           'Filing one for somebody notifies everyone who can approve it, naming you: "Mahnoor added leave for Yasir". Nothing you enter sits in a queue nobody has been told about.',
           'The count on the Attendance row in the sidebar is what is waiting on you, not what is waiting. A request you filed is not counted there — you are the one person who cannot clear it — so a zero means nothing is stuck on you, and a number means it is yours to act on.',
@@ -780,27 +791,42 @@ export const DOC_CHAPTERS: DocChapter[] = [
           'A day taken out of a longer request is removed from that person’s attendance straight away, and a leave day comes back to their balance. Their remaining days stay approved, so nobody has to reapply for the rest of the week.',
           'Removing a day from the middle of a range leaves two requests, one for the days before and one for the days after. That is the same leave, still approved, simply no longer covering the day in between.',
           'A single-day or half-day request has no day to take out. Reject it instead.',
-          'You can edit or withdraw a request while it is still pending.',
+          'Edit and Withdraw appear on your own rows while they are pending, in the same place an approver sees Approve and Reject. They are gone once it is decided: an approved request has already changed your record, and undoing that is a correction rather than a withdrawal.',
+          'A request somebody else entered for you cannot be edited or withdrawn by you. It is their record of something, so ask them.',
           'Nobody can approve their own request, whatever their role.',
         ],
       },
       {
         id: 'my-attendance',
-        title: 'Your attendance history',
+        title: 'Your own attendance',
         summary:
-          'This month\u2019s record — the days you were in, when you arrived, and the hours against each — under the requests you have filed.',
+          'Your day, your leave balance, your devices, what is coming up, and this month\u2019s record — the days you were in, when you arrived, and the hours against each.',
         where: 'People → Attendance → My Attendance',
+        procedures: [
+          {
+            title: 'Check how much leave you have left',
+            steps: [
+              'Open People → Attendance. Leave balance lists each kind of leave with the days remaining out of your allowance.',
+              'Press Request leave on that card to go straight to the form with Leave already chosen.',
+            ],
+          },
+        ],
         notes: [
           'The page shows the month you are in. On a phone, the History row on the attendance hub has a month stepper for looking further back.',
+          'Filing, editing and withdrawing all happen in Requests now. This page used to carry a separate form and list for each of leave, WFH, exceptions and overtime, which was a second copy of the same queue \u2014 there is one of each now, and the balance card links to it.',
+          'The balance counts approved leave taken this calendar year. A pending request has not been deducted yet.',
         ],
       },
       {
         id: 'team-attendance',
         title: 'Your team’s attendance',
         summary:
-          'The same view for the people who share a team with you, plus their pending requests.',
-        where: 'People → Attendance',
+          'One team at a time — who is in, and what they have asked for — on that team’s own page.',
+        where: 'People → Teams → the team → Attendance',
         feature: ['can_view_team_attendance', 'can_view_all_attendance'],
+        notes: [
+          'Today already shows the whole company on any date, and grouping it By team puts the team you lead at the top. Go to the team’s own page when you want that team and nothing else, with its requests beside the roster.',
+        ],
       },
     ],
   },

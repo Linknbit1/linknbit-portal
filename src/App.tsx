@@ -22,7 +22,7 @@ import StickyNotesPage from './pages/StickyNotesPage'
 import StandupTeamPage from './pages/StandupTeamPage'
 import StandupHistoryPage from './pages/StandupHistoryPage'
 import StandupSettingsPage from './pages/StandupSettingsPage'
-import { AttendanceSectionScreen, TeamAttendanceSectionScreen } from './pages/AttendanceMobile'
+import { AttendanceSectionScreen } from './pages/AttendanceMobile'
 import { GamificationSectionScreen } from './pages/admin/GamificationPage'
 import AdminProjectsPage from './pages/admin/ProjectsPage'
 import AdminProjectDetailPage from './pages/admin/ProjectDetailPage'
@@ -126,7 +126,6 @@ export default function App() {
                   element={<RoleGuard feature="can_manage_standups"><StandupSettingsPage /></RoleGuard>}
                 />
                 <Route path="/attendance" element={<AttendancePage />} />
-                <Route path="/attendance/team/:sub" element={<TeamAttendanceSectionScreen />} />
                 <Route path="/attendance/:section" element={<AttendanceSectionScreen />} />
                 {/* No combined Gamification page — land on the first sub-page. */}
                 <Route path="/gamification" element={<Navigate to="/gamification/leaderboard" replace />} />
