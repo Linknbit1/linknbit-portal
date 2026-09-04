@@ -31,11 +31,38 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: '1.28.1',
+    date: '2026-09-04',
+    title: 'The roster, read on a phone',
+    highlight:
+      'Today\u2019s roster keeps the group you are reading pinned under the top bar as you scroll, and on a phone the list finally has the width to say who is in and how.',
+    entries: [
+      {
+        kind: 'improved',
+        text: 'The group heading on Today \u2014 In office, Work from Home, On leave \u2014 stays pinned under the top bar while you scroll through it, so a long list never leaves you guessing which group a row belongs to.',
+      },
+      {
+        kind: 'improved',
+        text: 'By status and By team is a switch whose backing slides between the two, matching the tabs on Requests, rather than a background blinking off one button and on the other.',
+      },
+      {
+        kind: 'improved',
+        text: 'On a phone the date and the grouping share the first line, and Back to today drops beneath them instead of squeezing both.',
+      },
+      {
+        kind: 'improved',
+        text: 'On a phone each person is two lines \u2014 who, then how \u2014 and the card frame around the roster is gone. On a screen that narrow the border and its padding were spending the width the names and times needed.',
+      },
+      {
+        kind: 'improved',
+        text: 'Working from home is called Work from Home throughout the roster \u2014 on the counter and on the chip beside a person\u2019s name.',
+      },
+    ],
+  },
+  {
     version: '1.28.0',
     date: '2026-09-03',
     title: 'Half a day is not a day',
-    highlight:
-      'The attendance calendar now says how much of a day somebody is away for \u2014 full day, first half or second half \u2014 and shows approved exceptions alongside leave instead of leaving them off the month entirely.',
     entries: [
       {
         kind: 'improved',

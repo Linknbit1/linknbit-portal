@@ -5,6 +5,7 @@ import { cn } from '../../lib/cn'
 import { Avatar } from '../ui/Avatar'
 import { PersonLink } from './PersonLink'
 import { DatePicker } from '../ui/DatePicker'
+import { Tabs } from '../ui/Tabs'
 import { useDayRoster } from '../../hooks/useAttendance'
 import type { RosterEntry, RosterStatus } from '../../api/attendance'
 
@@ -15,6 +16,17 @@ function localToday(): string {
 
 const fmtTime = (ts: string | null): string =>
   ts ? new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : '-'
+
+/**
+ * Group headings pin under the Topbar, which is itself sticky at the top of the
+ * scrolling `<main>`. The safe-area inset is part of the offset because the
+ * Topbar pads itself by it — without that term the heading slides a notch's
+ * worth of pixels behind the bar on a phone.
+ */
+const STICKY_HEAD_TOP = 'top-[calc(var(--height-topbar)+env(safe-area-inset-top))]'
+
+/** Avatar (w-7) plus its gap — indents the phone's second line under the name. */
+const NAME_INDENT = 'pl-9.5'
 
 interface StatusMeta {
   label: string
@@ -38,7 +50,7 @@ const STATUS_META: Record<RosterStatus, StatusMeta> = {
     accent: 'text-success',
   },
   wfh: {
-    label: 'Working from home',
+    label: 'Work from Home',
     icon: Home,
     chip: 'bg-service-dev/12 text-service-dev border-service-dev/30',
     accent: 'text-service-dev',
@@ -82,7 +94,7 @@ const GROUP_ORDER: RosterStatus[] = [
   'off',
 ]
 
-function StatusChipInline({ status, dayPart }: { status: RosterStatus; dayPart: string }) {
+function StatusChipInline({ status, dayPart, className }: { status: RosterStatus; dayPart: string; className?: string }) {
   const meta = STATUS_META[status]
   const Icon = meta.icon
   return (
@@ -91,6 +103,7 @@ function StatusChipInline({ status, dayPart }: { status: RosterStatus; dayPart: 
         'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm border',
         'text-[10.5px] font-ui font-semibold uppercase tracking-wider whitespace-nowrap',
         meta.chip,
+        className,
       )}
     >
       <Icon size={11} />
@@ -117,10 +130,10 @@ function SummaryTiles({ rows }: { rows: RosterEntry[] }) {
         const meta = STATUS_META[status]
         const Icon = meta.icon
         return (
-          <div key={status} className="bg-surface-1 px-4 py-3 flex flex-col gap-1">
+          <div key={status} className="bg-surface-1 p-3 sm:px-4 flex flex-col gap-1">
             <span className="flex items-center gap-1.5 text-[10.5px] font-mono uppercase tracking-wider text-text-4">
-              <Icon size={12} />
-              {meta.label}
+              <Icon size={12} className="shrink-0" />
+              <span className="truncate">{meta.label}</span>
             </span>
             <span className={cn('font-mono text-2xl font-semibold tabular-nums', meta.accent)}>
               {counts[status] ?? 0}
@@ -134,8 +147,12 @@ function SummaryTiles({ rows }: { rows: RosterEntry[] }) {
 
 function PersonRow({ row }: { row: RosterEntry }) {
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 px-4 py-2.5 border-b border-border-subtle last:border-0">
-      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+    // A phone gets two lines — who, then how — because a name, three times and a
+    // status chip on one wrapped line leaves every cell too narrow to read. From
+    // `sm` up it is one row again, and no horizontal padding below `sm` because
+    // the list is not in a card there.
+    <div className="flex flex-col gap-1.5 py-2.5 border-b border-border-subtle last:border-0 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-3 sm:gap-y-1.5 sm:px-4">
+      <div className="flex items-center gap-2.5 min-w-0 sm:flex-1">
         <Avatar name={row.name} src={row.avatar_url ?? undefined} size="sm" personId={row.profile_id} />
         <div className="min-w-0">
           <PersonLink
@@ -150,52 +167,44 @@ function PersonRow({ row }: { row: RosterEntry }) {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11.5px] text-text-3 tabular-nums">
-        {/* Times are only returned for people the viewer is entitled to see them
-            for, so an absent time is "not yours to see", never "missing data". */}
-        {row.detail_visible && row.status === 'in_office' && (
-          <span>
-            In <span className="text-text-1">{fmtTime(row.check_in)}</span>
-          </span>
-        )}
-        {row.detail_visible && row.check_out && <span>Out {fmtTime(row.check_out)}</span>}
-        {row.detail_visible && row.leave_type && (
-          <span className="font-ui normal-case text-text-3">{row.leave_type}</span>
-        )}
-        {row.is_late && (
-          <span className="px-1.5 py-0.5 rounded-sm border border-warning/30 bg-warning/12 text-warning text-[10px] font-ui font-semibold uppercase tracking-wider">
-            Late
-          </span>
-        )}
-      </div>
+      {/* `sm:contents` dissolves this wrapper at the desktop breakpoint so the
+          times and the chip become cells of the row itself. On a phone it stays
+          a real box, which is what keeps the second line indented under the
+          name as one unit instead of indenting each fragment separately. */}
+      <div className={cn('flex flex-wrap items-center gap-x-3 gap-y-1', NAME_INDENT, 'sm:contents')}>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11.5px] text-text-3 tabular-nums">
+          {/* Times are only returned for people the viewer is entitled to see them
+              for, so an absent time is "not yours to see", never "missing data". */}
+          {row.detail_visible && row.status === 'in_office' && (
+            <span>
+              In <span className="text-text-1">{fmtTime(row.check_in)}</span>
+            </span>
+          )}
+          {row.detail_visible && row.check_out && <span>Out {fmtTime(row.check_out)}</span>}
+          {row.detail_visible && row.leave_type && (
+            <span className="font-ui normal-case text-text-3">{row.leave_type}</span>
+          )}
+          {row.is_late && (
+            <span className="px-1.5 py-0.5 rounded-sm border border-warning/30 bg-warning/12 text-warning text-[10px] font-ui font-semibold uppercase tracking-wider">
+              Late
+            </span>
+          )}
+        </div>
 
-      <StatusChipInline status={row.status} dayPart={row.day_part} />
+        <StatusChipInline status={row.status} dayPart={row.day_part} />
+      </div>
     </div>
   )
 }
 
 type GroupBy = 'status' | 'team'
 
-function GroupSwitch({ value, onChange }: { value: GroupBy; onChange: (v: GroupBy) => void }) {
-  return (
-    <div className="inline-flex rounded-md border border-border-default bg-surface-inset p-0.5">
-      {(['status', 'team'] as const).map((option) => (
-        <button
-          key={option}
-          type="button"
-          onClick={() => onChange(option)}
-          aria-pressed={value === option}
-          className={cn(
-            'px-3 py-1 rounded-sm text-[12px] font-ui font-semibold capitalize transition-colors',
-            value === option ? 'bg-brand-red/15 text-brand-red' : 'text-text-3 hover:text-text-1',
-          )}
-        >
-          By {option}
-        </button>
-      ))}
-    </div>
-  )
-}
+const GROUP_TABS = [
+  { key: 'status', label: 'By status' },
+  { key: 'team', label: 'By team' },
+]
+
+const isGroupBy = (key: string): key is GroupBy => key === 'status' || key === 'team'
 
 interface Group {
   key: string
@@ -255,25 +264,33 @@ export function TodayRoster() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <DatePicker value={date} onChange={setDate} className="w-44" />
+      {/* The date and the grouping share the first line on every width — they are
+          the two things that say what the list below is. "Back to today" wraps
+          beneath on a phone (order-last) rather than squeezing them. */}
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+        <DatePicker value={date} onChange={setDate} className="min-w-0 flex-1 sm:w-44 sm:flex-none" />
+        <Tabs
+          variant="pill"
+          size="sm"
+          tabs={GROUP_TABS}
+          activeKey={groupBy}
+          onChange={(key) => { if (isGroupBy(key)) setGroupBy(key) }}
+          className="order-2 shrink-0 sm:order-last sm:ml-auto"
+        />
         {date !== localToday() && (
           <button
             type="button"
             onClick={() => setDate(localToday())}
-            className="font-ui text-[12px] text-brand-red hover:underline"
+            className="order-3 font-ui text-[12px] text-brand-red hover:underline sm:order-2"
           >
             Back to today
           </button>
         )}
-        <div className="ml-auto">
-          <GroupSwitch value={groupBy} onChange={setGroupBy} />
-        </div>
       </div>
 
       {holidayName && (
-        <div className="flex items-center gap-2 px-4 py-2.5 border border-service-mkt/30 bg-service-mkt/10 text-service-mkt font-ui text-[13px]">
-          <Palmtree size={14} />
+        <div className="flex items-center gap-2 px-3 py-2.5 sm:px-4 border border-service-mkt/30 bg-service-mkt/10 text-service-mkt font-ui text-[13px]">
+          <Palmtree size={14} className="shrink-0" />
           <span>
             <span className="font-semibold">{holidayName}</span>. The office is closed.
           </span>
@@ -281,8 +298,8 @@ export function TodayRoster() {
       )}
 
       {companyWfh && !holidayName && (
-        <div className="flex items-center gap-2 px-4 py-2.5 border border-service-dev/30 bg-service-dev/10 text-service-dev font-ui text-[13px]">
-          <Home size={14} />
+        <div className="flex items-center gap-2 px-3 py-2.5 sm:px-4 border border-service-dev/30 bg-service-dev/10 text-service-dev font-ui text-[13px]">
+          <Home size={14} className="shrink-0" />
           <span>
             <span className="font-semibold">Company-wide WFH</span>, {companyWfh}
           </span>
@@ -291,23 +308,36 @@ export function TodayRoster() {
 
       <SummaryTiles rows={rows} />
 
-      <div className="border border-border-default bg-surface-1">
+      {/* No card on a phone: a border inside a 360px screen spends width on
+          chrome and boxes the list in twice. The dividers still make it a list. */}
+      <div className="sm:border sm:border-border-default sm:bg-surface-1">
         {isLoading ? (
           <div className="flex justify-center py-12 text-text-4">
             <Loader2 size={18} className="animate-spin" />
           </div>
         ) : isError ? (
-          <div className="px-4 py-12 text-center font-ui text-[13px] text-error">
+          <div className="py-12 text-center font-ui text-[13px] text-error sm:px-4">
             Could not load the roster. Refresh to try again.
           </div>
         ) : groups.length === 0 ? (
-          <div className="px-4 py-12 text-center font-ui text-[13px] text-text-4">
+          <div className="py-12 text-center font-ui text-[13px] text-text-4 sm:px-4">
             Nobody is tracked for this date.
           </div>
         ) : (
           groups.map((group) => (
             <section key={group.key}>
-              <h3 className="flex items-center gap-2 px-4 py-2 bg-surface-2 border-b border-border-subtle font-mono text-[10.5px] uppercase tracking-wider text-text-3">
+              {/* Pinned: a roster is scrolled past its own headings, and "which
+                  group am I looking at" is the one thing you cannot recover from
+                  the rows. Full-bleed on a phone so it covers the rows sliding
+                  under it edge to edge. */}
+              <h3
+                className={cn(
+                  'sticky z-20 flex items-center gap-2 -mx-4 px-4 py-2 bg-surface-2 border-y border-border-subtle',
+                  'font-mono text-[10.5px] uppercase tracking-wider text-text-3',
+                  'sm:mx-0 sm:border-t-0',
+                  STICKY_HEAD_TOP,
+                )}
+              >
                 {group.label}
                 <span className="text-text-4 tabular-nums">{group.rows.length}</span>
               </h3>

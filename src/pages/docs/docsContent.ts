@@ -604,8 +604,9 @@ export const DOC_CHAPTERS: DocChapter[] = [
             title: 'See who is in',
             steps: [
               'Open People → Attendance. Today is the first tab.',
-              'Read the four counters for the shape of the day: in office, working from home, on leave, not checked in.',
+              'Read the four counters for the shape of the day: in office, work from home, on leave, not checked in.',
               'Press By team to regroup the list by team instead of by status.',
+              'Scroll: the group heading you are inside stays pinned under the top bar, so it is always clear whose column you are reading.',
             ],
           },
           {
