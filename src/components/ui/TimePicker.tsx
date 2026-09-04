@@ -109,7 +109,7 @@ export function TimePicker({
         onClick={toggleOpen}
         disabled={disabled}
         className={cn(
-          'w-full flex items-center gap-2 bg-surface-inset border rounded-md px-3 py-2 text-left transition-colors',
+          'w-full h-9 flex items-center gap-2 bg-surface-inset border rounded-md px-3 text-left transition-colors',
           disabled
             ? 'border-border-subtle opacity-60 cursor-not-allowed'
             : open ? 'border-border-focus' : 'border-border-default hover:border-border-strong',

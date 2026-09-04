@@ -275,7 +275,10 @@ export function TodayRoster() {
           tabs={GROUP_TABS}
           activeKey={groupBy}
           onChange={(key) => { if (isGroupBy(key)) setGroupBy(key) }}
-          className="order-2 shrink-0 sm:order-last sm:ml-auto"
+          // h-9 + items-stretch: the same 36px control height the date box and
+          // every Select use, with the buttons filling the track so the sliding
+          // backing is inset by the track's padding rather than floating in it.
+          className="order-2 h-9 shrink-0 items-stretch sm:order-last sm:ml-auto"
         />
         {date !== localToday() && (
           <button

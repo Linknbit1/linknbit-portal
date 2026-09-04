@@ -47,7 +47,7 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'improved',
-        text: 'On a phone the date and the grouping share the first line, and Back to today drops beneath them instead of squeezing both.',
+        text: 'On a phone the date and the grouping share the first line, and Back to today drops beneath them instead of squeezing both. The two now stand the same height \u2014 as do the date and time boxes everywhere else, which were a hair taller than every other control beside them.',
       },
       {
         kind: 'improved',

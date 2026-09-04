@@ -101,7 +101,7 @@ export function DatePicker({ value, onChange, minDate, maxDate, allowedDow, plac
         type="button"
         onClick={toggleOpen}
         className={cn(
-          'w-full flex items-center gap-2 bg-surface-inset border rounded-md px-3 py-2 text-left transition-colors',
+          'w-full h-9 flex items-center gap-2 bg-surface-inset border rounded-md px-3 text-left transition-colors',
           open ? 'border-border-focus' : 'border-border-default hover:border-border-strong',
         )}
       >
