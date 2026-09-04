@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Loader2, Home, Plane, Palmtree, Building2, CircleSlash, Clock3 } from 'lucide-react'
+import { Loader2, Home, Plane, Palmtree, Building2, CircleSlash, Clock3, UserCheck } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { Avatar } from '../ui/Avatar'
@@ -7,6 +7,8 @@ import { PersonLink } from './PersonLink'
 import { DatePicker } from '../ui/DatePicker'
 import { Tabs } from '../ui/Tabs'
 import { useDayRoster } from '../../hooks/useAttendance'
+import { useTeams } from '../../hooks/useTeams'
+import { useAuthContext } from '../../context/AuthContext'
 import type { RosterEntry, RosterStatus } from '../../api/attendance'
 
 /** Local calendar date (`en-CA` renders ISO), not UTC — the roster is a local-day question. */
@@ -210,14 +212,16 @@ interface Group {
   key: string
   label: string
   rows: RosterEntry[]
+  /** A team this viewer leads — sorted to the top and marked as theirs. */
+  mine: boolean
 }
 
-function groupRows(rows: RosterEntry[], by: GroupBy): Group[] {
+function groupRows(rows: RosterEntry[], by: GroupBy, myTeams: ReadonlySet<string>): Group[] {
   if (by === 'status') {
     return GROUP_ORDER.flatMap((status) => {
       const matching = rows.filter((r) => r.status === status)
       return matching.length > 0
-        ? [{ key: status, label: STATUS_META[status].label, rows: matching }]
+        ? [{ key: status, label: STATUS_META[status].label, rows: matching, mine: false }]
         : []
     })
   }
@@ -237,11 +241,15 @@ function groupRows(rows: RosterEntry[], by: GroupBy): Group[] {
       else byTeam.set(team, [row])
     }
   }
+  // A lead's own team goes first. Alphabetical is the right order for teams you
+  // have no stake in, but it is the wrong first thing to read for someone who
+  // opens this page to check on the people they are answerable for.
   const groups = [...byTeam.entries()]
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([team, teamRows]) => ({ key: team, label: team, rows: teamRows }))
+    .map(([team, teamRows]) => ({ key: team, label: team, rows: teamRows, mine: myTeams.has(team) }))
+    .sort((a, b) => Number(b.mine) - Number(a.mine))
   return unassigned.length > 0
-    ? [...groups, { key: '__none__', label: 'No team', rows: unassigned }]
+    ? [...groups, { key: '__none__', label: 'No team', rows: unassigned, mine: false }]
     : groups
 }
 
@@ -256,7 +264,17 @@ export function TodayRoster() {
   const [groupBy, setGroupBy] = useState<GroupBy>('status')
   const { data: rows = [], isLoading, isError } = useDayRoster(date)
 
-  const groups = useMemo(() => groupRows(rows, groupBy), [rows, groupBy])
+  // Leading a team is a fact on the record, not a permission: whoever `lead_id`
+  // points at leads it, whatever their role is called. Matched by name because
+  // the roster reports team names, and they come from this same table.
+  const { profile } = useAuthContext()
+  const { data: teams = [] } = useTeams()
+  const myTeams = useMemo(
+    () => new Set(teams.filter((t) => t.lead_id === profile?.id).map((t) => t.name)),
+    [teams, profile?.id],
+  )
+
+  const groups = useMemo(() => groupRows(rows, groupBy, myTeams), [rows, groupBy, myTeams])
 
   // Company-wide facts are identical on every row; the first one carries them.
   const holidayName = rows.find((r) => r.holiday_name)?.holiday_name ?? null
@@ -264,10 +282,10 @@ export function TodayRoster() {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* The date and the grouping share the first line on every width — they are
-          the two things that say what the list below is. "Back to today" wraps
-          beneath on a phone (order-last) rather than squeezing them. */}
-      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+      {/* The date and the grouping share one line at every width — they are the
+          two things that say what the list below is. Getting back to today is
+          the date box's own Today button, not a second control out here. */}
+      <div className="flex items-center gap-2 sm:gap-3">
         <DatePicker value={date} onChange={setDate} className="min-w-0 flex-1 sm:w-44 sm:flex-none" />
         <Tabs
           variant="pill"
@@ -278,17 +296,8 @@ export function TodayRoster() {
           // h-9 + items-stretch: the same 36px control height the date box and
           // every Select use, with the buttons filling the track so the sliding
           // backing is inset by the track's padding rather than floating in it.
-          className="order-2 h-9 shrink-0 items-stretch sm:order-last sm:ml-auto"
+          className="h-9 shrink-0 items-stretch sm:ml-auto"
         />
-        {date !== localToday() && (
-          <button
-            type="button"
-            onClick={() => setDate(localToday())}
-            className="order-3 font-ui text-[12px] text-brand-red hover:underline sm:order-2"
-          >
-            Back to today
-          </button>
-        )}
       </div>
 
       {holidayName && (
@@ -335,14 +344,25 @@ export function TodayRoster() {
                   under it edge to edge. */}
               <h3
                 className={cn(
-                  'sticky z-20 flex items-center gap-2 -mx-4 px-4 py-2 bg-surface-2 border-y border-border-subtle',
-                  'font-mono text-[10.5px] uppercase tracking-wider text-text-3',
+                  'sticky z-20 flex items-center gap-2 -mx-4 px-4 py-2 border-y',
+                  'font-mono text-[10.5px] uppercase tracking-wider',
                   'sm:mx-0 sm:border-t-0',
+                  group.mine
+                    ? 'bg-brand-red/12 border-brand-red/25 text-brand-red'
+                    : 'bg-surface-2 border-border-subtle text-text-3',
                   STICKY_HEAD_TOP,
                 )}
               >
                 {group.label}
-                <span className="text-text-4 tabular-nums">{group.rows.length}</span>
+                <span className={cn('tabular-nums', group.mine ? 'text-brand-red/60' : 'text-text-4')}>
+                  {group.rows.length}
+                </span>
+                {group.mine && (
+                  <span className="ml-auto inline-flex items-center gap-1 rounded-sm border border-brand-red/30 bg-brand-red/10 px-1.5 py-0.5 font-semibold">
+                    <UserCheck size={11} />
+                    Your team
+                  </span>
+                )}
               </h3>
               {group.rows.map((row) => (
                 <PersonRow key={`${group.key}:${row.profile_id}`} row={row} />

@@ -47,7 +47,11 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'improved',
-        text: 'On a phone the date and the grouping share the first line, and Back to today drops beneath them instead of squeezing both. The two now stand the same height \u2014 as do the date and time boxes everywhere else, which were a hair taller than every other control beside them.',
+        text: 'Grouped by team, the team you lead is listed first and marked Your team, instead of sitting wherever the alphabet puts it. Lead more than one and all of them come first.',
+      },
+      {
+        kind: 'improved',
+        text: 'On a phone the date and the grouping share one line, at the same height \u2014 as do the date and time boxes everywhere else, which were a hair taller than every other control beside them. The separate Back to today link is gone: the date box has a Today button of its own at its foot.',
       },
       {
         kind: 'improved',
