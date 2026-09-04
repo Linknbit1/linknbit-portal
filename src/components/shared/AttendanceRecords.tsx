@@ -667,6 +667,11 @@ export function AttendanceRecords() {
           className="h-9 w-full items-stretch sm:w-auto sm:flex-none"
         />
 
+        {/* The stepper and the pair of date pickers swap places in this slot, so
+            they are both h-9 — the date pickers' own height, and the one every
+            input and select in the portal uses. At the stepper's default h-8 the
+            row grew and shrank by four pixels as you moved between Month and
+            Custom, and everything below it moved with it. */}
         {range.mode === 'custom' ? (
           <div className="flex items-center gap-2">
             <DatePicker value={range.from} onChange={range.setFrom} className="min-w-0 flex-1 sm:w-40 sm:flex-none" />
@@ -675,6 +680,7 @@ export function AttendanceRecords() {
           </div>
         ) : (
           <PeriodStepper
+            size="md"
             label={range.label}
             onPrev={() => range.step(-1)}
             onNext={() => range.step(1)}

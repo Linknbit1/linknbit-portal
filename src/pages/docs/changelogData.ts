@@ -83,6 +83,10 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'fixed',
+        text: 'Switching the register between Month and Custom no longer nudges the page. The month stepper and the pair of date pickers that replace it were four pixels apart in height, so everything below them shifted each time you moved between the two.',
+      },
+      {
+        kind: 'fixed',
         text: 'Attendance counters are whole days again. A worked half day used to score half to the attendance side and half to the leave side so the columns summed to the month, which printed things like "Present 18.5" \u2014 turning up is not divisible, and a counter reading 1.5 that then listed one row was describing something other than what it counted. Each counter now counts the days it names, on the register, on a team\u2019s page and on a member\u2019s profile alike.',
       },
       {

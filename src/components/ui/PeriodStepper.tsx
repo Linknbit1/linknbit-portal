@@ -20,25 +20,38 @@ interface PeriodStepperProps {
   labelClassName?: string
   /** Stretch to the full width of the parent, the label pill taking the slack. */
   fill?: boolean
+  /**
+   * `sm` (default, h-8) lines up with a `Button size="sm"` and a `Select
+   * size="sm"`. `md` (h-9) lines up with an Input, a `Select size="md"` and the
+   * date and time pickers — use it wherever the stepper can be SWAPPED for one
+   * of those, so the row does not change height and shove the page when it is.
+   */
+  size?: 'sm' | 'md'
   className?: string
 }
 
 /**
- * A compact `‹ Label ›` prev/next stepper used for year/month navigation. Controls
- * are a uniform `h-8` so the row aligns with adjacent `Button`s and `Select`s, and
- * the whole stepper stays on one line (`shrink-0`).
+ * A compact `‹ Label ›` prev/next stepper used for year/month navigation. Every
+ * control in it is one height so the row aligns with whatever sits beside it —
+ * `sm` with small buttons and selects, `md` with inputs and the date pickers —
+ * and the whole stepper stays on one line (`shrink-0`).
  */
 export function PeriodStepper({
-  label, onPrev, onNext, disablePrev, disableNext, icon: Icon, children, labelClassName, fill = false, className,
+  label, onPrev, onNext, disablePrev, disableNext, icon: Icon, children, labelClassName,
+  fill = false, size = 'sm', className,
 }: PeriodStepperProps) {
-  const btn = 'size-8 rounded-sm bg-surface-1 border border-border-default flex items-center justify-center text-text-3 hover:text-text-1 hover:border-border-strong transition-colors disabled:opacity-40 disabled:hover:text-text-3 disabled:hover:border-border-default shrink-0'
+  const btn = cn(
+    'rounded-sm bg-surface-1 border border-border-default flex items-center justify-center text-text-3 hover:text-text-1 hover:border-border-strong transition-colors disabled:opacity-40 disabled:hover:text-text-3 disabled:hover:border-border-default shrink-0',
+    size === 'md' ? 'size-9' : 'size-8',
+  )
   return (
     <div className={cn('flex items-center gap-2', fill ? 'w-full' : 'shrink-0', className)}>
       <button type="button" onClick={onPrev} disabled={disablePrev} className={btn} aria-label="Previous">
         <ChevronLeft size={15} />
       </button>
       <div className={cn(
-        'h-8 bg-surface-1 border border-border-default rounded-lg px-3.5 flex items-center gap-2 whitespace-nowrap',
+        'bg-surface-1 border border-border-default rounded-lg px-3.5 flex items-center gap-2 whitespace-nowrap',
+        size === 'md' ? 'h-9' : 'h-8',
         fill && 'min-w-0 flex-1 justify-center',
       )}>
         {Icon && <Icon size={14} className="text-brand-red shrink-0" />}
