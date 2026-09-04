@@ -660,6 +660,14 @@ export const DOC_CHAPTERS: DocChapter[] = [
             ],
           },
           {
+            title: 'Read a span day by day',
+            steps: [
+              'Pick any span longer than a day. The records are listed under a heading per date, which stays pinned as you scroll past it.',
+              'Press the date in a heading to run the days the other way round, newest first or oldest first.',
+              'Sorting on any other column orders the records within each day, so you can ask for the latest arrivals on each date.',
+            ],
+          },
+          {
             title: 'Correct a record',
             steps: [
               'Find the day and press the pencil on its row.',

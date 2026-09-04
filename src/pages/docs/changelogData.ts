@@ -54,8 +54,12 @@ export const RELEASES: ChangelogRelease[] = [
         text: 'Sorting on every column, both views: press a heading to sort, press it again to reverse. On a phone, where there are no headings to press, the same sort sits above the list.',
       },
       {
+        kind: 'added',
+        text: 'Over more than a day, records are listed under a heading per date that stays pinned as you scroll it. Press the date to run the days the other way round; sorting on any other column orders the records within each day.',
+      },
+      {
         kind: 'improved',
-        text: 'The counters filter. Pressing Present, Late, Absent, Half Day or Leave narrows the list to it and pressing again clears it, instead of naming five slices you then had to find again in a dropdown.',
+        text: 'The counters filter, and they are a compact strip rather than five tall cards \u2014 pressing Present, Late, Absent, Half Day or Leave narrows the list to it and pressing again clears it, instead of naming five slices you then had to find again in a dropdown.',
       },
       {
         kind: 'improved',

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { Fragment, useMemo, useState } from 'react'
 import {
   Loader2, Search, Download, Plus, Pencil, AlertCircle, Wifi, SlidersHorizontal,
   ClipboardList, CheckCircle2, Clock, AlertTriangle, Monitor, Plane, ArrowUp, ArrowUpDown,
@@ -29,6 +29,7 @@ import { useTeams } from '../../hooks/useTeams'
 import { useTeamMembers } from '../../hooks/useTeamMembers'
 import { zonedWallTimeToIso, isoToZonedMinutes } from '../../lib/timezone'
 import { downloadCsv } from '../../lib/csv'
+import { formatDayHeading } from '../../lib/dateGroups'
 import type { AttendanceWithProfile } from '../../api/attendance'
 
 /* ── Vocabulary ───────────────────────────────────────────────────────────── */
@@ -53,16 +54,15 @@ const RECORD_FILTERS: {
   icon: LucideIcon
   /** Tile accent; the filter list ignores it. */
   color: string
-  bg: string
   match: (r: RecordFacts) => boolean
 }[] = [
-  { value: 'present', label: 'Present', icon: CheckCircle2, color: 'text-success', bg: 'bg-success/10 border-success/20', match: (r) => r.status === 'present' },
-  { value: 'late', label: 'Late', icon: Clock, color: 'text-warning', bg: 'bg-warning/10 border-warning/20', match: (r) => r.status === 'late' },
-  { value: 'absent', label: 'Absent', icon: AlertTriangle, color: 'text-error', bg: 'bg-error/10 border-error/20', match: (r) => r.status === 'absent' },
-  { value: 'half_day', label: 'Half Day', icon: Monitor, color: 'text-service-design', bg: 'bg-service-design/10 border-service-design/20', match: (r) => r.day_type === 'leave' && r.day_part !== 'full' },
-  { value: 'leave', label: 'Leave', icon: Plane, color: 'text-service-dev', bg: 'bg-service-dev/10 border-service-dev/20', match: (r) => r.day_type === 'leave' && r.day_part === 'full' },
-  { value: 'wfh', label: 'WFH', icon: ClipboardList, color: 'text-service-dev', bg: 'bg-service-dev/10 border-service-dev/20', match: (r) => r.day_type === 'wfh' },
-  { value: 'holiday', label: 'Holiday', icon: Plane, color: 'text-text-3', bg: 'bg-text-3/10 border-border-default', match: (r) => r.day_type === 'holiday' },
+  { value: 'present', label: 'Present', icon: CheckCircle2, color: 'text-success', match: (r) => r.status === 'present' },
+  { value: 'late', label: 'Late', icon: Clock, color: 'text-warning', match: (r) => r.status === 'late' },
+  { value: 'absent', label: 'Absent', icon: AlertTriangle, color: 'text-error', match: (r) => r.status === 'absent' },
+  { value: 'half_day', label: 'Half Day', icon: Monitor, color: 'text-service-design', match: (r) => r.day_type === 'leave' && r.day_part !== 'full' },
+  { value: 'leave', label: 'Leave', icon: Plane, color: 'text-service-dev', match: (r) => r.day_type === 'leave' && r.day_part === 'full' },
+  { value: 'wfh', label: 'WFH', icon: ClipboardList, color: 'text-service-dev', match: (r) => r.day_type === 'wfh' },
+  { value: 'holiday', label: 'Holiday', icon: Plane, color: 'text-text-3', match: (r) => r.day_type === 'holiday' },
 ]
 
 /** Which of those get a counter tile, and in what order. */
@@ -143,11 +143,12 @@ function durationLabel(rec: AttendanceWithProfile): string {
   return `${Math.floor(mins / 60)}h ${mins % 60}m`
 }
 
-/** The day cell on a multi-day span: "Mon 14 Sep". One date needs no column. */
-const shortDay = (date: string): string => {
-  const [y, m, d] = date.split('-').map(Number)
-  return new Date(y, m - 1, d).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
-}
+/**
+ * Date headings pin under the Topbar, which is itself sticky at the top of the
+ * scrolling `<main>`. The safe-area term is there because the Topbar pads itself
+ * by it — without it the heading slides a notch's worth of pixels behind the bar.
+ */
+const STICKY_HEAD_TOP = 'top-[calc(var(--height-topbar)+env(safe-area-inset-top))]'
 
 /* ── Mark / edit a record ─────────────────────────────────────────────────── */
 
@@ -674,8 +675,15 @@ export function AttendanceRecords() {
         )}
       </div>
 
-      {/* ── Counters ───────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-px border border-border-default bg-border-default sm:grid-cols-3 lg:grid-cols-5">
+      {/* ── Counters ─────────────────────────────────────────────────────────
+          One compact strip, the same shape the roster's counters use: label on
+          top, number under it. They were tall cards with a boxed icon, which
+          spent a third of a phone screen on five numbers.
+
+          All five fit one row from `sm`; below it they go three and two rather
+          than two and a half, because a lone tile on its own line reads as a
+          different thing from the four above it. */}
+      <div className="grid grid-cols-3 gap-px border border-border-default bg-border-default sm:grid-cols-5">
         {TILE_ORDER.map((key) => {
           const meta = RECORD_FILTERS.find((f) => f.value === key)
           if (!meta) return null
@@ -691,18 +699,16 @@ export function AttendanceRecords() {
               onClick={() => setStatus(on ? 'all' : key)}
               aria-pressed={on}
               className={cn(
-                'flex flex-col gap-2 bg-surface-1 p-3 text-left transition-colors sm:p-4',
-                on ? 'bg-surface-2' : 'hover:bg-surface-2',
+                'flex flex-col gap-0.5 px-3 py-2.5 text-left transition-colors',
+                on ? 'bg-surface-2' : 'bg-surface-1 hover:bg-surface-2',
               )}
             >
-              <span className={cn('flex size-8 items-center justify-center rounded-lg border', meta.bg)}>
-                <Icon size={15} className={meta.color} />
+              <span className="flex items-center gap-1.5 font-mono text-[10.5px] uppercase tracking-wider text-text-4">
+                <Icon size={12} className={cn('shrink-0', on && meta.color)} />
+                <span className="truncate">{meta.label}</span>
               </span>
-              <span>
-                <span className={cn('block font-display text-[24px]/none font-bold', meta.color)}>
-                  {fmtDays(stats[key as keyof Tally] ?? 0)}
-                </span>
-                <span className="mt-1 block font-ui text-[12px] text-text-3">{meta.label}</span>
+              <span className={cn('font-mono text-[19px] font-semibold tabular-nums', meta.color)}>
+                {fmtDays(stats[key as keyof Tally] ?? 0)}
               </span>
             </button>
           )
@@ -859,13 +865,23 @@ function durationMinutes(rec: AttendanceWithProfile): number | null {
 
 const RECORD_SORTERS: Record<RecordSortKey, (r: AttendanceWithProfile) => string | number | null> = {
   name: (r) => r.profiles?.name ?? '',
-  date: (r) => r.date,
+  // Sorting BY date orders the day headings, not the rows inside one — every row
+  // in a group already shares its date. Within a day, name is the sane order.
+  date: (r) => r.profiles?.name ?? '',
   status: (r) => r.status ?? r.day_type,
   // The clock time, not the ISO string: sorting arrivals across several days has
   // to compare 09:15 with 09:40, not the 14th with the 15th.
   checkIn: (r) => (r.check_in ? new Date(r.check_in).getHours() * 60 + new Date(r.check_in).getMinutes() : null),
   duration: durationMinutes,
   source: (r) => r.source,
+}
+
+/** How many columns the table has, for the date row to span all of them. */
+const RECORD_COLUMNS = 8
+
+interface DayGroup {
+  date: string
+  rows: AttendanceWithProfile[]
 }
 
 function RecordsView({
@@ -875,8 +891,6 @@ function RecordsView({
   showDate: boolean
   onEdit: (rec: AttendanceWithProfile) => void
 }) {
-  // Date first on a span, name on a single day: the leading column is the one
-  // that tells rows apart, and on one date every row carries the same date.
   const [sort, setSort] = useState<Sort<RecordSortKey>>(
     () => ({ key: showDate ? 'date' : 'name', asc: true }),
   )
@@ -885,83 +899,68 @@ function RecordsView({
 
   const view = useMemo(() => sorted(rows, RECORD_SORTERS[sort.key], sort.asc), [rows, sort])
 
+  /**
+   * A span is read a day at a time, so the days are headings and not a column
+   * repeating the same value down twenty rows. Sorting by Date turns the arrow
+   * on those headings — the groups reverse — while any other column sorts
+   * within each day, which is what "the latest arrivals on Tuesday" means.
+   */
+  const dateAsc = sort.key !== 'date' || sort.asc
+  const flipDates = () => setSort({ key: 'date', asc: !dateAsc })
+
+  const groups = useMemo<DayGroup[] | null>(() => {
+    if (!showDate) return null
+    const byDate = new Map<string, AttendanceWithProfile[]>()
+    for (const r of view) {
+      const bucket = byDate.get(r.date)
+      if (bucket) bucket.push(r)
+      else byDate.set(r.date, [r])
+    }
+    return [...byDate.entries()]
+      .sort(([a], [b]) => (dateAsc ? a.localeCompare(b) : b.localeCompare(a)))
+      .map(([date, groupRows]) => ({ date, rows: groupRows }))
+  }, [view, showDate, dateAsc])
+
+  const head = (
+    <thead>
+      <tr className="border-b border-border-subtle bg-surface-2">
+        <SortTh label="Member" col="name" sort={sort} onSort={onSort} />
+        <SortTh label="Status" col="status" sort={sort} onSort={onSort} />
+        <SortTh label="Check In" col="checkIn" sort={sort} onSort={onSort} />
+        <SortTh label="Duration" col="duration" sort={sort} onSort={onSort} />
+        <SortTh label="Source" col="source" sort={sort} onSort={onSort} />
+        {['Device', 'Note', ''].map((h, i) => (
+          <th
+            key={h || `sp-${i}`}
+            className="px-4 py-2.5 text-left font-ui text-[10.5px] font-semibold uppercase tracking-wider text-text-3"
+          >
+            {h}
+          </th>
+        ))}
+      </tr>
+    </thead>
+  )
+
   return (
     <>
       <table className="hidden w-full lg:table">
-        <thead>
-          <tr className="border-b border-border-subtle bg-surface-2">
-            <SortTh label="Member" col="name" sort={sort} onSort={onSort} />
-            {showDate && <SortTh label="Date" col="date" sort={sort} onSort={onSort} />}
-            <SortTh label="Status" col="status" sort={sort} onSort={onSort} />
-            <SortTh label="Check In" col="checkIn" sort={sort} onSort={onSort} />
-            <SortTh label="Duration" col="duration" sort={sort} onSort={onSort} />
-            <SortTh label="Source" col="source" sort={sort} onSort={onSort} />
-            {['Device', 'Note', ''].map((h, i) => (
-              <th
-                key={h || `sp-${i}`}
-                className="px-4 py-2.5 text-left font-ui text-[10.5px] font-semibold uppercase tracking-wider text-text-3"
-              >
-                {h}
-              </th>
-            ))}
-          </tr>
-        </thead>
+        {head}
         <tbody>
-          {view.map((rec) => (
-            <tr key={rec.id} className="border-b border-border-subtle last:border-0 hover:bg-surface-2/50">
-              <td className="px-4 py-3">
-                <div className="flex items-center gap-2.5">
-                  <Avatar name={rec.profiles?.name ?? '?'} src={rec.profiles?.avatar_url ?? undefined} size="sm" personId={rec.profile_id} />
-                  <PersonLink personId={rec.profile_id} className="font-ui text-[13px] font-medium text-text-1">
-                    {rec.profiles?.name ?? rec.profile_id.slice(0, 8)}
-                  </PersonLink>
-                </div>
-              </td>
-              {showDate && (
-                <td className="px-4 py-3 font-mono text-[12px] whitespace-nowrap text-text-2">{shortDay(rec.date)}</td>
-              )}
-              <td className="px-4 py-3"><AttendanceChips facts={rec} /></td>
-              <td className="px-4 py-3 font-mono text-[12.5px] text-text-1">{fmtTime(rec.check_in)}</td>
-              <td className="px-4 py-3 font-mono text-[12px] text-text-2">{durationLabel(rec)}</td>
-              <td className="px-4 py-3">
-                <span className={cn('font-mono text-[11px] uppercase tracking-wider', rec.source === 'self' ? 'text-success' : 'text-text-3')}>
-                  {rec.source}
-                </span>
-              </td>
-              <td className="px-4 py-3">
-                {rec.device_flagged ? (
-                  <span className="flex items-center gap-1 font-ui text-[11px] text-warning">
-                    <AlertCircle size={11} /> Flagged
-                  </span>
-                ) : rec.device_name ? (
-                  <span className="block max-w-30 truncate font-mono text-[11px] text-text-3">{rec.device_name}</span>
-                ) : (
-                  <span className="font-mono text-[11px] text-text-4">-</span>
-                )}
-              </td>
-              <td className="max-w-35 truncate px-4 py-3 font-ui text-[12px] text-text-3">{rec.note ?? ''}</td>
-              <td className="px-4 py-3">
-                <div className="flex items-center gap-2">
-                  {rec.wifi_validated && <Wifi size={13} className="text-success" aria-label="WiFi validated" />}
-                  <button
-                    onClick={() => onEdit(rec)}
-                    className="text-text-4 transition-colors hover:text-text-1"
-                    aria-label={`Edit ${rec.profiles?.name ?? 'record'}`}
-                    title="Edit record"
-                  >
-                    <Pencil size={13} />
-                  </button>
-                </div>
-              </td>
-            </tr>
-          ))}
+          {groups
+            ? groups.map((g) => (
+                <Fragment key={g.date}>
+                  <DayRowCell date={g.date} count={g.rows.length} dateAsc={dateAsc} onFlip={flipDates} />
+                  {g.rows.map((rec) => (
+                    <RecordRow key={rec.id} rec={rec} onEdit={onEdit} />
+                  ))}
+                </Fragment>
+              ))
+            : view.map((rec) => <RecordRow key={rec.id} rec={rec} onEdit={onEdit} />)}
         </tbody>
       </table>
 
-      {/* Cards below lg. Two lines — who and when, then the facts — indented
-          under the name so the second line reads as belonging to the first.
-          There are no column headers to press here, so the same sort is offered
-          as a select; without it, sorting would be a desktop-only feature. */}
+      {/* Cards below lg. There are no column headers to press here, so the same
+          sort is offered as a select; without it, sorting would be desktop-only. */}
       <div className="lg:hidden">
         <MobileSort
           value={sort}
@@ -975,49 +974,189 @@ function RecordsView({
             { value: 'source', label: 'Source' },
           ]}
         />
-        {view.map((rec) => (
-          <div key={rec.id} className="flex flex-col gap-1.5 border-b border-border-subtle py-3 last:border-0 sm:px-4">
-            <div className="flex items-start gap-2.5">
-              <Avatar name={rec.profiles?.name ?? '?'} src={rec.profiles?.avatar_url ?? undefined} size="sm" personId={rec.profile_id} />
-              <div className="min-w-0 flex-1">
-                <PersonLink personId={rec.profile_id} className="block truncate font-ui text-[13px] font-medium text-text-1">
-                  {rec.profiles?.name ?? rec.profile_id.slice(0, 8)}
-                </PersonLink>
-                {showDate && (
-                  <span className="block font-mono text-[11px] text-text-4">{shortDay(rec.date)}</span>
-                )}
-              </div>
-              <button
-                onClick={() => onEdit(rec)}
-                className="shrink-0 text-text-4 transition-colors hover:text-text-1"
-                aria-label={`Edit ${rec.profiles?.name ?? 'record'}`}
-              >
-                <Pencil size={13} />
-              </button>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 pl-9.5">
-              <AttendanceChips facts={rec} />
-              <span className="font-mono text-[11.5px] tabular-nums text-text-3">
-                In <span className="text-text-1">{fmtTime(rec.check_in)}</span>
-              </span>
-              <span className="font-mono text-[11.5px] tabular-nums text-text-3">{durationLabel(rec)}</span>
-              <span className={cn('font-mono text-[10.5px] uppercase tracking-wider', rec.source === 'self' ? 'text-success' : 'text-text-4')}>
-                {rec.source}
-              </span>
-              {rec.wifi_validated && <Wifi size={12} className="text-success" aria-label="WiFi validated" />}
-              {rec.device_flagged && (
-                <span className="flex items-center gap-1 font-ui text-[11px] text-warning">
-                  <AlertCircle size={11} /> Flagged
-                </span>
-              )}
-            </div>
-
-            {rec.note && <p className="pl-9.5 font-ui text-[11.5px]/snug text-text-4">{rec.note}</p>}
-          </div>
-        ))}
+        {groups
+          ? groups.map((g) => (
+              <Fragment key={g.date}>
+                <DayRowCard date={g.date} count={g.rows.length} dateAsc={dateAsc} onFlip={flipDates} />
+                {g.rows.map((rec) => (
+                  <RecordCard key={rec.id} rec={rec} onEdit={onEdit} />
+                ))}
+              </Fragment>
+            ))
+          : view.map((rec) => <RecordCard key={rec.id} rec={rec} onEdit={onEdit} />)}
       </div>
     </>
+  )
+}
+
+/**
+ * What a date heading says: the day, whether it is today or yesterday, and how
+ * many records sit under it. Rendered into a table cell on a desktop and a div
+ * on a phone, which is why the wrapper is the caller's job.
+ */
+function DayHeading({
+  date, count, dateAsc, onFlip,
+}: {
+  date: string
+  count: number
+  dateAsc: boolean
+  onFlip: () => void
+}) {
+  const { label, relative } = formatDayHeading(date)
+  return (
+    <div className="flex items-center gap-2 px-4 py-2">
+      {/* The date is where the date order belongs. There is no Date column any
+          more — it would print the same value down every row under a heading
+          that already says it — so pressing the heading is what reverses the
+          days, and the arrow says which way they currently run. */}
+      <button
+        type="button"
+        onClick={onFlip}
+        aria-label={dateAsc ? 'Sort by date, oldest first' : 'Sort by date, newest first'}
+        className="inline-flex items-center gap-1.5 font-display text-[12.5px] font-semibold text-text-1 transition-colors hover:text-brand-red"
+      >
+        {label}
+        <ArrowUp size={11} className={cn('text-text-4 transition-transform', !dateAsc && 'rotate-180')} />
+      </button>
+      {relative && (
+        <span className="rounded-xs border border-brand-red/20 bg-brand-red/10 px-1.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide text-brand-red">
+          {relative}
+        </span>
+      )}
+      <span className="ml-auto font-mono text-[11px] text-text-4">{count}</span>
+    </div>
+  )
+}
+
+/**
+ * The date heading between two days of records, pinned under the Topbar the way
+ * the roster's group headings are — a long month should never leave you
+ * scrolling with no idea which day you are inside.
+ *
+ * On the desktop table the STICKY LIVES ON THE `<td>`, not on a div inside it. A
+ * sticky element can only travel inside its containing block, and a div's
+ * containing block is the one-row-tall cell, so it would never move at all. The
+ * cell's containing block is the whole `<tbody>`, which is what it has to slide
+ * against. The cell also has to stay `table-cell` — putting `flex` on it drops
+ * it out of the table's layout and the row collapses — so the flex row is the
+ * child, and the padding goes with it.
+ */
+function DayRowCell(props: { date: string; count: number; dateAsc: boolean; onFlip: () => void }) {
+  return (
+    <tr>
+      <td
+        colSpan={RECORD_COLUMNS}
+        className={cn('sticky z-20 border-y border-border-subtle bg-surface-2 p-0', STICKY_HEAD_TOP)}
+      >
+        <DayHeading {...props} />
+      </td>
+    </tr>
+  )
+}
+
+/** The same heading on a phone, full-bleed because the list has no card frame. */
+function DayRowCard(props: { date: string; count: number; dateAsc: boolean; onFlip: () => void }) {
+  return (
+    <div className={cn('sticky z-20 -mx-4 border-y border-border-subtle bg-surface-2 sm:mx-0', STICKY_HEAD_TOP)}>
+      <DayHeading {...props} />
+    </div>
+  )
+}
+
+function RecordRow({
+  rec, onEdit,
+}: {
+  rec: AttendanceWithProfile
+  onEdit: (rec: AttendanceWithProfile) => void
+}) {
+  return (
+    <tr className="border-b border-border-subtle last:border-0 hover:bg-surface-2/50">
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-2.5">
+          <Avatar name={rec.profiles?.name ?? '?'} src={rec.profiles?.avatar_url ?? undefined} size="sm" personId={rec.profile_id} />
+          <PersonLink personId={rec.profile_id} className="font-ui text-[13px] font-medium text-text-1">
+            {rec.profiles?.name ?? rec.profile_id.slice(0, 8)}
+          </PersonLink>
+        </div>
+      </td>
+      <td className="px-4 py-3"><AttendanceChips facts={rec} /></td>
+      <td className="px-4 py-3 font-mono text-[12.5px] text-text-1">{fmtTime(rec.check_in)}</td>
+      <td className="px-4 py-3 font-mono text-[12px] text-text-2">{durationLabel(rec)}</td>
+      <td className="px-4 py-3">
+        <span className={cn('font-mono text-[11px] uppercase tracking-wider', rec.source === 'self' ? 'text-success' : 'text-text-3')}>
+          {rec.source}
+        </span>
+      </td>
+      <td className="px-4 py-3">
+        {rec.device_flagged ? (
+          <span className="flex items-center gap-1 font-ui text-[11px] text-warning">
+            <AlertCircle size={11} /> Flagged
+          </span>
+        ) : rec.device_name ? (
+          <span className="block max-w-30 truncate font-mono text-[11px] text-text-3">{rec.device_name}</span>
+        ) : (
+          <span className="font-mono text-[11px] text-text-4">-</span>
+        )}
+      </td>
+      <td className="max-w-35 truncate px-4 py-3 font-ui text-[12px] text-text-3">{rec.note ?? ''}</td>
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-2">
+          {rec.wifi_validated && <Wifi size={13} className="text-success" aria-label="WiFi validated" />}
+          <button
+            onClick={() => onEdit(rec)}
+            className="text-text-4 transition-colors hover:text-text-1"
+            aria-label={`Edit ${rec.profiles?.name ?? 'record'}`}
+            title="Edit record"
+          >
+            <Pencil size={13} />
+          </button>
+        </div>
+      </td>
+    </tr>
+  )
+}
+
+function RecordCard({
+  rec, onEdit,
+}: {
+  rec: AttendanceWithProfile
+  onEdit: (rec: AttendanceWithProfile) => void
+}) {
+  return (
+    <div className="flex flex-col gap-1.5 border-b border-border-subtle py-3 last:border-0 sm:px-4">
+      <div className="flex items-start gap-2.5">
+        <Avatar name={rec.profiles?.name ?? '?'} src={rec.profiles?.avatar_url ?? undefined} size="sm" personId={rec.profile_id} />
+        <PersonLink personId={rec.profile_id} className="min-w-0 flex-1 truncate font-ui text-[13px] font-medium text-text-1">
+          {rec.profiles?.name ?? rec.profile_id.slice(0, 8)}
+        </PersonLink>
+        <button
+          onClick={() => onEdit(rec)}
+          className="shrink-0 text-text-4 transition-colors hover:text-text-1"
+          aria-label={`Edit ${rec.profiles?.name ?? 'record'}`}
+        >
+          <Pencil size={13} />
+        </button>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 pl-9.5">
+        <AttendanceChips facts={rec} />
+        <span className="font-mono text-[11.5px] tabular-nums text-text-3">
+          In <span className="text-text-1">{fmtTime(rec.check_in)}</span>
+        </span>
+        <span className="font-mono text-[11.5px] tabular-nums text-text-3">{durationLabel(rec)}</span>
+        <span className={cn('font-mono text-[10.5px] uppercase tracking-wider', rec.source === 'self' ? 'text-success' : 'text-text-4')}>
+          {rec.source}
+        </span>
+        {rec.wifi_validated && <Wifi size={12} className="text-success" aria-label="WiFi validated" />}
+        {rec.device_flagged && (
+          <span className="flex items-center gap-1 font-ui text-[11px] text-warning">
+            <AlertCircle size={11} /> Flagged
+          </span>
+        )}
+      </div>
+
+      {rec.note && <p className="pl-9.5 font-ui text-[11.5px]/snug text-text-4">{rec.note}</p>}
+    </div>
   )
 }
 
