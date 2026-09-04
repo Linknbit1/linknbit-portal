@@ -2,7 +2,6 @@ import { useSearchParams } from 'react-router-dom'
 import { useMemo, useState } from 'react'
 import { Loader2, Home, Plane, AlertCircle, Hourglass, Check, X, Inbox, CalendarX2, Plus, Search, UserPlus, SlidersHorizontal, Pencil, Trash2 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import type { ReactNode } from 'react'
 import { cn } from '../../lib/cn'
 import { Avatar } from '../ui/Avatar'
 import { PersonLink } from './PersonLink'
@@ -11,6 +10,7 @@ import { Select } from '../ui/Select'
 import { Tabs } from '../ui/Tabs'
 import { Toggle } from '../ui/Toggle'
 import { Drawer } from '../ui/Drawer'
+import { FilterField } from '../ui/FilterField'
 import { useIsDesktop } from '../../hooks/useMediaQuery'
 import { matchesQuery } from '../ui/optionSearch'
 import { isDecidableBy } from '../../lib/requestReview'
@@ -1039,11 +1039,4 @@ export function AttendanceRequests() {
 }
 
 /** One labelled row in the filter panel — a stack, not a toolbar's line. */
-function FilterField({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <span className="font-mono text-[10.5px] uppercase tracking-wider text-text-4">{label}</span>
-      {children}
-    </div>
-  )
-}
+

@@ -6,6 +6,7 @@ import {
   fetchAllAttendance,
   fetchDayRoster,
   fetchMonthlyAttendance,
+  fetchAttendanceRange,
   checkIn,
   markAttendance,
   updateAttendanceRecord,
@@ -87,6 +88,9 @@ export const ATTENDANCE_KEYS = {
   allByDate: (date: string) => ['attendance', 'all', date] as const,
   dayRoster: (date: string) => ['attendance', 'roster', date] as const,
   monthly: (year: number, month: number) => ['attendance', 'monthly', year, month] as const,
+  // Under the same 'all' prefix a mark/edit already invalidates, so a corrected
+  // record shows up in the range view without a second invalidation rule.
+  range: (from: string, to: string) => ['attendance', 'all', 'range', from, to] as const,
   settings: ['attendance', 'settings'] as const,
   exceptions: (filters: FetchExceptionsFilters) => ['attendance', 'exceptions', filters] as const,
   myExceptions: ['attendance', 'exceptions', 'my'] as const,
@@ -155,6 +159,18 @@ export function useDayRoster(date: string, enabled = true) {
     enabled,
     staleTime: 1000 * 30,
     refetchInterval: 1000 * 60,
+  })
+}
+
+/**
+ * Attendance rows across any span of dates. One query key per span, so stepping
+ * a week at a time keeps each week it has already fetched.
+ */
+export function useAttendanceRange(from: string, to: string) {
+  return useQuery({
+    queryKey: ATTENDANCE_KEYS.range(from, to),
+    queryFn: () => fetchAttendanceRange(from, to),
+    staleTime: 1000 * 60,
   })
 }
 

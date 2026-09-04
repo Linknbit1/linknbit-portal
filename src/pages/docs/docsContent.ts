@@ -627,6 +627,56 @@ export const DOC_CHAPTERS: DocChapter[] = [
         ],
       },
       {
+        id: 'records',
+        title: 'The attendance register',
+        summary:
+          'Every recorded day over any span — a day, a week, a month or two dates you pick — with where each record came from, and a per-person roll-up of it.',
+        where: 'People → Attendance → Records',
+        feature: 'can_manage_attendance',
+        procedures: [
+          {
+            title: 'Look at a span',
+            steps: [
+              'Open People → Attendance → Records.',
+              'Pick Day, Week, Month or Custom. The arrows either side step by whatever you picked; Custom takes two dates instead.',
+              'Switching between Day, Week and Month keeps the date you were on and widens around it, so you never lose your place.',
+            ],
+          },
+          {
+            title: 'Narrow it down',
+            steps: [
+              'Press a counter — Present, Late, Absent, Half Day, Leave — to show only those. Press it again to clear it.',
+              'Press Filters for team, employee, kind of day, and how the record was made (self check-in, biometric terminal, or entered by an admin).',
+              'Turn on Flagged only to see check-ins from a device the terminal could not vouch for.',
+              'Search by name on the toolbar for one person quickly.',
+            ],
+          },
+          {
+            title: 'See it per person',
+            steps: [
+              'Choose a span longer than a day. The Records / By person switch appears.',
+              'Slide it to By person. Each person becomes one row with their days present, late, absent, half, on leave and working from home.',
+              'It opens on most late days first. Press any column heading to sort by it, and again to reverse.',
+            ],
+          },
+          {
+            title: 'Correct a record',
+            steps: [
+              'Find the day and press the pencil on its row.',
+              'Change the status, the check-in time, or add a note saying why.',
+              'Press Mark attendance instead to record a day that has nothing against it at all.',
+            ],
+          },
+        ],
+        notes: [
+          'The counters are in days, not rows, and a worked half day counts as half to each side, so the totals always add up to the working days covered.',
+          'Everything narrows together: the counters always describe exactly the rows underneath them, and Export gives you what is on screen rather than the whole span.',
+          'On a phone the columns become cards and the sort moves to a control above the list, so nothing is desktop-only.',
+          'Somebody who has been deactivated does not appear here at all, and is not counted. Their days stay in the record; they are read on their own profile page.',
+          'This is the register, not the roster. Today shows everybody expected in, including people with nothing recorded yet. Records shows what was actually written down, and is the only place to change it.',
+        ],
+      },
+      {
         id: 'admin-console',
         title: 'Terminals, devices and the working calendar',
         summary:

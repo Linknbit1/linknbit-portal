@@ -18,9 +18,10 @@ import {
 
 // Admin tab components (reused as full-screen sections on mobile)
 import {
-  DailyRecordsTab, WFHRequestsTab, LeaveTab, ExceptionsTab, EnrolledDevicesTab,
+  WFHRequestsTab, LeaveTab, ExceptionsTab, EnrolledDevicesTab,
   HolidaysTab, OvertimeTab, ReportsTab, SettingsTab,
 } from './admin/AttendancePage'
+import { AttendanceRecords } from '../components/shared/AttendanceRecords'
 // Employee section components
 import {
   UpcomingScheduleSection, OooSection, HistoryTable, MyAttendanceSections,
@@ -52,7 +53,7 @@ const OPEN_SECTIONS: Record<string, SectionEntry> = {
 
 const ADMIN_SECTIONS: Record<string, SectionEntry> = {
   ...OPEN_SECTIONS,
-  records:    { title: 'Daily Records',    render: () => <DailyRecordsTab /> },
+  records:    { title: 'Records',          render: () => <AttendanceRecords /> },
   wfh:        { title: 'WFH Requests',     render: () => <WFHRequestsTab /> },
   leave:      { title: 'Leave',            render: () => <LeaveTab /> },
   exceptions: { title: 'Exceptions',       render: () => <ExceptionsTab /> },

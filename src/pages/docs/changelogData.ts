@@ -31,11 +31,58 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: '1.30.0',
+    date: '2026-09-04',
+    title: 'A register you can question',
+    highlight:
+      'Daily Records is now Records: any span of dates \u2014 a day, a week, a month or two you pick \u2014 with filters for team, person, kind of day and how it was recorded, a per-person roll-up, and sorting on every column.',
+    entries: [
+      {
+        kind: 'added',
+        text: 'Day, Week, Month and Custom spans. The arrows step by whatever you picked, and moving between Day, Week and Month widens around the date you were already on rather than jumping back to today.',
+      },
+      {
+        kind: 'added',
+        text: 'A By person view for any span longer than a day: one row each, with days present, late, absent, half, on leave and working from home. It opens on most late days first.',
+      },
+      {
+        kind: 'added',
+        text: 'Filters for team, employee, kind of day, and how the record was made \u2014 self check-in, biometric terminal, or entered by an admin \u2014 plus a flagged-devices-only switch. The panel is a drawer on a computer and a sheet you can drag away on a phone, matching Requests.',
+      },
+      {
+        kind: 'added',
+        text: 'Sorting on every column, both views: press a heading to sort, press it again to reverse. On a phone, where there are no headings to press, the same sort sits above the list.',
+      },
+      {
+        kind: 'improved',
+        text: 'The counters filter. Pressing Present, Late, Absent, Half Day or Leave narrows the list to it and pressing again clears it, instead of naming five slices you then had to find again in a dropdown.',
+      },
+      {
+        kind: 'improved',
+        text: 'Records reads properly on a phone: cards instead of a table you scroll sideways, the period control across the full width, and the card frame dropped where the screen is too narrow to spend width on it.',
+      },
+      {
+        kind: 'improved',
+        text: 'Mark attendance and Edit record open as a panel from the right on a computer and from the bottom on a phone, like every other form in attendance.',
+      },
+      {
+        kind: 'improved',
+        text: 'Export gives you what is on screen \u2014 the filtered span, or the per-person roll-up if that is the view you are in.',
+      },
+      {
+        kind: 'fixed',
+        text: 'People who have been deactivated no longer appear in the register, the requests queue or the calendar, and are not counted in any total. Their days stay on the record and are read on their own profile page.',
+      },
+      {
+        kind: 'improved',
+        text: 'The month control on the attendance calendar takes the full width on a phone, so the arrows are big enough to press and the month is unmistakably what the screen is showing.',
+      },
+    ],
+  },
+  {
     version: '1.29.0',
     date: '2026-09-04',
     title: 'One queue for a request',
-    highlight:
-      'Leave, WFH, exceptions and overtime are filed, edited and withdrawn in Requests \u2014 by everybody, for themselves or for someone else. My Attendance keeps what it is named after: your day, your leave balance, your devices and your record.',
     entries: [
       {
         kind: 'added',

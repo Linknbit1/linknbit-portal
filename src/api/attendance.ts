@@ -506,6 +506,39 @@ export interface MonthlyReportRow extends AttendanceWithProfile {
   profiles: { name: string; avatar_url: string | null; role: string } | null
 }
 
+/** As {@link MonthlyReportRow}, plus the flag that decides whether it is shown. */
+export interface AttendanceRangeRow extends AttendanceWithProfile {
+  profiles: { name: string; avatar_url: string | null; role: string; is_active: boolean } | null
+}
+
+/**
+ * Every attendance row between two dates, inclusive.
+ *
+ * The general form of {@link fetchMonthlyAttendance}, which predates it and is
+ * kept because the reports page asks in whole months. Rows are the raw record —
+ * somebody with nothing recorded for a day simply has no row, which is what
+ * separates this from the roster.
+ */
+export async function fetchAttendanceRange(
+  from: string,
+  to: string,
+): Promise<AttendanceRangeRow[]> {
+  const { data, error } = await supabase
+    .from('attendance')
+    .select('*, profiles!attendance_profile_id_fkey(name, avatar_url, role, is_active)')
+    .gte('date', from)
+    .lte('date', to)
+    .order('date', { ascending: true })
+  if (error) throw error
+  // Deactivated means gone from the company, and gone means gone: their old days
+  // are still in the table (deleting attendance would falsify the history that
+  // payroll and audits read) but they are not shown, and not counted. Filtered
+  // here rather than in the query because the join cannot be constrained from
+  // the embedded side without turning it into an inner join on every row.
+  const rows = data as unknown as AttendanceRangeRow[]
+  return rows.filter((r) => r.profiles?.is_active !== false)
+}
+
 export async function fetchMonthlyAttendance(
   year: number,
   month: number, // 1-indexed
@@ -529,7 +562,9 @@ export async function fetchMonthlyAttendance(
 // ── Admin: exceptions with profile join ───────────────────────────────────────
 
 export interface AttendanceExceptionWithProfile extends AttendanceException {
-  profiles: { name: string; avatar_url: string | null } | null
+  // is_active gates whether the row is listed at all: somebody who has left the
+  // company comes off the shared queues and calendars.
+  profiles: { name: string; avatar_url: string | null; is_active: boolean } | null
   // Set when somebody with can_manage_attendance filed it for them; null for self-submitted.
   entered_by_profile: { name: string } | null
 }
@@ -539,7 +574,7 @@ export async function fetchAllAttendanceExceptions(
 ): Promise<AttendanceExceptionWithProfile[]> {
   let q = supabase
     .from('attendance_exceptions')
-    .select('*, profiles!attendance_exceptions_profile_id_fkey(name, avatar_url), entered_by_profile:profiles!attendance_exceptions_entered_by_fkey(name)')
+    .select('*, profiles!attendance_exceptions_profile_id_fkey(name, avatar_url, is_active), entered_by_profile:profiles!attendance_exceptions_entered_by_fkey(name)')
     .order('created_at', { ascending: false })
   if (filters.profileId) q = q.eq('profile_id', filters.profileId)
   if (filters.date)      q = q.eq('date', filters.date)
@@ -547,8 +582,12 @@ export async function fetchAllAttendanceExceptions(
   if (filters.type)      q = q.eq('exception_type', filters.type)
   const { data, error } = await q
   if (error) throw error
-  // as unknown: Supabase cannot infer the joined shape when multiple FKs exist on profiles
-  return data as unknown as AttendanceExceptionWithProfile[]
+  // Somebody deactivated has left the company: their requests come off every
+  // shared queue and calendar, whatever state they were left in. The rows stay
+  // in the table — a departed person's leave history is still read on their own
+  // profile page, which fetches by id rather than through this list.
+  const rows = data as unknown as AttendanceExceptionWithProfile[]
+  return rows.filter((r) => r.profiles?.is_active !== false)
 }
 
 // ── Day roster ────────────────────────────────────────────────────────────────
@@ -722,7 +761,9 @@ export async function removeCompanyWfhDay(id: string): Promise<void> {
 // ── Overtime requests ─────────────────────────────────────────────────────────
 
 export interface OvertimeRequestWithProfile extends OvertimeRequest {
-  profiles: { name: string; avatar_url: string | null } | null
+  // is_active gates whether the row is listed at all: somebody who has left the
+  // company comes off the shared queues and calendars.
+  profiles: { name: string; avatar_url: string | null; is_active: boolean } | null
   // Set when somebody with can_manage_attendance filed it for them; null for self-submitted.
   entered_by_profile: { name: string } | null
 }
@@ -805,12 +846,17 @@ export async function fetchAllOvertimeRequests(
 ): Promise<OvertimeRequestWithProfile[]> {
   let q = supabase
     .from('overtime_requests')
-    .select('*, profiles!overtime_requests_profile_id_fkey(name, avatar_url), entered_by_profile:profiles!overtime_requests_entered_by_fkey(name)')
+    .select('*, profiles!overtime_requests_profile_id_fkey(name, avatar_url, is_active), entered_by_profile:profiles!overtime_requests_entered_by_fkey(name)')
     .order('date', { ascending: false })
   if (status) q = q.eq('status', status)
   const { data, error } = await q
   if (error) throw error
-  return data as unknown as OvertimeRequestWithProfile[]
+  // Somebody deactivated has left the company: their requests come off every
+  // shared queue and calendar, whatever state they were left in. The rows stay
+  // in the table — a departed person's leave history is still read on their own
+  // profile page, which fetches by id rather than through this list.
+  const rows = data as unknown as OvertimeRequestWithProfile[]
+  return rows.filter((r) => r.profiles?.is_active !== false)
 }
 
 // Overtime for one member (member profile page). RLS gates it: self, governors, and
@@ -875,7 +921,9 @@ export async function deleteOvertimeRequest(id: string): Promise<void> {
 export type WfhRequest = Tables<'wfh_requests'>
 
 export interface WfhRequestWithProfile extends WfhRequest {
-  profiles: { name: string; avatar_url: string | null } | null
+  // is_active gates whether the row is listed at all: somebody who has left the
+  // company comes off the shared queues and calendars.
+  profiles: { name: string; avatar_url: string | null; is_active: boolean } | null
 }
 
 /**
@@ -939,13 +987,17 @@ export async function fetchMyWfhRequests(): Promise<WfhRequest[]> {
 export async function fetchAllWfhRequests(status?: string): Promise<WfhRequestWithProfile[]> {
   let q = supabase
     .from('wfh_requests')
-    .select('*, profiles!wfh_requests_profile_id_fkey(name, avatar_url)')
+    .select('*, profiles!wfh_requests_profile_id_fkey(name, avatar_url, is_active)')
     .order('created_at', { ascending: false })
   if (status) q = q.eq('status', status)
   const { data, error } = await q
   if (error) throw error
-  // as unknown: Supabase cannot infer the joined shape when multiple FKs exist on profiles
-  return data as unknown as WfhRequestWithProfile[]
+  // Somebody deactivated has left the company: their requests come off every
+  // shared queue and calendar, whatever state they were left in. The rows stay
+  // in the table — a departed person's leave history is still read on their own
+  // profile page, which fetches by id rather than through this list.
+  const rows = data as unknown as WfhRequestWithProfile[]
+  return rows.filter((r) => r.profiles?.is_active !== false)
 }
 
 export async function reviewWfhRequest(
@@ -1068,7 +1120,9 @@ export interface LeaveRequestWithType extends LeaveRequest {
 }
 
 export interface LeaveRequestWithProfile extends LeaveRequest {
-  profiles: { name: string; avatar_url: string | null } | null
+  // is_active gates whether the row is listed at all: somebody who has left the
+  // company comes off the shared queues and calendars.
+  profiles: { name: string; avatar_url: string | null; is_active: boolean } | null
   leave_types: { name: string; color: string } | null
   // Set when HR/an admin entered the leave on the employee's behalf; null for self-submitted.
   entered_by_profile: { name: string } | null
@@ -1235,13 +1289,17 @@ export async function fetchWfhByProfile(profileId: string): Promise<WfhRequest[]
 export async function fetchAllLeaveRequests(status?: string): Promise<LeaveRequestWithProfile[]> {
   let q = supabase
     .from('leave_requests')
-    .select('*, profiles!leave_requests_profile_id_fkey(name, avatar_url), leave_types(name, color), entered_by_profile:profiles!leave_requests_entered_by_fkey(name)')
+    .select('*, profiles!leave_requests_profile_id_fkey(name, avatar_url, is_active), leave_types(name, color), entered_by_profile:profiles!leave_requests_entered_by_fkey(name)')
     .order('created_at', { ascending: false })
   if (status) q = q.eq('status', status)
   const { data, error } = await q
   if (error) throw error
-  // as unknown: Supabase cannot infer the joined shape when multiple FKs exist on profiles
-  return data as unknown as LeaveRequestWithProfile[]
+  // Somebody deactivated has left the company: their requests come off every
+  // shared queue and calendar, whatever state they were left in. The rows stay
+  // in the table — a departed person's leave history is still read on their own
+  // profile page, which fetches by id rather than through this list.
+  const rows = data as unknown as LeaveRequestWithProfile[]
+  return rows.filter((r) => r.profiles?.is_active !== false)
 }
 
 export async function reviewLeaveRequest(

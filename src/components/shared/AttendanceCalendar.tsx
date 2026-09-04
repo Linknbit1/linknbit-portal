@@ -262,11 +262,17 @@ export function AttendanceCalendar() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-3">
+        {/* Full width on a phone, natural width from `sm` up. The month is the
+            one control on this screen, and on a 360px row it was a small pill
+            with the legend crowding it — filling the line makes the arrows big
+            enough to hit and the label unmistakably the subject of the page. */}
         <PeriodStepper
           icon={CalendarDays}
           label={monthLabel}
           onPrev={() => stepMonth(-1)}
           onNext={() => stepMonth(1)}
+          fill
+          className="sm:w-auto sm:shrink-0"
         />
         <div className="ml-auto flex flex-wrap items-center gap-x-4 gap-y-1.5 font-ui text-[11.5px] text-text-3">
           <span className="inline-flex items-center gap-1.5">
