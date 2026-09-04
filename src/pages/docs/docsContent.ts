@@ -731,6 +731,14 @@ export const DOC_CHAPTERS: DocChapter[] = [
             ],
           },
           {
+            title: 'Check how much leave you have left',
+            steps: [
+              'Open People → Attendance → Requests and press New request.',
+              'Stay on the Leave tab. Each kind of leave is listed with the days remaining out of your allowance.',
+              'The type dropdown repeats the figure for whichever type you pick, so you can see whether the request fits before you submit it.',
+            ],
+          },
+          {
             title: 'Change or withdraw a request',
             steps: [
               'Find it in Requests. It has to still be pending — once it is decided, ask whoever manages attendance.',
@@ -771,6 +779,8 @@ export const DOC_CHAPTERS: DocChapter[] = [
           'The queue opens on Pending if you review requests, and on All if you do not \u2014 somebody reading their own record wants the whole of it, not only what is undecided.',
           'The tabs are the only thing that changes which slice you are looking at — Pending, Approved, Rejected, All. Everything in the Filters panel — type, employee, period — narrows whatever the tab is showing rather than replacing it, and Clear all in the panel puts it back.',
           'The queue opens on the current month, so a request dated for next month is not in the first list you see. The Filters button carries a count of how many filters are narrowing the queue, and the period is one of them — if something you expected is missing, that count is where to look.',
+          'Leave balances count approved leave taken this calendar year. A pending request has not been deducted yet.',
+          'Filing leave for somebody else shows their balances, not yours.',
           'A leave range that starts in one month and ends in the next shows under both, so a week off over a month boundary is never missing from the month you are looking at.',
           'You only ever see your own requests here, plus anyone whose requests you review. Nobody sees a colleague’s leave unless it is their job to decide on it.',
           'New request is the same button for everybody. Whoever manages attendance also gets a "Who is this for" field inside it, which opens on themselves — one button files your own leave and somebody else\u2019s.',
@@ -800,21 +810,12 @@ export const DOC_CHAPTERS: DocChapter[] = [
         id: 'my-attendance',
         title: 'Your own attendance',
         summary:
-          'Your day, your leave balance, your devices, what is coming up, and this month\u2019s record — the days you were in, when you arrived, and the hours against each.',
+          'Your day, what is coming up, this month\u2019s record — the days you were in, when you arrived, and the hours against each — and the devices you check in from.',
         where: 'People → Attendance → My Attendance',
-        procedures: [
-          {
-            title: 'Check how much leave you have left',
-            steps: [
-              'Open People → Attendance. Leave balance lists each kind of leave with the days remaining out of your allowance.',
-              'Press Request leave on that card to go straight to the form with Leave already chosen.',
-            ],
-          },
-        ],
         notes: [
           'The page shows the month you are in. On a phone, the History row on the attendance hub has a month stepper for looking further back.',
-          'Filing, editing and withdrawing all happen in Requests now. This page used to carry a separate form and list for each of leave, WFH, exceptions and overtime, which was a second copy of the same queue \u2014 there is one of each now, and the balance card links to it.',
-          'The balance counts approved leave taken this calendar year. A pending request has not been deducted yet.',
+          'Filing, editing and withdrawing all happen in Requests now. This page used to carry a separate form and list for each of leave, WFH, exceptions and overtime, which was a second copy of the same queue.',
+          'Your leave balances are in the New request panel, on the Leave tab, where you are choosing which allowance to spend.',
         ],
       },
       {

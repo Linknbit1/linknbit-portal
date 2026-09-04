@@ -21,7 +21,6 @@ import {
 } from '../../hooks/useAttendance'
 import { AttendanceCheckInCard } from '../../components/shared/AttendanceCheckInCard'
 import { MyDevicesCard } from '../../components/shared/MyDevicesCard'
-import { LeaveBalanceCard } from '../../components/shared/LeaveBalanceCard'
 import { useToast } from '../../components/ui/toast-context'
 import { cn } from '../../lib/cn'
 import { AttendanceChips } from '../../components/shared/AttendanceChips'
@@ -295,17 +294,17 @@ export function MyAttendanceSections() {
             request sections that used to sit here — WFH, leave, exceptions,
             overtime — were a second copy of the queue at /attendance/requests,
             each with its own form and its own history of the same rows. Filing,
-            editing and withdrawing all happen there now, for everybody; what is
-            left here is what the page is called: your day, your allowance, your
-            devices, what is coming, and what has already happened.
+            editing and withdrawing all happen there now, for everybody, and the
+            leave balances went with them: they belong beside the picker that
+            spends one, not on a page you cannot request from.
 
             The Teams panel went the same way. It was unscoped, so it showed
             exactly what Today and Requests already show this reader. A team's
-            own attendance still lives on that team's page. */}
-        <LeaveBalanceCard />
+            own attendance still lives on that team's page.
 
-        <MyDevicesCard />
-
+            Ordering is by how often it is read: what is happening now, what is
+            coming, what has already happened, and last the devices — set once
+            when you enrol a phone and rarely looked at again. */}
         <UpcomingScheduleSection />
 
         {/* OOO active state — shown only when employee has an approved OOO today */}
@@ -323,6 +322,8 @@ export function MyAttendanceSections() {
         ) : (
           <HistoryTable records={history} periodLabel={periodLabel} />
         )}
+
+        <MyDevicesCard />
       </div>
   )
 }

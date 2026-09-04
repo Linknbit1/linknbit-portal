@@ -77,7 +77,7 @@ export interface RequestDraft {
 
 interface RequestSheetProps {
   onClose: () => void
-  /** Which tab to open on — `?new=leave` from the leave balance card. */
+  /** Which tab to open on, for a link that means "file one" (`?new=leave`). */
   initialKind?: AttendanceRequestKind
   /** Editing an existing pending request rather than filing a new one. */
   editing?: RequestDraft | null
@@ -96,17 +96,14 @@ const isExceptionType = (v: string | null | undefined): v is AttendanceException
  * whoever may enter attendance for others gets a Who field, everybody else gets
  * the same sheet with that one field absent.
  *
- * What happens next has three outcomes, and the banner names the one that
- * applies rather than the two that might:
+ * The banner says which of two things is about to happen, before it happens:
+ * the entry applies immediately, or it goes for approval. Only holding
+ * `can_apply_attendance_directly` AND filing for somebody else gives the first.
  *
- * - Filing for someone else while holding `can_apply_attendance_directly`
- *   applies immediately and writes their record.
- * - Filing for someone else without it queues the request — and the filer is
- *   never the approver, so it says who will decide instead of implying they can.
- * - Filing for yourself always queues, whatever you hold. That is not a UI
- *   choice: the insert policy on all four tables only accepts `status =
- *   'pending'` when `profile_id = auth.uid()`, so an Apply button here would
- *   promise something the database refuses.
+ * Filing for yourself always queues, whatever you hold. That is not a UI choice:
+ * the insert policy on all four tables only accepts `status = 'pending'` when
+ * `profile_id = auth.uid()`, so an Apply button here would promise something the
+ * database refuses.
  */
 export function RequestSheet({ onClose, initialKind = 'leave', editing = null }: RequestSheetProps) {
   // Mounted by the parent on demand, so `open` starts true and the panel plays
@@ -296,12 +293,10 @@ export function RequestSheet({ onClose, initialKind = 'leave', editing = null }:
   const label = 'text-label font-ui font-semibold uppercase tracking-wider text-text-2'
 
   const banner = isEdit
-    ? 'Changing a request that is still waiting for a decision. It stays pending, and the approver sees the new version.'
+    ? 'This request is still pending. Your changes are sent to the approver with it.'
     : appliesDirectly
-      ? 'This applies straight away and updates their record. You are allowed to enter attendance without approval.'
-      : isSelf
-        ? 'This waits for approval and changes nothing until it is given.'
-        : 'This waits for approval and changes nothing until it is given. Not from you: nobody decides on a request they filed, so an admin or another approver will pick it up in this queue.'
+      ? 'This applies immediately and updates their attendance record.'
+      : 'This request will be reviewed by an admin and takes effect once approved.'
 
   return (
     <Drawer
@@ -365,6 +360,23 @@ export function RequestSheet({ onClose, initialKind = 'leave', editing = null }:
         {kind === 'leave' && (
           <div className="space-y-1.5">
             <label className={label}>Leave type</label>
+            {/* Every allowance at a glance, above the picker that spends one.
+                The dropdown says what is left against the type you have chosen;
+                this says what is left against all of them, which is the question
+                people have before they choose rather than after. */}
+            {balances.length > 0 && (
+              <div className="grid grid-cols-3 gap-px overflow-hidden rounded-sm border border-border-default bg-border-subtle">
+                {balances.map((b) => (
+                  <div key={b.type.id} className="bg-surface-2 px-2.5 py-2">
+                    <p className="truncate font-ui text-[11px] text-text-3">{b.type.name}</p>
+                    <p className="font-display text-body-lg/tight font-bold text-text-1">
+                      {b.remaining}
+                      <span className="font-mono text-[10px] font-normal text-text-4"> / {b.type.days_allowed}</span>
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
             <Select
               value={leaveTypeId}
               onChange={setLeaveTypeId}

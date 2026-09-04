@@ -51,15 +51,15 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'added',
-        text: 'A Leave balance card on My Attendance: each kind of leave with the days you have left, and a Request leave button that opens the form with Leave already chosen.',
+        text: 'Your leave balances are on the Leave tab of the New request panel \u2014 every allowance with the days you have left, above the picker that spends one, and repeated on the type you choose so you can see whether the request fits.',
       },
       {
         kind: 'improved',
-        text: 'The panel says what will happen before you submit, and the three outcomes are no longer worded as one. A request for yourself always waits for approval. An entry for somebody else applies at once if you may record attendance without approval, and otherwise joins the queue \u2014 where you cannot be the one to decide it, so it says who will.',
+        text: 'The panel says what will happen before you submit: the entry applies immediately, or it goes to an admin for approval. A request for yourself always goes for approval, whatever you are allowed to do for other people.',
       },
       {
         kind: 'improved',
-        text: 'The leave type list shows what is left against each allowance while you choose \u2014 "Annual, 12 of 20 left" \u2014 whether the request is yours or one you are entering for somebody else.',
+        text: 'Entering leave for somebody else shows their balances rather than yours, so you can see what they have left while you fill it in.',
       },
       {
         kind: 'improved',
@@ -67,7 +67,7 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'improved',
-        text: 'My Attendance is your day, your leave balance, your devices, what is coming and this month\u2019s record. The four request sections it used to carry were a second copy of the queue, each with its own form and its own list of the same rows.',
+        text: 'My Attendance is your day, what is coming, this month\u2019s record, and last the devices you check in from. The four request sections it used to carry were a second copy of the queue, each with its own form and its own list of the same rows.',
       },
       {
         kind: 'improved',
