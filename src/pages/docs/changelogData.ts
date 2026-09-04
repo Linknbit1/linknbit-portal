@@ -31,11 +31,34 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: '1.31.0',
+    date: '2026-09-04',
+    title: 'The company\u2019s month, not yours',
+    highlight:
+      'The attendance calendar now shows everybody\u2019s time off to everybody \u2014 who is away and for how much of the day \u2014 while keeping the reason to the people entitled to it. Requests still awaiting a decision are marked apart, so a day that looks staffed can be told from one that is.',
+    entries: [
+      {
+        kind: 'improved',
+        text: 'Everyone can see who is away on any day of the month. Until now the calendar showed you your own leave and the public holidays unless you managed attendance \u2014 while Today already showed you the whole company\u2019s status for the current day. The same fact was public on one screen and private on the other.',
+      },
+      {
+        kind: 'improved',
+        text: 'The reason stays private. The kind of leave is named only for yourself, your teammates, and whoever manages attendance; everyone else sees Away and how much of the day it covers. Exceptions \u2014 late arrival, early departure, out of office \u2014 are a record of somebody\u2019s day rather than a plan, so they stay on the same footing rather than going company-wide.',
+      },
+      {
+        kind: 'added',
+        text: 'Requests awaiting a decision appear on the calendar with a dashed mark and their own count, and are listed last when you open a day. They are never folded into the approved figures: a day reading \u201c3 off\u201d means three agreed absences, which is the one thing a planning view has to get right.',
+      },
+      {
+        kind: 'fixed',
+        text: 'People who have left the company no longer appear on the calendar.',
+      },
+    ],
+  },
+  {
     version: '1.30.0',
     date: '2026-09-04',
     title: 'A register you can question',
-    highlight:
-      'Daily Records is now Records: any span of dates \u2014 a day, a week, a month or two you pick \u2014 with filters for team, person, kind of day and how it was recorded, a per-person roll-up, and sorting on every column.',
     entries: [
       {
         kind: 'added',

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import {
-  Loader2, Palmtree, Home, Plane, CalendarDays, Clock, LogOut, DoorOpen, Sunrise, Sunset,
+  Loader2, Palmtree, Home, Plane, CalendarDays, Clock, LogOut, DoorOpen, Sunrise, Sunset, Hourglass,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '../../lib/cn'
@@ -15,9 +15,7 @@ import {
   useHolidays,
   useWorkingSaturdays,
   useCompanyWfhDays,
-  useAllLeaveRequests,
-  useAllWfhRequests,
-  useAllAttendanceExceptions,
+  useMonthRoster,
   useAttendanceSettings,
 } from '../../hooks/useAttendance'
 
@@ -53,6 +51,8 @@ interface Entry {
   name: string
   avatarUrl: string | null
   kind: 'leave' | 'wfh' | 'exception'
+  /** Approved is a plan; pending only might be. Marked apart, never merged. */
+  status: 'approved' | 'pending'
   /** 'full' for anything that is not an explicitly partial leave or WFH. */
   dayPart: AttendanceDayPart
   label: string
@@ -93,9 +93,22 @@ interface Mark {
   icon?: LucideIcon
 }
 
+/**
+ * Approved only for the four presence marks, and one mark for everything still
+ * undecided.
+ *
+ * Pending is not a sixth colour or an outline of each of the four — that would
+ * be nine marks in a cell 50px wide. It is one count, because what a reader
+ * needs at a glance is "this day is not settled yet", and which of the three
+ * kinds it is belongs in the day panel where there is room to say so. Counting
+ * pending inside the approved marks would be the worst of the options: a day
+ * that reads "3 off" when one of the three has not been agreed is exactly the
+ * lie a planning view must not tell.
+ */
 function marksFor(entries: Entry[]): Mark[] {
+  const approved = entries.filter((e) => e.status === 'approved')
   const of = (kind: Entry['kind'], partial: boolean) =>
-    entries.filter((e) => e.kind === kind && (e.dayPart !== 'full') === partial).length
+    approved.filter((e) => e.kind === kind && (e.dayPart !== 'full') === partial).length
 
   const out: Mark[] = [
     {
@@ -129,11 +142,22 @@ function marksFor(entries: Entry[]): Mark[] {
     },
     {
       key: 'exception',
-      count: entries.filter((e) => e.kind === 'exception').length,
+      count: approved.filter((e) => e.kind === 'exception').length,
       text: '',
       dot: 'bg-warning',
       chip: 'border-warning/30 bg-warning/12 text-warning',
       icon: Clock,
+    },
+    {
+      key: 'pending',
+      count: entries.filter((e) => e.status === 'pending').length,
+      text: 'pending',
+      // Dashed, and in the muted ink the rest of the UI uses for "not yet":
+      // undecided should read as provisional beside the solid marks, not as a
+      // sixth kind of absence.
+      dot: 'border border-dashed border-text-3',
+      chip: 'border-dashed border-text-3/40 text-text-3',
+      icon: Hourglass,
     },
   ]
   return out.filter((m) => m.count > 0)
@@ -147,14 +171,17 @@ export function AttendanceCalendar() {
   const holidaysQ = useHolidays(ym.year)
   const saturdaysQ = useWorkingSaturdays(ym.year)
   const companyWfhQ = useCompanyWfhDays(ym.year)
-  const leaveQ = useAllLeaveRequests('approved')
-  const wfhQ = useAllWfhRequests('approved')
-  const exceptionsQ = useAllAttendanceExceptions({ status: 'approved' })
+  // One call, and the only one that decides who may see what. Reading the three
+  // request tables directly meant RLS written for a REQUEST — its reason, its
+  // approver — decided what a calendar showed, which is why an employee saw
+  // their own leave and nothing else while Today showed them the whole company.
+  const monthStart = iso(ym.year, ym.month, 1)
+  const monthEnd = iso(ym.year, ym.month, new Date(ym.year, ym.month, 0).getDate())
+  const rosterQ = useMonthRoster(monthStart, monthEnd)
   const settingsQ = useAttendanceSettings()
 
   const isLoading =
-    holidaysQ.isLoading || saturdaysQ.isLoading || companyWfhQ.isLoading ||
-    leaveQ.isLoading || wfhQ.isLoading || exceptionsQ.isLoading
+    holidaysQ.isLoading || saturdaysQ.isLoading || companyWfhQ.isLoading || rosterQ.isLoading
 
   const saturdayWorking = settingsQ.data?.saturday_working ?? false
 
@@ -184,57 +211,44 @@ export function AttendanceCalendar() {
       const workingSaturday = isSaturday && workingSaturdays.has(date)
 
       const entries: Entry[] = []
-      for (const r of leaveQ.data ?? []) {
-        if (date >= r.start_date && date <= r.end_date) {
-          // A partial day is always a single day; a range is full days throughout.
-          const dayPart = r.start_date === r.end_date ? toDayPart(r.day_part) : 'full'
-          entries.push({
-            id: r.id,
-            profileId: r.profile_id,
-            name: r.profiles?.name ?? '-',
-            avatarUrl: r.profiles?.avatar_url ?? null,
-            kind: 'leave',
-            dayPart,
-            label: r.leave_types?.name ?? 'Leave',
-            time: null,
-            icon: dayPart === 'full' ? Plane : HALF_ICON[dayPart],
-          })
-        }
-      }
-      for (const r of wfhQ.data ?? []) {
-        if (date >= r.start_date && date <= r.end_date) {
-          const dayPart = r.start_date === r.end_date ? toDayPart(r.day_part) : 'full'
-          entries.push({
-            id: r.id,
-            profileId: r.profile_id,
-            name: r.profiles?.name ?? '-',
-            avatarUrl: r.profiles?.avatar_url ?? null,
-            kind: 'wfh',
-            dayPart,
-            label: 'Working from home',
-            time: null,
-            icon: Home,
-          })
-        }
-      }
-      for (const e of exceptionsQ.data ?? []) {
-        if (e.date !== date) continue
-        const from = formatTimeOfDay(e.requested_time)
-        const to = formatTimeOfDay(e.return_time)
+      for (const r of rosterQ.data ?? []) {
+        if (date < r.start_date || date > r.end_date) continue
+        // A partial day is always a single day; a range is full days throughout.
+        const dayPart = r.start_date === r.end_date ? toDayPart(r.day_part) : 'full'
+        const from = formatTimeOfDay(r.requested_time)
+        const to = formatTimeOfDay(r.return_time)
         entries.push({
-          id: e.id,
-          profileId: e.profile_id,
-          name: e.profiles?.name ?? '-',
-          avatarUrl: e.profiles?.avatar_url ?? null,
-          kind: 'exception',
-          dayPart: 'full',
-          label: exceptionTypeLabel(e.exception_type),
+          id: r.entry_id,
+          profileId: r.profile_id,
+          name: r.name,
+          avatarUrl: r.avatar_url,
+          kind: r.kind,
+          status: r.status,
+          dayPart,
+          // "Away" is what somebody not entitled to the reason is told. The RPC
+          // returns a null label for them rather than the leave type, so the two
+          // cases are the same code path and there is nothing here to leak.
+          label: r.kind === 'leave'
+            ? r.label ?? 'Away'
+            : r.kind === 'wfh'
+              ? 'Working from home'
+              : exceptionTypeLabel(r.exception_type ?? ''),
           time: from && to ? `${from} → ${to}` : from,
-          icon: EXCEPTION_ICON[e.exception_type] ?? Clock,
+          icon: r.kind === 'leave'
+            ? (dayPart === 'full' ? Plane : HALF_ICON[dayPart])
+            : r.kind === 'wfh'
+              ? Home
+              : EXCEPTION_ICON[r.exception_type ?? ''] ?? Clock,
         })
       }
+      // Settled first, then by how absent, then by name. A pending request read
+      // among the approved ones is the mistake this whole distinction exists to
+      // prevent, so it is also last in the list, not just marked differently.
       entries.sort(
-        (a, b) => KIND_RANK[a.kind] - KIND_RANK[b.kind] || a.name.localeCompare(b.name),
+        (a, b) =>
+          Number(a.status === 'pending') - Number(b.status === 'pending')
+          || KIND_RANK[a.kind] - KIND_RANK[b.kind]
+          || a.name.localeCompare(b.name),
       )
 
       return {
@@ -248,7 +262,7 @@ export function AttendanceCalendar() {
         entries,
       }
     })
-  }, [ym, holidaysQ.data, companyWfhQ.data, saturdaysQ.data, leaveQ.data, wfhQ.data, exceptionsQ.data, saturdayWorking])
+  }, [ym, holidaysQ.data, companyWfhQ.data, saturdaysQ.data, rosterQ.data, saturdayWorking])
 
   const monthLabel = new Date(ym.year, ym.month - 1, 1).toLocaleDateString('en-US', {
     month: 'long',
@@ -295,6 +309,10 @@ export function AttendanceCalendar() {
           <span className="inline-flex items-center gap-1.5">
             <span className="size-2.5 bg-warning/50 border border-warning" />
             Exception
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="size-2.5 border border-dashed border-text-3" />
+            Awaiting approval
           </span>
         </div>
       </div>
@@ -487,6 +505,12 @@ export function AttendanceCalendar() {
                     {half && <span className="opacity-75">· {half}</span>}
                     {person.kind === 'leave' && !half && <span className="opacity-75">· Full day</span>}
                   </span>
+                  {person.status === 'pending' && (
+                    <span className="inline-flex items-center gap-1 rounded-sm border border-dashed border-text-3/40 px-2 py-0.5 font-ui text-[10.5px] font-semibold uppercase tracking-wider whitespace-nowrap text-text-3">
+                      <Hourglass size={11} />
+                      Awaiting approval
+                    </span>
+                  )}
                 </div>
               )
             })

@@ -5591,6 +5591,26 @@ export type Database = {
         }[]
       }
       mark_release_seen: { Args: { p_version: string }; Returns: undefined }
+      month_roster: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          avatar_url: string
+          day_part: string
+          detail_visible: boolean
+          end_date: string
+          entry_id: string
+          exception_type: string
+          kind: string
+          label: string
+          label_color: string
+          name: string
+          profile_id: string
+          requested_time: string
+          return_time: string
+          start_date: string
+          status: string
+        }[]
+      }
       my_bd_meetings: {
         Args: never
         Returns: {

@@ -720,26 +720,37 @@ export const DOC_CHAPTERS: DocChapter[] = [
         id: 'attendance-calendar',
         title: 'The month ahead',
         summary:
-          'A month at a glance: public holidays, company off days, working Saturdays, who is away on which day, for how much of it, and who has an approved exception.',
+          'The whole company\u2019s month at a glance: public holidays, company off days, working Saturdays, who is away on which day and for how much of it, and what is still waiting on a decision.',
         where: 'People → Attendance → Calendar',
         procedures: [
           {
-            title: 'Check coverage before approving time off',
+            title: 'Find a day that works',
             steps: [
               'Open People → Attendance → Calendar.',
-              'Find the day in question. Each cell counts full days off, half days, people working from home, and approved exceptions separately.',
-              'Press the day to list exactly who, what kind of leave they are on, and which half of the day it covers.',
+              'Read the counts on each cell: full days off, half days, people working from home, and how many requests for that day are still undecided.',
+              'Press a day to see exactly who, and how much of the day each one covers.',
+            ],
+          },
+          {
+            title: 'Check coverage before approving time off',
+            steps: [
+              'Find the day the request covers.',
+              'Anything marked Awaiting approval is not settled yet \u2014 including, usually, the request you are about to decide.',
+              'Press the day to see who is already away, so you are not approving the third person off the same Thursday.',
             ],
           },
         ],
         notes: [
-          'Half days are counted apart from full days, so “3 off” always means three people who are gone for the whole day.',
-          'On a phone the cell shows a coloured dot per kind rather than the counts, and holiday names are left to the day panel — a phone cell is too narrow for either. Press the day for the full picture.',
+          'Everybody can see who is away, on any day of the month. Knowing that a colleague is off on the 14th is what the calendar is for, and having to ask in chat was the thing it was built to stop.',
+          'Why somebody is away is not shown to everybody. The kind of leave \u2014 sick, annual, bereavement \u2014 is named only for yourself, for people you share a team with, and for whoever manages attendance. Everyone else sees Away and how much of the day it covers.',
+          'Exceptions \u2014 late arrival, early departure, out of office \u2014 are shown on the same footing: your own, your team\u2019s, and everyone\u2019s if you manage attendance. They are a record of somebody\u2019s day rather than a plan, so they are not company-wide.',
+          'Requests still waiting on a decision appear with a dashed mark and are counted separately, never folded into the approved ones. A day that reads \u201c3 off\u201d means three agreed absences; anything undecided is counted beside it, and listed last when you open the day.',
+          'Half days are counted apart from full days, so \u201c3 off\u201d always means three people who are gone for the whole day.',
+          'On a phone the cell shows a coloured dot per kind rather than the counts, and holiday names are left to the day panel \u2014 a phone cell is too narrow for either. Press the day for the full picture.',
           'In the day list, every leave says whether it is a full day, the first half or the second half. A partial work-from-home says the same, and means the other half is worked from the office.',
-          'Approved exceptions — late arrival, early departure, out of office — appear on the day with the time they cover, so a thin day is not mistaken for a full one.',
           'Holidays are shaded and named in the cell, so you can see a long weekend coming without opening anything.',
-          'Only approved leave, WFH and exceptions appear here. A request still waiting on a decision is not counted, look in Requests for those.',
           'Working Saturdays are labelled; every other Saturday and Sunday is shaded as a non-working day.',
+          'People who have left the company are not shown.',
         ],
       },
       {

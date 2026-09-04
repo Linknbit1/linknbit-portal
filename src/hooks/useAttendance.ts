@@ -7,6 +7,7 @@ import {
   fetchDayRoster,
   fetchMonthlyAttendance,
   fetchAttendanceRange,
+  fetchMonthRoster,
   checkIn,
   markAttendance,
   updateAttendanceRecord,
@@ -90,6 +91,7 @@ export const ATTENDANCE_KEYS = {
   monthly: (year: number, month: number) => ['attendance', 'monthly', year, month] as const,
   // Under the same 'all' prefix a mark/edit already invalidates, so a corrected
   // record shows up in the range view without a second invalidation rule.
+  monthRoster: (from: string, to: string) => ['attendance', 'month-roster', from, to] as const,
   range: (from: string, to: string) => ['attendance', 'all', 'range', from, to] as const,
   settings: ['attendance', 'settings'] as const,
   exceptions: (filters: FetchExceptionsFilters) => ['attendance', 'exceptions', filters] as const,
@@ -170,6 +172,15 @@ export function useAttendanceRange(from: string, to: string) {
   return useQuery({
     queryKey: ATTENDANCE_KEYS.range(from, to),
     queryFn: () => fetchAttendanceRange(from, to),
+    staleTime: 1000 * 60,
+  })
+}
+
+/** Planned absence across a span — the calendar's single source. */
+export function useMonthRoster(from: string, to: string) {
+  return useQuery({
+    queryKey: ATTENDANCE_KEYS.monthRoster(from, to),
+    queryFn: () => fetchMonthRoster(from, to),
     staleTime: 1000 * 60,
   })
 }

@@ -590,6 +590,48 @@ export async function fetchAllAttendanceExceptions(
   return rows.filter((r) => r.profiles?.is_active !== false)
 }
 
+// ── Month roster ──────────────────────────────────────────────────────────────
+
+export interface MonthRosterEntry {
+  entry_id: string
+  profile_id: string
+  name: string
+  avatar_url: string | null
+  kind: 'leave' | 'wfh' | 'exception'
+  status: 'approved' | 'pending'
+  start_date: string
+  end_date: string
+  day_part: string
+  /** Leave type name, or null when the viewer may not be told the reason. */
+  label: string | null
+  label_color: string | null
+  exception_type: string | null
+  requested_time: string | null
+  return_time: string | null
+  detail_visible: boolean
+}
+
+/**
+ * Everybody's planned absence across a span, for the calendar.
+ *
+ * Replaces three direct table reads whose RLS was written for the REQUEST — its
+ * reason, its approver — rather than for the fact that somebody is away. That
+ * left an employee seeing only their own leave here while `day_roster` showed
+ * them the whole company's status for today; the RPC draws the line where the
+ * roster already draws it, and returns pending alongside approved so a day that
+ * merely looks staffed can be told apart from one that is.
+ */
+export async function fetchMonthRoster(
+  from: string,
+  to: string,
+): Promise<MonthRosterEntry[]> {
+  const { data, error } = await supabase.rpc('month_roster', { p_from: from, p_to: to })
+  if (error) throw error
+  // as unknown: the generated Returns type widens every column to `string`,
+  // including the two the function only ever emits from a fixed set.
+  return (data ?? []) as unknown as MonthRosterEntry[]
+}
+
 // ── Day roster ────────────────────────────────────────────────────────────────
 
 /**
