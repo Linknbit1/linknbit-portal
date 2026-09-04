@@ -171,19 +171,20 @@ export function TeamRoster({ memberIds }: TeamScope = {}) {
         profileId: id, name: r.profiles?.name ?? '-', avatar: r.profiles?.avatar_url ?? null,
         present: 0, late: 0, wfh: 0, leave: 0, absent: 0,
       }
-      // A worked half day is half an attendance and half a leave, so it counts
-      // 0.5 to each rather than a whole day to both. A partial WFH splits the
-      // same way: half remote, half in the office.
+      // Whole days, each counter independent. These used to be weighted, a worked
+      // half day scoring 0.5 to the attendance side and 0.5 to the leave side, so
+      // the columns summed to the month. Turning up is not divisible though —
+      // somebody who worked a half day was present, not half present — and
+      // "Present 18.5" describes nobody. A half day of leave that was worked is
+      // one present day and one leave day, because both are true of it.
       const isLeave = r.day_type === 'leave'
       const isWfh = r.day_type === 'wfh'
-      const isPartial = (isLeave || isWfh) && r.day_part !== 'full'
-      if (isLeave) t.leave += isPartial ? 0.5 : 1
-      else if (isWfh) t.wfh += isPartial ? 0.5 : 1
+      if (isLeave) t.leave += 1
+      else if (isWfh) t.wfh += 1
 
-      const w = isPartial ? 0.5 : 1
-      if (r.status === 'present') t.present += w
-      else if (r.status === 'late') t.late += w
-      else if (r.status === 'absent') t.absent += w
+      if (r.status === 'present') t.present += 1
+      else if (r.status === 'late') t.late += 1
+      else if (r.status === 'absent') t.absent += 1
       byMember.set(id, t)
     }
     return [...byMember.values()].sort((a, b) => a.name.localeCompare(b.name))

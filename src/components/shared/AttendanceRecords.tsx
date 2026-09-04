@@ -66,8 +66,16 @@ const RECORD_FILTERS: {
   { value: 'holiday', label: 'Holiday', icon: Plane, color: 'text-text-3', match: (r) => r.day_type === 'holiday' },
 ]
 
+/**
+ * The predicates, by key. Counting and filtering read the SAME function, so a
+ * counter can never disagree with the list it produces.
+ */
+const MATCHERS: Record<string, (r: RecordFacts) => boolean> = Object.fromEntries(
+  RECORD_FILTERS.map((f) => [f.value, f.match]),
+)
+
 /** Which of those get a counter tile, and in what order. */
-const TILE_ORDER = ['present', 'late', 'absent', 'half_day', 'leave']
+const TILE_ORDER: TallyKey[] = ['present', 'late', 'absent', 'half_day', 'leave']
 
 const STATUS_OPTIONS = [
   { value: 'present', label: 'Present' },
@@ -98,42 +106,37 @@ const isRangeMode = (v: string): v is RangeMode =>
 
 /* ── Counting ─────────────────────────────────────────────────────────────── */
 
+type TallyKey = 'present' | 'late' | 'absent' | 'half_day' | 'leave' | 'wfh'
+
+const TALLY_KEYS: TallyKey[] = ['present', 'late', 'absent', 'half_day', 'leave', 'wfh']
+
+type Tally = Record<TallyKey, number>
+
+const emptyTally = (): Tally =>
+  ({ present: 0, late: 0, absent: 0, half_day: 0, leave: 0, wfh: 0 })
+
 /**
- * A worked half day is half an attendance and half a leave, so it counts 0.5 to
- * each rather than a whole day to both — counting it whole in both inflates every
- * total. A partial WFH splits the same way: half remote, half in the office.
+ * Every counter is a count of DAYS MATCHING ITS OWN FILTER — a whole number,
+ * always, and always the number of rows you get when you press it.
+ *
+ * These used to be weighted: a worked half day scored 0.5 to the attendance side
+ * and 0.5 to the leave side, so the five numbers summed to the working days
+ * covered. Two things were wrong with that. Turning up is not divisible —
+ * somebody who worked a half day was present, not half present, and "Present
+ * 18.5" describes nobody. And a counter that reads 1.5 and then lists one row
+ * when pressed is simply lying about what it counts.
+ *
+ * The counters no longer sum to anything, and should not: they are six answers
+ * to six independent questions about the same days, not slices of one pie. A
+ * half day of leave that was worked is one present day AND one half day, because
+ * both are true of it. Leave days consumed — where halves genuinely are halves —
+ * is a leave-balance question, and lives on the balance, not here.
  */
-function weightOf(r: RecordFacts): number {
-  const partial = (r.day_type === 'leave' || r.day_type === 'wfh') && r.day_part !== 'full'
-  return partial ? 0.5 : 1
-}
-
-interface Tally {
-  present: number
-  late: number
-  absent: number
-  half_day: number
-  leave: number
-  wfh: number
-}
-
-const emptyTally = (): Tally => ({ present: 0, late: 0, absent: 0, half_day: 0, leave: 0, wfh: 0 })
-
 function addTo(t: Tally, r: RecordFacts): void {
-  const isLeave = r.day_type === 'leave'
-  const partial = (isLeave || r.day_type === 'wfh') && r.day_part !== 'full'
-  if (isLeave && partial) t.half_day += 0.5
-  else if (isLeave) t.leave += 1
-  if (r.day_type === 'wfh') t.wfh += partial ? 0.5 : 1
-
-  const w = weightOf(r)
-  if (r.status === 'present') t.present += w
-  else if (r.status === 'late') t.late += w
-  else if (r.status === 'absent') t.absent += w
+  for (const key of TALLY_KEYS) {
+    if (MATCHERS[key](r)) t[key] += 1
+  }
 }
-
-/** Drops a trailing .0 so whole days read "18" and halves read "18.5". */
-const fmtDays = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1))
 
 const fmtTime = (iso: string | null) =>
   iso ? new Date(iso).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '-'
@@ -378,6 +381,7 @@ function SortTh<K extends string>({
   return (
     <th
       className={cn(
+        HEAD_CELL,
         'px-4 py-2.5 font-ui text-[10.5px] font-semibold uppercase tracking-wider whitespace-nowrap text-text-3',
         align === 'right' ? 'text-right' : 'text-left',
       )}
@@ -515,11 +519,19 @@ export function AttendanceRecords() {
     return new Set(memberships.filter((m) => m.team_id === team).map((m) => m.profile_id))
   }, [team, memberships])
 
-  const filtered = useMemo(() => {
+  /**
+   * Everything except the status, which the counters themselves are.
+   *
+   * The counters are counted from THIS, not from the fully filtered list. They
+   * are a breakdown of one set of rows into five slices, so pressing Leave must
+   * not send Present to zero — five numbers that each go to nothing the moment
+   * you look at one of them are not a breakdown of anything. Pressing a counter
+   * changes what is listed underneath; the counters themselves only move when
+   * the span, the team, the person or the search does.
+   */
+  const inScope = useMemo(() => {
     const needle = search.trim().toLowerCase()
-    const statusMatch = RECORD_FILTERS.find((f) => f.value === status)
     return records.filter((r) => {
-      if (statusMatch && !statusMatch.match(r)) return false
       if (source !== 'all' && r.source !== source) return false
       if (flaggedOnly && !r.device_flagged) return false
       if (person !== 'all' && r.profile_id !== person) return false
@@ -527,13 +539,18 @@ export function AttendanceRecords() {
       if (needle && !(r.profiles?.name ?? '').toLowerCase().includes(needle)) return false
       return true
     })
-  }, [records, search, status, source, flaggedOnly, person, teamMemberIds])
+  }, [records, search, source, flaggedOnly, person, teamMemberIds])
+
+  const filtered = useMemo(() => {
+    const statusMatch = RECORD_FILTERS.find((f) => f.value === status)
+    return statusMatch ? inScope.filter((r) => statusMatch.match(r)) : inScope
+  }, [inScope, status])
 
   const stats = useMemo(() => {
     const t = emptyTally()
-    for (const r of filtered) addTo(t, r)
+    for (const r of inScope) addTo(t, r)
     return t
-  }, [filtered])
+  }, [inScope])
 
   const rollups = useMemo<PersonRollup[]>(() => {
     const byPerson = new Map<string, PersonRollup>()
@@ -602,8 +619,8 @@ export function AttendanceRecords() {
         `${name}-by-person`,
         ['Name', 'Days recorded', 'Present', 'Late', 'Absent', 'Half day', 'Leave', 'WFH'],
         rollups.map((p) => [
-          p.name, String(p.days), fmtDays(p.tally.present), fmtDays(p.tally.late),
-          fmtDays(p.tally.absent), fmtDays(p.tally.half_day), fmtDays(p.tally.leave), fmtDays(p.tally.wfh),
+          p.name, String(p.days), p.tally.present, p.tally.late,
+          p.tally.absent, p.tally.half_day, p.tally.leave, p.tally.wfh,
         ]),
       )
       return
@@ -715,7 +732,7 @@ export function AttendanceRecords() {
                 <span className="truncate">{meta.label}</span>
               </span>
               <span className={cn('font-mono text-[19px] font-semibold tabular-nums', meta.color)}>
-                {fmtDays(stats[key as keyof Tally] ?? 0)}
+                {stats[key]}
               </span>
             </button>
           )
@@ -904,6 +921,20 @@ const RECORD_SORTERS: Record<RecordSortKey, (r: AttendanceWithProfile) => string
 /** Member, Status, Check In, Duration, Source, Device, Note, actions. */
 const RECORD_COLUMNS = 8
 
+/**
+ * `border-separate` is not cosmetic here, it is what makes the pinned date row
+ * work at all: under `border-collapse: collapse` — Tailwind's default — Chrome
+ * and Safari ignore `position: sticky` on a table cell outright, so the heading
+ * scrolled away while the identical heading on the roster and the requests queue
+ * stayed put. Separated borders with zero spacing look the same.
+ *
+ * The catch that comes with it: a `<tr>` paints no border in separate mode, so
+ * every row's rule lives on its cells instead. {@link CELL} carries it.
+ */
+const TABLE = 'hidden w-full border-separate border-spacing-0 lg:table'
+const CELL = 'border-b border-border-subtle px-4 py-3'
+const HEAD_CELL = 'border-b border-border-subtle bg-surface-2'
+
 interface DayGroup {
   date: string
   rows: AttendanceWithProfile[]
@@ -951,7 +982,7 @@ function RecordsView({
 
   const head = (
     <thead>
-      <tr className="border-b border-border-subtle bg-surface-2">
+      <tr>
         <SortTh label="Member" col="name" sort={sort} onSort={onSort} />
         {showDate && !groupByDay && <SortTh label="Date" col="date" sort={sort} onSort={onSort} />}
         <SortTh label="Status" col="status" sort={sort} onSort={onSort} />
@@ -961,7 +992,7 @@ function RecordsView({
         {['Device', 'Note', ''].map((h, i) => (
           <th
             key={h || `sp-${i}`}
-            className="px-4 py-2.5 text-left font-ui text-[10.5px] font-semibold uppercase tracking-wider text-text-3"
+            className={cn(HEAD_CELL, 'px-4 py-2.5 text-left font-ui text-[10.5px] font-semibold uppercase tracking-wider text-text-3')}
           >
             {h}
           </th>
@@ -972,7 +1003,7 @@ function RecordsView({
 
   return (
     <>
-      <table className="hidden w-full lg:table">
+      <table className={TABLE}>
         {head}
         <tbody>
           {groups
@@ -1100,8 +1131,8 @@ function RecordRow({
   onEdit: (rec: AttendanceWithProfile) => void
 }) {
   return (
-    <tr className="border-b border-border-subtle last:border-0 hover:bg-surface-2/50">
-      <td className="px-4 py-3">
+    <tr className="hover:bg-surface-2/50">
+      <td className={CELL}>
         <div className="flex items-center gap-2.5">
           <Avatar name={rec.profiles?.name ?? '?'} src={rec.profiles?.avatar_url ?? undefined} size="sm" personId={rec.profile_id} />
           <PersonLink personId={rec.profile_id} className="font-ui text-[13px] font-medium text-text-1">
@@ -1110,17 +1141,17 @@ function RecordRow({
         </div>
       </td>
       {showDate && (
-        <td className="px-4 py-3 font-mono text-[12px] whitespace-nowrap text-text-2">{shortDay(rec.date)}</td>
+        <td className={cn(CELL, 'font-mono text-[12px] whitespace-nowrap text-text-2')}>{shortDay(rec.date)}</td>
       )}
-      <td className="px-4 py-3"><AttendanceChips facts={rec} /></td>
-      <td className="px-4 py-3 font-mono text-[12.5px] text-text-1">{fmtTime(rec.check_in)}</td>
-      <td className="px-4 py-3 font-mono text-[12px] text-text-2">{durationLabel(rec)}</td>
-      <td className="px-4 py-3">
+      <td className={CELL}><AttendanceChips facts={rec} /></td>
+      <td className={cn(CELL, 'font-mono text-[12.5px] text-text-1')}>{fmtTime(rec.check_in)}</td>
+      <td className={cn(CELL, 'font-mono text-[12px] text-text-2')}>{durationLabel(rec)}</td>
+      <td className={CELL}>
         <span className={cn('font-mono text-[11px] uppercase tracking-wider', rec.source === 'self' ? 'text-success' : 'text-text-3')}>
           {rec.source}
         </span>
       </td>
-      <td className="px-4 py-3">
+      <td className={CELL}>
         {rec.device_flagged ? (
           <span className="flex items-center gap-1 font-ui text-[11px] text-warning">
             <AlertCircle size={11} /> Flagged
@@ -1131,8 +1162,8 @@ function RecordRow({
           <span className="font-mono text-[11px] text-text-4">-</span>
         )}
       </td>
-      <td className="max-w-35 truncate px-4 py-3 font-ui text-[12px] text-text-3">{rec.note ?? ''}</td>
-      <td className="px-4 py-3">
+      <td className={cn(CELL, 'max-w-35 truncate font-ui text-[12px] text-text-3')}>{rec.note ?? ''}</td>
+      <td className={CELL}>
         <div className="flex items-center gap-2">
           {rec.wifi_validated && <Wifi size={13} className="text-success" aria-label="WiFi validated" />}
           <button
@@ -1199,7 +1230,7 @@ function RecordCard({
 
 /* ── By-person view ───────────────────────────────────────────────────────── */
 
-const ROLLUP_COLUMNS: { key: keyof Tally; label: string; color: string }[] = [
+const ROLLUP_COLUMNS: { key: TallyKey; label: string; color: string }[] = [
   { key: 'present', label: 'Present', color: 'text-success' },
   { key: 'late', label: 'Late', color: 'text-warning' },
   { key: 'absent', label: 'Absent', color: 'text-error' },
@@ -1208,7 +1239,7 @@ const ROLLUP_COLUMNS: { key: keyof Tally; label: string; color: string }[] = [
   { key: 'wfh', label: 'WFH', color: 'text-service-dev' },
 ]
 
-type PersonSortKey = 'name' | 'days' | keyof Tally
+type PersonSortKey = 'name' | 'days' | TallyKey
 
 function PeopleView({ rollups }: { rollups: PersonRollup[] }) {
   // Opens on most-late-first, which is the question this view exists to answer;
@@ -1228,9 +1259,9 @@ function PeopleView({ rollups }: { rollups: PersonRollup[] }) {
 
   return (
     <>
-      <table className="hidden w-full lg:table">
+      <table className={TABLE}>
         <thead>
-          <tr className="border-b border-border-subtle bg-surface-2">
+          <tr>
             <SortTh label="Member" col="name" sort={sort} onSort={onSort} />
             <SortTh label="Days" col="days" sort={sort} onSort={onSort} align="right" />
             {ROLLUP_COLUMNS.map((c) => (
@@ -1240,8 +1271,8 @@ function PeopleView({ rollups }: { rollups: PersonRollup[] }) {
         </thead>
         <tbody>
           {view.map((p) => (
-            <tr key={p.profileId} className="border-b border-border-subtle last:border-0 hover:bg-surface-2/50">
-              <td className="px-4 py-3">
+            <tr key={p.profileId} className="hover:bg-surface-2/50">
+              <td className={CELL}>
                 <div className="flex items-center gap-2.5">
                   <Avatar name={p.name} src={p.avatarUrl ?? undefined} size="sm" personId={p.profileId} />
                   <PersonLink personId={p.profileId} className="font-ui text-[13px] font-medium text-text-1">
@@ -1249,11 +1280,11 @@ function PeopleView({ rollups }: { rollups: PersonRollup[] }) {
                   </PersonLink>
                 </div>
               </td>
-              <td className="px-4 py-3 text-right font-mono text-[12.5px] tabular-nums text-text-2">{p.days}</td>
+              <td className={cn(CELL, 'text-right font-mono text-[12.5px] tabular-nums text-text-2')}>{p.days}</td>
               {ROLLUP_COLUMNS.map((c) => (
-                <td key={c.key} className="px-4 py-3 text-right font-mono text-[12.5px] tabular-nums">
+                <td key={c.key} className={cn(CELL, 'text-right font-mono text-[12.5px] tabular-nums')}>
                   {p.tally[c.key] > 0
-                    ? <span className={c.color}>{fmtDays(p.tally[c.key])}</span>
+                    ? <span className={c.color}>{p.tally[c.key]}</span>
                     : <span className="text-text-4">-</span>}
                 </td>
               ))}
@@ -1286,7 +1317,7 @@ function PeopleView({ rollups }: { rollups: PersonRollup[] }) {
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 pl-9.5 font-mono text-[11.5px] tabular-nums">
               {ROLLUP_COLUMNS.filter((c) => p.tally[c.key] > 0).map((c) => (
                 <span key={c.key} className="text-text-4">
-                  <span className={cn('font-semibold', c.color)}>{fmtDays(p.tally[c.key])}</span> {c.label.toLowerCase()}
+                  <span className={cn('font-semibold', c.color)}>{p.tally[c.key]}</span> {c.label.toLowerCase()}
                 </span>
               ))}
             </div>

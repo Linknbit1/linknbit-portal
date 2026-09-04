@@ -428,26 +428,28 @@ function AttendanceTab({ personId, leave, wfh }: {
   const mf = useMonthFilter()
   const { data: records = [] } = useAttendanceByProfileMonth(personId, mf.year, mf.month)
 
-  // Counted in days. A half-day leave that was worked is half an attendance and
-  // half a leave, so it contributes 0.5 to each rather than a whole day to both.
-  // A partial WFH splits the same way: half remote, half in the office.
+  // Whole days, each counter counting the days it describes and nothing else.
+  // These used to be weighted, a worked half day scoring 0.5 to the attendance
+  // side and 0.5 to the leave side so the counters summed to the month. Turning
+  // up is not divisible: somebody who worked a half day was present, not half
+  // present, and "Present 18.5" describes nobody. The counters no longer sum to
+  // anything, and should not — a half day that was worked is one present day and
+  // one half day, because both are true of it.
   const tally = (() => {
     const t = { present: 0, late: 0, absent: 0, leave: 0, wfh: 0, half_day: 0 }
     for (const r of records) {
       const isLeave = r.day_type === 'leave'
       const isWfh = r.day_type === 'wfh'
       const isPartial = (isLeave || isWfh) && r.day_part !== 'full'
-      if (isLeave) t[isPartial ? 'half_day' : 'leave'] += isPartial ? 0.5 : 1
-      else if (isWfh) t.wfh += isPartial ? 0.5 : 1
+      if (isLeave) t[isPartial ? 'half_day' : 'leave'] += 1
+      else if (isWfh) t.wfh += 1
 
-      const w = isPartial ? 0.5 : 1
-      if (r.status === 'present') t.present += w
-      else if (r.status === 'late') t.late += w
-      else if (r.status === 'absent') t.absent += w
+      if (r.status === 'present') t.present += 1
+      else if (r.status === 'late') t.late += 1
+      else if (r.status === 'absent') t.absent += 1
     }
     return t
   })()
-  const fmtDays = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1))
 
   const attended = tally.present + tally.late + tally.wfh
   const expected = attended + tally.absent
@@ -458,12 +460,12 @@ function AttendanceTab({ personId, leave, wfh }: {
   const totalAllowed = balances.reduce((s, b) => s + b.type.days_allowed, 0)
 
   const summary = [
-    { label: 'Present',  value: fmtDays(tally.present),  dot: 'bg-success',        text: 'text-success' },
-    { label: 'Late',     value: fmtDays(tally.late),     dot: 'bg-warning',        text: 'text-warning' },
-    { label: 'Absent',   value: fmtDays(tally.absent),   dot: 'bg-error',          text: 'text-error' },
-    { label: 'Leave',    value: fmtDays(tally.leave),    dot: 'bg-service-dev',    text: 'text-service-dev' },
-    { label: 'WFH',      value: fmtDays(tally.wfh),      dot: 'bg-service-dev',    text: 'text-service-dev' },
-    { label: 'Half day', value: fmtDays(tally.half_day), dot: 'bg-service-design', text: 'text-service-design' },
+    { label: 'Present',  value: String(tally.present),  dot: 'bg-success',        text: 'text-success' },
+    { label: 'Late',     value: String(tally.late),     dot: 'bg-warning',        text: 'text-warning' },
+    { label: 'Absent',   value: String(tally.absent),   dot: 'bg-error',          text: 'text-error' },
+    { label: 'Leave',    value: String(tally.leave),    dot: 'bg-service-dev',    text: 'text-service-dev' },
+    { label: 'WFH',      value: String(tally.wfh),      dot: 'bg-service-dev',    text: 'text-service-dev' },
+    { label: 'Half day', value: String(tally.half_day), dot: 'bg-service-design', text: 'text-service-design' },
   ]
 
   const { data: exceptions = [] } = useExceptionsByProfile(personId)

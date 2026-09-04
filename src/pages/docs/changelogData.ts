@@ -59,7 +59,7 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'improved',
-        text: 'The counters filter, and they are a compact strip rather than five tall cards \u2014 pressing Present, Late, Absent, Half Day or Leave narrows the list to it and pressing again clears it, instead of naming five slices you then had to find again in a dropdown.',
+        text: 'The counters filter, and they are a compact strip rather than five tall cards \u2014 pressing Present, Late, Absent, Half Day or Leave narrows the list to it and pressing again clears it, instead of naming five slices you then had to find again in a dropdown. They count the whole span whichever one is pressed, so choosing Leave no longer sends Present to zero.',
       },
       {
         kind: 'improved',
@@ -80,6 +80,14 @@ export const RELEASES: ChangelogRelease[] = [
       {
         kind: 'improved',
         text: 'The month control on the attendance calendar takes the full width on a phone, so the arrows are big enough to press and the month is unmistakably what the screen is showing.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Attendance counters are whole days again. A worked half day used to score half to the attendance side and half to the leave side so the columns summed to the month, which printed things like "Present 18.5" \u2014 turning up is not divisible, and a counter reading 1.5 that then listed one row was describing something other than what it counted. Each counter now counts the days it names, on the register, on a team\u2019s page and on a member\u2019s profile alike.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Date headings in the register stayed put on a phone but scrolled away on a computer. They now pin under the top bar on both, the same as the roster and the requests queue.',
       },
       {
         kind: 'fixed',

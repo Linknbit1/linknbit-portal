@@ -678,8 +678,9 @@ export const DOC_CHAPTERS: DocChapter[] = [
           },
         ],
         notes: [
-          'The counters are in days, not rows, and a worked half day counts as half to each side, so the totals always add up to the working days covered.',
-          'Everything narrows together: the counters always describe exactly the rows underneath them, and Export gives you what is on screen rather than the whole span.',
+          'Every counter is a whole number of days, and each one counts exactly what pressing it lists. Somebody who worked a half day is one present day and one half day, because both are true of it — so the counters do not add up to the days covered, and are not meant to.',
+          'The counters do not narrow each other. They are a breakdown of the span into five slices, so pressing Leave changes what is listed without sending Present to zero. Filtering by team, person or search does move them, because that changes which rows are being broken down.',
+          'Export gives you what is on screen rather than the whole span.',
           'On a phone the columns become cards and the sort moves to a control above the list, so nothing is desktop-only.',
           'Somebody who has been deactivated does not appear here at all, and is not counted. Their days stay in the record; they are read on their own profile page.',
           'This is the register, not the roster. Today shows everybody expected in, including people with nothing recorded yet. Records shows what was actually written down, and is the only place to change it.',
