@@ -662,7 +662,8 @@ export const DOC_CHAPTERS: DocChapter[] = [
           {
             title: 'Read a span day by day',
             steps: [
-              'Pick any span longer than a day. The records are listed under a heading per date, which stays pinned as you scroll past it.',
+              'Pick a span longer than a day, then turn on Group by day in the Filters panel.',
+              'The records are listed under a heading per date, which stays pinned as you scroll past it. The Date column goes, since the heading says it.',
               'Press the date in a heading to run the days the other way round, newest first or oldest first.',
               'Sorting on any other column orders the records within each day, so you can ask for the latest arrivals on each date.',
             ],

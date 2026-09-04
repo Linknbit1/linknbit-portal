@@ -5,6 +5,7 @@ import {
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '../../lib/cn'
+import { STICKY_UNDER_TOPBAR } from '../../lib/stickyHeader'
 import { Avatar } from '../ui/Avatar'
 import { Button } from '../ui/Button'
 import { Select } from '../ui/Select'
@@ -137,18 +138,18 @@ const fmtDays = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1))
 const fmtTime = (iso: string | null) =>
   iso ? new Date(iso).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '-'
 
+/** The day cell on an ungrouped span: "Mon 14 Sep". One date needs no column. */
+const shortDay = (date: string): string => {
+  const [y, m, d] = date.split('-').map(Number)
+  return new Date(y, m - 1, d).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
+}
+
 function durationLabel(rec: AttendanceWithProfile): string {
   if (!rec.check_in || !rec.check_out) return '-'
   const mins = Math.floor((new Date(rec.check_out).getTime() - new Date(rec.check_in).getTime()) / 60000)
   return `${Math.floor(mins / 60)}h ${mins % 60}m`
 }
 
-/**
- * Date headings pin under the Topbar, which is itself sticky at the top of the
- * scrolling `<main>`. The safe-area term is there because the Topbar pads itself
- * by it — without it the heading slides a notch's worth of pixels behind the bar.
- */
-const STICKY_HEAD_TOP = 'top-[calc(var(--height-topbar)+env(safe-area-inset-top))]'
 
 /* ── Mark / edit a record ─────────────────────────────────────────────────── */
 
@@ -496,6 +497,11 @@ export function AttendanceRecords() {
   const [status, setStatus] = useState('all')
   const [source, setSource] = useState('all')
   const [flaggedOnly, setFlaggedOnly] = useState(false)
+  // Off by default. A flat list answers "what happened over this span", which is
+  // what the register is for; grouping answers "what happened on the 14th", and
+  // a heading between every few rows is a lot of furniture to impose on somebody
+  // who did not ask for it. Same switch, same wording, same default as Requests.
+  const [groupByDay, setGroupByDay] = useState(false)
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [marking, setMarking] = useState(false)
   const [editRec, setEditRec] = useState<AttendanceWithProfile | null>(null)
@@ -577,10 +583,11 @@ export function AttendanceRecords() {
 
   const activeFilters =
     (team !== 'all' ? 1 : 0) + (person !== 'all' ? 1 : 0) + (status !== 'all' ? 1 : 0)
-    + (source !== 'all' ? 1 : 0) + (flaggedOnly ? 1 : 0)
+    + (source !== 'all' ? 1 : 0) + (flaggedOnly ? 1 : 0) + (groupByDay ? 1 : 0)
 
   const clearFilters = () => {
-    setTeam('all'); setPerson('all'); setStatus('all'); setSource('all'); setFlaggedOnly(false)
+    setTeam('all'); setPerson('all'); setStatus('all'); setSource('all')
+    setFlaggedOnly(false); setGroupByDay(false)
   }
 
   // A span of one day needs no Date column and no per-person fold: both would
@@ -778,6 +785,7 @@ export function AttendanceRecords() {
           <RecordsView
             rows={filtered}
             showDate={isMultiDay}
+            groupByDay={groupByDay && isMultiDay}
             onEdit={setEditRec}
           />
         )}
@@ -823,9 +831,25 @@ export function AttendanceRecords() {
           <FilterField label="How it was recorded">
             <Select value={source} onChange={setSource} options={SOURCE_OPTIONS} className="w-full" />
           </FilterField>
-          <FilterField label="Devices">
+          <FilterField label="Arrangement">
             {/* A div, not a button: Toggle is itself a <button>, and nesting one
                 inside another is invalid HTML — the outer press never lands. */}
+            <div className="flex items-center gap-3 rounded-sm border border-border-default bg-surface-inset px-3 py-2.5">
+              <div className="min-w-0 flex-1">
+                <span className="block font-ui text-[13px] text-text-1">Group by day</span>
+                <span className="block font-ui text-[11.5px]/snug text-text-4">
+                  A heading per date instead of a Date column. Needs a span longer than a day.
+                </span>
+              </div>
+              <Toggle
+                checked={groupByDay}
+                onChange={setGroupByDay}
+                label="Group by day"
+                disabled={!isMultiDay}
+              />
+            </div>
+          </FilterField>
+          <FilterField label="Devices">
             <div className="flex items-center gap-3 rounded-sm border border-border-default bg-surface-inset px-3 py-2.5">
               <div className="min-w-0 flex-1">
                 <span className="block font-ui text-[13px] text-text-1">Flagged only</span>
@@ -865,9 +889,10 @@ function durationMinutes(rec: AttendanceWithProfile): number | null {
 
 const RECORD_SORTERS: Record<RecordSortKey, (r: AttendanceWithProfile) => string | number | null> = {
   name: (r) => r.profiles?.name ?? '',
-  // Sorting BY date orders the day headings, not the rows inside one — every row
-  // in a group already shares its date. Within a day, name is the sane order.
-  date: (r) => r.profiles?.name ?? '',
+  // Ungrouped, this is the Date column. Grouped, it orders the day headings and
+  // never the rows inside one — every row in a group already shares its date —
+  // so the grouped path sorts on the date and then leaves the group intact.
+  date: (r) => r.date,
   status: (r) => r.status ?? r.day_type,
   // The clock time, not the ISO string: sorting arrivals across several days has
   // to compare 09:15 with 09:40, not the 14th with the 15th.
@@ -876,7 +901,7 @@ const RECORD_SORTERS: Record<RecordSortKey, (r: AttendanceWithProfile) => string
   source: (r) => r.source,
 }
 
-/** How many columns the table has, for the date row to span all of them. */
+/** Member, Status, Check In, Duration, Source, Device, Note, actions. */
 const RECORD_COLUMNS = 8
 
 interface DayGroup {
@@ -885,10 +910,13 @@ interface DayGroup {
 }
 
 function RecordsView({
-  rows, showDate, onEdit,
+  rows, showDate, groupByDay, onEdit,
 }: {
   rows: AttendanceWithProfile[]
+  /** The span covers more than one day, so which day a row belongs to matters. */
   showDate: boolean
+  /** Say it in headings rather than in a column. Never both — they are the same fact. */
+  groupByDay: boolean
   onEdit: (rec: AttendanceWithProfile) => void
 }) {
   const [sort, setSort] = useState<Sort<RecordSortKey>>(
@@ -909,7 +937,7 @@ function RecordsView({
   const flipDates = () => setSort({ key: 'date', asc: !dateAsc })
 
   const groups = useMemo<DayGroup[] | null>(() => {
-    if (!showDate) return null
+    if (!groupByDay) return null
     const byDate = new Map<string, AttendanceWithProfile[]>()
     for (const r of view) {
       const bucket = byDate.get(r.date)
@@ -919,12 +947,13 @@ function RecordsView({
     return [...byDate.entries()]
       .sort(([a], [b]) => (dateAsc ? a.localeCompare(b) : b.localeCompare(a)))
       .map(([date, groupRows]) => ({ date, rows: groupRows }))
-  }, [view, showDate, dateAsc])
+  }, [view, groupByDay, dateAsc])
 
   const head = (
     <thead>
       <tr className="border-b border-border-subtle bg-surface-2">
         <SortTh label="Member" col="name" sort={sort} onSort={onSort} />
+        {showDate && !groupByDay && <SortTh label="Date" col="date" sort={sort} onSort={onSort} />}
         <SortTh label="Status" col="status" sort={sort} onSort={onSort} />
         <SortTh label="Check In" col="checkIn" sort={sort} onSort={onSort} />
         <SortTh label="Duration" col="duration" sort={sort} onSort={onSort} />
@@ -951,11 +980,11 @@ function RecordsView({
                 <Fragment key={g.date}>
                   <DayRowCell date={g.date} count={g.rows.length} dateAsc={dateAsc} onFlip={flipDates} />
                   {g.rows.map((rec) => (
-                    <RecordRow key={rec.id} rec={rec} onEdit={onEdit} />
+                    <RecordRow key={rec.id} rec={rec} showDate={showDate && !groupByDay} onEdit={onEdit} />
                   ))}
                 </Fragment>
               ))
-            : view.map((rec) => <RecordRow key={rec.id} rec={rec} onEdit={onEdit} />)}
+            : view.map((rec) => <RecordRow key={rec.id} rec={rec} showDate={showDate && !groupByDay} onEdit={onEdit} />)}
         </tbody>
       </table>
 
@@ -967,7 +996,7 @@ function RecordsView({
           onChange={setSort}
           options={[
             { value: 'name', label: 'Name' },
-            ...(showDate ? [{ value: 'date' as const, label: 'Date' }] : []),
+            ...(showDate && !groupByDay ? [{ value: 'date' as const, label: 'Date' }] : []),
             { value: 'status', label: 'Status' },
             { value: 'checkIn', label: 'Check-in time' },
             { value: 'duration', label: 'Duration' },
@@ -979,11 +1008,11 @@ function RecordsView({
               <Fragment key={g.date}>
                 <DayRowCard date={g.date} count={g.rows.length} dateAsc={dateAsc} onFlip={flipDates} />
                 {g.rows.map((rec) => (
-                  <RecordCard key={rec.id} rec={rec} onEdit={onEdit} />
+                  <RecordCard key={rec.id} rec={rec} showDate={showDate && !groupByDay} onEdit={onEdit} />
                 ))}
               </Fragment>
             ))
-          : view.map((rec) => <RecordCard key={rec.id} rec={rec} onEdit={onEdit} />)}
+          : view.map((rec) => <RecordCard key={rec.id} rec={rec} showDate={showDate && !groupByDay} onEdit={onEdit} />)}
       </div>
     </>
   )
@@ -1046,7 +1075,7 @@ function DayRowCell(props: { date: string; count: number; dateAsc: boolean; onFl
     <tr>
       <td
         colSpan={RECORD_COLUMNS}
-        className={cn('sticky z-20 border-y border-border-subtle bg-surface-2 p-0', STICKY_HEAD_TOP)}
+        className={cn('sticky z-20 border-y border-border-subtle bg-surface-2 p-0', STICKY_UNDER_TOPBAR)}
       >
         <DayHeading {...props} />
       </td>
@@ -1057,16 +1086,17 @@ function DayRowCell(props: { date: string; count: number; dateAsc: boolean; onFl
 /** The same heading on a phone, full-bleed because the list has no card frame. */
 function DayRowCard(props: { date: string; count: number; dateAsc: boolean; onFlip: () => void }) {
   return (
-    <div className={cn('sticky z-20 -mx-4 border-y border-border-subtle bg-surface-2 sm:mx-0', STICKY_HEAD_TOP)}>
+    <div className={cn('sticky z-20 -mx-4 border-y border-border-subtle bg-surface-2 sm:mx-0', STICKY_UNDER_TOPBAR)}>
       <DayHeading {...props} />
     </div>
   )
 }
 
 function RecordRow({
-  rec, onEdit,
+  rec, showDate, onEdit,
 }: {
   rec: AttendanceWithProfile
+  showDate: boolean
   onEdit: (rec: AttendanceWithProfile) => void
 }) {
   return (
@@ -1079,6 +1109,9 @@ function RecordRow({
           </PersonLink>
         </div>
       </td>
+      {showDate && (
+        <td className="px-4 py-3 font-mono text-[12px] whitespace-nowrap text-text-2">{shortDay(rec.date)}</td>
+      )}
       <td className="px-4 py-3"><AttendanceChips facts={rec} /></td>
       <td className="px-4 py-3 font-mono text-[12.5px] text-text-1">{fmtTime(rec.check_in)}</td>
       <td className="px-4 py-3 font-mono text-[12px] text-text-2">{durationLabel(rec)}</td>
@@ -1117,18 +1150,22 @@ function RecordRow({
 }
 
 function RecordCard({
-  rec, onEdit,
+  rec, showDate, onEdit,
 }: {
   rec: AttendanceWithProfile
+  showDate: boolean
   onEdit: (rec: AttendanceWithProfile) => void
 }) {
   return (
     <div className="flex flex-col gap-1.5 border-b border-border-subtle py-3 last:border-0 sm:px-4">
       <div className="flex items-start gap-2.5">
         <Avatar name={rec.profiles?.name ?? '?'} src={rec.profiles?.avatar_url ?? undefined} size="sm" personId={rec.profile_id} />
-        <PersonLink personId={rec.profile_id} className="min-w-0 flex-1 truncate font-ui text-[13px] font-medium text-text-1">
-          {rec.profiles?.name ?? rec.profile_id.slice(0, 8)}
-        </PersonLink>
+        <div className="min-w-0 flex-1">
+          <PersonLink personId={rec.profile_id} className="block truncate font-ui text-[13px] font-medium text-text-1">
+            {rec.profiles?.name ?? rec.profile_id.slice(0, 8)}
+          </PersonLink>
+          {showDate && <span className="block font-mono text-[11px] text-text-4">{shortDay(rec.date)}</span>}
+        </div>
         <button
           onClick={() => onEdit(rec)}
           className="shrink-0 text-text-4 transition-colors hover:text-text-1"

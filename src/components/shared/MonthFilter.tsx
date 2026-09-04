@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { PeriodStepper } from '../ui/PeriodStepper'
 import { SlideSwitch } from '../ui/SlideSwitch'
 import { cn } from '../../lib/cn'
+import { STICKY_UNDER_TOPBAR } from '../../lib/stickyHeader'
 import { formatDayHeading } from '../../lib/dateGroups'
 import type { MonthFilter } from '../../hooks/useMonthFilter'
 
@@ -131,7 +132,17 @@ function StackedMonthFilter({ filter, hideCurrent }: { filter: MonthFilter; hide
 export function DateGroupHeading({ date, count, className }: { date: string; count: number; className?: string }) {
   const { label, relative } = formatDayHeading(date)
   return (
-    <div className={cn('sticky top-0 z-10 flex items-center gap-2 px-5 py-2 bg-surface-2/95 backdrop-blur-sm border-y border-border-subtle', className)}>
+    <div
+      className={cn(
+        // Pinned under the Topbar, not at the top of the viewport: `top-0` put it
+        // behind the bar, where a heading is worse than no heading. Full-bleed on
+        // a phone, where the list it heads has no card frame to sit inside, and
+        // opaque rather than translucent so rows do not ghost through it.
+        'sticky z-20 flex items-center gap-2 -mx-4 border-y border-border-subtle bg-surface-2 px-4 py-2 sm:mx-0',
+        STICKY_UNDER_TOPBAR,
+        className,
+      )}
+    >
       <span className="font-display font-semibold text-[12.5px] text-text-1">{label}</span>
       {relative && (
         <span className="px-1.5 py-0.5 rounded-xs bg-brand-red/10 border border-brand-red/20 text-brand-red text-[10px] font-mono font-semibold uppercase tracking-wide">

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Loader2, Home, Plane, Palmtree, Building2, CircleSlash, Clock3, UserCheck } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '../../lib/cn'
+import { STICKY_UNDER_TOPBAR } from '../../lib/stickyHeader'
 import { Avatar } from '../ui/Avatar'
 import { PersonLink } from './PersonLink'
 import { DatePicker } from '../ui/DatePicker'
@@ -19,13 +20,6 @@ function localToday(): string {
 const fmtTime = (ts: string | null): string =>
   ts ? new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : '-'
 
-/**
- * Group headings pin under the Topbar, which is itself sticky at the top of the
- * scrolling `<main>`. The safe-area inset is part of the offset because the
- * Topbar pads itself by it — without that term the heading slides a notch's
- * worth of pixels behind the bar on a phone.
- */
-const STICKY_HEAD_TOP = 'top-[calc(var(--height-topbar)+env(safe-area-inset-top))]'
 
 /** Avatar (w-7) plus its gap — indents the phone's second line under the name. */
 const NAME_INDENT = 'pl-9.5'
@@ -350,7 +344,7 @@ export function TodayRoster() {
                   group.mine
                     ? 'bg-brand-red/12 border-brand-red/25 text-brand-red'
                     : 'bg-surface-2 border-border-subtle text-text-3',
-                  STICKY_HEAD_TOP,
+                  STICKY_UNDER_TOPBAR,
                 )}
               >
                 {group.label}

@@ -55,7 +55,7 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'added',
-        text: 'Over more than a day, records are listed under a heading per date that stays pinned as you scroll it. Press the date to run the days the other way round; sorting on any other column orders the records within each day.',
+        text: 'Group by day, in the Filters panel: over more than a day, records are listed under a heading per date that stays pinned as you scroll it, in place of the Date column. Press the date to run the days the other way round; sorting on any other column orders the records within each day. Off by default \u2014 a flat list is what the register is usually read as.',
       },
       {
         kind: 'improved',
@@ -80,6 +80,10 @@ export const RELEASES: ChangelogRelease[] = [
       {
         kind: 'improved',
         text: 'The month control on the attendance calendar takes the full width on a phone, so the arrows are big enough to press and the month is unmistakably what the screen is showing.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Date headings in the requests queue pinned behind the top bar instead of under it, so the date you were reading was hidden by the very thing it was stuck to. They now pin in the right place, run edge to edge on a phone, and match the headings on the roster and the register.',
       },
     ],
   },
