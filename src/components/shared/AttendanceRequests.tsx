@@ -1,6 +1,6 @@
 import { useSearchParams } from 'react-router-dom'
 import { useMemo, useState } from 'react'
-import { Loader2, Home, Plane, AlertCircle, Hourglass, Check, X, Inbox, CalendarX2, Plus, Search, UserPlus, SlidersHorizontal, Pencil, Trash2 } from 'lucide-react'
+import { Loader2, Home, Plane, AlertCircle, Hourglass, Check, X, Inbox, CalendarX2, Plus, Search, UserPlus, SlidersHorizontal, Pencil, Trash2, History } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { Avatar } from '../ui/Avatar'
@@ -17,7 +17,7 @@ import { isDecidableBy } from '../../lib/requestReview'
 import { useMonthFilter } from '../../hooks/useMonthFilter'
 import { MonthStepper, DateGroupHeading } from './MonthFilter'
 import { RequestSheet, type RequestDraft } from './RequestSheet'
-import { formatDate, formatTimeOfDay, formatHoursMinutes } from '../../lib/utils'
+import { formatDate, formatTimeOfDay, formatHoursMinutes, formatStampFull } from '../../lib/utils'
 import { DAY_PART_LABEL } from '../../lib/dayParts'
 import { ConfirmDialog } from '../ui/ConfirmDialog'
 import { exceptionTypeLabel } from '../../lib/exceptionTypes'
@@ -96,6 +96,28 @@ const STATUS_PILL: Record<string, string> = {
   rejected: 'bg-error/10 text-error border-error/30',
 }
 
+/** How the metadata line names the decision that was taken. */
+const DECISION_VERB: Record<string, string> = {
+  approved: 'Approved',
+  rejected: 'Rejected',
+}
+
+/**
+ * The paper trail behind a row: when it was filed, and when and by whom it was
+ * decided. Built as parts so a still-pending request prints the first half
+ * alone rather than a trailing separator, and a decision taken before the
+ * reviewer was recorded prints the time without a name it does not have.
+ */
+function metadataOf(row: UnifiedRequest): string[] {
+  const parts = [`Filed ${formatStampFull(row.createdAt)}`]
+  if (row.reviewedAt) {
+    const verb = DECISION_VERB[row.status] ?? 'Decided'
+    const by = row.reviewedByName ? ` by ${row.reviewedByName}` : ''
+    parts.push(`${verb} ${formatStampFull(row.reviewedAt)}${by}`)
+  }
+  return parts
+}
+
 /** One row of the merged queue, normalised out of four differently-shaped tables. */
 interface UnifiedRequest {
   id: string
@@ -130,6 +152,9 @@ interface UnifiedRequest {
   enteredByName: string | null
   status: string
   createdAt: string
+  /** When the decision was taken, and by whom. Both null while it is pending. */
+  reviewedAt: string | null
+  reviewedByName: string | null
   /**
    * Whether the person it is about is also the one who raised it. Only such a
    * request can be edited or withdrawn by its owner — the same line the RLS
@@ -186,6 +211,35 @@ function DayStrip({
           </button>
         )
       })}
+    </div>
+  )
+}
+
+/**
+ * One switch in the filter panel, with the line of explanation it needs.
+ *
+ * A div, not a button: Toggle is itself a <button>, and nesting one inside
+ * another is invalid HTML — React rejects it and the outer press never reaches
+ * the switch. The switch is the control.
+ */
+function ToggleRow({
+  title,
+  hint,
+  checked,
+  onChange,
+}: {
+  title: string
+  hint: string
+  checked: boolean
+  onChange: (v: boolean) => void
+}) {
+  return (
+    <div className="flex items-center gap-3 rounded-sm border border-border-default bg-surface-inset px-3 py-2.5">
+      <div className="min-w-0 flex-1">
+        <span className="block font-ui text-[13px] text-text-1">{title}</span>
+        <span className="block font-ui text-[11.5px]/snug text-text-4">{hint}</span>
+      </div>
+      <Toggle checked={checked} onChange={onChange} label={title} />
     </div>
   )
 }
@@ -316,6 +370,11 @@ export function AttendanceRequests() {
   // the queue is for. Grouping answers "who is off on the 14th", which is a
   // different question and worth a switch rather than a second screen.
   const [groupByDay, setGroupByDay] = useState(false)
+  // Also off by default. The paper trail — filed when, decided when, by whom —
+  // is what you want when a decision is being questioned, and dead weight on
+  // every other reading of the queue, so it is a switch rather than a third
+  // permanent line under each row.
+  const [showMeta, setShowMeta] = useState(false)
   const isDesktop = useIsDesktop()
 
   const deleteLeave = useDeleteLeave()
@@ -358,6 +417,8 @@ export function AttendanceRequests() {
         enteredByName: r.entered_by_profile?.name ?? null,
         status: r.status,
         createdAt: r.created_at,
+        reviewedAt: r.reviewed_at,
+        reviewedByName: r.reviewed_by_profile?.name ?? null,
         ownFiled: r.entered_by === null,
         draft: {
           id: r.id,
@@ -389,6 +450,8 @@ export function AttendanceRequests() {
         enteredByName: null,
         status: r.status,
         createdAt: r.created_at,
+        reviewedAt: r.reviewed_at,
+        reviewedByName: r.reviewed_by_profile?.name ?? null,
         // wfh_requests has no entered_by; granted_directly is the same fact —
         // false means the employee raised it rather than being given it.
         ownFiled: !r.granted_directly,
@@ -425,6 +488,8 @@ export function AttendanceRequests() {
         enteredByName: r.entered_by_profile?.name ?? null,
         status: r.status,
         createdAt: r.created_at,
+        reviewedAt: r.reviewed_at,
+        reviewedByName: r.reviewed_by_profile?.name ?? null,
         ownFiled: r.entered_by === null,
         draft: {
           id: r.id,
@@ -460,6 +525,8 @@ export function AttendanceRequests() {
         enteredByName: r.entered_by_profile?.name ?? null,
         status: r.status,
         createdAt: r.created_at,
+        reviewedAt: r.reviewed_at,
+        reviewedByName: r.reviewed_by_profile?.name ?? null,
         ownFiled: r.entered_by === null,
         draft: {
           id: r.id,
@@ -570,9 +637,11 @@ export function AttendanceRequests() {
   // Search is not counted — it sits in the toolbar where it can be seen.
   const activeFilters =
     (kind !== 'all' ? 1 : 0) + (person !== 'all' ? 1 : 0) + (month.isDefault ? 0 : 1)
-    + (groupByDay ? 1 : 0)
+    + (groupByDay ? 1 : 0) + (showMeta ? 1 : 0)
 
-  const clearFilters = () => { setKind('all'); setPerson('all'); month.reset(); setGroupByDay(false) }
+  const clearFilters = () => {
+    setKind('all'); setPerson('all'); month.reset(); setGroupByDay(false); setShowMeta(false)
+  }
 
   const removingDay = removeLeaveDay.isPending || removeWfhDay.isPending
 
@@ -695,6 +764,25 @@ export function AttendanceRequests() {
             </p>
             {row.reason && (
               <p className="font-ui text-[11.5px]/snug text-text-4 wrap-break-word">{row.reason}</p>
+            )}
+            {/* Dimmer and smaller than the facts line above it: this is the
+                trail behind the request, not what the request is. It wraps part
+                by part, so on a phone "Filed …" and "Approved … by …" stack
+                instead of overflowing the column. */}
+            {showMeta && (
+              <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 font-mono text-[11px] tabular-nums text-text-4">
+                {metadataOf(row).map((part, i) => (
+                  // The icon rides inside the first part rather than beside the
+                  // list, so a line that wraps never leaves it stranded on a
+                  // row of its own.
+                  <span key={part} className="inline-flex items-center gap-1">
+                    {i === 0
+                      ? <History size={10} className="shrink-0" aria-hidden />
+                      : <span className="text-text-4/50">·</span>}
+                    {part}
+                  </span>
+                ))}
+              </p>
             )}
           </div>
         </div>
@@ -999,18 +1087,23 @@ export function AttendanceRequests() {
             <MonthStepper filter={month} stacked />
           </FilterField>
 
+          {/* Two switches, one field: neither narrows the queue — they change
+              how much of each row you see — so they read as one set rather than
+              as two more filters stacked under the ones that do. */}
           <FilterField label="Arrangement">
-            {/* A div, not a button: Toggle is itself a <button>, and nesting one
-                inside another is invalid HTML — React rejects it and the outer
-                press never reaches the switch. The switch is the control. */}
-            <div className="flex items-center gap-3 rounded-sm border border-border-default bg-surface-inset px-3 py-2.5">
-              <div className="min-w-0 flex-1">
-                <span className="block font-ui text-[13px] text-text-1">Group by day</span>
-                <span className="block font-ui text-[11.5px]/snug text-text-4">
-                  A heading per date, with every request that covers it listed underneath.
-                </span>
-              </div>
-              <Toggle checked={groupByDay} onChange={setGroupByDay} label="Group by day" />
+            <div className="flex flex-col gap-2">
+              <ToggleRow
+                title="Group by day"
+                hint="A heading per date, with every request that covers it listed underneath."
+                checked={groupByDay}
+                onChange={setGroupByDay}
+              />
+              <ToggleRow
+                title="Show metadata"
+                hint="When each request was filed, and when and by whom it was approved or rejected."
+                checked={showMeta}
+                onChange={setShowMeta}
+              />
             </div>
           </FilterField>
         </div>

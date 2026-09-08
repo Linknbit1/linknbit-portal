@@ -31,11 +31,26 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: '1.32.0',
+    date: '2026-09-08',
+    title: 'Who decided, and when',
+    highlight:
+      'The requests queue can now show the paper trail behind every row \u2014 when a request was filed, when it was decided, and by whom. It is a switch in the Filters panel, off unless you ask for it.',
+    entries: [
+      {
+        kind: 'added',
+        text: 'Show metadata, in the Filters panel on Requests. With it on, every row carries the date and time it was filed, and the date and time it was approved or rejected, with the name of whoever decided it. It sits under Group by day, is counted in the Filters badge, and Clear all turns it off again.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Exception corrections now record who decided them. Leave, WFH and overtime always did; an exception recorded only the time, so its decision had no name against it. Ones decided before this release still show the time without a name \u2014 there is nothing to recover.',
+      },
+    ],
+  },
+  {
     version: '1.31.0',
     date: '2026-09-04',
     title: 'The company\u2019s month, not yours',
-    highlight:
-      'The attendance calendar now shows everybody\u2019s time off to everybody \u2014 who is away and for how much of the day \u2014 while keeping the reason to the people entitled to it. Requests still awaiting a decision are marked apart, so a day that looks staffed can be told from one that is.',
     entries: [
       {
         kind: 'improved',

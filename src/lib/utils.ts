@@ -137,6 +137,19 @@ export function formatStamp(iso: string): string {
   return `${day}, ${d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true })}`
 }
 
+/**
+ * "04 Aug 2026, 09:00 AM" — {@link formatStamp} with the year on it.
+ *
+ * For audit lines rather than schedules: a request filed last December is still
+ * read in the queue, and "04 Aug" alone leaves the reader guessing which year.
+ */
+export function formatStampFull(iso: string): string {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  const day = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+  return `${day}, ${d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true })}`
+}
+
 /** Just the clock half of {@link formatStamp} — "09:00 AM". */
 export function formatStampTime(iso: string): string {
   const d = new Date(iso)

@@ -441,11 +441,17 @@ export async function reviewException(
   status: 'approved' | 'rejected',
   note?: string,
 ): Promise<AttendanceException> {
+  // reviewed_by is stamped here rather than left to the caller: the other three
+  // review calls take it as an argument, but nothing server-side fills it in, so
+  // an exception decided through the queue used to record when it was decided
+  // and never by whom.
+  const { data: { user } } = await supabase.auth.getUser()
   const { data, error } = await supabase
     .from('attendance_exceptions')
     .update({
       status,
       reviewed_at: new Date().toISOString(),
+      reviewed_by: user?.id ?? null,
       review_note: note ?? null,
     })
     .eq('id', id)
@@ -567,6 +573,12 @@ export interface AttendanceExceptionWithProfile extends AttendanceException {
   profiles: { name: string; avatar_url: string | null; is_active: boolean } | null
   // Set when somebody with can_manage_attendance filed it for them; null for self-submitted.
   entered_by_profile: { name: string } | null
+  /**
+   * Who signed the decision off, for the metadata line on the requests queue.
+   * Null while it is still pending, and on rows decided before the reviewer
+   * was recorded.
+   */
+  reviewed_by_profile: { name: string } | null
 }
 
 export async function fetchAllAttendanceExceptions(
@@ -574,7 +586,7 @@ export async function fetchAllAttendanceExceptions(
 ): Promise<AttendanceExceptionWithProfile[]> {
   let q = supabase
     .from('attendance_exceptions')
-    .select('*, profiles!attendance_exceptions_profile_id_fkey(name, avatar_url, is_active), entered_by_profile:profiles!attendance_exceptions_entered_by_fkey(name)')
+    .select('*, profiles!attendance_exceptions_profile_id_fkey(name, avatar_url, is_active), entered_by_profile:profiles!attendance_exceptions_entered_by_fkey(name), reviewed_by_profile:profiles!attendance_exceptions_reviewed_by_fkey(name)')
     .order('created_at', { ascending: false })
   if (filters.profileId) q = q.eq('profile_id', filters.profileId)
   if (filters.date)      q = q.eq('date', filters.date)
@@ -808,6 +820,12 @@ export interface OvertimeRequestWithProfile extends OvertimeRequest {
   profiles: { name: string; avatar_url: string | null; is_active: boolean } | null
   // Set when somebody with can_manage_attendance filed it for them; null for self-submitted.
   entered_by_profile: { name: string } | null
+  /**
+   * Who signed the decision off, for the metadata line on the requests queue.
+   * Null while it is still pending, and on rows decided before the reviewer
+   * was recorded.
+   */
+  reviewed_by_profile: { name: string } | null
 }
 
 export interface SubmitOvertimePayload {
@@ -888,7 +906,7 @@ export async function fetchAllOvertimeRequests(
 ): Promise<OvertimeRequestWithProfile[]> {
   let q = supabase
     .from('overtime_requests')
-    .select('*, profiles!overtime_requests_profile_id_fkey(name, avatar_url, is_active), entered_by_profile:profiles!overtime_requests_entered_by_fkey(name)')
+    .select('*, profiles!overtime_requests_profile_id_fkey(name, avatar_url, is_active), entered_by_profile:profiles!overtime_requests_entered_by_fkey(name), reviewed_by_profile:profiles!overtime_requests_reviewed_by_fkey(name)')
     .order('date', { ascending: false })
   if (status) q = q.eq('status', status)
   const { data, error } = await q
@@ -966,6 +984,12 @@ export interface WfhRequestWithProfile extends WfhRequest {
   // is_active gates whether the row is listed at all: somebody who has left the
   // company comes off the shared queues and calendars.
   profiles: { name: string; avatar_url: string | null; is_active: boolean } | null
+  /**
+   * Who signed the decision off, for the metadata line on the requests queue.
+   * Null while it is still pending, and on rows decided before the reviewer
+   * was recorded.
+   */
+  reviewed_by_profile: { name: string } | null
 }
 
 /**
@@ -1029,7 +1053,7 @@ export async function fetchMyWfhRequests(): Promise<WfhRequest[]> {
 export async function fetchAllWfhRequests(status?: string): Promise<WfhRequestWithProfile[]> {
   let q = supabase
     .from('wfh_requests')
-    .select('*, profiles!wfh_requests_profile_id_fkey(name, avatar_url, is_active)')
+    .select('*, profiles!wfh_requests_profile_id_fkey(name, avatar_url, is_active), reviewed_by_profile:profiles!wfh_requests_reviewed_by_fkey(name)')
     .order('created_at', { ascending: false })
   if (status) q = q.eq('status', status)
   const { data, error } = await q
@@ -1168,6 +1192,12 @@ export interface LeaveRequestWithProfile extends LeaveRequest {
   leave_types: { name: string; color: string } | null
   // Set when HR/an admin entered the leave on the employee's behalf; null for self-submitted.
   entered_by_profile: { name: string } | null
+  /**
+   * Who signed the decision off, for the metadata line on the requests queue.
+   * Null while it is still pending, and on rows decided before the reviewer
+   * was recorded.
+   */
+  reviewed_by_profile: { name: string } | null
 }
 
 /** How much of a day a request covers. Shared by leave and WFH. */
@@ -1331,7 +1361,7 @@ export async function fetchWfhByProfile(profileId: string): Promise<WfhRequest[]
 export async function fetchAllLeaveRequests(status?: string): Promise<LeaveRequestWithProfile[]> {
   let q = supabase
     .from('leave_requests')
-    .select('*, profiles!leave_requests_profile_id_fkey(name, avatar_url, is_active), leave_types(name, color), entered_by_profile:profiles!leave_requests_entered_by_fkey(name)')
+    .select('*, profiles!leave_requests_profile_id_fkey(name, avatar_url, is_active), leave_types(name, color), entered_by_profile:profiles!leave_requests_entered_by_fkey(name), reviewed_by_profile:profiles!leave_requests_reviewed_by_fkey(name)')
     .order('created_at', { ascending: false })
   if (status) q = q.eq('status', status)
   const { data, error } = await q
