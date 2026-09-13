@@ -31,11 +31,60 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: '1.32.0',
+    date: '2026-09-13',
+    title: 'Not everybody\u2019s week is the same week',
+    highlight:
+      'Somebody who works weekends can now check in and file a standup on the days they actually work, because working days are set per person instead of being the company\u2019s calendar for everyone. And business-development daily updates became a real module: only the people who owe one are asked for it, today\u2019s can be changed until midnight, and you can read your own history back.',
+    entries: [
+      {
+        kind: 'added',
+        text: 'Working days are now set per person. The default is unchanged \u2014 the company calendar, Monday to Friday plus any working Saturdays \u2014 but somebody can be given a specific week of their own (Tuesday to Saturday, say) or marked flexible, meaning any day that is not a public holiday. Check-in, the standup window, the absence count and leave arithmetic all follow whichever applies to that person.',
+      },
+      {
+        kind: 'fixed',
+        text: 'People who work weekends could not mark attendance or file a standup at all. Both refused every Saturday and Sunday because the only working-day rule in the portal was the company\u2019s. Now they can do both on the days they work.',
+      },
+      {
+        kind: 'improved',
+        text: 'Working days are deliberately separate from Job type. Job type still says where somebody works from and drives the office-network and timing rules; working days say which days they work. A hybrid employee can keep the company week or have their own, without the two settings fighting over one field.',
+        feature: 'can_manage_people',
+      },
+      {
+        kind: 'improved',
+        text: 'Somebody on flexible hours is no longer marked absent. No particular day was promised, so there is no day to find them missing from.',
+      },
+      {
+        kind: 'added',
+        text: 'Business Dev → Daily Updates now has a My history tab: the last 30 days, newest first, with the days you filed counted against the days you owed. Days you missed are shown as missed rather than quietly left out, and days that were not working days for you are not counted against you.',
+        feature: 'can_view_bd',
+      },
+      {
+        kind: 'added',
+        text: 'Only the people who hold Submit BD daily updates are asked for one. Until now the screen listed everyone who could open the BD module \u2014 which includes admins overseeing the department \u2014 and named them as still owing a check-in they were never expected to write. There is also a Who files these tab for one-off exceptions.',
+        feature: 'can_view_bd',
+      },
+      {
+        kind: 'improved',
+        text: 'A daily update can be corrected until midnight on the day it covers, and not after. Amending a settled day is now something only whoever manages BD can do.',
+        feature: 'can_view_bd',
+      },
+      {
+        kind: 'fixed',
+        text: 'A business developer\u2019s own day off is no longer reported as a missing update.',
+        feature: 'can_view_bd',
+      },
+      {
+        kind: 'improved',
+        text: 'Daily updates are read by their author and by whoever holds View the team\u2019s BD daily updates, rather than by everyone with BD access.',
+        feature: 'can_view_bd',
+      },
+    ],
+  },
+  {
     version: '1.31.0',
     date: '2026-09-04',
     title: 'The company\u2019s month, not yours',
-    highlight:
-      'The attendance calendar now shows everybody\u2019s time off to everybody \u2014 who is away and for how much of the day \u2014 while keeping the reason to the people entitled to it. Requests still awaiting a decision are marked apart, so a day that looks staffed can be told from one that is.',
     entries: [
       {
         kind: 'improved',

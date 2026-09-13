@@ -6,6 +6,7 @@ import type {
   BdActivity, BdActivityType, BdActivityOutcome,
   BdMeeting, MeetingType, MeetingPlatform,
   BdTask, BdTaskRecurrence, BdProject, BdDailyUpdate, BdTarget, BdHandoff, HandoffServicePlan, HandoffOutcome,
+  BdUpdateSlot, BdUpdateHistoryDay, BdUpdateParticipant, BdUpdateParticipationMode,
   TaskStatus, ProjectStatus, Priority,
 } from '../types'
 
@@ -762,6 +763,116 @@ export async function fetchDailyUpdates(): Promise<BdDailyUpdate[]> {
     .order('update_date', { ascending: false })
   if (error) throw error
   return data.map(mapUpdate)
+}
+
+/**
+ * Am I expected to file one? Settings-driven, like the standup equivalent, so
+ * the page asks the database instead of restating the rule as a role list.
+ */
+export async function fetchAmIBdUpdateParticipant(): Promise<boolean> {
+  const { data, error } = await supabase.rpc('am_i_bd_update_participant')
+  if (error) throw error
+  return data ?? false
+}
+
+/**
+ * Everyone who owes an update on `date`, filed or not.
+ *
+ * Deliberately not derived from the BD people list: that is everyone who can
+ * *see* the module, which includes admins through the administrator wildcard,
+ * and chasing them for a check-in they were never expected to write was the
+ * original complaint.
+ */
+export async function fetchBdUpdateRoster(date: string): Promise<BdUpdateSlot[]> {
+  const { data, error } = await supabase.rpc('bd_update_roster', { p_date: date })
+  if (error) throw error
+  return (data ?? []).map((row) => ({
+    repId: row.profile_id,
+    repName: row.profile_name,
+    avatarUrl: row.avatar_url,
+    isWorkingDay: row.is_working_day,
+    update: row.update_id
+      ? {
+          id: row.update_id,
+          repId: row.profile_id,
+          repName: row.profile_name,
+          date,
+          submittedAt: row.submitted_at,
+          platforms: narrowAll(CHANNELS, row.platforms ?? []),
+          summary: row.summary ?? '',
+          proposalsSent: row.proposals_sent ?? 0,
+          callsMade: row.calls_made ?? 0,
+          meetingsHeld: row.meetings_held ?? 0,
+          leadsAdded: row.leads_added ?? 0,
+        }
+      : null,
+  }))
+}
+
+/** One person's day-by-day history across a date range, gaps included. */
+export async function fetchBdUpdateHistory(
+  profileId: string,
+  from: string,
+  to: string,
+): Promise<BdUpdateHistoryDay[]> {
+  const { data, error } = await supabase.rpc('bd_update_history', {
+    p_profile: profileId, p_from: from, p_to: to,
+  })
+  if (error) throw error
+  return (data ?? []).map((row) => ({
+    repId: profileId,
+    repName: '',
+    avatarUrl: null,
+    date: row.update_date,
+    isWorkingDay: row.is_working_day,
+    isRequired: row.is_required,
+    canEdit: row.can_edit,
+    update: row.update_id
+      ? {
+          id: row.update_id,
+          repId: profileId,
+          repName: '',
+          date: row.update_date,
+          submittedAt: row.submitted_at,
+          platforms: narrowAll(CHANNELS, row.platforms ?? []),
+          summary: row.summary ?? '',
+          proposalsSent: row.proposals_sent ?? 0,
+          callsMade: row.calls_made ?? 0,
+          meetingsHeld: row.meetings_held ?? 0,
+          leadsAdded: row.leads_added ?? 0,
+        }
+      : null,
+  }))
+}
+
+export async function fetchBdUpdateParticipants(): Promise<BdUpdateParticipant[]> {
+  const { data, error } = await supabase.rpc('bd_update_participants_list')
+  if (error) throw error
+  return (data ?? []).map((row) => ({
+    profileId: row.profile_id,
+    name: row.profile_name,
+    avatarUrl: row.avatar_url,
+    role: row.role,
+    hasGrant: row.has_grant,
+    override: toParticipationMode(row.override),
+    isRequired: row.is_required,
+    note: row.note,
+  }))
+}
+
+function toParticipationMode(value: string | null): BdUpdateParticipationMode {
+  return value === 'required' || value === 'excluded' ? value : 'inherit'
+}
+
+export async function setBdUpdateParticipant(
+  profileId: string,
+  mode: BdUpdateParticipationMode,
+  note?: string | null,
+): Promise<void> {
+  const { error } = await supabase.rpc('set_bd_update_participant', {
+    p_profile: profileId, p_mode: mode, p_note: note ?? undefined,
+  })
+  if (error) throw error
 }
 
 /**

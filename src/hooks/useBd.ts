@@ -8,7 +8,7 @@ import { CLIENT_KEYS } from './useClients'
 import type { BdComment, BdCommentParent, BdPerson } from '../api/bd'
 import type {
   Lead, BdActivity, BdMeeting, BdTask, BdProject, BdDailyUpdate, BdTarget, TaskStatus,
-  LeadStage,
+  LeadStage, BdUpdateParticipationMode,
 } from '../types'
 
 /**
@@ -49,6 +49,12 @@ export const BD_KEYS = {
   tasks: ['bd', 'tasks'] as const,
   projects: ['bd', 'projects'] as const,
   updates: ['bd', 'updates'] as const,
+  /** Who owes an update on one date — a roster of people, not a list of updates. */
+  updateRoster: (date: string) => ['bd', 'updates', 'roster', date] as const,
+  updateHistory: (profileId: string, from: string, to: string) =>
+    ['bd', 'updates', 'history', profileId, from, to] as const,
+  amIUpdateParticipant: ['bd', 'updates', 'amIParticipant'] as const,
+  updateParticipants: ['bd', 'updates', 'participants'] as const,
   targets: (periodMonth: string) => ['bd', 'targets', periodMonth] as const,
   handoffs: ['bd', 'handoffs'] as const,
   comments: (parentType: BdCommentParent, parentId: string) =>
@@ -597,6 +603,53 @@ export function useSaveBdUpdate() {
     },
     run: ({ update }) => bd.saveDailyUpdate(update),
     errorMessage: 'Could not save your update. It has been undone.',
+  })
+}
+
+export function useAmIBdUpdateParticipant() {
+  return useQuery({
+    queryKey: BD_KEYS.amIUpdateParticipant,
+    queryFn: bd.fetchAmIBdUpdateParticipant,
+    staleTime: 5 * 60_000,
+  })
+}
+
+export function useBdUpdateRoster(date: string) {
+  return useQuery({
+    queryKey: BD_KEYS.updateRoster(date),
+    queryFn: () => bd.fetchBdUpdateRoster(date),
+    staleTime: STALE,
+  })
+}
+
+export function useBdUpdateHistory(profileId: string, from: string, to: string) {
+  return useQuery({
+    queryKey: BD_KEYS.updateHistory(profileId, from, to),
+    queryFn: () => bd.fetchBdUpdateHistory(profileId, from, to),
+    enabled: profileId !== '',
+    staleTime: STALE,
+  })
+}
+
+export function useBdUpdateParticipants() {
+  return useQuery({
+    queryKey: BD_KEYS.updateParticipants,
+    queryFn: bd.fetchBdUpdateParticipants,
+    staleTime: 5 * 60_000,
+  })
+}
+
+export function useSetBdUpdateParticipant() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ profileId, mode, note }: {
+      profileId: string
+      mode: BdUpdateParticipationMode
+      note?: string | null
+    }) => bd.setBdUpdateParticipant(profileId, mode, note),
+    // Changing who is required changes the roster and the viewer's own nav
+    // prompt, so the whole updates subtree goes rather than just the list.
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['bd', 'updates'] }),
   })
 }
 

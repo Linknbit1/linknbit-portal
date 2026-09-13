@@ -54,22 +54,41 @@ export async function inviteUser(payload: InvitePayload): Promise<InviteResult> 
   return data
 }
 
-export async function updatePersonRole(
-  profileId: string,
-  role: string,
-  designationId: string | null,
-  jobType: string,
+/**
+ * Which days of the week this person works.
+ *
+ * Separate from `jobType`, which says where they work from and drives the
+ * office-network and schedule-window policies. The two are independent: a
+ * hybrid employee may keep the company's Mon–Fri week or work Tue–Sat.
+ */
+export type ScheduleMode = 'company' | 'custom_days' | 'flexible'
+
+export interface RoleUpdatePayload {
+  profileId: string
+  role: string
+  designationId: string | null
+  jobType: string
   /** HH:MM to set the allowed check-in override, or '' to clear it (normal rule). */
-  allowedCheckIn: string,
-  attendanceExcluded: boolean,
-): Promise<void> {
+  allowedCheckIn: string
+  attendanceExcluded: boolean
+  scheduleMode: ScheduleMode
+  /** 0 = Sunday … 6 = Saturday. Read only when `scheduleMode` is 'custom_days'. */
+  workDays: number[]
+}
+
+export async function updatePersonRole(payload: RoleUpdatePayload): Promise<void> {
   const { error } = await supabase.rpc('admin_update_profile_role', {
-    p_profile_id: profileId,
-    p_role: role,
-    p_designation_id: designationId ?? undefined,
-    p_job_type: jobType,
-    p_allowed_check_in: allowedCheckIn,
-    p_attendance_excluded: attendanceExcluded,
+    p_profile_id: payload.profileId,
+    p_role: payload.role,
+    p_designation_id: payload.designationId ?? undefined,
+    p_job_type: payload.jobType,
+    p_allowed_check_in: payload.allowedCheckIn,
+    p_attendance_excluded: payload.attendanceExcluded,
+    p_schedule_mode: payload.scheduleMode,
+    // Sorted so the stored array reads as a week rather than as click order.
+    p_work_days: payload.scheduleMode === 'custom_days'
+      ? [...payload.workDays].sort((a, b) => a - b)
+      : undefined,
   })
   if (error) throw error
 }

@@ -5,6 +5,22 @@ export function formatDate(dateStr: string): string {
   return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
+/**
+ * Calendar date `offset` days from today, as YYYY-MM-DD in the viewer's own
+ * timezone.
+ *
+ * Not `toISOString().slice(0, 10)`: that converts to UTC first, so east of
+ * Greenwich it returns yesterday's date for the early hours of the day — in
+ * Karachi, anything before 05:00.
+ */
+export function localIsoDate(offset = 0): string {
+  const d = new Date()
+  d.setDate(d.getDate() + offset)
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${d.getFullYear()}-${month}-${day}`
+}
+
 export function formatRelativeTime(dateStr: string): string {
   const date = new Date(dateStr)
   const now = new Date()
@@ -205,6 +221,48 @@ export const JOB_TYPE_LABELS: Record<string, string> = {
 
 export const JOB_TYPE_OPTIONS: { value: string; label: string }[] =
   Object.entries(JOB_TYPE_LABELS).map(([value, label]) => ({ value, label }))
+
+/**
+ * Which days someone works — a different question from job type, which says
+ * where they work from. Kept apart so a hybrid employee can have either the
+ * company's week or their own.
+ */
+export const SCHEDULE_MODE_LABELS: Record<string, string> = {
+  company: 'Company calendar',
+  custom_days: 'Specific days',
+  flexible: 'Flexible (any day)',
+}
+
+export const SCHEDULE_MODE_OPTIONS: { value: string; label: string }[] =
+  Object.entries(SCHEDULE_MODE_LABELS).map(([value, label]) => ({ value, label }))
+
+export const SCHEDULE_MODE_HINTS: Record<string, string> = {
+  company: 'Mon–Fri (plus working Saturdays), holidays off — the default for everyone.',
+  custom_days: 'Only the days ticked below count as working days: check-in and standup open on those, and only those are marked absent.',
+  flexible: 'Can check in and file a standup any non-holiday day, and is never auto-marked absent.',
+}
+
+/**
+ * Narrows the `text` column the generated types give us to the three values the
+ * CHECK constraint actually allows, without an assertion. An unknown value is a
+ * row written by something newer than this bundle; treating it as the company
+ * calendar is the safe reading.
+ */
+export function toScheduleMode(value: string | null | undefined): 'company' | 'custom_days' | 'flexible' {
+  if (value === 'custom_days' || value === 'flexible') return value
+  return 'company'
+}
+
+/** 0 = Sunday, matching Postgres EXTRACT(DOW) and JavaScript getDay(). */
+export const WEEKDAYS: { value: number; short: string; label: string }[] = [
+  { value: 0, short: 'Sun', label: 'Sunday' },
+  { value: 1, short: 'Mon', label: 'Monday' },
+  { value: 2, short: 'Tue', label: 'Tuesday' },
+  { value: 3, short: 'Wed', label: 'Wednesday' },
+  { value: 4, short: 'Thu', label: 'Thursday' },
+  { value: 5, short: 'Fri', label: 'Friday' },
+  { value: 6, short: 'Sat', label: 'Saturday' },
+]
 
 export const ROLE_LABELS: Record<UserRole, string> = {
   super_admin: 'Super Admin',
