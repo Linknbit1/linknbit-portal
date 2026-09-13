@@ -1,26 +1,24 @@
 import { useMemo, useState } from 'react'
 import {
   AlertCircle, CalendarCheck, CheckCircle2, ClipboardList, Clock, History,
-  Minus, Pencil, Phone, Plus, Send, Settings2, UserPlus, Users,
+  Minus, Pencil, Phone, Plus, Send, UserPlus, Users,
 } from 'lucide-react'
 import { Topbar } from '../../components/layout/Topbar'
 import { Button } from '../../components/ui/Button'
 import { Select } from '../../components/ui/Select'
 import { Avatar } from '../../components/ui/Avatar'
 import { ChannelChip } from '../../components/shared/BdChips'
+import { MonthStepper } from '../../components/shared/MonthFilter'
 import { cn } from '../../lib/cn'
-import { formatDate, localIsoDate } from '../../lib/utils'
+import { formatDate, formatRelativeTime, localIsoDate } from '../../lib/utils'
 import { useBd } from '../../context/BdContext'
 import { useCanAccess } from '../../hooks/useRoleFlags'
+import { useMonthFilter } from '../../hooks/useMonthFilter'
 import {
   useAmIBdUpdateParticipant, useBdUpdateHistory, useBdUpdateRoster,
 } from '../../hooks/useBd'
 import { DailyUpdateModal } from './DailyUpdateModal'
-import { BdUpdateParticipantsPanel } from './BdUpdateParticipantsPanel'
-import type { BdDailyUpdate, BdUpdateHistoryDay, BdUpdateSlot } from '../../types'
-
-/** How far back the personal history reaches in one go. */
-const HISTORY_DAYS = 30
+import type { BdDailyUpdate, BdUpdateSlot } from '../../types'
 
 const DAY_OPTIONS = [
   { value: '0', label: 'Today' },
@@ -30,7 +28,7 @@ const DAY_OPTIONS = [
   { value: '-7', label: 'A week ago' },
 ]
 
-type Tab = 'today' | 'history' | 'who'
+type Tab = 'today' | 'history'
 
 /**
  * Business-development daily check-ins.
@@ -42,14 +40,13 @@ type Tab = 'today' | 'history' | 'who'
  *    admin overseeing the department is no longer named as missing an update
  *    they were never expected to file.
  *  • **A day off is not a miss.** The roster carries each person's own
- *    working-day answer, so somebody on a custom or flexible week is not
- *    reported absent from a day they never worked.
- *  • **History exists.** Anyone required to file can read their own back, gaps
- *    included; a lead with can_view_bd_team_updates can read the team's.
+ *    working-day answer, so somebody on a custom or flexible week is neither
+ *    reported absent from a day they never worked nor prompted to file on one.
+ *  • **History exists.** Anyone who files can read their own updates back a
+ *    month at a time. Only days they actually wrote something appear.
  */
 export default function DailyUpdatesPage() {
   const { viewerRepId, activities, meetings, avatarOf } = useBd()
-  const canManage = useCanAccess('can_manage_bd')
   const canSeeTeam = useCanAccess('can_view_bd_team_updates')
   const { data: amRequired = false } = useAmIBdUpdateParticipant()
 
@@ -77,11 +74,6 @@ export default function DailyUpdatesPage() {
             <TabButton active={tab === 'history'} onClick={() => setTab('history')} icon={History}>
               My history
             </TabButton>
-            {canManage && (
-              <TabButton active={tab === 'who'} onClick={() => setTab('who')} icon={Settings2}>
-                Who files these
-              </TabButton>
-            )}
           </nav>
 
           {tab === 'today' && (
@@ -112,7 +104,6 @@ export default function DailyUpdatesPage() {
           <HistoryView profileId={viewerRepId} onEdit={openForm} />
         )}
 
-        {tab === 'who' && canManage && <BdUpdateParticipantsPanel />}
       </div>
 
       {formOpen && (
@@ -197,10 +188,33 @@ function TodayView({
   const isToday = dayOffset === 0
   const myUpdate = mine?.update ?? null
 
+  /**
+   * Nothing is owed from you on a day you do not work.
+   *
+   * `amRequired` answers "do you file these at all", which is a question about
+   * the person and not about the date — on its own it chased a business
+   * developer for a Sunday update. The roster carries that person's own
+   * working-day answer, so the prompt waits for it rather than assuming: while
+   * the roster loads `mine` is undefined, and showing the banner then only to
+   * withdraw it is worse than showing it a moment late.
+   */
+  const owedToday = amRequired && isToday && mine?.isWorkingDay === true
+  const notWorkingToday = amRequired && isToday && !loading && mine?.isWorkingDay === false
+
   return (
     <>
+      {/* ── Nothing owed: say so, rather than leaving the day looking unfinished ── */}
+      {notWorkingToday && (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-border-default bg-surface-1 px-4 py-3">
+          <Minus size={15} className="shrink-0 text-text-4" />
+          <p className="font-ui text-[13px] text-text-2">
+            Today is not one of your working days, so no update is expected from you.
+          </p>
+        </div>
+      )}
+
       {/* ── Your own check-in, when one is owed ── */}
-      {amRequired && isToday && (
+      {owedToday && (
         <div className={cn(
           'flex flex-wrap items-center gap-x-4 gap-y-3 rounded-lg border px-4 py-3.5',
           myUpdate?.submittedAt
@@ -276,7 +290,7 @@ function TodayView({
               slot={slot}
               logged={loggedBy.get(slot.repId)}
               avatarUrl={avatarOf(slot.repId)}
-              onWrite={slot.repId === viewerRepId && isToday
+              onWrite={slot.repId === viewerRepId && isToday && slot.isWorkingDay
                 ? () => onWrite(slot.update)
                 : undefined}
             />
@@ -377,101 +391,104 @@ function KeyNumbers({ update }: { update: BdDailyUpdate }) {
   )
 }
 
-/* ── History ──────────────────────────────────────────────────────────────── */
+/* ── History ──────────────────────────────────────────────────────── */
 
+/**
+ * The updates this person actually wrote, a month at a time.
+ *
+ * Only filed days appear. A calendar with a row for every day was showing
+ * thirty "nothing here" rows to read four real ones, and a day nobody wrote
+ * anything about has nothing to say.
+ */
 function HistoryView({ profileId, onEdit }: {
   profileId: string
-  onEdit: (update: BdDailyUpdate | null) => void
+  onEdit: (update: BdDailyUpdate) => void
 }) {
-  const to = localIsoDate(0)
-  const from = localIsoDate(-(HISTORY_DAYS - 1))
-  const { data: days = [], isPending } = useBdUpdateHistory(profileId, from, to)
+  const monthFilter = useMonthFilter()
+  const range = monthFilter.allMonths ? null : monthRange(monthFilter.year, monthFilter.month)
+  const { data: updates = [], isPending } = useBdUpdateHistory(profileId, range)
 
-  // A day only counts as missed if something was actually expected of you on it.
-  const owed = days.filter((d) => d.isRequired && d.isWorkingDay)
-  const filed = owed.filter((d) => d.update?.submittedAt)
-
-  if (isPending) {
-    return (
-      <div className="flex flex-col gap-2">
-        {[0, 1, 2, 3, 4].map((i) => (
-          <div key={i} className="h-16 animate-pulse rounded-lg border border-border-default bg-surface-1" />
-        ))}
-      </div>
-    )
-  }
-
-  if (days.length === 0) {
-    return (
-      <EmptyState
-        icon={History}
-        title="No history yet"
-        body="Daily updates you file will be listed here, newest first."
-      />
-    )
-  }
+  const today = localIsoDate(0)
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center gap-2 px-0.5">
+      <div className="flex flex-wrap items-center gap-2">
         <h3 className="font-ui text-[11px] font-semibold uppercase tracking-widest text-text-4">
-          Last {HISTORY_DAYS} days
+          My updates
         </h3>
-        <span className="font-mono text-[11px] text-text-4">
-          {filed.length}/{owed.length} filed
-        </span>
+        {!isPending && updates.length > 0 && (
+          <span className="font-mono text-[11px] text-text-4">
+            {updates.length} {updates.length === 1 ? 'day' : 'days'}
+          </span>
+        )}
+        <div className="ml-auto flex items-center gap-2">
+          <MonthStepper filter={monthFilter} hideCurrent />
+        </div>
       </div>
 
-      {days.map((day) => <HistoryRow key={day.date} day={day} onEdit={onEdit} />)}
+      {isPending ? (
+        <div className="flex flex-col gap-2">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="h-24 animate-pulse rounded-lg border border-border-default bg-surface-1" />
+          ))}
+        </div>
+      ) : updates.length === 0 ? (
+        <EmptyState
+          icon={History}
+          title={monthFilter.allMonths ? 'No updates yet' : `Nothing filed in ${monthFilter.label}`}
+          body="Daily updates you file are listed here, newest first."
+        />
+      ) : (
+        updates.map((update) => (
+          <HistoryRow
+            key={update.id}
+            update={update}
+            // Today's is the only one that can still be changed. Everything
+            // before it is settled, and the database refuses the write anyway.
+            editable={update.date === today}
+            onEdit={onEdit}
+          />
+        ))
+      )}
     </div>
   )
 }
 
-function HistoryRow({ day, onEdit }: {
-  day: BdUpdateHistoryDay
-  onEdit: (update: BdDailyUpdate | null) => void
-}) {
-  const update = day.update?.submittedAt ? day.update : null
-  const missed = !update && day.isRequired && day.isWorkingDay
+/** Inclusive first and last day of a month, as 'YYYY-MM-DD'. */
+function monthRange(year: number, month: number): { from: string; to: string } {
+  const mm = String(month).padStart(2, '0')
+  // Day 0 of the next month is the last day of this one, leap years included.
+  const last = new Date(year, month, 0).getDate()
+  return { from: `${year}-${mm}-01`, to: `${year}-${mm}-${String(last).padStart(2, '0')}` }
+}
 
+function HistoryRow({ update, editable, onEdit }: {
+  update: BdDailyUpdate
+  editable: boolean
+  onEdit: (update: BdDailyUpdate) => void
+}) {
   return (
-    <article className={cn(
-      'flex flex-col gap-3 rounded-lg border bg-surface-1 p-4',
-      missed ? 'border-warning/25' : 'border-border-default',
-      !day.isWorkingDay && 'opacity-70',
-    )}>
+    <article className="flex flex-col gap-3 rounded-lg border border-border-default bg-surface-1 p-4">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-        <h4 className="font-ui text-[13px] font-semibold text-text-1">{formatDate(day.date)}</h4>
+        <h4 className="font-ui text-[13px] font-semibold text-text-1">{formatDate(update.date)}</h4>
         <span className="flex items-center gap-1.5 font-mono text-[10.5px] text-text-4">
-          {!day.isWorkingDay ? (
-            <><Minus size={11} /> Not a working day</>
-          ) : update ? (
-            <><CheckCircle2 size={11} className="text-success" /> Filed</>
-          ) : day.isRequired ? (
-            <><AlertCircle size={11} className="text-warning" /> Missed</>
-          ) : (
-            <><Minus size={11} /> Not required</>
-          )}
+          <CheckCircle2 size={11} className="text-success" />
+          {update.submittedAt ? formatRelativeTime(update.submittedAt) : 'Filed'}
         </span>
 
         <div className="ml-auto flex items-center gap-2.5">
-          {update?.platforms.map((channel) => <ChannelChip key={channel} channel={channel} />)}
-          {/* A manager may amend an old day, but only one that exists — the form
-              writes today's date when handed nothing, so offering "Write" on a
-              past blank row would silently file it against today. */}
-          {day.canEdit && (update || day.date === localIsoDate(0)) && (
+          {update.platforms.map((channel) => <ChannelChip key={channel} channel={channel} />)}
+          {editable && (
             <Button size="sm" variant="ghost" iconLeft={<Pencil size={13} />}
               onClick={() => onEdit(update)}>
-              {update ? 'Edit' : 'Write'}
+              Edit
             </Button>
           )}
         </div>
       </div>
 
-      {update && (
-        <p className="whitespace-pre-line font-ui text-body-sm/relaxed text-text-2">{update.summary}</p>
-      )}
-      {update && <KeyNumbers update={update} />}
+      <p className="whitespace-pre-line font-ui text-body-sm/relaxed text-text-2">{update.summary}</p>
+      <KeyNumbers update={update} />
     </article>
   )
 }

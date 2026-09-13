@@ -32,10 +32,10 @@ import type { ChangelogRelease } from '../../types'
 export const RELEASES: ChangelogRelease[] = [
   {
     version: '1.32.0',
-    date: '2026-09-13',
+    date: '2026-09-14',
     title: 'Not everybody\u2019s week is the same week',
     highlight:
-      'Somebody who works weekends can now check in and file a standup on the days they actually work, because working days are set per person instead of being the company\u2019s calendar for everyone. And business-development daily updates became a real module: only the people who owe one are asked for it, today\u2019s can be changed until midnight, and you can read your own history back.',
+      'Somebody who works weekends can now mark attendance and file a standup on the days they actually work. Working days are set per person instead of being the company\u2019s calendar for everyone, so a Saturday you work counts as a working day and a weekday you do not is never held against you.',
     entries: [
       {
         kind: 'added',
@@ -56,22 +56,22 @@ export const RELEASES: ChangelogRelease[] = [
       },
       {
         kind: 'added',
-        text: 'Business Dev → Daily Updates now has a My history tab: the last 30 days, newest first, with the days you filed counted against the days you owed. Days you missed are shown as missed rather than quietly left out, and days that were not working days for you are not counted against you.',
+        text: 'Business Dev → Daily Updates now has a My history tab: the updates you filed, newest first, a month at a time with an All months option. Only days you actually wrote something appear.',
         feature: 'can_view_bd',
       },
       {
         kind: 'added',
-        text: 'Only the people who hold Submit BD daily updates are asked for one. Until now the screen listed everyone who could open the BD module \u2014 which includes admins overseeing the department \u2014 and named them as still owing a check-in they were never expected to write. There is also a Who files these tab for one-off exceptions.',
+        text: 'Only the people who hold Submit BD daily updates are asked for one, and the permission is the whole rule. Until now the screen listed everyone who could open the BD module \u2014 which includes admins overseeing the department \u2014 and named them as still owing a check-in they were never expected to write.',
         feature: 'can_view_bd',
       },
       {
         kind: 'improved',
-        text: 'A daily update can be corrected until midnight on the day it covers, and not after. Amending a settled day is now something only whoever manages BD can do.',
+        text: 'An update belongs to the day it covers, and can only be filed or changed on that day. After midnight in company time the day is settled and nobody can reopen it \u2014 not a manager either.',
         feature: 'can_view_bd',
       },
       {
         kind: 'fixed',
-        text: 'A business developer\u2019s own day off is no longer reported as a missing update.',
+        text: 'A business developer is no longer asked for an update on a day they do not work, and their day off is no longer reported as a missing update. The prompt used to appear on a Sunday because it asked whether you file updates at all rather than whether you were working that day.',
         feature: 'can_view_bd',
       },
       {

@@ -1454,7 +1454,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
         id: 'bd-updates',
         title: 'Daily updates',
         summary:
-          'A written check-in at the end of a business-development day. Only the people who hold the Submit BD daily updates permission are asked for one, you can change today’s until midnight, and My history keeps every day you filed alongside the ones you missed.',
+          'A written check-in at the end of a business-development day. Only the people who hold the Submit BD daily updates permission are asked for one, you can change today’s until midnight, and My history keeps everything you have filed, a month at a time.',
         where: 'Business Dev → Daily Updates',
         feature: 'can_view_bd',
         procedures: [
@@ -1475,20 +1475,21 @@ export const DOC_CHAPTERS: DocChapter[] = [
             ],
           },
           {
-            title: 'Read your own history',
+            title: 'Read your own updates back',
             steps: [
               'Open the My history tab.',
-              'The last 30 days are listed newest first, with a count of how many you filed out of how many were owed.',
-              'Days marked Missed are days you were required and did not file. Days marked Not a working day were never expected of you.',
+              'Step the month box back and forward, or press All months.',
+              'The updates you filed that month are listed newest first. Only days you wrote something appear.',
             ],
           },
         ],
         notes: [
-          'You are asked for an update only if you hold Submit BD daily updates. Being able to open the BD module is not the same thing, which is why an admin overseeing the department is never listed as missing one.',
-          'Corrections close at midnight in company time. After that the day is settled and only somebody who manages BD can amend it.',
-          'A day that is not a working day for you is never counted as missed — including a Saturday you do work, if that is how your week is set up.',
+          'You are asked for an update only if you hold Submit BD daily updates. Being able to open the BD module is not the same thing, which is why an admin overseeing the department is never asked for one.',
+          'An update belongs to the day it covers. It can only be filed, changed or removed on that day — after midnight in company time the day is settled, and nobody can reopen it.',
+          'On a day that is not a working day for you, nothing is expected and nothing is counted against you — including a Saturday you do work, if that is how your week is set up.',
           'Notes keep the line breaks you type, so a bulleted list stays a bulleted list.',
           'If you filed nothing but logged outreach or hosted a meeting, your card says so. The system knowing you were busy is not a substitute for the check-in, but it is not held against you either.',
+          'Who is asked for an update is decided by the Submit BD daily updates permission in Settings → Roles, and nowhere else.',
         ],
       },
       {
@@ -1512,36 +1513,6 @@ export const DOC_CHAPTERS: DocChapter[] = [
         notes: [
           'The list is everyone required to file, not everyone in BD — so it is a roster you can actually chase.',
           'People not working that day are listed last and dimmed, and are left out of the filed count entirely.',
-        ],
-      },
-      {
-        id: 'bd-updates-who',
-        title: 'Deciding who files a daily update',
-        summary:
-          'The default comes from a permission, so it follows somebody’s role. Who files these is the exception list on top of it.',
-        where: 'Business Dev → Daily Updates → Who files these',
-        feature: 'can_manage_bd',
-        procedures: [
-          {
-            title: 'Set the default for a role',
-            steps: [
-              'Open Settings → Roles and pick the role.',
-              'Turn on Submit BD daily updates. Everyone holding that role is then asked for one.',
-              'The Business Development and BD Manager roles carry it already.',
-            ],
-          },
-          {
-            title: 'Make an exception for one person',
-            steps: [
-              'Open Business Dev → Daily Updates → Who files these.',
-              'Find the person and choose Always required or Never required.',
-              'Choose Follow their role to drop the exception and go back to the default.',
-            ],
-          },
-        ],
-        notes: [
-          'The line under each name says what is actually in force, and where it came from — their role, or set here.',
-          'Turn on View the team’s BD daily updates for whoever needs to read the desk’s check-ins rather than only their own.',
         ],
       },
       {

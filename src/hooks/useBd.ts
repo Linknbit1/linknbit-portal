@@ -8,7 +8,7 @@ import { CLIENT_KEYS } from './useClients'
 import type { BdComment, BdCommentParent, BdPerson } from '../api/bd'
 import type {
   Lead, BdActivity, BdMeeting, BdTask, BdProject, BdDailyUpdate, BdTarget, TaskStatus,
-  LeadStage, BdUpdateParticipationMode,
+  LeadStage,
 } from '../types'
 
 /**
@@ -51,10 +51,10 @@ export const BD_KEYS = {
   updates: ['bd', 'updates'] as const,
   /** Who owes an update on one date — a roster of people, not a list of updates. */
   updateRoster: (date: string) => ['bd', 'updates', 'roster', date] as const,
-  updateHistory: (profileId: string, from: string, to: string) =>
-    ['bd', 'updates', 'history', profileId, from, to] as const,
+  /** `month` is 'YYYY-MM', or 'all' for every month. */
+  updateHistory: (profileId: string, month: string) =>
+    ['bd', 'updates', 'history', profileId, month] as const,
   amIUpdateParticipant: ['bd', 'updates', 'amIParticipant'] as const,
-  updateParticipants: ['bd', 'updates', 'participants'] as const,
   targets: (periodMonth: string) => ['bd', 'targets', periodMonth] as const,
   handoffs: ['bd', 'handoffs'] as const,
   comments: (parentType: BdCommentParent, parentId: string) =>
@@ -622,34 +622,18 @@ export function useBdUpdateRoster(date: string) {
   })
 }
 
-export function useBdUpdateHistory(profileId: string, from: string, to: string) {
+/**
+ * One person's filed updates for a month, or for all time.
+ *
+ * Keyed on the month rather than a from/to pair so stepping back and forth
+ * between months reads from cache instead of refetching each way.
+ */
+export function useBdUpdateHistory(profileId: string, range: { from: string; to: string } | null) {
   return useQuery({
-    queryKey: BD_KEYS.updateHistory(profileId, from, to),
-    queryFn: () => bd.fetchBdUpdateHistory(profileId, from, to),
+    queryKey: BD_KEYS.updateHistory(profileId, range ? range.from.slice(0, 7) : 'all'),
+    queryFn: () => bd.fetchBdUpdateHistory(profileId, range ?? undefined),
     enabled: profileId !== '',
     staleTime: STALE,
-  })
-}
-
-export function useBdUpdateParticipants() {
-  return useQuery({
-    queryKey: BD_KEYS.updateParticipants,
-    queryFn: bd.fetchBdUpdateParticipants,
-    staleTime: 5 * 60_000,
-  })
-}
-
-export function useSetBdUpdateParticipant() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: ({ profileId, mode, note }: {
-      profileId: string
-      mode: BdUpdateParticipationMode
-      note?: string | null
-    }) => bd.setBdUpdateParticipant(profileId, mode, note),
-    // Changing who is required changes the roster and the viewer's own nav
-    // prompt, so the whole updates subtree goes rather than just the list.
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['bd', 'updates'] }),
   })
 }
 

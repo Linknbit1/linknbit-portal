@@ -621,31 +621,6 @@ export interface BdUpdateSlot {
   update: BdDailyUpdate | null
 }
 
-/**
- * A day in somebody's update history. Days with nothing filed are present too,
- * carrying `update: null`, because a gap is the thing worth seeing.
- */
-export interface BdUpdateHistoryDay extends BdUpdateSlot {
-  date: string
-  isRequired: boolean
-  /** Corrections close at midnight; a manager can still amend an old day. */
-  canEdit: boolean
-}
-
-/** Per-person answer to "must file a BD daily update"; `inherit` follows the role. */
-export type BdUpdateParticipationMode = 'inherit' | 'required' | 'excluded'
-
-export interface BdUpdateParticipant {
-  profileId: string
-  name: string
-  avatarUrl: string | null
-  role: string
-  /** Whether the role they hold carries can_submit_bd_updates. */
-  hasGrant: boolean
-  override: BdUpdateParticipationMode
-  isRequired: boolean
-  note: string | null
-}
 
 /** A rep's revenue and activity quota for a period. */
 export interface BdTarget {

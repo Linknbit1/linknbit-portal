@@ -1341,45 +1341,6 @@ export type Database = {
           },
         ]
       }
-      bd_update_participants: {
-        Row: {
-          is_required: boolean
-          note: string | null
-          profile_id: string
-          updated_at: string
-          updated_by: string | null
-        }
-        Insert: {
-          is_required: boolean
-          note?: string | null
-          profile_id: string
-          updated_at?: string
-          updated_by?: string | null
-        }
-        Update: {
-          is_required?: boolean
-          note?: string | null
-          profile_id?: string
-          updated_at?: string
-          updated_by?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "bd_update_participants_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: true
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bd_update_participants_updated_by_fkey"
-            columns: ["updated_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       biometric_punches: {
         Row: {
           created_at: string
@@ -5225,36 +5186,6 @@ export type Database = {
           role: string
         }[]
       }
-      bd_update_history: {
-        Args: { p_from: string; p_profile: string; p_to: string }
-        Returns: {
-          calls_made: number
-          can_edit: boolean
-          is_required: boolean
-          is_working_day: boolean
-          leads_added: number
-          meetings_held: number
-          platforms: string[]
-          proposals_sent: number
-          submitted_at: string
-          summary: string
-          update_date: string
-          update_id: string
-        }[]
-      }
-      bd_update_participants_list: {
-        Args: never
-        Returns: {
-          avatar_url: string
-          has_grant: boolean
-          is_required: boolean
-          note: string
-          override: string
-          profile_id: string
-          profile_name: string
-          role: string
-        }[]
-      }
       bd_update_roster: {
         Args: { p_date: string }
         Returns: {
@@ -5857,10 +5788,6 @@ export type Database = {
           reviewing: number
           tasks: number
         }[]
-      }
-      set_bd_update_participant: {
-        Args: { p_mode: string; p_note?: string; p_profile: string }
-        Returns: undefined
       }
       set_employee_of_the_month: {
         Args: {

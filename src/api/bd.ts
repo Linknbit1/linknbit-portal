@@ -6,7 +6,7 @@ import type {
   BdActivity, BdActivityType, BdActivityOutcome,
   BdMeeting, MeetingType, MeetingPlatform,
   BdTask, BdTaskRecurrence, BdProject, BdDailyUpdate, BdTarget, BdHandoff, HandoffServicePlan, HandoffOutcome,
-  BdUpdateSlot, BdUpdateHistoryDay, BdUpdateParticipant, BdUpdateParticipationMode,
+  BdUpdateSlot,
   TaskStatus, ProjectStatus, Priority,
 } from '../types'
 
@@ -809,70 +809,35 @@ export async function fetchBdUpdateRoster(date: string): Promise<BdUpdateSlot[]>
   }))
 }
 
-/** One person's day-by-day history across a date range, gaps included. */
+/**
+ * One person's filed updates, newest first.
+ *
+ * A plain query rather than an RPC: the SELECT policy on bd_daily_updates
+ * already answers "whose rows may I read" (your own, plus everyone's with
+ * can_view_bd_team_updates), so there is nothing for a SECURITY DEFINER
+ * function to add. Days with nothing filed are simply absent — a history is
+ * what somebody wrote, not a calendar with holes in it.
+ *
+ * `from`/`to` are inclusive 'YYYY-MM-DD' bounds. Pass none for every month.
+ */
 export async function fetchBdUpdateHistory(
   profileId: string,
-  from: string,
-  to: string,
-): Promise<BdUpdateHistoryDay[]> {
-  const { data, error } = await supabase.rpc('bd_update_history', {
-    p_profile: profileId, p_from: from, p_to: to,
-  })
-  if (error) throw error
-  return (data ?? []).map((row) => ({
-    repId: profileId,
-    repName: '',
-    avatarUrl: null,
-    date: row.update_date,
-    isWorkingDay: row.is_working_day,
-    isRequired: row.is_required,
-    canEdit: row.can_edit,
-    update: row.update_id
-      ? {
-          id: row.update_id,
-          repId: profileId,
-          repName: '',
-          date: row.update_date,
-          submittedAt: row.submitted_at,
-          platforms: narrowAll(CHANNELS, row.platforms ?? []),
-          summary: row.summary ?? '',
-          proposalsSent: row.proposals_sent ?? 0,
-          callsMade: row.calls_made ?? 0,
-          meetingsHeld: row.meetings_held ?? 0,
-          leadsAdded: row.leads_added ?? 0,
-        }
-      : null,
-  }))
-}
+  range?: { from: string; to: string },
+): Promise<BdDailyUpdate[]> {
+  let query = supabase
+    .from('bd_daily_updates')
+    .select(UPDATE_SELECT)
+    .eq('rep_id', profileId)
+    .not('submitted_at', 'is', null)
+    .order('update_date', { ascending: false })
 
-export async function fetchBdUpdateParticipants(): Promise<BdUpdateParticipant[]> {
-  const { data, error } = await supabase.rpc('bd_update_participants_list')
-  if (error) throw error
-  return (data ?? []).map((row) => ({
-    profileId: row.profile_id,
-    name: row.profile_name,
-    avatarUrl: row.avatar_url,
-    role: row.role,
-    hasGrant: row.has_grant,
-    override: toParticipationMode(row.override),
-    isRequired: row.is_required,
-    note: row.note,
-  }))
-}
+  if (range) {
+    query = query.gte('update_date', range.from).lte('update_date', range.to)
+  }
 
-function toParticipationMode(value: string | null): BdUpdateParticipationMode {
-  return value === 'required' || value === 'excluded' ? value : 'inherit'
-}
-
-export async function setBdUpdateParticipant(
-  profileId: string,
-  mode: BdUpdateParticipationMode,
-  note?: string | null,
-): Promise<void> {
-  const { error } = await supabase.rpc('set_bd_update_participant', {
-    p_profile: profileId, p_mode: mode, p_note: note ?? undefined,
-  })
+  const { data, error } = await query
   if (error) throw error
+  return data.map(mapUpdate)
 }
 
 /**
