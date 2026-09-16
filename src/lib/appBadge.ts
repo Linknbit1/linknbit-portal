@@ -33,94 +33,97 @@ export function setDockBadge(count: number): void {
 }
 
 /**
- * The original tab icon, captured before anything is drawn over it, so clearing
- * the badge puts back exactly what the page shipped with rather than a guess.
+ * The icon links the page shipped with, captured once so they can be put back
+ * exactly rather than reconstructed from a guess.
+ *
+ * They are REMOVED while a badge is up, not disabled: `disabled` only means
+ * anything on a stylesheet link, so disabling an icon link does nothing at all
+ * — and since an SVG favicon outranks a PNG wherever it is supported, the
+ * drawn one stayed invisible behind the one it was meant to replace.
  */
-let pristineHref: string | null = null
+let declared: HTMLLinkElement[] | null = null
 
-const iconLink = (): HTMLLinkElement | null => {
-  // The PNG link is the one to drive: an SVG favicon wins where it is supported,
-  // so it has to be removed for a canvas-drawn PNG to be seen at all.
-  const existing = document.querySelector<HTMLLinkElement>('link[rel~="icon"][data-badge]')
-  if (existing) return existing
-
-  const link = document.createElement('link')
-  link.rel = 'icon'
-  link.type = 'image/png'
-  link.dataset.badge = 'true'
-  document.head.appendChild(link)
-  return link
+function captureDeclared(): HTMLLinkElement[] {
+  declared ??= Array.from(document.querySelectorAll<HTMLLinkElement>('link[rel~="icon"]:not([data-badge])'))
+  return declared
 }
 
-/** Everything the page declared as an icon, other than the one drawn here. */
-const declaredIcons = () =>
-  Array.from(document.querySelectorAll<HTMLLinkElement>('link[rel~="icon"]:not([data-badge])'))
+function restoreDeclared(): void {
+  document.querySelector('link[rel~="icon"][data-badge]')?.remove()
+  for (const link of declared ?? []) {
+    if (!link.isConnected) document.head.appendChild(link)
+  }
+}
+
+/** A pill, with a plain rectangle where roundRect is not available. */
+function pill(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number): void {
+  ctx.beginPath()
+  if (typeof ctx.roundRect === 'function') ctx.roundRect(x, y, w, h, h / 2)
+  else ctx.rect(x, y, w, h)
+  ctx.fill()
+}
+
+function paint(ctx: CanvasRenderingContext2D, size: number, count: number): void {
+  const label = count > MAX_SHOWN ? `${MAX_SHOWN}+` : String(count)
+  // The pill grows with the number rather than the number shrinking to fit it.
+  const w = label.length === 1 ? 30 : label.length === 2 ? 38 : 46
+  const h = 30
+  const x = size - w
+  const y = size - h
+
+  // A ring in the page background separates the pill from whatever the icon
+  // puts behind it, at whatever scale the browser renders.
+  ctx.fillStyle = '#0A0A0A'
+  pill(ctx, x - 3, y - 3, w + 6, h + 6)
+
+  ctx.fillStyle = '#E01414'
+  pill(ctx, x, y, w, h)
+
+  ctx.fillStyle = '#FFFFFF'
+  ctx.font = 'bold 22px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillText(label, x + w / 2, y + h / 2 + 1)
+}
 
 /**
  * Redraws the tab icon with a count on it.
  *
- * Drawn from the icon the page already has rather than a second copy of the
- * mark, so a rebrand reaches the badge without anybody remembering to update it.
+ * Drawn over the 192px raster rather than the SVG favicon: an <img> pointed at
+ * an SVG is the one source that can refuse to decode or taint the canvas, and
+ * toDataURL on a tainted canvas throws — which would have been a badge that
+ * silently never appeared.
  */
 export function setTabBadge(count: number): void {
-  const declared = declaredIcons()
-  if (pristineHref === null) {
-    pristineHref = declared.find((l) => l.type === 'image/svg+xml')?.href
-      ?? declared[0]?.href
-      ?? '/favicon.svg'
-  }
-
   if (count <= 0) {
-    document.querySelector('link[rel~="icon"][data-badge]')?.remove()
-    for (const link of declared) link.disabled = false
+    restoreDeclared()
     return
+  }
+  captureDeclared()
+
+  const size = 64
+  const canvas = document.createElement('canvas')
+  canvas.width = size
+  canvas.height = size
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return
+
+  const commit = () => {
+    paint(ctx, size, count)
+    const link = document.querySelector<HTMLLinkElement>('link[rel~="icon"][data-badge]')
+      ?? document.createElement('link')
+    link.rel = 'icon'
+    link.type = 'image/png'
+    link.dataset.badge = 'true'
+    link.href = canvas.toDataURL('image/png')
+    if (!link.isConnected) document.head.appendChild(link)
+    // Only once the replacement is in place, so the tab never flashes blank.
+    for (const other of declared ?? []) other.remove()
   }
 
   const source = new Image()
-  source.crossOrigin = 'anonymous'
-  source.onload = () => {
-    const size = 64
-    const canvas = document.createElement('canvas')
-    canvas.width = size
-    canvas.height = size
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-
-    ctx.drawImage(source, 0, 0, size, size)
-
-    const label = count > MAX_SHOWN ? `${MAX_SHOWN}+` : String(count)
-    // Wider for two or three characters, so the pill grows with the number
-    // rather than the number shrinking to fit a fixed circle.
-    const width = label.length === 1 ? 30 : label.length === 2 ? 38 : 46
-    const height = 30
-    const x = size - width
-    const y = size - height
-    const r = height / 2
-
-    // A ring in the page background separates the pill from whatever the icon
-    // puts behind it, at any scale the browser picks.
-    ctx.fillStyle = '#0A0A0A'
-    ctx.beginPath()
-    ctx.roundRect(x - 3, y - 3, width + 6, height + 6, r + 3)
-    ctx.fill()
-
-    ctx.fillStyle = '#E01414'
-    ctx.beginPath()
-    ctx.roundRect(x, y, width, height, r)
-    ctx.fill()
-
-    ctx.fillStyle = '#FFFFFF'
-    ctx.font = 'bold 22px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
-    ctx.fillText(label, x + width / 2, y + height / 2 + 1)
-
-    const link = iconLink()
-    if (!link) return
-    link.href = canvas.toDataURL('image/png')
-    // An SVG favicon outranks a PNG wherever it is supported, so the declared
-    // ones have to stand down for the drawn one to appear at all.
-    for (const other of declaredIcons()) other.disabled = true
-  }
-  source.src = pristineHref
+  source.onload = () => { ctx.drawImage(source, 0, 0, size, size); commit() }
+  // Without the mark the badge is still the useful half, so draw it regardless.
+  source.onerror = () => { ctx.fillStyle = '#0A0A0A'; ctx.fillRect(0, 0, size, size); commit() }
+  source.src = '/icons/pwa-192x192.png'
 }
