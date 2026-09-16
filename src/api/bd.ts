@@ -6,6 +6,7 @@ import type {
   BdActivity, BdActivityType, BdActivityOutcome,
   BdMeeting, MeetingType, MeetingPlatform,
   BdTask, BdTaskRecurrence, BdProject, BdDailyUpdate, BdTarget, BdHandoff, HandoffServicePlan, HandoffOutcome,
+  BdUpdateSlot,
   TaskStatus, ProjectStatus, Priority,
 } from '../types'
 
@@ -760,6 +761,81 @@ export async function fetchDailyUpdates(): Promise<BdDailyUpdate[]> {
     .from('bd_daily_updates')
     .select(UPDATE_SELECT)
     .order('update_date', { ascending: false })
+  if (error) throw error
+  return data.map(mapUpdate)
+}
+
+/**
+ * Am I expected to file one? Settings-driven, like the standup equivalent, so
+ * the page asks the database instead of restating the rule as a role list.
+ */
+export async function fetchAmIBdUpdateParticipant(): Promise<boolean> {
+  const { data, error } = await supabase.rpc('am_i_bd_update_participant')
+  if (error) throw error
+  return data ?? false
+}
+
+/**
+ * Everyone who owes an update on `date`, filed or not.
+ *
+ * Deliberately not derived from the BD people list: that is everyone who can
+ * *see* the module, which includes admins through the administrator wildcard,
+ * and chasing them for a check-in they were never expected to write was the
+ * original complaint.
+ */
+export async function fetchBdUpdateRoster(date: string): Promise<BdUpdateSlot[]> {
+  const { data, error } = await supabase.rpc('bd_update_roster', { p_date: date })
+  if (error) throw error
+  return (data ?? []).map((row) => ({
+    repId: row.profile_id,
+    repName: row.profile_name,
+    avatarUrl: row.avatar_url,
+    isWorkingDay: row.is_working_day,
+    update: row.update_id
+      ? {
+          id: row.update_id,
+          repId: row.profile_id,
+          repName: row.profile_name,
+          date,
+          submittedAt: row.submitted_at,
+          platforms: narrowAll(CHANNELS, row.platforms ?? []),
+          summary: row.summary ?? '',
+          proposalsSent: row.proposals_sent ?? 0,
+          callsMade: row.calls_made ?? 0,
+          meetingsHeld: row.meetings_held ?? 0,
+          leadsAdded: row.leads_added ?? 0,
+        }
+      : null,
+  }))
+}
+
+/**
+ * One person's filed updates, newest first.
+ *
+ * A plain query rather than an RPC: the SELECT policy on bd_daily_updates
+ * already answers "whose rows may I read" (your own, plus everyone's with
+ * can_view_bd_team_updates), so there is nothing for a SECURITY DEFINER
+ * function to add. Days with nothing filed are simply absent — a history is
+ * what somebody wrote, not a calendar with holes in it.
+ *
+ * `from`/`to` are inclusive 'YYYY-MM-DD' bounds. Pass none for every month.
+ */
+export async function fetchBdUpdateHistory(
+  profileId: string,
+  range?: { from: string; to: string },
+): Promise<BdDailyUpdate[]> {
+  let query = supabase
+    .from('bd_daily_updates')
+    .select(UPDATE_SELECT)
+    .eq('rep_id', profileId)
+    .not('submitted_at', 'is', null)
+    .order('update_date', { ascending: false })
+
+  if (range) {
+    query = query.gte('update_date', range.from).lte('update_date', range.to)
+  }
+
+  const { data, error } = await query
   if (error) throw error
   return data.map(mapUpdate)
 }

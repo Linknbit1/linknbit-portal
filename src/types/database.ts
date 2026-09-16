@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       approvals: {
@@ -2966,10 +2941,12 @@ export type Database = {
           restricted_by: string | null
           restricted_reason: string | null
           role: string
+          schedule_mode: string
           skills: string[]
           tech_stacks: string[]
           theme: string
           updated_at: string
+          work_days: number[] | null
           zk_user_id: string | null
         }
         Insert: {
@@ -3002,10 +2979,12 @@ export type Database = {
           restricted_by?: string | null
           restricted_reason?: string | null
           role?: string
+          schedule_mode?: string
           skills?: string[]
           tech_stacks?: string[]
           theme?: string
           updated_at?: string
+          work_days?: number[] | null
           zk_user_id?: string | null
         }
         Update: {
@@ -3038,10 +3017,12 @@ export type Database = {
           restricted_by?: string | null
           restricted_reason?: string | null
           role?: string
+          schedule_mode?: string
           skills?: string[]
           tech_stacks?: string[]
           theme?: string
           updated_at?: string
+          work_days?: number[] | null
           zk_user_id?: string | null
         }
         Relationships: [
@@ -5151,9 +5132,12 @@ export type Database = {
           p_job_type?: string
           p_profile_id: string
           p_role: string
+          p_schedule_mode?: string
+          p_work_days?: number[]
         }
         Returns: undefined
       }
+      am_i_bd_update_participant: { Args: never; Returns: boolean }
       am_i_standup_participant: { Args: never; Returns: boolean }
       announce_release: {
         Args: { p_body: string; p_title: string; p_version: string }
@@ -5200,6 +5184,24 @@ export type Database = {
           id: string
           name: string
           role: string
+        }[]
+      }
+      bd_update_roster: {
+        Args: { p_date: string }
+        Returns: {
+          avatar_url: string
+          calls_made: number
+          is_required: boolean
+          is_working_day: boolean
+          leads_added: number
+          meetings_held: number
+          platforms: string[]
+          profile_id: string
+          profile_name: string
+          proposals_sent: number
+          submitted_at: string
+          summary: string
+          update_id: string
         }[]
       }
       can_access_task: { Args: { p_task_id: string }; Returns: boolean }
@@ -5299,6 +5301,8 @@ export type Database = {
       }
       fn_auto_checkout_missing: { Args: never; Returns: undefined }
       fn_award_badges: { Args: { p_profile_id: string }; Returns: undefined }
+      fn_bd_update_required: { Args: { p_profile: string }; Returns: boolean }
+      fn_bd_update_today: { Args: never; Returns: string }
       fn_can_report_on: { Args: { p_profile: string }; Returns: boolean }
       fn_can_report_on_project: {
         Args: { p_project: string }
@@ -5344,6 +5348,10 @@ export type Database = {
       }
       fn_hide_channel: { Args: { p_channel_id: string }; Returns: undefined }
       fn_is_working_day: { Args: { d: string }; Returns: boolean }
+      fn_is_working_day_for: {
+        Args: { d: string; p_profile: string }
+        Returns: boolean
+      }
       fn_makeup_balance: {
         Args: { p_from: string; p_profile: string; p_to: string }
         Returns: {
@@ -5955,12 +5963,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -5984,11 +5992,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -6009,11 +6017,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -6034,11 +6042,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -6051,11 +6059,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -6065,9 +6073,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       queue_status: ["pending", "processing", "done", "failed"],

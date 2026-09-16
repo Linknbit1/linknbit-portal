@@ -32,6 +32,7 @@ import type { ChangelogRelease } from '../../types'
 export const RELEASES: ChangelogRelease[] = [
   {
     version: '1.32.0',
+<<<<<<< HEAD
     date: '2026-09-08',
     title: 'Who decided, and when',
     highlight:
@@ -44,6 +45,62 @@ export const RELEASES: ChangelogRelease[] = [
       {
         kind: 'fixed',
         text: 'Exception corrections now record who decided them. Leave, WFH and overtime always did; an exception recorded only the time, so its decision had no name against it. Ones decided before this release still show the time without a name \u2014 there is nothing to recover.',
+=======
+    date: '2026-09-14',
+    title: 'Not everybody\u2019s week is the same week',
+    highlight:
+      'Somebody who works weekends can now mark attendance and file a standup on the days they actually work. Working days are set per person instead of being the company\u2019s calendar for everyone, so a Saturday you work counts as a working day and a weekday you do not is never held against you.',
+    entries: [
+      {
+        kind: 'added',
+        text: 'Unread chat messages now show as a number in front of the browser tab\u2019s title, and on the dock or taskbar icon if you have installed the app. Direct messages and channels are counted together, and nothing else is, so a number there always means somebody is waiting on a reply.',
+      },
+      {
+        kind: 'added',
+        text: 'Cards on a task board can now be dragged up and down inside their column, not only across to another one, so a column can be put in the order the work should happen. The other cards slide aside as you drag, showing the gap the card will drop into, and the order is saved for everyone.',
+      },
+      {
+        kind: 'added',
+        text: 'Working days are now set per person. The default is unchanged \u2014 the company calendar, Monday to Friday plus any working Saturdays \u2014 but somebody can be given a specific week of their own (Tuesday to Saturday, say) or marked flexible, meaning any day that is not a public holiday. Check-in, the standup window, the absence count and leave arithmetic all follow whichever applies to that person.',
+      },
+      {
+        kind: 'fixed',
+        text: 'People who work weekends could not mark attendance or file a standup at all. Both refused every Saturday and Sunday because the only working-day rule in the portal was the company\u2019s. Now they can do both on the days they work.',
+      },
+      {
+        kind: 'improved',
+        text: 'Working days are deliberately separate from Job type. Job type still says where somebody works from and drives the office-network and timing rules; working days say which days they work. A hybrid employee can keep the company week or have their own, without the two settings fighting over one field.',
+        feature: 'can_manage_people',
+      },
+      {
+        kind: 'improved',
+        text: 'Somebody on flexible hours is no longer marked absent. No particular day was promised, so there is no day to find them missing from.',
+      },
+      {
+        kind: 'added',
+        text: 'Business Dev → Daily Updates now has a My history tab: the updates you filed, newest first, a month at a time with an All months option. Only days you actually wrote something appear.',
+        feature: 'can_view_bd',
+      },
+      {
+        kind: 'added',
+        text: 'Only the people who hold Submit BD daily updates are asked for one, and the permission is the whole rule. Until now the screen listed everyone who could open the BD module \u2014 which includes admins overseeing the department \u2014 and named them as still owing a check-in they were never expected to write.',
+        feature: 'can_view_bd',
+      },
+      {
+        kind: 'improved',
+        text: 'An update belongs to the day it covers, and can only be filed or changed on that day. After midnight in company time the day is settled and nobody can reopen it \u2014 not a manager either.',
+        feature: 'can_view_bd',
+      },
+      {
+        kind: 'fixed',
+        text: 'A business developer is no longer asked for an update on a day they do not work, and their day off is no longer reported as a missing update. The prompt used to appear on a Sunday because it asked whether you file updates at all rather than whether you were working that day.',
+        feature: 'can_view_bd',
+      },
+      {
+        kind: 'improved',
+        text: 'Daily updates are read by their author and by whoever holds View the team\u2019s BD daily updates, rather than by everyone with BD access.',
+        feature: 'can_view_bd',
+>>>>>>> b7e57696dabf81a0e8cb97e68707be462f839e7e
       },
     ],
   },

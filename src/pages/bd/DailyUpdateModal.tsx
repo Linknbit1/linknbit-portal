@@ -7,7 +7,11 @@ import { CHANNEL_CONFIG, CHANNEL_ORDER } from '../../constants/bd'
 import { useBd } from '../../context/BdContext'
 import { randomUUID } from '../../lib/uuid'
 import { cn } from '../../lib/cn'
+import { localIsoDate } from '../../lib/utils'
 import type { BdChannel, BdDailyUpdate } from '../../types'
+
+/** Matches the bd_daily_updates_summary_check constraint. */
+const MIN_SUMMARY_CHARS = 10
 
 interface DailyUpdateModalProps {
   open: boolean
@@ -28,15 +32,19 @@ export function DailyUpdateModal({ open, update, onClose }: DailyUpdateModalProp
   const [leadsAdded, setLeadsAdded] = useState(update?.leadsAdded ?? 0)
   const [touched, setTouched] = useState(false)
 
-  const summaryError = touched && !summary.trim() ? 'A one-line recap is the whole point of the check-in' : undefined
+  // Ten characters is the database's own rule (bd_daily_updates_summary_check),
+  // repeated here so the person finds out while typing rather than on submit.
+  const summaryError = touched && summary.trim().length < MIN_SUMMARY_CHARS
+    ? 'A one-line recap is the whole point of the check-in'
+    : undefined
 
   const toggle = (channel: BdChannel) =>
     setPlatforms((p) => (p.includes(channel) ? p.filter((c) => c !== channel) : [...p, channel]))
 
   const submit = () => {
     setTouched(true)
-    if (!summary.trim()) return
-    const today = new Date().toISOString().slice(0, 10)
+    if (summary.trim().length < MIN_SUMMARY_CHARS) return
+    const today = localIsoDate()
     saveUpdate({
       id: update?.id ?? randomUUID(),
       repId: update?.repId ?? viewerRepId,

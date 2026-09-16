@@ -87,33 +87,29 @@ export type DayGate =
   | { blocked: true; code: 'holiday'; message: string; holidayName: string | null }
 
 /**
- * Company-wide calendar gates: Sundays, non-working Saturdays and holidays.
- * Applies to every attendance path — a terminal punch on a holiday is still
- * "not a working day", it is just recorded rather than refused.
+ * Calendar gates for one person on one date: holidays, then that person's own
+ * working days. Applies to every attendance path — a terminal punch on a holiday
+ * is still "not a working day", it is just recorded rather than refused.
+ *
+ * The working-day question is now per-person (profiles.schedule_mode), and the
+ * single source of truth for it is fn_is_working_day_for in the database. Asking
+ * Postgres rather than re-deriving the rule here is what stops this file and the
+ * SQL from drifting: the absence job, the standup window and this gate have to
+ * agree about Saturday, or somebody gets marked absent on a day they worked.
+ *
+ * The company rule is still reachable through that function (schedule_mode
+ * 'company', the default), so nothing changes for anyone who has not been given
+ * a custom week.
  */
 export async function checkDayGates(
   db: SupabaseClient,
+  profileId: string,
   today: string,
   dayOfWeek: number,
   settings: Pick<PolicySettings, 'saturday_working'>,
 ): Promise<DayGate> {
-  if (dayOfWeek === 0) {
-    return { blocked: true, code: 'weekend', message: 'Check-in is not allowed on Sundays.' }
-  }
-
-  if (dayOfWeek === 6 && !settings.saturday_working) {
-    // A specific Saturday can be opted in via working_saturdays.
-    const { data: workingSat } = await db
-      .from('working_saturdays')
-      .select('id')
-      .eq('date', today)
-      .maybeSingle()
-
-    if (!workingSat) {
-      return { blocked: true, code: 'weekend', message: 'Check-in is not allowed on Saturdays.' }
-    }
-  }
-
+  // Holidays outrank every schedule mode, so they are answered first and the
+  // caller keeps getting the distinct 'holiday' code it branches on.
   const { data: holiday } = await db
     .from('holidays')
     .select('name')
@@ -130,7 +126,51 @@ export async function checkDayGates(
     }
   }
 
-  return { blocked: false }
+  const { data: works, error } = await db.rpc('fn_is_working_day_for', {
+    p_profile: profileId,
+    d: today,
+  })
+
+  // A failed RPC must not become an open door. Fall back to the company rule
+  // this function used to apply on its own.
+  if (error) {
+    if (dayOfWeek === 0) {
+      return { blocked: true, code: 'weekend', message: 'Check-in is not allowed on Sundays.' }
+    }
+    if (dayOfWeek === 6 && !settings.saturday_working) {
+      const { data: workingSat } = await db
+        .from('working_saturdays')
+        .select('id')
+        .eq('date', today)
+        .maybeSingle()
+
+      if (!workingSat) {
+        return { blocked: true, code: 'weekend', message: 'Check-in is not allowed on Saturdays.' }
+      }
+    }
+    return { blocked: false }
+  }
+
+  if (works === true) return { blocked: false }
+
+  // Same code as before ('weekend') so the terminal path's holiday-vs-other
+  // branch is untouched, but the wording no longer claims it is the weekend —
+  // for a custom week the closed day can be any day.
+  if (dayOfWeek === 0 || dayOfWeek === 6) {
+    return {
+      blocked: true,
+      code: 'weekend',
+      message: dayOfWeek === 0
+        ? 'Check-in is not allowed on Sundays.'
+        : 'Check-in is not allowed on Saturdays.',
+    }
+  }
+
+  return {
+    blocked: true,
+    code: 'weekend',
+    message: 'Today is not one of your working days.',
+  }
 }
 
 export interface CutoffResult {

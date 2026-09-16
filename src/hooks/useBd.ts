@@ -49,6 +49,12 @@ export const BD_KEYS = {
   tasks: ['bd', 'tasks'] as const,
   projects: ['bd', 'projects'] as const,
   updates: ['bd', 'updates'] as const,
+  /** Who owes an update on one date — a roster of people, not a list of updates. */
+  updateRoster: (date: string) => ['bd', 'updates', 'roster', date] as const,
+  /** `month` is 'YYYY-MM', or 'all' for every month. */
+  updateHistory: (profileId: string, month: string) =>
+    ['bd', 'updates', 'history', profileId, month] as const,
+  amIUpdateParticipant: ['bd', 'updates', 'amIParticipant'] as const,
   targets: (periodMonth: string) => ['bd', 'targets', periodMonth] as const,
   handoffs: ['bd', 'handoffs'] as const,
   comments: (parentType: BdCommentParent, parentId: string) =>
@@ -597,6 +603,37 @@ export function useSaveBdUpdate() {
     },
     run: ({ update }) => bd.saveDailyUpdate(update),
     errorMessage: 'Could not save your update. It has been undone.',
+  })
+}
+
+export function useAmIBdUpdateParticipant() {
+  return useQuery({
+    queryKey: BD_KEYS.amIUpdateParticipant,
+    queryFn: bd.fetchAmIBdUpdateParticipant,
+    staleTime: 5 * 60_000,
+  })
+}
+
+export function useBdUpdateRoster(date: string) {
+  return useQuery({
+    queryKey: BD_KEYS.updateRoster(date),
+    queryFn: () => bd.fetchBdUpdateRoster(date),
+    staleTime: STALE,
+  })
+}
+
+/**
+ * One person's filed updates for a month, or for all time.
+ *
+ * Keyed on the month rather than a from/to pair so stepping back and forth
+ * between months reads from cache instead of refetching each way.
+ */
+export function useBdUpdateHistory(profileId: string, range: { from: string; to: string } | null) {
+  return useQuery({
+    queryKey: BD_KEYS.updateHistory(profileId, range ? range.from.slice(0, 7) : 'all'),
+    queryFn: () => bd.fetchBdUpdateHistory(profileId, range ?? undefined),
+    enabled: profileId !== '',
+    staleTime: STALE,
   })
 }
 

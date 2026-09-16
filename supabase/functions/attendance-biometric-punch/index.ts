@@ -179,7 +179,7 @@ async function reconcileDay(
   //    never turned into attendance: the person was physically here, but the
   //    day is not a working day and must not silently become one.
   const { dayOfWeek } = localParts(new Date(rows[0].punched_at), tz)
-  const gate = await checkDayGates(db, date, dayOfWeek, settings)
+  const gate = await checkDayGates(db, profileId, date, dayOfWeek, settings)
   if (gate.blocked) {
     await setResolution(allIds, gate.code === 'holiday' ? 'ignored_holiday' : 'ignored_weekend')
     await auditOnce(db, {

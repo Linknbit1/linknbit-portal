@@ -3,7 +3,7 @@ import {
   fetchPeople, inviteUser, updatePersonRole, updatePersonDetails, uploadPersonAvatar, setPersonActive, deletePerson,
   resendInvite, setUserPassword, fetchSalary, upsertSalary,
   fetchPerson, fetchPersonTeams, fetchPersonProjects,
-  type InvitePayload,
+  type InvitePayload, type RoleUpdatePayload,
 } from '../api/people'
 
 export const PEOPLE_KEYS = {
@@ -75,8 +75,7 @@ export function useInviteUser() {
 export function useUpdatePersonRole() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ profileId, role, designationId, jobType, allowedCheckIn, attendanceExcluded }: { profileId: string; role: string; designationId: string | null; jobType: string; allowedCheckIn: string; attendanceExcluded: boolean }) =>
-      updatePersonRole(profileId, role, designationId, jobType, allowedCheckIn, attendanceExcluded),
+    mutationFn: (payload: RoleUpdatePayload) => updatePersonRole(payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: PEOPLE_KEYS.all })
       qc.invalidateQueries({ queryKey: ['teams'] })

@@ -17,9 +17,13 @@ import { useSetProfileTeams, useTeamMembers } from '../../hooks/useTeamMembers'
 import { useUpdatePersonDetails, useUpdatePersonRole } from '../../hooks/usePeople'
 import { useAuthority, useCanAccess, useCanManagePeople } from '../../hooks/useRoleFlags'
 import { assignableRoleSlugs, humanizeError, outranks, toUserRole } from '../../lib/peopleAccess'
-import { JOB_TYPE_OPTIONS, ROLE_LABELS } from '../../lib/utils'
+import {
+  JOB_TYPE_OPTIONS, ROLE_LABELS, SCHEDULE_MODE_HINTS, SCHEDULE_MODE_OPTIONS,
+  WEEKDAYS, toScheduleMode,
+} from '../../lib/utils'
 import { validateAvatarFile } from '../../lib/avatar'
-import type { Person } from '../../api/people'
+import { cn } from '../../lib/cn'
+import type { Person, ScheduleMode } from '../../api/people'
 
 interface PersonEditDrawerProps {
   person: Person
@@ -87,6 +91,14 @@ export function PersonEditDrawer({ person, isSelf, onClose }: PersonEditDrawerPr
   const origAllowedCheckIn = person.allowed_check_in?.slice(0, 5) ?? ''
   const [allowedCheckIn, setAllowedCheckIn] = useState(origAllowedCheckIn)
   const [attendanceExcluded, setAttendanceExcluded] = useState(person.attendance_excluded)
+  const [scheduleMode, setScheduleMode] = useState<ScheduleMode>(toScheduleMode(person.schedule_mode))
+  // Seeded from the stored rota, or Mon–Fri when there is none, so switching to
+  // "Specific days" starts from a sane week rather than an empty one the
+  // database would reject.
+  const origWorkDays = person.work_days ?? []
+  const [workDays, setWorkDays] = useState<number[]>(
+    origWorkDays.length > 0 ? origWorkDays : [1, 2, 3, 4, 5],
+  )
 
   const roleOptions = assignableRoleSlugs(authority.myRank, authority.ladder)
     .map((r) => ({ value: r, label: ROLE_LABELS[toUserRole(r)] }))
@@ -94,9 +106,14 @@ export function PersonEditDrawer({ person, isSelf, onClose }: PersonEditDrawerPr
 
   const sameTeams = (a: string[], b: string[]) => a.length === b.length && [...a].sort().join() === [...b].sort().join()
   const detailsChanged = name !== person.name || avatarFile !== null
+  const sameDays = (a: number[], b: number[]) => a.length === b.length && [...a].sort().join() === [...b].sort().join()
   const roleChanged = role !== person.role || (designation || null) !== person.designation_id
     || jobType !== person.job_type || allowedCheckIn !== origAllowedCheckIn
     || attendanceExcluded !== person.attendance_excluded
+    || scheduleMode !== toScheduleMode(person.schedule_mode)
+    // Only compared while the days are the thing in force; in the other two
+    // modes the array is not read, so a stale tick is not a change.
+    || (scheduleMode === 'custom_days' && !sameDays(workDays, origWorkDays))
   const teamsChanged = pickedTeamIds !== null && !sameTeams(pickedTeamIds, currentTeamIds)
 
   const onPickAvatar = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -115,7 +132,14 @@ export function PersonEditDrawer({ person, isSelf, onClose }: PersonEditDrawerPr
         await saveDetails({ profileId: person.id, name: name.trim(), avatarUrl: person.avatar_url, avatarFile })
       }
       if (mayManage && roleChanged) {
-        await saveRole({ profileId: person.id, role, designationId: designation || null, jobType, allowedCheckIn, attendanceExcluded })
+        if (scheduleMode === 'custom_days' && workDays.length === 0) {
+          toast('Pick at least one working day, or switch the schedule back to the company calendar.', 'error')
+          return
+        }
+        await saveRole({
+          profileId: person.id, role, designationId: designation || null, jobType,
+          allowedCheckIn, attendanceExcluded, scheduleMode, workDays,
+        })
       }
       if (mayManage && teamsChanged) {
         await saveTeams({ profileId: person.id, teamIds })
@@ -197,6 +221,41 @@ export function PersonEditDrawer({ person, isSelf, onClose }: PersonEditDrawerPr
               {teamsLoading
                 ? <div className="h-11 animate-pulse rounded-md border border-border-default bg-surface-inset" />
                 : <TeamPicker teams={teamOptions} value={teamIds} onChange={setPickedTeamIds} />}
+            </div>
+            <div>
+              <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Working days</label>
+              <Select
+                value={scheduleMode}
+                onChange={(v) => setScheduleMode(toScheduleMode(v))}
+                options={SCHEDULE_MODE_OPTIONS}
+              />
+              {scheduleMode === 'custom_days' && (
+                <div className="mt-2 flex flex-wrap gap-1.5" role="group" aria-label="Working days">
+                  {WEEKDAYS.map((day) => {
+                    const on = workDays.includes(day.value)
+                    return (
+                      <button
+                        key={day.value}
+                        type="button"
+                        aria-pressed={on}
+                        aria-label={day.label}
+                        onClick={() => setWorkDays((cur) =>
+                          cur.includes(day.value) ? cur.filter((d) => d !== day.value) : [...cur, day.value],
+                        )}
+                        className={cn(
+                          'rounded-sm border px-2.5 py-1.5 font-ui text-[12px] transition-colors duration-150',
+                          on
+                            ? 'border-brand-red/40 bg-brand-red/13 text-text-1'
+                            : 'border-border-default bg-surface-2 text-text-3 hover:border-border-strong hover:text-text-2',
+                        )}
+                      >
+                        {day.short}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+              <p className="font-mono text-[10px] text-text-4 mt-1">{SCHEDULE_MODE_HINTS[scheduleMode]}</p>
             </div>
             <div>
               <label className="block text-[11px] font-mono font-semibold text-text-4 uppercase tracking-wider mb-1.5">Allowed check-in</label>

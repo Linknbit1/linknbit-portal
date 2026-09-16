@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { motion } from 'framer-motion'
 import {
   AlertCircle, Archive, Ban, BadgeCheck, Circle, CircleCheck, CircleDashed, CircleDot, Eye,
   CornerUpRight, GitBranch, Layers, MessageSquare, MoreHorizontal, Paperclip, Timer, Trash2,
@@ -8,7 +9,7 @@ import { cn } from '../../lib/cn'
 import { Avatar, AvatarGroup } from '../ui/Avatar'
 import { PriorityChip } from './PriorityChip'
 import { ServiceChip } from './ServiceChip'
-import { useDeleteTask, useUpdateTaskStatus } from '../../hooks/useTasks'
+import { useDeleteTask, useReorderBoardTasks } from '../../hooks/useTasks'
 import { useDragScroll } from '../../hooks/useDragScroll'
 import { useToast } from '../ui/toast-context'
 import { ConfirmDialog } from '../ui/ConfirmDialog'
@@ -220,10 +221,20 @@ interface TaskBoardProps {
 
 export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
   const toast = useToast()
-  const updateStatus = useUpdateTaskStatus()
+  const reorderBoard = useReorderBoardTasks()
   const deleteTask = useDeleteTask()
   const [dragId, setDragId] = useState<string | null>(null)
-  const [dragOver, setDragOver] = useState<string | null>(null)
+  /**
+   * Where the card would land: which column, and which slot within it.
+   *
+   * A column alone was enough while a drop could only change status. Dragging
+   * within a lane needs the slot too, and it is measured against the lane with
+   * the dragged card already taken out — so the index maps straight onto the
+   * position it will be written with.
+   */
+  const [dropAt, setDropAt] = useState<{ status: string; index: number } | null>(null)
+  /** New positions held locally until the write lands, so the board never snaps back. */
+  const [orderOverride, setOrderOverride] = useState<Record<string, number>>({})
   const { data: statuses = [] } = useTaskStatuses()
   const columns = useMemo(() => columnsFrom(statuses), [statuses])
   const [pendingDelete, setPendingDelete] = useState<TaskListItem | null>(null)
@@ -250,21 +261,169 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
 
   const statusOf = (t: TaskListItem): string => optimistic[t.id] ?? t.status
 
+  /** A card's position, preferring the one a drag has just given it. */
+  const positionOf = (t: TaskListItem) => orderOverride[t.id] ?? t.board_order ?? 0
+
+  /**
+   * A column's cards in board order. Sorted rather than taken as they come: the
+   * query orders by board_order then newest-first, and a local override has to
+   * be able to win over both without refetching.
+   */
+  const laneFor = (status: string) =>
+    tasks.filter((t) => statusOf(t) === status).slice().sort((a, b) => positionOf(a) - positionOf(b))
+
+  /**
+   * Where each card's midpoint sits, measured once when a drag starts.
+   *
+   * Hit-testing live rects does not work here: proposing a slot reorders the
+   * lane, the reorder animates, and the next pointer event measures cards that
+   * are still moving — so the answer feeds back into its own input and the card
+   * sticks or flickers instead of travelling. Dragging one up several places was
+   * where it showed worst.
+   *
+   * These positions describe the lane WITHOUT the dragged card, in the order it
+   * had before anything moved, which is exactly the basis a drop index is
+   * defined against. It cannot go stale mid-drag because it does not depend on
+   * what the preview is doing.
+   *
+   * Offsets are in the lane's own scroll space, so scrolling a column
+   * mid-drag stays correct.
+   */
+  const laneGeometry = useRef<Map<string, { id: string; mid: number }[]>>(new Map())
+  const laneRefs = useRef<Map<string, HTMLDivElement | null>>(new Map())
+
+  const measureLanes = (draggedId: string) => {
+    const measured = new Map<string, { id: string; mid: number }[]>()
+
+    for (const [status, container] of laneRefs.current) {
+      if (!container) continue
+      const children = Array.from(container.children) as HTMLElement[]
+
+      /**
+       * The container's content origin in viewport terms, so a card's position
+       * can be expressed the same way the pointer is read later.
+       *
+       * Measured, not taken from offsetTop: offsetTop is relative to the nearest
+       * POSITIONED ancestor, and this lane is not positioned — so those numbers
+       * carried the column's header and padding with them while the pointer was
+       * read from the lane's own top. A constant offset between the two biased
+       * every hit test upward, which is why dragging up landed and dragging down
+       * fell short. Nothing is animating at drag start, so rects are exact here.
+       */
+      const originTop = container.getBoundingClientRect().top - container.scrollTop
+      const topOf = (el: HTMLElement) => el.getBoundingClientRect().top - originTop
+
+      /**
+       * The gap the lane puts between cards, read from the lane rather than
+       * hard-coded, so restyling the spacing cannot quietly skew the maths.
+       */
+      const gap = children.length > 1
+        ? Math.max(0, topOf(children[1]) - (topOf(children[0]) + children[0].offsetHeight))
+        : 0
+
+      /**
+       * The hole the dragged card leaves behind.
+       *
+       * It is measured while still sitting in its slot, so every card BELOW it
+       * is currently a card-height lower than it will be once the card lifts
+       * out. Cards above it do not move at all — which is exactly why dragging
+       * up worked and dragging down was consistently one card short.
+       */
+      const dragged = children.find((el) => el.dataset.taskId === draggedId)
+      const closesUpBelow = dragged ? dragged.offsetHeight + gap : 0
+
+      const draggedTop = dragged ? topOf(dragged) : 0
+      const cards: { id: string; mid: number }[] = []
+      for (const el of children) {
+        const id = el.dataset.taskId
+        if (!id || id === draggedId) continue
+        const below = dragged ? topOf(el) > draggedTop : false
+        const top = topOf(el) - (below ? closesUpBelow : 0)
+        cards.push({ id, mid: top + el.offsetHeight / 2 })
+      }
+      measured.set(status, cards)
+    }
+
+    laneGeometry.current = measured
+  }
+
+  /** The slot the pointer is currently over, against the measurements above. */
+  const slotAt = (status: string, container: HTMLDivElement, clientY: number) => {
+    const y = clientY - container.getBoundingClientRect().top + container.scrollTop
+    const cards = laneGeometry.current.get(status) ?? []
+    const index = cards.findIndex((c) => y < c.mid)
+    return index === -1 ? cards.length : index
+  }
+
+  const endDrag = () => { setDragId(null); setDropAt(null); laneGeometry.current = new Map() }
+
+  /**
+   * A column's cards as they would stand if the drag ended now — the dragged
+   * card already sitting in its slot, everything else shuffled around it.
+   *
+   * This is what gets rendered, so the reorder IS the preview: cards move aside
+   * to open the gap rather than a line being drawn to describe one. The dragged
+   * card is never taken out of the DOM, which is what made it vanish under its
+   * neighbour before — removing the element being dragged breaks the drag the
+   * browser is running.
+   */
+  const laneWithPreview = (status: string): TaskListItem[] => {
+    const dragged = dragId ? tasks.find((t) => t.id === dragId) ?? null : null
+    // Not over any column yet: nothing has been proposed, so nothing moves.
+    if (!dragged || !dropAt) return laneFor(status)
+
+    const rest = laneFor(status).filter((t) => t.id !== dragId)
+    if (dropAt.status !== status) return rest
+
+    const at = Math.min(dropAt.index, rest.length)
+    return [...rest.slice(0, at), dragged, ...rest.slice(at)]
+  }
+
   const handleDrop = (col: Column) => {
-    setDragOver(null)
     const id = dragId
-    setDragId(null)
+    const at = dropAt
+    endDrag()
     if (!id) return
     if (col.isSignoff && !canSignOff) {
       toast('Only a project manager or team lead can mark a task approved or completed', 'error')
       return
     }
     const task = tasks.find((t) => t.id === id)
-    if (!task || statusOf(task) === col.status) return
-    setOptimistic((o) => ({ ...o, [id]: col.status }))
-    updateStatus.mutate(
-      { id, status: col.status, projectId: task.project_id },
-      { onError: (e) => { setOptimistic((o) => { const n = { ...o }; delete n[id]; return n }); toast(e instanceof Error ? e.message : 'Could not move task', 'error') } },
+    if (!task) return
+
+    const changingColumn = statusOf(task) !== col.status
+    const before = laneFor(col.status)
+    // The lane without the dragged card, which is what the drop index counts against.
+    const lane = before.filter((t) => t.id !== id)
+    const index = at?.status === col.status ? Math.min(at.index, lane.length) : lane.length
+    const next = [...lane.slice(0, index), task, ...lane.slice(index)]
+
+    // Dropped back exactly where it came from.
+    if (!changingColumn && before.findIndex((t) => t.id === id) === index) return
+
+    // Only the rows that actually shifted — dropping near the end of a long lane
+    // should write two rows, not thirty.
+    const positions = next.flatMap((t, i) =>
+      t.id !== id && positionOf(t) === i ? [] : [{ id: t.id, boardOrder: i }],
+    )
+
+    const previousOrder = orderOverride
+    setOrderOverride((o) => ({ ...o, ...Object.fromEntries(next.map((t, i) => [t.id, i])) }))
+    if (changingColumn) setOptimistic((o) => ({ ...o, [id]: col.status }))
+
+    reorderBoard.mutate(
+      {
+        positions,
+        moved: changingColumn ? { id, status: col.status } : undefined,
+        projectId: task.project_id,
+      },
+      {
+        onError: (e) => {
+          setOrderOverride(previousOrder)
+          if (changingColumn) setOptimistic((o) => { const n = { ...o }; delete n[id]; return n })
+          toast(e instanceof Error ? e.message : 'Could not move task', 'error')
+        },
+      },
     )
   }
 
@@ -279,16 +438,27 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
     // gutters, column background, below the last card — and drag sideways.
     <div ref={boardRef} className="flex min-h-80 flex-1 snap-x snap-mandatory gap-2.5 overflow-x-auto pb-2 lg:snap-none lg:gap-3">
       {columns.map((col) => {
-        const items = tasks.filter((t) => statusOf(t) === col.status)
+        const items = laneFor(col.status)
+        const lane = laneWithPreview(col.status)
         return (
           <div
             key={col.status}
+            // The column's own fallback: anywhere that is not over a card means
+            // the end of the lane. Cards stop propagation so their slot wins.
             onDragOver={(e) => {
               e.preventDefault()
               if (col.isSignoff && !canSignOff) return
-              setDragOver(col.status)
+              setDropAt({ status: col.status, index: lane.filter((t) => t.id !== dragId).length })
             }}
-            onDragLeave={() => setDragOver((c) => (c === col.status ? null : c))}
+            // Only when the pointer has actually left the column. dragleave also
+            // fires as it crosses into the column's own children, and clearing
+            // the proposal there makes the preview flicker on every card it
+            // passes over.
+            onDragLeave={(e) => {
+              const to = e.relatedTarget
+              if (to instanceof Node && e.currentTarget.contains(to)) return
+              setDropAt((c) => (c?.status === col.status ? null : c))
+            }}
             onDrop={() => handleDrop(col)}
             className={cn(
               'flex h-full snap-start flex-col overflow-hidden rounded-lg border p-2.5 transition-colors',
@@ -297,9 +467,9 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
               // scrolls sideways rather than squeezing every card thin — which
               // is why the lane is sized for the card rather than the viewport.
               'w-[86vw] shrink-0 sm:w-100 lg:w-auto lg:min-w-100 lg:flex-1',
-              dragOver === col.status ? 'bg-surface-2/40' : 'border-border-default bg-surface-1/60',
+              dropAt?.status === col.status ? 'bg-surface-2/40' : 'border-border-default bg-surface-1/60',
             )}
-            style={dragOver === col.status ? { borderColor: col.color } : undefined}
+            style={dropAt?.status === col.status ? { borderColor: col.color } : undefined}
           >
             {/* Coloured, iconed header — the column's identity, ClickUp style.
                 The bar above it repeats the colour at full strength so a lane is
@@ -331,18 +501,41 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
                 must not chain to the page when a column bottoms out, but the
                 horizontal axis has to reach the board — otherwise a sideways
                 gesture over a column scrolls nothing at all. */}
-            <div className="flex-1 space-y-2 min-h-2 overflow-y-auto overscroll-y-contain">
-              {items.map((t) => (
-                <div
+            <div
+              ref={(el) => { laneRefs.current.set(col.status, el) }}
+              // One handler for the whole lane rather than one per card: the
+              // pointer's position against the measurements taken at drag start
+              // is the whole answer, and no card has to be asked about itself.
+              onDragOver={(e) => {
+                if (!dragId) return
+                e.preventDefault()
+                e.stopPropagation()
+                if (col.isSignoff && !canSignOff) return
+                setDropAt({ status: col.status, index: slotAt(col.status, e.currentTarget, e.clientY) })
+              }}
+              className="flex-1 space-y-2 min-h-2 overflow-y-auto overscroll-y-contain">
+              {lane.map((t) => (
+                <motion.div
                   key={t.id}
+                  // layout: when the lane reorders under the cursor, every card
+                  // slides to its new place instead of jumping there. This is the
+                  // whole of "the cards move out of the way".
+                  layout
+                  // A tween, not a spring: no overshoot to settle out of, so a
+                  // card that has to travel several places arrives cleanly
+                  // instead of wobbling into its slot behind the cursor.
+                  transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
                   draggable
                   data-no-pan
-                  onDragStart={() => setDragId(t.id)}
-                  onDragEnd={() => { setDragId(null); setDragOver(null) }}
+                  data-task-id={t.id}
+                  onDragStart={() => { measureLanes(t.id); setDragId(t.id) }}
+                  onDragEnd={endDrag}
                   onClick={() => onOpenTask(t.id)}
                   className={cn(
-                    'group/card bg-surface-1 border border-border-default rounded-md p-3 cursor-grab active:cursor-grabbing hover:border-border-strong transition-[transform,opacity,border-color] duration-150',
-                    dragId === t.id ? 'opacity-40 scale-[0.98]' : 'opacity-100',
+                    'group/card bg-surface-1 border border-border-default rounded-md p-3 cursor-grab active:cursor-grabbing hover:border-border-strong transition-[opacity,border-color] duration-150',
+                    // Dimmed in its proposed slot, so it reads as the card in
+                    // flight rather than one already dropped there.
+                    dragId === t.id && 'opacity-50',
                   )}
                 >
                   {/* Floated together so the pill and the delete button share a
@@ -392,9 +585,9 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
                   </div>
                   <TaskCardProgress task={t} done={statusOf(t) === 'completed' || statusOf(t) === 'approved'} />
                   <TaskCardMeta task={t} />
-                </div>
+                </motion.div>
               ))}
-              {items.length === 0 && <p className="text-center text-[11px] text-text-4 py-4">Empty</p>}
+              {lane.length === 0 && <p className="text-center text-[11px] text-text-4 py-4">Empty</p>}
             </div>
           </div>
         )

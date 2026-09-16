@@ -605,6 +605,23 @@ export interface BdDailyUpdate {
   leadsAdded: number
 }
 
+/**
+ * One person's slot on one day: who owes an update and what they filed.
+ *
+ * `update` is null for somebody who has not checked in yet, which is the row
+ * the page actually exists to surface — so the roster is a list of people, not
+ * a list of updates.
+ */
+export interface BdUpdateSlot {
+  repId: string
+  repName: string
+  avatarUrl: string | null
+  /** False on that person's own day off — not filing is then not a miss. */
+  isWorkingDay: boolean
+  update: BdDailyUpdate | null
+}
+
+
 /** A rep's revenue and activity quota for a period. */
 export interface BdTarget {
   repId: string

@@ -99,8 +99,10 @@ Deno.serve(async (req: Request) => {
   const now = new Date()
   const { today, localMinutes, dayOfWeek } = localParts(now, tz)
 
-  // 4a/4b. Weekend and holiday gates.
-  const dayGate = await checkDayGates(supabase, today, dayOfWeek, settings)
+  // 4a/4b. Holiday gate, then this person's own working days
+  //         (profiles.schedule_mode) — a flexible or custom week can include
+  //         a Saturday the company does not work.
+  const dayGate = await checkDayGates(supabase, profileId, today, dayOfWeek, settings)
   if (dayGate.blocked) {
     return json({ error: dayGate.message, code: dayGate.code }, 422)
   }
@@ -169,7 +171,7 @@ Deno.serve(async (req: Request) => {
 
   // Schedule-window enforcement is per-job-type. When disabled (e.g. flexible
   // remote/hybrid hours) the early/late bounds are skipped and the arrival is
-  // never marked late. Weekend/holiday gates above still apply to everyone.
+  // never marked late. The holiday and working-day gates above still apply.
   if (policy.enforce_schedule_window) {
     if (lowerBoundActive && localMinutes < openMinutes) {
       return json({

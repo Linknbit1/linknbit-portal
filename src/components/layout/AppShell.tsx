@@ -6,6 +6,7 @@ import { NavChromeContext } from './MobileNavContext'
 import { cn } from '../../lib/cn'
 import { useAuthContext } from '../../context/AuthContext'
 import { useResyncPushSubscription } from '../../hooks/useNotifications'
+import { useAppBadge } from '../../hooks/useAppBadge'
 import { useRealtimeNotifications } from '../../hooks/realtime/useRealtimeNotifications'
 import { useRealtimeChannelList } from '../../hooks/realtime/useRealtimeChannelList'
 import { FileViewerProvider } from '../shared/FileViewer'
@@ -40,6 +41,8 @@ export function AppShell() {
   // route and both breakpoints — the toast should never depend on which page
   // or layout happens to be on screen.
   useRealtimeNotifications(profile?.id ?? '')
+  // Unread chat on the dock, the taskbar and the tab icon.
+  useAppBadge()
   // Push endpoints expire and get pruned server-side; nothing used to put them
   // back, so people quietly stopped being reachable. This repairs that on load.
   useResyncPushSubscription(profile?.id ?? '')

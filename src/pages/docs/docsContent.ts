@@ -347,6 +347,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
           'In a direct message there is only one other person, so it goes from one tick to two coloured. In a channel the two grey ticks tell you it has reached some people without claiming it reached all of them.',
           'Ticks turn as soon as somebody opens the conversation, without refreshing and without waiting for them to reply.',
           'The conversation list carries the same tick, in front of the preview, whenever the last message in that conversation was yours — so you can see what is still waiting on somebody without opening it.',
+          'Unread messages are counted in front of the browser tab\'s title, and on the dock or taskbar icon when you have installed the app. It counts direct messages and channels together, and nothing else — a number there means somebody is waiting on a reply.',
           'A conversation you have read can be marked unread again from its menu, for when you cannot deal with it yet.',
           'Type @ and a team name to tag a whole team. Teams are listed in their service colour, so Design, Development and Marketing are recognisable before you read the name. Only some roles may tag one; for everyone else the text still appears but reaches nobody.',
           'Deleting a message deletes the files attached to it, and they leave the Files panel with it. The message itself stays as a note that something was removed.',
@@ -410,6 +411,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
           'Watch a task to be notified about it even when it is not assigned to you.',
           'Reviewers work like assignees: a task can have several, and a reviewer can open the task they are reviewing whether or not it is theirs.',
           'Reviewers are notified when a card is dragged into whichever column is marked as the review column on Settings → Task statuses. It follows the marker, not the word, so a column called QA or Client sign-off works the same.',
+          'Drag a card up and down inside its column to order the work, not just across to another column. The other cards move aside as you go, so the gap you can see is where it will land — aim at a card\'s top or bottom half to drop above or below it. The order you set is kept and is what everyone else sees.',
           'You can assign or name a reviewer who is not staffed on the service yet. Choosing them adds them to it, the same way choosing a service the project does not run adds the service. This holds wherever you pick them: while writing the task, or later from the task itself.',
           'The service, assignee and reviewer lists are each split under two headings — what is already part of the project or service, and what picking will add to it. Anything under the second heading is a real choice, not a warning; it simply does one more thing when you save.',
           'A new task opens on the default column and can be saved as it stands; the status picker is there for starting one somewhere else.',
@@ -620,10 +622,41 @@ export const DOC_CHAPTERS: DocChapter[] = [
         ],
         notes: [
           'A public holiday or a company-wide work-from-home day is announced in a banner across the top, and everyone is marked accordingly.',
-          'Weekends show as a non-working day rather than reporting the whole company as missing.',
+          'Weekends show as a non-working day rather than reporting the whole company as missing. Somebody whose working days differ from the company’s is judged against their own week, so a Saturday they work counts and a Tuesday they do not is not held against them.',
           'You always see everyone’s status. Check-in times, the late flag and which kind of leave someone took are shown only for yourself, for people on your teams, and to whoever manages attendance.',
           'The roster refreshes on its own about once a minute, so it can be left open.',
           'People excluded from attendance tracking are left out entirely, counting them would make the numbers wrong.',
+        ],
+      },
+      {
+        id: 'working-days',
+        title: 'Working days that are not Monday to Friday',
+        summary:
+          'Most people follow the company calendar. Somebody who works weekends, or a fixed week of their own, is given their own working days so that check-in, standup and the absence count all follow it.',
+        where: 'People → open a person → Working days',
+        feature: 'can_manage_people',
+        procedures: [
+          {
+            title: 'Give somebody their own week',
+            steps: [
+              'Open People, find the person and press Edit.',
+              'Under Working days choose Specific days, then tick the days they work.',
+              'Save. They can now check in and file a standup on exactly those days.',
+            ],
+          },
+          {
+            title: 'Set somebody to flexible hours',
+            steps: [
+              'Open the person and set Working days to Flexible (any day).',
+              'Save. They can check in and file a standup on any day that is not a public holiday, and are never marked absent.',
+            ],
+          },
+        ],
+        notes: [
+          'Working days and Job type answer different questions and are set separately. Job type says where somebody works from and drives the office-network and timing rules; working days say which days they work. A hybrid employee can keep the company week or have their own.',
+          'Public holidays apply to everybody in every mode. Nobody is expected in on one.',
+          'Flexible is the setting for somebody whose days genuinely vary. Because no particular day was promised, the nightly absence check skips them — use Specific days if you do want a missed day to show.',
+          'Leave is counted in the person’s own working days, so a week off costs them the days they actually work.',
         ],
       },
       {
@@ -1426,23 +1459,65 @@ export const DOC_CHAPTERS: DocChapter[] = [
         id: 'bd-updates',
         title: 'Daily updates',
         summary:
-          'The team feed for a day, built from what everyone already logged. Nobody retypes their day. The numbers come from your outreach, meetings and leads. A note is for the days the numbers do not explain.',
+          'A written check-in at the end of a business-development day. Only the people who hold the Submit BD daily updates permission are asked for one, you can change today’s until midnight, and My history keeps everything you have filed, a month at a time.',
         where: 'Business Dev → Daily Updates',
         feature: 'can_view_bd',
         procedures: [
           {
-            title: 'Add a note about your day',
+            title: 'File today’s update',
             steps: [
-              'Open Business Dev → Daily Updates and press Add a note.',
-              'Write what the numbers do not show. A strategy call, a document you prepared, a day spent on something that logs nothing.',
-              'Save. Your card appears in the team feed straight away.',
+              'Open Business Dev → Daily Updates. If one is owed from you, the banner at the top says so.',
+              'Press Write today’s update.',
+              'Tick the platforms you worked on, write what you did — at least a sentence — and fill in any of the four key numbers that apply.',
+              'Press Submit.',
+            ],
+          },
+          {
+            title: 'Change what you filed',
+            steps: [
+              'On The day, press Edit my update. On My history, press Edit against today’s row.',
+              'Change what you need and save.',
+            ],
+          },
+          {
+            title: 'Read your own updates back',
+            steps: [
+              'Open the My history tab.',
+              'Step the month box back and forward, or press All months.',
+              'The updates you filed that month are listed newest first. Only days you wrote something appear.',
             ],
           },
         ],
         notes: [
-          'You appear in the feed if you logged outreach, hosted a meeting, or wrote a note, any one is enough. A day spent on work that logs nothing is still a day you checked in.',
+          'You are asked for an update only if you hold Submit BD daily updates. Being able to open the BD module is not the same thing, which is why an admin overseeing the department is never asked for one.',
+          'An update belongs to the day it covers. It can only be filed, changed or removed on that day — after midnight in company time the day is settled, and nobody can reopen it.',
+          'On a day that is not a working day for you, nothing is expected and nothing is counted against you — including a Saturday you do work, if that is how your week is set up.',
           'Notes keep the line breaks you type, so a bulleted list stays a bulleted list.',
-          'Nobody is asked to type numbers that already exist. Proposals, calls, meetings and leads are counted from what you logged elsewhere.',
+          'If you filed nothing but logged outreach or hosted a meeting, your card says so. The system knowing you were busy is not a substitute for the check-in, but it is not held against you either.',
+          'Who is asked for an update is decided by the Submit BD daily updates permission in Settings → Roles, and nowhere else.',
+        ],
+      },
+      {
+        id: 'bd-team-updates',
+        title: 'Reading the team’s daily updates',
+        summary:
+          'Who has checked in today and who has not, for everyone required to file. A BD manager sees the whole desk; a rep sees their own.',
+        where: 'Business Dev → Daily Updates → The day',
+        feature: 'can_view_bd_team_updates',
+        procedures: [
+          {
+            title: 'See where the day stands',
+            steps: [
+              'Open Business Dev → Daily Updates.',
+              'The heading counts how many of the people required today have filed.',
+              'Anybody still outstanding is named in the line above the feed.',
+              'Use the day picker to look back at any of the last week.',
+            ],
+          },
+        ],
+        notes: [
+          'The list is everyone required to file, not everyone in BD — so it is a roster you can actually chase.',
+          'People not working that day are listed last and dimmed, and are left out of the filed count entirely.',
         ],
       },
       {
