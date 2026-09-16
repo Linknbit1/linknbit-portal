@@ -294,18 +294,43 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
 
   const measureLanes = (draggedId: string) => {
     const measured = new Map<string, { id: string; mid: number }[]>()
+
     for (const [status, container] of laneRefs.current) {
       if (!container) continue
+      const children = Array.from(container.children) as HTMLElement[]
+
+      /**
+       * The gap the lane puts between cards, read from the lane rather than
+       * hard-coded, so restyling the spacing cannot quietly skew the maths.
+       */
+      const gap = children.length > 1
+        ? Math.max(0, children[1].offsetTop - (children[0].offsetTop + children[0].offsetHeight))
+        : 0
+
+      /**
+       * The hole the dragged card leaves behind.
+       *
+       * It is measured while still sitting in its slot, so every card BELOW it
+       * is currently a card-height lower than it will be once the card lifts
+       * out. Cards above it do not move at all — which is exactly why dragging
+       * up worked and dragging down was consistently one card short.
+       */
+      const dragged = children.find((el) => el.dataset.taskId === draggedId)
+      const closesUpBelow = dragged ? dragged.offsetHeight + gap : 0
+
       const cards: { id: string; mid: number }[] = []
-      for (const child of Array.from(container.children)) {
-        const el = child as HTMLElement
+      for (const el of children) {
         const id = el.dataset.taskId
+        if (!id || id === draggedId) continue
         // offsetTop, not a bounding rect: Framer animates with transforms, which
         // leave offsetTop reading the settled layout rather than the moving one.
-        if (id && id !== draggedId) cards.push({ id, mid: el.offsetTop + el.offsetHeight / 2 })
+        const below = dragged ? el.offsetTop > dragged.offsetTop : false
+        const top = el.offsetTop - (below ? closesUpBelow : 0)
+        cards.push({ id, mid: top + el.offsetHeight / 2 })
       }
       measured.set(status, cards)
     }
+
     laneGeometry.current = measured
   }
 
