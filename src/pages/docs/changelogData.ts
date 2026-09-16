@@ -31,21 +31,7 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
-    version: '1.32.0',
-<<<<<<< HEAD
-    date: '2026-09-08',
-    title: 'Who decided, and when',
-    highlight:
-      'The requests queue can now show the paper trail behind every row \u2014 when a request was filed, when it was decided, and by whom. It is a switch in the Filters panel, off unless you ask for it.',
-    entries: [
-      {
-        kind: 'added',
-        text: 'Show metadata, in the Filters panel on Requests. With it on, every row carries the date and time it was filed, and the date and time it was approved or rejected, with the name of whoever decided it. It sits under Group by day, is counted in the Filters badge, and Clear all turns it off again.',
-      },
-      {
-        kind: 'fixed',
-        text: 'Exception corrections now record who decided them. Leave, WFH and overtime always did; an exception recorded only the time, so its decision had no name against it. Ones decided before this release still show the time without a name \u2014 there is nothing to recover.',
-=======
+    version: '1.33.0',
     date: '2026-09-14',
     title: 'Not everybody\u2019s week is the same week',
     highlight:
@@ -100,7 +86,21 @@ export const RELEASES: ChangelogRelease[] = [
         kind: 'improved',
         text: 'Daily updates are read by their author and by whoever holds View the team\u2019s BD daily updates, rather than by everyone with BD access.',
         feature: 'can_view_bd',
->>>>>>> b7e57696dabf81a0e8cb97e68707be462f839e7e
+      },
+    ],
+  },
+  {
+    version: '1.32.0',
+    date: '2026-09-08',
+    title: 'Who decided, and when',
+    entries: [
+      {
+        kind: 'added',
+        text: 'Show metadata, in the Filters panel on Requests. With it on, every row carries the date and time it was filed, and the date and time it was approved or rejected, with the name of whoever decided it. It sits under Group by day, is counted in the Filters badge, and Clear all turns it off again.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Exception corrections now record who decided them. Leave, WFH and overtime always did; an exception recorded only the time, so its decision had no name against it. Ones decided before this release still show the time without a name \u2014 there is nothing to recover.',
       },
     ],
   },
