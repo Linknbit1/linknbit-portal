@@ -39,7 +39,7 @@ export const RELEASES: ChangelogRelease[] = [
     entries: [
       {
         kind: 'added',
-        text: 'Cards on a task board can now be dragged up and down inside their column, not only across to another one, so a column can be put in the order the work should happen. A line shows where the card will land, and the order is saved for everyone.',
+        text: 'Cards on a task board can now be dragged up and down inside their column, not only across to another one, so a column can be put in the order the work should happen. The other cards slide aside as you drag, showing the gap the card will drop into, and the order is saved for everyone.',
       },
       {
         kind: 'added',

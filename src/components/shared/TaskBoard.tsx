@@ -1,4 +1,5 @@
-import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { motion } from 'framer-motion'
 import {
   AlertCircle, Archive, Ban, BadgeCheck, Circle, CircleCheck, CircleDashed, CircleDot, Eye,
   CornerUpRight, GitBranch, Layers, MessageSquare, MoreHorizontal, Paperclip, Timer, Trash2,
@@ -218,17 +219,6 @@ interface TaskBoardProps {
   showProject?: boolean
 }
 
-/** Where the card will land, drawn in the column's own colour. */
-function DropLine({ color }: { color: string }) {
-  return (
-    <div
-      aria-hidden
-      className="h-0.5 rounded-full"
-      style={{ background: color, boxShadow: `0 0 8px ${color}` }}
-    />
-  )
-}
-
 export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
   const toast = useToast()
   const reorderBoard = useReorderBoardTasks()
@@ -283,6 +273,28 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
     tasks.filter((t) => statusOf(t) === status).slice().sort((a, b) => positionOf(a) - positionOf(b))
 
   const endDrag = () => { setDragId(null); setDropAt(null) }
+
+  /**
+   * A column's cards as they would stand if the drag ended now — the dragged
+   * card already sitting in its slot, everything else shuffled around it.
+   *
+   * This is what gets rendered, so the reorder IS the preview: cards move aside
+   * to open the gap rather than a line being drawn to describe one. The dragged
+   * card is never taken out of the DOM, which is what made it vanish under its
+   * neighbour before — removing the element being dragged breaks the drag the
+   * browser is running.
+   */
+  const laneWithPreview = (status: string): TaskListItem[] => {
+    const dragged = dragId ? tasks.find((t) => t.id === dragId) ?? null : null
+    // Not over any column yet: nothing has been proposed, so nothing moves.
+    if (!dragged || !dropAt) return laneFor(status)
+
+    const rest = laneFor(status).filter((t) => t.id !== dragId)
+    if (dropAt.status !== status) return rest
+
+    const at = Math.min(dropAt.index, rest.length)
+    return [...rest.slice(0, at), dragged, ...rest.slice(at)]
+  }
 
   const handleDrop = (col: Column) => {
     const id = dragId
@@ -344,10 +356,7 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
     <div ref={boardRef} className="flex min-h-80 flex-1 snap-x snap-mandatory gap-2.5 overflow-x-auto pb-2 lg:snap-none lg:gap-3">
       {columns.map((col) => {
         const items = laneFor(col.status)
-        // The dragged card leaves its slot while in flight, so the gap under the
-        // cursor IS the preview — and the indices below need no correction.
-        const lane = items.filter((t) => t.id !== dragId)
-        const dropIndex = dropAt?.status === col.status ? dropAt.index : null
+        const lane = laneWithPreview(col.status)
         return (
           <div
             key={col.status}
@@ -356,7 +365,7 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
             onDragOver={(e) => {
               e.preventDefault()
               if (col.isSignoff && !canSignOff) return
-              setDropAt({ status: col.status, index: lane.length })
+              setDropAt({ status: col.status, index: lane.filter((t) => t.id !== dragId).length })
             }}
             onDragLeave={() => setDropAt((c) => (c?.status === col.status ? null : c))}
             onDrop={() => handleDrop(col)}
@@ -402,10 +411,14 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
                 horizontal axis has to reach the board — otherwise a sideways
                 gesture over a column scrolls nothing at all. */}
             <div className="flex-1 space-y-2 min-h-2 overflow-y-auto overscroll-y-contain">
-              {lane.map((t, i) => (
-                <Fragment key={t.id}>
-                  {dropIndex === i && <DropLine color={col.color} />}
-                <div
+              {lane.map((t) => (
+                <motion.div
+                  key={t.id}
+                  // layout: when the lane reorders under the cursor, every card
+                  // slides to its new place instead of jumping there. This is the
+                  // whole of "the cards move out of the way".
+                  layout
+                  transition={{ type: 'spring', stiffness: 520, damping: 42, mass: 0.6 }}
                   draggable
                   data-no-pan
                   onDragStart={() => setDragId(t.id)}
@@ -417,13 +430,25 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
                     e.preventDefault()
                     e.stopPropagation()
                     if (col.isSignoff && !canSignOff) return
+                    // Measured against the lane WITHOUT the dragged card, which
+                    // is the same basis handleDrop writes positions from. `i` is
+                    // this card's place in the preview, which already counts the
+                    // dragged one and would be a slot out.
+                    const rest = lane.filter((x) => x.id !== dragId)
+                    const at = rest.findIndex((x) => x.id === t.id)
+                    // Over the dragged card itself: it is already where it would
+                    // land, so there is nothing to propose.
+                    if (at === -1) return
                     const box = e.currentTarget.getBoundingClientRect()
                     const below = e.clientY - box.top > box.height / 2
-                    setDropAt({ status: col.status, index: below ? i + 1 : i })
+                    setDropAt({ status: col.status, index: below ? at + 1 : at })
                   }}
                   onClick={() => onOpenTask(t.id)}
                   className={cn(
-                    'group/card bg-surface-1 border border-border-default rounded-md p-3 cursor-grab active:cursor-grabbing hover:border-border-strong transition-[transform,opacity,border-color] duration-150',
+                    'group/card bg-surface-1 border border-border-default rounded-md p-3 cursor-grab active:cursor-grabbing hover:border-border-strong transition-[opacity,border-color] duration-150',
+                    // Dimmed in its proposed slot, so it reads as the card in
+                    // flight rather than one already dropped there.
+                    dragId === t.id && 'opacity-50',
                   )}
                 >
                   {/* Floated together so the pill and the delete button share a
@@ -473,12 +498,9 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
                   </div>
                   <TaskCardProgress task={t} done={statusOf(t) === 'completed' || statusOf(t) === 'approved'} />
                   <TaskCardMeta task={t} />
-                </div>
-                </Fragment>
+                </motion.div>
               ))}
-              {/* The slot past the last card, and the only slot an empty lane has. */}
-              {dropIndex !== null && dropIndex >= lane.length && <DropLine color={col.color} />}
-              {items.length === 0 && <p className="text-center text-[11px] text-text-4 py-4">Empty</p>}
+              {lane.length === 0 && <p className="text-center text-[11px] text-text-4 py-4">Empty</p>}
             </div>
           </div>
         )
