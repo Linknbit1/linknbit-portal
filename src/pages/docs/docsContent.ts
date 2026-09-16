@@ -347,7 +347,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
           'In a direct message there is only one other person, so it goes from one tick to two coloured. In a channel the two grey ticks tell you it has reached some people without claiming it reached all of them.',
           'Ticks turn as soon as somebody opens the conversation, without refreshing and without waiting for them to reply.',
           'The conversation list carries the same tick, in front of the preview, whenever the last message in that conversation was yours — so you can see what is still waiting on somebody without opening it.',
-          'Unread messages are counted on the portal\'s own icon and in the tab\'s title: on the browser tab, and on the dock or taskbar when you have installed the app. It counts direct messages and channels together, and nothing else — a number there means somebody is waiting on a reply.',
+          'Unread messages are counted in front of the browser tab\'s title, and on the dock or taskbar icon when you have installed the app. It counts direct messages and channels together, and nothing else — a number there means somebody is waiting on a reply.',
           'A conversation you have read can be marked unread again from its menu, for when you cannot deal with it yet.',
           'Type @ and a team name to tag a whole team. Teams are listed in their service colour, so Design, Development and Marketing are recognisable before you read the name. Only some roles may tag one; for everyone else the text still appears but reaches nobody.',
           'Deleting a message deletes the files attached to it, and they leave the Files panel with it. The message itself stays as a note that something was removed.',

@@ -1,10 +1,10 @@
 import { useEffect } from 'react'
 import { useChatUnreadTotal } from './useChatUnreadCount'
-import { setDockBadge, setTabBadge, setTabTitle } from '../lib/appBadge'
+import { setDockBadge, setTabTitle } from '../lib/appBadge'
 
 /**
- * Puts the unread chat count on the app's icon — the dock, the taskbar, and the
- * browser tab.
+ * Puts the unread chat count where it can be seen without the portal in front of
+ * you — the dock, the taskbar, and the tab's title.
  *
  * Chat only, deliberately. A dock badge is read as "somebody is waiting on a
  * reply", and folding in every notification the portal raises — a holiday
@@ -18,13 +18,11 @@ export function useAppBadge(): void {
 
   useEffect(() => {
     setDockBadge(unread)
-    setTabBadge(unread)
     setTabTitle(unread)
   }, [unread])
 
   useEffect(() => () => {
     setDockBadge(0)
-    setTabBadge(0)
     setTabTitle(0)
   }, [])
 }
