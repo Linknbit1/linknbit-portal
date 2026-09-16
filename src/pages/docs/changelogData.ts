@@ -39,6 +39,10 @@ export const RELEASES: ChangelogRelease[] = [
     entries: [
       {
         kind: 'added',
+        text: 'Unread chat messages now show as a number on the portal\u2019s icon \u2014 on the browser tab, and on the dock or taskbar if you have installed the app. Direct messages and channels are counted together, and nothing else is, so a number there always means somebody is waiting on a reply.',
+      },
+      {
+        kind: 'added',
         text: 'Cards on a task board can now be dragged up and down inside their column, not only across to another one, so a column can be put in the order the work should happen. The other cards slide aside as you drag, showing the gap the card will drop into, and the order is saved for everyone.',
       },
       {

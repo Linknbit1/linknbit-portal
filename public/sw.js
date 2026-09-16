@@ -117,6 +117,17 @@ self.addEventListener('push', (event) => {
     payload = { title: 'Linknbit Portal', body: event.data ? event.data.text() : '' }
   }
 
+  // A chat push arriving while the app is closed should mark the dock/taskbar
+  // icon, so the count the running app keeps up to date does not simply stop
+  // being true the moment somebody quits it.
+  //
+  // A dot, not a number: the worker has no idea how many are unread, and
+  // guessing would put a wrong figure on the icon. The app replaces it with the
+  // real count the next time it opens.
+  if (payload.resource_type === 'channel' && 'setAppBadge' in navigator) {
+    navigator.setAppBadge().catch(() => {})
+  }
+
   event.waitUntil(
     self.registration.showNotification(payload.title || 'Linknbit Portal', {
       body: payload.body || '',
