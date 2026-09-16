@@ -272,7 +272,52 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
   const laneFor = (status: string) =>
     tasks.filter((t) => statusOf(t) === status).slice().sort((a, b) => positionOf(a) - positionOf(b))
 
-  const endDrag = () => { setDragId(null); setDropAt(null) }
+  /**
+   * Where each card's midpoint sits, measured once when a drag starts.
+   *
+   * Hit-testing live rects does not work here: proposing a slot reorders the
+   * lane, the reorder animates, and the next pointer event measures cards that
+   * are still moving — so the answer feeds back into its own input and the card
+   * sticks or flickers instead of travelling. Dragging one up several places was
+   * where it showed worst.
+   *
+   * These positions describe the lane WITHOUT the dragged card, in the order it
+   * had before anything moved, which is exactly the basis a drop index is
+   * defined against. It cannot go stale mid-drag because it does not depend on
+   * what the preview is doing.
+   *
+   * Offsets are in the lane's own scroll space, so scrolling a column
+   * mid-drag stays correct.
+   */
+  const laneGeometry = useRef<Map<string, { id: string; mid: number }[]>>(new Map())
+  const laneRefs = useRef<Map<string, HTMLDivElement | null>>(new Map())
+
+  const measureLanes = (draggedId: string) => {
+    const measured = new Map<string, { id: string; mid: number }[]>()
+    for (const [status, container] of laneRefs.current) {
+      if (!container) continue
+      const cards: { id: string; mid: number }[] = []
+      for (const child of Array.from(container.children)) {
+        const el = child as HTMLElement
+        const id = el.dataset.taskId
+        // offsetTop, not a bounding rect: Framer animates with transforms, which
+        // leave offsetTop reading the settled layout rather than the moving one.
+        if (id && id !== draggedId) cards.push({ id, mid: el.offsetTop + el.offsetHeight / 2 })
+      }
+      measured.set(status, cards)
+    }
+    laneGeometry.current = measured
+  }
+
+  /** The slot the pointer is currently over, against the measurements above. */
+  const slotAt = (status: string, container: HTMLDivElement, clientY: number) => {
+    const y = clientY - container.getBoundingClientRect().top + container.scrollTop
+    const cards = laneGeometry.current.get(status) ?? []
+    const index = cards.findIndex((c) => y < c.mid)
+    return index === -1 ? cards.length : index
+  }
+
+  const endDrag = () => { setDragId(null); setDropAt(null); laneGeometry.current = new Map() }
 
   /**
    * A column's cards as they would stand if the drag ended now — the dragged
@@ -367,7 +412,15 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
               if (col.isSignoff && !canSignOff) return
               setDropAt({ status: col.status, index: lane.filter((t) => t.id !== dragId).length })
             }}
-            onDragLeave={() => setDropAt((c) => (c?.status === col.status ? null : c))}
+            // Only when the pointer has actually left the column. dragleave also
+            // fires as it crosses into the column's own children, and clearing
+            // the proposal there makes the preview flicker on every card it
+            // passes over.
+            onDragLeave={(e) => {
+              const to = e.relatedTarget
+              if (to instanceof Node && e.currentTarget.contains(to)) return
+              setDropAt((c) => (c?.status === col.status ? null : c))
+            }}
             onDrop={() => handleDrop(col)}
             className={cn(
               'flex h-full snap-start flex-col overflow-hidden rounded-lg border p-2.5 transition-colors',
@@ -410,7 +463,19 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
                 must not chain to the page when a column bottoms out, but the
                 horizontal axis has to reach the board — otherwise a sideways
                 gesture over a column scrolls nothing at all. */}
-            <div className="flex-1 space-y-2 min-h-2 overflow-y-auto overscroll-y-contain">
+            <div
+              ref={(el) => { laneRefs.current.set(col.status, el) }}
+              // One handler for the whole lane rather than one per card: the
+              // pointer's position against the measurements taken at drag start
+              // is the whole answer, and no card has to be asked about itself.
+              onDragOver={(e) => {
+                if (!dragId) return
+                e.preventDefault()
+                e.stopPropagation()
+                if (col.isSignoff && !canSignOff) return
+                setDropAt({ status: col.status, index: slotAt(col.status, e.currentTarget, e.clientY) })
+              }}
+              className="flex-1 space-y-2 min-h-2 overflow-y-auto overscroll-y-contain">
               {lane.map((t) => (
                 <motion.div
                   key={t.id}
@@ -418,31 +483,15 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
                   // slides to its new place instead of jumping there. This is the
                   // whole of "the cards move out of the way".
                   layout
-                  transition={{ type: 'spring', stiffness: 520, damping: 42, mass: 0.6 }}
+                  // A tween, not a spring: no overshoot to settle out of, so a
+                  // card that has to travel several places arrives cleanly
+                  // instead of wobbling into its slot behind the cursor.
+                  transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
                   draggable
                   data-no-pan
-                  onDragStart={() => setDragId(t.id)}
+                  data-task-id={t.id}
+                  onDragStart={() => { measureLanes(t.id); setDragId(t.id) }}
                   onDragEnd={endDrag}
-                  // Top half means above this card, bottom half means below —
-                  // the whole of "drag it up and down its own column".
-                  onDragOver={(e) => {
-                    if (!dragId) return
-                    e.preventDefault()
-                    e.stopPropagation()
-                    if (col.isSignoff && !canSignOff) return
-                    // Measured against the lane WITHOUT the dragged card, which
-                    // is the same basis handleDrop writes positions from. `i` is
-                    // this card's place in the preview, which already counts the
-                    // dragged one and would be a slot out.
-                    const rest = lane.filter((x) => x.id !== dragId)
-                    const at = rest.findIndex((x) => x.id === t.id)
-                    // Over the dragged card itself: it is already where it would
-                    // land, so there is nothing to propose.
-                    if (at === -1) return
-                    const box = e.currentTarget.getBoundingClientRect()
-                    const below = e.clientY - box.top > box.height / 2
-                    setDropAt({ status: col.status, index: below ? at + 1 : at })
-                  }}
                   onClick={() => onOpenTask(t.id)}
                   className={cn(
                     'group/card bg-surface-1 border border-border-default rounded-md p-3 cursor-grab active:cursor-grabbing hover:border-border-strong transition-[opacity,border-color] duration-150',
