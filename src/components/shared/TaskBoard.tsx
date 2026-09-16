@@ -300,11 +300,25 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
       const children = Array.from(container.children) as HTMLElement[]
 
       /**
+       * The container's content origin in viewport terms, so a card's position
+       * can be expressed the same way the pointer is read later.
+       *
+       * Measured, not taken from offsetTop: offsetTop is relative to the nearest
+       * POSITIONED ancestor, and this lane is not positioned — so those numbers
+       * carried the column's header and padding with them while the pointer was
+       * read from the lane's own top. A constant offset between the two biased
+       * every hit test upward, which is why dragging up landed and dragging down
+       * fell short. Nothing is animating at drag start, so rects are exact here.
+       */
+      const originTop = container.getBoundingClientRect().top - container.scrollTop
+      const topOf = (el: HTMLElement) => el.getBoundingClientRect().top - originTop
+
+      /**
        * The gap the lane puts between cards, read from the lane rather than
        * hard-coded, so restyling the spacing cannot quietly skew the maths.
        */
       const gap = children.length > 1
-        ? Math.max(0, children[1].offsetTop - (children[0].offsetTop + children[0].offsetHeight))
+        ? Math.max(0, topOf(children[1]) - (topOf(children[0]) + children[0].offsetHeight))
         : 0
 
       /**
@@ -318,14 +332,13 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
       const dragged = children.find((el) => el.dataset.taskId === draggedId)
       const closesUpBelow = dragged ? dragged.offsetHeight + gap : 0
 
+      const draggedTop = dragged ? topOf(dragged) : 0
       const cards: { id: string; mid: number }[] = []
       for (const el of children) {
         const id = el.dataset.taskId
         if (!id || id === draggedId) continue
-        // offsetTop, not a bounding rect: Framer animates with transforms, which
-        // leave offsetTop reading the settled layout rather than the moving one.
-        const below = dragged ? el.offsetTop > dragged.offsetTop : false
-        const top = el.offsetTop - (below ? closesUpBelow : 0)
+        const below = dragged ? topOf(el) > draggedTop : false
+        const top = topOf(el) - (below ? closesUpBelow : 0)
         cards.push({ id, mid: top + el.offsetHeight / 2 })
       }
       measured.set(status, cards)
