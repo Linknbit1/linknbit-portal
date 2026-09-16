@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import {
   AlertCircle, Archive, Ban, BadgeCheck, Circle, CircleCheck, CircleDashed, CircleDot, Eye,
   CornerUpRight, GitBranch, Layers, MessageSquare, MoreHorizontal, Paperclip, Timer, Trash2,
@@ -8,7 +8,7 @@ import { cn } from '../../lib/cn'
 import { Avatar, AvatarGroup } from '../ui/Avatar'
 import { PriorityChip } from './PriorityChip'
 import { ServiceChip } from './ServiceChip'
-import { useDeleteTask, useUpdateTaskStatus } from '../../hooks/useTasks'
+import { useDeleteTask, useReorderBoardTasks } from '../../hooks/useTasks'
 import { useDragScroll } from '../../hooks/useDragScroll'
 import { useToast } from '../ui/toast-context'
 import { ConfirmDialog } from '../ui/ConfirmDialog'
@@ -218,12 +218,33 @@ interface TaskBoardProps {
   showProject?: boolean
 }
 
+/** Where the card will land, drawn in the column's own colour. */
+function DropLine({ color }: { color: string }) {
+  return (
+    <div
+      aria-hidden
+      className="h-0.5 rounded-full"
+      style={{ background: color, boxShadow: `0 0 8px ${color}` }}
+    />
+  )
+}
+
 export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
   const toast = useToast()
-  const updateStatus = useUpdateTaskStatus()
+  const reorderBoard = useReorderBoardTasks()
   const deleteTask = useDeleteTask()
   const [dragId, setDragId] = useState<string | null>(null)
-  const [dragOver, setDragOver] = useState<string | null>(null)
+  /**
+   * Where the card would land: which column, and which slot within it.
+   *
+   * A column alone was enough while a drop could only change status. Dragging
+   * within a lane needs the slot too, and it is measured against the lane with
+   * the dragged card already taken out — so the index maps straight onto the
+   * position it will be written with.
+   */
+  const [dropAt, setDropAt] = useState<{ status: string; index: number } | null>(null)
+  /** New positions held locally until the write lands, so the board never snaps back. */
+  const [orderOverride, setOrderOverride] = useState<Record<string, number>>({})
   const { data: statuses = [] } = useTaskStatuses()
   const columns = useMemo(() => columnsFrom(statuses), [statuses])
   const [pendingDelete, setPendingDelete] = useState<TaskListItem | null>(null)
@@ -250,21 +271,64 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
 
   const statusOf = (t: TaskListItem): string => optimistic[t.id] ?? t.status
 
+  /** A card's position, preferring the one a drag has just given it. */
+  const positionOf = (t: TaskListItem) => orderOverride[t.id] ?? t.board_order ?? 0
+
+  /**
+   * A column's cards in board order. Sorted rather than taken as they come: the
+   * query orders by board_order then newest-first, and a local override has to
+   * be able to win over both without refetching.
+   */
+  const laneFor = (status: string) =>
+    tasks.filter((t) => statusOf(t) === status).slice().sort((a, b) => positionOf(a) - positionOf(b))
+
+  const endDrag = () => { setDragId(null); setDropAt(null) }
+
   const handleDrop = (col: Column) => {
-    setDragOver(null)
     const id = dragId
-    setDragId(null)
+    const at = dropAt
+    endDrag()
     if (!id) return
     if (col.isSignoff && !canSignOff) {
       toast('Only a project manager or team lead can mark a task approved or completed', 'error')
       return
     }
     const task = tasks.find((t) => t.id === id)
-    if (!task || statusOf(task) === col.status) return
-    setOptimistic((o) => ({ ...o, [id]: col.status }))
-    updateStatus.mutate(
-      { id, status: col.status, projectId: task.project_id },
-      { onError: (e) => { setOptimistic((o) => { const n = { ...o }; delete n[id]; return n }); toast(e instanceof Error ? e.message : 'Could not move task', 'error') } },
+    if (!task) return
+
+    const changingColumn = statusOf(task) !== col.status
+    const before = laneFor(col.status)
+    // The lane without the dragged card, which is what the drop index counts against.
+    const lane = before.filter((t) => t.id !== id)
+    const index = at?.status === col.status ? Math.min(at.index, lane.length) : lane.length
+    const next = [...lane.slice(0, index), task, ...lane.slice(index)]
+
+    // Dropped back exactly where it came from.
+    if (!changingColumn && before.findIndex((t) => t.id === id) === index) return
+
+    // Only the rows that actually shifted — dropping near the end of a long lane
+    // should write two rows, not thirty.
+    const positions = next.flatMap((t, i) =>
+      t.id !== id && positionOf(t) === i ? [] : [{ id: t.id, boardOrder: i }],
+    )
+
+    const previousOrder = orderOverride
+    setOrderOverride((o) => ({ ...o, ...Object.fromEntries(next.map((t, i) => [t.id, i])) }))
+    if (changingColumn) setOptimistic((o) => ({ ...o, [id]: col.status }))
+
+    reorderBoard.mutate(
+      {
+        positions,
+        moved: changingColumn ? { id, status: col.status } : undefined,
+        projectId: task.project_id,
+      },
+      {
+        onError: (e) => {
+          setOrderOverride(previousOrder)
+          if (changingColumn) setOptimistic((o) => { const n = { ...o }; delete n[id]; return n })
+          toast(e instanceof Error ? e.message : 'Could not move task', 'error')
+        },
+      },
     )
   }
 
@@ -279,16 +343,22 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
     // gutters, column background, below the last card — and drag sideways.
     <div ref={boardRef} className="flex min-h-80 flex-1 snap-x snap-mandatory gap-2.5 overflow-x-auto pb-2 lg:snap-none lg:gap-3">
       {columns.map((col) => {
-        const items = tasks.filter((t) => statusOf(t) === col.status)
+        const items = laneFor(col.status)
+        // The dragged card leaves its slot while in flight, so the gap under the
+        // cursor IS the preview — and the indices below need no correction.
+        const lane = items.filter((t) => t.id !== dragId)
+        const dropIndex = dropAt?.status === col.status ? dropAt.index : null
         return (
           <div
             key={col.status}
+            // The column's own fallback: anywhere that is not over a card means
+            // the end of the lane. Cards stop propagation so their slot wins.
             onDragOver={(e) => {
               e.preventDefault()
               if (col.isSignoff && !canSignOff) return
-              setDragOver(col.status)
+              setDropAt({ status: col.status, index: lane.length })
             }}
-            onDragLeave={() => setDragOver((c) => (c === col.status ? null : c))}
+            onDragLeave={() => setDropAt((c) => (c?.status === col.status ? null : c))}
             onDrop={() => handleDrop(col)}
             className={cn(
               'flex h-full snap-start flex-col overflow-hidden rounded-lg border p-2.5 transition-colors',
@@ -297,9 +367,9 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
               // scrolls sideways rather than squeezing every card thin — which
               // is why the lane is sized for the card rather than the viewport.
               'w-[86vw] shrink-0 sm:w-100 lg:w-auto lg:min-w-100 lg:flex-1',
-              dragOver === col.status ? 'bg-surface-2/40' : 'border-border-default bg-surface-1/60',
+              dropAt?.status === col.status ? 'bg-surface-2/40' : 'border-border-default bg-surface-1/60',
             )}
-            style={dragOver === col.status ? { borderColor: col.color } : undefined}
+            style={dropAt?.status === col.status ? { borderColor: col.color } : undefined}
           >
             {/* Coloured, iconed header — the column's identity, ClickUp style.
                 The bar above it repeats the colour at full strength so a lane is
@@ -332,17 +402,28 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
                 horizontal axis has to reach the board — otherwise a sideways
                 gesture over a column scrolls nothing at all. */}
             <div className="flex-1 space-y-2 min-h-2 overflow-y-auto overscroll-y-contain">
-              {items.map((t) => (
+              {lane.map((t, i) => (
+                <Fragment key={t.id}>
+                  {dropIndex === i && <DropLine color={col.color} />}
                 <div
-                  key={t.id}
                   draggable
                   data-no-pan
                   onDragStart={() => setDragId(t.id)}
-                  onDragEnd={() => { setDragId(null); setDragOver(null) }}
+                  onDragEnd={endDrag}
+                  // Top half means above this card, bottom half means below —
+                  // the whole of "drag it up and down its own column".
+                  onDragOver={(e) => {
+                    if (!dragId) return
+                    e.preventDefault()
+                    e.stopPropagation()
+                    if (col.isSignoff && !canSignOff) return
+                    const box = e.currentTarget.getBoundingClientRect()
+                    const below = e.clientY - box.top > box.height / 2
+                    setDropAt({ status: col.status, index: below ? i + 1 : i })
+                  }}
                   onClick={() => onOpenTask(t.id)}
                   className={cn(
                     'group/card bg-surface-1 border border-border-default rounded-md p-3 cursor-grab active:cursor-grabbing hover:border-border-strong transition-[transform,opacity,border-color] duration-150',
-                    dragId === t.id ? 'opacity-40 scale-[0.98]' : 'opacity-100',
                   )}
                 >
                   {/* Floated together so the pill and the delete button share a
@@ -393,7 +474,10 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
                   <TaskCardProgress task={t} done={statusOf(t) === 'completed' || statusOf(t) === 'approved'} />
                   <TaskCardMeta task={t} />
                 </div>
+                </Fragment>
               ))}
+              {/* The slot past the last card, and the only slot an empty lane has. */}
+              {dropIndex !== null && dropIndex >= lane.length && <DropLine color={col.color} />}
               {items.length === 0 && <p className="text-center text-[11px] text-text-4 py-4">Empty</p>}
             </div>
           </div>

@@ -1,8 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
-  fetchTasks, fetchTask, createTask, updateTask, updateTaskStatus,
+  fetchTasks,
+  fetchTask,
+  createTask,
+  updateTask,
+  updateTaskStatus,
   moveTask,
-  type TaskFilters, type TaskStatus, type MoveTaskArgs,
+  type TaskFilters,
+  type TaskStatus,
+  type MoveTaskArgs,
+  reorderBoardTasks,
 } from '../api/tasks'
 import { deleteTaskCascade, fetchTaskDeleteImpact } from '../api/deleteCascade'
 import { PROJECT_KEYS } from './useProjects'
@@ -89,6 +96,28 @@ export function useUpdateTaskStatus() {
       qc.invalidateQueries({ queryKey: TASK_KEYS.detail(row.id) })
       qc.invalidateQueries({ queryKey: AUDIT_KEYS.task(row.id) })
       invalidateTasks(qc, row.project_id)
+    },
+  })
+}
+
+/**
+ * Card positions after a board drag, including a move between columns.
+ *
+ * No optimistic cache write here: the board holds the new order locally while
+ * this is in flight, which keeps the reordering maths in the one place that
+ * already knows the lane.
+ */
+export function useReorderBoardTasks() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ positions, moved }: {
+      positions: { id: string; boardOrder: number }[]
+      moved?: { id: string; status: TaskStatus }
+      projectId?: string
+    }) => reorderBoardTasks(positions, moved),
+    onSuccess: (_r, v) => {
+      if (v.moved) qc.invalidateQueries({ queryKey: TASK_KEYS.detail(v.moved.id) })
+      invalidateTasks(qc, v.projectId)
     },
   })
 }

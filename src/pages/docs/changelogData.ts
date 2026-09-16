@@ -39,6 +39,10 @@ export const RELEASES: ChangelogRelease[] = [
     entries: [
       {
         kind: 'added',
+        text: 'Cards on a task board can now be dragged up and down inside their column, not only across to another one, so a column can be put in the order the work should happen. A line shows where the card will land, and the order is saved for everyone.',
+      },
+      {
+        kind: 'added',
         text: 'Working days are now set per person. The default is unchanged \u2014 the company calendar, Monday to Friday plus any working Saturdays \u2014 but somebody can be given a specific week of their own (Tuesday to Saturday, say) or marked flexible, meaning any day that is not a public holiday. Check-in, the standup window, the absence count and leave arithmetic all follow whichever applies to that person.',
       },
       {

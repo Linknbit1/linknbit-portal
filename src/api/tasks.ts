@@ -114,6 +114,33 @@ export async function updateTaskStatus(id: string, status: TaskStatus, boardOrde
   return updateTask(id, updates)
 }
 
+/**
+ * Writes a lane's new card positions after a drag.
+ *
+ * Two things this is careful about, both of them triggers on `tasks`:
+ *
+ * - `status` is sent ONLY for the card that actually changed column.
+ *   `trg_tasks_notify_reviewers` fires on `UPDATE OF status`, which means the
+ *   column appearing in the SET clause at all — not its value changing. Sending
+ *   it on every row would notify reviewers for every card the drag shifted.
+ * - The caller sends only the rows whose index moved, so dropping a card near
+ *   the end of a long lane writes two rows rather than thirty.
+ */
+export async function reorderBoardTasks(
+  positions: { id: string; boardOrder: number }[],
+  moved?: { id: string; status: TaskStatus },
+): Promise<void> {
+  const results = await Promise.all(
+    positions.map(({ id, boardOrder }) => {
+      const updates: TablesUpdate<'tasks'> = { board_order: boardOrder }
+      if (moved?.id === id) updates.status = moved.status
+      return supabase.from('tasks').update(updates).eq('id', id)
+    }),
+  )
+  const failed = results.find((r) => r.error)
+  if (failed?.error) throw failed.error
+}
+
 /** Soft delete (archive). */
 export interface MoveTaskArgs {
   taskId: string
