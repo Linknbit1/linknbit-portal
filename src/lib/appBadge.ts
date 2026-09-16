@@ -55,6 +55,9 @@ function restoreDeclared(): void {
   }
 }
 
+/** The app mark, loaded once and composited under every badge after that. */
+let base: HTMLImageElement | null = null
+
 /** A pill, with a plain rectangle where roundRect is not available. */
 function pill(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number): void {
   ctx.beginPath()
@@ -89,10 +92,15 @@ function paint(ctx: CanvasRenderingContext2D, size: number, count: number): void
 /**
  * Redraws the tab icon with a count on it.
  *
- * Drawn over the 192px raster rather than the SVG favicon: an <img> pointed at
- * an SVG is the one source that can refuse to decode or taint the canvas, and
- * toDataURL on a tainted canvas throws — which would have been a badge that
- * silently never appeared.
+ * Everything that changes the document happens synchronously, before the base
+ * icon is even requested: the declared links come out, the badged one goes in,
+ * and it already carries a drawn badge. Loading the mark then only upgrades an
+ * icon that is on screen either way.
+ *
+ * Built that way because the previous version did all of it inside the image's
+ * onload, which is a single point at which the whole feature silently does
+ * nothing — and under StrictMode the mount/unmount/mount cycle can interleave
+ * that callback with its own teardown.
  */
 export function setTabBadge(count: number): void {
   if (count <= 0) {
@@ -108,22 +116,35 @@ export function setTabBadge(count: number): void {
   const ctx = canvas.getContext('2d')
   if (!ctx) return
 
-  const commit = () => {
+  const render = (): string => {
+    ctx.clearRect(0, 0, size, size)
+    ctx.fillStyle = '#0A0A0A'
+    ctx.fillRect(0, 0, size, size)
+    if (base?.complete && base.naturalWidth > 0) ctx.drawImage(base, 0, 0, size, size)
     paint(ctx, size, count)
-    const link = document.querySelector<HTMLLinkElement>('link[rel~="icon"][data-badge]')
-      ?? document.createElement('link')
-    link.rel = 'icon'
-    link.type = 'image/png'
-    link.dataset.badge = 'true'
-    link.href = canvas.toDataURL('image/png')
-    if (!link.isConnected) document.head.appendChild(link)
-    // Only once the replacement is in place, so the tab never flashes blank.
-    for (const other of declared ?? []) other.remove()
+    return canvas.toDataURL('image/png')
   }
 
-  const source = new Image()
-  source.onload = () => { ctx.drawImage(source, 0, 0, size, size); commit() }
-  // Without the mark the badge is still the useful half, so draw it regardless.
-  source.onerror = () => { ctx.fillStyle = '#0A0A0A'; ctx.fillRect(0, 0, size, size); commit() }
-  source.src = '/icons/pwa-192x192.png'
+  // Out first, in second. An SVG favicon outranks a PNG wherever it is
+  // supported, so the drawn one is invisible until the declared ones are gone.
+  for (const link of declared ?? []) link.remove()
+
+  const link = document.querySelector<HTMLLinkElement>('link[rel~="icon"][data-badge]')
+    ?? document.createElement('link')
+  link.rel = 'icon'
+  link.type = 'image/png'
+  link.dataset.badge = 'true'
+  link.href = render()
+  if (!link.isConnected) document.head.appendChild(link)
+
+  // The mark, once. Kept across calls so a changing count does not refetch it,
+  // and so a count arriving before it loads still gets it on the next change.
+  if (!base) {
+    base = new Image()
+    base.onload = () => {
+      const current = document.querySelector<HTMLLinkElement>('link[rel~="icon"][data-badge]')
+      if (current) current.href = render()
+    }
+    base.src = '/icons/pwa-192x192.png'
+  }
 }
