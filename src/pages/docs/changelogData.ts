@@ -32,11 +32,15 @@ import type { ChangelogRelease } from '../../types'
 export const RELEASES: ChangelogRelease[] = [
   {
     version: '1.33.0',
-    date: '2026-09-14',
+    date: '2026-09-16',
     title: 'Not everybody\u2019s week is the same week',
     highlight:
       'Somebody who works weekends can now mark attendance and file a standup on the days they actually work. Working days are set per person instead of being the company\u2019s calendar for everyone, so a Saturday you work counts as a working day and a weekday you do not is never held against you.',
     entries: [
+      {
+        kind: 'added',
+        text: 'A bulleted list now carries itself on in the message box. On a bullet, Shift+Enter starts the next bullet and Enter leaves the list, carrying on as a plain line back at the margin; either of them on a bullet you have left empty finishes the list. Enter does not send from inside a list, so Ctrl+Enter is what sends there. Everywhere else Enter still sends. The comment boxes on tasks and on BD records behave the same way.',
+      },
       {
         kind: 'added',
         text: 'Unread chat messages now show as a number in front of the browser tab\u2019s title, and on the dock or taskbar icon if you have installed the app. Direct messages and channels are counted together, and nothing else is, so a number there always means somebody is waiting on a reply.',

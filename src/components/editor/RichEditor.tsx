@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useEditor, EditorContent, type Editor, type JSONContent } from '@tiptap/react'
+import { type EditorState } from '@tiptap/pm/state'
+import { liftListItem, splitListItem } from '@tiptap/pm/schema-list'
+import { splitBlock } from '@tiptap/pm/commands'
 import './editor.css'
 import { BubbleMenu } from '@tiptap/react/menus'
 import StarterKit from '@tiptap/starter-kit'
@@ -14,6 +17,15 @@ import type { PersonMini } from '../../api/projects'
 import { fileRefExtension, type FileMentionItem } from './fileMention'
 import { EVERYONE_MENTION_ID } from '../../lib/richText'
 import { useFileRefClick } from './useFileRefClick'
+
+/** True when the caret sits inside a list item, however deeply nested. */
+function inListItem(state: EditorState): boolean {
+  const { $from } = state.selection
+  for (let depth = $from.depth; depth > 0; depth -= 1) {
+    if ($from.node(depth).type.name === 'listItem') return true
+  }
+  return false
+}
 
 interface RichEditorProps {
   value: JSONContent | null
@@ -117,15 +129,51 @@ export function RichEditor({
     autofocus: autoFocus ? 'end' : false,
     editorProps: {
       attributes: { class: 'prose-editor focus:outline-none' },
-      handleKeyDown: (_view, event) => {
+      /**
+       * Enter, in a box whose Send is Ctrl+Enter.
+       *
+       * Decided here rather than in an extension's keyboard shortcuts, because
+       * this prop is the only place asked before every plugin. StarterKit binds
+       * Enter to splitting a list item and Shift+Enter to a hard break, and a
+       * keymap of ours would be arguing with those over precedence instead of
+       * simply going first.
+       *
+       * Ctrl/Cmd+Enter      sends, and is the only key that does. Enter is a
+       *                     line, everywhere, so nothing half-written can leave
+       *                     by a keystroke meant to break the line.
+       * Outside a list      Enter and Shift+Enter both open the next line.
+       * On a bullet         Shift+Enter starts the next bullet; Enter leaves the
+       *                     list and carries on at the margin.
+       * On an empty bullet  either of them ends the list — an empty bullet is
+       *                     somebody finished with it, whichever they pressed.
+       *
+       * The new line is always a new block, never a hard break. An input rule
+       * only fires at the start of a block, so after a <br> typing "- " stays
+       * the two characters you typed instead of opening a list.
+       */
+      handleKeyDown: (view, event) => {
         // Not while a @mention, / command or # file list is open: there Enter
         // means "pick this one". Returning false hands the key to the suggestion
         // plugin, which ProseMirror only reaches after these props.
-        if (compact && event.key === 'Enter' && !event.shiftKey && !isSuggestionOpen()) {
-          onSubmitRef.current?.()
-          return true
+        if (!compact || event.key !== 'Enter' || isSuggestionOpen()) return false
+        const { state } = view
+        if (event.ctrlKey || event.metaKey) { onSubmitRef.current?.(); return true }
+
+        const itemType = state.schema.nodes.listItem
+        if (!itemType || !inListItem(state)) return splitBlock(state, view.dispatch)
+
+        if (state.selection.$from.parent.content.size === 0) {
+          return liftListItem(itemType)(state, view.dispatch)
         }
-        return false
+        if (event.shiftKey) return splitListItem(itemType)(state, view.dispatch)
+
+        // Split first so the bullet keeps its text, then lift the new item that
+        // split just made — lifting the one the caret is in would strip the
+        // bullet off what is already written. The second call reads `view.state`
+        // because the first has already moved it on.
+        if (!splitListItem(itemType)(state, view.dispatch)) return false
+        liftListItem(itemType)(view.state, view.dispatch)
+        return true
       },
       // Before ProseMirror's own paste handling, deliberately: an image copied
       // from a web page arrives as a file AND as <img> markup, and letting both

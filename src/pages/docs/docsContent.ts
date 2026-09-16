@@ -319,6 +319,16 @@ export const DOC_CHAPTERS: DocChapter[] = [
             ],
           },
           {
+            title: 'Write a message over several lines',
+            steps: [
+              'Start a bulleted list by typing \u201c- \u201d at the start of a line, or pick Bulleted list from the \u201c/\u201d menu.',
+              'Press Shift+Enter for the next bullet.',
+              'Press Enter to leave the list and carry on as a plain line, back at the margin.',
+              'Press either of them on a bullet you have left empty to finish the list.',
+              'Press Ctrl+Enter to send. Inside a list that is what sends, because Enter is the line break there.',
+            ],
+          },
+          {
             title: 'Quieten a conversation',
             steps: [
               'Open the conversation and use its info panel.',
@@ -1408,7 +1418,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
             steps: [
               'Open the record and go to its Comments tab (Discussion, on a campaign).',
               'Type “@” and a name to tag someone. They get a notification.',
-              'Press Enter to send. Shift+Enter starts a new line instead.',
+              'Press Enter to send. Shift+Enter starts a new line instead, or the next bullet when you are in a list \u2014 where Enter is the line break, so Ctrl+Enter is what sends.',
             ],
           },
           {

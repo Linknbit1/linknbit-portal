@@ -217,7 +217,7 @@ export function BdCommentThread({ parentType, parentId, fill, className }: BdCom
           />
         </div>
         <div className="flex items-center justify-between gap-2">
-          <span className="font-ui text-[11px] text-text-4">Enter to send · Shift+Enter for a new line</span>
+          <span className="font-ui text-[11px] text-text-4">Ctrl+Enter to send · Enter for the next line · Shift+Enter for the next bullet</span>
           <Button size="sm" iconLeft={<Send size={13} />} onClick={send}>Send</Button>
         </div>
       </div>

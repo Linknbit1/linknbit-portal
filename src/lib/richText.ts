@@ -35,6 +35,9 @@ export function docToPlainText(doc: JSONContent | null | undefined): string {
     if (node.type === 'text' && typeof node.text === 'string') parts.push(node.text)
     else if (node.type === 'mention') parts.push(`@${node.attrs?.label ?? node.attrs?.id ?? ''}`)
     else if (node.type === 'fileRef') parts.push(node.attrs?.label ?? 'file')
+    // A hard break is a line with no block of its own, so it has to end its line
+    // here or the two halves run together in every preview and notification.
+    else if (node.type === 'hardBreak') parts.push('\n')
     if (Array.isArray(node.content)) {
       node.content.forEach(walk)
       // Block-level nodes end a line.

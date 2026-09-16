@@ -307,7 +307,7 @@ export function MessageComposer({
       </div>
 
       <p className="font-mono text-[10px] text-text-4 mt-1.5 px-1 hidden lg:block">
-        Enter to send · Shift+Enter for a new line · @ to mention · drag files in to attach
+        Ctrl+Enter to send · Enter for the next line · Shift+Enter for the next bullet · @ to mention · drag files in to attach
       </p>
 
       <input
