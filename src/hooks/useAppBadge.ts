@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useChatUnreadTotal } from './useChatUnreadCount'
-import { setDockBadge, setTabBadge } from '../lib/appBadge'
+import { setDockBadge, setTabBadge, setTabTitle } from '../lib/appBadge'
 
 /**
  * Puts the unread chat count on the app's icon — the dock, the taskbar, and the
@@ -19,10 +19,12 @@ export function useAppBadge(): void {
   useEffect(() => {
     setDockBadge(unread)
     setTabBadge(unread)
+    setTabTitle(unread)
   }, [unread])
 
   useEffect(() => () => {
     setDockBadge(0)
     setTabBadge(0)
+    setTabTitle(0)
   }, [])
 }

@@ -39,7 +39,7 @@ export const RELEASES: ChangelogRelease[] = [
     entries: [
       {
         kind: 'added',
-        text: 'Unread chat messages now show as a number on the portal\u2019s icon \u2014 on the browser tab, and on the dock or taskbar if you have installed the app. Direct messages and channels are counted together, and nothing else is, so a number there always means somebody is waiting on a reply.',
+        text: 'Unread chat messages now show as a number on the portal\u2019s icon and in front of the tab\u2019s title \u2014 on the browser tab, and on the dock or taskbar if you have installed the app. Direct messages and channels are counted together, and nothing else is, so a number there always means somebody is waiting on a reply.',
       },
       {
         kind: 'added',
