@@ -38,8 +38,12 @@ export const RELEASES: ChangelogRelease[] = [
       'Somebody who works weekends can now mark attendance and file a standup on the days they actually work. Working days are set per person instead of being the company\u2019s calendar for everyone, so a Saturday you work counts as a working day and a weekday you do not is never held against you.',
     entries: [
       {
+        kind: 'improved',
+        text: 'The message box no longer sends on Enter. Ctrl+Enter sends, and so does the send button; Enter opens the next line. A message can now be written across several lines without a keystroke meant to break the line taking it out of your hands half-written. The comment boxes on tasks and on BD records changed with it.',
+      },
+      {
         kind: 'added',
-        text: 'A bulleted list now carries itself on in the message box. On a bullet, Shift+Enter starts the next bullet and Enter leaves the list, carrying on as a plain line back at the margin; either of them on a bullet you have left empty finishes the list. Enter does not send from inside a list, so Ctrl+Enter is what sends there. Everywhere else Enter still sends. The comment boxes on tasks and on BD records behave the same way.',
+        text: 'A bulleted list now carries itself on in the message box. Type \u201c- \u201d to start one, then Shift+Enter for the next bullet; Enter leaves the list and carries on as a plain line back at the margin, and either of them on a bullet you have left empty finishes the list.',
       },
       {
         kind: 'added',
