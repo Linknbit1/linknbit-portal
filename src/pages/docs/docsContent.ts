@@ -670,6 +670,31 @@ export const DOC_CHAPTERS: DocChapter[] = [
         ],
       },
       {
+        id: 'unmarked-days',
+        title: 'What a day with no check-in means',
+        summary:
+          'On-site staff who are never checked in are marked absent. Hybrid and remote staff are recorded as working from home instead, because the office never sees them either way. Each job type is set separately.',
+        where: 'Settings \u2192 Attendance \u2192 Days with no check-in',
+        feature: 'can_manage_attendance',
+        procedures: [
+          {
+            title: 'Change what a job type\u2019s silent day means',
+            steps: [
+              'Open Settings \u2192 Attendance and scroll to Days with no check-in.',
+              'For the job type, choose Absent or Working from home.',
+              'It saves as you choose it, and applies from the next day onwards.',
+            ],
+          },
+        ],
+        notes: [
+          'A day recorded as working from home carries no arrival time and counts as neither present nor absent. It is still a working day, so the standup and the daily hours are unchanged \u2014 those are what show whether the person worked.',
+          'Hybrid and remote start on Working from home, on-site on Absent. Set a job type to Absent if the people on it are expected in the office on fixed days and you want a missed day to show.',
+          'It changes what silence means and nothing else. A real check-in is still an office day, and approved leave is still leave.',
+          'Days already recorded are left alone. Correct an old absence on the attendance register.',
+          'Changing this needs the job-type permission, which HR does not hold \u2014 the setting is visible on this screen but fixed without it.',
+        ],
+      },
+      {
         id: 'records',
         title: 'The attendance register',
         summary:
@@ -826,6 +851,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
           'The on-site check-in button reappears automatically if the terminal is offline, so a broken device never costs you a day.',
           'Arriving after your allowed start time is recorded as late; the allowance can be adjusted per person.',
           'The portal decides the time from the server clock, never your device’s.',
+          'If your job type is hybrid or remote, a working day you never checked in on is recorded as a day at home rather than an absence — the office has no way of seeing you either way. It counts as neither present nor late, and your standup and your tracked hours are what say you worked. On-site staff are still marked absent.',
         ],
       },
       {

@@ -32,11 +32,15 @@ import type { ChangelogRelease } from '../../types'
 export const RELEASES: ChangelogRelease[] = [
   {
     version: '1.33.0',
-    date: '2026-09-16',
+    date: '2026-09-17',
     title: 'Not everybody\u2019s week is the same week',
     highlight:
       'Somebody who works weekends can now mark attendance and file a standup on the days they actually work. Working days are set per person instead of being the company\u2019s calendar for everyone, so a Saturday you work counts as a working day and a weekday you do not is never held against you.',
     entries: [
+      {
+        kind: 'improved',
+        text: 'A working day that hybrid and remote staff never checked in on is now recorded as a day at home instead of an absence. The office cannot see them either way, so an ordinary day working the way they were hired to no longer reads as a day missed \u2014 the standup and the tracked hours are what say the day was worked. On-site staff are unchanged: a day nobody checked them in on is still an absence. What each job type\u2019s silent day means is set in Settings \u2192 Attendance.',
+      },
       {
         kind: 'improved',
         text: 'The message box no longer sends on Enter. Ctrl+Enter sends, and so does the send button; Enter opens the next line. A message can now be written across several lines without a keystroke meant to break the line taking it out of your hands half-written. The comment boxes on tasks and on BD records changed with it.',

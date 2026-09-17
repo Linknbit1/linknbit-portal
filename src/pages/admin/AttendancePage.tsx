@@ -53,6 +53,7 @@ import {
   formatRequestedAt,
 } from "../../lib/dateGroups";
 import { DAY_PART_LABEL, DAY_PART_OPTIONS, toDayPart } from "../../lib/dayParts";
+import { JOB_TYPE_LABELS } from "../../lib/utils";
 import { ipInCidr } from "../../lib/officeIp";
 import { useToast } from "../../components/ui/toast-context";
 import { useAuthContext } from "../../context/AuthContext";
@@ -89,6 +90,8 @@ import {
   useReviewLeave,
   useDeleteLeave,
   useEnterLeaveForEmployee,
+  useJobTypePolicies,
+  useUpdateJobTypePolicy,
 } from "../../hooks/useAttendance";
 import type {
   AttendanceExceptionWithProfile,
@@ -4424,10 +4427,113 @@ export function SettingsTab() {
   }
 
   return (
-    <SettingsForm
-      key={settings.updated_at ?? "attendance-settings"}
-      settings={settings}
-    />
+    <div className="space-y-6">
+      <SettingsForm
+        key={settings.updated_at ?? "attendance-settings"}
+        settings={settings}
+      />
+      <UnmarkedDayPanel />
+    </div>
+  );
+}
+
+const UNMARKED_DAY_OPTIONS = [
+  { value: "absent", label: "Absent" },
+  { value: "wfh", label: "Working from home" },
+];
+
+const UNMARKED_DAY_HINT: Record<string, string> = {
+  absent:
+    "The office expected them, so nobody checking them in means an unexcused absence.",
+  wfh:
+    "The office never sees them anyway, so it records a home day and leaves the standup and the timer to say whether they worked.",
+};
+
+/**
+ * What a working day with no check-in means, per job type.
+ *
+ * On-site attendance is recorded by the terminal, so silence there really is an
+ * absence. A hybrid or remote person's ordinary day produces no punch at all,
+ * and reading that as an absence marks them down for working the way they were
+ * hired to. Each job type answers for itself.
+ *
+ * Saved separately from the form above because it is a different table with a
+ * different permission: `can_manage_job_types`, which HR does not hold, while
+ * the rest of this screen runs on `can_manage_attendance`.
+ */
+function UnmarkedDayPanel() {
+  const toast = useToast();
+  const { data: policies, isLoading } = useJobTypePolicies();
+  const updateMutation = useUpdateJobTypePolicy();
+  const canEdit = useCanAccess("can_manage_job_types");
+
+  const handleChange = async (jobType: string, value: string) => {
+    try {
+      await updateMutation.mutateAsync({
+        jobType,
+        payload: { unmarked_day_type: value },
+      });
+      toast(`${JOB_TYPE_LABELS[jobType] ?? jobType} days updated`, "success");
+    } catch {
+      toast("Failed to update", "error");
+    }
+  };
+
+  if (isLoading || !policies) {
+    return (
+      <div className="bg-surface-1 border border-border-default rounded-xl p-8 animate-pulse h-48" />
+    );
+  }
+
+  return (
+    <div className="bg-surface-1 border border-border-default rounded-xl p-6">
+      <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border-subtle">
+        <div className="size-9 rounded-lg bg-brand-red/10 border border-brand-red/20 flex items-center justify-center">
+          <Home size={16} className="text-brand-red" />
+        </div>
+        <div>
+          <h3 className="font-display font-semibold text-[15px] text-text-1">
+            Days With No Check-In
+          </h3>
+          <p className="font-ui text-[11.5px] text-text-4 mt-0.5">
+            What the portal records at the end of a working day nobody was
+            checked in for.
+          </p>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        {policies.map((policy) => (
+          <div
+            key={policy.job_type}
+            className="grid grid-cols-[1fr_auto] items-start gap-4 px-4 py-3 bg-surface-inset border border-border-default rounded-md"
+          >
+            <div className="min-w-0">
+              <p className="font-ui font-semibold text-[13px] text-text-1">
+                {JOB_TYPE_LABELS[policy.job_type] ?? policy.job_type}
+              </p>
+              <p className="font-ui text-[11px] text-text-4 mt-0.5">
+                {UNMARKED_DAY_HINT[policy.unmarked_day_type]}
+              </p>
+            </div>
+            <div className="w-56 shrink-0">
+              <Select
+                value={policy.unmarked_day_type}
+                onChange={(v) => handleChange(policy.job_type, v)}
+                options={UNMARKED_DAY_OPTIONS}
+                disabled={!canEdit || updateMutation.isPending}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <p className="font-ui text-[11px] text-text-4 mt-4">
+        {canEdit
+          ? "A home day carries no arrival time and counts as neither present nor absent. It still counts as a working day, so the standup and the daily hours are unchanged."
+          : "Only someone who can manage job types can change this."}
+      </p>
+    </div>
   );
 }
 

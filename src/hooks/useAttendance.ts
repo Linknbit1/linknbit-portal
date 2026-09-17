@@ -66,6 +66,8 @@ import {
   removeWfhDay,
   deleteLeaveRequest,
   fetchMyLeaveBalances,
+  fetchJobTypePolicies,
+  updateJobTypePolicy,
 } from '../api/attendance'
 import type {
   MarkAttendancePayload,
@@ -94,6 +96,7 @@ export const ATTENDANCE_KEYS = {
   monthRoster: (from: string, to: string) => ['attendance', 'month-roster', from, to] as const,
   range: (from: string, to: string) => ['attendance', 'all', 'range', from, to] as const,
   settings: ['attendance', 'settings'] as const,
+  jobTypePolicies: ['attendance', 'job-type-policies'] as const,
   exceptions: (filters: FetchExceptionsFilters) => ['attendance', 'exceptions', filters] as const,
   myExceptions: ['attendance', 'exceptions', 'my'] as const,
   allExceptions: (filters: FetchExceptionsFilters) => ['attendance', 'exceptions', 'all', filters] as const,
@@ -239,6 +242,27 @@ export function useUpdateAttendanceSettings() {
     mutationFn: (payload: TablesUpdate<'attendance_settings'>) =>
       updateAttendanceSettings(payload),
     onSuccess: () => qc.invalidateQueries({ queryKey: ATTENDANCE_KEYS.settings }),
+  })
+}
+
+// ── Job type policies ─────────────────────────────────────────────────────────
+
+export function useJobTypePolicies() {
+  return useQuery({
+    queryKey: ATTENDANCE_KEYS.jobTypePolicies,
+    queryFn: fetchJobTypePolicies,
+    staleTime: Infinity,
+  })
+}
+
+export function useUpdateJobTypePolicy() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ jobType, payload }: {
+      jobType: string
+      payload: TablesUpdate<'job_type_policies'>
+    }) => updateJobTypePolicy(jobType, payload),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ATTENDANCE_KEYS.jobTypePolicies }),
   })
 }
 

@@ -8,6 +8,7 @@ export type EnrolledDevice = Tables<'enrolled_devices'>
 export type AttendanceException = Tables<'attendance_exceptions'>
 export type HolidayRow = Tables<'holidays'>
 export type OvertimeRequest = Tables<'overtime_requests'>
+export type JobTypePolicy = Tables<'job_type_policies'>
 
 export interface CheckInResult {
   status: 'present' | 'late'
@@ -206,6 +207,31 @@ export async function updateAttendanceSettings(
     .from('attendance_settings')
     .update({ ...payload, updated_at: new Date().toISOString() })
     .eq('singleton', true)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+// ── Job type policies ─────────────────────────────────────────────────────────
+
+export async function fetchJobTypePolicies(): Promise<JobTypePolicy[]> {
+  const { data, error } = await supabase
+    .from('job_type_policies')
+    .select('*')
+    .order('job_type')
+  if (error) throw error
+  return data
+}
+
+export async function updateJobTypePolicy(
+  jobType: string,
+  payload: TablesUpdate<'job_type_policies'>,
+): Promise<JobTypePolicy> {
+  const { data, error } = await supabase
+    .from('job_type_policies')
+    .update({ ...payload, updated_at: new Date().toISOString() })
+    .eq('job_type', jobType)
     .select()
     .single()
   if (error) throw error

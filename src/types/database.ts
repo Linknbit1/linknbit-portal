@@ -2116,6 +2116,7 @@ export type Database = {
           enforce_schedule_window: boolean
           job_type: string
           require_office_network: boolean
+          unmarked_day_type: string
           updated_at: string
           updated_by: string | null
         }
@@ -2125,6 +2126,7 @@ export type Database = {
           enforce_schedule_window?: boolean
           job_type: string
           require_office_network?: boolean
+          unmarked_day_type?: string
           updated_at?: string
           updated_by?: string | null
         }
@@ -2134,6 +2136,7 @@ export type Database = {
           enforce_schedule_window?: boolean
           job_type?: string
           require_office_network?: boolean
+          unmarked_day_type?: string
           updated_at?: string
           updated_by?: string | null
         }
@@ -5514,6 +5517,7 @@ export type Database = {
         Args: { p_emoji: string; p_message_id: string }
         Returns: boolean
       }
+      fn_unmarked_day_type: { Args: { p_profile: string }; Returns: string }
       fn_unpaid_exception_minutes: {
         Args: { p_date: string; p_profile: string }
         Returns: number
