@@ -2931,9 +2931,11 @@ export type Database = {
           is_restricted: boolean
           job_title: string | null
           job_type: string
+          joined_on: string
           last_seen_at: string | null
           last_seen_release: string | null
           last_sign_in_at: string | null
+          left_on: string | null
           level: number
           location: string | null
           lp_balance: number
@@ -2969,9 +2971,11 @@ export type Database = {
           is_restricted?: boolean
           job_title?: string | null
           job_type?: string
+          joined_on?: string
           last_seen_at?: string | null
           last_seen_release?: string | null
           last_sign_in_at?: string | null
+          left_on?: string | null
           level?: number
           location?: string | null
           lp_balance?: number
@@ -3007,9 +3011,11 @@ export type Database = {
           is_restricted?: boolean
           job_title?: string | null
           job_type?: string
+          joined_on?: string
           last_seen_at?: string | null
           last_seen_release?: string | null
           last_sign_in_at?: string | null
+          left_on?: string | null
           level?: number
           location?: string | null
           lp_balance?: number
@@ -5304,6 +5310,10 @@ export type Database = {
           p_roles?: string[]
         }
         Returns: string
+      }
+      fn_employed_on: {
+        Args: { p_date: string; p_profile: string }
+        Returns: boolean
       }
       fn_exception_label: { Args: { t: string }; Returns: string }
       fn_extract_mention_ids: { Args: { p_doc: Json }; Returns: string[] }
