@@ -5572,6 +5572,16 @@ export type Database = {
         Returns: boolean
       }
       join_reward_pool: { Args: { p_pool_id: string }; Returns: undefined }
+      leave_balances: {
+        Args: { p_profile: string; p_year?: number }
+        Returns: {
+          color: string
+          days_allowed: number
+          leave_type_id: string
+          type_name: string
+          used_days: number
+        }[]
+      }
       leave_reward_pool: { Args: { p_pool_id: string }; Returns: undefined }
       link_zk_enrollment: {
         Args: { p_profile_id: string; p_zk_user_id: string }

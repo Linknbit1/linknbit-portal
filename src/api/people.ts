@@ -74,6 +74,14 @@ export interface RoleUpdatePayload {
   scheduleMode: ScheduleMode
   /** 0 = Sunday … 6 = Saturday. Read only when `scheduleMode` is 'custom_days'. */
   workDays: number[]
+  /** First day this person counted as staff. `null` leaves it unchanged. */
+  joinedOn?: string | null
+  /**
+   * Last day they counted as staff. `null` leaves it unchanged; `''` clears it,
+   * which is how somebody coming back is expressed. A plain date cannot say
+   * "clear this", which is why it crosses the wire as text.
+   */
+  leftOn?: string | null
 }
 
 export async function updatePersonRole(payload: RoleUpdatePayload): Promise<void> {
@@ -89,6 +97,8 @@ export async function updatePersonRole(payload: RoleUpdatePayload): Promise<void
     p_work_days: payload.scheduleMode === 'custom_days'
       ? [...payload.workDays].sort((a, b) => a - b)
       : undefined,
+    p_joined_on: payload.joinedOn ?? undefined,
+    p_left_on: payload.leftOn ?? undefined,
   })
   if (error) throw error
 }

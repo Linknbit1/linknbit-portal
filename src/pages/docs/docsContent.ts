@@ -876,6 +876,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
               'Open People → Attendance → Requests and press New request.',
               'Stay on the Leave tab. Each kind of leave is listed with the days remaining out of your allowance.',
               'The type dropdown repeats the figure for whichever type you pick, so you can see whether the request fits before you submit it.',
+              'A figure shown in red, reading “over” rather than “left”, means more leave has already been approved than the allowance covers. You can still file a request — whether to grant it is the approver’s call, not the form’s.',
             ],
           },
           {
@@ -921,6 +922,9 @@ export const DOC_CHAPTERS: DocChapter[] = [
           'The tabs are the only thing that changes which slice you are looking at — Pending, Approved, Rejected, All. Everything in the Filters panel — type, employee, period — narrows whatever the tab is showing rather than replacing it, and Clear all in the panel puts it back.',
           'The queue opens on the current month, so a request dated for next month is not in the first list you see. The Filters button carries a count of how many filters are narrowing the queue, and the period is one of them — if something you expected is missing, that count is where to look.',
           'Leave balances count approved leave taken this calendar year. A pending request has not been deducted yet.',
+          'Leave taken across new year is split between the two years. A break from 28 December to 4 January comes partly out of each year’s allowance, not all out of the year it started in.',
+          'A balance can go past the allowance and say so — “1.5 over” in red rather than “none left”. Going over is not blocked; it is shown, so whoever approves the next request can see it.',
+          'If you open a colleague’s profile and cannot see all of their leave, the balance is not shown at all. A figure built from only the part you are allowed to see would look complete and would be wrong.',
           'Filing leave for somebody else shows their balances, not yours.',
           'A leave range that starts in one month and ends in the next shows under both, so a week off over a month boundary is never missing from the month you are looking at.',
           'You only ever see your own requests here, plus anyone whose requests you review. Nobody sees a colleague’s leave unless it is their job to decide on it.',

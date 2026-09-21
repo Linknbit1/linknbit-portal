@@ -4,6 +4,7 @@ import { Avatar } from '../ui/Avatar'
 import { Button } from '../ui/Button'
 import { Drawer } from '../ui/Drawer'
 import { Input } from '../ui/Input'
+import { DatePicker } from '../ui/DatePicker'
 import { Select } from '../ui/Select'
 import { TimePicker } from '../ui/TimePicker'
 import { Toggle } from '../ui/Toggle'
@@ -91,6 +92,12 @@ export function PersonEditDrawer({ person, isSelf, onClose }: PersonEditDrawerPr
   const origAllowedCheckIn = person.allowed_check_in?.slice(0, 5) ?? ''
   const [allowedCheckIn, setAllowedCheckIn] = useState(origAllowedCheckIn)
   const [attendanceExcluded, setAttendanceExcluded] = useState(person.attendance_excluded)
+  // The employment period. joined_on is NOT NULL in the database; left_on is the
+  // day they stopped being staff, and is cleared by reactivating them.
+  const origJoinedOn = person.joined_on ?? ''
+  const origLeftOn = person.left_on ?? ''
+  const [joinedOn, setJoinedOn] = useState(origJoinedOn)
+  const [leftOn, setLeftOn] = useState(origLeftOn)
   const [scheduleMode, setScheduleMode] = useState<ScheduleMode>(toScheduleMode(person.schedule_mode))
   // Seeded from the stored rota, or Mon–Fri when there is none, so switching to
   // "Specific days" starts from a sane week rather than an empty one the
@@ -110,6 +117,8 @@ export function PersonEditDrawer({ person, isSelf, onClose }: PersonEditDrawerPr
   const roleChanged = role !== person.role || (designation || null) !== person.designation_id
     || jobType !== person.job_type || allowedCheckIn !== origAllowedCheckIn
     || attendanceExcluded !== person.attendance_excluded
+    || joinedOn !== origJoinedOn
+    || leftOn !== origLeftOn
     || scheduleMode !== toScheduleMode(person.schedule_mode)
     // Only compared while the days are the thing in force; in the other two
     // modes the array is not read, so a stale tick is not a change.
@@ -132,6 +141,10 @@ export function PersonEditDrawer({ person, isSelf, onClose }: PersonEditDrawerPr
         await saveDetails({ profileId: person.id, name: name.trim(), avatarUrl: person.avatar_url, avatarFile })
       }
       if (mayManage && roleChanged) {
+        if (leftOn && joinedOn && leftOn < joinedOn) {
+          toast('A leaving date cannot come before the joining date.', 'error')
+          return
+        }
         if (scheduleMode === 'custom_days' && workDays.length === 0) {
           toast('Pick at least one working day, or switch the schedule back to the company calendar.', 'error')
           return
@@ -139,6 +152,9 @@ export function PersonEditDrawer({ person, isSelf, onClose }: PersonEditDrawerPr
         await saveRole({
           profileId: person.id, role, designationId: designation || null, jobType,
           allowedCheckIn, attendanceExcluded, scheduleMode, workDays,
+          joinedOn: joinedOn || null,
+          // '' clears it (they are back), null leaves it alone.
+          leftOn: leftOn !== origLeftOn ? leftOn : null,
         })
       }
       if (mayManage && teamsChanged) {
@@ -270,6 +286,36 @@ export function PersonEditDrawer({ person, isSelf, onClose }: PersonEditDrawerPr
                 )}
               </div>
               <p className="font-mono text-[10px] text-text-4 mt-1">If set, checking in at or before this time is on-time (grace period ignored). Empty = standard office rule.</p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="font-ui text-[11.5px] text-text-3 mb-1.5 block">Joined on</label>
+                <DatePicker value={joinedOn} onChange={setJoinedOn} placeholder="Pick a date…" />
+                <p className="font-mono text-[10px] text-text-4 mt-1">
+                  Rosters, absence marking and reports ignore this person before this date.
+                </p>
+              </div>
+              <div>
+                <label className="font-ui text-[11.5px] text-text-3 mb-1.5 block">Left on</label>
+                <div className="flex items-center gap-2">
+                  <div className="min-w-0 flex-1">
+                    <DatePicker value={leftOn} onChange={setLeftOn} minDate={joinedOn || undefined} placeholder="Still here" />
+                  </div>
+                  {leftOn && (
+                    <button
+                      type="button"
+                      onClick={() => setLeftOn('')}
+                      className="shrink-0 rounded-md border border-border-default px-2.5 py-2 text-text-4 transition-colors hover:text-error"
+                      title="Clear (still employed)"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+                <p className="font-mono text-[10px] text-text-4 mt-1">
+                  Set automatically when somebody is deactivated. They stay on past rosters.
+                </p>
+              </div>
             </div>
             <div className="flex items-center justify-between gap-3 rounded-md border border-border-default bg-surface-inset px-3 py-2.5">
               <div className="min-w-0">

@@ -30,8 +30,9 @@ import {
   useLeaderboard, useProfileDirectory, useXpTransactions, useMyBadgeAwards,
   useBadges, useMyClaims, useAllQuestTasks, useApprovedShoutouts, useMyLpHistory,
 } from '../hooks/useGamification'
-import { formatRelativeTime } from '../lib/utils'
+import { formatDate, formatRelativeTime } from '../lib/utils'
 import { cn } from '../lib/cn'
+import { readLeaveBalance, leaveUsedPercent, isLeaveBalanceForbidden } from '../lib/leaveBalance'
 import { AttendanceChips } from '../components/shared/AttendanceChips'
 import type { Person, PersonTeam, PersonProject } from '../api/people'
 import type { TaskListItem } from '../api/tasks'
@@ -266,6 +267,14 @@ export default function MemberProfilePage() {
                   <a href={`mailto:${person.email}`} className="flex items-center gap-1.5 transition-colors hover:text-text-1"><Mail size={13} className="text-text-4" /> {person.email}</a>
                   {person.phone && <a href={`tel:${person.phone}`} className="flex items-center gap-1.5 transition-colors hover:text-text-1"><Phone size={13} className="text-text-4" /> {person.phone}</a>}
                   {designationName && <span className="flex items-center gap-1.5"><BadgeCheck size={13} className="text-text-4" /> {designationName}</span>}
+                  {person.joined_on && (
+                    <span className="flex items-center gap-1.5">
+                      <CalendarDays size={13} className="text-text-4" />
+                      {person.left_on
+                        ? `${formatDate(person.joined_on)} – ${formatDate(person.left_on)}`
+                        : `Joined ${formatDate(person.joined_on)}`}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -455,7 +464,10 @@ function AttendanceTab({ personId, leave, wfh }: {
   const expected = attended + tally.absent
   const rate = expected > 0 ? Math.round((attended / expected) * 100) : null
 
-  const { data: balances = [] } = useLeaveBalancesByProfile(personId)
+  const { data: balances = [], error: balancesError } = useLeaveBalancesByProfile(personId)
+  // Refused, not empty. leave_balances raises rather than handing back a figure
+  // built from the rows this viewer happens to be allowed to see.
+  const balancesHidden = isLeaveBalanceForbidden(balancesError)
   const totalRemaining = balances.reduce((s, b) => s + b.remaining, 0)
   const totalAllowed = balances.reduce((s, b) => s + b.type.days_allowed, 0)
 
@@ -540,21 +552,30 @@ function AttendanceTab({ personId, leave, wfh }: {
             </p>
             <p className="mt-1.5 font-ui text-[11.5px] text-text-3">Holiday days remaining this year</p>
           </div>
-          {balances.length === 0 ? <Empty label="HR hasn't set up a single leave type. Unlimited holidays? Almost certainly not." /> : (
+          {balancesHidden ? (
+            <Empty label="You can't see all of this person's leave, so there is no balance to show." />
+          ) : balances.length === 0 ? <Empty label="HR hasn't set up a single leave type. Unlimited holidays? Almost certainly not." /> : (
             <div className="flex flex-col gap-3.5">
               {balances.map((b) => {
                 const c = leaveColor(b.type.color)
-                const pct = b.type.days_allowed > 0 ? Math.min(100, (b.used / b.type.days_allowed) * 100) : 0
+                const reading = readLeaveBalance(b.remaining)
+                const pct = leaveUsedPercent(b.used, b.type.days_allowed)
                 return (
                   <div key={b.type.id}>
                     <div className="flex items-center justify-between font-ui text-[12px]">
                       <span className="text-text-1">{b.type.name}</span>
                       <span className="font-mono text-text-3">
-                        <span className={cn('font-semibold', c.text)}>{b.remaining}</span> / {b.type.days_allowed} left
+                        <span className={cn('font-semibold', reading.over ? 'text-error' : c.text)}>
+                          {reading.label}
+                        </span>
+                        {' '}of {b.type.days_allowed}
                       </span>
                     </div>
                     <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-surface-inset">
-                      <div className={cn('h-full rounded-full', c.bar)} style={{ width: `${pct}%` }} />
+                      <div
+                        className={cn('h-full rounded-full', reading.over ? 'bg-error' : c.bar)}
+                        style={{ width: `${pct}%` }}
+                      />
                     </div>
                   </div>
                 )

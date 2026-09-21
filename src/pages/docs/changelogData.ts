@@ -31,11 +31,55 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: '1.34.0',
+    date: '2026-09-21',
+    title: 'The portal now knows when you joined',
+    highlight:
+      'Nobody is counted before their first day or after their last. A new colleague no longer appears as absent for the weeks before they arrived, and somebody who has left stops vanishing from the months they actually worked.',
+    entries: [
+      {
+        kind: 'fixed',
+        text: 'Somebody who joined this week was shown as not checked in for every day before they arrived, on Today, on the monthly view, on the standup board and in reports \u2014 and the nightly job was quietly recording those days as absences. A person now has a joining date and, once they leave, a leaving date, and nothing counts them outside the two.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Somebody who leaves no longer disappears from the months they worked. Their rows stayed on Today and on the monthly view only while their account was active, so last month\u2019s attendance quietly lost a person and its totals changed after the fact. Past months now read the same today as they did then.',
+      },
+      {
+        kind: 'fixed',
+        text: 'A half day of leave with no check-in is no longer counted as an absence for the other half. It was recorded that way on exactly one day out of eighteen identical ones, depending only on whether the leave was approved before or after that night\u2019s run. All of them now read the same way.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Leave taken across new year is counted against the right years. A break from 28 December to 4 January used to come entirely out of the old year\u2019s allowance, leaving January\u2019s untouched. Each day now counts against the year it falls in.',
+      },
+      {
+        kind: 'improved',
+        text: 'A leave balance can now show that somebody is over it. It used to stop at zero, so a person one and a half days past their allowance read as \u201c0 left\u201d \u2014 the one thing an approver needed to know was the one thing the screen could not say. It now reads \u201c1.5 over\u201d, in red, wherever the balance appears.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Opening a colleague\u2019s profile when you are not allowed to see all of their leave no longer shows you a balance built from the part you can see. It says so plainly instead. The number it used to show looked complete and was not.',
+      },
+      {
+        kind: 'improved',
+        text: 'Excluding somebody from attendance now means it everywhere. It changed one screen and nothing else, so exempt colleagues still appeared on the timesheet with expected hours and a required day \u2014 and were being marked absent every working night. Those records have been cleared, and they now read simply as \u201cNot tracked\u201d, with any time they do track still shown.',
+      },
+      {
+        kind: 'added',
+        text: 'A joining date, and a leaving date where there is one, now show on a colleague\u2019s profile.',
+      },
+      {
+        kind: 'added',
+        text: 'Joining and leaving dates can be set on a person. Deactivating somebody fills in the leaving date on its own, and bringing them back clears it.',
+        feature: 'can_manage_people',
+      },
+    ],
+  },
+  {
     version: '1.33.0',
     date: '2026-09-17',
     title: 'Not everybody\u2019s week is the same week',
-    highlight:
-      'Somebody who works weekends can now mark attendance and file a standup on the days they actually work. Working days are set per person instead of being the company\u2019s calendar for everyone, so a Saturday you work counts as a working day and a weekday you do not is never held against you.',
     entries: [
       {
         kind: 'improved',

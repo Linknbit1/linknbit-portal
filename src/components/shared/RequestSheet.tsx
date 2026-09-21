@@ -19,6 +19,7 @@ import {
 } from '../../hooks/useAttendance'
 import { DAY_PART_LABEL, toDayPart } from '../../lib/dayParts'
 import { cn } from '../../lib/cn'
+import { readLeaveBalance, formatLeaveDays } from '../../lib/leaveBalance'
 import type { AttendanceExceptionType, AttendanceRequestKind } from '../../types'
 
 // "WFH" rather than "Work from home": the four tabs share the width equally, so
@@ -185,7 +186,7 @@ export function RequestSheet({ onClose, initialKind = 'leave', editing = null }:
   const leaveOptions = balances.length > 0
     ? balances.map((b) => ({
         value: b.type.id,
-        label: `${b.type.name}, ${b.remaining} of ${b.type.days_allowed} left`,
+        label: `${b.type.name}, ${readLeaveBalance(b.remaining).label}`,
       }))
     : leaveTypes.map((t) => ({ value: t.id, label: t.name }))
 
@@ -366,15 +367,24 @@ export function RequestSheet({ onClose, initialKind = 'leave', editing = null }:
                 people have before they choose rather than after. */}
             {balances.length > 0 && (
               <div className="grid grid-cols-3 gap-px overflow-hidden rounded-sm border border-border-default bg-border-subtle">
-                {balances.map((b) => (
-                  <div key={b.type.id} className="bg-surface-2 px-2.5 py-2">
-                    <p className="truncate font-ui text-[11px] text-text-3">{b.type.name}</p>
-                    <p className="font-display text-body-lg/tight font-bold text-text-1">
-                      {b.remaining}
-                      <span className="font-mono text-[10px] font-normal text-text-4"> / {b.type.days_allowed}</span>
-                    </p>
-                  </div>
-                ))}
+                {balances.map((b) => {
+                  const reading = readLeaveBalance(b.remaining)
+                  return (
+                    <div key={b.type.id} className="bg-surface-2 px-2.5 py-2">
+                      <p className="truncate font-ui text-[11px] text-text-3">{b.type.name}</p>
+                      <p className={cn(
+                        'font-display text-body-lg/tight font-bold',
+                        reading.over ? 'text-error' : 'text-text-1',
+                      )}>
+                        {reading.over ? `-${formatLeaveDays(Math.abs(b.remaining))}` : formatLeaveDays(b.remaining)}
+                        <span className="font-mono text-[10px] font-normal text-text-4"> / {b.type.days_allowed}</span>
+                      </p>
+                      {reading.over && (
+                        <p className="font-ui text-[10px] text-error">{reading.label}</p>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             )}
             <Select

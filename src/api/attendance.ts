@@ -1430,62 +1430,60 @@ export async function deleteLeaveRequest(id: string): Promise<void> {
 }
 
 export interface LeaveBalance {
-  type: LeaveType
+  type: { id: string; name: string; color: string | null; days_allowed: number }
   used: number
+  /**
+   * Allowance minus used. NEGATIVE when somebody is over — deliberately not
+   * clamped. The old client-side version wrapped this in Math.max(0, ...), so a
+   * person 1.5 days past their allowance read as "0 left" and the one number an
+   * approver needed to see was the one number the screen could not show.
+   */
   remaining: number
 }
 
-// Remaining = type allowance − approved leave days taken this calendar year.
+/**
+ * Leave balances for a person, for a calendar year.
+ *
+ * Server-side because the two things that were wrong with the client version can
+ * only be fixed there:
+ *
+ * - A request spanning new year used to count entirely against the year it
+ *   STARTED in, because the query filtered on start_date. 28 Dec to 4 Jan took all
+ *   its days out of December's allowance and none out of January's. The RPC counts
+ *   each working day against the year that day falls in.
+ * - The per-profile version silently under-counted. It read leave_requests through
+ *   the viewer's own RLS, so a viewer allowed to see only some of a colleague's
+ *   leave was shown a balance built from the rows they could see — presented as
+ *   fact, with no hint it was partial. The RPC returns the true figure to a viewer
+ *   entitled to it and refuses outright otherwise, so the UI can say "you can't see
+ *   this" instead of quietly showing a wrong number.
+ */
+export async function fetchLeaveBalances(profileId: string, year?: number): Promise<LeaveBalance[]> {
+  const { data, error } = await supabase.rpc('leave_balances', {
+    p_profile: profileId,
+    p_year: year ?? undefined,
+  })
+  if (error) throw error
+  return (data ?? []).map((row) => ({
+    type: {
+      id: row.leave_type_id,
+      name: row.type_name,
+      color: row.color,
+      days_allowed: row.days_allowed,
+    },
+    used: Number(row.used_days),
+    remaining: row.days_allowed - Number(row.used_days),
+  }))
+}
+
 export async function fetchMyLeaveBalances(): Promise<LeaveBalance[]> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return []
-  const year = new Date().getFullYear()
-
-  const [{ data: types, error: typeErr }, { data: requests, error: reqErr }] = await Promise.all([
-    supabase.from('leave_types').select('*').eq('is_active', true).order('name'),
-    supabase
-      .from('leave_requests')
-      .select('leave_type_id, days, status, start_date')
-      .eq('profile_id', user.id)
-      .eq('status', 'approved')
-      .gte('start_date', `${year}-01-01`)
-      .lte('start_date', `${year}-12-31`),
-  ])
-  if (typeErr) throw typeErr
-  if (reqErr) throw reqErr
-
-  return (types ?? []).map((type) => {
-    const used = (requests ?? [])
-      .filter((r) => r.leave_type_id === type.id)
-      .reduce((sum, r) => sum + (r.days ?? 0), 0)
-    return { type, used, remaining: Math.max(0, type.days_allowed - used) }
-  })
+  return fetchLeaveBalances(user.id)
 }
 
-// Leave balance for one member (member profile page). Same shape as
-// fetchMyLeaveBalances but for an arbitrary profile — RLS on leave_requests scopes
-// the "used" tally to what the viewer may see (empty → full allowance shown).
-export async function fetchLeaveBalancesByProfile(profileId: string): Promise<LeaveBalance[]> {
-  const year = new Date().getFullYear()
-  const [{ data: types, error: typeErr }, { data: requests, error: reqErr }] = await Promise.all([
-    supabase.from('leave_types').select('*').eq('is_active', true).order('name'),
-    supabase
-      .from('leave_requests')
-      .select('leave_type_id, days, status, start_date')
-      .eq('profile_id', profileId)
-      .eq('status', 'approved')
-      .gte('start_date', `${year}-01-01`)
-      .lte('start_date', `${year}-12-31`),
-  ])
-  if (typeErr) throw typeErr
-  if (reqErr) throw reqErr
-
-  return (types ?? []).map((type) => {
-    const used = (requests ?? [])
-      .filter((r) => r.leave_type_id === type.id)
-      .reduce((sum, r) => sum + (r.days ?? 0), 0)
-    return { type, used, remaining: Math.max(0, type.days_allowed - used) }
-  })
+export function fetchLeaveBalancesByProfile(profileId: string): Promise<LeaveBalance[]> {
+  return fetchLeaveBalances(profileId)
 }
 
 // ── Half-day leave dates for a month (drives report half-credit) ──────────────

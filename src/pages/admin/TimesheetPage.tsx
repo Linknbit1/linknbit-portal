@@ -757,9 +757,16 @@ function PersonRow({ row, from, to, schedule, tz, isToday }: {
             of {formatMinutes(person.required_minutes)}
           </p>
         )}
-        <span className="mt-0.5 flex justify-end">
-          <AttendanceChips facts={{ status: person.att_status, day_type: person.day_type, day_part: person.day_part }} />
-        </span>
+        {/* Excluded from attendance: they can still track time, so the tracked
+            total above stands, but there is no expectation to measure it against.
+            One muted line says so — a row of blanks reads as missing data. */}
+        {person.attendance_excluded ? (
+          <p className="mt-0.5 font-mono text-[10px] text-text-4">Not tracked</p>
+        ) : (
+          <span className="mt-0.5 flex justify-end">
+            <AttendanceChips facts={{ status: person.att_status, day_type: person.day_type, day_part: person.day_part }} />
+          </span>
+        )}
       </div>
     </div>
   )
