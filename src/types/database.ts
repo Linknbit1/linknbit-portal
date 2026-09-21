@@ -3750,38 +3750,6 @@ export type Database = {
           },
         ]
       }
-      role_feature_flags: {
-        Row: {
-          enabled: boolean
-          feature_key: string
-          role: string
-          updated_at: string
-          updated_by: string | null
-        }
-        Insert: {
-          enabled?: boolean
-          feature_key: string
-          role: string
-          updated_at?: string
-          updated_by?: string | null
-        }
-        Update: {
-          enabled?: boolean
-          feature_key?: string
-          role?: string
-          updated_at?: string
-          updated_by?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "role_feature_flags_updated_by_fkey"
-            columns: ["updated_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       role_permissions: {
         Row: {
           permission_key: string

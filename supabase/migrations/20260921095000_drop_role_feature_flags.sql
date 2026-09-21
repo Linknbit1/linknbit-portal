@@ -1,0 +1,41 @@
+-- Remove the pre-v2 permission table.
+--
+-- role_feature_flags was the role x flag matrix the portal authorised from before
+-- the Discord-style roles/permissions model replaced it. Nothing has read it for
+-- authorisation since: 0 RLS policies, 0 functions, 0 views referenced it, and
+-- has_feature() resolves entirely through profile_roles + role_permissions. The
+-- only mention left in src/ was a comment pointing readers away from it.
+--
+-- It was not unreferenced, though, which is why this is its own migration and not
+-- a line in the Wave 0 sweep. The delete-user edge function nulled its updated_by
+-- column as part of the profile-delete cascade, and that function checks every
+-- statement for an error — so dropping the table would have made deleting a person
+-- fail, with a foreign-key message pointing at a table nobody uses.
+--
+-- Sequenced as expand/migrate/contract, per CLAUDE.md: a deployed edge function is
+-- a client of this table.
+--   1. delete-user redeployed (v8) without the role_feature_flags statement.
+--   2. This migration, once that version was live.
+--   3. src/types/database.ts regenerated alongside.
+--
+-- That redeploy also closed a second, older bug found while checking this one:
+-- designations.created_by is ON DELETE NO ACTION and was missing from the cascade
+-- list entirely, so deleting anyone who had created a designation already failed.
+-- The list is now data, generated from the query below, rather than fourteen
+-- hand-maintained statements that the schema had quietly outgrown.
+--
+-- To regenerate that list — every FK to profiles the database will NOT clean up:
+--
+--   select c.relname as tbl, a.attname as col
+--     from pg_constraint con
+--     join pg_class c on c.oid = con.conrelid
+--     join pg_namespace n on n.oid = c.relnamespace and n.nspname = 'public'
+--     join pg_class rc on rc.oid = con.confrelid
+--     join lateral unnest(con.conkey) as k(attnum) on true
+--     join pg_attribute a on a.attrelid = c.oid and a.attnum = k.attnum
+--    where con.contype = 'f'
+--      and rc.relname = 'profiles'
+--      and con.confdeltype not in ('c', 'n')   -- not CASCADE, not SET NULL
+--    order by 1, 2;
+
+DROP TABLE IF EXISTS public.role_feature_flags;
