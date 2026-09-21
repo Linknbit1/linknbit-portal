@@ -5870,6 +5870,7 @@ export type Database = {
         Args: { p_date: string }
         Returns: {
           att_status: string
+          attendance_excluded: boolean
           avatar_url: string
           check_in: string
           check_out: string
