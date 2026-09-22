@@ -31,11 +31,41 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: '1.38.0',
+    date: '2026-09-22',
+    title: 'Permissions that mean what they say',
+    highlight:
+      'Several permissions were named for one thing and enforced as another, or enforced nowhere at all. Reports are now gated on the reports permission, budgets sit behind the budget permission, and a project can no longer be edited by somebody who cannot open it.',
+    entries: [
+      {
+        kind: 'fixed',
+        text: 'Reports were controlled by the standup permissions rather than the reports one. Anybody set up to view reports but not standups opened the page and saw only their own row; the fix means the permission named for reports is the one that decides.',
+      },
+      {
+        kind: 'fixed',
+        text: 'A project could be edited by somebody who was not allowed to open it. Editing a project now needs the same access as reading it.',
+      },
+      {
+        kind: 'improved',
+        text: 'Budgets are properly private. The figure was hidden on screen from anybody without the budget permission but still sent to their browser, and the reports table returned it to everyone. Both are closed.',
+        feature: 'can_view_budget',
+      },
+      {
+        kind: 'improved',
+        text: 'The Finance and Developer roles have been removed. Finance had nobody in it; Developer granted nothing that Employee did not.',
+        feature: 'can_manage_roles',
+      },
+      {
+        kind: 'fixed',
+        text: 'Four colleagues were not attached to any role at all \u2014 harmless while the Employee role grants nothing, invisible trouble the moment it grants something. They are attached now, and a new account gets its role automatically.',
+        feature: 'can_manage_people',
+      },
+    ],
+  },
+  {
     version: '1.37.0',
     date: '2026-09-22',
     title: 'One way to finish a task',
-    highlight:
-      'Approved and Completed were two columns that both meant done. They are one column now, called Completed, and the Schedule calendar gained a four-week view and drag-between-days.',
     entries: [
       {
         kind: 'improved',

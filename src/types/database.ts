@@ -3058,6 +3058,42 @@ export type Database = {
           },
         ]
       }
+      project_budgets: {
+        Row: {
+          amount: number | null
+          project_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          amount?: number | null
+          project_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          amount?: number | null
+          project_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_budgets_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_budgets_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_managers: {
         Row: {
           created_at: string
@@ -3792,6 +3828,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           id: string
+          is_client: boolean
           is_default: boolean
           is_hidden: boolean
           is_system: boolean
@@ -3805,6 +3842,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          is_client?: boolean
           is_default?: boolean
           is_hidden?: boolean
           is_system?: boolean
@@ -3818,6 +3856,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          is_client?: boolean
           is_default?: boolean
           is_hidden?: boolean
           is_system?: boolean
