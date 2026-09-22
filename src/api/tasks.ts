@@ -24,6 +24,9 @@ export interface TaskListItem extends TaskRow {
   attachment_count: number
 }
 
+/** Tasks fetched in one go before the caller must narrow. */
+export const DEFAULT_TASK_LIMIT = 500
+
 export interface TaskFilters {
   projectId?: string
   /** Narrow to one service block of a project (the 4-layer view). */
@@ -34,6 +37,8 @@ export interface TaskFilters {
   service?: string
   assigneeId?: string
   search?: string
+  /** Override the default ceiling. Raise it knowingly, never by habit. */
+  limit?: number
 }
 
 const TASK_SELECT =
@@ -70,6 +75,12 @@ export async function fetchTasks(filters: TaskFilters = {}): Promise<TaskListIte
   }
   if (filters.search) query = query.ilike('title', `%${filters.search}%`)
 
+  // A ceiling, not paging. Every caller renders a board or a table that a person
+  // reads, and nobody reads two thousand cards — but without a limit this select
+  // pulls every task RLS allows, with eight embedded relations, on every fetch.
+  // At 350 tasks that is invisible; the cliff arrives quietly.
+  query = query.limit(filters.limit ?? DEFAULT_TASK_LIMIT)
+
   const { data, error } = await query
   if (error) throw error
   const shaped = data.map(({ subtasks, comment_count, attachment_count, assignees, reviewers, ...rest }) => ({
@@ -81,8 +92,11 @@ export async function fetchTasks(filters: TaskFilters = {}): Promise<TaskListIte
     comment_count: comment_count[0]?.count ?? 0,
     attachment_count: attachment_count[0]?.count ?? 0,
   }))
-  // Service lives two joins away, so it is matched here rather than with an
-  // embedded filter (which would drop the embed instead of the row).
+  // Service still lives two joins away: an embedded filter drops the EMBED rather
+  // than the row, so PostgREST cannot express it. Matching here is correct, but it
+  // means the limit above is applied before the narrowing — so a service filter is
+  // narrowing a page, not the whole table. Callers that need a service in full
+  // should pass projectServiceId, which the query does filter on.
   return filters.service
     ? shaped.filter((t) => t.project_service?.service?.slug === filters.service)
     : shaped
@@ -177,3 +191,20 @@ export async function moveTask({ taskId, projectServiceId, stageId }: MoveTaskAr
   if (error) throw error
 }
 
+/** What is stuck and is this person's to unstick. Drives the Delivery nav badges. */
+export interface DeliveryAttention {
+  overdue: number
+  blocked: number
+  reviewNoOwner: number
+}
+
+export async function fetchDeliveryAttention(): Promise<DeliveryAttention> {
+  const { data, error } = await supabase.rpc('delivery_attention_counts')
+  if (error) throw error
+  const row = data?.[0]
+  return {
+    overdue: row?.overdue ?? 0,
+    blocked: row?.blocked ?? 0,
+    reviewNoOwner: row?.review_no_owner ?? 0,
+  }
+}

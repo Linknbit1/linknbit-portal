@@ -4756,6 +4756,9 @@ export type Database = {
       tasks: {
         Row: {
           assignee_id: string | null
+          blocked_on_id: string | null
+          blocked_reason: string | null
+          blocked_since: string | null
           board_order: number
           client_visible: boolean
           created_at: string
@@ -4779,6 +4782,9 @@ export type Database = {
         }
         Insert: {
           assignee_id?: string | null
+          blocked_on_id?: string | null
+          blocked_reason?: string | null
+          blocked_since?: string | null
           board_order?: number
           client_visible?: boolean
           created_at?: string
@@ -4802,6 +4808,9 @@ export type Database = {
         }
         Update: {
           assignee_id?: string | null
+          blocked_on_id?: string | null
+          blocked_reason?: string | null
+          blocked_since?: string | null
           board_order?: number
           client_visible?: boolean
           created_at?: string
@@ -4827,6 +4836,13 @@ export type Database = {
           {
             foreignKeyName: "tasks_assignee_id_fkey"
             columns: ["assignee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_blocked_on_id_fkey"
+            columns: ["blocked_on_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -5366,6 +5382,14 @@ export type Database = {
         Returns: string[]
       }
       delete_task_cascade: { Args: { p_task_id: string }; Returns: string[] }
+      delivery_attention_counts: {
+        Args: never
+        Returns: {
+          blocked: number
+          overdue: number
+          review_no_owner: number
+        }[]
+      }
       expire_reward_pools: { Args: never; Returns: undefined }
       fn_absorb_currency_rates: { Args: never; Returns: undefined }
       fn_add_channel_role: {

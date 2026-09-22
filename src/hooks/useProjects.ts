@@ -18,7 +18,7 @@ export function useProjects(filters: ProjectFilters = {}) {
   return useQuery({
     queryKey: PROJECT_KEYS.list(filters),
     queryFn: () => fetchProjects(filters),
-    staleTime: 20_000,
+    staleTime: 2 * 60 * 1000,
   })
 }
 
@@ -27,7 +27,7 @@ export function useProject(id: string | undefined) {
     queryKey: PROJECT_KEYS.detail(id ?? ''),
     queryFn: () => fetchProject(id!),
     enabled: !!id,
-    staleTime: 20_000,
+    staleTime: 2 * 60 * 1000,
   })
 }
 

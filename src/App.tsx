@@ -60,7 +60,15 @@ import ClientHelpPage from './pages/client/HelpPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
-    queries: { staleTime: 1000 * 60 * 5, retry: 1 },
+    queries: {
+      staleTime: 1000 * 60 * 5,
+      retry: 1,
+      // Off, now that the tables people wait on publish changes. Refetching every
+      // list on every tab switch was the cache polling for want of a signal; a
+      // realtime change marks its queries stale regardless of staleTime, so
+      // freshness comes from the doorbell rather than from re-asking.
+      refetchOnWindowFocus: false,
+    },
   },
 })
 

@@ -444,6 +444,35 @@ export const DOC_CHAPTERS: DocChapter[] = [
         ],
       },
       {
+        id: 'stuck-work',
+        title: 'When work is stuck',
+        summary:
+          'Blocked and overdue work is counted on the sidebar and has to explain itself. Nothing in the portal chases a task on its own, so the point is to make stuck work impossible to walk past.',
+        where: 'Delivery \u2192 Tasks, Delivery \u2192 Projects',
+        procedures: [
+          {
+            title: 'Mark a task blocked',
+            steps: [
+              'Set the status to Blocked. You will be asked what it is blocked on \u2014 a task cannot sit in Blocked without saying why.',
+              'Name the person it is waiting on where there is one. Some blockers are not somebody, and that is fine.',
+              'Move it out of Blocked when it clears. The reason and the clock are cleared with it.',
+            ],
+          },
+          {
+            title: 'Send a task for review',
+            steps: [
+              'Add at least one reviewer, then set the status to Review. The two cannot be done the other way round \u2014 a task in review with nobody named is waiting on nobody.',
+            ],
+          },
+        ],
+        notes: [
+          'The number on the Tasks row is your overdue work. The number on Projects is what is stuck: blocked tasks, plus anything in review with no reviewer.',
+          'Both counts only include what you can act on \u2014 tasks you are assigned, and projects you manage. A zero means nothing is waiting on you, not that nothing is wrong anywhere.',
+          'A task blocked before this was asked for says \u201cno reason recorded\u201d rather than inventing one. Its age is counted from when it last moved.',
+          'Thirteen tasks were already in review with no reviewer when this rule arrived. They were left as they are rather than being forced to change, and they show in the Projects count until somebody assigns one.',
+        ],
+      },
+      {
         id: 'working-a-task',
         title: 'Working a task',
         summary:

@@ -1,12 +1,11 @@
 import { useMemo } from 'react'
 import {
-  ClipboardCheck, CalendarCheck, Trophy, AtSign, Target,
+  CalendarCheck, Trophy, AtSign, Target,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useAuthContext } from '../context/AuthContext'
 import { useMyPermissions } from './usePermissions'
 import { ADMINISTRATOR } from '../api/permissions'
-import { useApprovals } from './useApprovals'
 import {
   useAllLeaveRequests, useAllWfhRequests, useAllAttendanceExceptions, useAllOvertimeRequests,
 } from './useAttendance'
@@ -58,7 +57,6 @@ export function useWaitingOnYou(): { items: WaitingItem[]; total: number } {
   const canReviewGamification =
     can('can_govern_gamification') || can('can_recognize') || can('can_fulfill_payouts')
 
-  const { data: approvals = [] } = useApprovals({ status: 'pending' })
   const { data: leave = [] } = useAllLeaveRequests('pending', canManageAttendance)
   const { data: wfh = [] } = useAllWfhRequests('pending', canManageAttendance)
   const { data: exceptions = [] } = useAllAttendanceExceptions({ status: 'pending' }, canManageAttendance)
@@ -87,18 +85,11 @@ export function useWaitingOnYou(): { items: WaitingItem[]; total: number } {
   return useMemo(() => {
     const items: WaitingItem[] = []
 
-    // Approvals are listed one by one: each names a different project, and
-    // "4 approvals" tells you nothing about which door to open.
-    for (const approval of approvals) {
-      items.push({
-        id: `approval:${approval.id}`,
-        label: `Approve ${approval.type.replace(/_/g, ' ')}`,
-        detail: approval.project?.name ?? undefined,
-        to: approval.project ? `/projects/${approval.project.id}` : '/projects',
-        icon: ClipboardCheck,
-        count: 1,
-      })
-    }
+    // Client sign-offs are deliberately NOT here. A pending approval is waiting
+    // on the CLIENT, not on the person reading this sidebar — counting it gave
+    // internal staff a number they could never drive to zero, which is exactly
+    // what this list exists to avoid. It also fired a query against an empty
+    // table on every page load for every user.
 
     // Only what this person can actually clear. A request they filed for
     // somebody else is pending on an approver who is not them, so counting it
@@ -165,5 +156,5 @@ export function useWaitingOnYou(): { items: WaitingItem[]; total: number } {
     }
 
     return { items, total: items.reduce((sum, item) => sum + item.count, 0) }
-  }, [approvals, leave, wfh, exceptions, overtime, gamificationPending, claimableQuests, unreadMentions, repliedAt, profile?.id])
+  }, [leave, wfh, exceptions, overtime, gamificationPending, claimableQuests, unreadMentions, repliedAt, profile?.id])
 }

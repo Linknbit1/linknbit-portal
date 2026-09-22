@@ -9,6 +9,7 @@ import { useResyncPushSubscription } from '../../hooks/useNotifications'
 import { useAppBadge } from '../../hooks/useAppBadge'
 import { useRealtimeNotifications } from '../../hooks/realtime/useRealtimeNotifications'
 import { useRealtimeChannelList } from '../../hooks/realtime/useRealtimeChannelList'
+import { useRealtimeAttendance } from '../../hooks/realtime/useRealtimeAttendance'
 import { FileViewerProvider } from '../shared/FileViewer'
 import { ImpersonationBanner } from './ImpersonationBanner'
 import { ScopeProvider } from '../../context/ScopeContext'
@@ -50,6 +51,7 @@ export function AppShell() {
   // Same reasoning for chat: the conversation list and the sidebar unread badge
   // stay live regardless of which page is open.
   useRealtimeChannelList(!!profile?.id)
+  useRealtimeAttendance()
 
   // Theme goes on <html>, not on a wrapper div: body paints the area outside the
   // app (iOS overscroll), scrollbars are styled at the document level, and modals

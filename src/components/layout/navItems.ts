@@ -41,6 +41,7 @@ import {
 } from '../../hooks/useAttendance'
 import { useEnrolledDevices } from '../../hooks/useEnrolledDevices'
 import { useClaimableQuestCount, useGamificationPendingCount } from '../../hooks/useGamification'
+import { useDeliveryAttention } from '../../hooks/useTasks'
 import { useAuthContext } from '../../context/AuthContext'
 import { countDecidable } from '../../lib/requestReview'
 
@@ -349,6 +350,10 @@ export function useNavItems(): NavItem[] {
   // itself — anyone can be pulled into a client call, so this is not a BD count.
   const { data: upcomingMeetings = 0 } = useMyUpcomingMeetingCount(!!profile)
   const amStandupParticipant = useAmIStandupParticipant()
+  // Overdue and blocked work, scoped server-side to what this person can act on.
+  // CLAUDE.md has always called for these two counts; they were never built, so
+  // 80 overdue and 10 blocked tasks were invisible from every screen.
+  const { data: attention } = useDeliveryAttention(!!profile)
 
   const devicesPending = devices.filter((d) => !d.approved_by && d.is_active).length
   // Leave, WFH, exceptions and overtime share one queue now, so their pending
@@ -384,6 +389,13 @@ export function useNavItems(): NavItem[] {
     if (item.matchPrefix === '/admin') {
       const total = devicesPending + (auditNewCount ?? 0)
       return [total > 0 ? { ...item, badge: total } : item]
+    }
+    // Tasks carries what is overdue on you; Projects carries what is stuck —
+    // blocked work plus anything sitting in review with no reviewer named.
+    if (item.to === '/tasks' && attention?.overdue) return [{ ...item, badge: attention.overdue }]
+    if (item.to === '/projects') {
+      const stuck = (attention?.blocked ?? 0) + (attention?.reviewNoOwner ?? 0)
+      return [stuck > 0 ? { ...item, badge: stuck } : item]
     }
     if (item.to === '/chat' && chatUnread) return [{ ...item, badge: chatUnread }]
     if (item.to === '/notifications' && waitingTotal) return [{ ...item, badge: waitingTotal }]

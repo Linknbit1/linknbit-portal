@@ -10,6 +10,7 @@ import {
   type TaskStatus,
   type MoveTaskArgs,
   reorderBoardTasks,
+  fetchDeliveryAttention,
 } from '../api/tasks'
 import { deleteTaskCascade, fetchTaskDeleteImpact } from '../api/deleteCascade'
 import { PROJECT_KEYS } from './useProjects'
@@ -26,7 +27,7 @@ export function useTasks(filters: TaskFilters = {}) {
   return useQuery({
     queryKey: TASK_KEYS.list(filters),
     queryFn: () => fetchTasks(filters),
-    staleTime: 15_000,
+    staleTime: 2 * 60 * 1000,
   })
 }
 
@@ -35,7 +36,7 @@ export function useTask(id: string | undefined) {
     queryKey: TASK_KEYS.detail(id ?? ''),
     queryFn: () => fetchTask(id!),
     enabled: !!id,
-    staleTime: 15_000,
+    staleTime: 2 * 60 * 1000,
   })
 }
 
@@ -141,5 +142,21 @@ export function useTaskDeleteImpact(id: string | undefined) {
     queryFn: () => fetchTaskDeleteImpact(id!),
     enabled: !!id,
     staleTime: 0,
+  })
+}
+
+/**
+ * Counts for the Projects and Tasks nav rows.
+ *
+ * Always mounted with the sidebar, so it is one small RPC rather than a task
+ * list the client then filters. Two minutes stale is fine: a task going overdue
+ * is not news that has to arrive in the same second.
+ */
+export function useDeliveryAttention(enabled = true) {
+  return useQuery({
+    queryKey: ['tasks', 'attention'] as const,
+    queryFn: fetchDeliveryAttention,
+    enabled,
+    staleTime: 2 * 60 * 1000,
   })
 }

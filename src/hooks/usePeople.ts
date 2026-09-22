@@ -26,7 +26,7 @@ export function usePeople() {
   return useQuery({
     queryKey: PEOPLE_KEYS.all,
     queryFn: fetchPeople,
-    staleTime: 30_000,
+    staleTime: 5 * 60 * 1000,
     select: (people) => people.filter((p) => p.is_active),
   })
 }
@@ -37,7 +37,7 @@ export function usePeople() {
  * still need to investigate what someone did before they left).
  */
 export function useAllPeople() {
-  return useQuery({ queryKey: PEOPLE_KEYS.all, queryFn: fetchPeople, staleTime: 30_000 })
+  return useQuery({ queryKey: PEOPLE_KEYS.all, queryFn: fetchPeople, staleTime: 5 * 60 * 1000 })
 }
 
 export function usePerson(id: string | undefined) {
@@ -134,7 +134,7 @@ export function useSalary(profileId: string | undefined) {
     queryKey: PEOPLE_KEYS.salary(profileId ?? ''),
     queryFn: () => fetchSalary(profileId!),
     enabled: !!profileId,
-    staleTime: 30_000,
+    staleTime: 5 * 60 * 1000,
   })
 }
 

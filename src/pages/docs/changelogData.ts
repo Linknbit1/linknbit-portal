@@ -31,11 +31,42 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: '1.39.0',
+    date: '2026-09-22',
+    title: 'Work that is stuck now says so',
+    highlight:
+      'Overdue and blocked work finally shows up somewhere. The Tasks and Projects menu rows carry a count of what is waiting on you, a blocked task has to say what it is blocked on, and nothing can go into review with no reviewer.',
+    entries: [
+      {
+        kind: 'added',
+        text: 'The Tasks row shows how many of your tasks are overdue, and the Projects row how many are stuck \u2014 blocked, or sitting in review with nobody named to review them. Both count only what you can do something about, so a zero means nothing is waiting on you.',
+      },
+      {
+        kind: 'added',
+        text: 'Marking a task blocked now asks what it is blocked on, and records when. The ten tasks already blocked have been stamped with the date they last moved, so their age reads honestly; none of them had a reason recorded, and they say so rather than pretending.',
+      },
+      {
+        kind: 'added',
+        text: 'A task cannot be moved into review without a reviewer. Thirteen were sitting in review waiting on nobody; those are left alone rather than blocked from saving, and they now show in the Projects count so somebody can pick them up.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Points for an on-time check-in are taken back when the check-in is corrected. Seven awards were still standing against days that no longer say on time. A points balance also stops at zero now instead of going negative.',
+      },
+      {
+        kind: 'improved',
+        text: 'Attendance queues update as decisions are made. Approving leave, WFH, overtime or a correction now reaches everybody looking at the same queue straight away, rather than up to five minutes later \u2014 long enough for two people to decide the same request.',
+      },
+      {
+        kind: 'improved',
+        text: 'The portal stops re-fetching every list each time you switch back to the tab, which it was doing because nothing told it when data had actually changed. Now something does.',
+      },
+    ],
+  },
+  {
     version: '1.38.0',
     date: '2026-09-22',
     title: 'Permissions that mean what they say',
-    highlight:
-      'Several permissions were named for one thing and enforced as another, or enforced nowhere at all. Reports are now gated on the reports permission, budgets sit behind the budget permission, and a project can no longer be edited by somebody who cannot open it.',
     entries: [
       {
         kind: 'fixed',
