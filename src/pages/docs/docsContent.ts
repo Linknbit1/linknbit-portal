@@ -388,6 +388,47 @@ export const DOC_CHAPTERS: DocChapter[] = [
         ],
       },
       {
+        id: 'schedule',
+        title: 'Planning a week',
+        summary:
+          'Schedule shows how many hours each person actually has on each day, and what has been booked into them. It is where a week gets filled before it starts, rather than worked out afterwards from due dates.',
+        where: 'Delivery → Schedule',
+        procedures: [
+          {
+            title: 'See who is free',
+            steps: [
+              'Open Delivery → Schedule. It opens on this week, with people down the side and the seven days across.',
+              'Read a cell as booked-out-of-available: the left figure is what is already planned, the right is how much of that day the person has.',
+              'Use the person picker to narrow to one colleague, or step to another week with the arrows either side of the dates.',
+            ],
+          },
+          {
+            title: 'Book somebody\u2019s time',
+            steps: [
+              'Press the day you want to fill. The panel says how much is already booked and how much is left.',
+              'Choose the task and say how long you expect it to take.',
+              'Press Book it. If that takes the person past their hours the panel says so before you commit, and lets you do it anyway.',
+            ],
+          },
+          {
+            title: 'Change or remove a booking',
+            steps: [
+              'Press the same day again. Everything booked on it is listed at the bottom of the panel.',
+              'Press the bin beside a booking to take it off.',
+            ],
+          },
+        ],
+        notes: [
+          'Available hours are worked out, not typed in: the person\u2019s working days, less the lunch break, less any approved leave, holiday or exception on that day.',
+          'Working from home does not reduce anybody\u2019s hours. Working from home is working.',
+          'A day showing a dash has no hours to give — a weekend, a holiday, a full day of leave, or a date before the person joined. There is nothing to book into it.',
+          'Going over somebody\u2019s hours is shown, never blocked. A day past its capacity reads red, because a plan that cannot say "this week is too full" is not worth keeping.',
+          'Booking a task that has no estimate gives it one. The estimate then shows the next time anybody schedules it.',
+          'Whose week you can see depends on what you do: your own always, your team\u2019s if you lead one, everybody\u2019s if you manage projects. My week is your own, read-only.',
+          'Planned hours, tracked hours and standup hours are three different things and are never added together. Schedule holds the plan; the timer holds what was measured.',
+        ],
+      },
+      {
         id: 'working-a-task',
         title: 'Working a task',
         summary:

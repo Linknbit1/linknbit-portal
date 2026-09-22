@@ -31,11 +31,44 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: '1.36.0',
+    date: '2026-09-22',
+    title: 'Schedule: who is free, and what is booked',
+    highlight:
+      'A new Schedule section shows everybody\u2019s week as capacity rather than as a list: how many hours each person actually has on each day, after their working days, leave, holidays and approved exceptions \u2014 and what has been booked into them.',
+    entries: [
+      {
+        kind: 'added',
+        text: 'Delivery \u2192 Schedule is new. People down the side, days across, and every cell says how much of that day is already booked out of how much the person has. Days with no capacity \u2014 a weekend, a holiday, full-day leave, or before somebody joined \u2014 read as unavailable rather than as free.',
+      },
+      {
+        kind: 'added',
+        text: 'Time can be booked onto a person\u2019s day against a task. Press any day in the grid, choose the task and say how long. Booking past somebody\u2019s available hours is allowed and shows the day in red \u2014 it is not blocked, because a plan that cannot express a busy day just moves the planning somewhere nobody can see it.',
+        feature: 'can_manage_projects',
+      },
+      {
+        kind: 'added',
+        text: 'Schedule \u2192 My week shows what has been planned for you, read-only.',
+      },
+      {
+        kind: 'improved',
+        text: 'Booking time against a task that has no estimate sets one from the booking, so the estimate comes from the moment somebody actually thought about how long the work takes rather than from a field nobody revisits.',
+        feature: 'can_manage_projects',
+      },
+      {
+        kind: 'fixed',
+        text: 'Filtering tasks by a person now finds every task they are on, not only the ones where they are the first name. A quarter of all assignments were to somebody who was not the primary assignee, and those were invisible to the filter.',
+      },
+      {
+        kind: 'fixed',
+        text: 'A task assigned to somebody who was not also listed in its assignee list could not be edited by the person it was assigned to. One task was in that state.',
+      },
+    ],
+  },
+  {
     version: '1.35.0',
     date: '2026-09-21',
     title: 'Your standup no longer has to add up to eight hours',
-    highlight:
-      'A standup is a note on what you did and what is stopping you, not a form that refuses to save until the numbers reach a full day. Nobody does eight focused hours in an eight-hour day, and asking for them only meant the difference got invented.',
     entries: [
       {
         kind: 'improved',

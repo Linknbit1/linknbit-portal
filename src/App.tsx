@@ -39,6 +39,7 @@ import AuditLogPage from './pages/admin/AuditLogPage'
 import AdminConsolePage, { AdminConsoleSectionScreen } from './pages/admin/AdminConsolePage'
 import SettingsPage, { SettingsSectionScreen } from './pages/admin/SettingsPage'
 import AttendancePage from './pages/AttendancePage'
+import SchedulePage, { ScheduleSectionScreen } from './pages/SchedulePage'
 import MyMeetingsPage from './pages/MyMeetingsPage'
 import BdLayout from './pages/bd/BdLayout'
 import BdSectionScreen from './pages/bd/BdSectionScreen'
@@ -125,6 +126,10 @@ export default function App() {
                   path="/standup/settings"
                   element={<RoleGuard feature="can_manage_standups"><StandupSettingsPage /></RoleGuard>}
                 />
+                {/* Capacity and the plan. Internal-only; the RPCs scope the rows
+                    to your own week, your team's, or everybody's. */}
+                <Route path="/schedule" element={<RoleGuard audience="internal"><SchedulePage /></RoleGuard>} />
+                <Route path="/schedule/:section" element={<RoleGuard audience="internal"><ScheduleSectionScreen /></RoleGuard>} />
                 <Route path="/attendance" element={<AttendancePage />} />
                 <Route path="/attendance/:section" element={<AttendanceSectionScreen />} />
                 {/* No combined Gamification page — land on the first sub-page. */}

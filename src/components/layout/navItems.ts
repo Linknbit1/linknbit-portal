@@ -20,6 +20,7 @@ import {
   Tag,
   Compass,
   TrendingUp,
+  CalendarRange,
   type LucideIcon,
 } from 'lucide-react'
 import { showWipFeatures } from '../../lib/featureFlags'
@@ -169,6 +170,12 @@ const BD_CHILDREN: NavItem[] = [
   { label: 'Performance',    icon: TrendingUp, to: '/bd/performance', feature: 'can_view_bd' },
 ]
 
+/** Schedule sub-pages — each is its own route at /schedule/:section. */
+const SCHEDULE_CHILDREN: NavItem[] = [
+  { label: 'Week',    icon: CalendarRange, to: '/schedule/week' },
+  { label: 'My week', icon: CalendarRange, to: '/schedule/me' },
+]
+
 /** Standup sub-pages — each is its own route at /standup/:section. */
 const STANDUP_CHILDREN: NavItem[] = [
   { label: 'My Standup', icon: ClipboardList, to: '/standup',          standupParticipant: true },
@@ -217,6 +224,10 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Clients', icon: UserCircle, to: '/clients', group: 'delivery', feature: 'can_manage_clients' },
   { label: 'Projects', icon: FolderOpen, to: '/projects', group: 'delivery' },
   { label: 'Tasks', icon: CheckSquare, to: '/tasks', group: 'delivery' },
+  // Who is free, and what is booked into their week. Ungated like Projects and
+  // Tasks: the RPCs behind it decide whose week you may look at, so somebody with
+  // no team still gets a useful page — their own.
+  { label: 'Schedule', icon: CalendarRange, to: '/schedule', group: 'delivery', matchPrefix: '/schedule', children: SCHEDULE_CHILDREN },
   // With Delivery rather than Admin: a PM reading where the hours went is doing
   // delivery work, not governance. No longer dev-only either — it reads real
   // timer and standup data now, not the mock arrays it shipped with.
