@@ -156,6 +156,27 @@ export interface LogTimeInput {
   billable?: boolean
 }
 
+/**
+ * Turns the overlap constraint into something a person can act on.
+ *
+ * `task_time_entries_no_overlap` stops one person's entries covering the same
+ * minute twice — the thing that had 12.4 of 1,028 tracked hours counted twice
+ * before it existed. Postgres reports that as "conflicting key value violates
+ * exclusion constraint", which tells the reader nothing about what to do.
+ */
+function humanizeTimeEntryError(error: { code?: string; message?: string } | null): Error | null {
+  if (!error) return null
+  const isOverlap = error.code === '23P01'
+    || (error.message ?? '').includes('task_time_entries_no_overlap')
+  if (isOverlap) {
+    return new Error(
+      'That overlaps time you have already logged. Two entries cannot cover the same minutes — '
+      + 'shorten one of them, or edit the entry that is already there.',
+    )
+  }
+  return new Error(error.message ?? 'Could not save that time entry')
+}
+
 /** Records a completed stretch of work without running a timer. */
 export async function logTime({ taskId, minutes, endedAt, startedAt, note, billable }: LogTimeInput): Promise<TimeEntryRow> {
   const { data: auth } = await supabase.auth.getUser()
@@ -180,7 +201,7 @@ export async function logTime({ taskId, minutes, endedAt, startedAt, note, billa
     .select()
     .single()
 
-  if (error) throw error
+  if (error) throw humanizeTimeEntryError(error)
   return data
 }
 
@@ -192,7 +213,7 @@ export async function updateTimeEntry(id: string, updates: TablesUpdate<'task_ti
     .select()
     .single()
 
-  if (error) throw error
+  if (error) throw humanizeTimeEntryError(error)
   return data
 }
 

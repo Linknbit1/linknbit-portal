@@ -188,7 +188,6 @@ export function StandupForm({ onDone, editing, onCancel }: StandupFormProps) {
 
   const minChars = window?.min_work_done_chars ?? DEFAULT_MIN_CHARS
   const requiredMinutes = window?.required_minutes ?? 0
-  const enforceHours = (window?.enforce_required_hours ?? false) && requiredMinutes > 0
   // Unpaid time from an approved exception earlier this month. Today may run
   // over by up to this much — that is how the debt gets worked off.
   const makeupOwed = window?.makeup_owed_minutes ?? 0
@@ -197,9 +196,7 @@ export function StandupForm({ onDone, editing, onCancel }: StandupFormProps) {
   const loggedMinutes = groups.reduce(
     (sum, g) => sum + g.tasks.reduce((s, t) => s + rowMinutes(t), 0), 0,
   )
-  const difference = loggedMinutes - requiredMinutes
   // Still unaccounted for. Only offered while there is a target to hit.
-  const remaining = enforceHours ? Math.max(0, requiredMinutes - loggedMinutes) : 0
 
   const patchGroup = (key: string, changes: Partial<ProjectGroup>) =>
     setGroups((gs) => gs.map((g) => (g.key === key ? { ...g, ...changes } : g)))
@@ -220,23 +217,11 @@ export function StandupForm({ onDone, editing, onCancel }: StandupFormProps) {
   )
 
   const structureValid = errors.every((e) => e.project === null && e.tasks.every((t) => t === null))
-  const hoursValid =
-    !enforceHours ||
-    (loggedMinutes >= requiredMinutes && loggedMinutes <= requiredMinutes + makeupOwed)
-  const isValid = structureValid && hoursValid && groups.length > 0
+  const isValid = structureValid && groups.length > 0
 
   const handleSubmit = () => {
     setShowErrors(true)
     if (!structureValid) { toast('Fix the highlighted fields first', 'error'); return }
-    if (!hoursValid) {
-      toast(
-        difference < 0
-          ? `${formatMinutes(-difference)} still to account for`
-          : `${formatMinutes(loggedMinutes - requiredMinutes - makeupOwed)} more than today allows`,
-        'error',
-      )
-      return
-    }
 
     const entries: StandupEntryInput[] = groups.flatMap((g) =>
       g.tasks.map((t) => ({
@@ -270,7 +255,6 @@ export function StandupForm({ onDone, editing, onCancel }: StandupFormProps) {
       <HoursMeter
         required={requiredMinutes}
         logged={loggedMinutes}
-        enforced={enforceHours}
         makeupOwed={makeupOwed}
       />
 
@@ -436,20 +420,6 @@ export function StandupForm({ onDone, editing, onCancel }: StandupFormProps) {
                       <div>
                         <label className="mb-1.5 flex items-center gap-2 font-ui text-[11px] font-semibold uppercase tracking-wider text-text-3">
                           Time spent
-                          {/* The last stretch of the day is the tedious one to
-                              work out: whatever is left over, on this row. */}
-                          {remaining > 0 && (
-                            <button
-                              type="button"
-                              onClick={() => patchTask(g.key, t.key, {
-                                hours: String(Math.floor((rowMinutes(t) + remaining) / 60) || ''),
-                                minutes: String((rowMinutes(t) + remaining) % 60 || ''),
-                              })}
-                              className="font-ui text-[10.5px] font-semibold normal-case tracking-normal text-brand-red hover:underline"
-                            >
-                              +{formatMinutes(remaining)} left
-                            </button>
-                          )}
                         </label>
                         <div className="flex items-center gap-1.5">
                           <input
@@ -507,6 +477,12 @@ export function StandupForm({ onDone, editing, onCancel }: StandupFormProps) {
                       <label className="mb-1.5 block font-ui text-[11px] font-semibold uppercase tracking-wider text-text-3">
                         Blocker <span className="font-normal normal-case tracking-normal text-text-4">- optional</span>
                       </label>
+                      {/* Says where it goes. The field had existed since the module
+                          shipped and had been used zero times in 576 entries: an
+                          optional box with nothing downstream of it. */}
+                      <p className="mb-1.5 font-ui text-[10.5px] text-text-4">
+                        Anything here shows on your lead&rsquo;s My Day until it is sorted.
+                      </p>
                       <textarea
                         value={t.blocker}
                         onChange={(e) => patchTask(g.key, t.key, { blocker: e.target.value })}
@@ -594,77 +570,30 @@ export function StandupForm({ onDone, editing, onCancel }: StandupFormProps) {
  * eight hours" is only a fair rule if the person can see where they are against
  * it while they type.
  */
-function HoursMeter({ required, logged, enforced, makeupOwed }: {
+function HoursMeter({ required, logged, makeupOwed }: {
+  /** A typical full day here, less the break and any approved leave. Context only. */
   required: number
   logged: number
-  enforced: boolean
-  /** Unpaid exception time still owed — today may run over by up to this much. */
+  /** Unpaid exception time still owed. A real obligation, unlike the day total. */
   makeupOwed: number
 }) {
-  if (required <= 0) {
-    return (
-      <div className="rounded-xl border border-border-default bg-surface-1 px-4 py-3">
-        <p className="font-ui text-[12.5px] text-text-3">
-          Logged so far: <span className="font-semibold text-text-1">{formatMinutes(logged)}</span>
-        </p>
-      </div>
-    )
-  }
-
-  const difference = logged - required
-  const ceiling = required + makeupOwed
-  const pct = Math.min(100, Math.round((logged / required) * 100))
-  // "Right" is anywhere from the requirement up to the requirement plus
-  // whatever make-up is outstanding.
-  const exact = logged >= required && logged <= ceiling
-  const over = logged > ceiling
-
   return (
-    <div
-      className={cn(
-        'rounded-xl border px-4 py-3.5',
-        exact ? 'border-success/40 bg-success/5'
-          : over ? 'border-warning/40 bg-warning/5'
-          : 'border-border-default bg-surface-1',
-      )}
-    >
+    <div className="rounded-xl border border-border-default bg-surface-1 px-4 py-3.5">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <p className="font-ui text-[12.5px] text-text-2">
-          Account for{' '}
-          <span className="font-display text-[15px] font-bold text-text-1">{formatMinutes(required)}</span>{' '}
-          today
-        </p>
-        <p className={cn(
-          'font-mono text-[12.5px] font-semibold',
-          exact ? 'text-success' : over ? 'text-warning' : 'text-text-2',
-        )}>
-          {formatMinutes(logged)} logged
-          {!exact && (
-            <span className="ml-1.5 font-normal">
-              · {over ? `${formatMinutes(difference)} over` : `${formatMinutes(-difference)} to go`}
-            </span>
-          )}
-          {exact && (
-            <span className="ml-1.5 font-normal">
-              {difference > 0 ? `· ${formatMinutes(difference)} toward make-up` : '· exactly right'}
+        <p className="font-ui text-[12.5px] text-text-2">Time accounted for</p>
+        <p className="font-mono text-[12.5px] font-semibold text-text-1">
+          {formatMinutes(logged)}
+          {required > 0 && (
+            <span className="ml-1.5 font-normal text-text-4">
+              · a full day here is {formatMinutes(required)}
             </span>
           )}
         </p>
-      </div>
-
-      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-3">
-        <div
-          className={cn(
-            'h-full rounded-full transition-[width] duration-200',
-            exact ? 'bg-success' : over ? 'bg-warning' : 'bg-brand-red',
-          )}
-          style={{ width: `${pct}%` }}
-        />
       </div>
 
       <p className="mt-2 font-ui text-[11px] text-text-4">
-        Your working day, less the lunch break and any approved leave or exception.
-        {enforced && ' The total has to match exactly.'}
+        Roughly where the day went. Nothing here has to add up to a full day — most
+        days do not, and the timer is what measures hours worked.
       </p>
 
       {makeupOwed > 0 && (
@@ -672,9 +601,7 @@ function HoursMeter({ required, logged, enforced, makeupOwed }: {
           <AlertTriangle size={11} className="mt-0.5 shrink-0" />
           <span>
             You owe <span className="font-semibold">{formatMinutes(makeupOwed)}</span> of make-up time
-            from an approved exception, unpaid hours you agreed to work back. Log up to{' '}
-            <span className="font-semibold">{formatMinutes(ceiling)}</span> today and the extra comes
-            off that balance.
+            from an approved exception — unpaid hours you agreed to work back.
           </span>
         </p>
       )}

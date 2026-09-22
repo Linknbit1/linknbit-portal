@@ -4,12 +4,16 @@ import {
   CalendarClock, Video, Play, Square, CircleDot, ClipboardList,
   Bell, Home, Plane, ArrowRight, Loader2, CheckCircle2,
   GitBranch, MessageSquare, Paperclip, Timer, CalendarDays,
+  AlertTriangle,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '../lib/cn'
+import { formatDate } from '../lib/utils'
 import { Topbar } from '../components/layout/Topbar'
 import { Avatar, AvatarGroup } from '../components/ui/Avatar'
+import { PersonLink } from '../components/shared/PersonLink'
 import { AttendanceCheckInCard } from '../components/shared/AttendanceCheckInCard'
+import { useOpenBlockers } from '../hooks/useStandups'
 import { StatusChip } from '../components/shared/StatusChip'
 import { PriorityChip } from '../components/shared/PriorityChip'
 import { useAuthContext } from '../context/AuthContext'
@@ -97,6 +101,41 @@ function Panel({
       </header>
       {children}
     </section>
+  )
+}
+
+/**
+ * Blockers raised in the last week by anybody whose standups this person reads.
+ *
+ * Deliberately on My Day rather than only on the standup board: a lead who has
+ * to unstick somebody needs to see it where they already look, on the morning it
+ * matters, not by remembering to open a board. The panel disappears entirely when
+ * there is nothing stuck, so it costs nothing on a normal day.
+ */
+function BlockersPanel() {
+  const { data: blockers = [] } = useOpenBlockers(7)
+  if (blockers.length === 0) return null
+
+  return (
+    <Panel title="Blocked" icon={AlertTriangle} count={blockers.length} action={{ to: '/standup/team', label: 'Standups' }}>
+      <ul className="divide-y divide-border-subtle">
+        {blockers.map((b) => (
+          <li key={b.entry_id} className="flex items-start gap-3 px-4 py-3">
+            <Avatar name={b.profile_name} src={b.avatar_url ?? undefined} size="xs" personId={b.profile_id} />
+            <div className="min-w-0 flex-1">
+              <p className="font-ui text-[12.5px] text-text-1">
+                <PersonLink personId={b.profile_id} className="font-semibold">{b.profile_name}</PersonLink>
+                {(b.task_name || b.project_name) && (
+                  <span className="text-text-3"> on {b.task_name || b.project_name}</span>
+                )}
+              </p>
+              <p className="mt-0.5 font-ui text-[12px] text-warning">{b.blocker}</p>
+            </div>
+            <span className="shrink-0 font-mono text-[10.5px] text-text-4">{formatDate(b.standup_date)}</span>
+          </li>
+        ))}
+      </ul>
+    </Panel>
   )
 }
 
@@ -431,6 +470,10 @@ export default function MyDayPage() {
             })}
           </p>
         </header>
+
+        {/* Anything stuck comes before anything scheduled: a blocker is somebody
+            waiting on you, and it is the one thing here that goes stale by the hour. */}
+        <BlockersPanel />
 
         {running?.task && (
           <div className="flex flex-wrap items-center gap-3 px-4 py-2.5 border border-brand-red/30 bg-brand-red/10">

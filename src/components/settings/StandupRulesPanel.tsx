@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { Clock, Coins, Ruler, AlertTriangle, Save, Loader2 } from 'lucide-react'
 import { Button } from '../ui/Button'
 import { Select } from '../ui/Select'
-import { Toggle } from '../ui/Toggle'
 import { TimePicker } from '../ui/TimePicker'
 import { useToast } from '../ui/toast-context'
 import { Skeleton } from '../ui/Skeleton'
@@ -44,7 +43,6 @@ export function StandupRulesPanel({ canEdit }: { canEdit: boolean }) {
   const [onTimeWindow, setOnTimeWindow] = useState('60')
   const [xp, setXp] = useState('5')
   const [minChars, setMinChars] = useState('100')
-  const [enforce, setEnforce] = useState(true)
   const [loaded, setLoaded] = useState(false)
 
   // Seed once from the server, then leave the form alone — a refetch mid-edit
@@ -56,7 +54,6 @@ export function StandupRulesPanel({ canEdit }: { canEdit: boolean }) {
     setOnTimeWindow(String(settings.on_time_window_min))
     setXp(String(settings.xp_on_time))
     setMinChars(String(settings.min_work_done_chars))
-    setEnforce(settings.enforce_required_hours)
     setLoaded(true)
   }
 
@@ -82,7 +79,6 @@ export function StandupRulesPanel({ canEdit }: { canEdit: boolean }) {
         on_time_window_min: Math.max(5, Number(onTimeWindow) || 60),
         xp_on_time: Math.max(0, Number(xp) || 0),
         min_work_done_chars: Math.max(15, Number(minChars) || 100),
-        enforce_required_hours: enforce,
       },
       {
         onSuccess: () => toast('Standup rules saved', 'success'),
@@ -170,7 +166,7 @@ export function StandupRulesPanel({ canEdit }: { canEdit: boolean }) {
       <SettingsGroup
         icon={Ruler}
         title="What counts as a real update"
-        description="The rules the form enforces before anything can be submitted."
+        description="What a standup has to contain before it can be submitted. Hours are not one of them — the time logged is a note on where the day went, not a total to reach."
       >
         <NumberField
           label="Minimum characters per task"
@@ -181,17 +177,6 @@ export function StandupRulesPanel({ canEdit }: { canEdit: boolean }) {
           disabled={!canEdit}
           hint="Applies to each task's description on its own, not the whole standup. Blocks “worked on it”."
         />
-
-        <SettingsField
-          label="Require the full day to be accounted for"
-          hint={
-            enforce
-              ? 'The logged time must match the day exactly. The working day less the break, less any leave or approved exception.'
-              : 'The required hours are shown but not enforced. Anyone can submit any amount.'
-          }
-        >
-          <Toggle checked={enforce} onChange={setEnforce} disabled={!canEdit} />
-        </SettingsField>
 
         {attendance && (
           <p className="rounded-md border border-border-subtle bg-surface-2/40 px-3 py-2 font-ui text-[11.5px] text-text-3">

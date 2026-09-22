@@ -5,7 +5,7 @@ import {
   fetchStandupWindow, submitStandup, updateStandup, fetchStandupsByDate, fetchMyStandups,
   fetchMyStandup, fetchStandupRoster, fetchStandupRoleSettings, fetchStandupParticipants,
   setStandupRoleRequirement, setStandupParticipation,
-  fetchStandupSettings, updateStandupSettings, fetchStandupSuggestions,
+  fetchStandupSettings, updateStandupSettings, fetchStandupSuggestions, fetchOpenBlockers,
   type StandupEntryInput, type ParticipationMode,
 } from '../api/standups'
 import type { TablesUpdate } from '../types/database'
@@ -218,4 +218,18 @@ export function useAmIStandupParticipant(): boolean {
     staleTime: 5 * 60 * 1000,
   })
   return data ?? false
+}
+
+/**
+ * Blockers raised in recent standups that this person may see.
+ *
+ * Short stale time: a blocker is the one thing on My Day somebody may need to act
+ * on within the hour, and the list is small.
+ */
+export function useOpenBlockers(days = 7) {
+  return useQuery({
+    queryKey: ['standups', 'blockers', days] as const,
+    queryFn: () => fetchOpenBlockers(days),
+    staleTime: 60_000,
+  })
 }

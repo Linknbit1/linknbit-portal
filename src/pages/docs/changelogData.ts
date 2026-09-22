@@ -31,11 +31,43 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: '1.35.0',
+    date: '2026-09-21',
+    title: 'Your standup no longer has to add up to eight hours',
+    highlight:
+      'A standup is a note on what you did and what is stopping you, not a form that refuses to save until the numbers reach a full day. Nobody does eight focused hours in an eight-hour day, and asking for them only meant the difference got invented.',
+    entries: [
+      {
+        kind: 'improved',
+        text: 'A standup is no longer rejected because its hours do not add up to a full day. It used to refuse to save unless the total matched exactly \u2014 which is why 194 of the last 213 standups came to precisely eight hours. The time you note is still worth filling in, as a record of roughly where the day went, but nothing is refused because of it and the timer is what measures hours worked.',
+      },
+      {
+        kind: 'added',
+        text: 'A blocker you raise in your standup now shows at the top of your lead\u2019s My Day until it is dealt with. The field had been there since the beginning and had never once been used, because nothing happened when you filled it in. Now something does.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Two stretches of tracked time can no longer cover the same minutes. Twenty-five pairs overlapped, which counted about twelve hours twice across everything tracked so far, and every hours report was overstating by that much. The overlapping parts have been trimmed, and logging time over time you have already logged now says so instead of silently doubling it.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Days where somebody checked in and never checked out are now closed. The end-of-day job only ever looked at the current day, so an evening it did not run left that day open for good \u2014 with no hours at all in any report. Nineteen such days have been closed at their own day\u2019s end, and marked, because a check-out nobody pressed is an assumption and should read as one.',
+      },
+      {
+        kind: 'improved',
+        text: 'Approved overtime now counts against time you owe. Twenty-four overtime requests had been approved and the system did nothing with any of them, while leaving early on an approved exception was still recorded as time to work back \u2014 so the ledger only ever ran one way. Overtime a manager has approved now clears that balance.',
+      },
+      {
+        kind: 'improved',
+        text: 'The setting that required a full day to be accounted for has been removed from Settings, because it no longer controls anything.',
+        feature: 'can_manage_standups',
+      },
+    ],
+  },
+  {
     version: '1.34.0',
     date: '2026-09-21',
     title: 'The portal now knows when you joined',
-    highlight:
-      'Nobody is counted before their first day or after their last. A new colleague no longer appears as absent for the weeks before they arrived, and somebody who has left stops vanishing from the months they actually worked.',
     entries: [
       {
         kind: 'fixed',

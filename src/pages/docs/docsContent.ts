@@ -498,7 +498,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
           {
             title: 'Submit one (while it is still required of you)',
             steps: [
-              'Open Workspace → Standup during the submission window. The top of the form shows how much of the day you have to account for.',
+              'Open Workspace → Standup during the submission window. The top of the form shows how much time you have noted so far, and what a full day here usually comes to — as context, not a target to hit.',
               'If you tracked time or moved tasks today, a banner offers to fill them in. Press “Fill them in” and the rows appear, with the time already in for anything you ran a timer on. Delete any that are wrong.',
               'Otherwise pick a project, then add a row for each task you worked on it, “Add another task on this project”.',
               'For hours with no project behind them, a meeting, an office quest, onboarding, or a stretch with nothing assigned, press “Add time with no project”. Pick one of the suggested titles or type your own. If your first card is still empty, “This was not project work” turns it into one of these.',
@@ -584,6 +584,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
           'A task somebody deleted still appears, struck through and marked, whenever time was logged against it. Its minutes are counted in the totals, so hiding it would make the breakdown disagree with the figures above it.',
           'Make-up is unpaid time from an approved exception that has not been worked back yet. It clears itself as the person logs over their requirement, and the CSV carries the unpaid, made-up and outstanding figures separately.',
           'Somebody who is not asked for a standup owes nothing, so their required hours read zero rather than a full month.',
+          'A blocker written into a standup shows at the top of My Day for everybody who can read that person’s standups, for a week. It is the one part of a standup that asks somebody else to do something.',
           'The variance column is the point: a project showing far more standup time than timer time is being worked on without the timer running, and the reverse means work nobody wrote up.',
           'Money appears only where it already exists. A project’s budget, when one is set. There is no cost-per-hour anywhere in the portal, so no profit or margin is calculated.',
         ],
@@ -1295,7 +1296,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
             steps: [
               'Set the XP for an on-time standup. Zero stops rewarding them.',
               'Set the minimum characters per task. It applies to each task on its own, not the whole standup.',
-              'Leave “Require the full day to be accounted for” on to enforce the hours, or turn it off to show them as guidance only.',
+              'There is no setting for requiring a full day any more. A standup is never refused over its hours — what it must contain is at least one update, each with a project or a title of its own and a description long enough to mean something.',
             ],
           },
           {
@@ -1308,7 +1309,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
         ],
         notes: [
           'People who are excluded stop appearing on the team standup board and are never marked late.',
-          'The hours a standup must account for come from Settings → Attendance: the working day, less the lunch break. Change the break and every standup follows.',
+          'The full day shown on the standup form comes from Settings → Attendance: the working day, less the lunch break. It is there for context. Nothing is required to add up to it, and the hours anybody actually worked come from the timer.',
           'A fixed opening time does not move when the working day does. The screen warns you when the two have drifted more than two hours apart.',
         ],
       },

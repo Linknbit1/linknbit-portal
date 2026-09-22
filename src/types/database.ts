@@ -5107,6 +5107,8 @@ export type Database = {
           p_attendance_excluded?: boolean
           p_designation_id?: string
           p_job_type?: string
+          p_joined_on?: string
+          p_left_on?: string
           p_profile_id: string
           p_role: string
           p_schedule_mode?: string
@@ -5631,6 +5633,19 @@ export type Database = {
       }
       my_permissions: { Args: never; Returns: string[] }
       my_role_rank: { Args: never; Returns: number }
+      open_blockers: {
+        Args: { p_days?: number }
+        Returns: {
+          avatar_url: string
+          blocker: string
+          entry_id: string
+          profile_id: string
+          profile_name: string
+          project_name: string
+          standup_date: string
+          task_name: string
+        }[]
+      }
       open_reward_pool: { Args: { p_reward_id: string }; Returns: string }
       profile_has_feature: {
         Args: { p_key: string; p_profile: string }

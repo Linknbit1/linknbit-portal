@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase'
-import type { Tables, TablesUpdate, Json } from '../types/database'
+import type { Tables, TablesUpdate, Json, Database } from '../types/database'
 
 export type StandupRow = Tables<'standups'>
 export type StandupEntryRow = Tables<'standup_entries'>
@@ -258,4 +258,21 @@ export async function setStandupParticipation(
     p_note: note ?? undefined,
   })
   if (error) throw error
+}
+
+/** A blocker somebody raised in a recent standup, and whose it is. */
+export type OpenBlocker = Database['public']['Functions']['open_blockers']['Returns'][number]
+
+/**
+ * Blockers raised in the last few days, scoped to whose standups you may read.
+ *
+ * The blocker field has existed on every standup entry since the module shipped
+ * and had been filled in exactly zero times out of 576. It was an optional box on
+ * a form with nothing downstream of it — raising one changed nothing and nobody
+ * saw it, so nobody used it. This is the downstream.
+ */
+export async function fetchOpenBlockers(days = 7): Promise<OpenBlocker[]> {
+  const { data, error } = await supabase.rpc('open_blockers', { p_days: days })
+  if (error) throw error
+  return data ?? []
 }
