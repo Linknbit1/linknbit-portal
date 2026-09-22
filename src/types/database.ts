@@ -4447,6 +4447,70 @@ export type Database = {
           },
         ]
       }
+      task_allocations: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          day: string
+          end_time: string | null
+          id: string
+          note: string | null
+          planned_minutes: number
+          profile_id: string
+          start_time: string | null
+          task_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          day: string
+          end_time?: string | null
+          id?: string
+          note?: string | null
+          planned_minutes: number
+          profile_id: string
+          start_time?: string | null
+          task_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          day?: string
+          end_time?: string | null
+          id?: string
+          note?: string | null
+          planned_minutes?: number
+          profile_id?: string
+          start_time?: string | null
+          task_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_allocations_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_allocations_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_allocations_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       task_assignees: {
         Row: {
           created_at: string
@@ -5202,6 +5266,18 @@ export type Database = {
         Args: { p_note?: string; p_pool_id: string }
         Returns: undefined
       }
+      capacity_roster: {
+        Args: { p_from: string; p_profile?: string; p_to: string }
+        Returns: {
+          available_minutes: number
+          avatar_url: string
+          day: string
+          job_title: string
+          profile_id: string
+          profile_name: string
+          team_names: string[]
+        }[]
+      }
       claim_quest_task: { Args: { p_task_id: string }; Returns: string }
       copy_template_into_service: {
         Args: { p_project_service_id: string; p_template_id: string }
@@ -5279,6 +5355,10 @@ export type Database = {
         Returns: Record<string, unknown>
       }
       fn_auto_checkout_missing: { Args: never; Returns: undefined }
+      fn_available_minutes: {
+        Args: { p_date: string; p_profile: string }
+        Returns: number
+      }
       fn_award_badges: { Args: { p_profile_id: string }; Returns: undefined }
       fn_bd_update_required: { Args: { p_profile: string }; Returns: boolean }
       fn_bd_update_today: { Args: never; Returns: string }
@@ -5787,6 +5867,21 @@ export type Database = {
       rotate_biometric_terminal_secret: {
         Args: { p_id: string; p_secret: string }
         Returns: undefined
+      }
+      schedule_roster: {
+        Args: { p_from: string; p_profile?: string; p_to: string }
+        Returns: {
+          allocations: Json
+          available_minutes: number
+          avatar_url: string
+          day: string
+          job_title: string
+          planned_minutes: number
+          profile_id: string
+          profile_name: string
+          team_names: string[]
+          tracked_minutes: number
+        }[]
       }
       service_member_task_load: {
         Args: { p_profile_id: string; p_project_service_id: string }

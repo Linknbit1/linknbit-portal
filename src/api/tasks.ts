@@ -54,7 +54,20 @@ export async function fetchTasks(filters: TaskFilters = {}): Promise<TaskListIte
   if (filters.projectServiceId) query = query.eq('project_service_id', filters.projectServiceId)
   if (filters.status) query = query.eq('status', filters.status)
   if (filters.priority) query = query.eq('priority', filters.priority)
-  if (filters.assigneeId) query = query.eq('assignee_id', filters.assigneeId)
+  // Through the join table, never tasks.assignee_id. 114 of 447 assignments are
+  // to somebody who is not the primary, so filtering on the single column would
+  // silently drop a quarter of them — which is exactly what "filter the task list
+  // by employee" is for.
+  if (filters.assigneeId) {
+    const { data: rows, error: assigneeError } = await supabase
+      .from('task_assignees')
+      .select('task_id')
+      .eq('profile_id', filters.assigneeId)
+    if (assigneeError) throw assigneeError
+    const ids = (rows ?? []).map((r) => r.task_id)
+    if (ids.length === 0) return []
+    query = query.in('id', ids)
+  }
   if (filters.search) query = query.ilike('title', `%${filters.search}%`)
 
   const { data, error } = await query
