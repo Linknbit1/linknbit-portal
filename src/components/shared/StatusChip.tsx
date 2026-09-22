@@ -7,7 +7,6 @@ const TASK_STATUS_CONFIG: Record<TaskStatus, { label: string; classes: string }>
   todo:        { label: 'To Do',        classes: 'bg-surface-2 text-text-3 border-border-default' },
   in_progress: { label: 'In Progress',  classes: 'bg-[rgba(34,197,94,0.12)] text-[#22C55E] border-[rgba(34,197,94,0.3)]' },
   review:      { label: 'Review',       classes: 'bg-[rgba(59,130,246,0.12)] text-[#60A5FA] border-[rgba(59,130,246,0.3)]' },
-  approved:    { label: 'Approved',     classes: 'bg-[rgba(34,197,94,0.12)] text-[#22C55E] border-[rgba(34,197,94,0.3)]' },
   completed:   { label: 'Completed',    classes: 'bg-[rgba(122,133,151,0.15)] text-text-2 border-border-default' },
   blocked:     { label: 'Blocked',      classes: 'bg-[rgba(244,54,76,0.1)] text-[#F4364C] border-[rgba(244,54,76,0.3)]' },
 }

@@ -1,12 +1,14 @@
 import { useMemo, useState } from 'react'
-import { CalendarDays, Plus, Loader2 } from 'lucide-react'
+import { CalendarDays, CalendarRange, Plus, Loader2 } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { Avatar } from '../ui/Avatar'
 import { Select } from '../ui/Select'
 import { PeriodStepper } from '../ui/PeriodStepper'
 import { Skeleton } from '../ui/Skeleton'
 import { PersonLink } from './PersonLink'
-import { useScheduleRoster } from '../../hooks/useSchedule'
+import { useScheduleRoster, useMoveAllocation } from '../../hooks/useSchedule'
+import { useToast } from '../ui/toast-context'
+import { ViewToggle } from '../ui/ViewToggle'
 import { usePeople } from '../../hooks/usePeople'
 import { formatMinutes } from '../../lib/duration'
 import type { ScheduleDay } from '../../api/schedule'
@@ -32,6 +34,13 @@ function startOfWeek(d: Date): Date {
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
 /**
+ * Week is seven days with room for the task names in each cell. Month is four
+ * weeks at a glance, for the question "when does this person next have a clear
+ * run" — the cells are too narrow for names, so they carry the numbers only.
+ */
+type ViewMode = 'week' | 'month'
+
+/**
  * How full a day is.
  *
  * Over-booking is shown, never forbidden: a lead who genuinely needs nine hours
@@ -53,9 +62,21 @@ interface DayCellProps {
   cell: ScheduleDay | undefined
   onBook: () => void
   canPlan: boolean
+  /** Month view: the cell is too narrow for task names, so it carries numbers only. */
+  compact: boolean
+  /** An allocation is in flight over the grid — this cell may be its destination. */
+  dragging: boolean
+  isDropTarget: boolean
+  onDragStartAllocation: (allocationId: string) => void
+  onDragOverCell: () => void
+  onDropOnCell: () => void
+  onDragEndAllocation: () => void
 }
 
-function DayCell({ cell, onBook, canPlan }: DayCellProps) {
+function DayCell({
+  cell, onBook, canPlan, compact, dragging, isDropTarget,
+  onDragStartAllocation, onDragOverCell, onDropOnCell, onDragEndAllocation,
+}: DayCellProps) {
   const available = cell?.availableMinutes ?? 0
   const planned = cell?.plannedMinutes ?? 0
   const tone = fill(planned, available)
@@ -67,7 +88,7 @@ function DayCell({ cell, onBook, canPlan }: DayCellProps) {
   // is nothing to book into it.
   if (available === 0) {
     return (
-      <div className="min-h-[76px] border-l border-border-subtle bg-surface-2/40 p-2">
+      <div className={cn('border-l border-border-subtle bg-surface-2/40 p-2', compact ? 'min-h-[52px]' : 'min-h-[76px]')}>
         <p className="font-mono text-[10px] text-text-4">—</p>
       </div>
     )
@@ -88,9 +109,26 @@ function DayCell({ cell, onBook, canPlan }: DayCellProps) {
         <div className={cn('h-full rounded-full', tone.bar)} style={{ width: `${pct}%` }} />
       </div>
 
-      <ul className="mt-1.5 flex flex-col gap-0.5">
+      <ul className={cn('mt-1.5 flex flex-col gap-0.5', compact && 'hidden')}>
         {allocations.slice(0, 2).map((a) => (
-          <li key={a.id} className="truncate font-ui text-[10.5px] text-text-2" title={a.task_title}>
+          <li
+            key={a.id}
+            // Dragging moves a booking to another day. It is a shortcut for what
+            // the booking panel already does, never the only way — the panel
+            // stays the path on a phone and from a keyboard.
+            draggable={canPlan}
+            onDragStart={(e) => {
+              e.stopPropagation()
+              e.dataTransfer.effectAllowed = 'move'
+              onDragStartAllocation(a.id)
+            }}
+            onDragEnd={onDragEndAllocation}
+            className={cn(
+              'truncate font-ui text-[10.5px] text-text-2',
+              canPlan && 'cursor-grab active:cursor-grabbing',
+            )}
+            title={a.task_title}
+          >
             {a.task_title}
           </li>
         ))}
@@ -102,7 +140,11 @@ function DayCell({ cell, onBook, canPlan }: DayCellProps) {
   )
 
   if (!canPlan) {
-    return <div className="min-h-[76px] border-l border-border-subtle p-2 text-left">{body}</div>
+    return (
+      <div className={cn('border-l border-border-subtle p-2 text-left', compact ? 'min-h-[52px]' : 'min-h-[76px]')}>
+        {body}
+      </div>
+    )
   }
 
   // The whole cell is the target, not a button revealed on hover. A hover-only
@@ -117,7 +159,13 @@ function DayCell({ cell, onBook, canPlan }: DayCellProps) {
           ? `Book time — ${formatMinutes(planned)} of ${formatMinutes(available)} already booked`
           : `Book time — ${formatMinutes(available)} free`
       }
-      className="group relative min-h-[76px] border-l border-border-subtle p-2 text-left transition-colors hover:bg-surface-2/60 focus-visible:bg-surface-2/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-border-focus"
+      onDragOver={(e) => { if (dragging) { e.preventDefault(); onDragOverCell() } }}
+      onDrop={(e) => { if (dragging) { e.preventDefault(); onDropOnCell() } }}
+      className={cn(
+        'group relative border-l border-border-subtle p-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-border-focus',
+        compact ? 'min-h-[52px]' : 'min-h-[76px]',
+        isDropTarget ? 'bg-brand-red/10 ring-1 ring-inset ring-brand-red/40' : 'hover:bg-surface-2/60 focus-visible:bg-surface-2/60',
+      )}
     >
       {body}
       <Plus
@@ -149,19 +197,28 @@ interface ScheduleGridProps {
  * empty, bookable day.
  */
 export function ScheduleGrid({ canPlan, lockedProfileId }: ScheduleGridProps) {
+  const [view, setView] = useState<ViewMode>('week')
   const [anchor, setAnchor] = useState(() => startOfWeek(new Date()))
   const [personFilter, setPersonFilter] = useState('')
   const [booking, setBooking] = useState<{ profileId: string; profileName: string; day: string } | null>(null)
+  // The booking being dragged, and the cell it is currently over. Held here
+  // rather than in each cell so only one cell can be the target at a time.
+  const [dragId, setDragId] = useState<string | null>(null)
+  const [dropAt, setDropAt] = useState<{ profileId: string; day: string } | null>(null)
 
+  const move = useMoveAllocation()
+  const toast = useToast()
+
+  const span = view === 'week' ? 7 : 28
   const from = iso(anchor)
-  const to = iso(addDays(anchor, 6))
+  const to = iso(addDays(anchor, span - 1))
   const person = lockedProfileId ?? (personFilter || undefined)
   const { data: rows = [], isLoading } = useScheduleRoster(from, to, person)
   const { data: people = [] } = usePeople()
 
   const days = useMemo(
-    () => Array.from({ length: 7 }, (_, i) => iso(addDays(anchor, i))),
-    [anchor],
+    () => Array.from({ length: span }, (_, i) => iso(addDays(anchor, i))),
+    [anchor, span],
   )
 
   /** profileId -> day -> cell. One pass, so the grid does lookups rather than scans. */
@@ -178,8 +235,8 @@ export function ScheduleGrid({ canPlan, lockedProfileId }: ScheduleGridProps) {
     return map
   }, [rows])
 
-  const weekLabel = `${new Date(from).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} – ${new Date(to).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
-  const isThisWeek = from === iso(startOfWeek(new Date()))
+  const rangeLabel = `${new Date(from).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} – ${new Date(to).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
+  const isCurrent = from === iso(startOfWeek(new Date()))
 
   const personOptions = [
     { value: '', label: 'Everyone' },
@@ -187,6 +244,27 @@ export function ScheduleGrid({ canPlan, lockedProfileId }: ScheduleGridProps) {
       .filter((p) => p.is_active)
       .map((p) => ({ value: p.id, label: p.name, avatar: { name: p.name, url: p.avatar_url } })),
   ]
+
+  /** Drops a booking on another person-day. Same person only: moving work to a
+   *  different person is a reassignment, which is a bigger decision than a drag. */
+  const handleDrop = async (profileId: string, day: string) => {
+    const id = dragId
+    setDragId(null)
+    setDropAt(null)
+    if (!id) return
+    const origin = rows.find((r) => r.allocations.some((a) => a.id === id))
+    if (!origin) return
+    if (origin.profileId !== profileId) {
+      toast('Drag moves a booking to another day, not to another person. Book it on them instead.', 'error')
+      return
+    }
+    if (origin.day === day) return
+    try {
+      await move.mutateAsync({ id, day })
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'Could not move that booking', 'error')
+    }
+  }
 
   const totals = useMemo(() => ({
     available: rows.reduce((s, r) => s + r.availableMinutes, 0),
@@ -198,16 +276,28 @@ export function ScheduleGrid({ canPlan, lockedProfileId }: ScheduleGridProps) {
       <div className="flex flex-wrap items-center gap-3">
         <PeriodStepper
           icon={CalendarDays}
-          label={weekLabel}
-          onPrev={() => setAnchor((a) => addDays(a, -7))}
-          onNext={() => setAnchor((a) => addDays(a, 7))}
+          label={rangeLabel}
+          onPrev={() => setAnchor((a) => addDays(a, -span))}
+          onNext={() => setAnchor((a) => addDays(a, span))}
         >
-          {isThisWeek && (
+          {isCurrent && (
             <span className="ml-1 rounded-xs border border-brand-red/20 bg-brand-red/10 px-1.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide text-brand-red">
-              This week
+              {view === 'week' ? 'This week' : 'From today'}
             </span>
           )}
         </PeriodStepper>
+
+        <ViewToggle
+          value={view}
+          onChange={(next) => {
+            setView(next)
+            setAnchor(next === 'week' ? startOfWeek(new Date()) : new Date())
+          }}
+          options={[
+            { value: 'week', label: 'Week', icon: CalendarDays },
+            { value: 'month', label: '4 weeks', icon: CalendarRange },
+          ]}
+        />
 
         {!lockedProfileId && (
           <div className="w-52">
@@ -230,8 +320,11 @@ export function ScheduleGrid({ canPlan, lockedProfileId }: ScheduleGridProps) {
         </p>
       ) : (
         <div className="overflow-x-auto border border-border-default bg-surface-1">
-          <div className="min-w-[840px]">
-            <div className="grid grid-cols-[180px_repeat(7,1fr)] border-b border-border-default bg-surface-2">
+          <div style={{ minWidth: view === 'week' ? 840 : 1180 }}>
+            <div
+              className="grid border-b border-border-default bg-surface-2"
+              style={{ gridTemplateColumns: `180px repeat(${span}, minmax(0, 1fr))` }}
+            >
               <div className="px-3 py-2 font-ui text-[11px] font-semibold uppercase tracking-wider text-text-3">
                 Person
               </div>
@@ -248,7 +341,8 @@ export function ScheduleGrid({ canPlan, lockedProfileId }: ScheduleGridProps) {
             {[...byPerson.entries()].map(([profileId, person]) => (
               <div
                 key={profileId}
-                className="grid grid-cols-[180px_repeat(7,1fr)] border-b border-border-subtle last:border-b-0"
+                className="grid border-b border-border-subtle last:border-b-0"
+                style={{ gridTemplateColumns: `180px repeat(${span}, minmax(0, 1fr))` }}
               >
                 <div className="flex items-center gap-2.5 px-3 py-2">
                   <Avatar name={person.name} src={person.avatar ?? undefined} size="xs" personId={profileId} />
@@ -266,7 +360,14 @@ export function ScheduleGrid({ canPlan, lockedProfileId }: ScheduleGridProps) {
                     key={d}
                     cell={person.days.get(d)}
                     canPlan={canPlan}
+                    compact={view === 'month'}
+                    dragging={dragId !== null}
+                    isDropTarget={dropAt?.profileId === profileId && dropAt?.day === d}
                     onBook={() => setBooking({ profileId, profileName: person.name, day: d })}
+                    onDragStartAllocation={setDragId}
+                    onDragOverCell={() => setDropAt({ profileId, day: d })}
+                    onDropOnCell={() => void handleDrop(profileId, d)}
+                    onDragEndAllocation={() => { setDragId(null); setDropAt(null) }}
                   />
                 ))}
               </div>

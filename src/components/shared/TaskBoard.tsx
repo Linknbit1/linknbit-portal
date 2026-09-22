@@ -541,7 +541,7 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
                   {/* Floated together so the pill and the delete button share a
                       line and the title text wraps around them. */}
                   <div className="float-right -mr-1 -mt-0.5 ml-1.5 flex items-center gap-1.5">
-                    {!!t.due_date && isOverdue(t.due_date) && statusOf(t) !== 'completed' && statusOf(t) !== 'approved' && <OverduePill />}
+                    {!!t.due_date && isOverdue(t.due_date) && statusOf(t) !== 'completed' && <OverduePill />}
                     <CardMenu
                       canMove={canMoveTask}
                       onMove={() => setPendingMove(t)}

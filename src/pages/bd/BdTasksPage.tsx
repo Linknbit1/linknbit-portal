@@ -258,7 +258,7 @@ export default function BdTasksPage() {
                     <td className="px-4 py-3"><StatusChip status={t.status} /></td>
                     <td className="px-4 py-3">
                       {t.dueDate
-                        ? <span className={cn('font-mono text-[12px]', isOverdue(t.dueDate) && t.status !== 'completed' && t.status !== 'approved' ? 'text-error' : 'text-text-3')}>{formatDate(t.dueDate)}</span>
+                        ? <span className={cn('font-mono text-[12px]', isOverdue(t.dueDate) && t.status !== 'completed' ? 'text-error' : 'text-text-3')}>{formatDate(t.dueDate)}</span>
                         : <span className="text-[12px] text-text-4">-</span>}
                     </td>
                     <td className="px-4 py-3">

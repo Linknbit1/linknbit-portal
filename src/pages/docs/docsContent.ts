@@ -417,6 +417,20 @@ export const DOC_CHAPTERS: DocChapter[] = [
               'Press the bin beside a booking to take it off.',
             ],
           },
+          {
+            title: 'Move a booking to another day',
+            steps: [
+              'Drag the task name from one day to another on the same person\u2019s row. The day you are over is outlined as you go.',
+              'On a phone, or from a keyboard, take it off the old day and book it on the new one instead \u2014 the panel does the same job.',
+            ],
+          },
+          {
+            title: 'Look further ahead',
+            steps: [
+              'Switch Week to 4 weeks at the top. The cells drop the task names and keep the numbers, which is what you want when the question is when somebody is next clear.',
+              'The arrows step a month at a time in that view, and a week at a time in the other.',
+            ],
+          },
         ],
         notes: [
           'Available hours are worked out, not typed in: the person\u2019s working days, less the lunch break, less any approved leave, holiday or exception on that day.',
@@ -426,6 +440,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
           'Booking a task that has no estimate gives it one. The estimate then shows the next time anybody schedules it.',
           'Whose week you can see depends on what you do: your own always, your team\u2019s if you lead one, everybody\u2019s if you manage projects. My week is your own, read-only.',
           'Planned hours, tracked hours and standup hours are three different things and are never added together. Schedule holds the plan; the timer holds what was measured.',
+          'Dragging moves a booking between days for the same person. It will not move work to somebody else — that is a reassignment, and it goes through the panel so the hours get thought about again.',
         ],
       },
       {

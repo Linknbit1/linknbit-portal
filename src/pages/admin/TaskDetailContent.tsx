@@ -359,7 +359,7 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
     )
   }
 
-  const isDone = task.status === 'completed' || task.status === 'approved'
+  const isDone = task.status === 'completed'
   const toggleComplete = () => {
     if (!isDone && !canSignOff) {
       toast('Only a project manager or team lead can mark a task complete', 'error')

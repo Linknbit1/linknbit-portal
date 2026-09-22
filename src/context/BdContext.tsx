@@ -210,7 +210,7 @@ export function BdProvider({ children }: { children: ReactNode }) {
     () =>
       rawProjects.map((p) => {
         const own = tasks.filter((t) => t.projectId === p.id)
-        const done = own.filter((t) => t.status === 'completed' || t.status === 'approved').length
+        const done = own.filter((t) => t.status === 'completed').length
         return {
           ...p,
           taskCount: own.length,

@@ -153,7 +153,7 @@ export default function BdProjectDetailPage() {
 
   const patch = (next: Partial<BdProject>) => patchProject(project.id, next)
   const overdue = !!project.deadline && isOverdue(project.deadline) && project.status !== 'completed'
-  const done = projectTasks.filter((t) => t.status === 'completed' || t.status === 'approved').length
+  const done = projectTasks.filter((t) => t.status === 'completed').length
   const openTask = openTaskId ? tasks.find((t) => t.id === openTaskId) ?? null : null
 
   const addTask = (status: TaskStatus = 'todo') => {

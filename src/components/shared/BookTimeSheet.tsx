@@ -48,7 +48,7 @@ export function BookTimeSheet({ profileId, profileName, day, onClose }: BookTime
   const taskOptions = useMemo(() => ([
     { value: '', label: 'Choose a task' },
     ...tasks
-      .filter((t) => !['completed', 'approved'].includes(t.status))
+      .filter((t) => t.status !== 'completed')
       .map((t) => ({
         value: t.id,
         label: t.project?.name ? `${t.title} · ${t.project.name}` : t.title,

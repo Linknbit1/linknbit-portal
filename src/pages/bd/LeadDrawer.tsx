@@ -475,7 +475,7 @@ export function LeadDrawer({ lead, onClose, onEdit, onLogActivity }: LeadDrawerP
                       <span
                         className={cn(
                           'size-1.5 shrink-0 rounded-full',
-                          t.status === 'completed' || t.status === 'approved' ? 'bg-success'
+                          t.status === 'completed' ? 'bg-success'
                             : t.status === 'blocked' ? 'bg-error'
                             : t.status === 'in_progress' ? 'bg-warning' : 'bg-text-4',
                         )}

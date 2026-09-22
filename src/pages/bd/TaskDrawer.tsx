@@ -129,7 +129,7 @@ export function TaskDrawer({ task, onClose }: TaskDrawerProps) {
 
   const patch = (next: Partial<BdTask>) => patchTask(task.id, next)
   const done = task.checklist.filter((c) => c.done).length
-  const isDone = task.status === 'completed' || task.status === 'approved'
+  const isDone = task.status === 'completed'
 
   const addChecklistItem = () => {
     const label = newItem.trim()

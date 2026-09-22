@@ -206,7 +206,6 @@ export const STATUS_LABELS: Record<TaskStatus, string> = {
   todo: 'To Do',
   in_progress: 'In Progress',
   review: 'Review',
-  approved: 'Approved',
   completed: 'Completed',
   blocked: 'Blocked',
 }

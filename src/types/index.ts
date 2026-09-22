@@ -22,7 +22,6 @@ export type TaskStatus =
   | 'todo'
   | 'in_progress'
   | 'review'
-  | 'approved'
   | 'completed'
   | 'blocked'
 
@@ -30,8 +29,12 @@ export type TaskStatus =
  * Statuses that declare a task finished. Setting one is a sign-off: the database
  * (fn_guard_task_approval) refuses it without can_approve_tasks, so every picker
  * filters against this list rather than offering a move that will bounce.
+ *
+ * One entry, not two. "Approved" and "Completed" were separate columns that both
+ * meant done and both counted as done for project progress, so nobody could say
+ * which one finished a task. They are one state now.
  */
-export const SIGN_OFF_STATUSES: TaskStatus[] = ['approved', 'completed']
+export const SIGN_OFF_STATUSES: TaskStatus[] = ['completed']
 
 export type Priority = 'critical' | 'high' | 'medium' | 'low'
 
@@ -688,7 +691,7 @@ export interface BdActivity {
  * because BD work is either queued or it isn't; there is no parking lot.
  */
 export const BD_TASK_STATUSES: TaskStatus[] = [
-  'todo', 'in_progress', 'review', 'approved', 'completed', 'blocked',
+  'todo', 'in_progress', 'review', 'completed', 'blocked',
 ]
 
 export type BdTaskRecurrence = 'once' | 'daily' | 'weekly' | 'monthly'

@@ -322,10 +322,10 @@ interface TaskCardProps {
 }
 
 function TaskCard({ task, assigneeAvatar, dragging, showProject, onDragStart, onDragEnd, onDragOver, onClick, onDelete }: TaskCardProps) {
-  const overdue = !!task.dueDate && isOverdue(task.dueDate) && task.status !== 'completed' && task.status !== 'approved'
+  const overdue = !!task.dueDate && isOverdue(task.dueDate) && task.status !== 'completed'
   const doneCount = task.checklist.filter((c) => c.done).length
   const progress = task.checklist.length === 0
-    ? (task.status === 'completed' || task.status === 'approved' ? 100 : 0)
+    ? (task.status === 'completed' ? 100 : 0)
     : Math.round((doneCount / task.checklist.length) * 100)
   const channel = task.channel ? CHANNEL_CONFIG[task.channel] : undefined
   const ChannelIcon = channel?.icon

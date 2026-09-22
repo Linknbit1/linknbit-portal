@@ -31,11 +31,31 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: '1.37.0',
+    date: '2026-09-22',
+    title: 'One way to finish a task',
+    highlight:
+      'Approved and Completed were two columns that both meant done. They are one column now, called Completed, and the Schedule calendar gained a four-week view and drag-between-days.',
+    entries: [
+      {
+        kind: 'improved',
+        text: 'Approved and Completed have been merged into Completed. They were the same state under two names \u2014 both counted as finished for project progress, both needed the same permission to set \u2014 so a task could sit in either and nobody could say what moving it between them meant. The 95 tasks that were Approved are now Completed. Nothing changed about who may finish a task.',
+      },
+      {
+        kind: 'added',
+        text: 'A booking on the Schedule can be dragged to another day. It moves between days for the same person; moving work to somebody else is a reassignment, so that still goes through the booking panel.',
+        feature: 'can_manage_projects',
+      },
+      {
+        kind: 'added',
+        text: 'Schedule has a four-week view beside the week. The cells show the numbers only, for the question \u201cwhen does this person next have a clear run\u201d.',
+      },
+    ],
+  },
+  {
     version: '1.36.0',
     date: '2026-09-22',
     title: 'Schedule: who is free, and what is booked',
-    highlight:
-      'A new Schedule section shows everybody\u2019s week as capacity rather than as a list: how many hours each person actually has on each day, after their working days, leave, holidays and approved exceptions \u2014 and what has been booked into them.',
     entries: [
       {
         kind: 'added',
