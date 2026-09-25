@@ -5,6 +5,11 @@
 //                                       into request-body logging)
 //   Body:   { terminal, action: 'punches' | 'heartbeat' | 'roster', ... }
 //
+// AUTH: verify_jwt MUST stay false on this function. The Pi is a device, not a
+// signed-in user: it holds a terminal secret and no Supabase session, so a
+// gateway JWT check 401s every request before this code runs and the terminal
+// goes silent. Authentication is the secret_hash comparison below.
+//
 // The Pi is an at-least-once relay: it re-sends anything it hasn't seen acked,
 // and the device keeps its own copy until we confirm. Everything here is
 // therefore idempotent — punches dedupe on punch_uid, and a day's attendance is
@@ -356,6 +361,25 @@ async function maintainOfficeIp(
   return data
 }
 
+/**
+ * Is this row a punch, or a piece of a packet?
+ *
+ * The relay lost byte alignment for five weeks and read packet headers as
+ * records: 122 rows arrived with an enroll number starting at byte 0x01 (SOH,
+ * the ZKTeco start marker) and a timestamp of 2000-01-01 — the device epoch,
+ * which is what the clock reads when the timestamp bytes fail to decode. Two
+ * more carried a real enroll number with that same epoch date, so neither field
+ * can vouch for the other.
+ *
+ * Dropped here rather than left to the table's CHECK constraints, because the
+ * insert is one batch: a single malformed frame would otherwise reject the whole
+ * sync and take everybody else's punches down with it. The constraints stay as
+ * the backstop for anything this misses.
+ */
+function isPlausiblePunch(zkUserId: string, at: Date): boolean {
+  return /^[0-9]+$/.test(zkUserId) && at.getUTCFullYear() >= 2020
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS_HEADERS })
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405)
@@ -454,7 +478,7 @@ Deno.serve(async (req: Request) => {
   const zkIds = [...new Set(
     incoming
       .map((p: Record<string, unknown>) => (typeof p.zk_user_id === 'string' ? p.zk_user_id : String(p.zk_user_id ?? '')))
-      .filter((v: string) => v.length > 0),
+      .filter((v: string) => /^[0-9]+$/.test(v)),
   )]
 
   const { data: linked } = await db
@@ -470,6 +494,7 @@ Deno.serve(async (req: Request) => {
   const toInsert: Record<string, unknown>[] = []
   const affected = new Map<string, { profileId: string; date: string }>()
   const unmatched = new Map<string, string>() // zk_user_id → local_date
+  const malformed: string[] = []
 
   for (const raw of incoming) {
     const punch = raw as Record<string, unknown>
@@ -480,6 +505,10 @@ Deno.serve(async (req: Request) => {
 
     const at = new Date(punchedAt)
     if (Number.isNaN(at.getTime())) continue
+    if (!isPlausiblePunch(zkUserId, at)) {
+      if (malformed.length < 20) malformed.push(`${zkUserId} @ ${punchedAt}`)
+      continue
+    }
 
     // The local date is resolved here, never taken from the Pi, so the whole
     // system agrees on which day a punch belongs to.
@@ -504,7 +533,23 @@ Deno.serve(async (req: Request) => {
     }
   }
 
-  if (toInsert.length === 0) return json({ ok: true, accepted: 0, reconciled: 0 }, 200)
+  // Say so loudly: a relay producing garbage keeps producing it, and the only
+  // person who can power-cycle the terminal is reading the audit log.
+  if (malformed.length > 0) {
+    await auditOnce(db, {
+      action: 'attendance.terminal_malformed_punches',
+      severity: 'warning',
+      summary: `Terminal ${terminalName} sent ${malformed.length} unreadable punch${malformed.length === 1 ? '' : 'es'}, which were discarded.`,
+      flagReason: 'The terminal relay is mis-reading the device log. Restart the relay; if it repeats, the terminal needs re-syncing.',
+      subjectId: null,
+      subjectName: null,
+      date: localParts(new Date(nowIso), settings.timezone).today,
+      terminalName,
+      context: { samples: malformed },
+    })
+  }
+
+  if (toInsert.length === 0) return json({ ok: true, accepted: 0, reconciled: 0, discarded: malformed.length }, 200)
 
   // punch_uid is UNIQUE; ignoreDuplicates makes a Pi retry a no-op.
   const { error: insertError } = await db
@@ -540,6 +585,7 @@ Deno.serve(async (req: Request) => {
     ok: true,
     accepted: toInsert.length,
     reconciled: affected.size,
+    discarded: malformed.length,
     unmatched: [...unmatched.keys()],
   }, 200)
 })
