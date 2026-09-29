@@ -13,6 +13,8 @@ import { Topbar } from '../components/layout/Topbar'
 import { Avatar, AvatarGroup } from '../components/ui/Avatar'
 import { PersonLink } from '../components/shared/PersonLink'
 import { AttendanceCheckInCard } from '../components/shared/AttendanceCheckInCard'
+import { StartTimerDialog } from '../components/shared/StartTimerDialog'
+import { useToast } from '../components/ui/toast-context'
 import { useOpenBlockers } from '../hooks/useStandups'
 import { StatusChip } from '../components/shared/StatusChip'
 import { PriorityChip } from '../components/shared/PriorityChip'
@@ -235,7 +237,7 @@ function TaskRow({
   bucket: Bucket
   myId: string
   runningTaskId: string | null
-  onStart: (id: string) => void
+  onStart: (task: TaskListItem) => void
   onStop: () => void
   busy: boolean
 }) {
@@ -280,7 +282,7 @@ function TaskRow({
         <button
           type="button"
           disabled={busy}
-          onClick={() => (running ? onStop() : onStart(task.id))}
+          onClick={() => (running ? onStop() : onStart(task))}
           aria-label={running ? 'Stop timer' : 'Start timer'}
           className={cn(
             'inline-flex items-center gap-1 px-2 py-1 rounded-sm border font-ui text-[11.5px] font-semibold transition-colors disabled:opacity-50',
@@ -393,6 +395,9 @@ export default function MyDayPage() {
   const startTimer = useStartTimer()
   const stopTimer = useStopTimer()
   const timerBusy = startTimer.isPending || stopTimer.isPending
+  // The task whose Start was pressed, held while the description is asked for.
+  const [startingTask, setStartingTask] = useState<TaskListItem | null>(null)
+  const toast = useToast()
 
   const todaysMeetings = useMemo(() => {
     return (meetingsQ.data ?? [])
@@ -531,7 +536,7 @@ export default function MyDayPage() {
                     bucket={bucket}
                     myId={myId}
                     runningTaskId={running?.task?.id ?? null}
-                    onStart={(id) => startTimer.mutate(id)}
+                    onStart={setStartingTask}
                     onStop={() => stopTimer.mutate()}
                     busy={timerBusy}
                   />
@@ -642,6 +647,21 @@ export default function MyDayPage() {
           </div>
         </div>
       </div>
+
+      <StartTimerDialog
+        open={!!startingTask}
+        taskTitle={startingTask?.title ?? ''}
+        runningElsewhere={running && running.task_id !== startingTask?.id ? running : null}
+        isPending={startTimer.isPending}
+        onConfirm={(note) => {
+          if (!startingTask) return
+          startTimer.mutate({ taskId: startingTask.id, note }, {
+            onSuccess: () => { setStartingTask(null); toast('Timer started', 'success') },
+            onError: (e) => toast(e instanceof Error ? e.message : 'Could not start the timer', 'error'),
+          })
+        }}
+        onClose={() => setStartingTask(null)}
+      />
     </div>
   )
 }

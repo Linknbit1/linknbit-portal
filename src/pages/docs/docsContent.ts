@@ -190,7 +190,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
               'Check in from the card on the right. The same one as on the Attendance page.',
               'Read Meetings today. The next one still ahead of you is marked, with a Join link when there is one.',
               'Work down Your work: overdue first, then due today, then anything already underway.',
-              'Press Start on a task to run its timer without leaving the page.',
+              'Press Start on a task, describe what you are about to work on, and press Start timer. The timer runs without you leaving the page.',
               'Click a task title to open it in the side panel of its project, with the board still behind it.',
             ],
           },
@@ -447,7 +447,7 @@ export const DOC_CHAPTERS: DocChapter[] = [
         id: 'stuck-work',
         title: 'When work is stuck',
         summary:
-          'Blocked and overdue work is counted on the sidebar and has to explain itself. Nothing in the portal chases a task on its own, so the point is to make stuck work impossible to walk past.',
+          'Blocked work has to explain itself. Nothing in the portal chases a task on its own, so the point is to make stuck work impossible to walk past.',
         where: 'Delivery \u2192 Tasks, Delivery \u2192 Projects',
         procedures: [
           {
@@ -553,21 +553,25 @@ export const DOC_CHAPTERS: DocChapter[] = [
             title: 'Time a task while you work',
             steps: [
               'Open the task and find the Time section.',
-              'Press Start. The running timer stays pinned to the bottom-right of the screen wherever you navigate.',
+              'Press Start and describe what you are about to work on, then press Start timer. The timer will not start without a description.',
+              'The running timer stays pinned to the bottom-right of the screen wherever you navigate, showing your description under the task.',
               'Press Stop when you finish, or when you switch tasks.',
+              'Press Start again for the next stretch and describe it again. Each start-to-stop stretch is listed under Entries with its time range and its own description.',
             ],
           },
           {
             title: 'Add time you forgot to track',
             steps: [
               'Open the task and choose “Log time”.',
-              'Enter how long, “45m” or “1h 30m” both work.',
-              'Add a short note on what you did, mark it billable if it is, and save.',
+              'Pick when you worked, from start to end.',
+              'Describe what you did, mark it billable if it is, and press Add entry. A description is required here too.',
             ],
           },
         ],
         notes: [
-          'Only one timer runs at a time. Starting one on another task moves it there rather than running two.',
+          'Only one timer runs at a time. Starting one on another task moves it there rather than running two, and the description box tells you which timer it will stop.',
+          'You are asked for a description every time you press Start, not once per task. The month-end work log lists every stretch with the description you gave it, so write down what you actually did.',
+          'Entries from before descriptions were required show “No description”. Edit an entry to add one; an edited entry needs a description before it can be saved.',
           'Tracked time is compared against the task’s estimate, and turns amber once you pass it.',
           'Because the timer records what you worked on and for how long, a written standup is no longer required.',
         ],
@@ -657,6 +661,14 @@ export const DOC_CHAPTERS: DocChapter[] = [
               'Open Admin → Reports and choose Project backlog or Employee backlog.',
               'Pick Today, This week, This month, or Custom for any range of dates.',
               'Search to narrow the table, then Export CSV to take it away.',
+            ],
+          },
+          {
+            title: 'Export the month’s work log',
+            steps: [
+              'Open Admin → Reports, choose Project backlog or Employee backlog, and pick This month (or the range you need).',
+              'Press Export work log. The sheet has one row for every timer stretch: date, person, client, project, service, task, start, end, minutes, hours and the description given when it started.',
+              'To export one person or one project only, open that row first and press Export work log there.',
             ],
           },
         ],

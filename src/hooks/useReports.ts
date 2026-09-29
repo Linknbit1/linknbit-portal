@@ -1,8 +1,9 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import {
   fetchActiveTimers, fetchTimesheetSegments, fetchTimesheetRoster,
   fetchProjectBacklog, fetchEmployeeBacklog,
   fetchProjectDetail, fetchEmployeeDetail, fetchProjectTasks, fetchEmployeeTasks,
+  fetchWorkLog,
 } from '../api/reports'
 
 export const REPORT_KEYS = {
@@ -125,5 +126,25 @@ export function useEmployeeBacklog(from: string, to: string, enabled = true) {
     queryFn: () => fetchEmployeeBacklog(from, to),
     enabled,
     staleTime: 60_000,
+  })
+}
+
+export interface WorkLogExportInput {
+  from: string
+  to: string
+  profileId?: string
+  projectId?: string
+}
+
+/**
+ * Fetches the work log on demand for an export.
+ *
+ * A mutation rather than a query: it runs once, on a click, and its result is a
+ * downloaded file — there is nothing to cache or keep fresh on screen.
+ */
+export function useWorkLogExport() {
+  return useMutation({
+    mutationFn: ({ from, to, profileId, projectId }: WorkLogExportInput) =>
+      fetchWorkLog(from, to, { profileId, projectId }),
   })
 }

@@ -179,6 +179,11 @@ export function RunningTimerWidget() {
                 <p className="truncate font-ui text-[11px] text-text-3">
                   {task?.project?.name ?? 'No project'}
                 </p>
+                {running.note && (
+                  <p className="mt-0.5 truncate font-ui text-[11px] italic text-text-2" title={running.note}>
+                    {running.note}
+                  </p>
+                )}
               </button>
             )}
 

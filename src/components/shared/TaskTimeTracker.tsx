@@ -5,6 +5,7 @@ import { Button } from '../ui/Button'
 import { ConfirmDialog } from '../ui/ConfirmDialog'
 import { DateTimeRangePicker } from '../ui/DateTimeRangePicker'
 import { ProgressBar } from '../ui/ProgressBar'
+import { StartTimerDialog } from './StartTimerDialog'
 import { Toggle } from '../ui/Toggle'
 import { useToast } from '../ui/toast-context'
 import {
@@ -21,6 +22,8 @@ import type { TimeEntry } from '../../api/timeEntries'
 
 interface TaskTimeTrackerProps {
   taskId: string
+  /** Named in the start dialog, so it is clear which task the clock is going on. */
+  taskTitle: string
   /** Drives the tracked-vs-estimated bar; omit when the task has no estimate. */
   estimatedMinutes?: number | null
   className?: string
@@ -74,7 +77,9 @@ function TimeEntryForm({
     ? 'Pick when you worked'
     : minutes <= 0
       ? 'The end has to come after the start'
-      : null
+      : !note.trim()
+        ? 'Add a description'
+        : null
 
   const submit = () => {
     if (error || !range.start || !range.end) return
@@ -94,7 +99,8 @@ function TimeEntryForm({
         <input
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          placeholder="What did you work on? (optional)"
+          placeholder="What did you work on? (required)"
+          aria-required
           className="min-w-0 flex-1 rounded-md border border-border-default bg-surface-1 px-3 py-2 font-ui text-[12.5px] text-text-1 placeholder:text-text-4 outline-none transition-colors hover:border-border-strong focus:border-border-focus"
         />
       </div>
@@ -137,7 +143,9 @@ function TimeEntryRow({ entry, now, canEdit, showWho, onEdit, onDelete }: TimeEn
       )}
       <div className="min-w-0 flex-1">
         <p className="truncate font-mono text-[11.5px] text-text-2">{rangeLabel(entry.started_at, entry.ended_at)}</p>
-        {entry.note && <p className="truncate font-ui text-[11.5px] text-text-4">{entry.note}</p>}
+        {entry.note
+          ? <p className="line-clamp-2 font-ui text-[12px] text-text-3" title={entry.note}>{entry.note}</p>
+          : <p className="font-ui text-[11.5px] italic text-text-4">No description</p>}
       </div>
       {entry.billable && (
         <span className="shrink-0 rounded-sm border border-success-border bg-success-soft px-1.5 py-0.5 font-mono text-[9.5px] uppercase tracking-wider text-success">
@@ -181,7 +189,7 @@ function useNow(active: boolean): number {
   return now
 }
 
-export function TaskTimeTracker({ taskId, estimatedMinutes, className }: TaskTimeTrackerProps) {
+export function TaskTimeTracker({ taskId, taskTitle, estimatedMinutes, className }: TaskTimeTrackerProps) {
   const toast = useToast()
 
   const { profile } = useAuthContext()
@@ -193,7 +201,7 @@ export function TaskTimeTracker({ taskId, estimatedMinutes, className }: TaskTim
   const updateEntry = useUpdateTimeEntry()
   const deleteEntry = useDeleteTimeEntry()
 
-  const [confirmSwitch, setConfirmSwitch] = useState(false)
+  const [askingNote, setAskingNote] = useState(false)
   const [showLog, setShowLog] = useState(false)
   const [logRange, setLogRange] = useState<DateTimeRange>({ start: null, end: null })
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -225,16 +233,14 @@ export function TaskTimeTracker({ taskId, estimatedMinutes, className }: TaskTim
   )
   const totalMinutes = Math.round(totalSeconds / 60)
 
-  // Only worth quoting once it rounds to a minute — "0m so far" reads as a bug.
-  const runningMinutes = running ? Math.round(secondsBetween(running.started_at, null, now) / 60) : 0
-  const runningElapsed = runningMinutes >= 1 ? formatMinutes(runningMinutes) : null
   const overEstimate = !!estimatedMinutes && totalMinutes > estimatedMinutes
 
   const busy = startTimer.isPending || stopTimer.isPending
 
-  const begin = (switched: boolean) => {
-    startTimer.mutate(taskId, {
-      onSuccess: () => { setConfirmSwitch(false); toast(switched ? 'Switched timer to this task' : 'Timer started', 'success') },
+  const begin = (note: string) => {
+    const switched = !!runningElsewhere
+    startTimer.mutate({ taskId, note }, {
+      onSuccess: () => { setAskingNote(false); toast(switched ? 'Switched timer to this task' : 'Timer started', 'success') },
       onError: (e) => toast(e instanceof Error ? e.message : 'Could not start the timer', 'error'),
     })
   }
@@ -245,11 +251,10 @@ export function TaskTimeTracker({ taskId, estimatedMinutes, className }: TaskTim
         onSuccess: () => toast('Timer stopped', 'success'),
         onError: (e) => toast(e instanceof Error ? e.message : 'Could not stop the timer', 'error'),
       })
-    } else if (runningElsewhere) {
-      // Starting here silently stops the other timer, so say so before it happens.
-      setConfirmSwitch(true)
     } else {
-      begin(false)
+      // Every start asks for its own description; the dialog also warns when
+      // starting here will stop a timer running on another task.
+      setAskingNote(true)
     }
   }
 
@@ -261,7 +266,7 @@ export function TaskTimeTracker({ taskId, estimatedMinutes, className }: TaskTim
         minutes,
         startedAt: new Date(v.start),
         endedAt: new Date(v.end),
-        note: v.note || null,
+        note: v.note,
         billable: v.billable,
       },
       {
@@ -411,25 +416,13 @@ export function TaskTimeTracker({ taskId, estimatedMinutes, className }: TaskTim
         onClose={() => setPendingDelete(null)}
       />
 
-      <ConfirmDialog
-        open={confirmSwitch}
-        danger={false}
-        title="A timer is already running"
-        confirmLabel="Switch timer"
-        cancelLabel="Keep it running"
-        pendingLabel="Switching…"
+      <StartTimerDialog
+        open={askingNote}
+        taskTitle={taskTitle}
+        runningElsewhere={runningElsewhere ? running ?? null : null}
         isPending={startTimer.isPending}
-        message={
-          <span>
-            Your timer is running on{' '}
-            <strong className="text-text-1">{running?.task?.title ?? 'another task'}</strong>
-            {running?.task?.project?.name && <> in <strong className="text-text-1">{running.task.project.name}</strong></>}
-            {runningElapsed && <> ({runningElapsed} so far)</>}.
-            {' '}Starting one here stops it and logs the time. Continue?
-          </span>
-        }
-        onConfirm={() => begin(true)}
-        onClose={() => setConfirmSwitch(false)}
+        onConfirm={begin}
+        onClose={() => setAskingNote(false)}
       />
     </div>
   )

@@ -9,6 +9,7 @@ import {
   stopRunningTimer,
   updateTimeEntry,
   type LogTimeInput,
+  type StartTimerInput,
   type TimeEntry,
 } from '../api/timeEntries'
 import { AUDIT_KEYS } from './useAuditLog'
@@ -69,7 +70,7 @@ function useInvalidateTime() {
 export function useStartTimer() {
   const invalidate = useInvalidateTime()
   return useMutation({
-    mutationFn: (taskId: string) => startTimer(taskId),
+    mutationFn: (input: StartTimerInput) => startTimer(input),
     onSuccess: invalidate,
   })
 }
@@ -115,7 +116,7 @@ export function useLogTime() {
         ended_at: end.toISOString(),
         // Log time is always hand-entered; the server will say the same.
         source: 'manual',
-        note: input.note ?? null,
+        note: input.note.trim(),
         billable: input.billable ?? false,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),

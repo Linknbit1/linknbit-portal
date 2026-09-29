@@ -251,7 +251,7 @@ ClientShell
 
 Dashboard, Projects, Clients, Teams, Tasks, Reports, Gamification, ClickUp, Settings
 
-Show notification count badges on: Projects (blocked count), Tasks (overdue count).
+Tasks and Projects carry no count badges in the sidebar.
 
 ---
 

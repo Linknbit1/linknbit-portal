@@ -492,7 +492,7 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
         <label className="text-label font-ui font-semibold text-text-2 uppercase tracking-wider flex items-center gap-1.5">
           <Clock size={13} /> Time tracking
         </label>
-        <TaskTimeTracker taskId={task.id} estimatedMinutes={task.estimated_minutes} />
+        <TaskTimeTracker taskId={task.id} taskTitle={task.title} estimatedMinutes={task.estimated_minutes} />
       </section>
 
       {/* Description — chromeless until hovered/focused, like ClickUp */}

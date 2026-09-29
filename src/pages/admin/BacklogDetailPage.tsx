@@ -14,6 +14,7 @@ import {
   useProjectTasks, useEmployeeTasks,
 } from '../../hooks/useReports'
 import { RangePicker, VarianceChip, ExportButton } from '../../components/reports/ReportControls'
+import { WorkLogExportButton } from '../../components/reports/WorkLogExportButton'
 import { resolvePreset, type DateRange, type RangePreset } from '../../components/reports/reportRange'
 import { downloadCsv } from '../../lib/csv'
 import { formatMinutes } from '../../lib/duration'
@@ -125,6 +126,7 @@ export default function ProjectBacklogDetailPage() {
       subtitle={summary?.client_name ?? undefined}
       preset={preset} setPreset={setPreset} custom={custom} setCustom={setCustom}
       onExport={exportCsv} exportDisabled={rows.length === 0}
+      workLog={<WorkLogExportButton from={range.from} to={range.to} projectId={id} label={summary?.project_name ?? undefined} />}
       summary={[
         { label: 'Tracked on the timer', value: formatMinutes(totals.timer), icon: Clock },
         { label: 'Accounted for in standups', value: formatMinutes(totals.standup), icon: Users },
@@ -272,6 +274,7 @@ export function EmployeeBacklogDetailPage() {
       avatar={{ name: summary?.profile_name ?? '', url: summary?.avatar_url ?? undefined, id }}
       preset={preset} setPreset={setPreset} custom={custom} setCustom={setCustom}
       onExport={exportCsv} exportDisabled={rows.length === 0}
+      workLog={<WorkLogExportButton from={range.from} to={range.to} profileId={id} label={summary?.profile_name ?? undefined} />}
       summary={[
         { label: 'Tracked on the timer', value: formatMinutes(summary?.timer_minutes ?? 0), icon: Clock },
         { label: 'Accounted for in standups', value: formatMinutes(summary?.standup_minutes ?? 0), icon: Users },
@@ -379,13 +382,15 @@ interface DetailShellProps {
   setCustom: (r: DateRange) => void
   onExport: () => void
   exportDisabled: boolean
+  /** The per-segment export, already narrowed to this project or person. */
+  workLog: React.ReactNode
   summary: { label: string; value: string; icon: React.ComponentType<{ size?: number; className?: string }> }[]
   children: React.ReactNode
 }
 
 function DetailShell({
   backLabel, title, subtitle, avatar, preset, setPreset, custom, setCustom,
-  onExport, exportDisabled, summary, children,
+  onExport, exportDisabled, workLog, summary, children,
 }: DetailShellProps) {
   return (
     <div className="flex flex-1 flex-col">
@@ -409,7 +414,7 @@ function DetailShell({
         <RangePicker
           preset={preset} onPreset={setPreset}
           custom={custom} onCustom={setCustom}
-          actions={<ExportButton onExport={onExport} disabled={exportDisabled} />}
+          actions={<>{workLog}<ExportButton onExport={onExport} disabled={exportDisabled} /></>}
         />
 
         <p className="flex items-start gap-2 rounded-md border border-border-subtle bg-surface-2/40 px-3 py-2.5 font-ui text-[11.5px] text-text-3">

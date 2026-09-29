@@ -31,11 +31,35 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: '1.40.0',
+    date: '2026-09-29',
+    title: 'Every stretch of time says what it was for',
+    highlight:
+      'Starting a timer now asks what you are about to work on. Each start-to-stop stretch keeps its own description, and at month end the work log exports every one of them.',
+    entries: [
+      {
+        kind: 'added',
+        text: 'Pressing Start on a task asks what you are going to work on, and the timer will not start until you say. Stop and start again and you are asked again, so a task worked on in three sittings shows three time ranges, each with its own description.',
+      },
+      {
+        kind: 'added',
+        text: 'Export work log on the Reports screens downloads one row per timer stretch for the range: who, which project and task, from when to when, and the description. Open a person or a project first to export just theirs.',
+        feature: 'can_view_reports',
+      },
+      {
+        kind: 'improved',
+        text: 'Logging time by hand, or editing an entry, needs a description too. The running timer shows yours under the task name so you can see what the clock is counting.',
+      },
+      {
+        kind: 'improved',
+        text: 'The overdue and stuck counts beside Tasks and Projects in the sidebar have been removed.',
+      },
+    ],
+  },
+  {
     version: '1.39.0',
     date: '2026-09-22',
     title: 'Work that is stuck now says so',
-    highlight:
-      'Overdue and blocked work finally shows up somewhere. The Tasks and Projects menu rows carry a count of what is waiting on you, a blocked task has to say what it is blocked on, and nothing can go into review with no reviewer.',
     entries: [
       {
         kind: 'added',

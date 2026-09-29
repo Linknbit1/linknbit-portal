@@ -12,6 +12,7 @@ import { downloadCsv } from '../../lib/csv'
 import { formatMinutes } from '../../lib/duration'
 import { cn } from '../../lib/cn'
 import { RangePicker, VarianceChip, ExportButton } from '../../components/reports/ReportControls'
+import { WorkLogExportButton } from '../../components/reports/WorkLogExportButton'
 import { useReportRange, type DateRange, type RangePreset } from '../../components/reports/reportRange'
 import { TimesheetContent } from './TimesheetPage'
 import { ReportsTab as AttendanceReports } from './AttendancePage'
@@ -130,7 +131,12 @@ function ProjectBacklog() {
       <RangePicker
         preset={preset} onPreset={setPreset}
         custom={custom} onCustom={setCustom}
-        actions={<ExportButton onExport={exportCsv} disabled={filtered.length === 0} />}
+        actions={
+          <>
+            <WorkLogExportButton from={range.from} to={range.to} />
+            <ExportButton onExport={exportCsv} disabled={filtered.length === 0} />
+          </>
+        }
       />
       <TwoClocksNote />
 
@@ -243,7 +249,12 @@ function EmployeeBacklog() {
       <RangePicker
         preset={preset} onPreset={setPreset}
         custom={custom} onCustom={setCustom}
-        actions={<ExportButton onExport={exportCsv} disabled={filtered.length === 0} />}
+        actions={
+          <>
+            <WorkLogExportButton from={range.from} to={range.to} />
+            <ExportButton onExport={exportCsv} disabled={filtered.length === 0} />
+          </>
+        }
       />
       <TwoClocksNote />
 

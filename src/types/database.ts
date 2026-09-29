@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       approvals: {
@@ -5911,6 +5936,33 @@ export type Database = {
           variance_minutes: number
         }[]
       }
+      report_time_entries: {
+        Args: {
+          p_from: string
+          p_profile?: string
+          p_project?: string
+          p_to: string
+        }
+        Returns: {
+          billable: boolean
+          client_name: string
+          ended_at: string
+          entry_id: string
+          is_running: boolean
+          minutes: number
+          note: string
+          profile_id: string
+          profile_name: string
+          project_id: string
+          project_name: string
+          service_name: string
+          source: string
+          started_at: string
+          task_deleted: boolean
+          task_id: string
+          task_title: string
+        }[]
+      }
       review_quest_task: {
         Args: { p_approve: boolean; p_claim_id: string; p_note?: string }
         Returns: undefined
@@ -6239,6 +6291,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       queue_status: ["pending", "processing", "done", "failed"],

@@ -507,7 +507,7 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
         <div className="space-y-1.5">
           <label className="text-label font-ui font-semibold text-text-2 uppercase tracking-wider">Track time</label>
           {isEdit ? (
-            <TaskTimeTracker taskId={task.id} estimatedMinutes={estimatedMinutes} />
+            <TaskTimeTracker taskId={task.id} taskTitle={task.title} estimatedMinutes={estimatedMinutes} />
           ) : (
             // Time is logged against a task that exists, so there is nothing to
             // attach an entry to until this form is saved.

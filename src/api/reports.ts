@@ -25,6 +25,7 @@ export type ProjectDetailRow = Database['public']['Functions']['report_project_d
 export type EmployeeDetailRow = Database['public']['Functions']['report_employee_detail']['Returns'][number]
 export type ProjectTaskRow = Database['public']['Functions']['report_project_tasks']['Returns'][number]
 export type EmployeeTaskRow = Database['public']['Functions']['report_employee_tasks']['Returns'][number]
+export type WorkLogRow = Database['public']['Functions']['report_time_entries']['Returns'][number]
 
 /** Timers running this instant. */
 export async function fetchActiveTimers(): Promise<ActiveTimer[]> {
@@ -178,4 +179,34 @@ export async function fetchEmployeeTasks(
   })
   if (error) throw error
   return data ?? []
+}
+
+/** PostgREST caps a response at 1,000 rows; a month of everyone's timers passes that. */
+const WORK_LOG_PAGE = 1000
+
+/**
+ * Every timer segment in a range with the description given when it started —
+ * the month-end work log. Optionally narrowed to one person or one project.
+ *
+ * Paged, because the export must be the whole month, and a silently truncated
+ * work log is worse than none: it reads as complete. The RPC orders by
+ * (started_at, id), so the pages neither overlap nor skip.
+ */
+export async function fetchWorkLog(
+  from: string, to: string, filters: { profileId?: string; projectId?: string } = {},
+): Promise<WorkLogRow[]> {
+  const rows: WorkLogRow[] = []
+  for (let offset = 0; ; offset += WORK_LOG_PAGE) {
+    const { data, error } = await supabase
+      .rpc('report_time_entries', {
+        p_from: from,
+        p_to: to,
+        p_profile: filters.profileId,
+        p_project: filters.projectId,
+      })
+      .range(offset, offset + WORK_LOG_PAGE - 1)
+    if (error) throw error
+    rows.push(...(data ?? []))
+    if (!data || data.length < WORK_LOG_PAGE) return rows
+  }
 }

@@ -85,12 +85,23 @@ export async function fetchRunningTimeEntry(): Promise<RunningTimeEntry | null> 
   return data
 }
 
+export interface StartTimerInput {
+  taskId: string
+  /** What this stretch is for. Required: each start→stop segment carries its own. */
+  note: string
+}
+
 /**
  * Starts a timer on a task. Any timer already running for this person is stopped
  * first, which both matches ClickUp's one-timer rule and keeps the partial unique
  * index from rejecting the insert.
  */
-export async function startTimer(taskId: string): Promise<TimeEntryRow> {
+export async function startTimer({ taskId, note }: StartTimerInput): Promise<TimeEntryRow> {
+  const description = note.trim()
+  // Checked before the running timer is stopped, so a refused start never
+  // leaves the person with no timer at all.
+  if (!description) throw new Error('Say what you are going to work on before starting the timer')
+
   const { data: auth } = await supabase.auth.getUser()
   const userId = auth.user?.id
   if (!userId) throw new Error('Not signed in')
@@ -99,7 +110,7 @@ export async function startTimer(taskId: string): Promise<TimeEntryRow> {
 
   const { data, error } = await supabase
     .from('task_time_entries')
-    .insert({ task_id: taskId, profile_id: userId, started_at: new Date().toISOString() })
+    .insert({ task_id: taskId, profile_id: userId, started_at: new Date().toISOString(), note: description })
     .select()
     .single()
 
@@ -152,7 +163,8 @@ export interface LogTimeInput {
    * says when the work happened, not just how long it took.
    */
   startedAt?: Date
-  note?: string | null
+  /** What the time was spent on — required, same as a running timer's. */
+  note: string
   billable?: boolean
 }
 
@@ -183,6 +195,9 @@ export async function logTime({ taskId, minutes, endedAt, startedAt, note, billa
   const userId = auth.user?.id
   if (!userId) throw new Error('Not signed in')
 
+  const description = note.trim()
+  if (!description) throw new Error('Say what you worked on before logging the time')
+
   const end = endedAt ?? new Date()
   const start = startedAt ?? new Date(end.getTime() - minutes * 60_000)
 
@@ -193,7 +208,7 @@ export async function logTime({ taskId, minutes, endedAt, startedAt, note, billa
       profile_id: userId,
       started_at: start.toISOString(),
       ended_at: end.toISOString(),
-      note: note ?? null,
+      note: description,
       billable: billable ?? false,
       // Self-reported rather than witnessed by the clock — the backlog says so.
       source: 'manual',
