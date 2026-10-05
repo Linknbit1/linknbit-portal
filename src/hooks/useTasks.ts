@@ -9,6 +9,7 @@ import {
   type TaskFilters,
   type TaskStatus,
   type MoveTaskArgs,
+  type BlockDetails,
   reorderBoardTasks,
   fetchDeliveryAttention,
 } from '../api/tasks'
@@ -113,7 +114,7 @@ export function useReorderBoardTasks() {
   return useMutation({
     mutationFn: ({ positions, moved }: {
       positions: { id: string; boardOrder: number }[]
-      moved?: { id: string; status: TaskStatus }
+      moved?: { id: string; status: TaskStatus; block?: BlockDetails }
       projectId?: string
     }) => reorderBoardTasks(positions, moved),
     onSuccess: (_r, v) => {

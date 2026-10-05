@@ -3,7 +3,7 @@ import type { JSONContent } from '@tiptap/react'
 import {
   Plus, Trash2, Send, CheckCircle2, MessageSquare, ListChecks, RotateCcw, Pencil,
   CircleDot, UserRound, CalendarDays, Flag, Layers, Eye, Paperclip, Bell, BellOff, Timer, Clock, History,
-  CornerUpRight,
+  CornerUpRight, Ban,
   type LucideIcon, CheckCheck,
 } from 'lucide-react'
 import { cn } from '../../lib/cn'
@@ -51,6 +51,8 @@ import { useTaskWatch } from '../../hooks/useWatchers'
 import { useAuthContext } from '../../context/AuthContext'
 import { useCanAccess } from '../../hooks/useRoleFlags'
 import { MoveTaskModal } from '../../components/shared/MoveTaskModal'
+import { BlockTaskDialog } from '../../components/shared/BlockTaskDialog'
+import { BLOCKED_STATUS } from '../../api/tasks'
 import { describeTaskActivity } from '../../lib/taskActivity'
 import type { Priority } from '../../types'
 
@@ -256,6 +258,8 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
   const [filesOpen, setFilesOpen] = useState(false)
   const [railTab, setRailTab] = useState<'comments' | 'activity'>('comments')
   const [moving, setMoving] = useState(false)
+  /** Moving into Blocked asks for the reason first; an existing blocker can be reworded. */
+  const [blockDialog, setBlockDialog] = useState<'block' | 'edit' | null>(null)
   const canMoveTask = useCanAccess('can_manage_projects')
   const canModerateComments = useCanAccess('can_moderate_comments')
   const canSignOff = useCanAccess('can_approve_tasks')
@@ -304,10 +308,10 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
 
   // Every property here saves on change, so each write reports into the header
   // badge — otherwise an edit landing (or failing) is invisible.
-  const patch = (updates: Parameters<typeof updateTask.mutate>[0]['updates']) => {
+  const patch = (updates: Parameters<typeof updateTask.mutate>[0]['updates'], onDone?: () => void) => {
     markSaving()
     updateTask.mutate({ id: task.id, updates }, {
-      onSuccess: () => markSaved(),
+      onSuccess: () => { markSaved(); onDone?.() },
       onError: (e) => { markFailed(); toast(e instanceof Error ? e.message : 'Update failed', 'error') },
     })
   }
@@ -360,6 +364,9 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
   }
 
   const isDone = task.status === 'completed'
+  const blockedOnName = task.blocked_on_id
+    ? assigneeOptions.find((p) => p.id === task.blocked_on_id)?.name
+    : undefined
   const toggleComplete = () => {
     if (!isDone && !canSignOff) {
       toast('Only a project manager or team lead can mark a task complete', 'error')
@@ -407,10 +414,34 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
         <EditableTitle value={task.title} onSave={(title) => patch({ title })} />
       </div>
 
+      {task.status === BLOCKED_STATUS && (
+        <div className="flex items-start gap-3 rounded-md border border-error/30 bg-error/10 px-3 py-2.5">
+          <Ban size={14} className="mt-0.5 shrink-0 text-error" aria-hidden />
+          <div className="min-w-0 flex-1 space-y-0.5">
+            <p className="font-ui text-[12.5px] text-text-1">{task.blocked_reason ?? 'No reason recorded'}</p>
+            <p className="font-mono text-[10.5px] text-text-4">
+              Blocked{task.blocked_since && ` ${formatRelativeTime(task.blocked_since)}`}
+              {blockedOnName && ` · waiting on ${blockedOnName}`}
+            </p>
+          </div>
+          <button
+            onClick={() => setBlockDialog('edit')}
+            className="shrink-0 rounded-sm px-2 py-1 font-ui text-[11.5px] font-medium text-text-3 transition-colors hover:bg-surface-2 hover:text-text-1"
+          >
+            Edit
+          </button>
+        </div>
+      )}
+
       {/* Properties — label on the left, control on the right, two columns */}
       <div className="grid grid-cols-1 gap-x-8 gap-y-0.5 sm:grid-cols-2">
         <PropertyRow icon={CircleDot} label="Status">
-          <Select value={task.status} onChange={(v) => patch({ status: v })} options={statusOptions} size="sm" />
+          <Select
+            value={task.status}
+            onChange={(v) => (v === BLOCKED_STATUS && task.status !== BLOCKED_STATUS ? setBlockDialog('block') : patch({ status: v }))}
+            options={statusOptions}
+            size="sm"
+          />
         </PropertyRow>
         <PropertyRow icon={UserRound} label="Assignees">
           <MultiSelectPeople
@@ -727,6 +758,21 @@ export function TaskDetailContent({ taskId, onClosed, fill }: TaskDetailContentP
           </div>
         </div>
       </aside>
+      <BlockTaskDialog
+        open={!!blockDialog}
+        taskTitle={task.title}
+        initial={blockDialog === 'edit'
+          ? { reason: task.blocked_reason ?? '', blockedOnId: task.blocked_on_id }
+          : undefined}
+        isPending={updateTask.isPending}
+        onConfirm={({ reason, blockedOnId }) => patch(
+          blockDialog === 'block'
+            ? { status: BLOCKED_STATUS, blocked_reason: reason, blocked_on_id: blockedOnId }
+            : { blocked_reason: reason, blocked_on_id: blockedOnId },
+          () => setBlockDialog(null),
+        )}
+        onClose={() => setBlockDialog(null)}
+      />
       {moving && (
         <MoveTaskModal
           taskId={task.id}

@@ -19,7 +19,8 @@ import { useCanAccess } from '../../hooks/useRoleFlags'
 import { ProgressBar } from '../ui/ProgressBar'
 import { isOverdue, formatStamp } from '../../lib/utils'
 import { formatEstimate } from '../../lib/duration'
-import type { TaskListItem } from '../../api/tasks'
+import { BLOCKED_STATUS, type BlockDetails, type TaskListItem } from '../../api/tasks'
+import { BlockTaskDialog } from './BlockTaskDialog'
 import { useTaskStatuses } from '../../hooks/useTaskStatuses'
 import type { TaskStatusRow } from '../../api/taskStatuses'
 
@@ -213,6 +214,14 @@ function CardMenu({ onMove, onDelete, canMove }: CardMenuProps) {
   )
 }
 
+/** A drop worked out but not yet written: the card, its column, and the lane it lands in. */
+interface PlannedDrop {
+  task: TaskListItem
+  status: string
+  next: TaskListItem[]
+  changingColumn: boolean
+}
+
 interface TaskBoardProps {
   tasks: TaskListItem[]
   onOpenTask: (id: string) => void
@@ -239,6 +248,8 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
   const columns = useMemo(() => columnsFrom(statuses), [statuses])
   const [pendingDelete, setPendingDelete] = useState<TaskListItem | null>(null)
   const [pendingMove, setPendingMove] = useState<TaskListItem | null>(null)
+  /** A drop into Blocked, held until the reason is given. */
+  const [pendingBlock, setPendingBlock] = useState<PlannedDrop | null>(null)
   const canMoveTask = useCanAccess('can_manage_projects')
   const canSignOff = useCanAccess('can_approve_tasks')
   const boardRef = useDragScroll<HTMLDivElement>()
@@ -401,6 +412,14 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
     // Dropped back exactly where it came from.
     if (!changingColumn && before.findIndex((t) => t.id === id) === index) return
 
+    const drop = { task, status: col.status, next, changingColumn }
+    // Blocked has to say why, so the card stays where it was until it does.
+    if (changingColumn && col.status === BLOCKED_STATUS) { setPendingBlock(drop); return }
+    commitDrop(drop)
+  }
+
+  const commitDrop = ({ task, status, next, changingColumn }: PlannedDrop, block?: BlockDetails) => {
+    const id = task.id
     // Only the rows that actually shifted — dropping near the end of a long lane
     // should write two rows, not thirty.
     const positions = next.flatMap((t, i) =>
@@ -409,12 +428,12 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
 
     const previousOrder = orderOverride
     setOrderOverride((o) => ({ ...o, ...Object.fromEntries(next.map((t, i) => [t.id, i])) }))
-    if (changingColumn) setOptimistic((o) => ({ ...o, [id]: col.status }))
+    if (changingColumn) setOptimistic((o) => ({ ...o, [id]: status }))
 
     reorderBoard.mutate(
       {
         positions,
-        moved: changingColumn ? { id, status: col.status } : undefined,
+        moved: changingColumn ? { id, status, block } : undefined,
         projectId: task.project_id,
       },
       {
@@ -568,6 +587,12 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
                   {t.description && (
                     <p className="mt-1 line-clamp-2 font-ui text-[11.5px]/snug text-text-4">{t.description}</p>
                   )}
+                  {statusOf(t) === BLOCKED_STATUS && t.blocked_reason && (
+                    <p className="mt-1.5 flex items-start gap-1.5 font-ui text-[11.5px]/snug text-error" title={t.blocked_reason}>
+                      <Ban size={11} className="mt-0.5 shrink-0" aria-label="Blocked on" />
+                      <span className="line-clamp-2">{t.blocked_reason}</span>
+                    </p>
+                  )}
                   {(t.start_date || t.due_date) && (
                     <div className="mt-2 min-w-0">
                       <ScheduleLine task={t} overdue={!!t.due_date && isOverdue(t.due_date) && statusOf(t) !== 'completed' && statusOf(t) !== 'approved'} />
@@ -593,6 +618,16 @@ export function TaskBoard({ tasks, onOpenTask, showProject }: TaskBoardProps) {
         )
       })}
 
+      <BlockTaskDialog
+        open={!!pendingBlock}
+        taskTitle={pendingBlock?.task.title ?? ''}
+        isPending={false}
+        onConfirm={(block) => {
+          if (pendingBlock) commitDrop(pendingBlock, block)
+          setPendingBlock(null)
+        }}
+        onClose={() => setPendingBlock(null)}
+      />
       {pendingMove && (
         <MoveTaskModal
           taskId={pendingMove.id}

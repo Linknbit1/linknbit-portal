@@ -27,6 +27,20 @@ export interface TaskListItem extends TaskRow {
 /** Tasks fetched in one go before the caller must narrow. */
 export const DEFAULT_TASK_LIMIT = 500
 
+/**
+ * The one status that has to explain itself. Matched by key rather than by a
+ * flag because fn_track_blocked_state matches it by key: a move into it without
+ * a blocked_reason in the same write is refused with `blocked_reason_required`.
+ */
+export const BLOCKED_STATUS = 'blocked'
+
+/** What a task is stuck on, written in the same update that moves it to Blocked. */
+export interface BlockDetails {
+  reason: string
+  /** Who can unblock it, when that is a person. */
+  blockedOnId: string | null
+}
+
 export interface TaskFilters {
   projectId?: string
   /** Narrow to one service block of a project (the 4-layer view). */
@@ -152,15 +166,23 @@ export async function updateTaskStatus(id: string, status: TaskStatus, boardOrde
  *   it on every row would notify reviewers for every card the drag shifted.
  * - The caller sends only the rows whose index moved, so dropping a card near
  *   the end of a long lane writes two rows rather than thirty.
+ * - A move into Blocked carries its reason in the same row update, because the
+ *   trigger checks the reason on the write that changes the status.
  */
 export async function reorderBoardTasks(
   positions: { id: string; boardOrder: number }[],
-  moved?: { id: string; status: TaskStatus },
+  moved?: { id: string; status: TaskStatus; block?: BlockDetails },
 ): Promise<void> {
   const results = await Promise.all(
     positions.map(({ id, boardOrder }) => {
       const updates: TablesUpdate<'tasks'> = { board_order: boardOrder }
-      if (moved?.id === id) updates.status = moved.status
+      if (moved?.id === id) {
+        updates.status = moved.status
+        if (moved.block) {
+          updates.blocked_reason = moved.block.reason
+          updates.blocked_on_id = moved.block.blockedOnId
+        }
+      }
       return supabase.from('tasks').update(updates).eq('id', id)
     }),
   )

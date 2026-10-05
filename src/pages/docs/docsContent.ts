@@ -453,8 +453,9 @@ export const DOC_CHAPTERS: DocChapter[] = [
           {
             title: 'Mark a task blocked',
             steps: [
-              'Set the status to Blocked. You will be asked what it is blocked on \u2014 a task cannot sit in Blocked without saying why.',
+              'Drag its card into the Blocked column, or pick Blocked from the task\u2019s Status menu. You will be asked what it is blocked on \u2014 a task cannot sit in Blocked without saying why.',
               'Name the person it is waiting on where there is one. Some blockers are not somebody, and that is fine.',
+              'Press Mark blocked. The reason shows on the card and at the top of the task; press Edit beside it to reword it or change who it is waiting on.',
               'Move it out of Blocked when it clears. The reason and the clock are cleared with it.',
             ],
           },
@@ -466,10 +467,9 @@ export const DOC_CHAPTERS: DocChapter[] = [
           },
         ],
         notes: [
-          'The number on the Tasks row is your overdue work. The number on Projects is what is stuck: blocked tasks, plus anything in review with no reviewer.',
-          'Both counts only include what you can act on \u2014 tasks you are assigned, and projects you manage. A zero means nothing is waiting on you, not that nothing is wrong anywhere.',
+          'Cancelling the question leaves the task where it was. Nothing moves until a reason is given.',
           'A task blocked before this was asked for says \u201cno reason recorded\u201d rather than inventing one. Its age is counted from when it last moved.',
-          'Thirteen tasks were already in review with no reviewer when this rule arrived. They were left as they are rather than being forced to change, and they show in the Projects count until somebody assigns one.',
+          'Thirteen tasks were already in review with no reviewer when this rule arrived. They were left as they are rather than being forced to change; adding a reviewer is all they need.',
         ],
       },
       {

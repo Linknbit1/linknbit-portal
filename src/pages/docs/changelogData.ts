@@ -31,6 +31,21 @@ import type { ChangelogRelease } from '../../types'
  */
 export const RELEASES: ChangelogRelease[] = [
   {
+    version: '1.40.1',
+    date: '2026-10-05',
+    title: 'Blocked asks why',
+    entries: [
+      {
+        kind: 'fixed',
+        text: 'Moving a task to Blocked now asks what it is blocked on, and who it is waiting on when that is a person. A reason has been required since 1.39.0 but nothing asked for one, so dragging a card to Blocked or picking Blocked from the status menu failed with an error instead.',
+      },
+      {
+        kind: 'improved',
+        text: 'A blocked task shows its reason on its board card and at the top of the task, with how long it has been blocked. Edit there to reword it or change who it is waiting on.',
+      },
+    ],
+  },
+  {
     version: '1.40.0',
     date: '2026-09-29',
     title: 'Every stretch of time says what it was for',

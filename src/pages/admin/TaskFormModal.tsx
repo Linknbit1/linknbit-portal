@@ -18,6 +18,7 @@ import { MultiSelectPeople } from '../../components/ui/MultiSelectPeople'
 import { RichEditor } from '../../components/editor/RichEditor'
 import { useSyncMentions } from '../../hooks/useMentions'
 import { TaskTimeTracker } from '../../components/shared/TaskTimeTracker'
+import { BlockFields } from '../../components/shared/BlockTaskDialog'
 import { useSetTaskAssignees } from '../../hooks/useTaskAssignees'
 import { useSetTaskReviewers } from '../../hooks/useTaskReviewers'
 import { useTaskStatuses } from '../../hooks/useTaskStatuses'
@@ -30,7 +31,7 @@ import { docToPlainText, extractMentionIds, fromDbDoc, plainTextToDoc, toDbDoc }
 import type { JSONContent } from '@tiptap/react'
 import { PRIORITY_LABELS, toDateInput, toTimeInput, fromDateTimeInput } from '../../lib/utils'
 import { IN_PROJECT, NOT_IN_PROJECT, ON_SERVICE, NOT_ON_SERVICE } from '../../constants/pickerGroups'
-import type { TaskListItem } from '../../api/tasks'
+import { BLOCKED_STATUS, type TaskListItem } from '../../api/tasks'
 import type { Priority } from '../../types'
 
 interface TaskFormModalProps {
@@ -145,6 +146,10 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
   const [dueTime, setDueTime] = useState(toTimeInput(task?.due_date) || '18:00')
   const dueAt = dueDay ? fromDateTimeInput(dueDay, dueTime) : null
   const [clientVisible, setClientVisible] = useState(task?.client_visible ?? false)
+  // Only sent while the status is Blocked; moving out of it clears both server-side.
+  const [blockedReason, setBlockedReason] = useState(task?.blocked_reason ?? '')
+  const [blockedOnId, setBlockedOnId] = useState(task?.blocked_on_id ?? '')
+  const [triedSubmit, setTriedSubmit] = useState(false)
   const [estimatedMinutes, setEstimatedMinutes] = useState<number | null>(task?.estimated_minutes ?? null)
   // Files chosen before the task exists. There is no task_id to attach them to
   // until save, so they wait here with their descriptions and upload after.
@@ -203,6 +208,11 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
    */
   const defaultStatusKey = taskStatuses.find((s) => s.is_default)?.key ?? taskStatuses[0]?.key ?? ''
   const effectiveStatus = statusOptions.some((o) => o.value === status) ? status : defaultStatusKey
+  const isBlocked = effectiveStatus === BLOCKED_STATUS
+  // Written in the same row as the status: the database refuses Blocked without a reason.
+  const blockFields = isBlocked
+    ? { blocked_reason: blockedReason.trim(), blocked_on_id: blockedOnId || null }
+    : {}
 
   const pending = createTask.isPending || updateTask.isPending || addService.isPending || moveTask.isPending || uploadAttachment.isPending
 
@@ -228,6 +238,7 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
     if (!description.trim()) { toast('A description is required', 'error'); return }
     if (!dueAt) { toast('A deadline is required', 'error'); return }
     if (!effectiveStatus) { toast('Statuses are still loading — try again in a moment', 'error'); return }
+    if (isBlocked && !blockedReason.trim()) { setTriedSubmit(true); toast('Say what the task is blocked on', 'error'); return }
     const onSuccess = () => { toast(isEdit ? 'Task updated' : 'Task created', 'success'); dismiss() }
     const onError = (e: unknown) => toast(e instanceof Error ? e.message : 'Save failed', 'error')
 
@@ -260,6 +271,7 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
             stage_id: stageId || null,
             priority, status: effectiveStatus, due_date: dueAt, client_visible: clientVisible,
             estimated_minutes: estimatedMinutes,
+            ...blockFields,
           },
         },
         {
@@ -306,6 +318,7 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
           assignee_id: assigneeIds[0] ?? null,
           priority, status: effectiveStatus, due_date: dueAt, client_visible: clientVisible,
           estimated_minutes: estimatedMinutes,
+          ...blockFields,
         },
         {
           onSuccess: async (row) => {
@@ -412,6 +425,17 @@ export function TaskFormModal({ projectId, projectServiceId, task, defaultStageI
             <Select value={effectiveStatus} onChange={setStatus} options={statusOptions} />
           </div>
         </div>
+        {isBlocked && (
+          <div className="space-y-3 rounded-md border border-error/30 bg-error/5 p-3">
+            <BlockFields
+              reason={blockedReason}
+              onReasonChange={setBlockedReason}
+              blockedOnId={blockedOnId}
+              onBlockedOnChange={setBlockedOnId}
+              showError={triedSubmit && !blockedReason.trim()}
+            />
+          </div>
+        )}
         <div className="space-y-1.5">
           <label className="text-label font-ui font-semibold text-text-2 uppercase tracking-wider">
             Deadline <span className="text-brand-red">*</span>
